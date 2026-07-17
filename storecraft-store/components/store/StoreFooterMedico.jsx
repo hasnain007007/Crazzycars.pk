@@ -232,13 +232,13 @@ export default function StoreFooterMedico({ settings }) {
   ).filter((m) => m && m.enabled !== false)
 
   const storeName = settings?.general?.storeName
-    || 'The Chain Gang'
+    || 'Crazzycars.pk'
 
   const logoUrl = trimmedLogoUrl(resolveStoreLogoUrl(settings))
   const showLogoInFooter = footer.showLogoInFooter !== false
 
   const tagline = footer.tagline
-    || 'Premium body piercing jewelry crafted for those who dare to be different.'
+    || "Pakistan's Premier Car Accessories Store"
 
   const shopLinks = (settings?.footer?.shopLinks || []).filter(
     (l) => l.enabled !== false

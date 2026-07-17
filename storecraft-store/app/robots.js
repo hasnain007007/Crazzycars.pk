@@ -1,7 +1,7 @@
 const BASE_URL = (
   process.env.NEXT_PUBLIC_APP_URL ||
   process.env.NEXT_PUBLIC_STORE_URL ||
-  "https://thechaingang.eu"
+  "https://crazzycars.pk"
 ).replace(/\/$/, "");
 
 export default function robots() {

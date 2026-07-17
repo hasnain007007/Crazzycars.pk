@@ -52,7 +52,7 @@ export default function TrustBadges({ items: itemsProp, enabled: enabledProp }) 
   if (!visible || !badges.length) return null;
 
   return (
-    <section className="homepage-section bg-[#F8F8F8] py-12 md:py-20">
+    <section className="homepage-section hidden bg-[#F8F8F8] py-12 md:block md:py-20">
       <div className="store-container">
         <h2 className="font-heading text-[32px] font-bold text-[#111111]">Trust & Service</h2>
         <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8 }} />

@@ -1,8 +1,12 @@
-/** Canonical storefront contact email and default brand name (The Chain Gang). */
-export const STORE_DEFAULT_NAME = "The Chain Gang";
-export const STORE_CONTACT_EMAIL = "info@thechaingang.eu";
+/** Canonical storefront contact email and default brand name (Crazzycars.pk). */
+export const STORE_DEFAULT_NAME = "Crazzycars.pk";
+export const STORE_CONTACT_EMAIL = "info@crazzycars.pk";
 
-const LEGACY_EMAILS = new Set(["support@chaingang.com", "support@chaingang.eu"]);
+const LEGACY_EMAILS = new Set([
+  "support@chaingang.com",
+  "support@chaingang.eu",
+  "info@thechaingang.eu",
+]);
 
 /** Normalize legacy support addresses to the single public contact email. */
 export function normalizeStoreEmail(email) {

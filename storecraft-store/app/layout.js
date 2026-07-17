@@ -99,13 +99,13 @@ export async function generateMetadata() {
       general.storeName ||
       process.env.NEXT_PUBLIC_STORE_NAME ||
       process.env.NEXT_PUBLIC_APP_NAME ||
-      "The Chain Gang";
+      "Crazzycars.pk";
 
     const title =
       seo.metaTitle?.trim() ||
       seo.defaultMetaTitle?.trim() ||
       storeName ||
-      "The Chain Gang";
+      "Crazzycars.pk";
     const description =
       seo.metaDescription?.trim() ||
       seo.defaultMetaDescription?.trim() ||
@@ -163,7 +163,7 @@ export async function generateMetadata() {
   } catch (e) {
     console.error("generateMetadata error:", e);
     return {
-      title: "The Chain Gang | Premium Body Piercing Jewelry",
+      title: "Crazzycars.pk | Car Accessories Pakistan",
       description: FALLBACK_DESCRIPTION,
     };
   }
@@ -198,7 +198,7 @@ export default async function RootLayout({ children }) {
     general.storeName ||
     process.env.NEXT_PUBLIC_APP_NAME ||
     process.env.NEXT_PUBLIC_STORE_NAME ||
-    "The Chain Gang";
+    "Crazzycars.pk";
   const baseUrl = (
     seo.canonicalUrl?.trim() ||
     process.env.NEXT_PUBLIC_STORE_URL?.replace(/\/$/, "") ||

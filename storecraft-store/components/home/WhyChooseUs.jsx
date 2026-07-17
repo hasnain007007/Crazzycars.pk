@@ -15,19 +15,19 @@ export default function WhyChooseUs({ settings }) {
           {settings?.sectionTitles?.whyChooseUs || "Why Choose Us"}
         </h2>
         <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8, marginBottom: 24 }} />
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 lg:gap-10">
           {(items.length ? items : FALLBACK_ITEMS).slice(0, 4).map((item, i) => (
             <div
               key={`${item.title}-${i}`}
-              className="group relative rounded-xl border border-[#2a2a2a] bg-[#151515] p-6 text-center transition duration-200 hover:shadow-[0_0_20px_rgba(196,30,30,0.25)]"
+              className="group relative flex flex-col items-center rounded-xl border border-[#2a2a2a] bg-[#151515] p-4 text-center transition duration-200 hover:shadow-[0_0_20px_rgba(196,30,30,0.25)] sm:p-6"
             >
-              <span className="text-[48px] leading-none" style={{ color: "#F5A623" }} aria-hidden>
+              <span className="text-[36px] leading-none sm:text-[48px]" style={{ color: "#F5A623" }} aria-hidden>
                 {item.icon}
               </span>
-              <h3 className="mt-4 text-base font-bold" style={{ color: "#FFFFFF" }}>
+              <h3 className="mt-3 text-sm font-bold sm:mt-4 sm:text-base" style={{ color: "#FFFFFF" }}>
                 {item.title}
               </h3>
-              <p className="mt-2 max-w-[220px] text-[13px] leading-relaxed" style={{ color: "#D1D5DB" }}>
+              <p className="mx-auto mt-2 max-w-[220px] text-xs leading-relaxed sm:text-[13px]" style={{ color: "#D1D5DB" }}>
                 {item.description || "Premium service, fast support and trusted quality."}
               </p>
             </div>

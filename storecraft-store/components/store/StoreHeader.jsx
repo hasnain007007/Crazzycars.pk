@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useStorePayment, useStoreSettings } from "@/context/StoreSettingsContext";
 import { formatPrice } from "@/lib/currency";
@@ -84,8 +84,48 @@ function buildMegaCols(footer) {
   return cols.length ? cols : DEFAULT_MEGA_COLS;
 }
 
+/** Derive brand + navigation config from store settings (used during SSR and on the client). */
+function deriveHeaderConfig(data) {
+  const general = data?.general || {};
+  const footer = data?.footer || {};
+  const mega = data?.megaMenu || {};
+
+  const brand = {
+    storeName: general.storeName || data?.storeName || "Crazzycars.pk",
+    logo: general.logo || general.logoUrl || data?.logoUrl || "",
+    phone: general.phone || data?.phone || "",
+    email: normalizeStoreEmail(general.email || data?.email || ""),
+    showStoreName: general.showStoreName !== false,
+  };
+
+  const menuItems = Array.isArray(mega.items) && mega.items.length ? mega.items : null;
+  let nav;
+  let megaCols;
+  if (menuItems) {
+    nav = menuItems.map((i) => ({
+      label: i.label,
+      href: i.href,
+      mega: mega.enabled !== false && (i.mega || (i.columns && i.columns.length > 0)),
+      deals: i.deals,
+      columns: (i.columns || []).map((c) => ({
+        title: c.heading || c.title || "",
+        links: (c.links || []).map((l) => ({
+          label: l.label,
+          href: l.href || l.url || "#",
+        })),
+      })),
+    }));
+    megaCols = DEFAULT_MEGA_COLS;
+  } else {
+    nav = buildNavFromFooter(footer);
+    megaCols = buildMegaCols(footer);
+  }
+
+  return { brand, nav, megaCols, megaEnabled: mega.enabled !== false };
+}
+
 function splitStoreName(name) {
-  const n = String(name || "The Chain Gang").trim();
+  const n = String(name || "Crazzycars.pk").trim();
   const parts = n.split(/\s+/);
   if (parts.length <= 1) return { line1: n.toUpperCase(), line2: "" };
   return {
@@ -197,65 +237,27 @@ export function StoreHeader() {
   const [cartToast, setCartToast] = useState(null);
   const [q, setQ] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [drawerExpanded, setDrawerExpanded] = useState({});
-  const [nav, setNav] = useState(DEFAULT_NAV);
-  const [megaCols, setMegaCols] = useState(DEFAULT_MEGA_COLS);
-  const [megaEnabled, setMegaEnabled] = useState(true);
-  const [brand, setBrand] = useState({
-    storeName: "The Chain Gang",
-    logo: "",
-    phone: "",
-    email: "",
-    showStoreName: true,
-  });
+  // Derive header config synchronously from server-provided settings so SSR
+  // and first client render match (no "default brand" flash / hydration diff).
+  const hasCtxSettings = ctxSettings && Object.keys(ctxSettings).length > 0;
+  const derived = useMemo(() => deriveHeaderConfig(hasCtxSettings ? ctxSettings : {}), [ctxSettings, hasCtxSettings]);
+  const [fetched, setFetched] = useState(null);
+
+  const config = hasCtxSettings ? derived : fetched || derived;
+  const { brand, nav, megaCols, megaEnabled } = config;
 
   const [activeMegaItem, setActiveMegaItem] = useState(null);
 
   useEffect(() => {
-    const apply = (data) => {
-      const general = data?.general || {};
-      const footer = data?.footer || {};
-      const mega = data?.megaMenu || {};
-      setBrand({
-        storeName: general.storeName || data?.storeName || "The Chain Gang",
-        logo: general.logo || general.logoUrl || data?.logoUrl || "",
-        phone: general.phone || data?.phone || "",
-        email: normalizeStoreEmail(general.email || data?.email || ""),
-        showStoreName: general.showStoreName !== false,
-      });
-      const menuItems = Array.isArray(mega.items) && mega.items.length ? mega.items : null;
-      if (menuItems) {
-        setNav(
-          menuItems.map((i) => ({
-            label: i.label,
-            href: i.href,
-            mega: mega.enabled !== false && (i.mega || (i.columns && i.columns.length > 0)),
-            deals: i.deals,
-            columns: (i.columns || []).map((c) => ({
-              title: c.heading || c.title || "",
-              links: (c.links || []).map((l) => ({
-                label: l.label,
-                href: l.href || l.url || "#",
-              })),
-            })),
-          }))
-        );
-      } else {
-        setNav(buildNavFromFooter(footer));
-        setMegaCols(buildMegaCols(footer));
-      }
-      setMegaEnabled(mega.enabled !== false);
-    };
-    if (ctxSettings && Object.keys(ctxSettings).length > 0) {
-      apply(ctxSettings);
-      return;
-    }
+    if (hasCtxSettings) return;
     fetch("/api/settings")
       .then((r) => r.json())
-      .then((data) => apply(data?.data || {}))
+      .then((data) => setFetched(deriveHeaderConfig(data?.data || {})))
       .catch(() => {});
-  }, [ctxSettings]);
+  }, [hasCtxSettings]);
 
   const cartCount = items.reduce((s, i) => s + (Number(i.quantity) || 1), 0);
   const accountHref = customer ? "/account" : "/account/login";
@@ -264,7 +266,14 @@ export function StoreHeader() {
   useEffect(() => {
     setMenuOpen(false);
     setMegaOpen(false);
+    setMobileSearchOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const open = () => setMobileSearchOpen(true);
+    window.addEventListener("open-mobile-search", open);
+    return () => window.removeEventListener("open-mobile-search", open);
+  }, []);
 
   useEffect(() => {
     const onAdded = (e) => {
@@ -289,6 +298,7 @@ export function StoreHeader() {
   function search(e) {
     e.preventDefault();
     const term = q.trim();
+    setMobileSearchOpen(false);
     if (term) router.push(`/products?q=${encodeURIComponent(term)}`);
     else router.push("/products");
   }
@@ -415,9 +425,15 @@ export function StoreHeader() {
           </div>
 
           <div className="ml-auto flex items-center gap-3 md:hidden">
-            <Link href="/products" className="flex h-10 w-10 items-center justify-center" aria-label="Search">
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen((v) => !v)}
+              className="flex h-10 w-10 items-center justify-center"
+              aria-label="Search"
+              aria-expanded={mobileSearchOpen}
+            >
               <IconSearch />
-            </Link>
+            </button>
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -436,6 +452,32 @@ export function StoreHeader() {
             </button>
           </div>
         </div>
+
+        {mobileSearchOpen ? (
+          <div className="border-t px-4 py-3 md:hidden" style={{ borderColor: "#E5E7EB" }}>
+            <form onSubmit={search}>
+              <div className="relative">
+                <input
+                  type="search"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search products..."
+                  autoFocus
+                  className="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-sm outline-none"
+                  style={{ borderColor: "#C41E1E" }}
+                />
+                <button
+                  type="submit"
+                  className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
+                  style={{ background: "#C41E1E" }}
+                  aria-label="Search"
+                >
+                  <IconSearch />
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
       </div>
 
       {/* Row 3 — nav */}

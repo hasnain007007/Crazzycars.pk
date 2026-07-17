@@ -237,11 +237,11 @@ export function ProductsBrowseMedico({
         </aside>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-4 flex items-center justify-between rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-4 py-3">
+          <div className="mb-4 flex flex-col gap-3 rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-[#333333]">
               Showing {products.length} of {totalCount || allProducts.length} products
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <label className="text-sm text-[#333333]">Sort by</label>
               <select
                 value={sort}

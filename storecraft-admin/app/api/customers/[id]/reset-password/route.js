@@ -84,7 +84,7 @@ export async function POST(req, context) {
             <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
               <div style="background:#111111;padding:24px;text-align:center;">
                 <h1 style="color:#C9A84C;margin:0;font-size:20px;letter-spacing:0.1em;">
-                  CHAIN GANG
+                  CRAZZYCARS.PK
                 </h1>
               </div>
               <div style="padding:32px;background:#ffffff;">

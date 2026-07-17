@@ -9,7 +9,7 @@ const WISHLIST_KEY = "sialkot_wishlist";
 
 const NAV = [
   { href: "/", label: "Home", key: "home" },
-  { href: "/products", label: "Search", key: "search" },
+  { href: null, label: "Search", key: "search", isSearch: true },
   { href: null, label: "Cart", key: "cart", isCart: true },
   { href: "/wishlist", label: "Wishlist", key: "wishlist" },
   { href: "/account", label: "Account", key: "account" },
@@ -86,10 +86,9 @@ export default function MobileBottomNav() {
       aria-label="Mobile navigation"
     >
       {NAV.map((item) => {
-        const active =
-          item.key === "cart"
-            ? false
-            : pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
+        const active = item.href
+          ? pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
+          : false;
 
         const content = (
           <>
@@ -128,6 +127,20 @@ export default function MobileBottomNav() {
               onClick={() => setOpen(true)}
               className="flex flex-1 flex-col items-center justify-center gap-0.5"
               aria-label="Cart"
+            >
+              {content}
+            </button>
+          );
+        }
+
+        if (item.isSearch) {
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => window.dispatchEvent(new Event("open-mobile-search"))}
+              className="flex flex-1 flex-col items-center justify-center gap-0.5"
+              aria-label="Search"
             >
               {content}
             </button>

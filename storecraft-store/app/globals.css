@@ -1205,8 +1205,10 @@ textarea::placeholder {
     width: 100% !important;
   }
 
+  /* Touch targets — but not on line-clamped text links, where forcing a
+     min-height exposes a clipped sliver of the truncated line. */
   button,
-  a {
+  a:not([class*="line-clamp"]) {
     min-height: 44px;
   }
 }
