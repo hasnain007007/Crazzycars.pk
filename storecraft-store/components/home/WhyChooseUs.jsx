@@ -9,7 +9,7 @@ export default function WhyChooseUs({ settings }) {
     .slice(0, 8);
 
   return (
-    <section className="homepage-section py-12 md:py-20" style={{ background: "#111111" }}>
+    <section className="homepage-section hidden py-12 md:block md:py-20" style={{ background: "#111111" }}>
       <div className="store-container">
         <h2 className="font-heading text-[32px] font-bold" style={{ color: "#FFFFFF" }}>
           {settings?.sectionTitles?.whyChooseUs || "Why Choose Us"}
