@@ -1,0 +1,722 @@
+import { NextResponse } from "next/server";
+import mongoose from "mongoose";
+import { allocateOrderNumber } from "@/lib/orderNumber";
+import { dbConnect } from "@/lib/db";
+import Coupon from "@/lib/models/Coupon.model";
+import Customer from "@/lib/models/Customer.model";
+import Order from "@/lib/models/Order.model";
+import Product from "@/lib/models/Product.model";
+import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
+import ShippingZone from "@/lib/models/Shipping.model";
+import { computeCouponDiscount } from "@/lib/couponCompute";
+import { recordEmailSent, resolveOrderConfirmationEmail, sendEmail, sendAdminOrderNotification } from "@/lib/email";
+import {
+  applyShippingRules,
+  buildAdvancePaymentOrderNote,
+  normalizeShippingRules,
+} from "@/lib/freeDelivery";
+import { isOfflinePakistaniPayment } from "@/lib/pakistaniPaymentMethods";
+import { quoteShipping } from "@/lib/shippingZoneWeight";
+import { toKg } from "@/lib/shippingEstimate";
+import { effectiveUnitPrice } from "@/lib/storePricing";
+
+function isValidCustomerEmail(email) {
+  const e = String(email || "").trim().toLowerCase();
+  return Boolean(e) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && !e.endsWith("@guest.checkout");
+}
+
+/** Guest checkout placeholder — satisfies Customer schema when email omitted. */
+function guestEmailForPhone(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return "";
+  return `guest+${digits}@guest.checkout`;
+}
+
+function aggregateInventoryNeeds(items) {
+  const byProduct = new Map();
+  const byVariant = new Map();
+  for (const it of items) {
+    const id = String(it.productId || "").trim();
+    if (!mongoose.Types.ObjectId.isValid(id)) continue;
+    const q = Math.max(1, Math.min(99, parseInt(it.quantity, 10) || 1));
+    const vid = String(it.variantId || "").trim();
+    if (vid && mongoose.Types.ObjectId.isValid(vid)) {
+      const k = `${id}::${vid}`;
+      byVariant.set(k, (byVariant.get(k) || 0) + q);
+    } else {
+      byProduct.set(id, (byProduct.get(id) || 0) + q);
+    }
+  }
+  return { byProduct, byVariant };
+}
+
+function normalizeMeasurements(raw) {
+  if (!raw || typeof raw !== "object") return {};
+  const out = {};
+  for (const [k, v] of Object.entries(raw)) {
+    const key = String(k || "").trim();
+    const value = String(v || "").trim();
+    if (!key || !value) continue;
+    out[key] = value;
+  }
+  return out;
+}
+
+function normalizeSelectedVariation(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  if (Array.isArray(raw.choices) && raw.choices.length) {
+    const choices = raw.choices
+      .map((c) => {
+        if (!c || typeof c !== "object") return null;
+        const optionValue = String(c.optionValue || "").trim();
+        if (!optionValue) return null;
+        const stockRaw = c.stock;
+        let stock;
+        if (stockRaw !== "" && stockRaw != null && Number.isFinite(Number(stockRaw))) {
+          stock = Math.max(0, Number(stockRaw));
+        }
+        return {
+          variationId: String(c.variationId || "").trim(),
+          variationName: String(c.variationName || "").trim(),
+          optionValue,
+          additionalPrice: Math.max(0, Number(c.additionalPrice) || 0),
+          optionWeight: Math.max(0, Number(c.optionWeight) || 0),
+          weightUnit: String(c.weightUnit || "kg").trim(),
+          additionalShippingWeight: Math.max(0, Number(c.additionalShippingWeight) || 0),
+          shippingWeightUnit: String(c.shippingWeightUnit || "kg").trim(),
+          shippingPriceSurcharge: Math.max(0, Number(c.shippingPriceSurcharge) || 0),
+          sku: String(c.sku || "").trim(),
+          ...(stock !== undefined ? { stock } : {}),
+        };
+      })
+      .filter(Boolean);
+    return { choices, label: String(raw.label || raw.name || "").trim().slice(0, 400) };
+  }
+  return {
+    name: String(raw.name || "").trim(),
+    type: String(raw.type || "").trim(),
+    options: Array.isArray(raw.options) ? raw.options.map((v) => String(v || "").trim()).filter(Boolean) : [],
+    weight: Math.max(0, Number(raw.weight) || 0),
+    additionalShippingWeight: Math.max(0, Number(raw.additionalShippingWeight) || 0),
+    shippingPriceSurcharge: Math.max(0, Number(raw.shippingPriceSurcharge) || 0),
+  };
+}
+
+function getOrderWeight(items) {
+  return items.reduce((total, item) => {
+    const baseWeight = Number(item.shipping?.weight ?? item.weight ?? 0);
+    const matchedWeight = Number(item.matchedCombination?.weight);
+    const itemWeight = Number.isFinite(matchedWeight) ? matchedWeight : baseWeight;
+    const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+    return total + itemWeight * qty;
+  }, 0);
+}
+
+function findOptionOnProduct(p, choice) {
+  const want = String(choice?.optionValue || "").trim();
+  if (!want) return null;
+  const vid = String(choice?.variationId || "").trim();
+  const nm = String(choice?.variationName || "").trim();
+  let v = (p.variations || []).find((x) => String(x._id) === vid);
+  if (!v && nm) {
+    v = (p.variations || []).find(
+      (x) => String(x.name || "").trim() === nm || String(x.type || "").trim() === nm
+    );
+  }
+  if (!v) return null;
+  const opts = v.options || [];
+  const opt = opts.find((o) => (typeof o === "string" ? o === want : String(o?.value) === want));
+  if (typeof opt === "string") {
+    return {
+      value: opt,
+      additionalPrice: 0,
+      weight: 0,
+      weightUnit: "kg",
+      additionalShippingWeight: 0,
+      shippingWeightUnit: "kg",
+      shippingPriceSurcharge: 0,
+    };
+  }
+  return opt && typeof opt === "object" ? opt : null;
+}
+
+function findVariantOnProduct(p, variantId) {
+  const vid = String(variantId || "").trim();
+  if (!vid || !mongoose.Types.ObjectId.isValid(vid)) return null;
+  return (p.variants || []).find((x) => String(x._id) === vid) || null;
+}
+
+function legacyVariantsLength(p) {
+  const v = p?.variants;
+  return Array.isArray(v) ? v.length : 0;
+}
+
+function normalizeComboOptions(opts) {
+  if (!Array.isArray(opts)) return [];
+  return [...opts]
+    .map((o) => ({
+      name: String(o?.name ?? "").trim(),
+      value: String(o?.value ?? "").trim(),
+    }))
+    .filter((o) => o.name && o.value)
+    .sort((a, b) => a.name.localeCompare(b.name) || a.value.localeCompare(b.value));
+}
+
+function combinationsOptionsMatch(comboOpts, mcOpts) {
+  const A = normalizeComboOptions(comboOpts);
+  const B = normalizeComboOptions(mcOpts);
+  if (A.length !== B.length || A.length === 0) return false;
+  for (let i = 0; i < A.length; i++) {
+    if (A[i].name !== B[i].name || A[i].value !== B[i].value) return false;
+  }
+  return true;
+}
+
+/** Resolve variationCombinations row from cart payload (matchedCombination). */
+function resolveCombinationFromCart(p, raw) {
+  const mc = raw.matchedCombination;
+  if (!mc || typeof mc !== "object") return null;
+  const combos = p.variationCombinations || [];
+  if (!Array.isArray(combos) || combos.length === 0) return null;
+  const id = mc._id != null ? String(mc._id) : "";
+  if (id && mongoose.Types.ObjectId.isValid(id)) {
+    const found = combos.find((c) => String(c._id) === id);
+    if (found) return found;
+  }
+  const mcOpts = mc.options;
+  if (Array.isArray(mcOpts) && mcOpts.length > 0) {
+    return combos.find((c) => combinationsOptionsMatch(c.options || [], mcOpts)) || null;
+  }
+  return null;
+}
+
+/** Cart line indicates options were chosen (simple variations, combos, or legacy variation payload). */
+function cartHasModernSelection(raw) {
+  const mc = raw.matchedCombination;
+  if (mc && typeof mc === "object") {
+    if (Array.isArray(mc.options) && mc.options.length > 0) return true;
+    const id = mc._id != null ? String(mc._id) : "";
+    if (id.trim()) return true;
+    if (Number.isFinite(Number(mc.price))) return true;
+    if (Number.isFinite(Number(mc.stock))) return true;
+  }
+  if (String(raw.variationLabel || "").trim()) return true;
+  const sv = normalizeSelectedVariation(raw.selectedVariation);
+  if (sv?.choices?.length) return true;
+  return false;
+}
+
+function lineUnitPriceAndShipping(p, raw, selectedVariation) {
+  const variantId = String(raw.variantId || "").trim();
+  if (variantId && mongoose.Types.ObjectId.isValid(variantId)) {
+    const v = findVariantOnProduct(p, variantId);
+    if (v) {
+      const baseWeightKg = toKg(p.inventory?.weight, p.inventory?.weightUnit || "kg");
+      const addKg = toKg(v.additionalShippingWeight, v.weightUnit || "kg");
+      const unitPrice = Math.max(0, Number(v.price) || 0);
+      return {
+        unitPrice: Math.round(unitPrice * 100) / 100,
+        perUnitWeightKg: Math.max(0, baseWeightKg + addKg),
+        surcharge: Math.max(0, Number(v.shippingPriceSurcharge) || 0),
+        variant: v,
+      };
+    }
+  }
+  const base = effectiveUnitPrice(p);
+  const baseWeightKg = toKg(p.inventory?.weight, p.inventory?.weightUnit || "kg");
+  if (!selectedVariation) {
+    const cw = Number(raw.calculatedWeight);
+    return {
+      unitPrice: Math.round((Number(raw.unitPrice) > 0 ? Number(raw.unitPrice) : base) * 100) / 100,
+      perUnitWeightKg: cw > 0 ? Math.max(0, cw) : baseWeightKg,
+      surcharge: Number(raw.shippingPriceSurcharge) || 0,
+      variant: null,
+    };
+  }
+  if (selectedVariation?.choices?.length) {
+    let optionAdd = 0;
+    let addShipKg = 0;
+    let surcharge = 0;
+    for (const c of selectedVariation.choices) {
+      const opt = findOptionOnProduct(p, c);
+      if (opt) {
+        optionAdd += Number(opt.additionalPrice) || 0;
+        addShipKg += toKg(opt.additionalShippingWeight, opt.shippingWeightUnit || opt.weightUnit || "kg");
+        surcharge += Number(opt.shippingPriceSurcharge) || 0;
+      }
+    }
+    return {
+      unitPrice: Math.round((base + optionAdd) * 100) / 100,
+      perUnitWeightKg: Math.max(0, baseWeightKg + addShipKg),
+      surcharge,
+      variant: null,
+    };
+  }
+  const addShipKg = toKg(selectedVariation?.additionalShippingWeight ?? 0, "kg");
+  const surcharge = Number(selectedVariation?.shippingPriceSurcharge) || 0;
+  const cw = Number(raw.calculatedWeight);
+  if (cw > 0) {
+    return {
+      unitPrice: Math.round((Number(raw.unitPrice) > 0 ? Number(raw.unitPrice) : base) * 100) / 100,
+      perUnitWeightKg: Math.max(0, cw),
+      surcharge: surcharge || Number(raw.shippingPriceSurcharge) || 0,
+      variant: null,
+    };
+  }
+  const perUnitWeightKg = Math.max(0, baseWeightKg + addShipKg);
+  const unitPrice = Math.round((Number(raw.unitPrice) > 0 ? Number(raw.unitPrice) : base) * 100) / 100;
+  return { unitPrice, perUnitWeightKg, surcharge, variant: null };
+}
+
+export async function POST(request) {
+  try {
+    await dbConnect();
+    const body = await request.json().catch(() => ({}));
+    const itemsIn = Array.isArray(body.items) ? body.items : [];
+    if (!itemsIn.length) {
+      return NextResponse.json({ success: false, error: "Cart is empty." }, { status: 400 });
+    }
+
+    const customerIn = body.customer || {};
+    const name = String(customerIn.name || "").trim();
+    const phone = String(customerIn.phone || "").trim();
+    const emailInput = String(customerIn.email || "").trim().toLowerCase();
+    const email = isValidCustomerEmail(emailInput) ? emailInput : "";
+    if (!name) {
+      return NextResponse.json({ success: false, error: "Name is required." }, { status: 400 });
+    }
+    if (!phone) {
+      return NextResponse.json({ success: false, error: "Phone number is required." }, { status: 400 });
+    }
+    const customerRecordEmail = email || guestEmailForPhone(phone);
+    if (!customerRecordEmail) {
+      return NextResponse.json({ success: false, error: "Phone number is required." }, { status: 400 });
+    }
+
+    const stateVal = String(body.shippingAddress?.state || "").trim();
+    const shippingAddress = {
+      name: String(body.shippingAddress?.name || name).trim(),
+      phone: String(body.shippingAddress?.phone || phone).trim(),
+      street: String(body.shippingAddress?.street || "").trim(),
+      city: String(body.shippingAddress?.city || "").trim(),
+      state: stateVal,
+      province: stateVal,
+      country: String(body.shippingAddress?.country || "").trim(),
+      zip: String(body.shippingAddress?.zip || "").trim(),
+      nif: String(body.shippingAddress?.nif || "").trim(),
+    };
+
+    const requestedPaymentMethod = String(body.paymentMethod || "cod").trim();
+    let paymentMethod = "cod";
+    if (requestedPaymentMethod.toLowerCase() === "stripe") {
+      paymentMethod = "stripe";
+    } else if (isOfflinePakistaniPayment(requestedPaymentMethod)) {
+      paymentMethod = requestedPaymentMethod;
+    }
+    const paymentStatus = "unpaid";
+    const initialStatus = "pending";
+
+    const { byProduct, byVariant } = aggregateInventoryNeeds(itemsIn);
+    const productIds = [
+      ...new Set([...byProduct.keys(), ...[...byVariant.keys()].map((k) => k.split("::")[0])]),
+    ];
+    const products = await Product.find({ _id: { $in: productIds }, status: "active" }).lean();
+    if (products.length !== productIds.length) {
+      return NextResponse.json({ success: false, error: "One or more products are unavailable." }, { status: 400 });
+    }
+
+    const byId = new Map(products.map((p) => [p._id.toString(), p]));
+    for (const [pid, need] of byProduct.entries()) {
+      const p = byId.get(pid);
+      if (!p) continue;
+      if ((p.variants || []).length) continue;
+      if (p.inventory?.trackInventory && (Number(p.inventory.quantity) || 0) < need) {
+        return NextResponse.json(
+          { success: false, error: `Insufficient stock for ${p.name}.` },
+          { status: 400 }
+        );
+      }
+    }
+    for (const [key, need] of byVariant.entries()) {
+      const [pid, vid] = key.split("::");
+      const p = byId.get(pid);
+      if (!p) continue;
+      const v = findVariantOnProduct(p, vid);
+      if (!v || v.isAvailable === false) {
+        return NextResponse.json(
+          { success: false, error: `Variant unavailable for ${p?.name || "product"}.` },
+          { status: 400 }
+        );
+      }
+      if (v.trackStock !== false && (Number(v.stock) || 0) < need) {
+        return NextResponse.json(
+          { success: false, error: `Insufficient stock for ${p.name} (${(v.combination || []).join(" / ")}).` },
+          { status: 400 }
+        );
+      }
+    }
+
+    const lineItems = [];
+    let subtotal = 0;
+    let totalOrderWeightKg = 0;
+    let totalSurcharge = 0;
+    const categoryIdSet = new Set();
+
+    for (const raw of itemsIn) {
+      const pid = String(raw.productId || "").trim();
+      if (!mongoose.Types.ObjectId.isValid(pid)) continue;
+      const p = byId.get(pid);
+      if (!p) continue;
+      const qty = Math.max(1, Math.min(99, parseInt(raw.quantity, 10) || 1));
+      (p.categories || []).forEach((c) => categoryIdSet.add(String(c)));
+      const hasLegacyVariants = legacyVariantsLength(p) > 0;
+      const variantIdStr = String(raw.variantId || "").trim();
+      const variantDoc =
+        variantIdStr && mongoose.Types.ObjectId.isValid(variantIdStr)
+          ? findVariantOnProduct(p, variantIdStr)
+          : null;
+      const modernPick = cartHasModernSelection(raw);
+      const resolvedCombo = resolveCombinationFromCart(p, raw);
+
+      if (hasLegacyVariants && !variantDoc) {
+        if (resolvedCombo) {
+          if (p.inventory?.trackInventory !== false) {
+            const cs = resolvedCombo.stock;
+            if (cs !== undefined && cs !== null && Number.isFinite(Number(cs)) && Number(cs) < qty) {
+              return NextResponse.json(
+                {
+                  success: false,
+                  error: `Insufficient stock for "${p.name}" for the selected options.`,
+                },
+                { status: 400 }
+              );
+            }
+          }
+        } else if (!modernPick) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Please select options for "${p.name}" before checkout.`,
+            },
+            { status: 400 }
+          );
+        }
+      }
+      const variation = String(raw.variationLabel || "").trim().slice(0, 200);
+      const selectedVariation = normalizeSelectedVariation(raw.selectedVariation);
+      if (selectedVariation?.choices?.length) {
+        for (const c of selectedVariation.choices) {
+          const opt = findOptionOnProduct(p, c);
+          if (opt && typeof opt.stock === "number" && Number.isFinite(opt.stock) && opt.stock < qty) {
+            return NextResponse.json(
+              { success: false, error: `Insufficient stock for ${p.name} (${c.optionValue}).` },
+              { status: 400 }
+            );
+          }
+        }
+      }
+      const { unitPrice, perUnitWeightKg, surcharge, variant: lineVariant } = lineUnitPriceAndShipping(
+        p,
+        raw,
+        selectedVariation
+      );
+      const matchedWeightTotal = getOrderWeight([
+        {
+          shipping: { weight: p?.shipping?.weight ?? p?.inventory?.weight ?? 0 },
+          weight: raw?.weight ?? perUnitWeightKg,
+          matchedCombination: raw?.matchedCombination || null,
+          quantity: qty,
+        },
+      ]);
+      const lineWeightKg = matchedWeightTotal > 0 ? matchedWeightTotal : perUnitWeightKg * qty;
+      totalOrderWeightKg += lineWeightKg;
+      totalSurcharge += surcharge * qty;
+      const img =
+        String(raw.image || "").trim() ||
+        (lineVariant?.image?.url ? String(lineVariant.image.url) : "") ||
+        p.media?.images?.find((i) => i.isMain)?.url ||
+        p.media?.images?.[0]?.url ||
+        "";
+      const lineTotal = Math.round(unitPrice * qty * 100) / 100;
+      subtotal += lineTotal;
+      lineItems.push({
+        productId: p._id,
+        name: p.name,
+        image: img,
+        variation,
+        selectedVariation,
+        calculatedWeight: Math.round(perUnitWeightKg * 1000) / 1000,
+        estimatedShipping: Math.max(0, Number(raw.estimatedShipping) || 0),
+        customMeasurements: normalizeMeasurements(raw.customMeasurements),
+        quantity: qty,
+        unitPrice: unitPrice,
+        total: lineTotal,
+      });
+    }
+
+    if (!lineItems.length) {
+      return NextResponse.json({ success: false, error: "No valid line items." }, { status: 400 });
+    }
+
+    subtotal = Math.round(subtotal * 100) / 100;
+    let discount = 0;
+    let couponCode = "";
+
+    const code = String(body.couponCode || "").trim().toUpperCase();
+    if (code) {
+      const coupon = await Coupon.findOne({ code }).lean();
+      const catIds = [...categoryIdSet];
+      const r = computeCouponDiscount(coupon, subtotal, catIds);
+      if (r.valid) {
+        discount = r.discount;
+        couponCode = code;
+        await Coupon.updateOne({ _id: coupon._id }, { $inc: { usedCount: 1 } });
+      }
+    }
+
+    const settingsDoc =
+      (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
+      (await Settings.findOne({}).lean());
+    const storePayment = normalizeShippingRules(settingsDoc?.storePayment);
+    const whatsappNumber = String(settingsDoc?.whatsapp?.number || "").trim();
+
+    const activeZones = await ShippingZone.find({ status: "active" }).sort({ sortOrder: 1 }).lean();
+    const totalWeightGrams = Math.max(0, Math.round(totalOrderWeightKg * 1000));
+    const orderSubtotalAfterDiscount = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
+    const country = String(shippingAddress.country || "Pakistan").trim();
+    const city = String(shippingAddress.city || "").trim();
+    const province = String(shippingAddress.state || shippingAddress.province || "").trim();
+    const quote = quoteShipping(
+      activeZones,
+      country,
+      city,
+      totalWeightGrams,
+      orderSubtotalAfterDiscount,
+      province
+    );
+    let shippingCost = 0;
+    let shippingMethod = "";
+    let shippingZoneLabel = "";
+
+    const zoneShippingCost = Math.round(Math.max(0, Number(quote.shippingCost) || 0) * 100) / 100;
+    const rulesResult = applyShippingRules({
+      zoneShippingCost,
+      cartTotal: orderSubtotalAfterDiscount,
+      paymentMethod,
+      zoneIsFree: Boolean(quote.isFree),
+      storePayment,
+    });
+    shippingCost = Math.round(rulesResult.shippingCost * 100) / 100;
+    shippingMethod = "Weight-based";
+    shippingZoneLabel = String(quote.zoneName || "").trim();
+    if (rulesResult.freeReason === "order_above") {
+      shippingZoneLabel = shippingZoneLabel
+        ? `${shippingZoneLabel} (Free delivery — order above threshold)`
+        : "Free delivery — order above threshold";
+    } else if (rulesResult.freeReason === "advance_payment") {
+      shippingZoneLabel = shippingZoneLabel
+        ? `${shippingZoneLabel} (Free delivery — advance payment)`
+        : "Free delivery — advance payment";
+    } else if (quote.isFree || rulesResult.isFree) {
+      shippingZoneLabel = shippingZoneLabel ? `${shippingZoneLabel} (Free Shipping)` : "Free Shipping";
+    }
+    const advanceNote = buildAdvancePaymentOrderNote(storePayment, whatsappNumber);
+    const statusNotes = [];
+    if (rulesResult.freeReason === "advance_payment") {
+      statusNotes.push("Free delivery — advance payment");
+    } else if (rulesResult.freeReason === "order_above") {
+      statusNotes.push(`Free delivery — order above Rs. ${storePayment.freeShippingOnOrderAbove}`);
+    }
+    if (paymentMethod === "cod" && shippingCost > 0 && advanceNote) {
+      statusNotes.push(advanceNote);
+    }
+    const placedNote = statusNotes.length ? statusNotes.join(" | ") : "Order placed";
+    const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+
+    let customerId = null;
+    let existing = email
+      ? await Customer.findOne({ email }).lean()
+      : await Customer.findOne({ phone }).lean();
+    if (!existing && customerRecordEmail) {
+      existing = await Customer.findOne({ email: customerRecordEmail }).lean();
+    }
+    if (existing?.isActive === false) {
+      return NextResponse.json({ success: false, error: "This account cannot place orders." }, { status: 403 });
+    }
+    if (existing) {
+      customerId = existing._id;
+      await Customer.updateOne(
+        { _id: existing._id },
+        {
+          $set: {
+            name,
+            phone,
+            ...(email ? { email } : {}),
+            address: {
+              street: shippingAddress.street,
+              city: shippingAddress.city,
+              state: shippingAddress.state,
+              country: shippingAddress.country,
+              zip: shippingAddress.zip,
+            },
+          },
+        }
+      );
+    } else {
+      const created = await Customer.create({
+        name,
+        email: customerRecordEmail,
+        phone,
+        address: {
+          street: shippingAddress.street,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          country: shippingAddress.country,
+          zip: shippingAddress.zip,
+        },
+      });
+      customerId = created._id;
+    }
+
+    const orderNumber = await allocateOrderNumber();
+
+    for (const [key, qty] of byVariant.entries()) {
+      const [pid, vid] = key.split("::");
+      const p = byId.get(pid);
+      const v = findVariantOnProduct(p, vid);
+      if (!v || v.trackStock === false) continue;
+      const oid = new mongoose.Types.ObjectId(vid);
+      const r = await Product.updateOne(
+        { _id: pid },
+        { $inc: { "variants.$[el].stock": -qty } },
+        { arrayFilters: [{ "el._id": oid, "el.stock": { $gte: qty } }] }
+      );
+      if (r.matchedCount === 0 || r.modifiedCount === 0) {
+        return NextResponse.json({ success: false, error: "Stock changed while checking out. Try again." }, { status: 409 });
+      }
+    }
+
+    for (const raw of itemsIn) {
+      const pid = String(raw.productId || "").trim();
+      if (!mongoose.Types.ObjectId.isValid(pid)) continue;
+      const p = byId.get(pid);
+      if (!p) continue;
+      const qty = Math.max(1, Math.min(99, parseInt(raw.quantity, 10) || 1));
+      const variantIdStr = String(raw.variantId || "").trim();
+      const variantDoc =
+        variantIdStr && mongoose.Types.ObjectId.isValid(variantIdStr)
+          ? findVariantOnProduct(p, variantIdStr)
+          : null;
+      if (variantDoc) continue;
+      const combo = resolveCombinationFromCart(p, raw);
+      if (!combo?._id) continue;
+      if (p.inventory?.trackInventory === false) continue;
+      const cs = combo.stock;
+      if (cs === undefined || cs === null || !Number.isFinite(Number(cs))) continue;
+      const oid = combo._id;
+      const r = await Product.updateOne(
+        { _id: p._id },
+        { $inc: { "variationCombinations.$[el].stock": -qty } },
+        { arrayFilters: [{ "el._id": oid, "el.stock": { $gte: qty } }] }
+      );
+      if (r.matchedCount === 0 || r.modifiedCount === 0) {
+        return NextResponse.json({ success: false, error: "Stock changed while checking out. Try again." }, { status: 409 });
+      }
+    }
+
+    for (const [pid, qty] of byProduct.entries()) {
+      const p = byId.get(pid);
+      if (!p?.inventory?.trackInventory) continue;
+      if ((p.variants || []).length) continue;
+      const updated = await Product.findOneAndUpdate(
+        { _id: pid, "inventory.quantity": { $gte: qty } },
+        { $inc: { "inventory.quantity": -qty } },
+        { new: true }
+      ).lean();
+      if (!updated) {
+        return NextResponse.json({ success: false, error: "Stock changed while checking out. Try again." }, { status: 409 });
+      }
+    }
+
+    const order = await Order.create({
+      orderNumber,
+      customer: {
+        name,
+        email,
+        phone,
+        customerId,
+      },
+      items: lineItems,
+      pricing: {
+        subtotal,
+        discount,
+        shippingCost,
+        shippingMethod,
+        shippingZone: shippingZoneLabel,
+        totalWeightGrams,
+        total,
+      },
+      orderStatus: initialStatus,
+      paymentStatus,
+      paymentMethod,
+      shippingAddress,
+      couponCode,
+      statusHistory: [
+        {
+          status: initialStatus,
+          changedBy: "Store",
+          note: placedNote,
+        },
+      ],
+      timeline: [
+        {
+          status: "placed",
+          title: "Order Placed",
+          description: `Order #${orderNumber} received successfully`,
+          timestamp: new Date(),
+          by: "customer",
+        },
+      ],
+    });
+
+    if (paymentMethod === "cod" && isValidCustomerEmail(order.customer?.email)) {
+      try {
+        const storeName = settingsDoc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+        const logoUrl = settingsDoc?.general?.logo?.url || "";
+        const { subject, html: emailHtml } = await resolveOrderConfirmationEmail(order, storeName, logoUrl);
+        const sent = await sendEmail({
+          to: order.customer.email,
+          subject,
+          html: emailHtml,
+        });
+        if (sent?.success) {
+          await recordEmailSent(order._id, "order_confirmation", subject, order.customer.email);
+        }
+      } catch (emailError) {
+        console.error("Order confirmation email failed:", emailError);
+      }
+    }
+
+    sendAdminOrderNotification(order).catch((e) =>
+      console.error("Admin order notification failed:", e)
+    );
+
+    return NextResponse.json({
+      success: true,
+      orderId: order._id.toString(),
+      orderNumber: order.orderNumber,
+      total,
+      paymentStatus,
+      order: {
+        _id: order._id.toString(),
+        orderNumber: order.orderNumber,
+        pricing: order.pricing,
+      },
+    });
+  } catch (e) {
+    if (e.code === 11000) {
+      return NextResponse.json({ success: false, error: "Could not save customer." }, { status: 400 });
+    }
+    return NextResponse.json({ success: false, error: e.message || "Checkout failed." }, { status: 500 });
+  }
+}

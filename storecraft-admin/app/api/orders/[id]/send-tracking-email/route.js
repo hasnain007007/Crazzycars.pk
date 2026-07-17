@@ -1,0 +1,70 @@
+import { NextResponse } from "next/server";
+import mongoose from "mongoose";
+import { logActivity } from "@/lib/auth";
+import { dbConnect } from "@/lib/db";
+import { getRequestUser } from "@/lib/getRequestUser";
+import { buildShippingEmail, recordEmailSent, sendEmail } from "@/lib/email";
+import Order from "@/lib/models/Order.model";
+import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
+import { requestIp } from "@/lib/requestIp";
+
+export async function POST(request, context) {
+  try {
+    const user = getRequestUser(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+    const { id } = await context.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });
+    }
+    await dbConnect();
+    const settingsDoc = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean();
+    const storeName = settingsDoc?.general?.storeName || "Store";
+    const logoUrl = settingsDoc?.general?.logo?.url || "";
+    const order = await Order.findById(id).lean();
+    if (!order) {
+      return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
+    }
+    if (!order.customer?.email) {
+      return NextResponse.json({ success: false, error: "Customer email missing." }, { status: 400 });
+    }
+
+    const carrier = order.tracking?.carrier || "Carrier";
+    const trackingNumber = order.tracking?.number || "";
+    const emailHtml = buildShippingEmail(order, storeName, logoUrl);
+    const subject = `Your order ${order.orderNumber} has shipped! 🚚`;
+    const sent = await sendEmail({
+      to: order.customer.email,
+      subject,
+      html: emailHtml,
+    });
+    if (!sent?.success) {
+      return NextResponse.json(
+        { success: false, error: sent?.error || "Failed to send email." },
+        { status: 502 }
+      );
+    }
+    await recordEmailSent(id, "shipping_notification", subject, order.customer.email);
+
+    await Order.updateOne({ _id: id }, { $set: { "tracking.notifiedAt": new Date() } });
+
+    await logActivity({
+      user: user.userId,
+      userName: user.name || "Admin",
+      action: `Tracking email sent for ${order.orderNumber}`,
+      resource: "Order",
+      resourceId: id,
+      details: { to: order.customer.email, trackingNumber, carrier },
+      type: "update",
+      ip: requestIp(request),
+    });
+
+    return NextResponse.json({ success: true, message: "Email sent" });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to prepare email." },
+      { status: 500 }
+    );
+  }
+}

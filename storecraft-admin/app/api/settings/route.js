@@ -1,0 +1,196 @@
+import { NextResponse } from "next/server";
+import { logActivity } from "@/lib/auth";
+import { dbConnect } from "@/lib/db";
+import { getRequestUser } from "@/lib/getRequestUser";
+import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
+import { requestIp } from "@/lib/requestIp";
+
+function mergeNested(target, patch) {
+  if (!patch || typeof patch !== "object") return;
+  for (const key of Object.keys(patch)) {
+    if (patch[key] != null && typeof patch[key] === "object" && !Array.isArray(patch[key]) && !(patch[key] instanceof Date)) {
+      if (!target[key]) target[key] = {};
+      mergeNested(target[key], patch[key]);
+    } else {
+      target[key] = patch[key];
+    }
+  }
+}
+
+/** Admin saves href; storefront may read url — keep both in sync. */
+function normalizeFooterLinkArrays(footer) {
+  if (!footer || typeof footer !== "object") return footer;
+  for (const key of ["shopLinks", "customerCareLinks"]) {
+    if (!Array.isArray(footer[key])) continue;
+    footer[key] = footer[key].map((link) => {
+      if (!link || typeof link !== "object") return link;
+      const url = String(link.url || link.href || "").trim();
+      const href = String(link.href || link.url || "").trim();
+      const path = url || href;
+      return { ...link, url: path, href: path };
+    });
+  }
+  return footer;
+}
+
+export async function GET(request) {
+  try {
+    if (!getRequestUser(request)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+    await dbConnect();
+    let doc = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY });
+    if (!doc) {
+      doc = await Settings.create({ singletonKey: SETTINGS_SINGLETON_KEY });
+    }
+    const settings = doc.toObject();
+    return NextResponse.json({
+      success: true,
+      settings,
+      data: settings,
+      general: settings.general || {},
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to load settings." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const user = getRequestUser(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+    await dbConnect();
+    let doc = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY });
+    if (!doc) {
+      doc = await Settings.create({ singletonKey: SETTINGS_SINGLETON_KEY });
+    }
+    const body = await request.json();
+    if (body.general) {
+      if (!doc.general) doc.set("general", {});
+      mergeNested(doc.general, body.general);
+    }
+    if (body.notifications) mergeNested(doc.notifications, body.notifications);
+    if (body.payment !== undefined) {
+      if (!doc.payment) doc.payment = {};
+      mergeNested(doc.payment, body.payment);
+      doc.markModified("payment");
+    }
+    if (body.pakistaniPaymentMethods !== undefined) {
+      if (!doc.pakistaniPaymentMethods) doc.set("pakistaniPaymentMethods", {});
+      mergeNested(doc.pakistaniPaymentMethods, body.pakistaniPaymentMethods);
+      doc.markModified("pakistaniPaymentMethods");
+    }
+    if (body.storePayment !== undefined) {
+      if (!doc.storePayment) doc.set("storePayment", {});
+      mergeNested(doc.storePayment, body.storePayment);
+      doc.markModified("storePayment");
+    }
+    if (body.courier !== undefined) {
+      if (!doc.courier) doc.set("courier", {});
+      mergeNested(doc.courier, body.courier);
+      doc.markModified("courier");
+    }
+    if (body.seo !== undefined && body.seo !== null && typeof body.seo === "object") {
+      if (!doc.seo) doc.set("seo", {});
+      mergeNested(doc.seo, body.seo);
+      doc.markModified("seo");
+    }
+    if (body.emailTemplates) mergeNested(doc.emailTemplates, body.emailTemplates);
+    if (body.footer) {
+      normalizeFooterLinkArrays(body.footer);
+      if (!doc.footer) doc.set("footer", {});
+      mergeNested(doc.footer, body.footer);
+      doc.markModified("footer");
+    }
+    if (body.storefront != null && typeof body.storefront === "object") {
+      if (!doc.storefront) doc.storefront = {};
+      mergeNested(doc.storefront, body.storefront);
+    }
+    if (body.orderNumber) {
+      if (!doc.orderNumber) doc.orderNumber = {};
+      mergeNested(doc.orderNumber, body.orderNumber);
+    }
+    if (body.aboutPage != null && typeof body.aboutPage === "object") {
+      doc.aboutPage = body.aboutPage;
+      doc.markModified("aboutPage");
+    }
+    if (body.contactPage !== undefined) {
+      doc.contactPage = body.contactPage;
+      doc.markModified("contactPage");
+    }
+    if (body.whatsapp !== undefined) {
+      doc.whatsapp = body.whatsapp;
+      doc.markModified("whatsapp");
+    }
+    if (body.whatsappTemplates !== undefined) {
+      if (!doc.whatsappTemplates) doc.set("whatsappTemplates", {});
+      mergeNested(doc.whatsappTemplates, body.whatsappTemplates);
+      doc.markModified("whatsappTemplates");
+    }
+    if (body.announcementBar !== undefined) {
+      doc.announcementBar = body.announcementBar;
+      doc.markModified("announcementBar");
+    }
+    if (body.trustBadges !== undefined) {
+      doc.trustBadges = body.trustBadges;
+      doc.markModified("trustBadges");
+    }
+    if (body.brandStory !== undefined) {
+      doc.brandStory = body.brandStory;
+      doc.markModified("brandStory");
+    }
+    if (body.megaMenu !== undefined) {
+      doc.megaMenu = body.megaMenu;
+      doc.markModified("megaMenu");
+    }
+    if (body.productBadges !== undefined) {
+      doc.productBadges = body.productBadges;
+      doc.markModified("productBadges");
+    }
+    if (body.checkout !== undefined) {
+      doc.checkout = body.checkout;
+      doc.markModified("checkout");
+    }
+    if (body.homepageSettings !== undefined) {
+      doc.homepageSettings = body.homepageSettings;
+      doc.markModified("homepageSettings");
+    }
+    doc.markModified("general");
+    doc.markModified("notifications");
+    doc.markModified("payment");
+    doc.markModified("pakistaniPaymentMethods");
+    doc.markModified("storePayment");
+    doc.markModified("courier");
+    doc.markModified("seo");
+    doc.markModified("emailTemplates");
+    doc.markModified("footer");
+    doc.markModified("storefront");
+    doc.markModified("orderNumber");
+    if (body.whatsappTemplates !== undefined) {
+      doc.markModified("whatsappTemplates");
+    }
+    await doc.save();
+
+    await logActivity({
+      user: user.userId,
+      userName: user.name || "Admin",
+      action: "Settings updated",
+      resource: "Settings",
+      resourceId: SETTINGS_SINGLETON_KEY,
+      type: "settings",
+      ip: requestIp(request),
+    });
+
+    return NextResponse.json({ success: true, settings: doc.toObject() });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error.message || "Update failed." },
+      { status: 500 }
+    );
+  }
+}
