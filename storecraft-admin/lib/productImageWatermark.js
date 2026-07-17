@@ -21,28 +21,43 @@ export function normalizeProductImageWatermark(raw) {
   };
 }
 
+function escapeXml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+const WHITE_RE = /^(#fff(fff)?|white)$/i;
+
+/**
+ * Tiled diagonal watermark (gulautos.pk style): the text repeats across the
+ * whole image, rotated, in a subtle gray. Returns a style for a full-cover
+ * overlay div (no text content needed).
+ */
 export function getWatermarkOverlayStyle(watermark) {
-  const position = watermark?.position || "bottom-right";
-  const style = {
+  const label = escapeXml(String(watermark?.text || "").toUpperCase());
+  const fontSize = Math.max(10, Math.min(28, Number(watermark?.fontSize) || 18));
+  const rawColor = String(watermark?.color || "#FFFFFF").trim();
+  // Tiled white-on-white is invisible; fall back to the reference gray.
+  const fill = WHITE_RE.test(rawColor) ? "#8A8A8A" : rawColor;
+  const fillOpacity = Math.min(0.4, Number(watermark?.opacity ?? 0.7));
+
+  const tileW = Math.max(140, Math.round(label.length * fontSize * 0.72) + fontSize * 3);
+  const tileH = Math.round(tileW * 0.72);
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${tileW}" height="${tileH}">` +
+    `<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" ` +
+    `transform="rotate(-30 ${tileW / 2} ${tileH / 2})" ` +
+    `font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="600" ` +
+    `letter-spacing="${Math.round(fontSize * 0.3)}" fill="${fill}" fill-opacity="${fillOpacity}">` +
+    `${label}</text></svg>`;
+
+  return {
     position: "absolute",
-    color: watermark?.color || "#FFFFFF",
-    fontSize: `${watermark?.fontSize || 24}px`,
-    fontWeight: 700,
-    opacity: watermark?.opacity ?? 0.7,
-    textShadow: "1px 1px 3px rgba(0, 0, 0, 0.8)",
-    fontFamily: "Rajdhani, sans-serif",
+    inset: 0,
+    backgroundImage: `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`,
+    backgroundRepeat: "repeat",
+    backgroundSize: `${tileW}px ${tileH}px`,
     pointerEvents: "none",
     userSelect: "none",
-    whiteSpace: "nowrap",
     zIndex: 2,
   };
-  if (position.includes("bottom")) style.bottom = "10px";
-  else style.top = "10px";
-  if (position.includes("right")) style.right = "10px";
-  else if (position.includes("left")) style.left = "10px";
-  else {
-    style.left = "50%";
-    style.transform = "translateX(-50%)";
-  }
-  return style;
 }

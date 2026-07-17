@@ -6,5 +6,5 @@ export function WatermarkCssOverlay({ watermark }) {
   if (!watermark?.enabled || !watermark?.text) {
     return null;
   }
-  return <div style={getWatermarkOverlayStyle(watermark)}>{watermark.text}</div>;
+  return <div style={getWatermarkOverlayStyle(watermark)} aria-hidden />;
 }

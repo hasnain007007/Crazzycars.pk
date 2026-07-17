@@ -23,7 +23,7 @@ export function WatermarkedImage({ src, alt, watermark, className, imgClassName,
         className={imgClassName}
         style={{ width: "100%", display: "block", ...imgStyle }}
       />
-      <div style={getWatermarkOverlayStyle(watermark)}>{watermark.text}</div>
+      <div style={getWatermarkOverlayStyle(watermark)} aria-hidden />
     </div>
   );
 }
