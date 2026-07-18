@@ -197,7 +197,7 @@ const settingsSchema = new mongoose.Schema(
         subtitle: {
           type: String,
           default:
-            `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with premium seat covers, floor mats, steering wraps, and car care essentials — delivered across Pakistan.`,
+            `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
         },
       },
       story: {
@@ -211,7 +211,7 @@ const settingsSchema = new mongoose.Schema(
         paragraph2: {
           type: String,
           default:
-            "From seat covers and floor mats to LED lights and organizers, every product is chosen for real-world use in Pakistani conditions — heat, dust, and daily driving.",
+            "From bumper splitters and spoilers to LED lights and body kits, every product is chosen for real-world use in Pakistani conditions — heat, dust, and daily driving.",
         },
         paragraph3: {
           type: String,
@@ -500,7 +500,7 @@ Thank you! 🚗✨`,
       description: {
         type: String,
         default:
-          "Crazzycars.pk was founded in Gujranwala to bring premium seat covers, floor mats, steering wraps, and car care products to drivers across Pakistan — with COD nationwide.",
+          "Crazzycars.pk was founded in Gujranwala to bring splitters, LED lighting, body kits, and carbon fiber accessories to drivers across Pakistan — with COD nationwide.",
       },
       buttonText: { type: String, default: "Shop Car Accessories" },
       buttonLink: { type: String, default: "/about" },
