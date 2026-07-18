@@ -327,7 +327,7 @@ const settingsSchema = new mongoose.Schema(
           type: String,
           default: `Assalam o Alaikum {customerName}! 🚗
 
-Your order from *Crazzycars.pk* has been confirmed!
+Your order from *Crazzycars.pk* is ready — please confirm:
 
 📦 *Order:* #{orderNumber}
 📅 *Date:* {orderDate}
@@ -351,6 +351,15 @@ Shipping: {shipping}
 🕐 Estimated Delivery: 2-4 business days
 {trackingSection}
 Need help? Call us: 📞 {storePhone}
+
+————————————
+📋 *Confirm your order (tap a link):*
+✅ *Confirm order:* {confirmOrderUrl}
+❌ *Not confirm / Cancel:* {cancelOrderUrl}
+
+Or reply:
+1️⃣ CONFIRM
+2️⃣ CANCEL
 
 Thank you for shopping with Crazzycars.pk! 🚗✨`,
         },

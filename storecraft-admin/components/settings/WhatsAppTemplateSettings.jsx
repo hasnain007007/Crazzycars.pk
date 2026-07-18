@@ -30,6 +30,8 @@ const TEMPLATE_CONFIG = [
       "trackingUrl",
       "storePhone",
       "storeName",
+      "confirmOrderUrl",
+      "cancelOrderUrl",
     ],
   },
   {

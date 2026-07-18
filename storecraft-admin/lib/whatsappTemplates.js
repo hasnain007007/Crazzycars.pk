@@ -5,7 +5,7 @@ export const DEFAULT_WHATSAPP_TEMPLATES = {
     enabled: true,
     template: `Assalam o Alaikum {customerName}! 🚗
 
-Your order from *Crazzycars.pk* has been confirmed!
+Your order from *Crazzycars.pk* is ready — please confirm:
 
 📦 *Order:* #{orderNumber}
 📅 *Date:* {orderDate}
@@ -29,6 +29,15 @@ Shipping: {shipping}
 🕐 Estimated Delivery: 2-4 business days
 {trackingSection}
 Need help? Call us: 📞 {storePhone}
+
+————————————
+📋 *Confirm your order (tap a link):*
+✅ *Confirm order:* {confirmOrderUrl}
+❌ *Not confirm / Cancel:* {cancelOrderUrl}
+
+Or reply:
+1️⃣ CONFIRM
+2️⃣ CANCEL
 
 Thank you for shopping with Crazzycars.pk! 🚗✨`,
   },
@@ -187,7 +196,7 @@ export function resolveTemplate(settings, key) {
   };
 }
 
-export function buildCustomerOrderVariables(order, settings = {}) {
+export function buildCustomerOrderVariables(order, settings = {}, extras = {}) {
   const addr = order?.shippingAddress || {};
   const pricing = order?.pricing || {};
   const subtotal = Number(pricing.subtotal ?? order?.subtotal ?? 0);
@@ -195,6 +204,12 @@ export function buildCustomerOrderVariables(order, settings = {}) {
   const total = Number(pricing.total ?? order?.total ?? 0);
   const storeName = settings?.general?.storeName || "Crazzycars.pk";
   const storePhone = settings?.general?.phone || "";
+  const orderId = order?.id || order?._id || "";
+  const base =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || "";
+  const fallbackUrl = orderId ? `${String(base).replace(/\/$/, "")}/orders/${orderId}` : "";
 
   return {
     customerName: customerNameFromOrder(order),
@@ -215,6 +230,8 @@ export function buildCustomerOrderVariables(order, settings = {}) {
     trackingUrl: String(order?.trackingUrl || order?.tracking?.url || ""),
     storePhone,
     storeName,
+    confirmOrderUrl: String(extras.confirmOrderUrl || extras.confirmUrl || fallbackUrl),
+    cancelOrderUrl: String(extras.cancelOrderUrl || extras.cancelUrl || fallbackUrl),
   };
 }
 
@@ -267,10 +284,10 @@ export function buildOrderShippedVariables(order, settings = {}, overrides = {})
   };
 }
 
-export function getCustomerOrderWhatsAppMessage(order, settings) {
+export function getCustomerOrderWhatsAppMessage(order, settings, extras = {}) {
   const { enabled, template } = resolveTemplate(settings, "customerOrderConfirmation");
   if (!enabled) return "";
-  return buildWhatsAppMessage(template, buildCustomerOrderVariables(order, settings));
+  return buildWhatsAppMessage(template, buildCustomerOrderVariables(order, settings, extras));
 }
 
 export function getAdminNewOrderWhatsAppMessage(order, settings, extras = {}) {

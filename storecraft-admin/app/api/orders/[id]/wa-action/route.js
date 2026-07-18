@@ -81,12 +81,18 @@ export async function GET(request, { params }) {
     const already = order.orderStatus === nextStatus;
     if (!already) {
       order.orderStatus = nextStatus;
+      if (action === "confirm") {
+        order.codConfirmed = true;
+      }
       if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
       order.statusHistory.push({
         status: nextStatus,
-        changedBy: "WhatsApp link",
+        changedBy: "WhatsApp customer link",
         changedAt: new Date(),
-        note: action === "confirm" ? "Confirmed via WhatsApp action link" : "Cancelled via WhatsApp action link",
+        note:
+          action === "confirm"
+            ? "Customer confirmed order via WhatsApp link"
+            : "Customer cancelled / did not confirm via WhatsApp link",
       });
       const statusInfo = ORDER_STATUS_TIMELINE_TITLES[nextStatus] || {
         title: nextStatus,
@@ -96,22 +102,29 @@ export async function GET(request, { params }) {
       order.timeline.push({
         status: nextStatus,
         title: statusInfo.title,
-        description: statusInfo.description || `Updated via WhatsApp ${action} link`,
+        description:
+          action === "confirm"
+            ? "Customer confirmed via WhatsApp"
+            : "Customer cancelled via WhatsApp",
         timestamp: new Date(),
-        by: "admin",
+        by: "customer",
       });
       order.markModified("timeline");
       await order.save();
     }
 
-    const adminUrl = `${String(process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "")}/orders/${id}`;
+    const storeUrl = String(process.env.NEXT_PUBLIC_STORE_URL || "").replace(/\/$/, "");
     const label = action === "confirm" ? "confirmed" : "cancelled";
     return new NextResponse(
       htmlPage({
         title: already ? `Already ${label}` : `Order ${label}`,
-        body: `Order <strong>${escapeHtml(order.orderNumber)}</strong> is now <strong>${escapeHtml(nextStatus)}</strong>.${
-          adminUrl
-            ? ` <a href="${escapeHtml(adminUrl)}">Open in admin</a>`
+        body: `Shukriya! Order <strong>${escapeHtml(order.orderNumber)}</strong> is now <strong>${escapeHtml(nextStatus)}</strong>.${
+          action === "confirm"
+            ? " We will process your order shortly."
+            : " Your order has been cancelled."
+        }${
+          storeUrl
+            ? ` <a href="${escapeHtml(storeUrl)}">Back to Crazzycars.pk</a>`
             : ""
         }`,
         ok: true,

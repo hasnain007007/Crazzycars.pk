@@ -142,22 +142,43 @@ export function OrderWhatsAppButton({ order, onNotified, settings: settingsProp 
   }, [settingsProp]);
 
   const rawPhone = getCustomerOrderPhone(order);
-  const plainMessage = order
-    ? getCustomerOrderWhatsAppMessage(order, settings || {}) ||
-      getLegacyWhatsAppMessage(order)
-    : "";
-  const waUrl = buildWaLink(rawPhone, plainMessage);
   const orderApiId = order?.id || order?._id;
 
-  function openCustomerWhatsApp() {
-    if (!waUrl) return;
-    openWhatsApp(rawPhone, plainMessage);
-    void recordNotified();
+  async function openCustomerWhatsApp() {
+    if (!rawPhone || !order) return;
+    setLoading(true);
+    try {
+      let extras = {};
+      if (orderApiId) {
+        try {
+          const res = await fetch(`/api/orders/${orderApiId}/wa-links`, { credentials: "include" });
+          const json = await res.json();
+          if (json.success) {
+            extras = {
+              confirmUrl: json.confirmUrl,
+              cancelUrl: json.cancelUrl,
+              confirmOrderUrl: json.confirmUrl,
+              cancelOrderUrl: json.cancelUrl,
+            };
+          }
+        } catch {
+          /* optional */
+        }
+      }
+      const msg =
+        getCustomerOrderWhatsAppMessage(order, settings || {}, extras) ||
+        getLegacyWhatsAppMessage(order);
+      if (!msg || !buildWaLink(rawPhone, msg)) return;
+      const images = (order.items || []).map((i) => i.image).filter(Boolean);
+      await openWhatsAppWithOptionalImage(rawPhone, msg, images);
+      await recordNotified();
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function recordNotified() {
     if (!orderApiId) return;
-    setLoading(true);
     try {
       await fetch(`/api/orders/${orderApiId}`, {
         method: "PUT",
@@ -169,12 +190,10 @@ export function OrderWhatsAppButton({ order, onNotified, settings: settingsProp 
       onNotified?.();
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
     }
   }
 
-  if (!waUrl) {
+  if (!rawPhone) {
     return (
       <button
         type="button"
@@ -224,7 +243,9 @@ export function OrderWhatsAppButton({ order, onNotified, settings: settingsProp 
         {loading ? "Sending…" : done ? "✓ Opened WhatsApp" : "WhatsApp Customer"}
       </button>
       {done ? (
-        <p className="text-xs text-[#6b7280]">WhatsApp opened. Customer confirms by replying if needed.</p>
+        <p className="text-xs text-[#6b7280]">
+          Message includes Confirm / Not confirm links for the customer.
+        </p>
       ) : null}
     </div>
   );
