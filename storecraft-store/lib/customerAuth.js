@@ -48,6 +48,15 @@ export function CustomerProvider({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        const hasSession =
+          typeof document !== "undefined" &&
+          /(?:^|;\s*)(customer_token|store_token)=/.test(document.cookie || "");
+        if (!hasSession) {
+          setCustomer(null);
+          setLoading(false);
+          return;
+        }
+
         const res = await fetch("/api/customer/me", {
           credentials: "include",
           cache: "no-store",

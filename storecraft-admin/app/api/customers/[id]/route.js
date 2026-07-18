@@ -59,6 +59,7 @@ export async function GET(request, context) {
         email: customer.email,
         phone: customer.phone || "",
         address: customer.address || {},
+        addresses: Array.isArray(customer.addresses) ? customer.addresses : [],
         status: customer.status || "active",
         isActive: customer.isActive !== false,
         joinedAt: customer.createdAt,

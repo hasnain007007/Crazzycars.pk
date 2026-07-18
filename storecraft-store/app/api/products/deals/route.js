@@ -53,12 +53,22 @@ export async function GET(request) {
       ...dealsExpr(filter),
     };
     const rows = await Product.find(query)
+      .select(
+        "name slug media.images pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
+      )
       .sort({ featured: -1, createdAt: -1 })
       .limit(limit)
       .populate("categories", "name slug")
       .lean();
 
-    return NextResponse.json({ success: true, products: rows.map(serializeStoreProductSummary) });
+    return NextResponse.json(
+      { success: true, products: rows.map(serializeStoreProductSummary) },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (e) {
     return NextResponse.json({ success: false, error: e.message || "Failed to load deals." }, { status: 500 });
   }

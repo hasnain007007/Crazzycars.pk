@@ -14,9 +14,9 @@ export default function AnalyticsScripts({ settings }) {
         <>
           <Script
             src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}`}
-            strategy="afterInteractive"
+            strategy="lazyOnload"
           />
-          <Script id="ga4-init" strategy="afterInteractive">
+          <Script id="ga4-init" strategy="lazyOnload">
             {`
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
@@ -27,7 +27,7 @@ export default function AnalyticsScripts({ settings }) {
         </>
       ) : null}
       {fbPixelId ? (
-        <Script id="fb-pixel" strategy="afterInteractive">
+        <Script id="fb-pixel" strategy="lazyOnload">
           {`
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

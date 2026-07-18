@@ -217,11 +217,14 @@ export function CheckoutView() {
   const [addr, setAddr] = useState({
     street: "",
     street2: "",
+    area: "",
     city: "",
     state: "",
     country: STORE_COUNTRY,
     zip: "",
   });
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [couponHint, setCouponHint] = useState("");
   const [discountPreview, setDiscountPreview] = useState(0);
@@ -319,20 +322,68 @@ export function CheckoutView() {
           email: c.email || "",
           phone: c.phone || "",
         });
-        const a = c.address || {};
+        const list = Array.isArray(c.addresses) ? c.addresses : [];
+        setSavedAddresses(list);
+        const def =
+          list.find((a) => a.isDefault) ||
+          list[0] ||
+          (c.address && (c.address.street || c.address.city) ? c.address : null);
+        if (!def) return;
+        const province = def.province || def.state || "";
+        const street = def.street || def.address || "";
         setAddr((prev) => ({
           ...prev,
-          street: a.street || "",
-          street2: a.street2 || a.line2 || "",
-          city: a.city || "",
-          state: a.state || "",
+          street,
+          street2: def.street2 || def.line2 || "",
+          area: def.area || "",
+          city: def.city || "",
+          state: province,
           country: STORE_COUNTRY,
-          zip: a.zip || "",
+          zip: def.zip || def.postcode || "",
         }));
-        if (a.street2 || a.line2) setShowStreet2(true);
+        if (def.street2 || def.line2) setShowStreet2(true);
+        if (def._id || def.id) setSelectedAddressId(String(def._id || def.id));
+        if (def.phone) {
+          setCustomer((f) => ({ ...f, phone: f.phone || def.phone }));
+        }
+        if (def.firstName || def.lastName) {
+          setCustomer((f) => ({
+            ...f,
+            firstName: f.firstName || def.firstName || "",
+            lastName: f.lastName || def.lastName || "",
+          }));
+        }
       })
       .catch(() => {});
   }, []);
+
+  const applySavedAddress = useCallback(
+    (entry) => {
+      if (!entry) return;
+      const id = String(entry._id || entry.id || "");
+      setSelectedAddressId(id);
+      const province = entry.province || entry.state || "";
+      setAddr({
+        street: entry.street || entry.address || "",
+        street2: entry.street2 || entry.line2 || "",
+        area: entry.area || "",
+        city: entry.city || "",
+        state: province,
+        country: STORE_COUNTRY,
+        zip: entry.zip || entry.postcode || "",
+      });
+      if (entry.street2 || entry.line2) setShowStreet2(true);
+      if (entry.phone) setCustomer((f) => ({ ...f, phone: entry.phone }));
+      if (entry.firstName || entry.lastName) {
+        setCustomer((f) => ({
+          ...f,
+          firstName: entry.firstName || f.firstName,
+          lastName: entry.lastName || f.lastName,
+        }));
+      }
+    },
+    []
+  );
 
   const totalWeightGrams = useMemo(() => {
     return items.reduce((total, item) => {
@@ -818,6 +869,46 @@ export function CheckoutView() {
 
           <h2 className="mb-3 text-base font-semibold text-zinc-900">Delivery details</h2>
 
+          {savedAddresses.length > 0 ? (
+            <div style={{ marginBottom: 16 }}>
+              <label style={CHECKOUT_LABEL}>Saved addresses</label>
+              <div style={{ display: "grid", gap: 8 }}>
+                {savedAddresses.map((a) => {
+                  const id = String(a._id || a.id || "");
+                  const active = selectedAddressId === id;
+                  return (
+                    <button
+                      key={id || `${a.street}-${a.city}`}
+                      type="button"
+                      onClick={() => applySavedAddress(a)}
+                      style={{
+                        textAlign: "left",
+                        padding: "12px 14px",
+                        borderRadius: 8,
+                        border: active ? "2px solid #111111" : "1px solid #E5E5E5",
+                        background: active ? "#fafafa" : "#fff",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>
+                        {a.label || "Address"}
+                        {a.isDefault ? (
+                          <span style={{ marginLeft: 8, color: "#D72323", fontWeight: 600 }}>Default</span>
+                        ) : null}
+                      </span>
+                      <span style={{ display: "block", fontSize: 12, color: "#666", marginTop: 4, lineHeight: 1.4 }}>
+                        {[a.street || a.address, a.area, a.city, a.province || a.state].filter(Boolean).join(", ")}
+                      </span>
+                    </button>
+                  );
+                })}
+                <Link href="/account/addresses" style={{ fontSize: 12, color: "#D72323", fontWeight: 600 }}>
+                  Manage addresses →
+                </Link>
+              </div>
+            </div>
+          ) : null}
+
           <div style={{ marginBottom: 10 }}>
             <label style={CHECKOUT_LABEL}>
               Name <span style={{ color: "#dc2626" }}>*</span>
@@ -939,6 +1030,17 @@ export function CheckoutView() {
                 ⚠ {fieldErrors.address}
               </p>
             ) : null}
+          </div>
+
+          <div style={{ marginBottom: 10 }}>
+            <label style={CHECKOUT_LABEL}>Area</label>
+            <input
+              type="text"
+              value={addr.area || ""}
+              onChange={(e) => setAddr((s) => ({ ...s, area: e.target.value }))}
+              placeholder="Colony / sector / mohalla"
+              style={checkoutInputStyle(false)}
+            />
           </div>
 
           {!showStreet2 ? (

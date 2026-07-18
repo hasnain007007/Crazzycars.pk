@@ -135,6 +135,11 @@ export async function PUT(request, context) {
       if (spIn === null || spIn === "") saleNext = undefined;
       else if (spIn !== undefined && spIn !== null) saleNext = Number(spIn);
     }
+    let costNext = Number(existing.pricing?.costPerItem) || 0;
+    if (body.pricing !== undefined && body.pricing.costPerItem !== undefined) {
+      const c = body.pricing.costPerItem;
+      costNext = c === null || c === "" ? 0 : Math.max(0, Number(c) || 0);
+    }
     const saleScheduleIn = body.pricing?.saleSchedule;
     let saleScheduleNext = existing.pricing?.saleSchedule
       ? {
@@ -155,6 +160,7 @@ export async function PUT(request, context) {
     existing.pricing = {
       regularPrice,
       salePrice: saleNext,
+      costPerItem: costNext,
       saleSchedule: saleScheduleNext,
     };
 

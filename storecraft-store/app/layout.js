@@ -3,25 +3,25 @@ import { cache, Suspense } from "react";
 import { Toaster } from "react-hot-toast";
 import AnalyticsScripts from "@/components/store/AnalyticsScripts";
 import AnnouncementBar from "@/components/store/AnnouncementBar";
+import { ClientOnlyWidgets, LivePresenceClient } from "@/components/store/ClientOnlyWidgets";
 import MobileBottomNav from "@/components/store/MobileBottomNav";
 import ThemeInjector from "@/components/store/ThemeInjector";
-import { CartDrawer } from "@/components/store/CartDrawer";
 import { StoreFooter } from "@/components/store/StoreFooter";
 import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreProviders } from "@/components/store/StoreProviders";
-import WhatsAppButton from "@/components/store/WhatsAppButton";
 import { CustomerProvider } from "@/lib/customerAuth";
-import { getServerStoreSettings } from "@/lib/serverSettings";
+import { getPublicStoreSettings } from "@/lib/serverSettings";
 import { getSiteUrl, isIndexableEnvironment, sanitizeCanonicalUrl, absoluteUrl } from "@/lib/siteUrl";
 import "./globals.css";
 
-export const dynamic = "force-dynamic";
+/** Cache HTML for 60s — major TTFB win vs force-dynamic. */
+export const revalidate = 60;
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
-  weight: ["400", "500", "600"],
+  weight: ["400", "600"],
   preload: true,
 });
 
@@ -29,14 +29,14 @@ const rajdhani = Rajdhani({
   subsets: ["latin"],
   variable: "--font-rajdhani",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["600", "700"],
   preload: true,
 });
 
 const FALLBACK_DESCRIPTION =
   "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide. CrazzyCars.pk";
 
-const getLayoutSettings = cache(getServerStoreSettings);
+const getLayoutSettings = cache(getPublicStoreSettings);
 
 function robotsFromSeo(robotsTxt) {
   const s = String(robotsTxt || "index, follow").toLowerCase();
@@ -234,6 +234,7 @@ export default async function RootLayout({ children }) {
       >
         <ThemeInjector settings={settings} />
         <AnalyticsScripts settings={settings} />
+        <LivePresenceClient />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -256,8 +257,7 @@ export default async function RootLayout({ children }) {
             <Suspense fallback={null}>
               <StoreFooter settings={settings} />
             </Suspense>
-            <CartDrawer />
-            <WhatsAppButton />
+            <ClientOnlyWidgets />
             <MobileBottomNav />
           </StoreProviders>
         </CustomerProvider>

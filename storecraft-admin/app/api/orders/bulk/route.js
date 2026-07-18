@@ -55,6 +55,7 @@ export async function PUT(request) {
         "packed",
         "shipped",
         "delivered",
+        "returned",
         "cancelled",
         "refunded",
         "disputed",

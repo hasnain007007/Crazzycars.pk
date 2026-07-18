@@ -20,11 +20,15 @@ import { formatAdminPrice } from "@/lib/currency";
 const ORDER_STATUSES = [
   { value: "all", label: "All statuses" },
   { value: "pending", label: "Pending" },
+  { value: "confirmed", label: "Confirmed" },
   { value: "processing", label: "Processing" },
-  { value: "shipped", label: "Shipped" },
+  { value: "packed", label: "Packed" },
+  { value: "shipped", label: "Dispatched" },
   { value: "delivered", label: "Delivered" },
+  { value: "returned", label: "Returned" },
   { value: "cancelled", label: "Cancelled" },
   { value: "refunded", label: "Refunded" },
+  { value: "disputed", label: "Disputed" },
 ];
 
 const PIE_COLORS = ["#1d6fb8", "#22c55e", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6", "#64748b", "#ef4444"];

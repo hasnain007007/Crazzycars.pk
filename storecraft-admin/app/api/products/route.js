@@ -165,6 +165,14 @@ export async function POST(request) {
           body.pricing?.salePrice != null && body.pricing.salePrice !== ""
             ? Number(body.pricing.salePrice)
             : undefined,
+        costPerItem: Math.max(
+          0,
+          Number(
+            body.pricing?.costPerItem != null && body.pricing.costPerItem !== ""
+              ? body.pricing.costPerItem
+              : 0
+          ) || 0
+        ),
         saleSchedule: (() => {
           const ss = body.pricing?.saleSchedule;
           if (!ss) return { enabled: false };

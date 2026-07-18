@@ -1,54 +1,52 @@
-import { headers } from "next/headers";
+import { dbConnect } from "@/lib/db";
+import Product from "@/lib/models/Product.model";
+import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 
-/** Origin for server-side fetches to this app's /api routes. */
-export async function getServerStoreOrigin() {
-  const explicit = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_STORE_URL ||
-    ""
-  )
-    .trim()
-    .replace(/\/$/, "");
-  if (explicit) return explicit;
-
-  const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "")}`;
-
-  try {
-    const h = await headers();
-    const host = h.get("x-forwarded-host") || h.get("host");
-    const proto = h.get("x-forwarded-proto") || "http";
-    if (host) return `${proto}://${host}`;
-  } catch {
-    /* headers() unavailable outside request */
-  }
-
-  return "http://127.0.0.1:3000";
-}
+/** Fields needed for product cards / homepage grids. */
+export const PRODUCT_CARD_SELECT =
+  "name slug media.images pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews";
 
 /**
- * @param {Record<string, string | number | boolean | undefined>} params
+ * Direct Mongo product query for SSR (avoids self-HTTP to /api/products).
+ * @param {{ limit?: number, sort?: string, page?: number }} params
  */
 export async function fetchProductsServer(params = {}) {
-  const origin = await getServerStoreOrigin();
-  const qs = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      qs.set(key, String(value));
-    }
-  });
-
   try {
-    const res = await fetch(`${origin}/api/products?${qs.toString()}`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return { products: [], total: 0 };
-    const data = await res.json();
+    await dbConnect();
+    const limit = Math.min(48, Math.max(1, Number(params.limit) || 12));
+    const page = Math.max(1, Number(params.page) || 1);
+    const skip = (page - 1) * limit;
+    const sort = String(params.sort || "newest");
+
+    const filter = { status: { $regex: /^active$/i } };
+    let sortSpec = { createdAt: -1 };
+    if (sort === "popular" || sort === "bestselling") {
+      sortSpec = { featured: -1, "inventory.quantity": -1, createdAt: -1 };
+    } else if (sort === "price-asc") {
+      sortSpec = { "pricing.regularPrice": 1 };
+    } else if (sort === "price-desc") {
+      sortSpec = { "pricing.regularPrice": -1 };
+    }
+
+    const [rows, total] = await Promise.all([
+      Product.find(filter)
+        .select(PRODUCT_CARD_SELECT)
+        .populate("categories", "name slug")
+        .sort(sortSpec)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(filter),
+    ]);
+
     return {
-      products: Array.isArray(data?.products) ? data.products : [],
-      total: Number(data?.total) || 0,
+      products: rows.map(serializeStoreProductSummary),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit) || 1,
     };
-  } catch {
-    return { products: [], total: 0 };
+  } catch (e) {
+    console.error("fetchProductsServer error:", e);
+    return { products: [], total: 0, page: 1, totalPages: 1 };
   }
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 
 function pctOff(regular, sale, onSale) {
   if (!onSale || regular <= 0) return 0;
@@ -19,8 +20,8 @@ export function HomeProductCard({ product }) {
   push(product.image);
   for (const img of product.images || []) push(img);
   for (const img of product.media?.images || []) push(img);
-  const imageUrl = images[0] || "";
-  const hoverImageUrl = images[1] || "";
+  const imageUrl = cardImageUrl(images[0] || "") || images[0] || "";
+  const hoverImageUrl = cardImageUrl(images[1] || "") || images[1] || "";
   const regular = Number(product.regularPrice ?? product.compareAt ?? 0);
   const saleVal = Number(product.salePrice ?? 0);
   const onSale =

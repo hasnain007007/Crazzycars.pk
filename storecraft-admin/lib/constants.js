@@ -7,7 +7,18 @@ export const STORE_COUNTRY = "Pakistan";
 export const STORE_WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP;
 export const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk';
 export const ORDER_NUMBER_PREFIX = "CC";
-export const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"];
+export const ORDER_STATUSES = [
+  "pending",
+  "confirmed",
+  "processing",
+  "packed",
+  "shipped",
+  "delivered",
+  "returned",
+  "cancelled",
+  "refunded",
+  "disputed",
+];
 export const PAYMENT_STATUSES = ["unpaid", "paid", "refunded", "partial", "failed"];
 
 export const PAKISTAN_PROVINCES = [

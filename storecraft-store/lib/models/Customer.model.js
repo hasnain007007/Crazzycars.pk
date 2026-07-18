@@ -1,5 +1,27 @@
 import mongoose from "mongoose";
 
+const addressSubSchema = new mongoose.Schema(
+  {
+    label: { type: String, default: "Home" },
+    firstName: { type: String, default: "" },
+    lastName: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    street: { type: String, default: "" },
+    /** @deprecated use street — kept for older address-book rows */
+    address: { type: String, default: "" },
+    street2: { type: String, default: "" },
+    area: { type: String, default: "" },
+    city: { type: String, default: "" },
+    province: { type: String, default: "" },
+    state: { type: String, default: "" },
+    postcode: { type: String, default: "" },
+    zip: { type: String, default: "" },
+    country: { type: String, default: "Pakistan" },
+    isDefault: { type: Boolean, default: false },
+  },
+  { _id: true }
+);
+
 const CustomerSchema = new mongoose.Schema(
   {
     firstName: { type: String, default: "" },
@@ -19,19 +41,17 @@ const CustomerSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     isVerified: { type: Boolean, default: false },
     lastLogin: { type: Date },
-    addresses: [
-      {
-        label: { type: String, default: "Home" },
-        firstName: { type: String, default: "" },
-        lastName: { type: String, default: "" },
-        address: { type: String, default: "" },
-        city: { type: String, default: "" },
-        postcode: { type: String, default: "" },
-        country: { type: String, default: "Pakistan" },
-        phone: { type: String, default: "" },
-        isDefault: { type: Boolean, default: false },
-      },
-    ],
+    /** Legacy singular address (kept in sync with default book entry). */
+    address: {
+      street: { type: String, default: "" },
+      street2: { type: String, default: "" },
+      area: { type: String, default: "" },
+      city: { type: String, default: "" },
+      state: { type: String, default: "" },
+      country: { type: String, default: "Pakistan" },
+      zip: { type: String, default: "" },
+    },
+    addresses: { type: [addressSubSchema], default: [] },
     wishlist: [
       {
         productId: { type: String },

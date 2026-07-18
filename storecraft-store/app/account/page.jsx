@@ -49,6 +49,12 @@ export default function AccountPage() {
       desc: "View and track your orders",
     },
     {
+      href: "/account/addresses",
+      icon: "📍",
+      title: "My Addresses",
+      desc: "Manage delivery addresses",
+    },
+    {
       href: "/account/profile",
       icon: "👤",
       title: "My Profile",

@@ -13,9 +13,14 @@ function formatMoney(n) {
 }
 
 function formatAddr(a) {
-  if (!a?.street && !a?.city) return "—";
+  if (!a) return "—";
+  const street = a.street || a.address || a.line1 || "";
+  const street2 = a.street2 || a.line2 || "";
+  const province = a.province || a.state || "";
+  const zip = a.zip || a.postcode || "";
+  if (!street && !a.city && !a.area) return "—";
   const country = a.country?.trim() || "Pakistan";
-  return [a.street, a.city, a.state, a.zip, country].filter(Boolean).join(", ");
+  return [street, street2, a.area, a.city, province, zip, country].filter(Boolean).join(", ");
 }
 
 function formatPhoneDisplay(phone) {
@@ -318,6 +323,31 @@ export function CustomerDetailPage({ customerId }) {
               </div>
             </div>
           </div>
+
+          {Array.isArray(c.addresses) && c.addresses.length > 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Saved addresses</h2>
+              <ul className="mt-3 space-y-3">
+                {c.addresses.map((a, idx) => (
+                  <li
+                    key={a._id || a.id || idx}
+                    className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950/40"
+                  >
+                    <p className="font-medium text-slate-900 dark:text-white">
+                      {a.label || "Address"}
+                      {a.isDefault ? (
+                        <span className="ml-2 rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white dark:bg-white dark:text-slate-900">
+                          Default
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="mt-1 text-slate-600 dark:text-slate-400">{formatAddr(a)}</p>
+                    {a.phone ? <p className="mt-1 text-xs text-slate-500">{formatPhoneDisplay(a.phone)}</p> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Order history</h2>

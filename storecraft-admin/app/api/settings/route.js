@@ -152,6 +152,11 @@ export async function PUT(request) {
       doc.productBadges = body.productBadges;
       doc.markModified("productBadges");
     }
+    if (body.productImageWatermark !== undefined && body.productImageWatermark !== null) {
+      if (!doc.productImageWatermark) doc.set("productImageWatermark", {});
+      mergeNested(doc.productImageWatermark, body.productImageWatermark);
+      doc.markModified("productImageWatermark");
+    }
     if (body.checkout !== undefined) {
       doc.checkout = body.checkout;
       doc.markModified("checkout");

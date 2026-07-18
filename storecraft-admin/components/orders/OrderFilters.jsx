@@ -47,11 +47,15 @@ export function OrderFilters({
           >
             <option value="all">All</option>
             <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
             <option value="processing">Processing</option>
-            <option value="shipped">Shipped</option>
+            <option value="packed">Packed</option>
+            <option value="shipped">Dispatched</option>
             <option value="delivered">Delivered</option>
+            <option value="returned">Returned</option>
             <option value="cancelled">Cancelled</option>
             <option value="refunded">Refunded</option>
+            <option value="disputed">Disputed</option>
           </select>
         </div>
         <div>

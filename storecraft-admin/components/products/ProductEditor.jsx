@@ -131,6 +131,7 @@ function emptyForm() {
     pricing: {
       regularPrice: "",
       salePrice: "",
+      costPerItem: "",
       saleSchedule: { enabled: false, startDate: "", endDate: "" },
     },
     inventory: {
@@ -199,6 +200,7 @@ function productToForm(p) {
     pricing: {
       regularPrice: p.pricing?.regularPrice ?? "",
       salePrice: p.pricing?.salePrice ?? "",
+      costPerItem: p.pricing?.costPerItem ?? "",
       saleSchedule: {
         enabled: Boolean(p.pricing?.saleSchedule?.enabled),
         startDate: p.pricing?.saleSchedule?.startDate ? toDatetimeLocalValue(p.pricing.saleSchedule.startDate) : "",
@@ -307,6 +309,7 @@ function productToForm(p) {
 function buildApiPayload(form) {
   const regularPrice = Number(form.pricing.regularPrice);
   const saleRaw = form.pricing.salePrice;
+  const costRaw = form.pricing.costPerItem;
   const slugTrimmed = String(form.slug || "").trim();
   const slugFinal = slugTrimmed || generateSlugFromProductName(form.name || "") || undefined;
   return {
@@ -320,6 +323,8 @@ function buildApiPayload(form) {
     pricing: {
       regularPrice,
       salePrice: saleRaw === "" || saleRaw === null || saleRaw === undefined ? null : Number(saleRaw),
+      costPerItem:
+        costRaw === "" || costRaw === null || costRaw === undefined ? 0 : Math.max(0, Number(costRaw) || 0),
       saleSchedule: {
         enabled: Boolean(form.pricing.saleSchedule?.enabled),
         startDate:

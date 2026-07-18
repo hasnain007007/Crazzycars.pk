@@ -121,6 +121,7 @@ const productSchema = new mongoose.Schema(
     pricing: {
       regularPrice: { type: Number, required: true },
       salePrice: { type: Number },
+      costPerItem: { type: Number, default: 0, min: 0 },
       saleSchedule: {
         enabled: { type: Boolean, default: false },
         startDate: { type: Date },

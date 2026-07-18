@@ -257,11 +257,9 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      fetch("/api/car-catalog").then((r) => r.json()),
-      fetch("/api/car-catalog?popular=true").then((r) => r.json()),
-    ])
-      .then(([data, popularData]) => {
+    fetch("/api/car-catalog")
+      .then((r) => r.json())
+      .then((data) => {
         if (cancelled) return;
         if (data?.makes?.length && data?.carData) {
           setCatalog({
@@ -272,8 +270,8 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
         } else {
           setCatalog(buildFallbackCatalog());
         }
-        if (popularData?.success && Array.isArray(popularData.popular)) {
-          setPopularFromApi(popularData.popular);
+        if (Array.isArray(data?.popular)) {
+          setPopularFromApi(data.popular);
         } else {
           setPopularFromApi([]);
         }

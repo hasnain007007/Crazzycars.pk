@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Customer from "@/lib/models/Customer.model";
+import { serializeAddress, pickDefaultAddress, toLegacySingularAddress } from "@/lib/addressBook";
 import jwt from "jsonwebtoken";
 
 export async function GET(req) {
@@ -57,15 +58,21 @@ export async function GET(req) {
       );
     }
 
+    const addresses = (customer.addresses || []).map(serializeAddress).filter(Boolean);
+    const def = pickDefaultAddress(addresses);
+    const address = customer.address || (def ? toLegacySingularAddress(def) : null);
+
     return NextResponse.json({
       success: true,
       customer: {
         id: String(customer._id),
         firstName: customer.firstName,
         lastName: customer.lastName,
+        name: customer.name || [customer.firstName, customer.lastName].filter(Boolean).join(" "),
         email: customer.email,
         phone: customer.phone || "",
-        addresses: customer.addresses || [],
+        address,
+        addresses,
         createdAt: customer.createdAt,
       },
     });

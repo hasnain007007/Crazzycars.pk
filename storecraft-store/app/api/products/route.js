@@ -179,7 +179,7 @@ export async function GET(request) {
     const [rows, total] = await Promise.all([
       Product.find(filter)
         .select(
-          "name slug media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants isUniversal compatibleCars vehicleCompatibility rating averageRating ratingAverage reviewCount totalReviews numReviews reviews"
+          "name slug media.images pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
         )
         .populate("categories", "name slug")
         .sort(sortSpec)

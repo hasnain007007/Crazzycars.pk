@@ -1,18 +1,46 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import BestSellers from "@/components/home/BestSellers";
-import BrandCarousel from "@/components/home/BrandCarousel";
-import BrandStory from "@/components/home/BrandStory";
-import CategoryGrid from "@/components/home/CategoryGrid";
-import HotDeals from "@/components/home/HotDeals";
 import HomeHero from "@/components/home/HomeHero";
-import ShopByCar from "@/components/home/ShopByCar";
-import ShopByVehicle from "@/components/home/ShopByVehicle";
 import StatsBar from "@/components/home/StatsBar";
-import WhyChooseUs from "@/components/home/WhyChooseUs";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
+
+const ShopByCar = dynamic(() => import("@/components/home/ShopByCar"), {
+  loading: () => <SectionSkeleton height={280} />,
+});
+const CategoryGrid = dynamic(() => import("@/components/home/CategoryGrid"), {
+  loading: () => <SectionSkeleton height={220} />,
+});
+const HotDeals = dynamic(() => import("@/components/home/HotDeals"), {
+  loading: () => <SectionSkeleton height={360} />,
+});
+const BestSellers = dynamic(() => import("@/components/home/BestSellers"), {
+  loading: () => <SectionSkeleton height={360} />,
+});
+const ShopByVehicle = dynamic(() => import("@/components/home/ShopByVehicle"), {
+  loading: () => <SectionSkeleton height={240} />,
+});
+const BrandCarousel = dynamic(() => import("@/components/home/BrandCarousel"), {
+  loading: () => <SectionSkeleton height={120} />,
+});
+const WhyChooseUs = dynamic(() => import("@/components/home/WhyChooseUs"), {
+  loading: () => <SectionSkeleton height={280} />,
+});
+const BrandStory = dynamic(() => import("@/components/home/BrandStory"), {
+  loading: () => <SectionSkeleton height={320} />,
+});
+
+function SectionSkeleton({ height = 240 }) {
+  return (
+    <div
+      className="mx-auto my-6 max-w-7xl animate-pulse rounded-2xl bg-[#f3f4f6]"
+      style={{ height }}
+      aria-hidden
+    />
+  );
+}
 
 function mergeHomepageSettings(raw) {
   if (!raw || typeof raw !== "object") return DEFAULT_HOMEPAGE_SETTINGS;
@@ -24,8 +52,7 @@ function mergeHomepageSettings(raw) {
 }
 
 /**
- * Homepage — uses SSR settings from context on first paint (no DEFAULT flash).
- * Hero slides come from the server so the front image is in the initial HTML.
+ * Homepage — hero SSR-first; below-fold sections load as separate chunks.
  */
 export function HomePage({
   initialBestSellers = [],
@@ -78,5 +105,3 @@ export function HomePage({
     </div>
   );
 }
-
-export default HomePage;

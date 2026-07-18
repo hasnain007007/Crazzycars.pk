@@ -8,6 +8,7 @@ export function orderStatusBadgeClass(status) {
     packed: "bg-indigo-100 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100",
     shipped: "bg-violet-100 text-violet-900 dark:bg-violet-950/50 dark:text-violet-100",
     delivered: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100",
+    returned: "bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-100",
     cancelled: "bg-red-100 text-red-900 dark:bg-red-950/50 dark:text-red-100",
     refunded: "bg-slate-200 text-slate-800 dark:bg-slate-600 dark:text-slate-100",
     disputed: "bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-100",

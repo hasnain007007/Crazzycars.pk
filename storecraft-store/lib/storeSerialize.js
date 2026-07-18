@@ -91,7 +91,6 @@ export function serializeStoreProductSummary(p) {
     reviewCount: Number(p?.reviewCount) || 0,
     totalReviews: Number(p?.totalReviews) || 0,
     numReviews: Number(p?.numReviews) || 0,
-    reviews: Array.isArray(p?.reviews) ? p.reviews : [],
   };
 }
 

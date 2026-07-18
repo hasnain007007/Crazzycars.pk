@@ -4,7 +4,7 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getHeroSlides } from "@/lib/heroBanners";
 import { getBestSellingProducts, getHotDealProducts, isShopifyEnabled } from "@/lib/shopify";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
   title: "CrazzyCars.pk | Car Accessories Pakistan",

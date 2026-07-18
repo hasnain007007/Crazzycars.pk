@@ -21,6 +21,7 @@ export function customerForStorefront(doc) {
     name,
     email: c.email,
     phone: c.phone || "",
+    address: c.address || null,
     addresses: c.addresses || [],
     wishlist: c.wishlist || [],
     createdAt: c.createdAt,

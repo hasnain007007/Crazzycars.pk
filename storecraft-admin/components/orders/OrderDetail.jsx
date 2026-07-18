@@ -147,7 +147,8 @@ function addressFormFromOrder(order) {
     fullName,
     phone: String(addr.phone || order?.customer?.phone || "").trim(),
     line1,
-    line2,
+    line2: line2 || String(addr.street2 || addr.line2 || "").trim(),
+    area: String(addr.area || "").trim(),
     city: String(addr.city || "").trim(),
     province:
       String(addr.province || addr.state || "").trim() || "Punjab",
@@ -164,6 +165,7 @@ function buildShippingAddressPayload(form) {
   const lastName = parts.slice(1).join(" ");
   const line1 = String(form.line1 || "").trim();
   const line2 = String(form.line2 || "").trim();
+  const area = String(form.area || "").trim();
   const province = String(form.province || "").trim();
 
   return {
@@ -172,8 +174,11 @@ function buildShippingAddressPayload(form) {
     lastName,
     phone: String(form.phone || "").trim(),
     street: line1,
+    street2: line2,
     line1,
+    line2,
     address: [line1, line2].filter(Boolean).join(", "),
+    area,
     city: String(form.city || "").trim(),
     state: province,
     province,
@@ -313,13 +318,13 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
     {
       label: "Address",
       value:
-        [addr.street || addr.line1, addr.address]
+        [addr.street || addr.line1, addr.street2 || addr.line2]
           .filter(Boolean)
-          .join(addr.street && addr.address ? " — " : "") ||
-        addr.street ||
-        addr.line1 ||
+          .join(", ") ||
+        addr.address ||
         "—",
     },
+    { label: "Area", value: addr.area || "—" },
     { label: "City", value: addr.city || "—" },
     { label: "Province", value: addr.province || addr.state || "—" },
     {
@@ -456,6 +461,16 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
                 type="text"
                 value={form.line2}
                 onChange={(e) => patchField("line2", e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Area (optional)</label>
+              <input
+                type="text"
+                value={form.area || ""}
+                onChange={(e) => patchField("area", e.target.value)}
+                placeholder="Colony / sector / mohalla"
                 className={inputClass}
               />
             </div>

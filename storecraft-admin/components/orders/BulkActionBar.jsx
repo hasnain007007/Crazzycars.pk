@@ -263,8 +263,9 @@ export function BulkActionBar({
               <div className="absolute left-0 z-20 mt-1 min-w-[200px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900">
                 {[
                   ["processing", "Mark as processing"],
-                  ["shipped", "Mark as shipped"],
+                  ["shipped", "Mark as dispatched"],
                   ["delivered", "Mark as delivered"],
+                  ["returned", "Mark as returned"],
                   ["cancelled", "Mark as cancelled"],
                 ].map(([val, label]) => (
                   <button

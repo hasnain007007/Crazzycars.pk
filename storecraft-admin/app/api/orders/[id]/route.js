@@ -171,6 +171,7 @@ export async function PUT(request, context) {
         "packed",
         "shipped",
         "delivered",
+        "returned",
         "cancelled",
         "refunded",
         "disputed",

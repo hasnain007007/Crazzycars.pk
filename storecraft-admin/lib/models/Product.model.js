@@ -122,6 +122,8 @@ const productSchema = new mongoose.Schema(
     pricing: {
       regularPrice: { type: Number, required: true },
       salePrice: { type: Number },
+      /** Merchant cost (not shown on storefront) — used for margin in admin */
+      costPerItem: { type: Number, default: 0, min: 0 },
       saleSchedule: {
         enabled: { type: Boolean, default: false },
         startDate: { type: Date },

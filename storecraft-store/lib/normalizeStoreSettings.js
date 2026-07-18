@@ -412,3 +412,70 @@ export function buildStoreSettingsPayload(settings = {}) {
 
   return data;
 }
+
+/**
+ * Strip secrets and heavy blobs before sending settings to the browser.
+ * Keeps only what storefront UI needs.
+ */
+export function toPublicClientSettings(full = {}) {
+  const payment = full.payment && typeof full.payment === "object" ? full.payment : {};
+  const stripe = payment.stripe && typeof payment.stripe === "object" ? payment.stripe : {};
+  const paypal = payment.paypal && typeof payment.paypal === "object" ? payment.paypal : {};
+
+  return {
+    announcementBar: full.announcementBar,
+    homepageSettings: full.homepageSettings,
+    trustBadges: full.trustBadges,
+    brandStory: full.brandStory,
+    appearance: full.appearance,
+    checkoutMessages: full.checkoutMessages,
+    storePayment: full.storePayment,
+    productBadges: full.productBadges ?? null,
+    productBadgeUi: full.productBadgeUi,
+    productImageWatermark: full.productImageWatermark,
+    megaMenu: full.megaMenu,
+    general: {
+      storeName: full.general?.storeName || full.storeName || "",
+      logo: full.general?.logo || full.logoUrl || "",
+      logoUrl: full.general?.logoUrl || full.logoUrl || "",
+      showStoreName: full.general?.showStoreName !== false,
+      phone: full.general?.phone || full.phone || "",
+      email: full.general?.email || full.email || "",
+      address: full.general?.address || "",
+      currency: full.general?.currency || full.currency || "PKR",
+      website: full.general?.website || full.website || "",
+    },
+    payment: {
+      stripe: {
+        enabled: stripe.enabled === true,
+        publishableKey: String(stripe.publishableKey || "").trim(),
+      },
+      paypal: {
+        enabled: paypal.enabled === true,
+        clientId: String(paypal.clientId || "").trim(),
+        mode: paypal.mode || "sandbox",
+      },
+    },
+    pakistaniPaymentMethods: full.pakistaniPaymentMethods,
+    seo: {
+      googleAnalyticsId: full.seo?.googleAnalyticsId || "",
+      facebookPixelId: full.seo?.facebookPixelId || "",
+      metaTitle: full.seo?.metaTitle || "",
+      metaDescription: full.seo?.metaDescription || "",
+    },
+    footer: full.footer,
+    whatsapp: full.whatsapp,
+    checkoutSuccess: full.checkoutSuccess || {},
+    checkout: full.checkout,
+    storeName: full.storeName,
+    logoUrl: full.logoUrl,
+    phone: full.phone,
+    email: full.email,
+    footerText: full.footerText || "",
+    website: full.website || "",
+    currency: full.currency || "PKR",
+    footerMeta: full.footerMeta,
+    whatsappNormalized: full.whatsappNormalized,
+  };
+}
+

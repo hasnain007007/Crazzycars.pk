@@ -114,6 +114,7 @@ export async function GET(request) {
         carData,
         makesMeta: makesMeta || {},
         quickPills: quickPills.length ? quickPills : QUICK_CAR_PILLS,
+        popular: buildPopularList(activeMakes),
       },
       {
         headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" },

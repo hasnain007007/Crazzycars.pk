@@ -15,6 +15,7 @@ const ORDER_STATUSES = [
   "packed",
   "shipped",
   "delivered",
+  "returned",
   "cancelled",
   "refunded",
   "disputed",

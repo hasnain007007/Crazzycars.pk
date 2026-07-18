@@ -41,6 +41,27 @@ export function TabOptions({
     if (!Number.isFinite(r) || r <= 0 || s == null || !Number.isFinite(s) || s >= r) return null;
     return Math.round(((r - s) / r) * 100);
   }, [form.pricing.regularPrice, saleState.effectiveSalePrice]);
+
+  const marginInfo = useMemo(() => {
+    const regular = Number(form.pricing.regularPrice);
+    const sale = saleState.effectiveSalePrice;
+    const sell =
+      sale != null && Number.isFinite(sale) && sale > 0 && sale < regular
+        ? sale
+        : Number.isFinite(regular) && regular > 0
+          ? regular
+          : null;
+    const costRaw = form.pricing.costPerItem;
+    const costEntered = costRaw !== "" && costRaw != null;
+    const cost = Number(costRaw);
+    if (sell == null || !costEntered || !Number.isFinite(cost) || cost < 0) {
+      return { sell: null, cost: null, profit: null, marginPct: null };
+    }
+    const profit = Math.round((sell - cost) * 100) / 100;
+    const marginPct = sell > 0 ? Math.round(((sell - cost) / sell) * 1000) / 10 : null;
+    return { sell, cost, profit, marginPct };
+  }, [form.pricing.regularPrice, form.pricing.costPerItem, saleState.effectiveSalePrice]);
+
   const baseWeightKg = useMemo(
     () => toKg(form.inventory?.weight, form.inventory?.weightUnit),
     [form.inventory?.weight, form.inventory?.weightUnit]
@@ -78,6 +99,107 @@ export function TabOptions({
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
+        <h3 className="text-base font-semibold text-[#111827]">Price</h3>
+        <p className="mt-0.5 text-xs text-[#6b7280]">
+          Sell price and cost auto-calculate margin for your reference (cost is admin-only).
+        </p>
+
+        <div className="mt-4">
+          <label className="mb-1 block text-sm font-medium text-[#374151]">
+            Price <span className="text-red-500">*</span>
+          </label>
+          <div className="relative max-w-md">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6b7280]">
+              Rs
+            </span>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.pricing.regularPrice}
+              onChange={(e) => updateFormData("pricing", { ...form.pricing, regularPrice: e.target.value })}
+              className={`${fieldClass} pl-10 text-base font-medium`}
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#f3f4f6] px-3 py-1.5 text-xs text-[#374151]">
+            <span className="font-medium text-[#6b7280]">Sale</span>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-[#9ca3af]">
+                Rs
+              </span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.pricing.salePrice}
+                onChange={(e) => updateFormData("pricing", { ...form.pricing, salePrice: e.target.value })}
+                className="w-[7.5rem] rounded-md border border-[#e5e7eb] bg-white py-1 pl-7 pr-2 text-xs tabular-nums outline-none focus:border-[#1d6fb8]"
+                placeholder="Optional"
+                title="Optional sale price — customer pays this when lower than Price"
+              />
+            </div>
+            {pctOff != null ? (
+              <span className="font-semibold text-emerald-600">{pctOff}% off</span>
+            ) : null}
+          </div>
+
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#f3f4f6] px-3 py-1.5 text-xs text-[#374151]">
+            <span className="font-medium text-[#6b7280]">Cost per item</span>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-[#9ca3af]">
+                Rs
+              </span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.pricing.costPerItem}
+                onChange={(e) => updateFormData("pricing", { ...form.pricing, costPerItem: e.target.value })}
+                className="w-[7.5rem] rounded-md border border-[#e5e7eb] bg-white py-1 pl-7 pr-2 text-xs tabular-nums outline-none focus:border-[#1d6fb8]"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          {marginInfo.marginPct != null ? (
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"
+              style={{
+                background: marginInfo.marginPct >= 0 ? "#ecfdf5" : "#fef2f2",
+                color: marginInfo.marginPct >= 0 ? "#047857" : "#b91c1c",
+              }}
+              title="Margin = (Sell price − Cost) ÷ Sell price"
+            >
+              <span>Margin {marginInfo.marginPct}%</span>
+              <span className="opacity-70">·</span>
+              <span>
+                Profit {formatAdminPrice(marginInfo.profit)}
+              </span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center rounded-full bg-[#f3f4f6] px-3 py-1.5 text-xs text-[#9ca3af]">
+              Margin — enter price &amp; cost
+            </div>
+          )}
+        </div>
+
+        {marginInfo.sell != null && marginInfo.cost != null ? (
+          <p className="mt-2 text-[11px] text-[#6b7280]">
+            Sell {formatAdminPrice(marginInfo.sell)}
+            {saleState.effectiveSalePrice != null &&
+            Number(saleState.effectiveSalePrice) < Number(form.pricing.regularPrice)
+              ? " (sale)"
+              : ""}{" "}
+            − Cost {formatAdminPrice(marginInfo.cost)} = Profit {formatAdminPrice(marginInfo.profit)}
+          </p>
+        ) : null}
+      </div>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div>
           <label className="mb-1 block text-sm font-medium text-[#374151]">Quantity</label>
@@ -88,46 +210,6 @@ export function TabOptions({
             onChange={(e) => updateFormData("inventory", { ...form.inventory, quantity: e.target.value })}
             className={fieldClass}
           />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[#374151]">
-            Regular price <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-[#6b7280]">
-              Rs.
-            </span>
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={form.pricing.regularPrice}
-              onChange={(e) => updateFormData("pricing", { ...form.pricing, regularPrice: e.target.value })}
-              className={`${fieldClass} pl-12`}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[#374151]">Sale price</label>
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-[#6b7280]">
-              Rs.
-            </span>
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={form.pricing.salePrice}
-              onChange={(e) => updateFormData("pricing", { ...form.pricing, salePrice: e.target.value })}
-              className={`${fieldClass} pl-12`}
-            />
-          </div>
-          {pctOff != null ? (
-            <p className="mt-1 text-xs font-medium text-emerald-600">
-              {pctOff}% OFF
-              {saleState.isOnSale ? <span className="ml-2 text-[#6b7280]">(effective sale)</span> : null}
-            </p>
-          ) : null}
         </div>
 
         <div>

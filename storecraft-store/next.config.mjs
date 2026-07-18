@@ -61,7 +61,6 @@ const nextConfig = {
   },
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],
   },
   async headers() {
     return [
@@ -95,7 +94,7 @@ const nextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate",
+            value: "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -104,7 +103,25 @@ const nextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, s-maxage=30, stale-while-revalidate=0",
+            value: "public, s-maxage=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        source: "/api/products",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        source: "/api/car-catalog",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=600",
           },
         ],
       },

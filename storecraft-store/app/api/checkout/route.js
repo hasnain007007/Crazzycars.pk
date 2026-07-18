@@ -297,18 +297,39 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Phone number is required." }, { status: 400 });
     }
 
-    const stateVal = String(body.shippingAddress?.state || "").trim();
+    const stateVal = String(body.shippingAddress?.state || body.shippingAddress?.province || "").trim();
+    const streetVal = String(body.shippingAddress?.street || body.shippingAddress?.line1 || "").trim();
+    const street2Val = String(body.shippingAddress?.street2 || body.shippingAddress?.line2 || "").trim();
+    const areaVal = String(body.shippingAddress?.area || "").trim();
+    const cityVal = String(body.shippingAddress?.city || "").trim();
+    const zipVal = String(body.shippingAddress?.zip || body.shippingAddress?.postcode || "").trim();
     const shippingAddress = {
       name: String(body.shippingAddress?.name || name).trim(),
       phone: String(body.shippingAddress?.phone || phone).trim(),
-      street: String(body.shippingAddress?.street || "").trim(),
-      city: String(body.shippingAddress?.city || "").trim(),
+      street: streetVal,
+      street2: street2Val,
+      line1: streetVal,
+      line2: street2Val,
+      address: [streetVal, street2Val].filter(Boolean).join(", "),
+      area: areaVal,
+      city: cityVal,
       state: stateVal,
       province: stateVal,
       country: String(body.shippingAddress?.country || "Pakistan").trim() || "Pakistan",
-      zip: String(body.shippingAddress?.zip || "").trim(),
+      zip: zipVal,
+      postcode: zipVal,
+      postalCode: zipVal,
       nif: String(body.shippingAddress?.nif || "").trim(),
     };
+    if (!shippingAddress.street) {
+      return NextResponse.json({ success: false, error: "Street address is required." }, { status: 400 });
+    }
+    if (!shippingAddress.city) {
+      return NextResponse.json({ success: false, error: "City is required." }, { status: 400 });
+    }
+    if (!shippingAddress.state) {
+      return NextResponse.json({ success: false, error: "Province is required." }, { status: 400 });
+    }
 
     const requestedPaymentMethod = String(body.paymentMethod || "cod").trim();
     let paymentMethod = "cod";
@@ -444,6 +465,7 @@ export async function POST(request) {
         p.media?.images?.[0]?.url ||
         "";
       const lineTotal = Math.round(unitPrice * qty * 100) / 100;
+      const unitCost = Math.max(0, Number(p.pricing?.costPerItem) || 0);
       subtotal += lineTotal;
       lineItems.push({
         productId: p._id,
@@ -456,6 +478,7 @@ export async function POST(request) {
         customMeasurements: normalizeMeasurements(raw.customMeasurements),
         quantity: qty,
         unitPrice: unitPrice,
+        unitCost,
         total: lineTotal,
       });
     }
@@ -567,45 +590,84 @@ export async function POST(request) {
 
     let customerId = null;
     let existing = email
-      ? await Customer.findOne({ email }).lean()
-      : await Customer.findOne({ phone }).lean();
+      ? await Customer.findOne({ email })
+      : await Customer.findOne({ phone });
     if (!existing && customerRecordEmail) {
-      existing = await Customer.findOne({ email: customerRecordEmail }).lean();
+      existing = await Customer.findOne({ email: customerRecordEmail });
     }
     if (existing?.isActive === false) {
       return NextResponse.json({ success: false, error: "This account cannot place orders." }, { status: 403 });
     }
+
+    const nameParts = name.split(/\s+/).filter(Boolean);
+    const addrBookEntry = {
+      label: "Home",
+      firstName: nameParts[0] || "",
+      lastName: nameParts.slice(1).join(" ") || "",
+      phone: shippingAddress.phone,
+      street: shippingAddress.street,
+      street2: shippingAddress.street2 || "",
+      area: shippingAddress.area || "",
+      city: shippingAddress.city,
+      province: shippingAddress.state,
+      state: shippingAddress.state,
+      postcode: shippingAddress.zip || "",
+      zip: shippingAddress.zip || "",
+      country: shippingAddress.country,
+      isDefault: true,
+    };
+    const legacyAddress = {
+      street: shippingAddress.street,
+      street2: shippingAddress.street2 || "",
+      area: shippingAddress.area || "",
+      city: shippingAddress.city,
+      state: shippingAddress.state,
+      country: shippingAddress.country,
+      zip: shippingAddress.zip || "",
+    };
+
     if (existing) {
       customerId = existing._id;
-      await Customer.updateOne(
-        { _id: existing._id },
-        {
-          $set: {
-            name,
-            phone,
-            ...(email ? { email } : {}),
-            address: {
-              street: shippingAddress.street,
-              city: shippingAddress.city,
-              state: shippingAddress.state,
-              country: shippingAddress.country,
-              zip: shippingAddress.zip,
-            },
-          },
-        }
+      existing.name = name;
+      existing.phone = phone;
+      if (email) existing.email = email;
+      existing.address = legacyAddress;
+      if (!Array.isArray(existing.addresses)) existing.addresses = [];
+      const same = existing.addresses.find(
+        (a) =>
+          String(a.street || a.address || "").trim().toLowerCase() === shippingAddress.street.toLowerCase() &&
+          String(a.city || "").trim().toLowerCase() === shippingAddress.city.toLowerCase() &&
+          String(a.province || a.state || "").trim().toLowerCase() === shippingAddress.state.toLowerCase()
       );
+      if (same) {
+        existing.addresses.forEach((a) => {
+          a.isDefault = false;
+        });
+        same.isDefault = true;
+        same.street = shippingAddress.street;
+        same.street2 = shippingAddress.street2 || "";
+        same.area = shippingAddress.area || "";
+        same.phone = shippingAddress.phone;
+        same.postcode = shippingAddress.zip || "";
+        same.zip = shippingAddress.zip || "";
+      } else {
+        existing.addresses.forEach((a) => {
+          a.isDefault = false;
+        });
+        if (!existing.addresses.length) addrBookEntry.isDefault = true;
+        existing.addresses.push(addrBookEntry);
+      }
+      existing.markModified("addresses");
+      await existing.save();
     } else {
       const created = await Customer.create({
         name,
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
         email: customerRecordEmail,
         phone,
-        address: {
-          street: shippingAddress.street,
-          city: shippingAddress.city,
-          state: shippingAddress.state,
-          country: shippingAddress.country,
-          zip: shippingAddress.zip,
-        },
+        address: legacyAddress,
+        addresses: [addrBookEntry],
       });
       customerId = created._id;
     }

@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { dbConnect } from "@/lib/db";
-import { buildStoreSettingsPayload } from "@/lib/normalizeStoreSettings";
+import { buildStoreSettingsPayload, toPublicClientSettings } from "@/lib/normalizeStoreSettings";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 
 /**
@@ -26,4 +26,10 @@ export const getServerStoreSettings = cache(async () => {
     console.error("getServerStoreSettings error:", e);
     return buildStoreSettingsPayload({});
   }
+});
+
+/** Public subset safe to pass into client providers (no secrets / heavy blobs). */
+export const getPublicStoreSettings = cache(async () => {
+  const full = await getServerStoreSettings();
+  return toPublicClientSettings(full);
 });
