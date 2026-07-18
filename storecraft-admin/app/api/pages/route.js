@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
+import { getRequestUser } from "@/lib/getRequestUser";
 import Page from "@/lib/models/Page.model";
 
 function toSlug(input = "") {
@@ -13,6 +14,9 @@ function toSlug(input = "") {
 
 export async function GET(req) {
   try {
+    if (!getRequestUser(req)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     await dbConnect();
     const pages = await Page.find({}).sort({ sortOrder: 1, createdAt: -1 }).lean();
     return NextResponse.json({ success: true, pages, count: pages.length });
@@ -23,6 +27,9 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    if (!getRequestUser(req)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     await dbConnect();
     const body = await req.json();
     if (!body.slug && body.title) {

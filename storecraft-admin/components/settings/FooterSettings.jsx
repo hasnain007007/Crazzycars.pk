@@ -26,14 +26,7 @@ const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "About Us", href: "/about", enabled: true },
 ];
 
-const DEFAULT_CATEGORIES_LINKS = [
-  { label: "Splitters & Side Skirts", href: "/categories/splitters-side-skirts", enabled: true },
-  { label: "LED Headlights & Bulbs", href: "/categories/led-headlights-bulbs", enabled: true },
-  { label: "Body Kits", href: "/categories/body-kits", enabled: true },
-  { label: "Spoilers & Diffusers", href: "/categories/spoilers-diffusers", enabled: true },
-  { label: "Care & Cleaning", href: "/categories/care-cleaning", enabled: true },
-  { label: "SOS & Flasher LEDs", href: "/categories/sos-flasher-led-lights", enabled: true },
-];
+const DEFAULT_CATEGORIES_LINKS = [];
 
 const FOOTER_INPUT_STYLE = {
   width: "100%",

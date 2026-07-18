@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { CRAZZYCARS_CATEGORIES, categoryHref } from "@/lib/categories";
+import { useEffect, useState } from "react";
+import { categoryHref } from "@/lib/categories";
 
 function CategoryCard({ c }) {
   return (
@@ -23,15 +24,50 @@ function CategoryCard({ c }) {
 }
 
 export default function CategoryGrid({ title = "Shop by Category", viewAllText = "View all →", categories: injected }) {
+  const [fetched, setFetched] = useState([]);
+
+  useEffect(() => {
+    if (Array.isArray(injected) && injected.length) return;
+    let cancelled = false;
+    fetch("/api/categories?showOnHomepage=true", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        let cats = data?.categories || data?.data || [];
+        if (!Array.isArray(cats) || !cats.length) {
+          return fetch("/api/categories", { cache: "no-store" })
+            .then((r) => r.json())
+            .then((all) => {
+              if (cancelled) return;
+              const list = all?.categories || all?.data || [];
+              setFetched(
+                (Array.isArray(list) ? list : [])
+                  .filter((c) => c?.slug && c?.name && !c.parentId)
+                  .slice(0, 12)
+              );
+            });
+        }
+        setFetched(Array.isArray(cats) ? cats.filter((c) => c?.slug && c?.name) : []);
+      })
+      .catch(() => {
+        if (!cancelled) setFetched([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [injected]);
+
   const categories =
     Array.isArray(injected) && injected.length
       ? injected
-      : CRAZZYCARS_CATEGORIES.map((c) => ({
+      : fetched.map((c) => ({
           name: c.name,
           slug: c.slug,
           href: categoryHref(c.slug),
-          homepageIcon: "🚗",
+          homepageIcon: c.homepageIcon || "🚗",
         }));
+
+  if (!categories.length) return null;
 
   return (
     <section className="homepage-section bg-white py-12 md:py-20">

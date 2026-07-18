@@ -966,11 +966,7 @@ export function OrderDetail({ orderId }) {
       }
       setAdminNotifiedSession(true);
       if (!isAuto) {
-        toast.success(
-          result.mode === "share"
-            ? "Shared to WhatsApp with product photo (if supported)."
-            : "WhatsApp opened — tap Confirm/Cancel links in the message."
-        );
+        toast.success("WhatsApp opened — tap Confirm/Cancel links in the message.");
       }
       return true;
     },

@@ -37,7 +37,7 @@ const TEMPLATE_CONFIG = [
   {
     key: "adminNewOrder",
     label: "Admin New Order Alert",
-    description: "Notification for store admin when a new order arrives",
+    description: "Notification for store admin when a new order arrives. Admin order link requires login. Confirm/Cancel links show a confirmation page first (safe from WhatsApp link previews).",
     variables: [
       "customerName",
       "customerPhone",

@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
+import { getRequestUser } from "@/lib/getRequestUser";
 import Page from "@/lib/models/Page.model";
 
 export async function GET(req, { params }) {
   try {
+    if (!getRequestUser(req)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     await dbConnect();
     const { id } = await params;
     const page = await Page.findById(id).lean();
@@ -18,6 +22,9 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
+    if (!getRequestUser(req)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     await dbConnect();
     const { id } = await params;
     const body = await req.json();
@@ -34,6 +41,9 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
+    if (!getRequestUser(req)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     await dbConnect();
     const { id } = await params;
     await Page.findByIdAndDelete(id);

@@ -3,10 +3,10 @@
  */
 import crypto from "node:crypto";
 
-const TTL_SEC = 60 * 60 * 24 * 14; // 14 days
+const TTL_SEC = 60 * 60 * 48; // 48 hours — shorter window if the WhatsApp message is forwarded
 
 function secret() {
-  return process.env.JWT_SECRET || process.env.WA_ACTION_SECRET || "";
+  return process.env.WA_ACTION_SECRET || process.env.JWT_SECRET || "";
 }
 
 export function signWaActionToken(orderId, action) {

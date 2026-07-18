@@ -385,7 +385,7 @@ Thank you for shopping with Crazzycars.pk! 🚗✨`,
 
 📍 Address: {address}, {city}
 
-🔗 View order: {adminOrderUrl}
+🔗 Open in admin (login required): {adminOrderUrl}
 
 ————————————
 📋 *Quick action (tap a link):*

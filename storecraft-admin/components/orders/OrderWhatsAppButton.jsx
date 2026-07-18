@@ -30,30 +30,12 @@ export function openWhatsApp(phone, message) {
 }
 
 /**
- * Prefer sharing text + first product image when the device supports it (mobile).
- * Falls back to wa.me text link (cannot attach media via URL).
+ * Open WhatsApp with the order message.
+ * Always uses wa.me — never navigator.share with files (on macOS that opens
+ * the system share sheet for the JPEG instead of WhatsApp).
+ * Product image URLs stay in the message text when the template includes them.
  */
-export async function openWhatsAppWithOptionalImage(phone, message, imageUrls = []) {
-  const firstImage = (Array.isArray(imageUrls) ? imageUrls : []).map(String).map((s) => s.trim()).find(Boolean);
-  if (firstImage && typeof navigator !== "undefined" && navigator.share && navigator.canShare) {
-    try {
-      const res = await fetch(firstImage, { mode: "cors" });
-      if (res.ok) {
-        const blob = await res.blob();
-        const ext = blob.type.includes("png") ? "png" : "jpg";
-        const file = new File([blob], `order-product.${ext}`, { type: blob.type || "image/jpeg" });
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            text: message,
-            files: [file],
-          });
-          return { ok: true, mode: "share" };
-        }
-      }
-    } catch {
-      /* fall through to wa.me */
-    }
-  }
+export async function openWhatsAppWithOptionalImage(phone, message, _imageUrls = []) {
   const ok = openWhatsApp(phone, message);
   return { ok, mode: ok ? "wa-link" : "failed" };
 }

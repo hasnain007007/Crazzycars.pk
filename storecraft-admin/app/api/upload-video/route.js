@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { getCloudinaryCloudName } from "@/lib/cloudinaryConfig";
+import { getRequestUser } from "@/lib/getRequestUser";
 
 cloudinary.config({
   cloud_name: getCloudinaryCloudName(),
@@ -10,6 +11,9 @@ cloudinary.config({
 
 export async function GET(req) {
   try {
+    if (!getRequestUser(req)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type") || "video";
     const timestamp = Math.round(Date.now() / 1000);
@@ -39,6 +43,9 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    if (!getRequestUser(req)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     const body = await req.json();
     const { publicId } = body;
     if (!publicId) {
@@ -60,6 +67,9 @@ export async function POST(req) {
 
 export async function DELETE(req) {
   try {
+    if (!getRequestUser(req)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     const body = await req.json();
     const { publicId, resourceType } = body;
     if (!publicId) {

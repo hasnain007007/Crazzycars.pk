@@ -1,6 +1,7 @@
 /**
  * Next.js 16+ route guard (formerly middleware). Compiled output is still named middleware.js.
- * Add new admin sections to `config.matcher` so unauthenticated users cannot load those pages.
+ * Protects admin UI pages — unauthenticated users are redirected to /login.
+ * API routes enforce auth separately via getRequestUser (except login + signed wa-action).
  */
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
@@ -23,6 +24,9 @@ export async function proxy(request) {
 
   try {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET missing");
+    }
     const { payload } = await jwtVerify(token, secret);
 
     const requestHeaders = new Headers(request.headers);
@@ -45,39 +49,10 @@ export async function proxy(request) {
 
 export const config = {
   matcher: [
-    "/dashboard",
-    "/dashboard/:path*",
-    "/catalog",
-    "/catalog/:path*",
-    "/car-catalog",
-    "/car-catalog/:path*",
-    "/orders",
-    "/orders/:path*",
-    "/customers",
-    "/customers/:path*",
-    "/users",
-    "/users/:path*",
-    "/blog-manager",
-    "/blog-manager/:path*",
-    "/pages-manager",
-    "/pages-manager/:path*",
-    "/reviews",
-    "/reviews/:path*",
-    "/product-options",
-    "/product-options/:path*",
-    "/banners",
-    "/banners/:path*",
-    "/redirects",
-    "/redirects/:path*",
-    "/shipping",
-    "/shipping/:path*",
-    "/coupons",
-    "/coupons/:path*",
-    "/reports",
-    "/reports/:path*",
-    "/settings",
-    "/settings/:path*",
-    "/activity-log",
-    "/activity-log/:path*",
+    /*
+     * Protect all admin app pages except login + Next internals + public files.
+     * Does NOT match /api/* — those use getRequestUser per route.
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|login|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

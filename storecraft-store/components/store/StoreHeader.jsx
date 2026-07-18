@@ -9,7 +9,7 @@ import { formatPrice } from "@/lib/currency";
 import { normalizeStoreEmail } from "@/lib/storeContact";
 import { trimmedLogoUrl } from "@/lib/storeLogo";
 import { getCodFreeDeliveryProgress, getProgressBarThreshold } from "@/lib/freeDelivery";
-import { categoryHref, getCategoryMegaColumns } from "@/lib/categories";
+import { getCategoryMegaColumns } from "@/lib/categories";
 import { useCustomer } from "@/lib/customerAuth";
 
 const WISHLIST_KEY = "sialkot_wishlist";
@@ -18,10 +18,6 @@ const DEFAULT_NAV = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/shop", mega: true },
   { label: "Categories", href: "/categories", mega: true },
-  { label: "Splitters", href: categoryHref("splitters-side-skirts") },
-  { label: "LED Lights", href: categoryHref("led-headlights-bulbs") },
-  { label: "Body Kits", href: categoryHref("body-kits") },
-  { label: "Car Care", href: categoryHref("care-cleaning") },
   { label: "Deals", href: "/shop?deals=1", deals: true },
   { label: "📦 Track Order", href: "/track-order", track: true },
   { label: "Blog", href: "/blogs" },
@@ -29,39 +25,24 @@ const DEFAULT_NAV = [
 
 const DEFAULT_MEGA_COLS = getCategoryMegaColumns();
 
-/** Map leftover template nav paths → real CrazzyCars category routes. */
+/** Normalize footer/settings nav hrefs without inventing fake category routes. */
 function normalizeNavHref(label, href) {
   const raw = String(href || "").trim() || "/";
   const pathOnly = raw.split("?")[0].replace(/\/+$/, "") || "/";
-  const key = `${String(label || "").trim().toLowerCase()}|${pathOnly.toLowerCase()}`;
+  const labelOnly = String(label || "").trim().toLowerCase();
   const byLabel = {
-    exterior: categoryHref("splitters-side-skirts"),
-    interior: categoryHref("steering-wheel-covers"),
-    lighting: categoryHref("led-headlights-bulbs"),
-    "car care": categoryHref("care-cleaning"),
-    "car lighting": categoryHref("led-headlights-bulbs"),
     deals: "/shop?deals=1",
     blog: "/blogs",
+    categories: "/categories",
+    shop: "/shop",
+    home: "/",
   };
-  const labelOnly = String(label || "").trim().toLowerCase();
   if (byLabel[labelOnly]) return byLabel[labelOnly];
 
   const brokenPaths = {
-    "/categories/exterior": categoryHref("splitters-side-skirts"),
-    "/exterior": categoryHref("splitters-side-skirts"),
-    "/categories/interior": categoryHref("steering-wheel-covers"),
-    "/interior": categoryHref("steering-wheel-covers"),
-    "/categories/car-lighting": categoryHref("led-headlights-bulbs"),
-    "/categories/lighting": categoryHref("led-headlights-bulbs"),
-    "/lighting": categoryHref("led-headlights-bulbs"),
-    "/categories/car-care": categoryHref("care-cleaning"),
-    "/car-care": categoryHref("care-cleaning"),
-    "/categories/seat-covers": categoryHref("steering-wheel-covers"),
-    "/categories/floor-mats": categoryHref("universal-car-accessories"),
     "/blog": "/blogs",
   };
   if (brokenPaths[pathOnly.toLowerCase()]) return brokenPaths[pathOnly.toLowerCase()];
-  void key;
   return raw.startsWith("/") || raw.startsWith("http") ? raw : `/${raw}`;
 }
 
@@ -172,12 +153,16 @@ function deriveHeaderConfig(data) {
         };
       })
       .filter((i) => i.label);
-    // Old template mega nav (Exterior/Interior/…) → use our catalog defaults
+    // Old template mega nav (Exterior/Interior/…) → clean default nav (no fake categories)
     const looksLegacy = nav.some((i) =>
       /^(exterior|interior|lighting|car care)$/i.test(String(i.label || "").trim())
     );
-    if (looksLegacy) nav = DEFAULT_NAV;
-    megaCols = DEFAULT_MEGA_COLS;
+    if (looksLegacy) {
+      nav = DEFAULT_NAV;
+      megaCols = DEFAULT_MEGA_COLS;
+    } else {
+      megaCols = DEFAULT_MEGA_COLS;
+    }
   } else {
     nav = buildNavFromFooter(footer);
     megaCols = buildMegaCols(footer);

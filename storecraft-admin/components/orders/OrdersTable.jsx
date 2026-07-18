@@ -166,11 +166,7 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
           toast.error("Could not open WhatsApp.");
           return;
         }
-        toast.success(
-          result.mode === "share"
-            ? "Shared with product photo."
-            : "WhatsApp opened — use Confirm/Cancel links in the message."
-        );
+        toast.success("WhatsApp opened — use Confirm/Cancel links in the message.");
       } catch {
         toast.error("Network error.");
       } finally {
