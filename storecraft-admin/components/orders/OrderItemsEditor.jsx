@@ -119,17 +119,12 @@ export function OrderItemsEditor({ order, onUpdated }) {
   useEffect(() => {
     if (!showAdd) return undefined;
     const q = search.trim();
-    if (q.length < 2) {
-      setResults([]);
-      return undefined;
-    }
     const t = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(
-          `/api/products?search=${encodeURIComponent(q)}&status=active&limit=8`,
-          { credentials: "include" }
-        );
+        const params = new URLSearchParams({ status: "active", limit: "50" });
+        if (q.length >= 1) params.set("search", q);
+        const res = await fetch(`/api/products?${params}`, { credentials: "include" });
         const json = await res.json();
         if (json.success) setResults(Array.isArray(json.data) ? json.data : []);
       } catch {
@@ -137,7 +132,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
       } finally {
         setSearching(false);
       }
-    }, 280);
+    }, q.length ? 280 : 0);
     return () => clearTimeout(t);
   }, [search, showAdd]);
 
@@ -203,13 +198,13 @@ export function OrderItemsEditor({ order, onUpdated }) {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Type product name (min 2 characters)"
+            placeholder="Filter products (all active load automatically)"
             className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"
             autoFocus
           />
-          {searching ? <p className="mt-2 text-xs text-slate-500">Searching…</p> : null}
+          {searching ? <p className="mt-2 text-xs text-slate-500">Loading catalog…</p> : null}
           {results.length > 0 ? (
-            <ul className="mt-2 max-h-48 overflow-y-auto divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-600 dark:bg-slate-900">
+            <ul className="mt-2 max-h-64 overflow-y-auto divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-600 dark:bg-slate-900">
               {results.map((product) => (
                 <li key={product._id || product.id}>
                   <button

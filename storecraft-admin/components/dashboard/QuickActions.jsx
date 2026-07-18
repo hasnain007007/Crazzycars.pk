@@ -4,9 +4,9 @@ import Link from "next/link";
 
 const actions = [
   {
-    href: "/orders",
+    href: "/orders/new",
     label: "+ New Sale",
-    sub: "Open orders",
+    sub: "Create invoice",
     className: "bg-[#1A7A4C] text-white hover:bg-[#15663f]",
   },
   {
@@ -16,9 +16,9 @@ const actions = [
     className: "bg-[#E8913A] text-white hover:bg-[#d47f2a]",
   },
   {
-    href: "/orders",
+    href: "/orders/new",
     label: "+ Create Invoice",
-    sub: "From an order",
+    sub: "Walk-in / phone sale",
     className: "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900",
   },
 ];

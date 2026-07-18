@@ -3,6 +3,7 @@
  */
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { OrderFilters } from "./OrderFilters";
 import { OrdersTable } from "./OrdersTable";
@@ -94,13 +95,21 @@ export function OrdersPage() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Orders</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{total} orders match filters</p>
         </div>
-        <button
-          type="button"
-          onClick={exportCsv}
-          className="shrink-0 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-        >
-          Export CSV
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/orders/new"
+            className="shrink-0 rounded-lg bg-[#1A7A4C] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#15663f]"
+          >
+            + New invoice
+          </Link>
+          <button
+            type="button"
+            onClick={exportCsv}
+            className="shrink-0 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
