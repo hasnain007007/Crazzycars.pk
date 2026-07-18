@@ -1,25 +1,37 @@
 /**
- * Client dashboard — clean single-surface layout.
+ * Modern ops dashboard — forest green / amber accents, live visitors, full widgets.
  */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { BusinessInsightsCard } from "./BusinessInsightsCard";
+import { CategorySalesDonut } from "./CategorySalesDonut";
 import { DashboardDateRange } from "./DashboardDateRange";
+import { InventoryAlertsCard } from "./InventoryAlertsCard";
 import { KpiCards } from "./KpiCards";
 import { LiveUsersCard } from "./LiveUsersCard";
-import { OrderStatusPieChart } from "./OrderStatusPieChart";
+import { PaymentMethodsCard } from "./PaymentMethodsCard";
+import { QuickActions } from "./QuickActions";
 import { RecentOrdersTable } from "./RecentOrdersTable";
+import { RevenueCostBarChart } from "./RevenueCostBarChart";
 import { SalesTrendChart } from "./SalesTrendChart";
 import { StockAlertBanner } from "@/components/stock-alerts/StockAlertBanner";
 
 const emptyData = {
   todaySales: 0,
   todayOrders: 0,
+  todaySalesGrowth: 0,
+  monthlyRevenue: 0,
+  lastMonthRevenue: 0,
+  monthlyGrowth: 0,
   periodSales: 0,
   periodOrders: 0,
   totalRevenue: 0,
   totalSell: 0,
   totalProfit: 0,
+  totalCost: 0,
+  profitMargin: 0,
+  profitGrowth: 0,
   totalCustomers: 0,
   pendingOrders: 0,
   ordersReceived: 0,
@@ -27,22 +39,15 @@ const emptyData = {
   ordersDelivered: 0,
   ordersReturned: 0,
   recentOrders: [],
-  orderStatusCounts: {
-    pending: 0,
-    confirmed: 0,
-    processing: 0,
-    packed: 0,
-    shipped: 0,
-    delivered: 0,
-    returned: 0,
-    cancelled: 0,
-    refunded: 0,
-    disputed: 0,
-  },
+  orderStatusCounts: {},
   salesLast7Days: [],
   salesTrend: [],
   chartMode: "day",
   lowStockProducts: [],
+  salesByCategory: [],
+  paymentMethods: [],
+  weekdayRevenueVsCost: [],
+  insights: [],
   range: { id: "last30", label: "Last 30 days", from: null, to: null },
 };
 
@@ -68,7 +73,6 @@ export function DashboardView() {
   const [data, setData] = useState(emptyData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [topLocations, setTopLocations] = useState([]);
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
@@ -104,33 +108,6 @@ export function DashboardView() {
     loadDashboard();
   }, [loadDashboard]);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/orders?limit=100", { credentials: "include" });
-        const json = await res.json();
-        if (!res.ok || !json.success || cancelled) return;
-        const orders = json.orders || [];
-        const cityCounts = {};
-        for (const order of orders) {
-          const city = order.shippingCity || order.shippingAddress?.city;
-          if (city) cityCounts[city] = (cityCounts[city] || 0) + 1;
-        }
-        const topCities = Object.entries(cityCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5)
-          .map(([city, count]) => ({ city, count }));
-        if (!cancelled) setTopLocations(topCities);
-      } catch {
-        if (!cancelled) setTopLocations([]);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const onRangeChange = ({ rangeId: nextId, from, to }) => {
     setRangeId(nextId);
     if (nextId === "custom") {
@@ -143,7 +120,7 @@ export function DashboardView() {
   const trendData = data.salesTrend?.length ? data.salesTrend : data.salesLast7Days;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="mx-auto max-w-7xl space-y-5">
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
@@ -152,14 +129,14 @@ export function DashboardView() {
 
       <StockAlertBanner lowStockProducts={data.lowStockProducts} />
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
+      {/* Header toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard</h1>
+          <p className="text-xs text-slate-500">CrazzyCars ops overview · {rangeLabel}</p>
+        </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Period</p>
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">{rangeLabel}</p>
-          </div>
-          <div className="hidden h-8 w-px bg-slate-200 sm:block dark:bg-slate-700" />
+          <LiveUsersCard variant="badge" />
           <DashboardDateRange
             rangeId={rangeId}
             from={customFrom}
@@ -168,48 +145,42 @@ export function DashboardView() {
             loading={loading}
           />
         </div>
-        <LiveUsersCard compact />
       </div>
 
-      {/* Metrics */}
-      <div className={loading ? "opacity-50 transition" : "transition"}>
+      <div className={loading ? "pointer-events-none opacity-60 transition" : "transition"}>
+        {/* Hero KPIs */}
         <KpiCards data={data} />
-      </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+        {/* Charts row */}
+        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <SalesTrendChart data={trendData} rangeLabel={rangeLabel} chartMode={data.chartMode} />
+          <RevenueCostBarChart data={data.weekdayRevenueVsCost} />
+          <CategorySalesDonut data={data.salesByCategory} />
         </div>
-        <div className="lg:col-span-2">
-          <OrderStatusPieChart counts={data.orderStatusCounts} rangeLabel={rangeLabel} />
-        </div>
-      </div>
 
-      {/* Orders + locations */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <RecentOrdersTable orders={data.recentOrders} rangeLabel={rangeLabel} />
+        {/* Orders + actions + payments */}
+        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="lg:col-span-6">
+            <RecentOrdersTable orders={data.recentOrders} />
+          </div>
+          <div className="lg:col-span-3">
+            <QuickActions />
+          </div>
+          <div className="lg:col-span-3">
+            <PaymentMethodsCard methods={data.paymentMethods} />
+          </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2 dark:border-slate-800 dark:bg-slate-900">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Top locations</h3>
-          <p className="text-xs text-slate-400">Recent orders</p>
-          {topLocations.length ? (
-            <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-800">
-              {topLocations.map(({ city, count }, idx) => (
-                <li key={city} className="flex items-center justify-between py-2.5 text-sm">
-                  <span className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
-                    <span className="w-4 text-xs tabular-nums text-slate-400">{idx + 1}</span>
-                    {city}
-                  </span>
-                  <span className="tabular-nums text-slate-500">{count}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-8 text-center text-sm text-slate-400">No location data yet</p>
-          )}
+
+        {/* Live + inventory + insights */}
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <LiveUsersCard variant="card" />
+          <InventoryAlertsCard products={data.lowStockProducts} />
+          <BusinessInsightsCard insights={data.insights} />
         </div>
+
+        <p className="mt-8 text-center text-[11px] font-medium tracking-wide text-slate-400">
+          CrazzyCars Admin · Live · Fast · Reliable
+        </p>
       </div>
     </div>
   );

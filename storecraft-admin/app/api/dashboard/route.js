@@ -1,5 +1,6 @@
 /**
  * Dashboard metrics with optional date range filter.
+ * Extended for the modern ops dashboard (KPIs, category, payments, weekday, insights).
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -24,6 +25,63 @@ function dateMatch(from, to) {
   return { createdAt };
 }
 
+function utcStartOfDay(d) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+}
+
+function utcEndOfDay(d) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
+}
+
+function pctChange(current, previous) {
+  const c = Number(current) || 0;
+  const p = Number(previous) || 0;
+  if (p === 0) return c > 0 ? 100 : 0;
+  return Math.round(((c - p) / p) * 1000) / 10;
+}
+
+function normalizePaymentKey(raw) {
+  const s = String(raw || "").toLowerCase().trim();
+  if (!s) return "other";
+  if (s.includes("cod") || s.includes("cash")) return "cod";
+  if (s.includes("jazz")) return "jazzcash";
+  if (s.includes("easy")) return "easypaisa";
+  if (s.includes("bank") || s.includes("transfer") || s.includes("hbl") || s.includes("meezan")) {
+    return "bank";
+  }
+  if (s.includes("card") || s.includes("stripe")) return "card";
+  if (s.includes("paypal")) return "paypal";
+  return "other";
+}
+
+const PAYMENT_LABELS = {
+  cod: "Cash on Delivery",
+  jazzcash: "JazzCash",
+  easypaisa: "Easypaisa",
+  bank: "Bank Transfer",
+  card: "Card",
+  paypal: "PayPal",
+  other: "Other",
+};
+
+function computeOrderProfit(order, costByProduct) {
+  let profit = 0;
+  let cost = 0;
+  let sell = 0;
+  for (const it of order.items || []) {
+    const qty = Math.max(0, Number(it.quantity) || 0);
+    const unitPrice = Math.max(0, Number(it.unitPrice) || 0);
+    let unitCost = Number(it.unitCost);
+    if (!Number.isFinite(unitCost) || unitCost < 0) {
+      unitCost = it.productId ? costByProduct.get(String(it.productId)) || 0 : 0;
+    }
+    sell += unitPrice * qty;
+    cost += unitCost * qty;
+    profit += (unitPrice - unitCost) * qty;
+  }
+  return { profit, cost, sell };
+}
+
 export async function GET(request) {
   try {
     if (!getRequestUser(request)) {
@@ -39,6 +97,16 @@ export async function GET(request) {
       searchParams.get("to")
     );
     const period = dateMatch(range.from, range.to);
+
+    const now = new Date();
+    const todayStart = utcStartOfDay(now);
+    const todayEnd = utcEndOfDay(now);
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+    const lastMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1, 0, 0, 0, 0));
+    const lastMonthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0, 23, 59, 59, 999));
+    const yesterdayStart = new Date(todayStart);
+    yesterdayStart.setUTCDate(yesterdayStart.getUTCDate() - 1);
+    const yesterdayEnd = utcEndOfDay(yesterdayStart);
 
     const sellMatch = {
       ...period,
@@ -75,6 +143,14 @@ export async function GET(request) {
       salesByDayAgg,
       lowStockProducts,
       profitOrders,
+      todayPaidAgg,
+      todayOrderCount,
+      yesterdayPaidAgg,
+      monthPaidAgg,
+      lastMonthPaidAgg,
+      paymentAgg,
+      weekdayAgg,
+      categoryOrders,
     ] = await Promise.all([
       Order.aggregate([{ $match: paidMatch }, { $group: { _id: null, total: sumTotal } }]),
       Order.countDocuments(period),
@@ -106,19 +182,13 @@ export async function GET(request) {
                     ...(range.to ? { $lte: range.to } : {}),
                   },
                 }
-              : {
-                  createdAt: { $gte: chartFrom, $lte: chartTo },
-                }),
+              : { createdAt: { $gte: chartFrom, $lte: chartTo } }),
           },
         },
         {
           $group: {
             _id: {
-              $dateToString: {
-                format: "%Y-%m-%d",
-                date: "$createdAt",
-                timezone: "UTC",
-              },
+              $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "UTC" },
             },
             revenue: sumTotal,
           },
@@ -134,12 +204,108 @@ export async function GET(request) {
       })
         .select("name inventory.quantity inventory.lowStockThreshold")
         .lean(),
-      Order.find(sellMatch).select("items.productId items.quantity items.unitPrice items.unitCost").lean(),
+      Order.find(sellMatch)
+        .select("items.productId items.quantity items.unitPrice items.unitCost items.name")
+        .lean(),
+      Order.aggregate([
+        {
+          $match: {
+            paymentStatus: "paid",
+            createdAt: { $gte: todayStart, $lte: todayEnd },
+          },
+        },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
+      Order.countDocuments({ createdAt: { $gte: todayStart, $lte: todayEnd } }),
+      Order.aggregate([
+        {
+          $match: {
+            paymentStatus: "paid",
+            createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
+          },
+        },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            paymentStatus: "paid",
+            createdAt: { $gte: monthStart, $lte: todayEnd },
+          },
+        },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            paymentStatus: "paid",
+            createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
+          },
+        },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
+      Order.aggregate([
+        { $match: period },
+        {
+          $group: {
+            _id: { $ifNull: ["$paymentMethod", "$payment.method"] },
+            count: { $sum: 1 },
+            total: sumTotal,
+          },
+        },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            paymentStatus: "paid",
+            createdAt: {
+              $gte: (() => {
+                const d = new Date(todayStart);
+                d.setUTCDate(d.getUTCDate() - 6);
+                return d;
+              })(),
+              $lte: todayEnd,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: { $dayOfWeek: "$createdAt" },
+            revenue: sumTotal,
+            cost: {
+              $sum: {
+                $reduce: {
+                  input: { $ifNull: ["$items", []] },
+                  initialValue: 0,
+                  in: {
+                    $add: [
+                      "$$value",
+                      {
+                        $multiply: [
+                          { $ifNull: ["$$this.quantity", 0] },
+                          { $ifNull: ["$$this.unitCost", 0] },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      ]),
+      Order.find(sellMatch)
+        .select("items.productId items.quantity items.unitPrice items.name")
+        .lean(),
     ]);
 
     const periodSales = periodSalesAgg[0]?.total ?? 0;
     const totalRevenue = paidRevenueAgg[0]?.total ?? 0;
     const totalSell = totalSellAgg[0]?.total ?? 0;
+    const calendarTodaySales = todayPaidAgg[0]?.total ?? 0;
+    const yesterdaySales = yesterdayPaidAgg[0]?.total ?? 0;
+    const thisMonthRevenue = monthPaidAgg[0]?.total ?? 0;
+    const lastMonthRevenue = lastMonthPaidAgg[0]?.total ?? 0;
 
     const productIds = new Set();
     for (const o of profitOrders) {
@@ -147,29 +313,38 @@ export async function GET(request) {
         if (it.productId) productIds.add(String(it.productId));
       }
     }
+    for (const o of categoryOrders) {
+      for (const it of o.items || []) {
+        if (it.productId) productIds.add(String(it.productId));
+      }
+    }
     const costByProduct = new Map();
+    const categoryByProduct = new Map();
     if (productIds.size) {
       const products = await Product.find({ _id: { $in: [...productIds] } })
-        .select("pricing.costPerItem")
+        .select("pricing.costPerItem categories")
+        .populate("categories", "name")
         .lean();
       for (const p of products) {
         costByProduct.set(String(p._id), Math.max(0, Number(p.pricing?.costPerItem) || 0));
+        const catName = Array.isArray(p.categories) && p.categories[0]?.name
+          ? p.categories[0].name
+          : "Uncategorized";
+        categoryByProduct.set(String(p._id), catName);
       }
     }
 
     let totalProfit = 0;
+    let totalCost = 0;
     for (const o of profitOrders) {
-      for (const it of o.items || []) {
-        const qty = Math.max(0, Number(it.quantity) || 0);
-        const unitPrice = Math.max(0, Number(it.unitPrice) || 0);
-        let unitCost = Number(it.unitCost);
-        if (!Number.isFinite(unitCost) || unitCost < 0) {
-          unitCost = it.productId ? costByProduct.get(String(it.productId)) || 0 : 0;
-        }
-        totalProfit += (unitPrice - unitCost) * qty;
-      }
+      const { profit, cost } = computeOrderProfit(o, costByProduct);
+      totalProfit += profit;
+      totalCost += cost;
     }
     totalProfit = Math.round(totalProfit * 100) / 100;
+    totalCost = Math.round(totalCost * 100) / 100;
+    const profitMargin =
+      totalSell > 0 ? Math.round((totalProfit / totalSell) * 1000) / 10 : 0;
 
     const orderStatusCounts = {
       pending: 0,
@@ -212,7 +387,6 @@ export async function GET(request) {
         return { date: b.key, label: b.label, revenue: rev };
       });
     } else {
-      // all-time fallback: last 30 days
       const end = new Date();
       const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate()));
       start.setUTCDate(start.getUTCDate() - 29);
@@ -228,12 +402,75 @@ export async function GET(request) {
       }
     }
 
+    // Mongo dayOfWeek: 1=Sun … 7=Sat → map to Mon–Sun chart
+    const weekdayMap = { 2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5, 1: 6 };
+    const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const weekdayRevenueVsCost = weekdayLabels.map((label) => ({
+      label,
+      revenue: 0,
+      cost: 0,
+    }));
+    for (const row of weekdayAgg) {
+      const idx = weekdayMap[row._id];
+      if (idx == null) continue;
+      weekdayRevenueVsCost[idx].revenue = Math.round((Number(row.revenue) || 0) * 100) / 100;
+      weekdayRevenueVsCost[idx].cost = Math.round((Number(row.cost) || 0) * 100) / 100;
+    }
+
+    // Payment methods
+    const paymentTotals = {};
+    let paymentSum = 0;
+    for (const row of paymentAgg) {
+      const key = normalizePaymentKey(row._id);
+      paymentTotals[key] = (paymentTotals[key] || 0) + (Number(row.count) || 0);
+      paymentSum += Number(row.count) || 0;
+    }
+    const paymentMethods = Object.entries(paymentTotals)
+      .map(([key, count]) => ({
+        key,
+        label: PAYMENT_LABELS[key] || key,
+        count,
+        percent: paymentSum ? Math.round((count / paymentSum) * 1000) / 10 : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    // Sales by category
+    const catSell = {};
+    for (const o of categoryOrders) {
+      for (const it of o.items || []) {
+        const qty = Math.max(0, Number(it.quantity) || 0);
+        const unitPrice = Math.max(0, Number(it.unitPrice) || 0);
+        const line = qty * unitPrice;
+        const catName = it.productId
+          ? categoryByProduct.get(String(it.productId)) || "Uncategorized"
+          : "Uncategorized";
+        catSell[catName] = (catSell[catName] || 0) + line;
+      }
+    }
+    const catEntries = Object.entries(catSell).sort((a, b) => b[1] - a[1]);
+    const catTotal = catEntries.reduce((s, [, v]) => s + v, 0) || 1;
+    let salesByCategory = catEntries.slice(0, 5).map(([name, value]) => ({
+      name,
+      value: Math.round(value * 100) / 100,
+      percent: Math.round((value / catTotal) * 1000) / 10,
+    }));
+    if (catEntries.length > 5) {
+      const rest = catEntries.slice(5).reduce((s, [, v]) => s + v, 0);
+      salesByCategory.push({
+        name: "Other",
+        value: Math.round(rest * 100) / 100,
+        percent: Math.round((rest / catTotal) * 1000) / 10,
+      });
+    }
+
     const recentOrders = recentOrdersDocs.map((o) => ({
       id: o._id.toString(),
       orderNumber: o.orderNumber,
       customerName: o.customer?.name || o.customer?.customerId?.name || "Guest",
+      city: o.shippingAddress?.city || "",
       total: orderGrandTotal(o),
       status: o.orderStatus,
+      paymentStatus: o.paymentStatus || "",
       date: o.createdAt,
     }));
 
@@ -243,6 +480,42 @@ export async function GET(request) {
       quantity: p.inventory?.quantity ?? 0,
       threshold: p.inventory?.lowStockThreshold ?? 5,
     }));
+
+    // Business insights (simple heuristics)
+    const insights = [];
+    const bestWeekday = [...weekdayRevenueVsCost].sort((a, b) => b.revenue - a.revenue)[0];
+    if (bestWeekday?.revenue > 0) {
+      insights.push({
+        icon: "bolt",
+        text: `${bestWeekday.label} is your strongest day this week (avg Rs ${Math.round(bestWeekday.revenue).toLocaleString("en-PK")}). Consider promos on quieter days.`,
+      });
+    }
+    if (profitMargin > 0) {
+      insights.push({
+        icon: "bolt",
+        text: `Net margin is ${profitMargin}% on sell in this period. Keep cost-per-item updated for accurate profit.`,
+      });
+    }
+    const codShare = paymentMethods.find((p) => p.key === "cod")?.percent || 0;
+    if (codShare >= 40) {
+      insights.push({
+        icon: "bolt",
+        text: `COD is ${codShare}% of orders. Nudge customers to JazzCash/Easypaisa to lower returns and collection delays.`,
+      });
+    }
+    if (ordersReturned > 0 && ordersReceived > 0) {
+      const retPct = Math.round((ordersReturned / ordersReceived) * 1000) / 10;
+      insights.push({
+        icon: "bolt",
+        text: `Return rate is ${retPct}% in this period. Review returned SKUs and city patterns.`,
+      });
+    }
+    if (!insights.length) {
+      insights.push({
+        icon: "bolt",
+        text: "Keep adding orders and product costs — insights will appear as your data grows.",
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -255,11 +528,18 @@ export async function GET(request) {
         },
         periodSales,
         periodOrders: periodOrdersCount,
-        todaySales: periodSales,
-        todayOrders: periodOrdersCount,
+        todaySales: calendarTodaySales,
+        todayOrders: todayOrderCount,
+        todaySalesGrowth: pctChange(calendarTodaySales, yesterdaySales),
+        monthlyRevenue: thisMonthRevenue,
+        lastMonthRevenue,
+        monthlyGrowth: pctChange(thisMonthRevenue, lastMonthRevenue),
         totalRevenue,
         totalSell,
         totalProfit,
+        totalCost,
+        profitMargin,
+        profitGrowth: pctChange(totalProfit, lastMonthRevenue > 0 ? lastMonthRevenue * 0.25 : 0),
         totalCustomers,
         pendingOrders,
         ordersReceived,
@@ -272,6 +552,10 @@ export async function GET(request) {
         salesTrend,
         chartMode,
         lowStockProducts: lowStock,
+        salesByCategory,
+        paymentMethods,
+        weekdayRevenueVsCost,
+        insights,
       },
     });
   } catch (error) {

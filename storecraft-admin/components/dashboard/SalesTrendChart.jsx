@@ -1,5 +1,5 @@
 /**
- * Revenue trend — calm empty state when no paid revenue; otherwise clean area chart.
+ * Revenue trend — forest green area chart (reference style).
  */
 "use client";
 
@@ -15,12 +15,14 @@ import {
 } from "recharts";
 import { formatAdminPrice } from "@/lib/currency";
 
+const GREEN = "#1A7A4C";
+
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900">
       <p className="text-xs text-slate-400">{label}</p>
-      <p className="font-semibold tabular-nums text-slate-900 dark:text-white">
+      <p className="font-semibold tabular-nums" style={{ color: GREEN }}>
         {formatAdminPrice(Number(payload[0]?.value) || 0)}
       </p>
     </div>
@@ -49,28 +51,28 @@ export function SalesTrendChart({ data, rangeLabel, chartMode }) {
   const hasRevenue = total > 0;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-baseline justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Revenue trend</h3>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Sales trend</h3>
           <p className="text-xs text-slate-400">
-            Paid orders · {rangeLabel || "Period"}
+            Paid revenue · {rangeLabel || "Period"}
             {chartMode === "week" ? " · weekly" : ""}
           </p>
         </div>
         {hasRevenue ? (
-          <p className="text-sm font-semibold tabular-nums text-slate-900 dark:text-white">
+          <p className="text-sm font-bold tabular-nums" style={{ color: GREEN }}>
             {formatAdminPrice(total)}
           </p>
         ) : null}
       </div>
 
-      <div className="mt-4 h-64 w-full">
+      <div className="mt-4 h-56 w-full">
         {!rows.length || !hasRevenue ? (
-          <div className="flex h-full flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-950/50">
+          <div className="flex h-full flex-col items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-950/50">
             <p className="text-sm font-medium text-slate-600 dark:text-slate-300">No paid revenue yet</p>
             <p className="mt-1 max-w-xs text-center text-xs text-slate-400">
-              The chart will appear once orders are marked paid in this period.
+              Chart appears once orders are marked paid.
             </p>
           </div>
         ) : (
@@ -78,8 +80,8 @@ export function SalesTrendChart({ data, rangeLabel, chartMode }) {
             <AreaChart data={rows} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id={`rev-${gradId}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#334155" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="#334155" stopOpacity={0} />
+                  <stop offset="0%" stopColor={GREEN} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={GREEN} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 6" stroke="#e2e8f0" vertical={false} />
@@ -89,7 +91,7 @@ export function SalesTrendChart({ data, rangeLabel, chartMode }) {
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
-                minTickGap={32}
+                minTickGap={28}
               />
               <YAxis
                 tick={{ fontSize: 11, fill: "#94a3b8" }}
@@ -103,11 +105,11 @@ export function SalesTrendChart({ data, rangeLabel, chartMode }) {
               <Area
                 type="monotone"
                 dataKey="revenue"
-                stroke="#334155"
-                strokeWidth={2}
+                stroke={GREEN}
+                strokeWidth={2.5}
                 fill={`url(#rev-${gradId})`}
-                dot={false}
-                activeDot={{ r: 4, fill: "#0f172a", stroke: "#fff", strokeWidth: 2 }}
+                dot={{ r: 3, fill: GREEN, stroke: "#fff", strokeWidth: 1.5 }}
+                activeDot={{ r: 5, fill: GREEN, stroke: "#fff", strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>
