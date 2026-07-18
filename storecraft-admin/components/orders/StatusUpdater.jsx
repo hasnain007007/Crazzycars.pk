@@ -114,27 +114,98 @@ export function OrderStatusCard({ order, onUpdated }) {
   );
 }
 
+function orderTotal(order) {
+  const t = Number(order?.pricing?.total ?? order?.subtotal ?? 0);
+  return Number.isFinite(t) ? t : 0;
+}
+
 export function PaymentStatusCard({ order, onUpdated }) {
-  const [next, setNext] = useState(order.paymentStatus);
+  const total = orderTotal(order);
+  const [next, setNext] = useState(() => String(order.paymentStatus || "unpaid").toLowerCase());
+  const [paidAmount, setPaidAmount] = useState("");
+  const [remainingCod, setRemainingCod] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const isPartial = String(next).toLowerCase() === "partial";
+
   useEffect(() => {
-    setNext(order.paymentStatus);
-  }, [order.paymentStatus, order.id]);
+    const status = String(order.paymentStatus || "unpaid").toLowerCase();
+    setNext(status);
+    const paid = Number(order.payment?.paidAmount ?? order.payment?.amount ?? 0) || 0;
+    const rem = Number(order.payment?.remainingCod ?? 0) || 0;
+    if (status === "partial") {
+      setPaidAmount(paid > 0 ? String(paid) : "");
+      setRemainingCod(rem > 0 ? String(rem) : total > 0 ? String(total) : "");
+    } else {
+      setPaidAmount("");
+      setRemainingCod(total > 0 ? String(total) : "");
+    }
+  }, [order.paymentStatus, order.payment?.paidAmount, order.payment?.amount, order.payment?.remainingCod, order.id, total]);
+
+  function selectStatus(value) {
+    const v = String(value).toLowerCase();
+    setNext(v);
+    if (v === "partial") {
+      const paid = Number(order.payment?.paidAmount ?? order.payment?.amount ?? 0) || 0;
+      const rem = Number(order.payment?.remainingCod ?? 0) || 0;
+      setPaidAmount(paid > 0 ? String(paid) : "");
+      setRemainingCod(rem > 0 ? String(rem) : total > 0 ? String(total) : "");
+    }
+  }
+
+  function onPaidChange(value) {
+    setPaidAmount(value);
+    const paid = Number(value);
+    if (Number.isFinite(paid) && paid >= 0 && total > 0) {
+      setRemainingCod(String(Math.max(0, Math.round((total - paid) * 100) / 100)));
+    }
+  }
+
+  function onRemainingChange(value) {
+    setRemainingCod(value);
+    const rem = Number(value);
+    if (Number.isFinite(rem) && rem >= 0 && total > 0) {
+      setPaidAmount(String(Math.max(0, Math.round((total - rem) * 100) / 100)));
+    }
+  }
 
   async function submit(e) {
     e.preventDefault();
-    if (next === order.paymentStatus) {
+    const status = String(next).toLowerCase();
+    const sameStatus = status === String(order.paymentStatus || "").toLowerCase();
+
+    if (sameStatus && status !== "partial") {
       toast.error("Select a different payment status.");
       return;
     }
+
+    let paid = 0;
+    let remaining = 0;
+    if (status === "partial") {
+      paid = Number(paidAmount);
+      remaining = Number(remainingCod);
+      if (!Number.isFinite(paid) || paid < 0 || String(paidAmount).trim() === "") {
+        toast.error("Enter how much was paid (partial payment).");
+        return;
+      }
+      if (!Number.isFinite(remaining) || remaining < 0 || String(remainingCod).trim() === "") {
+        toast.error("Enter the remaining COD amount.");
+        return;
+      }
+    }
+
     setSaving(true);
     try {
+      const body = { paymentStatus: status };
+      if (status === "partial") {
+        body.paidAmount = paid;
+        body.remainingCod = remaining;
+      }
       const res = await fetch(`/api/orders/${order.id}`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentStatus: next }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
@@ -164,12 +235,26 @@ export function PaymentStatusCard({ order, onUpdated }) {
           {order.paymentStatus}
         </span>
       </div>
+
+      {String(order.paymentStatus).toLowerCase() === "partial" ? (
+        <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+          <p>
+            Paid:{" "}
+            <strong>Rs. {(Number(order.payment?.paidAmount ?? order.payment?.amount) || 0).toLocaleString()}</strong>
+          </p>
+          <p className="mt-0.5">
+            Remaining COD:{" "}
+            <strong>Rs. {(Number(order.payment?.remainingCod) || 0).toLocaleString()}</strong>
+          </p>
+        </div>
+      ) : null}
+
       <form onSubmit={submit} className="mt-4 space-y-3">
         <div>
           <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Payment status</label>
           <select
-            value={next}
-            onChange={(e) => setNext(e.target.value)}
+            value={String(next).toLowerCase()}
+            onChange={(e) => selectStatus(e.target.value)}
             className="mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm capitalize dark:border-slate-600 dark:bg-slate-800"
           >
             {PAYMENT_STATUSES.map((s) => (
@@ -179,6 +264,48 @@ export function PaymentStatusCard({ order, onUpdated }) {
             ))}
           </select>
         </div>
+
+        {isPartial ? (
+          <div className="space-y-3 rounded-lg border-2 border-[#1d6fb8]/40 bg-[#1d6fb8]/5 p-3">
+            <p className="text-xs font-semibold text-[#1d6fb8]">Partial payment details</p>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                How much is paid? (Rs.)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={paidAmount}
+                onChange={(e) => onPaidChange(e.target.value)}
+                placeholder="e.g. 3000"
+                required
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium dark:border-slate-600 dark:bg-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                Remaining COD (Rs.)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={remainingCod}
+                onChange={(e) => onRemainingChange(e.target.value)}
+                placeholder={total > 0 ? `Order total ${total}` : "e.g. 5850"}
+                required
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium dark:border-slate-600 dark:bg-slate-900"
+              />
+              {total > 0 ? (
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Order total Rs. {total.toLocaleString()}. Enter paid — remaining fills automatically.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
         <button
           type="submit"
           disabled={saving}

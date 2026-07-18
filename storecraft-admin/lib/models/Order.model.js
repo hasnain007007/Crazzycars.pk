@@ -89,7 +89,22 @@ const orderSchema = new mongoose.Schema(
       default: "unpaid",
       index: true,
     },
-    paymentMethod: { type: String, enum: ["cod", "stripe", "paypal"], default: "cod", trim: true },
+    paymentMethod: {
+      type: String,
+      enum: [
+        "cod",
+        "stripe",
+        "paypal",
+        "jazzcash",
+        "easypaisa",
+        "bankTransfer",
+        "hbl",
+        "meezan",
+        "ubl",
+      ],
+      default: "cod",
+      trim: true,
+    },
     currency: { type: String, default: "PKR" },
     payment: {
       paypalOrderId: { type: String, default: "" },
@@ -98,6 +113,10 @@ const orderSchema = new mongoose.Schema(
       stripePaymentIntentId: { type: String, default: "" },
       paidAt: { type: Date },
       amount: { type: Number, default: 0 },
+      /** Amount already collected when paymentStatus is partial */
+      paidAmount: { type: Number, default: 0, min: 0 },
+      /** Remaining COD to collect on delivery */
+      remainingCod: { type: Number, default: 0, min: 0 },
     },
     shippingAddress: {
       firstName: { type: String, default: "" },
@@ -114,7 +133,7 @@ const orderSchema = new mongoose.Schema(
       zip: { type: String, default: "" },
       postcode: { type: String, default: "" },
       postalCode: { type: String, default: "" },
-      country: { type: String, default: "Portugal" },
+      country: { type: String, default: "Pakistan" },
       nif: { type: String, default: "" },
     },
     couponCode: { type: String, default: "", trim: true },

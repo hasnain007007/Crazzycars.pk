@@ -16,6 +16,7 @@ import {
 import { InternalNotes } from "./InternalNotes";
 import { PrintInvoice } from "./PrintInvoice";
 import { OrderStatusCard, PaymentStatusCard } from "./StatusUpdater";
+import { OrderItemsEditor } from "./OrderItemsEditor";
 import {
   buildWaLink,
   getAdminWhatsAppNumber,
@@ -37,8 +38,9 @@ function adminOrderDetailUrl(order) {
   const base =
     typeof window !== "undefined"
       ? window.location.origin
-      : "https://storecraft-admin-beta.vercel.app";
-  return orderId ? `${String(base).replace(/\/$/, "")}/orders/${orderId}` : "";
+      : process.env.NEXT_PUBLIC_APP_URL || "";
+  if (!base || !orderId) return "";
+  return `${String(base).replace(/\/$/, "")}/orders/${orderId}`;
 }
 
 function buildAdminOrderNotifyVariables(order) {
@@ -77,11 +79,6 @@ function orderItemCount(order) {
 
 function formatMoney(n) {
   return formatAdminPrice(n);
-}
-
-function measurementEntries(item) {
-  if (!item?.customMeasurements || typeof item.customMeasurements !== "object") return [];
-  return Object.entries(item.customMeasurements).filter(([k, v]) => k && String(v || "").trim());
 }
 
 function paymentMethodLabel(method) {
@@ -647,7 +644,9 @@ function PaymentInformationSection({ order, orderId, onRefunded }) {
                     ? "#fee2e2"
                     : order.paymentStatus === "failed"
                       ? "#fee2e2"
-                      : "#fef3c7",
+                      : order.paymentStatus === "partial"
+                        ? "#dbeafe"
+                        : "#fef3c7",
               color:
                 order.paymentStatus === "paid"
                   ? "#16a34a"
@@ -655,7 +654,9 @@ function PaymentInformationSection({ order, orderId, onRefunded }) {
                     ? "#dc2626"
                     : order.paymentStatus === "failed"
                       ? "#dc2626"
-                      : "#92400e",
+                      : order.paymentStatus === "partial"
+                        ? "#1d4ed8"
+                        : "#92400e",
             }}
           >
             {order.paymentStatus === "paid"
@@ -664,7 +665,11 @@ function PaymentInformationSection({ order, orderId, onRefunded }) {
                 ? "Refunded"
                 : order.paymentStatus === "failed"
                   ? "Failed"
-                  : "Pending"}
+                  : order.paymentStatus === "partial"
+                    ? "Partial"
+                    : order.paymentStatus === "unpaid"
+                      ? "Unpaid"
+                      : "Pending"}
           </span>
         </div>
 
@@ -679,12 +684,27 @@ function PaymentInformationSection({ order, orderId, onRefunded }) {
           </div>
         ) : null}
 
-        {order.payment?.amount != null && order.payment.amount > 0 ? (
+        {(order.paymentStatus === "partial"
+          ? Number(order.payment?.paidAmount ?? order.payment?.amount) > 0
+          : order.payment?.amount != null && order.payment.amount > 0) ? (
           <div>
             <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>
-              Amount paid
+              {order.paymentStatus === "partial" ? "Paid amount" : "Amount paid"}
             </p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: "#16a34a", margin: 0 }}>{formatMoney(order.payment.amount)}</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#16a34a", margin: 0 }}>
+              {formatMoney(order.payment?.paidAmount ?? order.payment.amount)}
+            </p>
+          </div>
+        ) : null}
+
+        {order.paymentStatus === "partial" && Number(order.payment?.remainingCod) > 0 ? (
+          <div>
+            <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>
+              Remaining COD
+            </p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#c2410c", margin: 0 }}>
+              {formatMoney(order.payment.remainingCod)}
+            </p>
           </div>
         ) : null}
 
@@ -1598,91 +1618,7 @@ export function OrderDetail({ orderId }) {
             <OrderInformationCard order={order} />
             <ShippingDetailsCard order={order} orderId={orderId} onUpdated={setOrder} />
 
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Order items</h2>
-              <div className="mt-3 overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="border-b border-slate-200 text-xs font-semibold uppercase text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                    <tr>
-                      <th className="py-2 pr-2">Image</th>
-                      <th className="py-2 pr-2">Product</th>
-                      <th className="py-2 pr-2">Variation</th>
-                      <th className="py-2 pr-2 text-right">Qty</th>
-                      <th className="py-2 pr-2 text-right">Unit price</th>
-                      <th className="py-2 text-right">Line total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {(order.items || []).map((item, idx) => (
-                      <tr key={idx}>
-                        <td className="py-2 pr-2">
-                          <div className="h-12 w-12 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
-                            {item.image ? (
-                              <>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={item.image} alt="" className="h-full w-full object-cover" />
-                              </>
-                            ) : (
-                              <span className="flex h-full items-center justify-center text-[10px] text-slate-400">
-                                —
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-2 pr-2 font-medium text-slate-900 dark:text-white">
-                          {item.name}
-                          {measurementEntries(item).length ? (
-                            <details className="mt-2 rounded border border-blue-200 bg-blue-50 p-2 text-xs">
-                              <summary className="cursor-pointer font-semibold text-blue-800">📏 Custom Measurements</summary>
-                              <table className="mt-2 w-full text-left text-xs">
-                                <thead>
-                                  <tr className="text-blue-700">
-                                    <th className="pr-2">Field</th>
-                                    <th>Value</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {measurementEntries(item).map(([key, value]) => (
-                                    <tr key={key}>
-                                      <td className="pr-2 py-0.5 text-slate-700">{key}</td>
-                                      <td className="py-0.5 text-slate-900">{String(value)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </details>
-                          ) : null}
-                        </td>
-                        <td className="py-2 pr-2 text-slate-600 dark:text-slate-300">{item.variation || "—"}</td>
-                        <td className="py-2 pr-2 text-right tabular-nums">{item.quantity}</td>
-                        <td className="py-2 pr-2 text-right tabular-nums">{formatMoney(item.unitPrice)}</td>
-                        <td className="py-2 text-right tabular-nums font-medium">{formatMoney(item.total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="mt-4 border-t border-slate-100 pt-4 text-sm dark:border-slate-800">
-                <div className="flex justify-between py-0.5">
-                  <span className="text-slate-600 dark:text-slate-400">Subtotal</span>
-                  <span className="tabular-nums">{formatMoney(p.subtotal)}</span>
-                </div>
-                {p.discount > 0 ? (
-                  <div className="flex justify-between py-0.5 text-emerald-700 dark:text-emerald-400">
-                    <span>Discount</span>
-                    <span className="tabular-nums">−{formatMoney(p.discount)}</span>
-                  </div>
-                ) : null}
-                <div className="flex justify-between py-0.5">
-                  <span className="text-slate-600 dark:text-slate-400">Shipping</span>
-                  <span className="tabular-nums">{formatMoney(p.shippingCost)}</span>
-                </div>
-                <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 text-lg font-bold dark:border-slate-700">
-                  <span>Total</span>
-                  <span className="tabular-nums">{formatMoney(p.total)}</span>
-                </div>
-              </div>
-            </div>
+            <OrderItemsEditor order={order} onUpdated={setOrder} />
 
             <InternalNotes order={order} onUpdated={setOrder} />
           </div>

@@ -56,7 +56,21 @@ function serializeOrder(doc) {
     orderStatus: o.orderStatus,
     paymentStatus: o.paymentStatus,
     paymentMethod: o.paymentMethod || "",
-    payment: o.payment && typeof o.payment === "object" ? { ...o.payment } : {},
+    payment: (() => {
+      const pay = o.payment;
+      if (!pay || typeof pay !== "object") return {};
+      const plain = typeof pay.toObject === "function" ? pay.toObject() : { ...pay };
+      return {
+        paypalOrderId: plain.paypalOrderId || "",
+        paypalCaptureId: plain.paypalCaptureId || "",
+        transactionId: plain.transactionId || "",
+        stripePaymentIntentId: plain.stripePaymentIntentId || "",
+        paidAt: plain.paidAt || null,
+        amount: Number(plain.amount) || 0,
+        paidAmount: Number(plain.paidAmount ?? plain.amount) || 0,
+        remainingCod: Number(plain.remainingCod) || 0,
+      };
+    })(),
     shippingAddress: o.shippingAddress || {},
     couponCode: o.couponCode || "",
     trackingNumber: o.trackingNumber || o.tracking?.number || "",
@@ -188,13 +202,171 @@ export async function PUT(request, context) {
       updates.push(`orderStatus → ${body.orderStatus}`);
     }
 
-    if (body.paymentStatus !== undefined && body.paymentStatus !== order.paymentStatus) {
-      const allowedPay = ["unpaid", "paid", "refunded", "partial"];
-      if (!allowedPay.includes(body.paymentStatus)) {
+    if (body.paymentStatus !== undefined) {
+      const allowedPay = ["unpaid", "paid", "refunded", "partial", "failed"];
+      const nextPay = String(body.paymentStatus || "").toLowerCase().trim();
+      if (!allowedPay.includes(nextPay)) {
         return NextResponse.json({ success: false, error: "Invalid payment status." }, { status: 400 });
       }
-      order.paymentStatus = body.paymentStatus;
-      updates.push(`paymentStatus → ${body.paymentStatus}`);
+
+      const statusChanging = nextPay !== order.paymentStatus;
+      if (statusChanging) {
+        order.paymentStatus = nextPay;
+        updates.push(`paymentStatus → ${nextPay}`);
+      }
+
+      if (nextPay === "partial") {
+        const paidAmount = Number(body.paidAmount);
+        const remainingCod = Number(body.remainingCod);
+        if (!Number.isFinite(paidAmount) || paidAmount < 0) {
+          return NextResponse.json(
+            { success: false, error: "Enter a valid paid amount for partial payment." },
+            { status: 400 }
+          );
+        }
+        if (!Number.isFinite(remainingCod) || remainingCod < 0) {
+          return NextResponse.json(
+            { success: false, error: "Enter a valid remaining COD amount." },
+            { status: 400 }
+          );
+        }
+        if (paidAmount <= 0 && remainingCod <= 0) {
+          return NextResponse.json(
+            { success: false, error: "Partial payment requires a paid amount and/or remaining COD." },
+            { status: 400 }
+          );
+        }
+        if (!order.payment || typeof order.payment !== "object") order.payment = {};
+        order.payment.paidAmount = paidAmount;
+        order.payment.remainingCod = remainingCod;
+        order.payment.amount = paidAmount;
+        order.markModified("payment");
+        updates.push(`partial: paid ${paidAmount}, remaining COD ${remainingCod}`);
+      } else if (statusChanging && ["unpaid", "paid", "refunded", "failed"].includes(nextPay)) {
+        if (!order.payment || typeof order.payment !== "object") order.payment = {};
+        if (nextPay === "paid") {
+          const total = orderGrandTotal(order);
+          order.payment.paidAmount = total;
+          order.payment.remainingCod = 0;
+          order.payment.amount = total;
+          order.payment.paidAt = order.payment.paidAt || new Date();
+        } else if (nextPay === "unpaid") {
+          order.payment.paidAmount = 0;
+          order.payment.remainingCod = 0;
+          order.payment.amount = 0;
+        }
+        order.markModified("payment");
+      } else if (!statusChanging) {
+        return NextResponse.json(
+          { success: false, error: "Select a different payment status." },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (Array.isArray(body.items)) {
+      if (body.items.length < 1) {
+        return NextResponse.json(
+          { success: false, error: "Order must have at least one item." },
+          { status: 400 }
+        );
+      }
+      const normalizedItems = [];
+      for (const raw of body.items) {
+        const name = String(raw?.name || "").trim();
+        const quantity = Math.max(1, Math.min(999, Math.round(Number(raw?.quantity) || 1)));
+        const unitPrice = Math.max(0, Number(raw?.unitPrice) || 0);
+        if (!name) {
+          return NextResponse.json(
+            { success: false, error: "Each item needs a product name." },
+            { status: 400 }
+          );
+        }
+        if (!Number.isFinite(unitPrice)) {
+          return NextResponse.json(
+            { success: false, error: "Each item needs a valid unit price." },
+            { status: 400 }
+          );
+        }
+        const lineTotal = Math.round(quantity * unitPrice * 100) / 100;
+        let productId = null;
+        if (raw?.productId && mongoose.Types.ObjectId.isValid(String(raw.productId))) {
+          productId = raw.productId;
+        }
+        normalizedItems.push({
+          productId,
+          name: name.slice(0, 300),
+          image: String(raw?.image || "").trim().slice(0, 1000),
+          variation: String(raw?.variation || "").trim().slice(0, 200),
+          quantity,
+          unitPrice,
+          total: lineTotal,
+        });
+      }
+
+      const subtotal = Math.round(
+        normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0) * 100
+      ) / 100;
+      const discount = Math.max(0, Number(order.pricing?.discount) || 0);
+
+      let shippingCost = Number(order.pricing?.shippingCost ?? order.shippingCost ?? 0) || 0;
+      if (body.deliveryEnabled === false) {
+        shippingCost = 0;
+      } else if (body.shippingCost !== undefined) {
+        shippingCost = Math.max(0, Number(body.shippingCost) || 0);
+      } else if (body.deliveryEnabled === true && body.shippingCost === undefined && shippingCost <= 0) {
+        shippingCost = 250;
+      }
+
+      const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+
+      order.items = normalizedItems;
+      order.subtotal = subtotal;
+      order.shippingCost = shippingCost;
+      order.pricing = {
+        ...(order.pricing?.toObject?.() || order.pricing || {}),
+        subtotal,
+        discount,
+        shippingCost,
+        shippingMethod: order.pricing?.shippingMethod || "",
+        shippingZone: order.pricing?.shippingZone || "",
+        total,
+      };
+      order.markModified("items");
+      order.markModified("pricing");
+
+      if (!Array.isArray(order.timeline)) order.timeline = [];
+      order.timeline.push({
+        status: "items_updated",
+        title: "Order items updated by admin",
+        description: `${normalizedItems.length} item(s) · total Rs. ${total}`,
+        timestamp: new Date(),
+        by: "admin",
+      });
+      order.markModified("timeline");
+      updates.push("items & pricing updated");
+    } else if (body.shippingCost !== undefined || body.deliveryEnabled !== undefined) {
+      const discount = Math.max(0, Number(order.pricing?.discount) || 0);
+      const subtotal = Math.max(
+        0,
+        Number(order.pricing?.subtotal ?? order.subtotal) || 0
+      );
+      let shippingCost = Number(order.pricing?.shippingCost ?? order.shippingCost ?? 0) || 0;
+      if (body.deliveryEnabled === false) shippingCost = 0;
+      else if (body.shippingCost !== undefined) shippingCost = Math.max(0, Number(body.shippingCost) || 0);
+      const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+      order.shippingCost = shippingCost;
+      order.pricing = {
+        ...(order.pricing?.toObject?.() || order.pricing || {}),
+        subtotal,
+        discount,
+        shippingCost,
+        shippingMethod: order.pricing?.shippingMethod || "",
+        shippingZone: order.pricing?.shippingZone || "",
+        total,
+      };
+      order.markModified("pricing");
+      updates.push(`shipping → ${shippingCost}`);
     }
 
     if (body.shippingAddress && typeof body.shippingAddress === "object") {
