@@ -4,26 +4,21 @@ const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
 
 const DEFAULT_HERO = {
   badge: "Our Story",
-  title: "Pakistan's Premier Car Accessories Store",
-  subtitle: `At ${STORE}, we help drivers upgrade their ride with premium seat covers, floor mats, steering wraps, and car care essentials — delivered across Pakistan.`,
+  title: "Pakistan's Car Accessories Store",
+  subtitle: `At ${STORE}, we help drivers upgrade their ride with splitters, LED lighting, body kits, carbon fiber parts, and car care — delivered across Pakistan.`,
 };
 
 const DEFAULT_STORY = {
   badge: "Who We Are",
   title: "Built for Pakistani Car Enthusiasts",
-  paragraph1: `${STORE} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
+  paragraph1: `${STORE} is based in Gujranwala, Pakistan, and focuses on exterior and lighting upgrades that fit real Pakistani driving conditions.`,
   paragraph2:
-    "From seat covers and floor mats to LED lights and organizers, every product is chosen for real-world use in Pakistani conditions — heat, dust, and daily driving.",
+    "From bumper splitters and spoilers to LED headlights and body kits, we stock accessories chosen for fitment, finish, and everyday use.",
   paragraph3:
-    "Today we serve customers from Lahore to Karachi and beyond, with Cash on Delivery, responsive support, and accessories that make every drive more comfortable and stylish.",
+    "We serve customers nationwide with Cash on Delivery, clear product details, and support when you need help choosing the right part.",
 };
 
-const DEFAULT_STATS = [
-  { number: "500+", label: "Car Accessories" },
-  { number: "10K+", label: "Happy Customers" },
-  { number: "50+", label: "Cities Served" },
-  { number: "4.9★", label: "Average Rating" },
-];
+const DEFAULT_STATS = [];
 
 const DEFAULT_VALUES = [
   {
@@ -34,9 +29,9 @@ const DEFAULT_VALUES = [
   },
   {
     icon: "✨",
-    title: "Perfect Fitment",
+    title: "Clear Fitment Info",
     description:
-      "Seat covers, mats, and interior upgrades sized for popular Pakistani makes and models — clearly listed on every product page.",
+      "Compatible makes and models are listed where available so you can order with confidence.",
   },
   {
     icon: "💳",
@@ -47,7 +42,7 @@ const DEFAULT_VALUES = [
     icon: "🚚",
     title: "Nationwide Delivery",
     description:
-      "Fast delivery to Lahore, Karachi, Islamabad, and cities across Pakistan with tracking where available.",
+      "Fast delivery to Lahore, Karachi, Islamabad, Gujranwala, and cities across Pakistan with tracking where available.",
   },
 ];
 
@@ -94,7 +89,7 @@ export default function AboutPageView({ aboutPage }) {
   const stats =
     Array.isArray(about.stats) && about.stats.some((s) => s?.number || s?.label)
       ? about.stats.filter((s) => s?.number || s?.label)
-      : DEFAULT_STATS;
+      : [];
 
   const values =
     Array.isArray(about.values) && about.values.some((v) => v?.title || v?.description)

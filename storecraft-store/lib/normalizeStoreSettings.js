@@ -6,39 +6,29 @@ export const DEFAULT_ANNOUNCEMENT_BAR = {
   enabled: true,
   items: [
     { text: "Free Delivery on Orders Over Rs. 2,999", link: "", enabled: true },
-    { text: "30 Day Returns", link: "/returns-policy", enabled: true },
-    { text: "Secure Payments", link: "", enabled: true },
+    { text: "Cash on Delivery Available", link: "", enabled: true },
   ],
   backgroundColor: "#111111",
   textColor: "#FFFFFF",
 };
 
 export const DEFAULT_TRUST_BADGES = {
-  enabled: true,
-  items: [
-    { icon: "🚚", title: "Free Delivery", description: "On orders over Rs. 2,999", enabled: true },
-    { icon: "↩️", title: "30 Day Returns", description: "Easy hassle-free returns", enabled: true },
-    { icon: "🔒", title: "Secure Payment", description: "256-bit SSL encryption", enabled: true },
-    { icon: "⭐", title: "Premium Quality", description: "Genuine products", enabled: true },
-  ],
+  enabled: false,
+  items: [],
 };
 
 export const DEFAULT_BRAND_STORY = {
   enabled: true,
   badge: "Our Story",
   heading: "Built for Pakistani Car Enthusiasts",
-  subheading: "Pakistan's Premier Car Accessories Store",
+  subheading: "Pakistan's Car Accessories Store",
   description:
-    "Crazzycars.pk was founded in Gujranwala to bring premium seat covers, floor mats, steering wraps, and car care products to drivers across Pakistan — with COD nationwide.",
-  buttonText: "Shop Car Accessories",
+    "Crazzycars.pk is based in Gujranwala and ships premium car accessories nationwide — splitters, LED lighting, body kits, carbon fiber parts, and more.",
+  buttonText: "About Us",
   buttonLink: "/about",
   image1: "",
   image2: "",
-  stats: [
-    { value: "5+", label: "Years Experience" },
-    { value: "10K+", label: "Happy Customers" },
-    { value: "500+", label: "Products" },
-  ],
+  stats: [],
 };
 
 export const DEFAULT_APPEARANCE = {

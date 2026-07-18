@@ -1,16 +1,9 @@
 "use client";
 
 /**
- * Homepage stats strip. Prefers CMS `brandStory.stats` / `homepage.stats`,
- * then falls back to defaults — edit those in Admin → Settings rather than hardcoding.
+ * Homepage stats strip — CMS only (`brandStory.stats` / `homepage.stats`).
+ * Hides when empty so we never invent customer/product counts.
  */
-const DEFAULT_STATS = [
-  { value: "10,000+", label: "Happy Customers" },
-  { value: "500+", label: "Products" },
-  { value: "5 Years", label: "Experience" },
-  { value: "100%", label: "Genuine Products" },
-];
-
 export default function StatsBar({ settings }) {
   const fromBrand =
     Array.isArray(settings?.brandStory?.stats) && settings.brandStory.stats.length
@@ -26,7 +19,7 @@ export default function StatsBar({ settings }) {
           label: s.label || "",
         }))
       : null;
-  const stats = (fromBrand || fromHomepage || DEFAULT_STATS).filter((s) => s.value && s.label);
+  const stats = (fromBrand || fromHomepage || []).filter((s) => s.value && s.label);
 
   if (!stats.length) return null;
 

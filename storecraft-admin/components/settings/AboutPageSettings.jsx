@@ -5,12 +5,7 @@ import toast from "react-hot-toast";
 import { clearStorefrontBrowserCache } from "@/lib/clearStorefrontBrowserCache";
 import { clearAdminSettingsCache } from "@/lib/adminSettingsCache";
 
-const DEFAULT_STATS = [
-  { number: "500+", label: "Car Accessories" },
-  { number: "10K+", label: "Happy Customers" },
-  { number: "50+", label: "Cities Served" },
-  { number: "4.9★", label: "Average Rating" },
-];
+const DEFAULT_STATS = [];
 
 const DEFAULT_VALUES = [
   {
@@ -21,9 +16,9 @@ const DEFAULT_VALUES = [
   },
   {
     icon: "✨",
-    title: "Perfect Fitment",
+    title: "Clear Fitment Info",
     description:
-      "Seat covers, mats, and interior upgrades sized for popular Pakistani makes and models — clearly listed on every product page.",
+      "Compatible makes and models are listed where available so you can order with confidence.",
   },
   {
     icon: "💳",
@@ -87,7 +82,7 @@ const HERO_DEFAULT = {
   badge: "Our Story",
   title: "Pakistan's Premier Car Accessories Store",
   subtitle:
-    `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with premium seat covers, floor mats, steering wraps, and car care essentials — delivered across Pakistan.`,
+    `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
 };
 
 const STORY_DEFAULT = {
@@ -96,7 +91,7 @@ const STORY_DEFAULT = {
   paragraph1:
     `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
   paragraph2:
-    "From seat covers and floor mats to LED lights and organizers, every product is chosen for real-world use in Pakistani conditions — heat, dust, and daily driving.",
+    "From bumper splitters and spoilers to LED lights and body kits, every product is chosen for real-world use in Pakistani conditions — heat, dust, and daily driving.",
   paragraph3:
     "Today we serve customers from Lahore to Karachi and beyond, with Cash on Delivery, responsive support, and accessories that make every drive more comfortable and stylish.",
 };

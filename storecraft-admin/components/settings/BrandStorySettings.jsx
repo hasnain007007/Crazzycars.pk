@@ -6,11 +6,7 @@ import { ImageUploader } from "@/components/ui/ImageUploader";
 import { clearStorefrontBrowserCache } from "@/lib/clearStorefrontBrowserCache";
 import { clearAdminSettingsCache } from "@/lib/adminSettingsCache";
 
-const DEFAULT_STATS = [
-  { value: "5+", label: "Years Experience" },
-  { value: "10K+", label: "Happy Customers" },
-  { value: "500+", label: "Products" },
-];
+const DEFAULT_STATS = [];
 
 const DEFAULT_FORM = {
   enabled: true,
@@ -18,7 +14,7 @@ const DEFAULT_FORM = {
   heading: "Built for Pakistani Car Enthusiasts",
   subheading: "Pakistan's Premier Car Accessories Store",
   description:
-    "Crazzycars.pk was founded in Gujranwala to bring premium seat covers, floor mats, steering wraps, and car care products to drivers across Pakistan — with COD nationwide.",
+    "Crazzycars.pk was founded in Gujranwala to bring splitters, LED lighting, body kits, and carbon fiber accessories to drivers across Pakistan — with COD nationwide.",
   buttonText: "Shop Car Accessories",
   buttonLink: "/about",
   image1: "",

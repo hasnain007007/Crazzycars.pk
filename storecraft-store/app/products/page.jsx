@@ -6,7 +6,7 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 export const metadata = buildPageMetadata({
   title: "Shop All Car Accessories | Crazzycars.pk",
   description:
-    "Browse our complete collection of premium car accessories. Seat covers, floor mats, steering covers, LED lights and more with cash on delivery across Pakistan.",
+    "Browse premium car accessories in Pakistan — splitters, LED headlights, body kits, spoilers, carbon fiber parts, and more. Cash on delivery available.",
   path: "/products",
 });
 
@@ -42,9 +42,8 @@ export default async function Page() {
             maxWidth: 720,
           }}
         >
-          Browse our complete collection of premium car accessories. Shop seat covers, floor mats,
-          steering covers, LED lights, car care products and more with cash on delivery across
-          Pakistan.
+          Browse our complete collection of premium car accessories. Shop splitters, LED lights,
+          body kits, spoilers, carbon fiber parts, and more — with cash on delivery across Pakistan.
         </p>
       </div>
       <Suspense fallback={<Fallback />}>

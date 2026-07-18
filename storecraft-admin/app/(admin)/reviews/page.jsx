@@ -1,7 +1,7 @@
 import { ReviewsPage } from "@/components/reviews/ReviewsPage";
 
 export const metadata = {
-  title: "Reviews | StoreCraft Admin",
+  title: "Reviews | Crazzycars.pk Admin",
 };
 
 export default function Page() {

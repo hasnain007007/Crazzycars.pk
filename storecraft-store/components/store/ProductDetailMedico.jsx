@@ -68,7 +68,7 @@ const DEFAULT_PRODUCT_PAGE_TRUST_BADGES = [
 ];
 
 function normalizeProductTrustBadges(arr) {
-  if (!Array.isArray(arr) || arr.length === 0) return DEFAULT_PRODUCT_PAGE_TRUST_BADGES;
+  if (!Array.isArray(arr) || arr.length === 0) return [];
   const iconFallback = ["🛡️", "↩️", "🔒", "🚚"];
   return arr.map((b, i) => {
     const d = DEFAULT_PRODUCT_PAGE_TRUST_BADGES[Math.min(i, DEFAULT_PRODUCT_PAGE_TRUST_BADGES.length - 1)];
@@ -166,57 +166,6 @@ function AccordionSection({ id, title, icon, isOpen, onToggle, children, badge }
   );
 }
 
-const PK_NAMES = [
-  "Ali Hassan",
-  "Muhammad Usman",
-  "Bilal Ahmad",
-  "Hamza Khan",
-  "Umar Farooq",
-  "Zain ul Abideen",
-  "Sana Malik",
-  "Fatima Zahra",
-  "Ayesha Siddiqui",
-  "Nadia Hussain",
-  "Hira Baig",
-  "Sara Ahmed",
-  "Asad Mehmood",
-  "Faisal Iqbal",
-  "Tariq Mahmood",
-  "Imran Shahid",
-  "Kashif Ali",
-  "Adnan Raza",
-];
-
-const PK_CITIES = [
-  "Karachi",
-  "Lahore",
-  "Islamabad",
-  "Rawalpindi",
-  "Faisalabad",
-  "Multan",
-  "Peshawar",
-  "Sialkot",
-  "Gujranwala",
-  "Hyderabad",
-  "Quetta",
-  "Abbottabad",
-  "Sargodha",
-  "Bahawalpur",
-  "Sukkur",
-  "Mardan",
-];
-
-const TIME_AGO = [
-  "just now",
-  "2 minutes ago",
-  "5 minutes ago",
-  "12 minutes ago",
-  "18 minutes ago",
-  "25 minutes ago",
-  "1 hour ago",
-  "2 hours ago",
-];
-
 export function ProductDetailMedico({ product: initialProduct = null, relatedProducts = [] }) {
   const { addItem } = useCart();
   const router = useRouter();
@@ -234,12 +183,10 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
   const [openSection, setOpenSection] = useState(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [reviewAverage, setReviewAverage] = useState(null);
-  const [viewers, setViewers] = useState(0);
   const [productBadges, setProductBadges] = useState(null);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isCompared, setIsCompared] = useState(false);
   const [deliveryInfo, setDeliveryInfo] = useState(null);
-  const [socialProof, setSocialProof] = useState(null);
   const { productImageWatermark: rawWatermark } = useStoreSettings();
   const productImageWatermark = normalizeProductImageWatermark(rawWatermark);
 
@@ -327,50 +274,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     setIsCompared(getCompare().some((item) => String(item.id) === wid));
   }, [product?._id, product?.id]);
 
-  useEffect(() => {
-    const initial = Math.floor(Math.random() * 22) + 3;
-    setViewers(initial);
 
-    let timeoutId;
-    const scheduleUpdate = () => {
-      const delay = Math.floor(Math.random() * 30000) + 30000;
-      timeoutId = setTimeout(() => {
-        setViewers((prev) => {
-          const magnitude = Math.random() > 0.5 ? 1 : 2;
-          const change = Math.random() > 0.5 ? magnitude : -magnitude;
-          const next = prev + change;
-          return Math.min(Math.max(next, 2), 35);
-        });
-        scheduleUpdate();
-      }, delay);
-    };
-    scheduleUpdate();
-
-    return () => clearTimeout(timeoutId);
-  }, []);
-
-  useEffect(() => {
-    let hideTimer;
-
-    const showNotification = () => {
-      const name = PK_NAMES[Math.floor(Math.random() * PK_NAMES.length)];
-      const city = PK_CITIES[Math.floor(Math.random() * PK_CITIES.length)];
-      const timeAgo = TIME_AGO[Math.floor(Math.random() * TIME_AGO.length)];
-      setSocialProof({ name, city, timeAgo });
-
-      if (hideTimer) clearTimeout(hideTimer);
-      hideTimer = setTimeout(() => setSocialProof(null), 5000);
-    };
-
-    const firstTimer = setTimeout(showNotification, Math.random() * 7000 + 8000);
-    const interval = setInterval(showNotification, Math.random() * 30000 + 30000);
-
-    return () => {
-      clearTimeout(firstTimer);
-      clearInterval(interval);
-      if (hideTimer) clearTimeout(hideTimer);
-    };
-  }, []);
 
   const regularPrice = Number(product?.regularPrice ?? product?.compareAt ?? product?.pricing?.regularPrice ?? product?.price ?? 0);
   const salePrice = Number(product?.salePrice ?? product?.pricing?.salePrice ?? 0);
@@ -1034,31 +938,6 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
               </span>
             </p>
 
-            {viewers > 0 ? (
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: 13,
-                  color: "#C41E1E",
-                  fontWeight: 500,
-                  marginTop: 8,
-                }}
-              >
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: "#C41E1E",
-                    display: "inline-block",
-                    animation: "productViewerPulse 2s infinite",
-                  }}
-                />
-                {viewers} people viewing this right now
-              </div>
-            ) : null}
 
             <ProductVariations
               simpleVariations={simpleVariations}
@@ -1402,7 +1281,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                 );
               })()}
 
-            {(!productBadges || productBadges?.asianImportsBadge?.enabled !== false) && (
+            {(productBadges?.asianImportsBadge?.enabled === true && String(productBadges?.asianImportsBadge?.title || '').trim()) && (
               <div
                 style={{
                   background: "#F8F8F8",
@@ -1427,7 +1306,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                       margin: "0 0 2px",
                     }}
                   >
-                    {productBadges?.asianImportsBadge?.title || "No Asian Imports"}
+                    {productBadges?.asianImportsBadge?.title}
                   </p>
                   <p
                     style={{
@@ -1437,8 +1316,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                       lineHeight: 1.5,
                     }}
                   >
-                    {productBadges?.asianImportsBadge?.description ||
-                      "We source all our accessories exclusively from trusted Pakistani manufacturers. No cheap imports — ever."}
+                    {productBadges?.asianImportsBadge?.description || ''}
                   </p>
                 </div>
               </div>
@@ -1708,56 +1586,6 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
 
     </div>
 
-    {socialProof ? (
-      <div
-        role="status"
-        aria-live="polite"
-        style={{
-          position: "fixed",
-          bottom: 80,
-          left: 20,
-          zIndex: 9999,
-          background: "#FFFFFF",
-          border: "1px solid #E5E7EB",
-          borderRadius: 12,
-          padding: "12px 16px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          maxWidth: 280,
-          animation: "slideInLeft 0.3s ease",
-        }}
-      >
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 8,
-            background: "#FEF2F2",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 20,
-            flexShrink: 0,
-          }}
-          aria-hidden
-        >
-          🚗
-        </div>
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>
-            {socialProof.name} from {socialProof.city}
-          </div>
-          <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
-            ordered this {socialProof.timeAgo}
-          </div>
-          <div style={{ fontSize: 11, color: "#C41E1E", fontWeight: 600, marginTop: 2 }}>
-            ✓ Verified Purchase
-          </div>
-        </div>
-      </div>
-    ) : null}
     </>
   );
 }

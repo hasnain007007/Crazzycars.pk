@@ -1,7 +1,7 @@
 import PagesManager from "@/components/pages/PagesManager";
 
 export const metadata = {
-  title: "Pages | StoreCraft Admin",
+  title: "Pages | Crazzycars.pk Admin",
 };
 
 export default function PagesPage() {

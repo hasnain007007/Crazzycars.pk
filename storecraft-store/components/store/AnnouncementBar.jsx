@@ -3,12 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 
-const FALLBACK = [
-  "🚗 Free Delivery on Orders Over Rs. 2,999 — Pakistan Wide",
-  "💰 Cash on Delivery Available — Pay When It Arrives",
-  "⚡ CrazzyCars.pk — Trusted by Customers Across Pakistan",
-];
-
 function deriveBar(bar) {
   if (!bar || bar.enabled === false) {
     return { hidden: true, messages: [], bg: "#111111", textColor: "#ffffff" };
@@ -17,8 +11,8 @@ function deriveBar(bar) {
     .filter((m) => m.enabled !== false && String(m.text || "").trim())
     .map((m) => String(m.text).trim());
   return {
-    hidden: false,
-    messages: active.length ? active : FALLBACK,
+    hidden: active.length === 0,
+    messages: active,
     bg: bar.backgroundColor || "#111111",
     textColor: bar.textColor || "#ffffff",
   };

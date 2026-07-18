@@ -17,26 +17,22 @@ const DEFAULT_SHOP_LINKS = [
   { label: "New Arrivals", href: "/shop?sort=newest", enabled: true },
   { label: "Best Sellers", href: "/shop?sort=popular", enabled: true },
   { label: "On Sale", href: "/sale", enabled: true },
-  { label: "Gift Ideas", href: "/shop?tag=gift", enabled: true },
 ];
 
 const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "Contact Us", href: "/contact", enabled: true },
-  { label: "FAQ", href: "/pages/faq", enabled: true },
-  { label: "Shipping Info", href: "/pages/shipping", enabled: true },
-  { label: "Returns & Refunds", href: "/pages/returns", enabled: true },
-  { label: "Track My Order", href: "/account/orders", enabled: true },
-  { label: "Privacy Policy", href: "/pages/privacy", enabled: true },
-  { label: "Terms of Service", href: "/pages/terms", enabled: true },
+  { label: "FAQ", href: "/faq", enabled: true },
+  { label: "Track My Order", href: "/track-order", enabled: true },
+  { label: "About Us", href: "/about", enabled: true },
 ];
 
 const DEFAULT_CATEGORIES_LINKS = [
-  { label: "Seat Covers", href: "/categories/seat-covers", enabled: true },
-  { label: "Floor Mats", href: "/categories/floor-mats", enabled: true },
-  { label: "Steering Covers", href: "/categories/steering-covers", enabled: true },
-  { label: "Car Care", href: "/categories/car-care", enabled: true },
-  { label: "LED Lights", href: "/categories/led-lights", enabled: true },
-  { label: "Phone Holders", href: "/categories/phone-holders", enabled: true },
+  { label: "Splitters & Side Skirts", href: "/categories/splitters-side-skirts", enabled: true },
+  { label: "LED Headlights & Bulbs", href: "/categories/led-headlights-bulbs", enabled: true },
+  { label: "Body Kits", href: "/categories/body-kits", enabled: true },
+  { label: "Spoilers & Diffusers", href: "/categories/spoilers-diffusers", enabled: true },
+  { label: "Care & Cleaning", href: "/categories/care-cleaning", enabled: true },
+  { label: "SOS & Flasher LEDs", href: "/categories/sos-flasher-led-lights", enabled: true },
 ];
 
 const FOOTER_INPUT_STYLE = {

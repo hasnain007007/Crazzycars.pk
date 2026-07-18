@@ -9,7 +9,7 @@ const DEFAULT_FORM = {
   announcementMessages: [
     { text: "Free delivery on orders over Rs. 2,999 — Pakistan wide", isActive: true },
     { text: "Cash on delivery available at checkout", isActive: true },
-    { text: "Crazzycars.pk — Trusted by 10,000+ customers", isActive: true },
+    
   ],
   announcementBgColor: "#111111",
   whyChooseUs: [
