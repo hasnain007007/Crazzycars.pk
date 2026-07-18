@@ -431,7 +431,6 @@ export default function CarCatalogManager() {
   const [selectedId, setSelectedId] = useState(null);
   const [form, setForm] = useState(emptyMake());
   const [saving, setSaving] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   const [makeSearch, setMakeSearch] = useState("");
   const [modelModal, setModelModal] = useState(null);
   const [modelDraft, setModelDraft] = useState(null);
@@ -478,8 +477,6 @@ export default function CarCatalogManager() {
     if (!q) return sorted;
     return sorted.filter((m) => m.name.toLowerCase().includes(q));
   }, [makes, makeSearch]);
-
-  const isEmpty = !loading && makes.length === 0;
 
   async function saveMake() {
     const name = form.name.trim();
@@ -626,25 +623,6 @@ export default function CarCatalogManager() {
     setModelDraft(null);
   }
 
-  async function seedDefaults() {
-    if (!window.confirm("This will add Pakistani car data. Existing data will not be overwritten.")) return;
-    setSeeding(true);
-    try {
-      const res = await fetch("/api/car-catalog/seed", { method: "POST", credentials: "include" });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        toast.error(data.error || "Seed failed");
-        return;
-      }
-      toast.success(data.message || "Seed complete");
-      await load();
-    } catch {
-      toast.error("Network error");
-    } finally {
-      setSeeding(false);
-    }
-  }
-
   async function deleteMake(id, name) {
     if (!window.confirm(`Delete make "${name}" and all its models?`)) return;
     try {
@@ -684,22 +662,6 @@ export default function CarCatalogManager() {
     return <p className="text-sm text-slate-500">Loading car catalog…</p>;
   }
 
-  if (isEmpty) {
-    return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-        <p className="text-slate-700">No car catalog data yet. Seed default Pakistani makes and models.</p>
-        <button
-          type="button"
-          onClick={seedDefaults}
-          disabled={seeding}
-          className="mt-6 rounded-lg bg-[#C41E1E] px-6 py-2.5 text-sm font-semibold text-white"
-        >
-          {seeding ? "Seeding…" : "Seed Default Data"}
-        </button>
-      </div>
-    );
-  }
-
   const sortedFiltered = filteredMakes;
 
   return (
@@ -725,9 +687,6 @@ export default function CarCatalogManager() {
           className="rounded-lg bg-[#C41E1E] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
           {saving ? "Saving…" : "Save Changes"}
-        </button>
-        <button type="button" onClick={seedDefaults} disabled={seeding} className="rounded-lg border px-4 py-2 text-sm">
-          Seed Default Data
         </button>
       </div>
 

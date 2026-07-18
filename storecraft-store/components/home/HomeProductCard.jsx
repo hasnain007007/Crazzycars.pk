@@ -11,7 +11,16 @@ function pctOff(regular, sale, onSale) {
 
 export function HomeProductCard({ product }) {
   const { addItem } = useCart();
-  const imageUrl = product.image || (Array.isArray(product.images) ? product.images[0] : "") || "";
+  const images = [];
+  const push = (u) => {
+    const url = typeof u === "string" ? u.trim() : String(u?.url || "").trim();
+    if (url && !images.includes(url)) images.push(url);
+  };
+  push(product.image);
+  for (const img of product.images || []) push(img);
+  for (const img of product.media?.images || []) push(img);
+  const imageUrl = images[0] || "";
+  const hoverImageUrl = images[1] || "";
   const regular = Number(product.regularPrice ?? product.compareAt ?? 0);
   const saleVal = Number(product.salePrice ?? 0);
   const onSale =
@@ -42,8 +51,26 @@ export function HomeProductCard({ product }) {
     <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm transition hover:shadow-md">
       <Link href={`/${product.slug}`} className="relative block aspect-square overflow-hidden bg-[#f9fafb]">
         {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={product.name || "Product"} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" loading="lazy" />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageUrl}
+              alt={product.name || "Product"}
+              className={`absolute inset-0 h-full w-full object-cover transition duration-300 ${
+                hoverImageUrl ? "group-hover:opacity-0" : "group-hover:scale-[1.03]"
+              }`}
+              loading="lazy"
+            />
+            {hoverImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={hoverImageUrl}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                loading="lazy"
+              />
+            ) : null}
+          </>
         ) : (
           <div className="flex h-full items-center justify-center text-4xl text-[#d1d5db]">💎</div>
         )}

@@ -1,12 +1,14 @@
 import { Suspense } from "react";
 import { ProductsBrowseMedico } from "@/components/store/ProductsBrowseMedico";
 import { fetchProductsServer } from "@/lib/serverProductFetch";
+import { buildPageMetadata } from "@/lib/pageMetadata";
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: "Shop All Car Accessories | Crazzycars.pk",
   description:
     "Browse our complete collection of premium car accessories. Seat covers, floor mats, steering covers, LED lights and more with cash on delivery across Pakistan.",
-};
+  path: "/products",
+});
 
 function Fallback() {
   return (

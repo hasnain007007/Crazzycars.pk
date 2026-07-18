@@ -5,7 +5,10 @@
 
 set -euo pipefail
 
-VPS_HOST="${VPS_HOST:-root@89.116.39.237}"
+if [ -z "${VPS_HOST:-}" ]; then
+  echo "Error: set VPS_HOST (e.g. VPS_HOST=root@your.server.ip ./scripts/deploy-vps.sh)" >&2
+  exit 1
+fi
 VPS_STORE_PATH="${VPS_STORE_PATH:-/var/www/storecraft-store}"
 VPS_ADMIN_PATH="${VPS_ADMIN_PATH:-/var/www/storecraft-admin}"
 # Default: CCSMS repo. Override: DEPLOY_ROOT=/Users/mac/Desktop/Ecommerce ./scripts/deploy-vps.sh

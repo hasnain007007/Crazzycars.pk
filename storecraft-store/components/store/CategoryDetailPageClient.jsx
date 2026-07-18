@@ -6,6 +6,7 @@ import { ProductCard } from "./ProductCard";
 
 /** Maps category-page product documents to the flat shape ProductCard + /api/products use. */
 function toProductCard(product) {
+  if (product?.source === "shopify") return product;
   const regularPrice = Number(product.pricing?.regularPrice ?? product.regularPrice ?? product.price ?? 0);
   const salePrice = Number(product.pricing?.salePrice ?? product.salePrice ?? 0);
   return {

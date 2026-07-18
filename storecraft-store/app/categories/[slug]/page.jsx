@@ -3,15 +3,33 @@ import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { CategoryDetailPageClient } from "@/components/store/CategoryDetailPageClient";
+import { getSiteUrl } from "@/lib/siteUrl";
+import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
-const BASE_URL = (process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://crazzycars.pk").replace(/\/$/, "");
+const BASE_URL = getSiteUrl();
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
+
+  if (isShopifyEnabled()) {
+    const collection = await getCollectionByHandle(slugStr).catch(() => null);
+    if (!collection) return { title: "Category Not Found", robots: { index: false, follow: false } };
+    return {
+      title: collection.title,
+      description: collection.description || `Shop ${collection.title} at ${BRAND}.`,
+      alternates: { canonical: `${BASE_URL}/categories/${slugStr}` },
+      openGraph: {
+        title: collection.title,
+        description: collection.description || "",
+        url: `${BASE_URL}/categories/${slugStr}`,
+        images: collection.image?.url ? [{ url: collection.image.url }] : [],
+      },
+    };
+  }
 
   try {
     await dbConnect();
@@ -35,13 +53,19 @@ export async function generateMetadata({ params }) {
       title,
       description,
       openGraph: {
-        title: category.name,
-        description: `Shop ${category.name} at ${BRAND}`,
-        url: `${BASE_URL}/${slugStr}`,
+        title,
+        description,
+        url: `${BASE_URL}/categories/${slugStr}`,
         images: category.image?.url ? [{ url: category.image.url }] : [],
       },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: category.image?.url ? [category.image.url] : [],
+      },
       alternates: {
-        canonical: `${BASE_URL}/${slugStr}`,
+        canonical: `${BASE_URL}/categories/${slugStr}`,
       },
     };
   } catch {
@@ -53,6 +77,26 @@ export default async function CategoryPage({ params }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   if (!slugStr) notFound();
+
+  if (isShopifyEnabled()) {
+    const collection = await getCollectionByHandle(slugStr).catch(() => null);
+    if (!collection) notFound();
+    return (
+      <CategoryDetailPageClient
+        initialCategory={{
+          _id: collection.handle,
+          slug: collection.handle,
+          name: collection.title,
+          description: collection.descriptionHtml || collection.description,
+          image: collection.image,
+          source: "shopify",
+        }}
+        initialSubcategories={[]}
+        initialProducts={collection.products}
+        initialBreadcrumbs={[]}
+      />
+    );
+  }
 
   await dbConnect();
   const detail = await loadStoreCategoryDetail(slugStr);

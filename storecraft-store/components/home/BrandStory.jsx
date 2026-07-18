@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { storyImageUrlOptimized } from "@/lib/cloudinaryImage";
 
 function storyImageUrl(field) {
   if (field == null) return "";
@@ -47,8 +48,8 @@ export default function BrandStory({ story: storyProp }) {
 
   if (loading || !hasBrandStoryContent(story)) return null;
 
-  const image1Url = storyImageUrl(story.image1);
-  const image2Url = storyImageUrl(story.image2);
+  const image1Url = storyImageUrlOptimized(storyImageUrl(story.image1)) || storyImageUrl(story.image1);
+  const image2Url = storyImageUrlOptimized(storyImageUrl(story.image2)) || storyImageUrl(story.image2);
   const stats = (Array.isArray(story.stats) ? story.stats : []).filter(
     (s) => String(s?.value || "").trim() || String(s?.label || "").trim()
   );
@@ -65,7 +66,9 @@ export default function BrandStory({ story: storyProp }) {
                   <img
                     src={image1Url}
                     alt={story.heading || "Our story"}
-                    loading="lazy"
+                    loading="eager"
+                    fetchPriority="low"
+                    decoding="async"
                     className="h-full w-full rounded-xl object-cover shadow-md"
                     style={{ minHeight: 280 }}
                   />
@@ -140,7 +143,7 @@ export default function BrandStory({ story: storyProp }) {
 
             {story.buttonText ? (
               <Link
-                href={story.buttonLink || "/about-us"}
+                href={story.buttonLink || "/about"}
                 className="mt-8 inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
                 style={{ background: "#C41E1E" }}
               >

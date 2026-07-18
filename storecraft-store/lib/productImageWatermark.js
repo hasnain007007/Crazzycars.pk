@@ -2,9 +2,9 @@ export const DEFAULT_PRODUCT_IMAGE_WATERMARK = {
   enabled: true,
   text: "Crazzycars.pk",
   position: "bottom-right",
-  opacity: 0.7,
-  fontSize: 24,
-  color: "#FFFFFF",
+  opacity: 0.25,
+  fontSize: 13,
+  color: "#8A8A8A",
 };
 
 const POSITIONS = ["bottom-right", "bottom-left", "bottom-center", "top-right", "top-left"];
@@ -34,11 +34,12 @@ const WHITE_RE = /^(#fff(fff)?|white)$/i;
  */
 export function getWatermarkOverlayStyle(watermark) {
   const label = escapeXml(String(watermark?.text || "").toUpperCase());
-  const fontSize = Math.max(10, Math.min(28, Number(watermark?.fontSize) || 18));
-  const rawColor = String(watermark?.color || "#FFFFFF").trim();
+  // Font size and opacity come straight from admin settings (Settings → Product Image Watermark).
+  const fontSize = Math.max(8, Math.min(60, Number(watermark?.fontSize) || DEFAULT_PRODUCT_IMAGE_WATERMARK.fontSize));
+  const rawColor = String(watermark?.color || "#8A8A8A").trim();
   // Tiled white-on-white is invisible; fall back to the reference gray.
   const fill = WHITE_RE.test(rawColor) ? "#8A8A8A" : rawColor;
-  const fillOpacity = Math.min(0.4, Number(watermark?.opacity ?? 0.7));
+  const fillOpacity = Math.min(1, Math.max(0, Number(watermark?.opacity ?? DEFAULT_PRODUCT_IMAGE_WATERMARK.opacity)));
 
   const tileW = Math.max(140, Math.round(label.length * fontSize * 0.72) + fontSize * 3);
   const tileH = Math.round(tileW * 0.72);

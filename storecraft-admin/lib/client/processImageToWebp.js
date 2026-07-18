@@ -10,10 +10,10 @@ function drawWatermark(ctx, width, height, text) {
   // Tiled diagonal watermark (gulautos.pk style): repeat the label across the
   // whole image, rotated -30deg, in a subtle gray.
   const label = text.trim().toUpperCase();
-  const fontSize = Math.max(14, Math.round(width * 0.03));
+  const fontSize = Math.max(11, Math.round(width * 0.02));
   ctx.save();
   ctx.font = `600 ${fontSize}px Arial`;
-  ctx.fillStyle = "rgba(120, 120, 120, 0.28)";
+  ctx.fillStyle = "rgba(120, 120, 120, 0.22)";
   const spaced = label.split("").join("\u200a\u200a");
   const textWidth = ctx.measureText(spaced).width;
   const stepX = textWidth + fontSize * 4;

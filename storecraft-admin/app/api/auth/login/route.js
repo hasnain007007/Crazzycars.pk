@@ -44,10 +44,17 @@ export async function POST(request) {
     }
 
     const isPasswordValid = bcrypt.compareSync(password, user.password);
-    if (!isPasswordValid || user.status !== "active") {
+    if (!isPasswordValid) {
       return NextResponse.json(
         { success: false, error: "Invalid email or password." },
         { status: 401 }
+      );
+    }
+
+    if (user.status !== "active") {
+      return NextResponse.json(
+        { success: false, error: "This account is inactive. Contact a superadmin." },
+        { status: 403 }
       );
     }
 

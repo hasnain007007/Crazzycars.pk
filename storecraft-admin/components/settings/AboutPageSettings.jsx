@@ -94,7 +94,7 @@ const STORY_DEFAULT = {
   badge: "Who We Are",
   title: "Built for Pakistani Car Enthusiasts",
   paragraph1:
-    `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Sialkot, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
+    `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
   paragraph2:
     "From seat covers and floor mats to LED lights and organizers, every product is chosen for real-world use in Pakistani conditions — heat, dust, and daily driving.",
   paragraph3:

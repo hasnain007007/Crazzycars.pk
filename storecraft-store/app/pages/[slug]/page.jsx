@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import Page from "@/lib/models/Page.model";
 import PageView from "@/components/store/PageView";
+import { getSiteUrl } from "@/lib/siteUrl";
 
 async function loadPage(slug) {
   try {
@@ -21,20 +22,22 @@ export async function generateMetadata({ params }) {
   const page = await loadPage(slug);
   if (!page) return { title: "Page Not Found" };
 
-  const BASE_URL = process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL;
+  const BASE_URL = getSiteUrl();
+  const title = page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`;
+  const description = page.seo?.metaDescription || "";
+  const canonical = `${BASE_URL}/pages/${slug}`;
 
   return {
-    title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
-    description: page.seo?.metaDescription || ``,
-    alternates: {
-      canonical: page.seo?.canonical || `${BASE_URL}/${slug}`,
-    },
+    title,
+    description,
+    alternates: { canonical },
     openGraph: {
-      title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
-      description: page.seo?.metaDescription || "",
+      title,
+      description,
       type: "website",
-      url: page.seo?.canonical || `${BASE_URL}/${slug}`,
+      url: canonical,
     },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 

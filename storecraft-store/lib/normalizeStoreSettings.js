@@ -29,9 +29,9 @@ export const DEFAULT_BRAND_STORY = {
   heading: "Built for Pakistani Car Enthusiasts",
   subheading: "Pakistan's Premier Car Accessories Store",
   description:
-    "Crazzycars.pk was founded in Sialkot to bring premium seat covers, floor mats, steering wraps, and car care products to drivers across Pakistan — with COD nationwide.",
+    "Crazzycars.pk was founded in Gujranwala to bring premium seat covers, floor mats, steering wraps, and car care products to drivers across Pakistan — with COD nationwide.",
   buttonText: "Shop Car Accessories",
-  buttonLink: "/about-us",
+  buttonLink: "/about",
   image1: "",
   image2: "",
   stats: [
@@ -65,14 +65,17 @@ export const DEFAULT_STORE_PAYMENT = {
   codFee: 0,
   minimumOrderAmount: 0,
   freeShippingThreshold: 2999,
-  freeShippingOnAdvancePayment: true,
+  freeShippingOnAdvancePayment: false,
   freeShippingOnOrderAbove: 10000,
-  freeShippingOnOrderAboveEnabled: true,
+  freeShippingOnOrderAboveEnabled: false,
   advancePaymentMessage:
-    "To confirm your order, please pay at least Rs. 500 in advance as delivery charges paid to TCS courier. Send payment screenshot on WhatsApp to confirm.",
-  advancePaymentAmount: 500,
+    "To confirm your order, please pay delivery charges of {amount} in advance.\n\nSend payment screenshot on WhatsApp: {whatsapp}",
+  advancePaymentAmount: 250,
   advancePaymentMessageEnabled: true,
   advancePaymentMessageTitle: "Confirm Your Order",
+  advancePaymentDiscountEnabled: true,
+  advancePaymentDiscountPercent: 3,
+  flatDeliveryCharge: 250,
 };
 
 export const DEFAULT_PRODUCT_BADGE_UI = {
@@ -178,16 +181,10 @@ export function normalizeStorePayment(raw) {
     codFee: Number(p.codFee) || 0,
     minimumOrderAmount: Number(p.minimumOrderAmount) || 0,
     freeShippingThreshold: Number(p.freeShippingThreshold) || DEFAULT_STORE_PAYMENT.freeShippingThreshold,
-    freeShippingOnAdvancePayment:
-      p.freeShippingOnAdvancePayment !== undefined
-        ? Boolean(p.freeShippingOnAdvancePayment)
-        : DEFAULT_STORE_PAYMENT.freeShippingOnAdvancePayment,
+    freeShippingOnAdvancePayment: p.freeShippingOnAdvancePayment === true,
     freeShippingOnOrderAbove:
       Number(p.freeShippingOnOrderAbove) || DEFAULT_STORE_PAYMENT.freeShippingOnOrderAbove,
-    freeShippingOnOrderAboveEnabled:
-      p.freeShippingOnOrderAboveEnabled !== undefined
-        ? Boolean(p.freeShippingOnOrderAboveEnabled)
-        : DEFAULT_STORE_PAYMENT.freeShippingOnOrderAboveEnabled,
+    freeShippingOnOrderAboveEnabled: p.freeShippingOnOrderAboveEnabled === true,
     advancePaymentAmount: Number(p.advancePaymentAmount) || DEFAULT_STORE_PAYMENT.advancePaymentAmount,
     advancePaymentMessageEnabled:
       p.advancePaymentMessageEnabled !== undefined
@@ -197,6 +194,18 @@ export function normalizeStorePayment(raw) {
       p.advancePaymentMessageTitle?.trim() || DEFAULT_STORE_PAYMENT.advancePaymentMessageTitle,
     advancePaymentMessage:
       p.advancePaymentMessage?.trim() || DEFAULT_STORE_PAYMENT.advancePaymentMessage,
+    advancePaymentDiscountEnabled:
+      p.advancePaymentDiscountEnabled !== undefined
+        ? Boolean(p.advancePaymentDiscountEnabled)
+        : DEFAULT_STORE_PAYMENT.advancePaymentDiscountEnabled,
+    advancePaymentDiscountPercent: Math.min(
+      100,
+      Math.max(0, Number(p.advancePaymentDiscountPercent) || DEFAULT_STORE_PAYMENT.advancePaymentDiscountPercent)
+    ),
+    flatDeliveryCharge: Math.max(
+      0,
+      Number(p.flatDeliveryCharge) || DEFAULT_STORE_PAYMENT.flatDeliveryCharge
+    ),
   };
 }
 

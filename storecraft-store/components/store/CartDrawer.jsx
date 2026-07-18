@@ -18,7 +18,7 @@ function lineKey(x) {
 }
 
 export function CartDrawer() {
-  const { items, open, setOpen, subtotal, removeItem, updateQuantity } = useCart();
+  const { items, open, setOpen, subtotal, removeItem, updateQuantity, checkoutUrl } = useCart();
   const checkoutMessages = useCheckoutMessages();
   const storePayment = useStorePayment();
   const emptyMsg = checkoutMessages.cartEmptyMessage || "Your cart is empty";
@@ -98,7 +98,7 @@ export function CartDrawer() {
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <Link href={`/${item.slug}`} className="line-clamp-2 font-medium text-zinc-900 hover:underline" onClick={() => setOpen(false)}>
+                    <Link href={item.source === "shopify" ? `/products/${item.slug}` : `/${item.slug}`} className="line-clamp-2 font-medium text-zinc-900 hover:underline" onClick={() => setOpen(false)}>
                       {item.name}
                     </Link>
                     {item.variationLabel ? <p className="text-xs text-zinc-500">{item.variationLabel}</p> : null}
@@ -224,14 +224,15 @@ export function CartDrawer() {
             <span className="text-base font-semibold">Order Total</span>
             <span className="price text-xl font-bold">{formatPrice(subtotal)}</span>
           </div>
-          <Link
-            href="/checkout"
-            onClick={() => setOpen(false)}
-            className="mt-4 block w-full rounded-xl py-3.5 text-center text-base font-semibold transition hover:opacity-90"
-            style={{ background: "#111111", color: "#FFFFFF" }}
-          >
-            Checkout →
-          </Link>
+          {checkoutUrl ? (
+            <a href={checkoutUrl} onClick={() => setOpen(false)} className="mt-4 block w-full rounded-xl py-3.5 text-center text-base font-semibold transition hover:opacity-90" style={{ background: "#111111", color: "#FFFFFF" }}>
+              Checkout →
+            </a>
+          ) : (
+            <Link href="/checkout" onClick={() => setOpen(false)} className="mt-4 block w-full rounded-xl py-3.5 text-center text-base font-semibold transition hover:opacity-90" style={{ background: "#111111", color: "#FFFFFF" }}>
+              Checkout →
+            </Link>
+          )}
           <button type="button" onClick={() => setOpen(false)} className="mt-3 w-full text-center text-sm text-zinc-500 hover:text-zinc-700">
             Continue Shopping
           </button>

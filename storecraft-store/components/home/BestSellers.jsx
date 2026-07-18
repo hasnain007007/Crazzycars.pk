@@ -51,6 +51,9 @@ export default function BestSellers({ initialProducts = [], settings }) {
   const filtered = useMemo(() => products.filter((p) => matchesTab(p, tab)), [products, tab]);
   const shown = filtered.slice(0, visible);
 
+  // Hide entire section when catalog has no products (after load).
+  if (!loading && products.length === 0) return null;
+
   return (
     <section className="homepage-section bg-white py-12 md:py-20">
       <div className="store-container">
@@ -90,14 +93,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
             ))}
           </div>
         ) : shown.length === 0 ? (
-          <div className="mt-8">
-            <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <SkeletonCard key={i} />
-              ))}
-            </div>
-            <p className="mt-4 text-sm text-[#6B7280]">Products coming soon</p>
-          </div>
+          <p className="mt-8 text-sm text-[#6B7280]">No products in this tab yet.</p>
         ) : (
           <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
             {shown.map((p) => (

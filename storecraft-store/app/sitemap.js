@@ -2,14 +2,11 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Category from "@/lib/models/Category.model";
 import BlogPost from "@/lib/models/BlogPost.model";
-
-const BASE_URL = (
-  process.env.NEXT_PUBLIC_APP_URL ||
-  process.env.NEXT_PUBLIC_STORE_URL ||
-  "https://crazzycars.pk"
-).replace(/\/$/, "");
+import { getSiteUrl, isIndexableEnvironment } from "@/lib/siteUrl";
 
 export default async function sitemap() {
+  if (!isIndexableEnvironment()) return [];
+  const BASE_URL = getSiteUrl();
   const now = new Date().toISOString();
 
   const staticPages = [
@@ -86,7 +83,7 @@ export default async function sitemap() {
       .lean();
 
     const categoryPages = categories.map((c) => ({
-      url: `${BASE_URL}/${c.slug}`,
+      url: `${BASE_URL}/categories/${c.slug}`,
       lastModified: c.updatedAt || now,
       changeFrequency: "weekly",
       priority: 0.7,

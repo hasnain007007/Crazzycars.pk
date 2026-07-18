@@ -11,17 +11,21 @@ import {
   useStoreSettings,
 } from "@/context/StoreSettingsContext";
 import {
-  getEnabledPakistaniMethods,
-  normalizePakistaniPaymentMethods,
-} from "@/lib/pakistaniPaymentMethods";
-import {
   applyShippingRules,
+  computeAdvancePaymentDiscount,
   formatAdvancePaymentMessage,
+  formatWhatsAppDisplay,
+  getAdvancePaymentAccountLines,
   getCodFreeDeliveryProgress,
   getFreeShippingThreshold,
   normalizeShippingRules,
   shouldShowAdvancePaymentMessage,
 } from "@/lib/freeDelivery";
+import {
+  getEnabledPakistaniMethods,
+  isAdvancePaymentMethod,
+  normalizePakistaniPaymentMethods,
+} from "@/lib/pakistaniPaymentMethods";
 import { FreeDeliveryProgress } from "@/components/store/FreeDeliveryProgress";
 import { PakistaniPaymentIcon } from "./PakistaniPaymentIcons";
 import { formatPrice } from "@/lib/currency";
@@ -100,27 +104,38 @@ function pakistaniPaymentInstructions(methodKey, config) {
   const key = methodKey || "cod";
   const c = config || {};
   if (key === "cod") {
-    return ["Pay cash when your order arrives"];
+    return [
+      { text: "Pay cash when your order arrives" },
+      { text: "Delivery charges must be paid in advance to confirm your order." },
+    ];
   }
   if (key === "jazzcash" || key === "easypaisa") {
-    const lines = [`Send payment via ${c.label || key}.`];
-    if (c.accountNumber) lines.push(`Account number: ${c.accountNumber}`);
-    if (c.accountName) lines.push(`Account name: ${c.accountName}`);
-    lines.push("Share your payment screenshot on WhatsApp after transfer.");
+    const lines = [{ text: `Send payment via ${c.label || key}.` }];
+    if (c.accountNumber) lines.push({ label: "Account number", value: c.accountNumber });
+    if (c.accountName) lines.push({ label: "Account name", value: c.accountName });
+    lines.push({ text: "Share your payment screenshot on WhatsApp after transfer." });
     return lines;
   }
   if (key === "bankTransfer") {
-    const lines = ["Transfer to our bank account:"];
-    if (c.bankName) lines.push(`Bank: ${c.bankName}`);
-    if (c.accountNumber) lines.push(`Account: ${c.accountNumber}`);
-    if (c.accountTitle) lines.push(`Title: ${c.accountTitle}`);
-    if (c.iban) lines.push(`IBAN: ${c.iban}`);
+    const lines = [{ text: "Transfer to our bank account:" }];
+    if (c.bankName) lines.push({ label: "Bank", value: c.bankName });
+    if (c.accountNumber) lines.push({ label: "Account", value: c.accountNumber });
+    if (c.accountTitle) lines.push({ label: "Title", value: c.accountTitle });
+    if (c.iban) lines.push({ label: "IBAN", value: c.iban });
     return lines;
   }
-  if (key === "hbl" || key === "meezan" || key === "ubl") {
-    const lines = [`${c.label || key} account details:`];
-    if (c.accountNumber) lines.push(`Account number: ${c.accountNumber}`);
-    if (c.accountTitle) lines.push(`Account title: ${c.accountTitle}`);
+  if (key === "meezan") {
+    const lines = [{ text: "Transfer to our Meezan Bank account:" }];
+    if (c.bankName) lines.push({ label: "Bank", value: c.bankName });
+    if (c.accountNumber) lines.push({ label: "Account", value: c.accountNumber });
+    if (c.accountTitle) lines.push({ label: "Title", value: c.accountTitle });
+    if (c.iban) lines.push({ label: "IBAN", value: c.iban });
+    return lines;
+  }
+  if (key === "hbl" || key === "ubl") {
+    const lines = [{ text: `${c.label || key} account details:` }];
+    if (c.accountNumber) lines.push({ label: "Account number", value: c.accountNumber });
+    if (c.accountTitle) lines.push({ label: "Account title", value: c.accountTitle });
     return lines;
   }
   return [];
@@ -338,16 +353,35 @@ export function CheckoutView() {
     [subtotal, discountPreview]
   );
 
+  const advanceDiscountInfo = useMemo(
+    () =>
+      computeAdvancePaymentDiscount({
+        amountAfterCoupon: cartTotalAfterDiscount,
+        paymentMethod,
+        storePayment,
+      }),
+    [cartTotalAfterDiscount, paymentMethod, storePayment]
+  );
+  const advanceDiscount = advanceDiscountInfo.discount;
+  const totalDiscount = Math.max(
+    0,
+    Math.round((discountPreview + advanceDiscount) * 100) / 100
+  );
+  const cartTotalAfterAllDiscounts = useMemo(
+    () => Math.max(0, Math.round((subtotal - totalDiscount) * 100) / 100),
+    [subtotal, totalDiscount]
+  );
+
   const shippingApplied = useMemo(
     () =>
       applyShippingRules({
         zoneShippingCost,
-        cartTotal: cartTotalAfterDiscount,
+        cartTotal: cartTotalAfterAllDiscounts,
         paymentMethod,
         zoneIsFree: shippingIsFree,
         storePayment,
       }),
-    [zoneShippingCost, cartTotalAfterDiscount, paymentMethod, shippingIsFree, storePayment]
+    [zoneShippingCost, cartTotalAfterAllDiscounts, paymentMethod, shippingIsFree, storePayment]
   );
   const displayShippingCost = shippingApplied.shippingCost;
   const displayShippingFree = shippingApplied.isFree;
@@ -357,12 +391,12 @@ export function CheckoutView() {
     [cartTotalAfterDiscount, freeThreshold]
   );
 
-  const qualifiesForThresholdFreeDelivery =
-    paymentMethod === "cod" && cartTotalAfterDiscount >= freeThreshold && freeThreshold > 0;
+  const showShippingAsFree = displayShippingFree;
 
-  const showShippingAsFree = displayShippingFree || qualifiesForThresholdFreeDelivery;
-
-  const whatsappNumber = String(settings?.whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || "").trim();
+  const whatsappNumber = String(
+    settings?.whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || "03284010007"
+  ).trim();
+  const whatsappDisplay = formatWhatsAppDisplay(whatsappNumber || "03284010007");
   const showAdvanceMessage = shouldShowAdvancePaymentMessage({
     paymentMethod,
     shippingCost: displayShippingCost,
@@ -370,8 +404,12 @@ export function CheckoutView() {
   });
   const advanceMessageBody = formatAdvancePaymentMessage(
     shippingRules.advancePaymentMessage,
-    shippingRules.advancePaymentAmount,
-    whatsappNumber
+    shippingRules.advancePaymentAmount || displayShippingCost || 250,
+    whatsappDisplay
+  );
+  const advanceAccountLines = useMemo(
+    () => getAdvancePaymentAccountLines(normalizePakistaniPaymentMethods(pakistaniPaymentRaw)),
+    [pakistaniPaymentRaw]
   );
 
   const calculateShipping = useCallback(
@@ -448,8 +486,8 @@ export function CheckoutView() {
   }, [addr.country, addr.city, addr.state, items.length, totalWeightGrams, cartTotalAfterDiscount, calculateShipping]);
 
   const total = useMemo(
-    () => Math.max(0, Math.round((subtotal - discountPreview + displayShippingCost) * 100) / 100),
-    [subtotal, discountPreview, displayShippingCost]
+    () => Math.max(0, Math.round((subtotal - totalDiscount + displayShippingCost) * 100) / 100),
+    [subtotal, totalDiscount, displayShippingCost]
   );
   const totalWeightKg = useMemo(() => totalWeightGrams / 1000, [totalWeightGrams]);
 
@@ -995,8 +1033,9 @@ export function CheckoutView() {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
-                      padding: "8px 10px",
+                      gap: 12,
+                      minHeight: 52,
+                      padding: "10px 12px",
                       border: "1px solid",
                       borderColor: selected ? "#C41E1E" : "#E5E7EB",
                       borderRadius: 8,
@@ -1011,10 +1050,67 @@ export function CheckoutView() {
                       value={m.key}
                       checked={selected}
                       onChange={() => setPaymentMethod(m.key)}
-                      style={{ accentColor: "#C41E1E", margin: 0, flexShrink: 0 }}
+                      style={{ accentColor: "#C41E1E", margin: 0, flexShrink: 0, width: 16, height: 16 }}
                     />
-                    <PakistaniPaymentIcon methodKey={iconKey} height={22} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#111111" }}>{m.label || m.key}</span>
+                    <span
+                      style={{
+                        width: 48,
+                        height: 40,
+                        flexShrink: 0,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <PakistaniPaymentIcon methodKey={iconKey} height={36} />
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: "#111111",
+                        lineHeight: 1.2,
+                        flex: 1,
+                        minWidth: 0,
+                      }}
+                    >
+                      {m.key === "bankTransfer" ? m.label || "Bank Alfalah" : m.label || m.key}
+                      {m.key !== "cod" &&
+                      isAdvancePaymentMethod(m.key) &&
+                      shippingRules.advancePaymentDiscountEnabled !== false ? (
+                        <span
+                          style={{
+                            marginLeft: 8,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: "#16A34A",
+                            background: "#DCFCE7",
+                            padding: "2px 6px",
+                            borderRadius: 4,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {shippingRules.advancePaymentDiscountPercent || 3}% OFF
+                        </span>
+                      ) : null}
+                      {m.key === "cod" ? (
+                        <span
+                          style={{
+                            marginLeft: 8,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: "#B45309",
+                            background: "#FEF3C7",
+                            padding: "2px 6px",
+                            borderRadius: 4,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Delivery charges advance
+                        </span>
+                      ) : null}
+                    </span>
                     {m.key === "cod" && storePayment.codFee > 0 ? (
                       <span style={{ marginLeft: "auto", fontSize: 11, color: "#6B7280" }}>
                         +{formatPrice(storePayment.codFee)}
@@ -1031,8 +1127,17 @@ export function CheckoutView() {
                         lineHeight: 1.5,
                       }}
                     >
-                      {pakistaniPaymentInstructions(m.key, m).map((line) => (
-                        <li key={line}>{line}</li>
+                      {pakistaniPaymentInstructions(m.key, m).map((line, i) => (
+                        <li key={`${m.key}-${i}`}>
+                          {line.label ? (
+                            <>
+                              <strong style={{ fontWeight: 700, color: "#111111" }}>{line.label}:</strong>{" "}
+                              {line.value}
+                            </>
+                          ) : (
+                            line.text
+                          )}
+                        </li>
                       ))}
                     </ul>
                   ) : null}
@@ -1042,7 +1147,16 @@ export function CheckoutView() {
 
             {shippingApplied.freeReason === "advance_payment" ? (
               <p style={{ fontSize: 12, color: "#16A34A", margin: "4px 0 0", fontWeight: 500 }}>
-                🎉 Free delivery when you pay in advance
+                🎉 Free delivery
+                {shippingRules.advancePaymentDiscountEnabled !== false
+                  ? ` + ${shippingRules.advancePaymentDiscountPercent || 3}% off`
+                  : ""}{" "}
+                when you pay in advance
+              </p>
+            ) : advanceDiscount > 0 ? (
+              <p style={{ fontSize: 12, color: "#16A34A", margin: "4px 0 0", fontWeight: 500 }}>
+                🎉 {advanceDiscountInfo.percent}% off for advance payment — delivery Rs.{" "}
+                {shippingRules.flatDeliveryCharge || 250}
               </p>
             ) : null}
 
@@ -1057,10 +1171,24 @@ export function CheckoutView() {
                   padding: "10px 12px",
                 }}
               >
-                <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: 13, color: "#92400E" }}>
+                <p style={{ margin: "0 0 6px", fontWeight: 700, fontSize: 13, color: "#92400E" }}>
                   {shippingRules.advancePaymentMessageTitle}
                 </p>
-                <p style={{ margin: 0, fontSize: 12, color: "#78350F", lineHeight: 1.5 }}>{advanceMessageBody}</p>
+                <p style={{ margin: "0 0 8px", fontSize: 12, color: "#78350F", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                  {advanceMessageBody}
+                </p>
+                {advanceAccountLines.length > 0 ? (
+                  <ul style={{ margin: "0 0 8px", paddingLeft: 16, fontSize: 12, color: "#78350F", lineHeight: 1.6 }}>
+                    {advanceAccountLines.map((line) => (
+                      <li key={line.label}>
+                        <strong style={{ color: "#92400E" }}>{line.label}:</strong> {line.value}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <p style={{ margin: 0, fontSize: 12, color: "#78350F", fontWeight: 700 }}>
+                  WhatsApp screenshot: {whatsappDisplay}
+                </p>
               </div>
             ) : null}
           </div>
@@ -1119,6 +1247,12 @@ export function CheckoutView() {
                 <span>Discount</span>
                 <span className="price">−{formatPrice(discountPreview, addr.country)}</span>
               </div>
+              {advanceDiscount > 0 ? (
+                <div className="flex justify-between text-emerald-700">
+                  <span>Advance payment ({advanceDiscountInfo.percent}% off)</span>
+                  <span className="price">−{formatPrice(advanceDiscount, addr.country)}</span>
+                </div>
+              ) : null}
               {shippingApplied.freeReason === "order_above" && shippingRules.freeShippingOnOrderAboveEnabled ? (
                 <p style={{ fontSize: 13, color: "#16A34A", margin: "0 0 8px", fontWeight: 500 }}>
                   🎉 Free delivery on orders above {formatPrice(shippingRules.freeShippingOnOrderAbove)}!
@@ -1126,7 +1260,11 @@ export function CheckoutView() {
               ) : null}
               {shippingApplied.freeReason === "advance_payment" ? (
                 <p style={{ fontSize: 13, color: "#16A34A", margin: "0 0 8px", fontWeight: 500 }}>
-                  🎉 You get FREE delivery by paying in advance!
+                  🎉 Free delivery + {advanceDiscountInfo.percent || shippingRules.advancePaymentDiscountPercent || 3}% off for advance payment!
+                </p>
+              ) : advanceDiscount > 0 ? (
+                <p style={{ fontSize: 13, color: "#16A34A", margin: "0 0 8px", fontWeight: 500 }}>
+                  🎉 {advanceDiscountInfo.percent}% off for advance payment
                 </p>
               ) : null}
               <div className="flex justify-between border-b border-zinc-100 pb-1.5">

@@ -1,10 +1,12 @@
 import { Suspense } from "react";
 import OrderTrackingView from "@/components/store/OrderTrackingView";
+import { buildPageMetadata } from "@/lib/pageMetadata";
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: "Track Your Order | Crazzycars.pk",
   description: "Track your Postex shipment with your tracking number.",
-};
+  path: "/track-order",
+});
 
 export default function TrackOrderPage() {
   return (

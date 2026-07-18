@@ -21,8 +21,8 @@ export const DEFAULT_PAKISTANI_PAYMENT_METHODS = {
   },
   bankTransfer: {
     enabled: false,
-    label: "Bank Transfer",
-    bankName: "",
+    label: "Bank Alfalah",
+    bankName: "Alfalah",
     accountNumber: "",
     accountTitle: "",
     iban: "",
@@ -38,8 +38,10 @@ export const DEFAULT_PAKISTANI_PAYMENT_METHODS = {
   meezan: {
     enabled: false,
     label: "Meezan Bank",
+    bankName: "Meezan Bank",
     accountNumber: "",
     accountTitle: "",
+    iban: "",
     icon: "meezan",
   },
   ubl: {

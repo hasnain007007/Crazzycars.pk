@@ -9,6 +9,7 @@ import path from "path";
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { getCloudinaryCloudName } from "@/lib/cloudinaryConfig";
 
 function sanitizeFolder(raw) {
   const s = String(raw || "categories")
@@ -21,7 +22,7 @@ function sanitizeFolder(raw) {
 
 function hasCloudinary() {
   return Boolean(
-    process.env.CLOUDINARY_CLOUD_NAME &&
+    getCloudinaryCloudName() &&
       process.env.CLOUDINARY_API_KEY &&
       process.env.CLOUDINARY_API_SECRET
   );
@@ -29,7 +30,7 @@ function hasCloudinary() {
 
 function configureCloudinary() {
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    cloud_name: getCloudinaryCloudName(),
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });

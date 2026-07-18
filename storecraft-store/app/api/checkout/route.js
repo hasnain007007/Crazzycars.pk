@@ -13,9 +13,13 @@ import { recordEmailSent, resolveOrderConfirmationEmail, sendEmail, sendAdminOrd
 import {
   applyShippingRules,
   buildAdvancePaymentOrderNote,
+  computeAdvancePaymentDiscount,
   normalizeShippingRules,
 } from "@/lib/freeDelivery";
-import { isOfflinePakistaniPayment } from "@/lib/pakistaniPaymentMethods";
+import {
+  isOfflinePakistaniPayment,
+  normalizePakistaniPaymentMethods,
+} from "@/lib/pakistaniPaymentMethods";
 import { quoteShipping } from "@/lib/shippingZoneWeight";
 import { toKg } from "@/lib/shippingEstimate";
 import { effectiveUnitPrice } from "@/lib/storePricing";
@@ -301,7 +305,7 @@ export async function POST(request) {
       city: String(body.shippingAddress?.city || "").trim(),
       state: stateVal,
       province: stateVal,
-      country: String(body.shippingAddress?.country || "").trim(),
+      country: String(body.shippingAddress?.country || "Pakistan").trim() || "Pakistan",
       zip: String(body.shippingAddress?.zip || "").trim(),
       nif: String(body.shippingAddress?.nif || "").trim(),
     };
@@ -310,6 +314,8 @@ export async function POST(request) {
     let paymentMethod = "cod";
     if (requestedPaymentMethod.toLowerCase() === "stripe") {
       paymentMethod = "stripe";
+    } else if (requestedPaymentMethod.toLowerCase() === "paypal") {
+      paymentMethod = "paypal";
     } else if (isOfflinePakistaniPayment(requestedPaymentMethod)) {
       paymentMethod = requestedPaymentMethod;
     }
@@ -461,6 +467,7 @@ export async function POST(request) {
     subtotal = Math.round(subtotal * 100) / 100;
     let discount = 0;
     let couponCode = "";
+    let advancePaymentDiscount = 0;
 
     const code = String(body.couponCode || "").trim().toUpperCase();
     if (code) {
@@ -479,6 +486,22 @@ export async function POST(request) {
       (await Settings.findOne({}).lean());
     const storePayment = normalizeShippingRules(settingsDoc?.storePayment);
     const whatsappNumber = String(settingsDoc?.whatsapp?.number || "").trim();
+    const pakMethods = normalizePakistaniPaymentMethods(settingsDoc?.pakistaniPaymentMethods);
+    if (isOfflinePakistaniPayment(paymentMethod) && pakMethods[paymentMethod]?.enabled !== true) {
+      return NextResponse.json(
+        { success: false, error: "Selected payment method is not available." },
+        { status: 400 }
+      );
+    }
+
+    const afterCoupon = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
+    const adv = computeAdvancePaymentDiscount({
+      amountAfterCoupon: afterCoupon,
+      paymentMethod,
+      storePayment,
+    });
+    advancePaymentDiscount = adv.discount;
+    discount = Math.max(0, Math.round((discount + advancePaymentDiscount) * 100) / 100);
 
     const activeZones = await ShippingZone.find({ status: "active" }).sort({ sortOrder: 1 }).lean();
     const totalWeightGrams = Math.max(0, Math.round(totalOrderWeightKg * 1000));
@@ -520,12 +543,21 @@ export async function POST(request) {
     } else if (quote.isFree || rulesResult.isFree) {
       shippingZoneLabel = shippingZoneLabel ? `${shippingZoneLabel} (Free Shipping)` : "Free Shipping";
     }
-    const advanceNote = buildAdvancePaymentOrderNote(storePayment, whatsappNumber);
+    const advanceNote = buildAdvancePaymentOrderNote(
+      storePayment,
+      whatsappNumber || "03284010007",
+      settingsDoc?.pakistaniPaymentMethods
+    );
     const statusNotes = [];
     if (rulesResult.freeReason === "advance_payment") {
       statusNotes.push("Free delivery — advance payment");
     } else if (rulesResult.freeReason === "order_above") {
       statusNotes.push(`Free delivery — order above Rs. ${storePayment.freeShippingOnOrderAbove}`);
+    }
+    if (advancePaymentDiscount > 0) {
+      statusNotes.push(
+        `Advance payment discount ${adv.percent}% (−Rs. ${advancePaymentDiscount})`
+      );
     }
     if (paymentMethod === "cod" && shippingCost > 0 && advanceNote) {
       statusNotes.push(advanceNote);
@@ -679,7 +711,7 @@ export async function POST(request) {
       ],
     });
 
-    if (paymentMethod === "cod" && isValidCustomerEmail(order.customer?.email)) {
+    if (isValidCustomerEmail(order.customer?.email)) {
       try {
         const storeName = settingsDoc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
         const logoUrl = settingsDoc?.general?.logo?.url || "";

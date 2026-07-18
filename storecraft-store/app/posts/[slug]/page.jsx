@@ -3,7 +3,8 @@ import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
 import BlogPostView from "@/components/store/BlogPostView";
-const BASE_URL = (process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://crazzycars.pk").replace(/\/$/, "");
+import { getSiteUrl } from "@/lib/siteUrl";
+const BASE_URL = getSiteUrl();
 
 function withClientId(doc) {
   if (!doc || typeof doc !== "object") return doc;
@@ -51,16 +52,9 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const post = await loadBlogPost(slug);
   if (!post) return { title: "Blog Not Found" };
-  const resolvedKeywords =
-    post.seo?.keywords ||
-    (Array.isArray(post.seo?.metaKeywords) ? post.seo.metaKeywords.join(", ") : "") ||
-    post.tags?.join(", ") ||
-    "";
-
   return {
     title: post.seo?.metaTitle || `${post.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} Blog`,
     description: post.seo?.metaDescription || post.excerpt || post.title,
-    keywords: resolvedKeywords,
     authors: [{ name: post.author?.name || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk" }],
     publishedTime: post.createdAt,
     modifiedTime: post.updatedAt,
@@ -131,11 +125,6 @@ export default async function BlogPostPage({ params }) {
         "@type": "WebPage",
         "@id": `${BASE_URL}/blogs/${post.slug}`,
       },
-      keywords:
-        post.seo?.keywords ||
-        (Array.isArray(post.seo?.metaKeywords) ? post.seo.metaKeywords.join(", ") : "") ||
-        post.tags?.join(", ") ||
-        "",
     };
 
     return (

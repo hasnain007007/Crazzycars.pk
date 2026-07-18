@@ -11,7 +11,7 @@ const addressSubSchema = new mongoose.Schema(
     address: String,
     city: String,
     postcode: String,
-    country: { type: String, default: "Portugal" },
+    country: { type: String, default: "Pakistan" },
     phone: String,
     isDefault: { type: Boolean, default: false },
   },

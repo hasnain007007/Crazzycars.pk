@@ -91,9 +91,9 @@ const METHOD_META = {
   },
   jazzcash: { title: "JazzCash", description: "Mobile wallet payments", fields: "wallet" },
   easypaisa: { title: "Easypaisa", description: "Mobile wallet payments", fields: "wallet" },
-  bankTransfer: { title: "Bank Transfer", description: "Direct bank transfer", fields: "bank" },
+  bankTransfer: { title: "Bank Alfalah", description: "Direct bank transfer", fields: "bank" },
   hbl: { title: "HBL", description: "Habib Bank Limited", fields: "account" },
-  meezan: { title: "Meezan Bank", description: "Islamic banking", fields: "account" },
+  meezan: { title: "Meezan Bank", description: "Islamic banking", fields: "bank" },
   ubl: { title: "UBL", description: "United Bank Limited", fields: "account" },
 };
 

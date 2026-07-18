@@ -1,19 +1,13 @@
 import { Suspense } from "react";
 import { ProductsBrowseMedico } from "@/components/store/ProductsBrowseMedico";
+import { buildPageMetadata } from "@/lib/pageMetadata";
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: "Shop All Car Accessories",
   description:
     "Browse premium car accessories in Pakistan. Filter by category, brand, and car make. Cash on delivery available nationwide from Crazzycars.pk.",
-  keywords: [
-    "car accessories pakistan",
-    "seat covers pakistan",
-    "Crazzycars.pk",
-    "car parts online pakistan",
-    "cod car accessories",
-    "auto accessories pakistan",
-  ],
-};
+  path: "/shop",
+});
 
 function Fallback() {
   return (

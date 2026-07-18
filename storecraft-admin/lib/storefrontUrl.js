@@ -16,7 +16,7 @@ function isAdminOrigin(url) {
   const u = normalizeBase(url).toLowerCase();
   if (!u) return true;
   return (
-    u.includes("localhost:3000") ||
+    u.includes("localhost:3001") ||
     u.includes("storecraft-admin") ||
     u.endsWith("/admin")
   );
@@ -38,7 +38,7 @@ export function getStorefrontBaseUrl() {
   if (typeof window !== "undefined") {
     const { hostname } = window.location;
     if (hostname === "localhost" || hostname === "127.0.0.1") {
-      return normalizeBase(process.env.NEXT_PUBLIC_STORE_URL) || "http://localhost:3001";
+      return normalizeBase(process.env.NEXT_PUBLIC_STORE_URL) || "http://localhost:3000";
     }
   }
 

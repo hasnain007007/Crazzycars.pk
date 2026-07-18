@@ -8,10 +8,11 @@ import Page from "@/lib/models/Page.model";
 import Category from "@/lib/models/Category.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { serializeStoreProductDetail } from "@/lib/storeSerialize";
+import { getSiteUrl } from "@/lib/siteUrl";
 
 export const dynamic = "force-dynamic";
 
-const BASE_URL = (process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://crazzycars.pk").replace(/\/$/, "");
+const BASE_URL = getSiteUrl();
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
 const CURRENCY = process.env.NEXT_PUBLIC_CURRENCY || "PKR";
 
@@ -28,7 +29,7 @@ async function loadContent(slug) {
     status: { $regex: /^active$/i },
   })
     .select(
-      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications seo"
+      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications seo averageRating ratingAverage rating reviewCount totalReviews numReviews"
     )
     .populate("categories", "name slug")
     .lean();
@@ -90,10 +91,9 @@ export async function generateMetadata({ params }) {
     return {
       title,
       description,
-      keywords: [p.name, "car accessories", "floor mats", BRAND],
       alternates: { canonical },
       openGraph: {
-        title: p.name,
+        title,
         description: (p.seo?.metaDescription || "").trim() || stripHtml(p.shortDescription || "").slice(0, 200) || `Buy ${p.name} at ${BRAND}`,
         type: "website",
         url: canonical,
@@ -101,7 +101,7 @@ export async function generateMetadata({ params }) {
       },
       twitter: {
         card: "summary_large_image",
-        title: p.name,
+        title,
         description: (p.seo?.metaDescription || "").trim() || stripHtml(p.shortDescription || "").slice(0, 200) || `Buy ${p.name} at ${BRAND}`,
         images: mainImg ? [mainImg] : [],
       },
@@ -119,11 +119,12 @@ export async function generateMetadata({ params }) {
       description,
       alternates: { canonical },
       openGraph: {
-        title: cat.name,
+        title,
         description: `Shop ${cat.name} at ${BRAND}`,
         url: canonical,
         images: cat.image?.url ? [{ url: cat.image.url }] : [],
       },
+      twitter: { card: "summary_large_image", title, description },
     };
   }
 
@@ -131,15 +132,19 @@ export async function generateMetadata({ params }) {
   return {
     title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
     description: page.seo?.metaDescription || "",
-    keywords: page.seo?.keywords || "",
     alternates: {
       canonical: page.seo?.canonical || `${BASE_URL}/${slugStr}`,
     },
     openGraph: {
-      title: page.seo?.metaTitle || page.title,
+      title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`,
       description: page.seo?.metaDescription || "",
       type: "website",
       url: `${BASE_URL}/${slugStr}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`,
+      description: page.seo?.metaDescription || "",
     },
   };
 }

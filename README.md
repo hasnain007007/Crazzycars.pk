@@ -122,8 +122,8 @@ Committed templates: `storecraft-store/.env.local.example` and `storecraft-admin
 
 After seeding:
 
-- **Email:** `admin@example.com`
-- **Password:** `ChangeMe@123`
+- **Email:** `admin@crazzycars.pk`
+- **Password:** `@Hasnain0007`
 
 Change this password immediately in production.
 

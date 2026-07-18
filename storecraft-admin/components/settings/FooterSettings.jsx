@@ -21,7 +21,7 @@ const DEFAULT_SHOP_LINKS = [
 ];
 
 const DEFAULT_CUSTOMER_CARE_LINKS = [
-  { label: "Contact Us", href: "/pages/contact", enabled: true },
+  { label: "Contact Us", href: "/contact", enabled: true },
   { label: "FAQ", href: "/pages/faq", enabled: true },
   { label: "Shipping Info", href: "/pages/shipping", enabled: true },
   { label: "Returns & Refunds", href: "/pages/returns", enabled: true },
@@ -73,7 +73,7 @@ const FOOTER_CONTENT_DEFAULTS = {
   copyrightText: `© ${new Date().getFullYear()} Crazzycars.pk. All Rights Reserved.`,
   contactEmail: "info@crazzycars.pk",
   phone: "+92 324 422 0007",
-  registeredAddress: "Sialkot, Punjab, Pakistan",
+  registeredAddress: "Gujranwala, Punjab, Pakistan",
 };
 
 function LinkManager({ title, links, setLinks }) {
@@ -632,7 +632,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
           <textarea
             value={f.registeredAddress || FOOTER_CONTENT_DEFAULTS.registeredAddress}
             onChange={(e) => setFooter({ registeredAddress: e.target.value })}
-            placeholder={"Sialkot, Punjab, Pakistan"}
+            placeholder={"Gujranwala, Punjab, Pakistan"}
             rows={4}
             style={{
               width: "100%",

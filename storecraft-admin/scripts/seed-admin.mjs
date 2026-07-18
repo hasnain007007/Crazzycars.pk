@@ -16,11 +16,13 @@ dotenv.config({ path: envPath });
 
 const ADMIN_USER = {
   name: "Crazzycars.pk",
-  email: "admin@example.com",
-  password: "ChangeMe@123",
+  email: "admin@crazzycars.pk",
+  password: "@Hasnain0007",
   role: "superadmin",
   status: "active",
 };
+
+const LEGACY_EMAILS = ["admin@example.com", "crazzycars.pk"];
 
 async function seedAdmin() {
   const { MONGODB_URI } = process.env;
@@ -30,13 +32,36 @@ async function seedAdmin() {
 
   await mongoose.connect(MONGODB_URI, { bufferCommands: false });
 
-  const existingUser = await User.findOne({ email: ADMIN_USER.email });
-  if (existingUser) {
-    console.log(`Superadmin already exists: ${ADMIN_USER.email}`);
-    return;
+  const force = process.argv.includes("--force");
+  const hashedPassword = await bcrypt.hash(ADMIN_USER.password, 12);
+  let existingUser = await User.findOne({ email: ADMIN_USER.email });
+
+  if (!existingUser) {
+    for (const legacy of LEGACY_EMAILS) {
+      const legacyUser = await User.findOne({ email: legacy });
+      if (legacyUser) {
+        legacyUser.email = ADMIN_USER.email;
+        existingUser = legacyUser;
+        break;
+      }
+    }
   }
 
-  const hashedPassword = await bcrypt.hash(ADMIN_USER.password, 12);
+  if (existingUser) {
+    // Always re-activate; --force also resets password to the seed default.
+    existingUser.email = ADMIN_USER.email;
+    existingUser.status = "active";
+    existingUser.role = ADMIN_USER.role;
+    existingUser.name = ADMIN_USER.name;
+    if (force) existingUser.password = hashedPassword;
+    await existingUser.save();
+    console.log(
+      force
+        ? `Superadmin reset (active + password): ${ADMIN_USER.email}`
+        : `Superadmin already exists — set active: ${ADMIN_USER.email}`
+    );
+    return;
+  }
 
   await User.create({
     ...ADMIN_USER,

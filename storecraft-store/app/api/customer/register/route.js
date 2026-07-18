@@ -6,85 +6,56 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    // Parse body
     let body;
     try {
       body = await req.json();
-    } catch (e) {
+    } catch {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid request body",
-          step: "parse",
-        },
+        { success: false, error: "Invalid request body" },
         { status: 400 }
       );
     }
 
     const { firstName, lastName, email, password } = body;
 
-    // Validate
-    if (
-      !firstName?.trim() ||
-      !lastName?.trim() ||
-      !email?.trim() ||
-      !password
-    ) {
+    if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "All fields are required",
-          step: "validation",
-        },
+        { success: false, error: "All fields are required" },
         { status: 400 }
       );
     }
 
     if (password.length < 6) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Password must be at least 6 characters",
-          step: "validation",
-        },
+        { success: false, error: "Password must be at least 6 characters" },
         { status: 400 }
       );
     }
 
-    // Connect DB
     try {
       await dbConnect();
     } catch (e) {
+      console.error("[register] db_connect:", e);
       return NextResponse.json(
-        {
-          success: false,
-          error: "Database connection failed",
-          step: "db_connect",
-        },
+        { success: false, error: "Registration failed. Please try again." },
         { status: 500 }
       );
     }
 
-    // Check existing
     const existing = await Customer.findOne({
       email: email.toLowerCase().trim(),
     });
 
     if (existing) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Email already registered. Please login.",
-          step: "duplicate",
-        },
+        { success: false, error: "Email already registered. Please login." },
         { status: 400 }
       );
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const customerData = {
+    const customer = await Customer.create({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       name: `${firstName.trim()} ${lastName.trim()}`,
@@ -92,23 +63,16 @@ export async function POST(req) {
       password: hashedPassword,
       passwordHash: hashedPassword,
       isActive: true,
-    };
-
-    const customer = await Customer.create(customerData);
+    });
 
     if (!process.env.JWT_SECRET) {
       console.error("[register] JWT_SECRET is not set");
       return NextResponse.json(
-        {
-          success: false,
-          error: "Server configuration error",
-          step: "jwt",
-        },
+        { success: false, error: "Registration failed. Please try again." },
         { status: 500 }
       );
     }
 
-    // Create JWT
     const token = jwt.sign(
       {
         customerId: String(customer._id),
@@ -142,11 +106,7 @@ export async function POST(req) {
   } catch (e) {
     console.error("[register] error:", e);
     return NextResponse.json(
-      {
-        success: false,
-        error: e.message || "Registration failed",
-        step: "unknown",
-      },
+      { success: false, error: "Registration failed. Please try again." },
       { status: 500 }
     );
   }

@@ -61,8 +61,15 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
   const { items, setOpen } = useCart();
   const [wishCount, setWishCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   const cartCount = items.reduce((s, i) => s + (Number(i.quantity) || 1), 0);
+  const badgeCart = mounted ? cartCount : 0;
+  const badgeWish = mounted ? wishCount : 0;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function read() {
@@ -94,20 +101,20 @@ export default function MobileBottomNav() {
           <>
             <span className="relative">
               <NavIcon name={item.key} active={active} />
-              {item.key === "cart" && cartCount > 0 ? (
+              {item.key === "cart" && badgeCart > 0 ? (
                 <span
                   className="absolute -right-2 -top-1.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full px-0.5 text-[8px] font-bold text-white"
                   style={{ background: "#C41E1E" }}
                 >
-                  {cartCount > 9 ? "9+" : cartCount}
+                  {badgeCart > 9 ? "9+" : badgeCart}
                 </span>
               ) : null}
-              {item.key === "wishlist" && wishCount > 0 ? (
+              {item.key === "wishlist" && badgeWish > 0 ? (
                 <span
                   className="absolute -right-2 -top-1.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full px-0.5 text-[8px] font-bold text-white"
                   style={{ background: "#C41E1E" }}
                 >
-                  {wishCount > 9 ? "9+" : wishCount}
+                  {badgeWish > 9 ? "9+" : badgeWish}
                 </span>
               ) : null}
             </span>

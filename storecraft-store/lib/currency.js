@@ -13,7 +13,7 @@ function formatPkrAmount(amount) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(num);
-  return `Rs. ${formatted}`;
+  return `Rs.${formatted}`;
 }
 
 export function formatPrice(amount) {
@@ -30,7 +30,7 @@ export function formatPrice(amount) {
 
 export function formatPriceShort(amount) {
   const num = Number.parseFloat(amount) || 0;
-  if (num === 0) return "Rs. 0";
+  if (num === 0) return "Rs.0";
   return formatPkrAmount(amount);
 }
 

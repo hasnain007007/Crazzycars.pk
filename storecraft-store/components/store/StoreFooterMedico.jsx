@@ -3,6 +3,20 @@
 import Link from 'next/link'
 import { normalizeStoreEmail } from '@/lib/storeContact'
 import { resolveStoreLogoUrl, trimmedLogoUrl } from '@/lib/storeLogo'
+import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
+
+const DEFAULT_SHOP_LINKS = [
+  { label: "Home", href: "/" },
+  { label: "Shop All", href: "/shop" },
+  { label: "Categories", href: "/categories" },
+  { label: "Blog", href: "/blogs" },
+]
+const DEFAULT_CUSTOMER_CARE_LINKS = [
+  { label: "My Account", href: "/account" },
+  { label: "Order Tracking", href: "/track-order" },
+  { label: "FAQ", href: "/faq" },
+  { label: "Contact", href: "/contact" },
+]
 
 const PaymentLogo = ({ method }) => {
   const type = (method.type || method).toLowerCase()
@@ -248,11 +262,24 @@ export default function StoreFooterMedico({ settings }) {
     (l) => l.enabled !== false
   )
 
-  const categoriesLinks = (settings?.footer?.categoriesLinks || []).filter(
-    (l) => l.enabled !== false
-  )
+  const normalizeFooterLink = (l, fallbackHref = "/") => {
+    const href = String(l.href || l.url || "").trim()
+    const label = String(l.label || "").trim()
+    if (!href || href === "#") {
+      return label ? { label, href: fallbackHref } : null
+    }
+    return { label: label || href, href }
+  }
 
-  const finalCategoryLinks = categoriesLinks
+  let resolvedShopLinks = shopLinks
+    .map((l) => normalizeFooterLink(l, "/shop"))
+    .filter(Boolean)
+  if (!resolvedShopLinks.length) resolvedShopLinks = [...DEFAULT_SHOP_LINKS]
+
+  let resolvedCustomerCareLinks = customerCareLinks
+    .map((l) => normalizeFooterLink(l, "/contact"))
+    .filter(Boolean)
+  if (!resolvedCustomerCareLinks.length) resolvedCustomerCareLinks = [...DEFAULT_CUSTOMER_CARE_LINKS]
 
   const colHeading = {
     fontSize: 13,
@@ -434,7 +461,7 @@ export default function StoreFooterMedico({ settings }) {
           <div style={colStyle}>
             <h4 style={colHeading}>Shop</h4>
             <nav>
-              {shopLinks.map((link, i) => (
+              {resolvedShopLinks.filter((link) => link.href || link.url).map((link, i) => (
                 <Link
                   key={i}
                   href={link.href}
@@ -452,7 +479,7 @@ export default function StoreFooterMedico({ settings }) {
           <div style={colStyle}>
             <h4 style={colHeading}>Customer Care</h4>
             <nav>
-              {customerCareLinks.map((link, i) => (
+              {resolvedCustomerCareLinks.filter((link) => link.href || link.url).map((link, i) => (
                 <Link
                   key={i}
                   href={link.href}
@@ -468,31 +495,7 @@ export default function StoreFooterMedico({ settings }) {
 
           {/* COL 4: Categories */}
           <div style={colStyle}>
-            <h4 style={colHeading}>Categories</h4>
-            <nav>
-              {finalCategoryLinks.map((link, i) => (
-                <Link
-                  key={i}
-                  href={link.href}
-                  style={colLink}
-                  onMouseEnter={(e) => { e.target.style.opacity = '0.6' }}
-                  onMouseLeave={(e) => { e.target.style.opacity = '1' }}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              {finalCategoryLinks.length === 0 && (
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: 'rgba(255,255,255,0.3)',
-                    fontStyle: 'italic',
-                  }}
-                >
-                  No categories added
-                </p>
-              )}
-            </nav>
+            <FooterCategoriesColumn />
           </div>
 
           {/* COL 5: Company Information */}

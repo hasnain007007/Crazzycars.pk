@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { getAdminEmail, getFromEmail, sendEmail } from "@/lib/email";
 
 function escapeHtml(s) {
   return String(s ?? "")
@@ -16,17 +16,22 @@ export async function POST(req) {
     const { name, email, subject, message, orderNumber } = body;
 
     if (!name?.trim() || !email?.trim() || !message?.trim()) {
-      return NextResponse.json({
-        success: false,
-        error: "Please fill in all required fields",
-      });
+      return NextResponse.json(
+        { success: false, error: "Please fill in all required fields" },
+        { status: 400 }
+      );
     }
 
-    const hasSmtp =
-      process.env.SMTP_HOST &&
-      process.env.SMTP_USER &&
-      process.env.SMTP_PASS &&
-      !String(process.env.SMTP_PASS).includes("placeholder");
+    const fromEmail = getFromEmail();
+    if (!process.env.RESEND_API_KEY || !fromEmail) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Contact form is temporarily unavailable. Please try WhatsApp or email us directly.",
+        },
+        { status: 503 }
+      );
+    }
 
     const safeName = escapeHtml(name.trim());
     const safeEmail = escapeHtml(email.trim());
@@ -34,29 +39,15 @@ export async function POST(req) {
     const safeMessage = escapeHtml(message.trim());
     const safeOrder = escapeHtml(orderNumber?.trim() || "");
 
-    if (hasSmtp) {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(String(process.env.SMTP_PORT || "587"), 10) || 587,
-        secure: process.env.SMTP_SECURE === "true",
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
+    const storeLabel = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+    const toAddr = process.env.CONTACT_EMAIL || getAdminEmail();
 
-      const storeLabel = process.env.NEXT_PUBLIC_STORE_NAME || "Store";
-      const fromAddr = process.env.SMTP_FROM || process.env.SMTP_USER;
-      const toAddr = process.env.CONTACT_EMAIL || process.env.SMTP_USER;
-
-      await transporter.sendMail({
-        from: `"${storeLabel}" <${fromAddr}>`,
-        to: toAddr,
-        replyTo: email.trim(),
-        subject: `Contact Form: ${subject?.trim() || "New message"} — ${name.trim()}`,
-        html: `
-          <div style="font-family: 'DM Sans', sans-serif; max-width: 600px;">
-            <h2 style="color: #009688; font-family: 'Libre Baskerville', Georgia, serif;">New Contact Form Submission</h2>
+    const result = await sendEmail({
+      to: toAddr,
+      subject: `Contact Form: ${subject?.trim() || "New message"} — ${name.trim()}`,
+      html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px;">
+            <h2 style="color: #009688;">New Contact Form Submission</h2>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px; font-weight: bold; width: 140px;">Name:</td>
@@ -81,9 +72,17 @@ export async function POST(req) {
                 <td style="padding: 8px; white-space: pre-wrap;">${safeMessage}</td>
               </tr>
             </table>
+            <p style="color:#999;font-size:12px;margin-top:16px;">Sent via ${storeLabel} contact form</p>
           </div>
         `,
-      });
+      from: `${storeLabel} Contact <${fromEmail}>`,
+    });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: "Failed to send message. Please try again later." },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({

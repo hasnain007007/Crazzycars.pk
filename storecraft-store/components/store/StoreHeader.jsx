@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useStorePayment, useStoreSettings } from "@/context/StoreSettingsContext";
@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/currency";
 import { normalizeStoreEmail } from "@/lib/storeContact";
 import { trimmedLogoUrl } from "@/lib/storeLogo";
 import { getCodFreeDeliveryProgress, getProgressBarThreshold } from "@/lib/freeDelivery";
+import { categoryHref, getCategoryMegaColumns } from "@/lib/categories";
 import { useCustomer } from "@/lib/customerAuth";
 
 const WISHLIST_KEY = "sialkot_wishlist";
@@ -17,63 +18,109 @@ const DEFAULT_NAV = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/shop", mega: true },
   { label: "Categories", href: "/categories", mega: true },
-  { label: "Exterior", href: "/categories/exterior" },
-  { label: "Interior", href: "/categories/interior" },
-  { label: "Lighting", href: "/categories/car-lighting" },
-  { label: "Car Care", href: "/categories/car-care" },
+  { label: "Splitters", href: categoryHref("splitters-side-skirts") },
+  { label: "LED Lights", href: categoryHref("led-headlights-bulbs") },
+  { label: "Body Kits", href: categoryHref("body-kits") },
+  { label: "Car Care", href: categoryHref("care-cleaning") },
   { label: "Deals", href: "/shop?deals=1", deals: true },
   { label: "📦 Track Order", href: "/track-order", track: true },
   { label: "Blog", href: "/blogs" },
 ];
 
-const DEFAULT_MEGA_COLS = [
-  {
-    title: "Interior",
-    links: [
-      { label: "Seat Covers", href: "/categories/seat-covers" },
-      { label: "Floor Mats", href: "/categories/floor-mats" },
-      { label: "Steering Wheels", href: "/categories/steering-wheels" },
-      { label: "Interior Accessories", href: "/categories/interior" },
-    ],
-  },
-  {
-    title: "Exterior & Lighting",
-    links: [
-      { label: "Exterior Mods", href: "/categories/exterior" },
-      { label: "Car Lighting", href: "/categories/car-lighting" },
-      { label: "Audio & Sound", href: "/categories/audio-sound" },
-    ],
-  },
-  {
-    title: "Car Care & Deals",
-    links: [
-      { label: "Cleaning & Care", href: "/categories/car-care" },
-      { label: "All Deals", href: "/shop?deals=1" },
-      { label: "Shop All", href: "/shop" },
-    ],
-  },
-];
+const DEFAULT_MEGA_COLS = getCategoryMegaColumns();
+
+/** Map leftover template nav paths → real CrazzyCars category routes. */
+function normalizeNavHref(label, href) {
+  const raw = String(href || "").trim() || "/";
+  const pathOnly = raw.split("?")[0].replace(/\/+$/, "") || "/";
+  const key = `${String(label || "").trim().toLowerCase()}|${pathOnly.toLowerCase()}`;
+  const byLabel = {
+    exterior: categoryHref("splitters-side-skirts"),
+    interior: categoryHref("steering-wheel-covers"),
+    lighting: categoryHref("led-headlights-bulbs"),
+    "car care": categoryHref("care-cleaning"),
+    "car lighting": categoryHref("led-headlights-bulbs"),
+    deals: "/shop?deals=1",
+    blog: "/blogs",
+  };
+  const labelOnly = String(label || "").trim().toLowerCase();
+  if (byLabel[labelOnly]) return byLabel[labelOnly];
+
+  const brokenPaths = {
+    "/categories/exterior": categoryHref("splitters-side-skirts"),
+    "/exterior": categoryHref("splitters-side-skirts"),
+    "/categories/interior": categoryHref("steering-wheel-covers"),
+    "/interior": categoryHref("steering-wheel-covers"),
+    "/categories/car-lighting": categoryHref("led-headlights-bulbs"),
+    "/categories/lighting": categoryHref("led-headlights-bulbs"),
+    "/lighting": categoryHref("led-headlights-bulbs"),
+    "/categories/car-care": categoryHref("care-cleaning"),
+    "/car-care": categoryHref("care-cleaning"),
+    "/categories/seat-covers": categoryHref("steering-wheel-covers"),
+    "/categories/floor-mats": categoryHref("universal-car-accessories"),
+    "/blog": "/blogs",
+  };
+  if (brokenPaths[pathOnly.toLowerCase()]) return brokenPaths[pathOnly.toLowerCase()];
+  void key;
+  return raw.startsWith("/") || raw.startsWith("http") ? raw : `/${raw}`;
+}
+
+function humanizeNavLabel(label, href) {
+  const cleaned = String(label || "").trim();
+  if (cleaned && cleaned !== href && !cleaned.startsWith("/")) return cleaned;
+  const path = String(href || "").split("?")[0].replace(/\/+$/, "") || "/";
+  const map = {
+    "/": "Home",
+    "/shop": "Shop",
+    "/products": "Products",
+    "/categories": "Categories",
+    "/wishlist": "Wishlist",
+    "/account": "Account",
+    "/blogs": "Blog",
+    "/blog": "Blog",
+    "/track-order": "Track Order",
+    "/contact": "Contact",
+    "/faq": "FAQ",
+    "/about": "About",
+    "/about-us": "About",
+    "/sale": "Sale",
+  };
+  if (map[path]) return map[path];
+  const last = path.split("/").filter(Boolean).pop() || "Page";
+  return last
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
 
 function buildNavFromFooter(footer) {
   const shop = (footer?.shopLinks || [])
-    .filter((l) => l.enabled !== false && String(l.label || "").trim())
-    .map((l) => ({
-      label: String(l.label).trim(),
-      href: String(l.href || l.url || "/").trim() || "/",
-      mega: false,
-      deals: /deal/i.test(l.label),
-    }));
+    .filter((l) => l.enabled !== false && (String(l.label || "").trim() || String(l.href || l.url || "").trim()))
+    .map((l) => {
+      const label = humanizeNavLabel(l.label, l.href || l.url);
+      const href = normalizeNavHref(label, l.href || l.url || "/");
+      return {
+        label,
+        href,
+        mega: false,
+        deals: /deal/i.test(String(label || href)),
+      };
+    });
   if (shop.length >= 4) return shop;
   return DEFAULT_NAV;
 }
 
 function buildMegaCols(footer) {
   const cats = (footer?.categoriesLinks || [])
-    .filter((l) => l.enabled !== false && String(l.label || "").trim())
-    .map((l) => ({
-      label: String(l.label).trim(),
-      href: String(l.href || l.url || "#").trim() || "#",
-    }));
+    .filter((l) => l.enabled !== false && (String(l.label || "").trim() || String(l.href || l.url || "").trim()))
+    .map((l) => {
+      const label = humanizeNavLabel(l.label, l.href || l.url);
+      const href = normalizeNavHref(label, l.href || l.url || "/categories");
+      return {
+        label,
+        href: href === "#" ? "/categories" : href,
+      };
+    });
   if (cats.length < 3) return DEFAULT_MEGA_COLS;
   const chunk = Math.ceil(cats.length / 3);
   const cols = [];
@@ -102,19 +149,34 @@ function deriveHeaderConfig(data) {
   let nav;
   let megaCols;
   if (menuItems) {
-    nav = menuItems.map((i) => ({
-      label: i.label,
-      href: i.href,
-      mega: mega.enabled !== false && (i.mega || (i.columns && i.columns.length > 0)),
-      deals: i.deals,
-      columns: (i.columns || []).map((c) => ({
-        title: c.heading || c.title || "",
-        links: (c.links || []).map((l) => ({
-          label: l.label,
-          href: l.href || l.url || "#",
-        })),
-      })),
-    }));
+    nav = menuItems
+      .map((i) => {
+        const label = humanizeNavLabel(i.label, i.href || i.url);
+        const href = normalizeNavHref(label, i.href || i.url || "/");
+        return {
+          label,
+          href,
+          mega: mega.enabled !== false && (i.mega || (i.columns && i.columns.length > 0)),
+          deals: Boolean(i.deals) || /deal/i.test(label),
+          columns: (i.columns || []).map((c) => ({
+            title: c.heading || c.title || "",
+            links: (c.links || []).map((l) => {
+              const linkLabel = humanizeNavLabel(l.label, l.href || l.url);
+              const linkHref = normalizeNavHref(linkLabel, l.href || l.url || "#");
+              return {
+                label: linkLabel,
+                href: linkHref === "#" ? "/shop" : linkHref,
+              };
+            }),
+          })),
+        };
+      })
+      .filter((i) => i.label);
+    // Old template mega nav (Exterior/Interior/…) → use our catalog defaults
+    const looksLegacy = nav.some((i) =>
+      /^(exterior|interior|lighting|car care)$/i.test(String(i.label || "").trim())
+    );
+    if (looksLegacy) nav = DEFAULT_NAV;
     megaCols = DEFAULT_MEGA_COLS;
   } else {
     nav = buildNavFromFooter(footer);
@@ -229,6 +291,7 @@ function HeaderAction({ href, onClick, label, icon, badge }) {
 export function StoreHeader() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { items, setOpen } = useCart();
   const { customer } = useCustomer();
   const ctxSettings = useStoreSettings();
@@ -240,6 +303,9 @@ export function StoreHeader() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [drawerExpanded, setDrawerExpanded] = useState({});
+  // Badges read cart/wishlist from localStorage after mount — keep them at 0
+  // until then so SSR HTML matches the first client render.
+  const [mounted, setMounted] = useState(false);
   // Derive header config synchronously from server-provided settings so SSR
   // and first client render match (no "default brand" flash / hydration diff).
   const hasCtxSettings = ctxSettings && Object.keys(ctxSettings).length > 0;
@@ -252,6 +318,10 @@ export function StoreHeader() {
   const [activeMegaItem, setActiveMegaItem] = useState(null);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (hasCtxSettings) return;
     fetch("/api/settings")
       .then((r) => r.json())
@@ -260,6 +330,8 @@ export function StoreHeader() {
   }, [hasCtxSettings]);
 
   const cartCount = items.reduce((s, i) => s + (Number(i.quantity) || 1), 0);
+  const badgeCart = mounted ? cartCount : 0;
+  const badgeWish = mounted ? wishCount : 0;
   const accountHref = customer ? "/account" : "/account/login";
   const { line1, line2 } = splitStoreName(brand.storeName);
 
@@ -303,10 +375,55 @@ export function StoreHeader() {
     else router.push("/products");
   }
 
+  function isNavItemActive(item) {
+    const href = String(item?.href || "");
+    const [pathPart, query = ""] = href.split("?");
+    const path = (pathPart || "/").replace(/\/+$/, "") || "/";
+    const current = (pathname || "/").replace(/\/+$/, "") || "/";
+    const dealsQ = searchParams?.get("deals");
+    const saleQ = searchParams?.get("sale");
+    const onDealsPage =
+      (current === "/shop" || current === "/products" || current === "/sale") &&
+      (dealsQ === "1" || dealsQ === "true" || saleQ === "true" || current === "/sale");
+
+    if (item.deals || /deal/i.test(String(item.label || ""))) {
+      return onDealsPage;
+    }
+    // Don't mark Shop active while viewing Deals
+    if (onDealsPage && (path === "/shop" || path === "/products")) {
+      return false;
+    }
+    if (query) {
+      if (current !== path) return false;
+      const params = new URLSearchParams(query);
+      for (const [k, v] of params.entries()) {
+        if (searchParams?.get(k) !== v) return false;
+      }
+      return true;
+    }
+    if (path === "/") return current === "/";
+
+    // Exact match only for section roots like /categories, /shop, /blogs
+    // so parent + child (CATEGORIES + LED LIGHTS) are not both red.
+    if (path === "/categories" || path === "/shop" || path === "/products" || path === "/blogs") {
+      if (path === "/shop" || path === "/products") {
+        return current === "/shop" || current === "/products";
+      }
+      if (path === "/blogs") {
+        return current === "/blogs" || current.startsWith("/blogs/");
+      }
+      // /categories → active only on the index, not on /categories/[slug]
+      return current === "/categories";
+    }
+
+    // Specific links (e.g. /categories/led-headlights-bulbs) — exact path only
+    return current === path;
+  }
+
   const navLinkClass = (item) => {
-    const active = pathname === item.href;
-    return `px-3 py-3 text-sm font-semibold transition-colors ${
-      item.deals ? "" : active ? "text-[#C41E1E]" : "text-[#111111] hover:text-[#C41E1E]"
+    const active = isNavItemActive(item);
+    return `px-3 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+      active ? "" : "hover:text-[#C41E1E]"
     }`;
   };
 
@@ -420,8 +537,8 @@ export function StoreHeader() {
 
           <div className="ml-auto hidden items-center gap-6 md:flex">
             <HeaderAction href={accountHref} label="Account" icon={<IconAccount />} badge={0} />
-            <HeaderAction href="/wishlist" label="Saved" icon={<IconHeart />} badge={wishCount} />
-            <HeaderAction label="Cart" icon={<IconBag />} badge={cartCount} onClick={() => setOpen(true)} />
+            <HeaderAction href="/wishlist" label="Saved" icon={<IconHeart />} badge={badgeWish} />
+            <HeaderAction label="Cart" icon={<IconBag />} badge={badgeCart} onClick={() => setOpen(true)} />
           </div>
 
           <div className="ml-auto flex items-center gap-3 md:hidden">
@@ -441,12 +558,12 @@ export function StoreHeader() {
               aria-label="Cart"
             >
               <IconBag />
-              {cartCount > 0 ? (
+              {badgeCart > 0 ? (
                 <span
                   className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white"
                   style={{ background: "#C41E1E" }}
                 >
-                  {cartCount > 9 ? "9+" : cartCount}
+                  {badgeCart > 9 ? "9+" : badgeCart}
                 </span>
               ) : null}
             </button>
@@ -501,7 +618,8 @@ export function StoreHeader() {
               <Link
                 href={item.href}
                 className={navLinkClass(item)}
-                style={item.deals ? { color: "#C41E1E" } : undefined}
+                style={{ color: isNavItemActive(item) ? "#C41E1E" : "#111111" }}
+                aria-current={isNavItemActive(item) ? "page" : undefined}
               >
                 {item.label}
               </Link>
@@ -606,8 +724,9 @@ export function StoreHeader() {
                   ) : (
                     <Link
                       href={item.href}
-                      className="block py-4 text-sm font-semibold"
-                      style={item.deals ? { color: "#C41E1E" } : { color: "#111111" }}
+                      className="block py-4 text-sm font-semibold uppercase"
+                      style={{ color: isNavItemActive(item) ? "#C41E1E" : "#111111" }}
+                      aria-current={isNavItemActive(item) ? "page" : undefined}
                       onClick={() => setMenuOpen(false)}
                     >
                       {item.label}

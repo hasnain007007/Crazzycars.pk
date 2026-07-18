@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import { getCloudinaryCloudName } from "@/lib/cloudinaryConfig";
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  cloud_name: getCloudinaryCloudName(),
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
@@ -32,7 +33,7 @@ export async function GET(req) {
       signature,
       timestamp,
       folder,
-      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      cloudName: getCloudinaryCloudName(),
       apiKey: process.env.CLOUDINARY_API_KEY,
     });
   } catch (e) {

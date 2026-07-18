@@ -1,10 +1,10 @@
-const BASE_URL = (
-  process.env.NEXT_PUBLIC_APP_URL ||
-  process.env.NEXT_PUBLIC_STORE_URL ||
-  "https://crazzycars.pk"
-).replace(/\/$/, "");
+import { getSiteUrl, isIndexableEnvironment } from "@/lib/siteUrl";
 
 export default function robots() {
+  const siteUrl = getSiteUrl();
+  if (!isIndexableEnvironment()) {
+    return { rules: [{ userAgent: "*", disallow: "/" }] };
+  }
   return {
     rules: [
       {
@@ -13,6 +13,6 @@ export default function robots() {
         disallow: ["/api/", "/account/", "/checkout/", "/cart/", "/admin/"],
       },
     ],
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: `${siteUrl}/sitemap.xml`,
   };
 }

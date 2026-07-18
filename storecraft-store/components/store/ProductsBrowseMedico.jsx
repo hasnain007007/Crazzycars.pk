@@ -7,6 +7,9 @@ import { formatPrice } from "@/lib/currency";
 import { ProductCard } from "./ProductCard";
 import { CAR_MAKES } from "@/lib/carCatalog";
 
+/** Real vehicle brands only — not product attributes like Universal/Premium. */
+const SHOP_BRANDS = ["Honda", "Toyota", "Suzuki", "KIA", "Hyundai", "Changan", "MG"];
+
 function Section({ title, children }) {
   const [open, setOpen] = useState(true);
   return (
@@ -144,6 +147,7 @@ export function ProductsBrowseMedico({
   const inCount = useMemo(() => allProducts.filter((p) => p.inStock).length, [allProducts]);
   const outCount = Math.max(0, allProducts.length - inCount);
   const highest = useMemo(() => Math.max(0, ...allProducts.map((p) => Number(p.price) || 0)), [allProducts]);
+  const catalogEmpty = !loading && allProducts.length === 0;
 
   return (
     <div>
@@ -162,138 +166,151 @@ export function ProductsBrowseMedico({
           <p className="text-sm text-[#555555]">Home / Shop</p>
         </div>
       </div>
-      <div className="mx-auto flex max-w-7xl gap-6 px-4 py-8">
-        <aside className="hidden w-64 shrink-0 rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] p-4 lg:block">
-          <h3 className="text-base font-bold" style={{ color: "#111111" }}>Filter:</h3>
-          <Section title="Availability">
-            <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-[#333333]">
-              <input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} className="accent-[#D72323]" /> In stock ({inCount})
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-[#333333]">
-              <input type="checkbox" checked={outOfStock} onChange={(e) => setOutOfStock(e.target.checked)} className="accent-[#D72323]" /> Out of stock ({outCount})
-            </label>
-          </Section>
-          <Section title="Price">
-            <p className="text-xs text-[#555555]">
-              The highest price is <span className="price">{formatPrice(highest)}</span>
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <input
-                value={priceFrom}
-                onChange={(e) => setPriceFrom(e.target.value)}
-                placeholder="From"
-                className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111] placeholder:text-[#777777]"
-              />
-              <input
-                value={priceTo}
-                onChange={(e) => setPriceTo(e.target.value)}
-                placeholder="To"
-                className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111] placeholder:text-[#777777]"
-              />
-            </div>
-          </Section>
-          <Section title="Category">
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
-            >
-              <option value="">All categories</option>
-              {([] || []).map((c) => (
-                <option key={c.slug || c.id} value={c.slug || c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Section>
-          <Section title="Brand">
-            <select
-              value={filterBrand}
-              onChange={(e) => setFilterBrand(e.target.value)}
-              className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
-            >
-              <option value="">All brands</option>
-              {["Honda", "Toyota", "Suzuki", "KIA", "Universal", "Premium"].map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </Section>
-          <Section title="Car Make">
-            <select
-              value={filterMake}
-              onChange={(e) => setFilterMake(e.target.value)}
-              className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
-            >
-              <option value="">Any vehicle</option>
-              {CAR_MAKES.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </Section>
-        </aside>
 
-        <div className="min-w-0 flex-1">
-          <div className="mb-4 flex flex-col gap-3 rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-[#333333]">
-              Showing {products.length} of {totalCount || allProducts.length} products
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <label className="text-sm text-[#333333]">Sort by</label>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111]"
-              >
-                <option value="newest">Newest</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="popular">Popular</option>
-                <option value="name">Alphabetically A-Z</option>
-              </select>
-              <button
-                type="button"
-                className={`rounded border px-2 py-1 text-[#555555] ${grid ? "border-[#D72323] text-[#D72323]" : "border-[rgba(0,0,0,0.12)]"}`}
-                onClick={() => setGrid(true)}
-              >
-                ⊞
-              </button>
-              <button
-                type="button"
-                className={`rounded border px-2 py-1 text-[#555555] ${!grid ? "border-[#D72323] text-[#D72323]" : "border-[rgba(0,0,0,0.12)]"}`}
-                onClick={() => setGrid(false)}
-              >
-                ☰
-              </button>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-72 animate-pulse rounded border border-[rgba(0,0,0,0.12)] bg-[#EFEFEF]" />
-              ))}
-            </div>
-          ) : (
-            <div className={`grid gap-4 ${grid ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"}`}>
-              {products.map((p) => (
-                <div key={p.id} className={!grid ? "max-w-md" : ""}>
-                  <ProductCard product={p} />
+      {catalogEmpty ? (
+        <div className="mx-auto max-w-7xl px-4 py-16 text-center">
+          <h2 className="font-heading text-xl font-bold text-[#111111]">Products coming soon</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#555555]">
+            We&apos;re stocking the shelves with premium car accessories for Pakistan. Check back shortly.
+          </p>
+          <Link
+            href="/"
+            className="mt-6 inline-block rounded bg-[#C41E1E] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#a01818]"
+          >
+            Back to home
+          </Link>
+        </div>
+      ) : (
+        <div className="mx-auto flex max-w-7xl gap-6 px-4 py-8">
+          <aside className="hidden w-64 shrink-0 rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] p-4 lg:block">
+            <h3 className="text-base font-bold" style={{ color: "#111111" }}>Filter:</h3>
+            <Section title="Availability">
+              <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-[#333333]">
+                <input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} className="accent-[#D72323]" /> In stock ({inCount})
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-[#333333]">
+                <input type="checkbox" checked={outOfStock} onChange={(e) => setOutOfStock(e.target.checked)} className="accent-[#D72323]" /> Out of stock ({outCount})
+              </label>
+            </Section>
+            {highest > 0 ? (
+              <Section title="Price">
+                <p className="text-xs text-[#555555]">
+                  The highest price is <span className="price">{formatPrice(highest)}</span>
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <input
+                    value={priceFrom}
+                    onChange={(e) => setPriceFrom(e.target.value)}
+                    placeholder="From"
+                    className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111] placeholder:text-[#777777]"
+                  />
+                  <input
+                    value={priceTo}
+                    onChange={(e) => setPriceTo(e.target.value)}
+                    placeholder="To"
+                    className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111] placeholder:text-[#777777]"
+                  />
                 </div>
-              ))}
+              </Section>
+            ) : null}
+            <Section title="Category">
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
+              >
+                <option value="">All categories</option>
+              </select>
+            </Section>
+            <Section title="Brand">
+              <select
+                value={filterBrand}
+                onChange={(e) => setFilterBrand(e.target.value)}
+                className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
+              >
+                <option value="">All brands</option>
+                {SHOP_BRANDS.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </Section>
+            <Section title="Car Make">
+              <select
+                value={filterMake}
+                onChange={(e) => setFilterMake(e.target.value)}
+                className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
+              >
+                <option value="">Any vehicle</option>
+                {CAR_MAKES.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </Section>
+          </aside>
+
+          <div className="min-w-0 flex-1">
+            <div className="mb-4 flex flex-col gap-3 rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-[#333333]">
+                Showing {products.length} of {totalCount || allProducts.length} products
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="text-sm text-[#333333]">Sort by</label>
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111]"
+                >
+                  <option value="newest">Newest</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="popular">Popular</option>
+                  <option value="name">Alphabetically A-Z</option>
+                </select>
+                <button
+                  type="button"
+                  className={`rounded border px-2 py-1 text-[#555555] ${grid ? "border-[#D72323] text-[#D72323]" : "border-[rgba(0,0,0,0.12)]"}`}
+                  onClick={() => setGrid(true)}
+                >
+                  ⊞
+                </button>
+                <button
+                  type="button"
+                  className={`rounded border px-2 py-1 text-[#555555] ${!grid ? "border-[#D72323] text-[#D72323]" : "border-[rgba(0,0,0,0.12)]"}`}
+                  onClick={() => setGrid(false)}
+                >
+                  ☰
+                </button>
+              </div>
             </div>
-          )}
-          {!products.length && !loading ? <p className="mt-6 text-sm text-[#555555]">No products match current filters.</p> : null}
-          <div className="mt-6">
-            <Link href="/shop" className="text-sm text-[#D72323] underline underline-offset-2 hover:text-[#a01818]">
-              Reset filters
-            </Link>
+
+            {loading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="h-72 animate-pulse rounded border border-[rgba(0,0,0,0.12)] bg-[#EFEFEF]" />
+                ))}
+              </div>
+            ) : (
+              <div className={`grid gap-4 ${grid ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"}`}>
+                {products.map((p) => (
+                  <div key={p.id} className={!grid ? "max-w-md" : ""}>
+                    <ProductCard product={p} />
+                  </div>
+                ))}
+              </div>
+            )}
+            {!products.length && !loading ? <p className="mt-6 text-sm text-[#555555]">No products match current filters.</p> : null}
+            <div className="mt-6">
+              <Link href="/shop" className="text-sm text-[#D72323] underline underline-offset-2 hover:text-[#a01818]">
+                Reset filters
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

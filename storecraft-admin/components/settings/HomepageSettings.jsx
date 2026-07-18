@@ -65,14 +65,13 @@ const DEFAULT_FORM = {
   },
   sectionOrder: [
     { id: "hero", label: "Hero Banner", enabled: true, order: 1 },
-    { id: "trust", label: "Trust Badges", enabled: true, order: 2 },
-    { id: "shopByCar", label: "Shop by Car", enabled: true, order: 3 },
-    { id: "categories", label: "Categories", enabled: true, order: 4 },
-    { id: "bestSellers", label: "Best Sellers", enabled: true, order: 5 },
-    { id: "hotDeals", label: "Hot Deals", enabled: true, order: 6 },
-    { id: "flashSale", label: "Flash Sale", enabled: true, order: 7 },
-    { id: "brands", label: "Brand Carousel", enabled: true, order: 8 },
-    { id: "whyChooseUs", label: "Why Choose Us", enabled: true, order: 9 },
+    { id: "shopByCar", label: "Shop by Car", enabled: true, order: 2 },
+    { id: "categories", label: "Categories", enabled: true, order: 3 },
+    { id: "bestSellers", label: "Best Sellers", enabled: true, order: 4 },
+    { id: "hotDeals", label: "Hot Deals", enabled: true, order: 5 },
+    { id: "flashSale", label: "Flash Sale", enabled: true, order: 6 },
+    { id: "brands", label: "Brand Carousel", enabled: true, order: 7 },
+    { id: "whyChooseUs", label: "Why Choose Us", enabled: true, order: 8 },
   ],
   sectionTitles: {
     categories: "Shop by Category",
@@ -124,7 +123,9 @@ export default function HomepageSettings() {
             categories: { ...prev.categories, ...(hp.categories || {}) },
             bestSellers: { ...prev.bestSellers, ...(hp.bestSellers || {}) },
             hotDeals: { ...prev.hotDeals, ...(hp.hotDeals || {}) },
-            sectionOrder: hp.sectionOrder?.length ? hp.sectionOrder : prev.sectionOrder,
+            sectionOrder: hp.sectionOrder?.length
+              ? hp.sectionOrder.filter((s) => s?.id !== "trust")
+              : prev.sectionOrder,
             sectionTitles: { ...prev.sectionTitles, ...(hp.sectionTitles || {}) },
           }));
         }

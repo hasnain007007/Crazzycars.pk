@@ -113,11 +113,11 @@ export async function GET() {
         popup_banner: group("popup_banner"),
         all: banners,
       },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
-        },
-      }
+          {
+            headers: {
+              "Cache-Control": "public, s-maxage=30, stale-while-revalidate=0",
+            },
+          }
     );
   } catch (e) {
     return NextResponse.json(

@@ -6,6 +6,8 @@ const LEGACY_EMAILS = new Set([
   "support@chaingang.com",
   "support@chaingang.eu",
   "info@thechaingang.eu",
+  "sialkotmotorssports@gmail.com",
+  "sialkotmotorsports@gmail.com",
 ]);
 
 /** Normalize legacy support addresses to the single public contact email. */

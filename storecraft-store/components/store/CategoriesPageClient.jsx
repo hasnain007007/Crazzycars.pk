@@ -8,7 +8,7 @@ import { useMemo } from "react";
 function CategoriesPageInner({ initialCategories }) {
   const searchParams = useSearchParams();
   const parentParam = searchParams.get("parent");
-  const categories = initialCategories;
+  const categories = Array.isArray(initialCategories) ? initialCategories : [];
 
   const flat = useMemo(() => {
     const out = [];
@@ -37,11 +37,12 @@ function CategoriesPageInner({ initialCategories }) {
       </div>
 
       <div className="store-container mx-auto max-w-7xl px-4 py-8">
-        <>
+        {topLevel.length ? (
+          <>
           <h2 className="mb-4 text-xl font-bold text-[#111111]">Top Level Categories</h2>
           <div className="categories-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }}>
             {topLevel.map((cat) => (
-              <Link key={cat._id} href={`/${cat.slug}`} style={cardLink}>
+              <Link key={cat._id} href={`/categories/${cat.slug}`} style={cardLink}>
                 <div
                   className="card-image-wrap"
                   style={{
@@ -106,7 +107,7 @@ function CategoriesPageInner({ initialCategories }) {
               ) : (
                 <div className="categories-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }}>
                   {subcategories.map((cat) => (
-                    <Link key={cat._id} href={`/${cat.slug}`} style={cardLink}>
+                    <Link key={cat._id} href={`/categories/${cat.slug}`} style={cardLink}>
                       <div
                         className="card-image-wrap"
                         style={{
@@ -161,7 +162,14 @@ function CategoriesPageInner({ initialCategories }) {
               )}
             </div>
           ) : null}
-        </>
+          </>
+        ) : (
+          <div className="rounded border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+            <h2 className="text-xl font-bold text-[#111111]">Categories are coming soon</h2>
+            <p className="mt-2 text-[#555555]">Browse all available accessories while we add new categories.</p>
+            <Link href="/shop" className="mt-5 inline-block font-semibold text-[#D72323]">Shop all accessories →</Link>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { cartLinesAdd, cartLinesRemove, cartLinesUpdate, getCart } from "@/lib/shopifyCartClient";
 
 const STORAGE_KEY = "cart_items";
 const LEGACY_STORAGE_KEY = "sialkot_store_cart_v1";
@@ -68,6 +69,8 @@ function computeRequiresVariant(row) {
 export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState("");
+  const [shopifyActive, setShopifyActive] = useState(false);
 
   useEffect(() => {
     // Hydrate cart from localStorage after mount (avoid SSR/client cart mismatch).
@@ -76,12 +79,35 @@ export function CartProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    getCart()
+      .then((cart) => {
+        if (!cart) return;
+        setItems(cart.lines);
+        setCheckoutUrl(cart.checkoutUrl || "");
+        setShopifyActive(true);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     saveCart(items);
   }, [items]);
 
-  const addItem = useCallback((productOrRow, quantityArg = 1) => {
+  const addItem = useCallback(async (productOrRow, quantityArg = 1) => {
     const row = productOrRow || {};
     const normalizedQty = Math.max(1, Math.min(99, Number(row.quantity ?? quantityArg) || 1));
+    if (row.source === "shopify" && (row.merchandiseId || row.variantId)) {
+      try {
+        const cart = await cartLinesAdd(row.merchandiseId || row.variantId, normalizedQty);
+        setItems(cart.lines);
+        setCheckoutUrl(cart.checkoutUrl || "");
+        setShopifyActive(true);
+        setOpen(true);
+        return;
+      } catch {
+        // Continue into the local cart flow if Shopify credentials are unavailable.
+      }
+    }
     const itemId = getItemId(row);
     if (!itemId) return;
     setItems((prev) => {
@@ -136,14 +162,37 @@ export function CartProvider({ children }) {
     setOpen(true);
   }, []);
 
-  const removeItem = useCallback((itemId) => {
+  const removeItem = useCallback(async (itemId) => {
     const target = String(itemId || "");
+    const shopifyLine = items.find((item) => String(item.id) === target && item.source === "shopify");
+    if (shopifyLine) {
+      try {
+        const cart = await cartLinesRemove(shopifyLine.id);
+        setItems(cart.lines);
+        setCheckoutUrl(cart.checkoutUrl || "");
+        return;
+      } catch {
+        // Preserve a usable local cart if the remote cart cannot be updated.
+      }
+    }
     setItems((prev) => prev.filter((item) => getItemId(item) !== target));
-  }, []);
+  }, [items]);
 
-  const updateQuantity = useCallback((itemId, newQuantity) => {
+  const updateQuantity = useCallback(async (itemId, newQuantity) => {
     const target = String(itemId || "");
     const q = Number(newQuantity) || 0;
+    const shopifyLine = items.find((item) => String(item.id) === target && item.source === "shopify");
+    if (shopifyLine) {
+      try {
+        if (q < 1) return removeItem(target);
+        const cart = await cartLinesUpdate(shopifyLine.id, Math.min(99, q));
+        setItems(cart.lines);
+        setCheckoutUrl(cart.checkoutUrl || "");
+        return;
+      } catch {
+        // Use existing local behavior as a safe fallback.
+      }
+    }
     if (q < 1) {
       removeItem(target);
       return;
@@ -151,7 +200,7 @@ export function CartProvider({ children }) {
     setItems((prev) =>
       prev.map((item) => (getItemId(item) === target ? { ...item, quantity: Math.min(99, q) } : item))
     );
-  }, [removeItem]);
+  }, [items, removeItem]);
 
   const increaseQuantity = useCallback((itemId) => {
     const target = String(itemId || "");
@@ -210,6 +259,8 @@ export function CartProvider({ children }) {
       cartTotal,
       count: cartCount,
       subtotal: cartTotal,
+      checkoutUrl,
+      shopifyActive,
       open,
       isOpen: open,
       setOpen,
@@ -229,6 +280,8 @@ export function CartProvider({ children }) {
       items,
       cartCount,
       cartTotal,
+      checkoutUrl,
+      shopifyActive,
       open,
       addItem,
       removeItem,

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
+import { heroImageUrl } from "@/lib/cloudinaryImage";
 
 const TRUST = ["✓ COD Available", "✓ Free Delivery Rs.2999+", "✓ Easy Returns"];
 
@@ -85,32 +86,6 @@ function HeroButtons({ buttons, defaultTextColor = "#FFFFFF" }) {
   );
 }
 
-/** Map API hero_slider banner to slide props (admin field paths). */
-function mapBannerToSlide(banner) {
-  const imageUrl = String(banner?.background?.image?.url || "").trim() || null;
-  const title = String(banner?.content?.heading?.text || "").trim();
-  const subtitle = String(banner?.content?.subheading?.text || "").trim();
-  const rawButtons = Array.isArray(banner?.content?.buttons) ? banner.content.buttons : [];
-  const buttons = rawButtons.map((btn) => ({
-    text: btn?.text || "",
-    url: btn?.url || btn?.link || banner?.targetUrl || "/shop",
-    bgColor: btn?.bgColor || "",
-    textColor: btn?.textColor || btn?.color || "",
-    style: btn?.style || "primary",
-  }));
-
-  return {
-    id: banner?._id || banner?.id || title || "hero",
-    title,
-    subtitle,
-    imageUrl,
-    buttons,
-    backgroundColor: banner?.background?.color || "#111111",
-    textColor: banner?.content?.heading?.color || "#FFFFFF",
-    subColor: banner?.content?.subheading?.color || "#9CA3AF",
-  };
-}
-
 function FallbackHero({ settings }) {
   const hp = settings || DEFAULT_HOMEPAGE_SETTINGS;
   const { line1, line2 } = splitHeadline(hp.heroHeadline);
@@ -186,7 +161,17 @@ function HeroSlideContent({ slide }) {
           {slide.subtitle}
         </p>
       ) : null}
-      <HeroButtons buttons={slide.buttons?.length ? slide.buttons : [{ text: "Shop Now", url: "/shop", style: "primary" }, { text: "Browse Categories", url: "/categories", style: "outline" }]} defaultTextColor={slide.textColor} />
+      <HeroButtons
+        buttons={
+          slide.buttons?.length
+            ? slide.buttons
+            : [
+                { text: "Shop Now", url: "/shop", style: "primary" },
+                { text: "Browse Categories", url: "/categories", style: "outline" },
+              ]
+        }
+        defaultTextColor={slide.textColor}
+      />
       <ul className="mt-6 flex flex-wrap gap-2">
         {TRUST.map((t) => (
           <li key={t} className="rounded-full border border-white/40 px-3 py-1 text-xs text-white/90">
@@ -198,19 +183,49 @@ function HeroSlideContent({ slide }) {
   );
 }
 
-export default function HomeHero({ settings }) {
-  const [slides, setSlides] = useState([]);
+/**
+ * @param {{ settings?: object, initialSlides?: Array }} props
+ * initialSlides from SSR — first paint includes the hero image (no empty flash).
+ */
+export default function HomeHero({ settings, initialSlides = null }) {
+  const hasInitial = Array.isArray(initialSlides);
+  const [slides, setSlides] = useState(() => (hasInitial ? initialSlides : []));
   const [index, setIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!hasInitial);
 
   useEffect(() => {
+    if (hasInitial) {
+      setSlides(initialSlides);
+      setLoading(false);
+      return undefined;
+    }
     let cancelled = false;
     fetch("/api/banners", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
         const heroList = Array.isArray(data?.hero_slider) ? data.hero_slider : [];
-        setSlides(heroList.map(mapBannerToSlide));
+        setSlides(
+          heroList.map((b) => {
+            const raw = String(b?.background?.image?.url || "").trim();
+            return {
+              id: b?._id || b?.id || "hero",
+              title: String(b?.content?.heading?.text || "").trim(),
+              subtitle: String(b?.content?.subheading?.text || "").trim(),
+              imageUrl: raw ? heroImageUrl(raw) : null,
+              buttons: (Array.isArray(b?.content?.buttons) ? b.content.buttons : []).map((btn) => ({
+                text: btn?.text || "",
+                url: btn?.url || btn?.link || b?.targetUrl || "/shop",
+                bgColor: btn?.bgColor || "",
+                textColor: btn?.textColor || btn?.color || "",
+                style: btn?.style || "primary",
+              })),
+              backgroundColor: b?.background?.color || "#111111",
+              textColor: b?.content?.heading?.color || "#FFFFFF",
+              subColor: b?.content?.subheading?.color || "#9CA3AF",
+            };
+          })
+        );
       })
       .catch(() => {
         if (!cancelled) setSlides([]);
@@ -221,7 +236,7 @@ export default function HomeHero({ settings }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hasInitial, initialSlides]);
 
   const go = useCallback(
     (dir) => {
@@ -253,30 +268,31 @@ export default function HomeHero({ settings }) {
 
   const slide = slides[index];
   const bgImage = slide.imageUrl;
-  const bgStyle = bgImage
-    ? {
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }
-    : { background: slide.backgroundColor || "#111111" };
 
   return (
-    <section className="relative overflow-hidden" style={{ minHeight: 600 }}>
-      <div className="absolute inset-0 transition-opacity duration-700" style={bgStyle} aria-hidden />
+    <section className="relative overflow-hidden" style={{ minHeight: 600, background: slide.backgroundColor || "#111111" }}>
       {bgImage ? (
-        <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)" }} aria-hidden />
+        // eslint-disable-next-line @next/next/no-img-element -- LCP hero; Cloudinary-optimized src
+        <img
+          src={bgImage}
+          alt=""
+          fetchPriority={index === 0 ? "high" : "low"}
+          decoding={index === 0 ? "sync" : "async"}
+          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+          style={{ opacity: 1 }}
+          key={slide.id}
+        />
       ) : (
         <div
           className="absolute inset-0"
           style={{
             background:
               "radial-gradient(circle at 20% 30%, rgba(196,30,30,0.35), transparent 40%), linear-gradient(120deg, #111111 0%, #1a1a1a 40%, #2a0f0f 100%)",
-            animation: "pulse 8s ease-in-out infinite alternate",
           }}
           aria-hidden
         />
       )}
+      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)" }} aria-hidden />
       <div className="relative mx-auto flex min-h-[420px] max-w-[1400px] items-center px-6 py-12 md:min-h-[600px] md:py-20 md:pl-[8%] md:pr-8">
         <HeroSlideContent slide={slide} />
       </div>
@@ -320,18 +336,6 @@ export default function HomeHero({ settings }) {
           </div>
         </>
       ) : null}
-      <style jsx>{`
-        @keyframes pulse {
-          0% {
-            opacity: 0.75;
-            transform: scale(1);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1.03);
-          }
-        }
-      `}</style>
     </section>
   );
 }

@@ -27,7 +27,7 @@ const CustomerSchema = new mongoose.Schema(
         address: { type: String, default: "" },
         city: { type: String, default: "" },
         postcode: { type: String, default: "" },
-        country: { type: String, default: "Portugal" },
+        country: { type: String, default: "Pakistan" },
         phone: { type: String, default: "" },
         isDefault: { type: Boolean, default: false },
       },

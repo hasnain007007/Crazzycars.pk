@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-const STORE_JWT_COOKIE_NAME = "sialkot_store_token";
-const STORE_JWT_COOKIE_NAME_LEGACY = "sialkot_store_token_legacy";
+import {
+  STORE_JWT_COOKIE_NAME,
+  STORE_JWT_COOKIE_NAME_LEGACY,
+} from "@/lib/constants";
 
 /**
  * Protect storefront account pages only. Blog, shop, and public APIs stay open.
@@ -10,7 +12,10 @@ const STORE_JWT_COOKIE_NAME_LEGACY = "sialkot_store_token_legacy";
 export async function middleware(request) {
   const token =
     request.cookies.get(STORE_JWT_COOKIE_NAME)?.value ||
-    request.cookies.get(STORE_JWT_COOKIE_NAME_LEGACY)?.value;
+    request.cookies.get(STORE_JWT_COOKIE_NAME_LEGACY)?.value ||
+    // Legacy brand cookie names (pre-rename); accept until clients refresh.
+    request.cookies.get("sialkot_store_token")?.value ||
+    request.cookies.get("sialkot_store_token_legacy")?.value;
   if (!token) {
     return NextResponse.redirect(new URL("/account/login", request.url));
   }

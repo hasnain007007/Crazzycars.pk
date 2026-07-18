@@ -19,7 +19,7 @@ export default function ContactPageSettings() {
     address: {
       line1: "",
       line2: "",
-      city: "Sialkot",
+      city: "Gujranwala",
       country: "Pakistan",
     },
     hours: {
@@ -300,7 +300,7 @@ export default function ContactPageSettings() {
             <label style={label}>Address Line 1</label>
             <input
               style={input}
-              placeholder="Sialkot, Punjab, Pakistan"
+              placeholder="Gujranwala, Punjab, Pakistan"
               value={form.address?.line1 || ""}
               onChange={(e) =>
                 setForm((f) => ({
@@ -334,7 +334,7 @@ export default function ContactPageSettings() {
             <label style={label}>City</label>
             <input
               style={input}
-              placeholder="Sialkot"
+              placeholder="Gujranwala"
               value={form.address?.city || ""}
               onChange={(e) =>
                 setForm((f) => ({

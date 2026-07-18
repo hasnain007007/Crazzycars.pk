@@ -1,26 +1,73 @@
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { formatAdminPrice } from "@/lib/currency";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587", 10),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+function getResend() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+  return new Resend(apiKey);
+}
+
+function hasSmtp() {
+  return Boolean(
+    process.env.SMTP_HOST &&
+      process.env.SMTP_USER &&
+      process.env.SMTP_PASS &&
+      !String(process.env.SMTP_PASS).includes("placeholder")
+  );
+}
+
+function getSmtpTransporter() {
+  if (!hasSmtp()) return null;
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || "587", 10),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
 
 export async function sendEmail({ to, subject, html, from }) {
-  const fromAddress = from || process.env.SMTP_FROM || process.env.SMTP_USER;
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER;
+  const fromAddress = from || (fromEmail ? `"${storeName}" <${fromEmail}>` : null);
+
+  // Prefer Resend (same stack as storefront) when configured.
+  const resend = getResend();
+  if (resend && fromEmail) {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: typeof fromAddress === "string" ? fromAddress : `${storeName} <${fromEmail}>`,
+        to,
+        subject,
+        html,
+      });
+      if (error) {
+        console.error("Resend error:", error);
+        return { success: false, error: error.message };
+      }
+      return { success: true, messageId: data?.id };
+    } catch (error) {
+      console.error("Email error:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  const transporter = getSmtpTransporter();
+  if (!transporter || !fromEmail) {
+    return { success: false, error: "Email not configured (set RESEND_API_KEY + FROM_EMAIL, or SMTP_*)" };
+  }
+
   try {
     const info = await transporter.sendMail({
-      from: `"${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}" <${fromAddress}>`,
+      from: `"${storeName}" <${fromEmail}>`,
       to,
       subject,
       html,
     });
-    console.log("Email sent:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error("Email error:", error);
@@ -70,7 +117,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl) {
         
         <div style="padding:30px">
           <h2 style="color:#333;margin:0 0 10px">
-            Your Crazzycars.pk Order is Confirmed 🎉
+            Your Crazzycars.pk Order is Confirmed
           </h2>
           <p style="color:#666;margin:0 0 20px">
             Dear ${order.customer?.name || "Customer"},<br>
@@ -145,7 +192,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl) {
             order.shippingAddress
               ? `
           <div style="background:#f9f9f9;border-radius:8px;padding:15px;margin-bottom:20px">
-            <h3 style="color:#333;margin:0 0 10px;font-size:14px">📦 Shipping Address</h3>
+            <h3 style="color:#333;margin:0 0 10px;font-size:14px">Shipping Address</h3>
             <p style="color:#555;margin:0;line-height:1.6">
               ${order.shippingAddress.name || ""}<br>
               ${order.shippingAddress.street || ""}<br>
@@ -185,7 +232,7 @@ export function buildShippingEmail(order, storeName, logoUrl) {
         <div style="background:#009688;padding:30px;text-align:center">
           ${logoUrl ? `<img src="${logoUrl}" alt="${storeName}" style="max-height:60px;margin-bottom:10px"><br>` : ""}
           <h1 style="color:white;margin:0">${storeName}</h1>
-          <p style="color:rgba(255,255,255,0.8);margin:5px 0 0">Your Order Has Shipped! 🚚</p>
+          <p style="color:rgba(255,255,255,0.8);margin:5px 0 0">Your Order Has Shipped!</p>
         </div>
         <div style="padding:30px">
           <h2 style="color:#333">Great news, ${order.customer?.name || "Customer"}!</h2>

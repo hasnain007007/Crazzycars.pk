@@ -63,14 +63,13 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
   },
   sectionOrder: [
     { id: "hero", label: "Hero Banner", enabled: true, order: 1 },
-    { id: "trust", label: "Trust Badges", enabled: true, order: 2 },
-    { id: "shopByCar", label: "Shop by Car", enabled: true, order: 3 },
-    { id: "categories", label: "Categories", enabled: true, order: 4 },
-    { id: "bestSellers", label: "Best Sellers", enabled: true, order: 5 },
-    { id: "hotDeals", label: "Hot Deals", enabled: true, order: 6 },
-    { id: "flashSale", label: "Flash Sale", enabled: true, order: 7 },
-    { id: "brands", label: "Brand Carousel", enabled: true, order: 8 },
-    { id: "whyChooseUs", label: "Why Choose Us", enabled: true, order: 9 },
+    { id: "shopByCar", label: "Shop by Car", enabled: true, order: 2 },
+    { id: "categories", label: "Categories", enabled: true, order: 3 },
+    { id: "bestSellers", label: "Best Sellers", enabled: true, order: 4 },
+    { id: "hotDeals", label: "Hot Deals", enabled: true, order: 5 },
+    { id: "flashSale", label: "Flash Sale", enabled: true, order: 6 },
+    { id: "brands", label: "Brand Carousel", enabled: true, order: 7 },
+    { id: "whyChooseUs", label: "Why Choose Us", enabled: true, order: 8 },
   ],
   sectionTitles: {
     categories: "Shop by Category",
@@ -164,12 +163,14 @@ export function normalizeHomepageSettings(raw) {
     },
     sectionOrder:
       Array.isArray(raw.sectionOrder) && raw.sectionOrder.length
-        ? raw.sectionOrder.map((s, i) => ({
-            id: String(s?.id || ""),
-            label: String(s?.label || ""),
-            enabled: s?.enabled !== false,
-            order: Number.isFinite(Number(s?.order)) ? Number(s.order) : i + 1,
-          }))
+        ? raw.sectionOrder
+            .filter((s) => s?.id && s.id !== "trust")
+            .map((s, i) => ({
+              id: String(s?.id || ""),
+              label: String(s?.label || ""),
+              enabled: s?.enabled !== false,
+              order: Number.isFinite(Number(s?.order)) ? Number(s.order) : i + 1,
+            }))
         : d.sectionOrder,
     sectionTitles: {
       categories: raw.sectionTitles?.categories || d.sectionTitles.categories,

@@ -5,17 +5,20 @@ import { isAdvancePaymentMethod } from "@/lib/pakistaniPaymentMethods";
 export const DEFAULT_FREE_SHIPPING_THRESHOLD = 2999;
 
 const DEFAULT_ADVANCE_MESSAGE =
-  "To confirm your order, please pay at least Rs. 500 in advance as delivery charges paid to TCS courier. Send payment screenshot on WhatsApp to confirm.";
+  "To confirm your order, please pay delivery charges of {amount} in advance.\n\nSend payment screenshot on WhatsApp: {whatsapp}";
 
 export const DEFAULT_SHIPPING_RULES = {
   freeShippingThreshold: DEFAULT_FREE_SHIPPING_THRESHOLD,
-  freeShippingOnAdvancePayment: true,
+  freeShippingOnAdvancePayment: false,
   freeShippingOnOrderAbove: 10000,
-  freeShippingOnOrderAboveEnabled: true,
+  freeShippingOnOrderAboveEnabled: false,
   advancePaymentMessage: DEFAULT_ADVANCE_MESSAGE,
-  advancePaymentAmount: 500,
+  advancePaymentAmount: 250,
   advancePaymentMessageEnabled: true,
   advancePaymentMessageTitle: "Confirm Your Order",
+  advancePaymentDiscountEnabled: true,
+  advancePaymentDiscountPercent: 3,
+  flatDeliveryCharge: 250,
 };
 
 /** Normalize storePayment shipping rule fields with fallbacks. */
@@ -27,17 +30,16 @@ export function normalizeShippingRules(storePayment) {
       0,
       Number(p.freeShippingThreshold) || DEFAULT_SHIPPING_RULES.freeShippingThreshold
     ),
-    freeShippingOnAdvancePayment:
-      p.freeShippingOnAdvancePayment !== undefined ? Boolean(p.freeShippingOnAdvancePayment) : true,
+    freeShippingOnAdvancePayment: p.freeShippingOnAdvancePayment === true,
     freeShippingOnOrderAbove: Math.max(
       0,
       Number(p.freeShippingOnOrderAbove) || DEFAULT_SHIPPING_RULES.freeShippingOnOrderAbove
     ),
-    freeShippingOnOrderAboveEnabled:
-      p.freeShippingOnOrderAboveEnabled !== undefined
-        ? Boolean(p.freeShippingOnOrderAboveEnabled)
-        : true,
-    advancePaymentAmount: Math.max(0, Number(p.advancePaymentAmount) || 500),
+    freeShippingOnOrderAboveEnabled: p.freeShippingOnOrderAboveEnabled === true,
+    advancePaymentAmount: Math.max(
+      0,
+      Number(p.advancePaymentAmount) || DEFAULT_SHIPPING_RULES.advancePaymentAmount
+    ),
     advancePaymentMessageEnabled:
       p.advancePaymentMessageEnabled !== undefined ? Boolean(p.advancePaymentMessageEnabled) : true,
     advancePaymentMessageTitle:
@@ -45,7 +47,41 @@ export function normalizeShippingRules(storePayment) {
       DEFAULT_SHIPPING_RULES.advancePaymentMessageTitle,
     advancePaymentMessage:
       String(p.advancePaymentMessage || "").trim() || DEFAULT_ADVANCE_MESSAGE,
+    advancePaymentDiscountEnabled:
+      p.advancePaymentDiscountEnabled !== undefined
+        ? Boolean(p.advancePaymentDiscountEnabled)
+        : true,
+    advancePaymentDiscountPercent: Math.min(
+      100,
+      Math.max(0, Number(p.advancePaymentDiscountPercent) || 3)
+    ),
+    flatDeliveryCharge: Math.max(
+      0,
+      Number(p.flatDeliveryCharge) || DEFAULT_SHIPPING_RULES.flatDeliveryCharge
+    ),
   };
+}
+
+/**
+ * 3% (configurable) off when paying in advance (JazzCash, bank, Meezan, etc.).
+ * Applied on cart total after coupon discount.
+ */
+export function computeAdvancePaymentDiscount({
+  amountAfterCoupon,
+  paymentMethod,
+  storePayment,
+}) {
+  const sp = normalizeShippingRules(storePayment);
+  if (sp.advancePaymentDiscountEnabled === false) {
+    return { discount: 0, percent: 0, applied: false };
+  }
+  if (!isAdvancePaymentMethod(paymentMethod)) {
+    return { discount: 0, percent: sp.advancePaymentDiscountPercent, applied: false };
+  }
+  const base = Math.max(0, Number(amountAfterCoupon) || 0);
+  const percent = sp.advancePaymentDiscountPercent;
+  const discount = Math.max(0, Math.round(base * (percent / 100) * 100) / 100);
+  return { discount, percent, applied: discount > 0 };
 }
 
 /** COD free-delivery minimum order (Rs.) from admin storePayment settings. */
@@ -83,6 +119,8 @@ export function getCodFreeDeliveryProgress(cartTotal, threshold) {
 
 /**
  * Apply admin shipping rules on top of zone-calculated shipping.
+ * Flat delivery charge (default Rs. 250) is used when set — delivery is not free
+ * unless an explicit free-shipping rule is enabled.
  */
 export function applyShippingRules({
   zoneShippingCost,
@@ -93,15 +131,23 @@ export function applyShippingRules({
 }) {
   const sp = normalizeShippingRules(storePayment);
   const total = Math.max(0, Number(cartTotal) || 0);
-  let cost = zoneIsFree ? 0 : Math.max(0, Number(zoneShippingCost) || 0);
-  let freeReason = zoneIsFree ? "zone" : null;
+  const flat = Math.max(0, Number(sp.flatDeliveryCharge) || 0);
+
+  let cost =
+    flat > 0
+      ? flat
+      : zoneIsFree
+        ? 0
+        : Math.max(0, Number(zoneShippingCost) || 0);
+  let freeReason = flat > 0 ? null : zoneIsFree ? "zone" : null;
 
   if (sp.freeShippingOnOrderAboveEnabled && sp.freeShippingOnOrderAbove > 0 && total >= sp.freeShippingOnOrderAbove) {
     cost = 0;
     freeReason = "order_above";
   }
 
-  if (sp.freeShippingOnAdvancePayment !== false && isAdvancePaymentMethod(paymentMethod)) {
+  // Only free for advance payment when admin explicitly enables it
+  if (sp.freeShippingOnAdvancePayment === true && isAdvancePaymentMethod(paymentMethod)) {
     cost = 0;
     freeReason = "advance_payment";
   }
@@ -115,13 +161,37 @@ export function applyShippingRules({
   };
 }
 
+export function formatWhatsAppDisplay(whatsapp) {
+  const raw = String(whatsapp || "").replace(/\D/g, "");
+  if (!raw) return "03284010007";
+  // 923284010007 → 03284010007
+  if (raw.startsWith("92") && raw.length >= 12) return `0${raw.slice(2)}`;
+  if (raw.startsWith("0")) return raw;
+  if (raw.length === 10) return `0${raw}`;
+  return raw;
+}
+
 export function formatAdvancePaymentMessage(message, amount, whatsapp) {
   const amt = Math.max(0, Number(amount) || 0);
-  const wa = String(whatsapp || "").trim();
+  const wa = formatWhatsAppDisplay(whatsapp);
   const amountStr = formatPrice(amt);
   return String(message || DEFAULT_ADVANCE_MESSAGE)
     .replace(/\{amount\}/gi, amountStr)
-    .replace(/\{whatsapp\}/gi, wa || "WhatsApp");
+    .replace(/\{whatsapp\}/gi, wa);
+}
+
+/** Account lines for COD delivery-charge advance payment box. */
+export function getAdvancePaymentAccountLines(pakistaniPaymentMethods) {
+  const pm = pakistaniPaymentMethods || {};
+  const bank = pm.bankTransfer?.enabled !== false ? pm.bankTransfer : null;
+  const source = bank?.accountNumber || bank?.iban ? bank : pm.meezan?.accountNumber ? pm.meezan : bank;
+  if (!source) return [];
+  const lines = [];
+  if (source.bankName) lines.push({ label: "Bank", value: source.bankName });
+  if (source.accountNumber) lines.push({ label: "Account", value: source.accountNumber });
+  if (source.accountTitle) lines.push({ label: "Title", value: source.accountTitle });
+  if (source.iban) lines.push({ label: "IBAN", value: source.iban });
+  return lines;
 }
 
 export function shouldShowAdvancePaymentMessage({ paymentMethod, shippingCost, storePayment }) {
@@ -132,7 +202,7 @@ export function shouldShowAdvancePaymentMessage({ paymentMethod, shippingCost, s
   return Math.max(0, Number(shippingCost) || 0) > 0;
 }
 
-export function buildAdvancePaymentOrderNote(storePayment, whatsapp = "") {
+export function buildAdvancePaymentOrderNote(storePayment, whatsapp = "", pakistaniPaymentMethods = null) {
   const sp = normalizeShippingRules(storePayment);
   if (!sp.advancePaymentMessageEnabled) return "";
   const body = formatAdvancePaymentMessage(
@@ -140,6 +210,10 @@ export function buildAdvancePaymentOrderNote(storePayment, whatsapp = "") {
     sp.advancePaymentAmount,
     whatsapp
   );
+  const accounts = getAdvancePaymentAccountLines(pakistaniPaymentMethods)
+    .map((l) => `${l.label}: ${l.value}`)
+    .join(" | ");
   const title = sp.advancePaymentMessageTitle;
-  return title ? `${title}: ${body}` : body;
+  const full = accounts ? `${body} | ${accounts}` : body;
+  return title ? `${title}: ${full}` : full;
 }

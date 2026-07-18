@@ -12,6 +12,7 @@ import { StoreProviders } from "@/components/store/StoreProviders";
 import WhatsAppButton from "@/components/store/WhatsAppButton";
 import { CustomerProvider } from "@/lib/customerAuth";
 import { getServerStoreSettings } from "@/lib/serverSettings";
+import { getSiteUrl, isIndexableEnvironment, sanitizeCanonicalUrl, absoluteUrl } from "@/lib/siteUrl";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -33,24 +34,7 @@ const rajdhani = Rajdhani({
 });
 
 const FALLBACK_DESCRIPTION =
-  "Buy premium car accessories online in Pakistan. Seat covers, floor mats, steering wheels, car lighting & more. Cash on delivery available nationwide from Sialkot.";
-
-const DEFAULT_KEYWORDS = [
-  "car accessories pakistan",
-  "seat covers pakistan",
-  "Crazzycars.pk",
-  "car parts online pakistan",
-  "cod car accessories",
-  "auto accessories pakistan",
-];
-
-function getPublicOrigin() {
-  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
-  if (explicit) return explicit;
-  const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "")}`;
-  return "http://localhost:3000";
-}
+  "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide. CrazzyCars.pk";
 
 const getLayoutSettings = cache(getServerStoreSettings);
 
@@ -70,26 +54,6 @@ function robotsFromSeo(robotsTxt) {
   };
 }
 
-function keywordsFromSeo(metaKeywords) {
-  if (!metaKeywords || typeof metaKeywords !== "string") return [];
-  return metaKeywords
-    .split(",")
-    .map((k) => k.trim())
-    .filter(Boolean);
-}
-
-function safeUrl(str, fallback) {
-  try {
-    return new URL(str);
-  } catch {
-    try {
-      return new URL(fallback);
-    } catch {
-      return new URL("http://localhost:3000");
-    }
-  }
-}
-
 export async function generateMetadata() {
   try {
     const settings = await getLayoutSettings();
@@ -99,61 +63,66 @@ export async function generateMetadata() {
       general.storeName ||
       process.env.NEXT_PUBLIC_STORE_NAME ||
       process.env.NEXT_PUBLIC_APP_NAME ||
-      "Crazzycars.pk";
+      "CrazzyCars.pk";
 
     const title =
       seo.metaTitle?.trim() ||
       seo.defaultMetaTitle?.trim() ||
       storeName ||
-      "Crazzycars.pk";
+      "CrazzyCars.pk";
     const description =
       seo.metaDescription?.trim() ||
       seo.defaultMetaDescription?.trim() ||
       FALLBACK_DESCRIPTION;
-    const keywordsRaw = seo.metaKeywords?.trim();
-    const kw = keywordsFromSeo(keywordsRaw);
-    const keywords = kw.length ? kw : DEFAULT_KEYWORDS;
-
-    const envFallback = (process.env.NEXT_PUBLIC_STORE_URL || getPublicOrigin()).replace(/\/$/, "");
-    const canonical = (seo.canonicalUrl?.trim() || envFallback || "https://crazzycars.pk").replace(
-      /\/$/,
-      ""
-    );
+    const siteUrl = getSiteUrl();
+    const canonical = sanitizeCanonicalUrl(seo.canonicalUrl?.trim() || siteUrl);
 
     const ogTitle = seo.ogTitle?.trim() || title;
     const ogDescription = seo.ogDescription?.trim() || description;
-    const ogImage = seo.ogImage?.trim();
+    // Prefer local OG asset on our domain — never inherit foreign absolute URLs from old CMS.
+    const configuredOg = seo.ogImage?.trim() || "";
+    let ogSafe = "";
+    if (configuredOg) {
+      try {
+        const host = new URL(configuredOg, siteUrl).hostname.replace(/^www\./, "");
+        const siteHost = new URL(siteUrl).hostname.replace(/^www\./, "");
+        if (host === siteHost || configuredOg.startsWith("/")) {
+          ogSafe = configuredOg.startsWith("http") ? configuredOg : absoluteUrl(configuredOg);
+        }
+      } catch {
+        ogSafe = "";
+      }
+    }
+    const ogImageUrl = ogSafe || absoluteUrl("/og-image.jpg");
 
     const gsc = seo.googleSearchConsoleId?.trim();
     const verification = gsc ? { google: gsc } : {};
 
     return {
-      metadataBase: safeUrl(canonical, envFallback),
+      metadataBase: new URL(siteUrl),
       title: {
         default: title,
         template: `%s | ${storeName}`,
       },
       description,
-      keywords,
       authors: [{ name: storeName }],
       creator: storeName,
       publisher: storeName,
-      robots: robotsFromSeo(seo.robotsTxt),
+      robots: isIndexableEnvironment() ? robotsFromSeo(seo.robotsTxt) : { index: false, follow: false },
       openGraph: {
         title: ogTitle,
         description: ogDescription,
-        locale: "en_PK",
+        locale: "en_US",
         type: "website",
         siteName: storeName,
-        images: ogImage
-          ? [{ url: ogImage, width: 1200, height: 630, alt: storeName }]
-          : [{ url: "/og-image.jpg", width: 1200, height: 630, alt: storeName }],
+        url: canonical,
+        images: [{ url: ogImageUrl, width: 1200, height: 630, alt: storeName }],
       },
       twitter: {
         card: "summary_large_image",
         title: ogTitle,
         description: ogDescription,
-        images: ogImage ? [ogImage] : ["/og-image.jpg"],
+        images: [ogImageUrl],
       },
       alternates: {
         canonical,
@@ -163,8 +132,17 @@ export async function generateMetadata() {
   } catch (e) {
     console.error("generateMetadata error:", e);
     return {
-      title: "Crazzycars.pk | Car Accessories Pakistan",
+      metadataBase: new URL(getSiteUrl()),
+      title: "CrazzyCars.pk | Car Accessories Pakistan",
       description: FALLBACK_DESCRIPTION,
+      robots: isIndexableEnvironment() ? undefined : { index: false, follow: false },
+      openGraph: {
+        images: [{ url: absoluteUrl("/og-image.jpg"), width: 1200, height: 630, alt: "CrazzyCars.pk" }],
+      },
+      twitter: {
+        card: "summary_large_image",
+        images: [absoluteUrl("/og-image.jpg")],
+      },
     };
   }
 }
@@ -191,19 +169,15 @@ export default async function RootLayout({ children }) {
     console.error("RootLayout settings error:", e);
   }
 
-  const seo = settings?.seo || {};
   const appearance = settings?.appearance || {};
   const general = settings?.general || {};
+  const seo = settings?.seo || {};
   const storeName =
     general.storeName ||
     process.env.NEXT_PUBLIC_APP_NAME ||
     process.env.NEXT_PUBLIC_STORE_NAME ||
     "Crazzycars.pk";
-  const baseUrl = (
-    seo.canonicalUrl?.trim() ||
-    process.env.NEXT_PUBLIC_STORE_URL?.replace(/\/$/, "") ||
-    getPublicOrigin()
-  ).replace(/\/$/, "");
+  const baseUrl = getSiteUrl();
   const description =
     seo.metaDescription?.trim() || seo.defaultMetaDescription?.trim() || FALLBACK_DESCRIPTION;
 
@@ -216,10 +190,10 @@ export default async function RootLayout({ children }) {
     description,
     address: {
       "@type": "PostalAddress",
-      streetAddress: general.address || "Sialkot",
-      addressLocality: "Sialkot",
+      streetAddress: general.address || "Gujranwala",
+      addressLocality: "Gujranwala",
       addressRegion: "Punjab",
-      postalCode: "51310",
+      postalCode: "52250",
       addressCountry: "PK",
     },
     contactPoint: {

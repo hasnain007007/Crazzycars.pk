@@ -153,7 +153,7 @@ export function parsePostexOrderDetail(json, trackingNumber) {
       "deliveryDate",
       "edd"
     ),
-    origin: pick(dist, "pickupCity", "originCity", "merchantCity", "pickupAddress") || "Sialkot",
+    origin: pick(dist, "pickupCity", "originCity", "merchantCity", "pickupAddress") || "Gujranwala",
     destination: pick(dist, "deliveryCity", "cityName", "destinationCity", "deliveryAddress"),
     weight,
     pieces: Number(dist.items ?? dist.pieces ?? dist.itemCount) || 1,
@@ -391,7 +391,7 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
   const originCity =
     String(courier.originCity || "").trim() ||
     String(general.address || "").split(",")[0]?.trim() ||
-    "Sialkot";
+    "Gujranwala";
 
   const rawPhone = resolveOrderPhone(order);
   const normalized = normalizePkMobile(rawPhone);

@@ -93,7 +93,7 @@ const PAGE_TEMPLATES = [
     slug: "about-us",
     template: "about",
     content: `<h2>Our Story</h2>
-<p>${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Sialkot, Pakistan, to bring premium car accessories — seat covers, floor mats, steering wraps, and more — to drivers nationwide.</p>
+<p>${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Gujranwala, Pakistan, to bring premium car accessories — seat covers, floor mats, steering wraps, and more — to drivers nationwide.</p>
 <h2>Our Promise</h2>
 <p>Every product is selected for quality, fit, and value. We only stock accessories we would use on our own cars.</p>
 <h2>Why Shop With Us</h2>

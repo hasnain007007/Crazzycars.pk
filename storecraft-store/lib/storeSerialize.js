@@ -190,6 +190,9 @@ export function serializeStoreProductDetail(p) {
     trackInventory: p?.inventory?.trackInventory ?? true,
     shippingBaseWeight: Number(p.inventory?.weight) || 0,
     shippingBaseWeightUnit: p.inventory?.weightUnit || "kg",
+    seo: p.seo || {},
+    averageRating: Number(p.averageRating) || Number(p.ratingAverage) || Number(p.rating) || 0,
+    reviewCount: Number(p.reviewCount) || Number(p.totalReviews) || Number(p.numReviews) || 0,
     features: p.features || [],
     specifications: Array.isArray(p.specifications) ? p.specifications.filter((s) => s.label && s.value) : [],
     addOns: Array.isArray(p.addOns)

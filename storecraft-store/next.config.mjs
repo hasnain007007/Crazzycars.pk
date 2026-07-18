@@ -17,16 +17,6 @@ const nextConfig = {
         destination: "/:slug",
         permanent: true,
       },
-      {
-        source: "/products/:slug",
-        destination: "/:slug",
-        permanent: true,
-      },
-      {
-        source: "/categories/:slug",
-        destination: "/:slug",
-        permanent: true,
-      },
     ];
   },
   poweredByHeader: false,
@@ -36,10 +26,26 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   images: {
+    // TODO: consolidate to one Cloudinary account (currently products≈djmqim946, logo≈dquier8fv)
     remotePatterns: [
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
+        pathname: "/djmqim946/**",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/dquier8fv/**",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.shopify.com",
         pathname: "/**",
       },
       {
@@ -85,11 +91,29 @@ const nextConfig = {
         ],
       },
       {
+        source: "/api/settings",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/api/banners",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=30, stale-while-revalidate=0",
+          },
+        ],
+      },
+      {
         source: "/api/:path*",
         headers: [
           {
             key: "Cache-Control",
-            value: "public, s-maxage=60, stale-while-revalidate=300",
+            value: "public, s-maxage=30, stale-while-revalidate=60",
           },
         ],
       },

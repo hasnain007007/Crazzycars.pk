@@ -1,24 +1,14 @@
 import BlogListView from "@/components/store/BlogListView";
-const BASE_URL = (process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://crazzycars.pk").replace(/\/$/, "");
+import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: `Blog | ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} — car care tips & accessories Guides`,
   description:
     `Expert car accessories advice, aftercare guides, accessories care tips and style inspiration from ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} automotive specialists — read our blog.`,
-  keywords:
-    "car accessories pakistan, seat covers, steering wheels, floor mats, car lighting, auto accessories sialkot",
-  alternates: {
-    canonical: `${BASE_URL}/blogs`,
-  },
-  openGraph: {
-    title: `Blog | ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
-    description: "Expert car accessories advice and accessories guides",
-    type: "website",
-    url: `${BASE_URL}/blogs`,
-  },
-};
+  path: "/posts",
+});
 
 export default async function BlogPage({ searchParams }) {
   const params = await searchParams;

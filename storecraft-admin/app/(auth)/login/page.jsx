@@ -83,6 +83,7 @@ function LoginForm() {
               id="email"
               name="email"
               type="email"
+              autoComplete="username"
               value={formData.email}
               onChange={onFieldChange}
               required

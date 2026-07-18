@@ -144,7 +144,7 @@ export function parsePostexOrderDetail(json, trackingNumber) {
       "deliveryDate",
       "edd"
     ),
-    origin: pick(dist, "pickupCity", "originCity", "merchantCity", "pickupAddress") || "Sialkot",
+    origin: pick(dist, "pickupCity", "originCity", "merchantCity", "pickupAddress") || "Gujranwala",
     destination: pick(dist, "deliveryCity", "cityName", "destinationCity", "deliveryAddress"),
     weight,
     pieces: Number(dist.items ?? dist.pieces ?? dist.itemCount) || 1,

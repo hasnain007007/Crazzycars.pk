@@ -5,8 +5,9 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import AnnouncementBarSettings from "@/components/settings/AnnouncementBarSettings";
 import CheckoutSettings from "@/components/settings/CheckoutSettings";
-import TrustBadgeSettings from "@/components/settings/TrustBadgeSettings";
 import BrandStorySettings from "@/components/settings/BrandStorySettings";
+import AboutPageSettings from "@/components/settings/AboutPageSettings";
+import ContactPageSettings from "@/components/settings/ContactPageSettings";
 import { FooterSettings } from "@/components/settings/FooterSettings";
 import MegaMenuSettings from "@/components/settings/MegaMenuSettings";
 import ProductBadgeSettings from "@/components/settings/ProductBadgeSettings";
@@ -37,8 +38,9 @@ const TABS = [
   "Checkout Messages",
   "WhatsApp",
   "Announcement Bar",
-  "Trust Badges",
   "Brand Story",
+  "About Page",
+  "Contact Page",
   "Mega Menu",
   "Product Badges",
   "Checkout",
@@ -241,16 +243,22 @@ export function SettingsPage() {
       freeShippingThreshold: Math.max(0, Number(raw.freeShippingThreshold) || 2999),
       minimumOrderAmount: Math.max(0, Number(raw.minimumOrderAmount) || 0),
       codFee: Math.max(0, Number(raw.codFee) || 0),
-      freeShippingOnAdvancePayment: raw.freeShippingOnAdvancePayment !== false,
+      freeShippingOnAdvancePayment: raw.freeShippingOnAdvancePayment === true,
       freeShippingOnOrderAbove: Math.max(0, Number(raw.freeShippingOnOrderAbove) || 10000),
-      freeShippingOnOrderAboveEnabled: raw.freeShippingOnOrderAboveEnabled !== false,
-      advancePaymentAmount: Math.max(0, Number(raw.advancePaymentAmount) || 500),
+      freeShippingOnOrderAboveEnabled: raw.freeShippingOnOrderAboveEnabled === true,
+      advancePaymentAmount: Math.max(0, Number(raw.advancePaymentAmount) || 250),
       advancePaymentMessageEnabled: raw.advancePaymentMessageEnabled !== false,
       advancePaymentMessageTitle: String(raw.advancePaymentMessageTitle || "Confirm Your Order").trim(),
       advancePaymentMessage: String(raw.advancePaymentMessage || "").trim(),
+      advancePaymentDiscountEnabled: raw.advancePaymentDiscountEnabled !== false,
+      advancePaymentDiscountPercent: Math.min(
+        100,
+        Math.max(0, Number(raw.advancePaymentDiscountPercent) || 3)
+      ),
+      flatDeliveryCharge: Math.max(0, Number(raw.flatDeliveryCharge) || 250),
       majorCitiesDays: String(raw.majorCitiesDays || "2-3").trim(),
       otherAreasDays: String(raw.otherAreasDays || "4-7").trim(),
-      deliveryNote: String(raw.deliveryNote || "Free delivery on orders over Rs. 2,999").trim(),
+      deliveryNote: String(raw.deliveryNote || "Delivery charges Rs. 250").trim(),
     };
   }
 
@@ -706,20 +714,56 @@ export function SettingsPage() {
             </p>
 
             <div className="space-y-4 rounded-lg border border-slate-100 p-4">
+              <div>
+                <label className="text-xs font-medium text-slate-600">Flat delivery charge (Rs.)</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={sp.flatDeliveryCharge ?? 250}
+                  onChange={(e) => patchStorePayment("flatDeliveryCharge", parseFloat(e.target.value) || 0)}
+                  className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  Charged on every order (e.g. 250). Set 0 to use shipping zones instead.
+                </p>
+              </div>
               <Toggle
                 label="Free Delivery on Advance Payment"
-                checked={sp.freeShippingOnAdvancePayment !== false}
+                checked={sp.freeShippingOnAdvancePayment === true}
                 onChange={(v) => patchStorePayment("freeShippingOnAdvancePayment", v)}
               />
               <p style={{ fontSize: 11, color: "#6b7280", margin: "-8px 0 0", paddingLeft: 4 }}>
-                JazzCash, Easypaisa, bank transfer, etc. — customer pays in advance
+                Off by default — delivery is charged even for bank / JazzCash / Meezan
               </p>
+              <Toggle
+                label="Discount on Advance Payment"
+                checked={sp.advancePaymentDiscountEnabled !== false}
+                onChange={(v) => patchStorePayment("advancePaymentDiscountEnabled", v)}
+              />
+              <div>
+                <label className="text-xs font-medium text-slate-600">Advance payment discount (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  value={sp.advancePaymentDiscountPercent ?? 3}
+                  onChange={(e) =>
+                    patchStorePayment("advancePaymentDiscountPercent", parseFloat(e.target.value) || 0)
+                  }
+                  className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  e.g. 3 = customer gets 3% off when paying via JazzCash / bank / Meezan (not COD)
+                </p>
+              </div>
             </div>
 
             <div className="mt-4 space-y-3 rounded-lg border border-slate-100 p-4">
               <Toggle
                 label="Free Delivery on Orders Above"
-                checked={sp.freeShippingOnOrderAboveEnabled !== false}
+                checked={sp.freeShippingOnOrderAboveEnabled === true}
                 onChange={(v) => patchStorePayment("freeShippingOnOrderAboveEnabled", v)}
               />
               <div>
@@ -1210,41 +1254,47 @@ export function SettingsPage() {
 
       {tab === 10 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <TrustBadgeSettings />
+          <BrandStorySettings />
         </div>
       ) : null}
 
       {tab === 11 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <BrandStorySettings />
+          <AboutPageSettings />
         </div>
       ) : null}
 
       {tab === 12 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <MegaMenuSettings />
+          <ContactPageSettings />
         </div>
       ) : null}
 
       {tab === 13 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <ProductBadgeSettings />
+          <MegaMenuSettings />
         </div>
       ) : null}
 
       {tab === 14 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <CheckoutSettings />
+          <ProductBadgeSettings />
         </div>
       ) : null}
 
       {tab === 15 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <HomepageSettings />
+          <CheckoutSettings />
         </div>
       ) : null}
 
       {tab === 16 ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+          <HomepageSettings />
+        </div>
+      ) : null}
+
+      {tab === 17 ? (
         <CourierSettingsTab
           courier={courier}
           onPatch={(partial) => setS({ ...s, courier: { ...courier, ...partial } })}
@@ -1311,7 +1361,7 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
         </div>
         <Field
           label="Origin City"
-          value={courier.originCity || "Sialkot"}
+          value={courier.originCity || "Gujranwala"}
           onChange={(v) => onPatch({ originCity: v })}
         />
         <p className="text-xs text-slate-500 sm:col-span-2">

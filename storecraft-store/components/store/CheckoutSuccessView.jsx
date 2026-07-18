@@ -7,11 +7,14 @@ import { useCheckoutMessages } from "@/context/StoreSettingsContext";
 import { formatPrice } from "@/lib/currency";
 import {
   formatAdvancePaymentMessage,
+  formatWhatsAppDisplay,
+  getAdvancePaymentAccountLines,
   normalizeShippingRules,
   shouldShowAdvancePaymentMessage,
 } from "@/lib/freeDelivery";
+import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 
-function CodDeliveryChargeBox({ order, storePayment, whatsapp }) {
+function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentMethods }) {
   const pm = String(order?.paymentMethod || "").toLowerCase();
   const shipping = Math.max(0, Number(order?.pricing?.shippingCost) || 0);
   const rules = normalizeShippingRules(storePayment);
@@ -25,12 +28,17 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp }) {
     return null;
   }
 
-  const waNum = String(whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || "").trim();
+  const waNum = String(whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || "03284010007").trim();
+  const waDisplay = formatWhatsAppDisplay(waNum || "03284010007");
   const messageBody = formatAdvancePaymentMessage(
     rules.advancePaymentMessage,
-    rules.advancePaymentAmount,
-    waNum
+    rules.advancePaymentAmount || shipping || 250,
+    waDisplay
   );
+  const accountLines = getAdvancePaymentAccountLines(
+    normalizePakistaniPaymentMethods(pakistaniPaymentMethods)
+  );
+  const waLink = `https://wa.me/${String(waNum || "03284010007").replace(/\D/g, "").replace(/^0/, "92")}`;
 
   return (
     <div
@@ -56,7 +64,7 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp }) {
       </p>
       <p
         style={{
-          margin: 0,
+          margin: "0 0 10px",
           fontSize: 14,
           color: "#78350F",
           lineHeight: 1.6,
@@ -64,6 +72,29 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp }) {
         }}
       >
         {messageBody}
+      </p>
+      {accountLines.length > 0 ? (
+        <ul
+          style={{
+            margin: "0 0 10px",
+            paddingLeft: 18,
+            fontSize: 14,
+            color: "#78350F",
+            lineHeight: 1.7,
+          }}
+        >
+          {accountLines.map((line) => (
+            <li key={line.label}>
+              <strong style={{ color: "#92400E" }}>{line.label}:</strong> {line.value}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <p style={{ margin: 0, fontSize: 14, color: "#78350F", fontWeight: 700 }}>
+        WhatsApp screenshot:{" "}
+        <a href={waLink} target="_blank" rel="noopener noreferrer" style={{ color: "#16A34A" }}>
+          {waDisplay}
+        </a>
       </p>
     </div>
   );
@@ -76,7 +107,11 @@ export default function CheckoutSuccessView() {
   const paid = searchParams.get("paid") === "true";
   const paymentFailed = searchParams.get("paid") === "false";
   const [order, setOrder] = useState(null);
-  const [contact, setContact] = useState({ storePayment: null, whatsapp: null });
+  const [contact, setContact] = useState({
+    storePayment: null,
+    whatsapp: null,
+    pakistaniPaymentMethods: null,
+  });
   const [loading, setLoading] = useState(true);
 
   const showSuccess = useMemo(() => Boolean(orderId) || paid, [orderId, paid]);
@@ -90,6 +125,7 @@ export default function CheckoutSuccessView() {
         setContact({
           storePayment: s?.storePayment,
           whatsapp: s?.whatsapp,
+          pakistaniPaymentMethods: s?.pakistaniPaymentMethods,
         });
       })
       .catch(() => {});
@@ -383,6 +419,7 @@ export default function CheckoutSuccessView() {
             order={order}
             storePayment={contact.storePayment}
             whatsapp={contact.whatsapp}
+            pakistaniPaymentMethods={contact.pakistaniPaymentMethods}
           />
         ) : null}
 

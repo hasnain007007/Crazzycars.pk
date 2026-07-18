@@ -377,7 +377,6 @@ export function FullScreenImageEditor({
     resize: false,
     draw: false,
     color: false,
-    generate: false,
   });
   const [brushSize, setBrushSize] = useState(8);
   const [brushColor, setBrushColor] = useState("#3b82f6");
@@ -1169,11 +1168,6 @@ export function FullScreenImageEditor({
             >
               Apply (save URL)
             </button>
-          </DarkSection>
-
-          <DarkSection title="⑥ Generate" expanded={sections.generate} onToggle={toggle("generate")}>
-            <p className="text-sm text-[#aaa]">AI Generate</p>
-            <span className="inline-block rounded bg-[#333] px-2 py-0.5 text-xs text-[#888]">Coming soon</span>
           </DarkSection>
 
           <div className="border-b border-[#2a2a2a] px-3 py-3">

@@ -18,9 +18,9 @@ const DEFAULT_FORM = {
   heading: "Built for Pakistani Car Enthusiasts",
   subheading: "Pakistan's Premier Car Accessories Store",
   description:
-    "Crazzycars.pk was founded in Sialkot to bring premium seat covers, floor mats, steering wraps, and car care products to drivers across Pakistan — with COD nationwide.",
+    "Crazzycars.pk was founded in Gujranwala to bring premium seat covers, floor mats, steering wraps, and car care products to drivers across Pakistan — with COD nationwide.",
   buttonText: "Shop Car Accessories",
-  buttonLink: "/about-us",
+  buttonLink: "/about",
   image1: "",
   image2: "",
   stats: DEFAULT_STATS,
@@ -305,7 +305,7 @@ export default function BrandStorySettings() {
               resize: "vertical",
               lineHeight: 1.6,
             }}
-            placeholder="Crazzycars.pk was founded in Sialkot to deliver premium car accessories across Pakistan..."
+            placeholder="Crazzycars.pk was founded in Gujranwala to deliver premium car accessories across Pakistan..."
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           />
@@ -325,7 +325,7 @@ export default function BrandStorySettings() {
             <label style={labelStyle}>Button Link</label>
             <input
               style={inputStyle}
-              placeholder="/about-us"
+              placeholder="/about"
               value={form.buttonLink}
               onChange={(e) => setForm((f) => ({ ...f, buttonLink: e.target.value }))}
             />
