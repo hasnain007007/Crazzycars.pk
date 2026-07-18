@@ -1,4 +1,4 @@
-import { postexPublicTrackingUrl } from "@/lib/postex";
+import { postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
 
 export const DEFAULT_WHATSAPP_TEMPLATES = {
   customerOrderConfirmation: {
@@ -180,7 +180,7 @@ export function buildPaymentInstructions(order, settings = {}) {
 
 export function buildTrackingSection(order) {
   const tn = String(order?.trackingNumber || order?.tracking?.number || "").trim();
-  const url = String(order?.trackingUrl || order?.tracking?.url || "").trim() || postexPublicTrackingUrl(tn);
+  const url = storefrontTrackingUrl(tn) || String(order?.trackingUrl || order?.tracking?.url || "").trim();
   if (!tn && !url) return "";
   if (url) return `📍 Track: ${url}`;
   return `📍 Tracking: ${tn}`;
@@ -227,7 +227,9 @@ export function buildCustomerOrderVariables(order, settings = {}, extras = {}) {
     customerPhone: String(addr.phone || order?.customer?.phone || "").trim() || "—",
     trackingSection: buildTrackingSection(order),
     trackingNumber: String(order?.trackingNumber || order?.tracking?.number || ""),
-    trackingUrl: String(order?.trackingUrl || order?.tracking?.url || ""),
+    trackingUrl:
+      storefrontTrackingUrl(String(order?.trackingNumber || order?.tracking?.number || "").trim()) ||
+      String(order?.trackingUrl || order?.tracking?.url || ""),
     storePhone,
     storeName,
     confirmOrderUrl: String(extras.confirmOrderUrl || extras.confirmUrl || fallbackUrl),
@@ -268,6 +270,7 @@ export function buildOrderShippedVariables(order, settings = {}, overrides = {})
     String(overrides.trackingNumber || order?.trackingNumber || order?.tracking?.number || "").trim();
   const courier = String(overrides.courier || order?.courier || order?.tracking?.carrier || "Postex");
   const trackingUrl =
+    storefrontTrackingUrl(trackingNumber) ||
     String(overrides.trackingUrl || order?.trackingUrl || order?.tracking?.url || "").trim() ||
     postexPublicTrackingUrl(trackingNumber);
   const storePhone = settings?.general?.phone || "";
@@ -278,6 +281,7 @@ export function buildOrderShippedVariables(order, settings = {}, overrides = {})
     courier,
     trackingNumber,
     trackingUrl,
+    estimatedDelivery: String(overrides.estimatedDelivery || "2-4 business days"),
     address: [addr.street, addr.line1, addr.address].filter(Boolean).join(" ").trim() || "—",
     city: String(addr.city || "").trim() || "—",
     storePhone,
@@ -309,14 +313,6 @@ export function getLegacyTrackingWhatsAppMessage({
   trackingNumber,
   storeUrl = "",
 }) {
-  const postexLink = postexPublicTrackingUrl(trackingNumber);
-  const siteBase = String(storeUrl || process.env.NEXT_PUBLIC_STORE_URL || "").replace(/\/$/, "");
-  const storeTrack = siteBase
-    ? `${siteBase}/track-order?tracking=${encodeURIComponent(trackingNumber)}`
-    : "";
-  let msg = `Your ${storeName} order #${orderNumber} has been shipped!\n\nTrack your order:\n${postexLink}`;
-  if (storeTrack) {
-    msg += `\n\nOr track on our website:\n${storeTrack}`;
-  }
-  return msg;
+  const storeTrack = storefrontTrackingUrl(trackingNumber, storeUrl);
+  return `Your ${storeName} order #${orderNumber} has been shipped!\n\nTrack your order:\n${storeTrack || postexPublicTrackingUrl(trackingNumber)}`;
 }

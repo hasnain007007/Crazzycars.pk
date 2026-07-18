@@ -26,7 +26,7 @@ import {
   OrderWhatsAppButton,
 } from "@/components/orders/OrderWhatsAppButton";
 import { formatAdminPrice } from "@/lib/currency";
-import { isPrepaidOrder, postexPublicTrackingUrl } from "@/lib/postex";
+import { isPrepaidOrder, postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
 import {
   buildWhatsAppMessage,
   getLegacyTrackingWhatsAppMessage,
@@ -1073,7 +1073,8 @@ export function OrderDetail({ orderId }) {
 
     const url =
       String(trackingUrl || "").trim() ||
-      (isPostex ? postexPublicTrackingUrl(num) : trackingUrl);
+      storefrontTrackingUrl(num) ||
+      (isPostex ? postexPublicTrackingUrl(num) : "");
 
     setTrackingSaving(true);
     try {
@@ -1132,14 +1133,12 @@ export function OrderDetail({ orderId }) {
       return;
     }
     const rawPhone = getCustomerOrderPhone(order);
+    const customerTrackUrl = storefrontTrackingUrl(num, storeUrl);
     const msg =
       getOrderShippedWhatsAppMessage(order, settings || {}, {
         trackingNumber: num,
         courier: order.courier || trackingCarrier || "Postex",
-        trackingUrl:
-          order.trackingUrl ||
-          trackingUrl ||
-          postexPublicTrackingUrl(num),
+        trackingUrl: customerTrackUrl || order.trackingUrl || trackingUrl || postexPublicTrackingUrl(num),
       }) ||
       getLegacyTrackingWhatsAppMessage({
         storeName: storeMeta.storeName,

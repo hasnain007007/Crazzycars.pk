@@ -28,6 +28,45 @@ export function postexPublicTrackingUrl(trackingNumber) {
   return `https://www.postex.pk/tracking?trackingId=${encodeURIComponent(id)}`;
 }
 
+/**
+ * Customer-facing tracking page (preferred in WhatsApp / emails).
+ *
+ * Priority:
+ * 1. NEXT_PUBLIC_TRACKING_PAGE_URL (full page URL without query, e.g. https://admin…/track-order)
+ * 2. NEXT_PUBLIC_ADMIN_URL + /track-order (works while crazzycars.pk is still on Shopify)
+ * 3. storeUrl / NEXT_PUBLIC_STORE_URL + /track-order (after storefront cutover)
+ */
+export function storefrontTrackingUrl(trackingNumber, storeUrl = "") {
+  const id = String(trackingNumber || "").trim();
+  if (!id) return "";
+
+  const dedicated = String(process.env.NEXT_PUBLIC_TRACKING_PAGE_URL || "")
+    .trim()
+    .replace(/\/$/, "");
+  if (dedicated) {
+    return `${dedicated}?tracking=${encodeURIComponent(id)}`;
+  }
+
+  const adminBase = String(process.env.NEXT_PUBLIC_ADMIN_URL || "")
+    .trim()
+    .replace(/\/$/, "");
+  if (adminBase) {
+    return `${adminBase}/track-order?tracking=${encodeURIComponent(id)}`;
+  }
+
+  const siteBase = String(
+    storeUrl || process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL || ""
+  )
+    .trim()
+    .replace(/\/$/, "");
+  if (siteBase) {
+    return `${siteBase}/track-order?tracking=${encodeURIComponent(id)}`;
+  }
+
+  // Last resort — live admin beta host
+  return `https://storecraft-admin-beta.vercel.app/track-order?tracking=${encodeURIComponent(id)}`;
+}
+
 function pick(obj, ...keys) {
   if (!obj || typeof obj !== "object") return "";
   for (const k of keys) {
@@ -240,17 +279,8 @@ export function buildTrackingWhatsAppMessage({
   trackingNumber,
   storeUrl = "",
 }) {
-  const postexLink = postexPublicTrackingUrl(trackingNumber);
-  const siteBase = String(storeUrl || process.env.NEXT_PUBLIC_STORE_URL || "").replace(/\/$/, "");
-  const storeTrack = siteBase
-    ? `${siteBase}/track-order?tracking=${encodeURIComponent(trackingNumber)}`
-    : "";
-
-  let msg = `Your ${storeName} order #${orderNumber} has been shipped!\n\nTrack your order:\n${postexLink}`;
-  if (storeTrack) {
-    msg += `\n\nOr track on our website:\n${storeTrack}`;
-  }
-  return msg;
+  const storeTrack = storefrontTrackingUrl(trackingNumber, storeUrl);
+  return `Your ${storeName} order #${orderNumber} has been shipped!\n\nTrack your order:\n${storeTrack || postexPublicTrackingUrl(trackingNumber)}`;
 }
 
 function formatPostexOrderDate(date) {

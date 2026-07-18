@@ -14,6 +14,11 @@ export async function proxy(request) {
     return NextResponse.next();
   }
 
+  // Public customer tracking page (WhatsApp / storefront links) — no login
+  if (pathname === "/track-order" || pathname.startsWith("/track-order/")) {
+    return NextResponse.next();
+  }
+
   const token = request.cookies.get(JWT_COOKIE_NAME)?.value;
 
   if (!token) {
@@ -53,6 +58,6 @@ export const config = {
      * Protect all admin app pages except login + Next internals + public files.
      * Does NOT match /api/* — those use getRequestUser per route.
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|login|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|login|track-order|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

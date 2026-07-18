@@ -17,6 +17,16 @@ const nextConfig = {
         destination: "/:slug",
         permanent: true,
       },
+      {
+        source: "/tracking",
+        destination: "/track-order",
+        permanent: false,
+      },
+      {
+        source: "/track",
+        destination: "/track-order",
+        permanent: false,
+      },
     ];
   },
   poweredByHeader: false,

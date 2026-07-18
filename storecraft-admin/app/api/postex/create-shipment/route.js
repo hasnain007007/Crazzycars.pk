@@ -11,7 +11,7 @@ import {
   createPostexShipment,
   fetchPostexLabel,
   isPrepaidOrder,
-  postexPublicTrackingUrl,
+  storefrontTrackingUrl,
 } from "@/lib/postex";
 
 function requestIp(request) {
@@ -20,7 +20,7 @@ function requestIp(request) {
 
 function applyShipmentToOrder(order, { trackingNumber, label, adminName }) {
   const tn = String(trackingNumber || "").trim();
-  const url = postexPublicTrackingUrl(tn);
+  const url = storefrontTrackingUrl(tn);
 
   order.trackingNumber = tn;
   order.courier = "Postex";

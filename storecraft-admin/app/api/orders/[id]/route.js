@@ -9,7 +9,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import Order from "@/lib/models/Order.model";
 import { orderGrandTotal, orderPricing } from "@/lib/orderFormat";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
-import { postexPublicTrackingUrl } from "@/lib/postex";
+import { postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
@@ -459,6 +459,7 @@ export async function PUT(request, context) {
       const carrier = courierIn ?? order.courier ?? order.tracking?.carrier ?? "Postex";
       const url =
         String(body.trackingUrl || body.tracking?.url || "").trim().slice(0, 500) ||
+        (number ? storefrontTrackingUrl(number) : "") ||
         (number && carrier.toLowerCase() === "postex"
           ? postexPublicTrackingUrl(number)
           : order.trackingUrl || order.tracking?.url || "");
@@ -509,6 +510,7 @@ export async function PUT(request, context) {
       const carrier = String(body.tracking.carrier || "Postex").trim().slice(0, 120);
       const url =
         String(body.tracking.url || "").trim().slice(0, 500) ||
+        (number ? storefrontTrackingUrl(number) : "") ||
         (number && carrier.toLowerCase() === "postex" ? postexPublicTrackingUrl(number) : "");
       order.trackingNumber = number;
       order.courier = carrier;
