@@ -17,14 +17,21 @@ function getStock(product) {
   return q;
 }
 
+function getProductImages(product) {
+  const list = [];
+  const push = (u) => {
+    const url = typeof u === "string" ? u.trim() : String(u?.url || "").trim();
+    if (url && !list.includes(url)) list.push(url);
+  };
+  if (typeof product?.image === "string") push(product.image);
+  else if (product?.image?.url) push(product.image.url);
+  for (const img of product?.images || []) push(img);
+  for (const img of product?.media?.images || []) push(img);
+  return list;
+}
+
 function getImage(product) {
-  return (
-    (typeof product?.image === "string" ? product.image : product?.image?.url) ||
-    product?.images?.[0]?.url ||
-    (typeof product?.images?.[0] === "string" ? product.images[0] : null) ||
-    product?.media?.images?.[0]?.url ||
-    ""
-  );
+  return getProductImages(product)[0] || "";
 }
 
 function getPrices(product) {
@@ -50,10 +57,12 @@ export function ProductCard({ product, compact = false }) {
   const productImageWatermark = normalizeProductImageWatermark(rawWatermark);
   const [wish, setWish] = useState(false);
   const inStock = getStock(product) > 0;
-  const imageUrl = getImage(product);
+  const images = getProductImages(product);
+  const imageUrl = images[0] || "";
+  const hoverImageUrl = images[1] || "";
   const { regular, sale, onSale, pct } = getPrices(product);
-  const slug = product.slug || "";
-  const href = slug ? `/${slug}` : "#";
+  const slug = product.slug || product.handle || "";
+  const href = slug ? (product.source === "shopify" || product.handle ? `/products/${slug}` : `/${slug}`) : "#";
   const reviewCount = Number(product.reviewCount || product.reviews_count || 0);
   const rating = Number(product.rating || 0);
   const showNew = !onSale && isNewProduct(product);
@@ -97,6 +106,11 @@ export function ProductCard({ product, compact = false }) {
       toast.error("Product unavailable");
       return;
     }
+    const variant = product.source === "shopify" ? product.variants?.find((item) => item.availableForSale) : null;
+    if (product.source === "shopify" && !variant?.id) {
+      toast.error("Product unavailable");
+      return;
+    }
     addItem({
       productId: product.id,
       id: product.id,
@@ -107,6 +121,9 @@ export function ProductCard({ product, compact = false }) {
       price: sale,
       quantity: 1,
       variationLabel: "",
+      variantId: variant?.id || "",
+      merchandiseId: variant?.id || "",
+      source: product.source,
     });
     toast.success("Added to cart");
   }
@@ -118,14 +135,36 @@ export function ProductCard({ product, compact = false }) {
     >
       <Link href={href} className="relative block aspect-square overflow-hidden rounded-lg m-3 mb-0" style={{ background: "#F9FAFB" }}>
         {imageUrl ? (
-          <WatermarkedImage
-            src={imageUrl}
-            alt={product.name || "Product"}
-            watermark={productImageWatermark}
-            className="h-full w-full"
-            imgClassName="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-            imgStyle={{ height: "100%", objectFit: "cover" }}
-          />
+          <div className="relative h-full w-full">
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                hoverImageUrl ? "group-hover:opacity-0" : ""
+              }`}
+            >
+              <WatermarkedImage
+                src={imageUrl}
+                alt={product.name || "Product"}
+                watermark={productImageWatermark}
+                className="h-full w-full"
+                imgClassName={`h-full w-full object-cover transition-transform duration-300 ${
+                  hoverImageUrl ? "" : "group-hover:scale-[1.02]"
+                }`}
+                imgStyle={{ height: "100%", objectFit: "cover" }}
+              />
+            </div>
+            {hoverImageUrl ? (
+              <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <WatermarkedImage
+                  src={hoverImageUrl}
+                  alt=""
+                  watermark={productImageWatermark}
+                  className="h-full w-full"
+                  imgClassName="h-full w-full object-cover"
+                  imgStyle={{ height: "100%", objectFit: "cover" }}
+                />
+              </div>
+            ) : null}
+          </div>
         ) : (
           <div className="flex h-full items-center justify-center text-3xl text-[#D1D5DB]">—</div>
         )}
@@ -206,9 +245,51 @@ export function ProductCard({ product, compact = false }) {
         </div>
 
         {badgeConfig.showCodBadge ? (
-          <p className="mt-2 text-[11px]" style={{ color: badgeConfig.codBadgeColor || "#6B7280" }}>
-            {badgeConfig.codBadgeText}
-          </p>
+          <div
+            className="mt-3 inline-flex max-w-full items-center gap-1.5 px-2.5 py-1"
+            style={{
+              background: "#111111",
+              color: "#FFFFFF",
+              borderRadius: 2,
+            }}
+            title={badgeConfig.codBadgeText || "Cash on delivery"}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+              style={{ flexShrink: 0 }}
+            >
+              <path
+                d="M3 7h11v8H3V7z"
+                stroke="#C41E1E"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M14 10h4l3 3v2h-7v-5z"
+                stroke="#C41E1E"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+              <circle cx="7" cy="17.5" r="1.6" fill="#C41E1E" />
+              <circle cx="17" cy="17.5" r="1.6" fill="#C41E1E" />
+              <path
+                d="M1 9h1.5M1 12h1.5M1 15h1.5"
+                stroke="#C41E1E"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span
+              className="truncate text-[11px] font-bold uppercase tracking-wide"
+              style={{ fontStyle: "italic", letterSpacing: "0.04em" }}
+            >
+              {badgeConfig.codBadgeText || "Cash on delivery"}
+            </span>
+          </div>
         ) : null}
       </div>
     </article>
