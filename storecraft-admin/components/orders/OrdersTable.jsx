@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { orderStatusBadgeClass, paymentStatusBadgeClass } from "@/lib/orderUi";
 import { BulkActionBar } from "./BulkActionBar";
 import { formatAdminPrice } from "@/lib/currency";
-import { getAdminWhatsAppNumber, openWhatsApp } from "@/components/orders/OrderWhatsAppButton";
+import { getAdminWhatsAppNumber, openWhatsAppWithOptionalImage } from "@/components/orders/OrderWhatsAppButton";
 import { buildWhatsAppMessage, resolveTemplate } from "@/lib/whatsappTemplates";
 
 function adminOrderDetailUrl(order) {
@@ -18,14 +18,19 @@ function adminOrderDetailUrl(order) {
   const base =
     typeof window !== "undefined"
       ? window.location.origin
-      : "https://storecraft-admin-beta.vercel.app";
-  return orderId ? `${String(base).replace(/\/$/, "")}/orders/${orderId}` : "";
+      : process.env.NEXT_PUBLIC_APP_URL || "";
+  if (!base || !orderId) return "";
+  return `${String(base).replace(/\/$/, "")}/orders/${orderId}`;
 }
 
-function buildAdminOrderNotifyVariables(order) {
+function buildAdminOrderNotifyVariables(order, extras = {}) {
   const addr = order?.shippingAddress || {};
   const items = Array.isArray(order?.items) ? order.items : [];
   const total = Number(order?.pricing?.total ?? order?.total ?? 0);
+  const imageBlock = items
+    .filter((i) => i?.image)
+    .map((i) => `🖼️ ${String(i.name || "Item").slice(0, 60)}:\n${i.image}`)
+    .join("\n\n");
   return {
     customerName: String(addr.name ?? "").trim() || "—",
     customerPhone: String(addr.phone ?? "").trim() || "—",
@@ -34,17 +39,20 @@ function buildAdminOrderNotifyVariables(order) {
     province: String(addr.state ?? addr.province ?? "").trim() || "—",
     itemsList:
       items.map((i) => `• ${i.quantity ?? 1}x ${i.name ?? "Item"}`).join("\n") || "—",
+    productImages: imageBlock ? `📸 *Product photos:*\n${imageBlock}` : "",
     total: total.toLocaleString("en-PK"),
     paymentMethod: String(order?.paymentMethod ?? order?.payment?.method ?? "—"),
     address: String(addr.street ?? addr.line1 ?? addr.address ?? "").trim() || "—",
     adminOrderUrl: adminOrderDetailUrl(order),
+    confirmOrderUrl: extras.confirmUrl || adminOrderDetailUrl(order),
+    cancelOrderUrl: extras.cancelUrl || adminOrderDetailUrl(order),
   };
 }
 
-function getAdminNotifyMessage(order, settings) {
+function getAdminNotifyMessage(order, settings, extras = {}) {
   const { enabled, template } = resolveTemplate(settings, "adminNewOrder");
   if (!enabled) return "";
-  return buildWhatsAppMessage(template, buildAdminOrderNotifyVariables(order));
+  return buildWhatsAppMessage(template, buildAdminOrderNotifyVariables(order, extras));
 }
 
 function formatMoney(n) {
@@ -137,16 +145,32 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
           toast.error(json.error || "Could not load order.");
           return;
         }
-        const msg = getAdminNotifyMessage(json.order, settings || {});
+        let extras = {};
+        try {
+          const linkRes = await fetch(`/api/orders/${orderId}/wa-links`, { credentials: "include" });
+          const linkJson = await linkRes.json();
+          if (linkJson.success) {
+            extras = { confirmUrl: linkJson.confirmUrl, cancelUrl: linkJson.cancelUrl };
+          }
+        } catch {
+          /* optional */
+        }
+        const msg = getAdminNotifyMessage(json.order, settings || {}, extras);
         if (!msg) {
           toast.error("Admin new-order WhatsApp template is disabled.");
           return;
         }
-        if (!openWhatsApp(adminPhone, msg)) {
+        const imageUrls = (json.order.items || []).map((i) => i.image).filter(Boolean);
+        const result = await openWhatsAppWithOptionalImage(adminPhone, msg, imageUrls);
+        if (!result.ok) {
           toast.error("Could not open WhatsApp.");
           return;
         }
-        toast.success("WhatsApp opened for admin.");
+        toast.success(
+          result.mode === "share"
+            ? "Shared with product photo."
+            : "WhatsApp opened — use Confirm/Cancel links in the message."
+        );
       } catch {
         toast.error("Network error.");
       } finally {

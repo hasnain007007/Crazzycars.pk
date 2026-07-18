@@ -69,17 +69,20 @@ const settingsSchema = new mongoose.Schema(
         type: String,
         default: "Free delivery on orders over Rs. 2,999",
       },
-      freeShippingOnAdvancePayment: { type: Boolean, default: true },
+      freeShippingOnAdvancePayment: { type: Boolean, default: false },
       freeShippingOnOrderAbove: { type: Number, default: 10000 },
-      freeShippingOnOrderAboveEnabled: { type: Boolean, default: true },
+      freeShippingOnOrderAboveEnabled: { type: Boolean, default: false },
       advancePaymentMessage: {
         type: String,
         default:
-          "To confirm your order, please pay at least Rs. 500 in advance as delivery charges paid to TCS courier. Send payment screenshot on WhatsApp to confirm.",
+          "To confirm your order, please pay delivery charges of {amount} in advance.\n\nSend payment screenshot on WhatsApp: {whatsapp}",
       },
-      advancePaymentAmount: { type: Number, default: 500 },
+      advancePaymentAmount: { type: Number, default: 250 },
       advancePaymentMessageEnabled: { type: Boolean, default: true },
       advancePaymentMessageTitle: { type: String, default: "Confirm Your Order" },
+      advancePaymentDiscountEnabled: { type: Boolean, default: true },
+      advancePaymentDiscountPercent: { type: Number, default: 3 },
+      flatDeliveryCharge: { type: Number, default: 250 },
     },
     courier: {
       defaultCourier: { type: String, default: "Postex" },
@@ -152,8 +155,10 @@ const settingsSchema = new mongoose.Schema(
       meezan: {
         enabled: { type: Boolean, default: false },
         label: { type: String, default: "Meezan Bank" },
+        bankName: { type: String, default: "Meezan Bank" },
         accountNumber: { type: String, default: "" },
         accountTitle: { type: String, default: "" },
+        iban: { type: String, default: "" },
         icon: { type: String, default: "meezan" },
       },
       ubl: {
@@ -201,7 +206,7 @@ const settingsSchema = new mongoose.Schema(
         paragraph1: {
           type: String,
           default:
-            `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Sialkot, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
+            `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
         },
         paragraph2: {
           type: String,
@@ -363,12 +368,23 @@ Thank you for shopping with Crazzycars.pk! 🚗✨`,
 🛍️ Items:
 {itemsList}
 
+{productImages}
+
 💰 Total: *Rs. {total}*
 💳 Payment: {paymentMethod}
 
 📍 Address: {address}, {city}
 
-🔗 View order in admin: {adminOrderUrl}`,
+🔗 View order: {adminOrderUrl}
+
+————————————
+📋 *Quick action (tap a link):*
+✅ Confirm order: {confirmOrderUrl}
+❌ Cancel order: {cancelOrderUrl}
+
+Or reply here:
+1️⃣ CONFIRM
+2️⃣ CANCEL`,
         },
       },
       orderShipped: {
@@ -475,10 +491,10 @@ Thank you! 🚗✨`,
       description: {
         type: String,
         default:
-          "Crazzycars.pk was founded in Sialkot to bring premium seat covers, floor mats, steering wraps, and car care products to drivers across Pakistan — with COD nationwide.",
+          "Crazzycars.pk was founded in Gujranwala to bring premium seat covers, floor mats, steering wraps, and car care products to drivers across Pakistan — with COD nationwide.",
       },
       buttonText: { type: String, default: "Shop Car Accessories" },
-      buttonLink: { type: String, default: "/about-us" },
+      buttonLink: { type: String, default: "/about" },
       image1: { type: String, default: "" },
       image2: { type: String, default: "" },
       stats: [
@@ -639,7 +655,7 @@ Thank you! 🚗✨`,
       companyName: { type: String, default: "Crazzycars.pk" },
       companyNumber: { type: String, default: "" },
       vatNumber: { type: String, default: "" },
-      registeredAddress: { type: String, default: "Sialkot, Punjab, Pakistan" },
+      registeredAddress: { type: String, default: "Gujranwala, Punjab, Pakistan" },
       trustpilotUrl: { type: String, default: "" },
       shopLinks: [
         {

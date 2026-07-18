@@ -43,12 +43,23 @@ Thank you for shopping with Crazzycars.pk! 🚗✨`,
 🛍️ Items:
 {itemsList}
 
+{productImages}
+
 💰 Total: *Rs. {total}*
 💳 Payment: {paymentMethod}
 
 📍 Address: {address}, {city}
 
-🔗 View order in admin: {adminOrderUrl}`,
+🔗 View order: {adminOrderUrl}
+
+————————————
+📋 *Quick action (tap a link):*
+✅ Confirm order: {confirmOrderUrl}
+❌ Cancel order: {cancelOrderUrl}
+
+Or reply here:
+1️⃣ CONFIRM
+2️⃣ CANCEL`,
   },
   orderShipped: {
     enabled: true,
@@ -105,6 +116,19 @@ function formatItemsList(order) {
   const items = Array.isArray(order?.items) ? order.items : [];
   if (!items.length) return "—";
   return items.map((i) => `• ${i.quantity}x ${i.name}`).join("\n");
+}
+
+function formatProductImages(order) {
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const lines = [];
+  items.forEach((i, idx) => {
+    const url = String(i?.image || "").trim();
+    if (!url) return;
+    const label = String(i?.name || `Item ${idx + 1}`).slice(0, 60);
+    lines.push(`🖼️ ${label}:\n${url}`);
+  });
+  if (!lines.length) return "";
+  return `📸 *Product photos:*\n${lines.join("\n\n")}`;
 }
 
 function paymentMethodLabel(order) {
@@ -194,7 +218,7 @@ export function buildCustomerOrderVariables(order, settings = {}) {
   };
 }
 
-export function buildAdminNewOrderVariables(order, settings = {}) {
+export function buildAdminNewOrderVariables(order, settings = {}, extras = {}) {
   const addr = order?.shippingAddress || {};
   const total = Number(order?.pricing?.total ?? order?.total ?? 0);
   const base =
@@ -211,10 +235,13 @@ export function buildAdminNewOrderVariables(order, settings = {}) {
     city: String(addr.city || "").trim() || "—",
     province: String(addr.province || addr.state || "").trim() || "—",
     itemsList: formatItemsList(order),
+    productImages: formatProductImages(order) || String(extras.productImages || ""),
     total: total.toLocaleString("en-PK"),
     paymentMethod: paymentMethodLabel(order),
     address: [addr.street, addr.line1, addr.address].filter(Boolean).join(" ").trim() || "—",
     adminOrderUrl,
+    confirmOrderUrl: String(extras.confirmOrderUrl || extras.confirmUrl || adminOrderUrl),
+    cancelOrderUrl: String(extras.cancelOrderUrl || extras.cancelUrl || adminOrderUrl),
   };
 }
 
@@ -246,10 +273,10 @@ export function getCustomerOrderWhatsAppMessage(order, settings) {
   return buildWhatsAppMessage(template, buildCustomerOrderVariables(order, settings));
 }
 
-export function getAdminNewOrderWhatsAppMessage(order, settings) {
+export function getAdminNewOrderWhatsAppMessage(order, settings, extras = {}) {
   const { enabled, template } = resolveTemplate(settings, "adminNewOrder");
   if (!enabled) return "";
-  return buildWhatsAppMessage(template, buildAdminNewOrderVariables(order, settings));
+  return buildWhatsAppMessage(template, buildAdminNewOrderVariables(order, settings, extras));
 }
 
 export function getOrderShippedWhatsAppMessage(order, settings, overrides = {}) {

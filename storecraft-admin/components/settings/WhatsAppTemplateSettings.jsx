@@ -43,10 +43,13 @@ const TEMPLATE_CONFIG = [
       "city",
       "province",
       "itemsList",
+      "productImages",
       "total",
       "paymentMethod",
       "address",
       "adminOrderUrl",
+      "confirmOrderUrl",
+      "cancelOrderUrl",
     ],
   },
   {

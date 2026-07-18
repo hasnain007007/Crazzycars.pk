@@ -22,6 +22,7 @@ import {
   getAdminWhatsAppNumber,
   getCustomerOrderPhone,
   openWhatsApp,
+  openWhatsAppWithOptionalImage,
   OrderWhatsAppButton,
 } from "@/components/orders/OrderWhatsAppButton";
 import { formatAdminPrice } from "@/lib/currency";
@@ -43,10 +44,14 @@ function adminOrderDetailUrl(order) {
   return `${String(base).replace(/\/$/, "")}/orders/${orderId}`;
 }
 
-function buildAdminOrderNotifyVariables(order) {
+function buildAdminOrderNotifyVariables(order, extras = {}) {
   const addr = order?.shippingAddress || {};
   const items = Array.isArray(order?.items) ? order.items : [];
   const total = Number(order?.pricing?.total ?? order?.total ?? 0);
+  const imageBlock = items
+    .filter((i) => i?.image)
+    .map((i) => `🖼️ ${String(i.name || "Item").slice(0, 60)}:\n${i.image}`)
+    .join("\n\n");
   return {
     customerName: String(addr.name ?? "").trim() || "—",
     customerPhone: String(addr.phone ?? "").trim() || "—",
@@ -55,17 +60,20 @@ function buildAdminOrderNotifyVariables(order) {
     province: String(addr.state ?? addr.province ?? "").trim() || "—",
     itemsList:
       items.map((i) => `• ${i.quantity ?? 1}x ${i.name ?? "Item"}`).join("\n") || "—",
+    productImages: imageBlock ? `📸 *Product photos:*\n${imageBlock}` : "",
     total: total.toLocaleString("en-PK"),
     paymentMethod: String(order?.paymentMethod ?? order?.payment?.method ?? "—"),
     address: String(addr.street ?? addr.line1 ?? addr.address ?? "").trim() || "—",
     adminOrderUrl: adminOrderDetailUrl(order),
+    confirmOrderUrl: extras.confirmUrl || adminOrderDetailUrl(order),
+    cancelOrderUrl: extras.cancelUrl || adminOrderDetailUrl(order),
   };
 }
 
-function getAdminNotifyMessage(order, settings) {
+function getAdminNotifyMessage(order, settings, extras = {}) {
   const { enabled, template } = resolveTemplate(settings, "adminNewOrder");
   if (!enabled) return "";
-  return buildWhatsAppMessage(template, buildAdminOrderNotifyVariables(order));
+  return buildWhatsAppMessage(template, buildAdminOrderNotifyVariables(order, extras));
 }
 
 function adminNotifyStorageKey(orderId) {
@@ -902,19 +910,37 @@ export function OrderDetail({ orderId }) {
   }, [order]);
 
   const notifyAdminOnWhatsApp = useCallback(
-    (isAuto = false) => {
+    async (isAuto = false) => {
       if (!order) return false;
       const adminPhone = getAdminWhatsAppNumber(settings);
       if (!adminPhone) {
         if (!isAuto) toast.error("Set WhatsApp number in Settings → WhatsApp.");
         return false;
       }
-      const msg = getAdminNotifyMessage(order, settings || {});
+
+      let extras = {};
+      try {
+        const res = await fetch(`/api/orders/${order.id}/wa-links`, { credentials: "include" });
+        const json = await res.json();
+        if (json.success) {
+          extras = {
+            confirmUrl: json.confirmUrl,
+            cancelUrl: json.cancelUrl,
+          };
+        }
+      } catch {
+        /* links optional */
+      }
+
+      const msg = getAdminNotifyMessage(order, settings || {}, extras);
       if (!msg) {
         if (!isAuto) toast.error("Admin new-order WhatsApp template is disabled.");
         return false;
       }
-      if (!openWhatsApp(adminPhone, msg)) {
+
+      const imageUrls = (order.items || []).map((i) => i.image).filter(Boolean);
+      const result = await openWhatsAppWithOptionalImage(adminPhone, msg, imageUrls);
+      if (!result.ok) {
         if (!isAuto) toast.error("Could not open WhatsApp.");
         return false;
       }
@@ -924,7 +950,13 @@ export function OrderDetail({ orderId }) {
         /* ignore */
       }
       setAdminNotifiedSession(true);
-      if (!isAuto) toast.success("WhatsApp opened for admin notification.");
+      if (!isAuto) {
+        toast.success(
+          result.mode === "share"
+            ? "Shared to WhatsApp with product photo (if supported)."
+            : "WhatsApp opened — tap Confirm/Cancel links in the message."
+        );
+      }
       return true;
     },
     [order, settings]

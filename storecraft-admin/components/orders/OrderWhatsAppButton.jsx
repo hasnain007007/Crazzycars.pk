@@ -29,6 +29,35 @@ export function openWhatsApp(phone, message) {
   return true;
 }
 
+/**
+ * Prefer sharing text + first product image when the device supports it (mobile).
+ * Falls back to wa.me text link (cannot attach media via URL).
+ */
+export async function openWhatsAppWithOptionalImage(phone, message, imageUrls = []) {
+  const firstImage = (Array.isArray(imageUrls) ? imageUrls : []).map(String).map((s) => s.trim()).find(Boolean);
+  if (firstImage && typeof navigator !== "undefined" && navigator.share && navigator.canShare) {
+    try {
+      const res = await fetch(firstImage, { mode: "cors" });
+      if (res.ok) {
+        const blob = await res.blob();
+        const ext = blob.type.includes("png") ? "png" : "jpg";
+        const file = new File([blob], `order-product.${ext}`, { type: blob.type || "image/jpeg" });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            text: message,
+            files: [file],
+          });
+          return { ok: true, mode: "share" };
+        }
+      }
+    } catch {
+      /* fall through to wa.me */
+    }
+  }
+  const ok = openWhatsApp(phone, message);
+  return { ok, mode: ok ? "wa-link" : "failed" };
+}
+
 /** Admin/store WhatsApp from Settings → WhatsApp (never hardcode). */
 export function getAdminWhatsAppNumber(settings) {
   return String(settings?.whatsapp?.number ?? "").trim();
@@ -226,10 +255,9 @@ export function OrderAdminWhatsAppButton({ order, settings: settingsProp }) {
   }, [settingsProp]);
 
   const adminPhoneRaw = getAdminWhatsAppNumber(settings);
-  const msg = order ? getAdminNewOrderWhatsAppMessage(order, settings || {}) : "";
-  const adminWaUrl = buildWaLink(adminPhoneRaw, msg);
+  const [sending, setSending] = useState(false);
 
-  if (!adminWaUrl) {
+  if (!adminPhoneRaw) {
     return (
       <button
         type="button"
@@ -251,14 +279,38 @@ export function OrderAdminWhatsAppButton({ order, settings: settingsProp }) {
     );
   }
 
-  if (!msg) {
+  async function sendAdminAlert() {
+    if (!order) return;
+    setSending(true);
+    try {
+      let extras = {};
+      const orderId = order.id || order._id;
+      if (orderId) {
+        const res = await fetch(`/api/orders/${orderId}/wa-links`, { credentials: "include" });
+        const json = await res.json();
+        if (json.success) {
+          extras = { confirmUrl: json.confirmUrl, cancelUrl: json.cancelUrl };
+        }
+      }
+      const msg = getAdminNewOrderWhatsAppMessage(order, settings || {}, extras);
+      if (!msg) return;
+      const images = (order.items || []).map((i) => i.image).filter(Boolean);
+      await openWhatsAppWithOptionalImage(adminPhoneRaw, msg, images);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const previewMsg = order ? getAdminNewOrderWhatsAppMessage(order, settings || {}) : "";
+  if (!previewMsg) {
     return null;
   }
 
   return (
     <button
       type="button"
-      onClick={() => openWhatsApp(adminPhoneRaw, msg)}
+      onClick={sendAdminAlert}
+      disabled={sending}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -271,7 +323,8 @@ export function OrderAdminWhatsAppButton({ order, settings: settingsProp }) {
         borderRadius: 6,
         fontSize: 13,
         fontWeight: 600,
-        cursor: "pointer",
+        cursor: sending ? "wait" : "pointer",
+        opacity: sending ? 0.7 : 1,
       }}
     >
       WhatsApp Admin Alert
