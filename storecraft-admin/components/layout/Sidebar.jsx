@@ -27,7 +27,7 @@ const NAV = [
     label: "SALES",
     items: [
       { href: "/orders", label: "Orders", icon: "cart" },
-      { href: "/orders/new", label: "New Invoice", icon: "invoice" },
+      { href: "/invoices", label: "Invoices", icon: "invoice" },
       { href: "/customers", label: "Customers", icon: "users" },
       { href: "/coupons", label: "Coupons", icon: "tag" },
     ],
@@ -232,6 +232,19 @@ function Icon({ name }) {
 
 function isActive(pathname, href) {
   if (href === "/dashboard") return pathname === "/dashboard";
+
+  // Orders: list + /orders/[id] only — never /orders/new (invoice flow)
+  if (href === "/orders") {
+    if (pathname === "/orders") return true;
+    if (pathname.startsWith("/orders/new")) return false;
+    return /^\/orders\/[^/]+$/.test(pathname);
+  }
+
+  // Invoices: list + /invoices/new + detail
+  if (href === "/invoices") {
+    return pathname === "/invoices" || pathname.startsWith("/invoices/");
+  }
+
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

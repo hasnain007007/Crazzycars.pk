@@ -1,8 +1,6 @@
-/**
- * Create walk-in sale / invoice from admin catalog.
- */
-import { CreateInvoiceForm } from "@/components/orders/CreateInvoiceForm";
+import { redirect } from "next/navigation";
 
-export default function NewInvoicePage() {
-  return <CreateInvoiceForm />;
+/** Old path — invoices are no longer orders. */
+export default function OrdersNewRedirect() {
+  redirect("/invoices/new");
 }

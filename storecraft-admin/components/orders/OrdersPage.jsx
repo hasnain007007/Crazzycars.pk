@@ -3,7 +3,6 @@
  */
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { OrderFilters } from "./OrderFilters";
 import { OrdersTable } from "./OrdersTable";
@@ -96,12 +95,6 @@ export function OrdersPage() {
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{total} orders match filters</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link
-            href="/orders/new"
-            className="shrink-0 rounded-lg bg-[#1A7A4C] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#15663f]"
-          >
-            + New invoice
-          </Link>
           <button
             type="button"
             onClick={exportCsv}

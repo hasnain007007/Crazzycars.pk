@@ -119,7 +119,7 @@ export function invoiceInnerHtml(order, options = {}) {
             <div style="font-size:12px;color:#555;margin-top:4px;">Invoice</div>
           </div>
         <div style="text-align:right;font-size:13px;">
-          <div style="font-family:monospace;font-weight:700;">${esc(order.orderNumber)}</div>
+          <div style="font-family:monospace;font-weight:700;">${esc(order.invoiceNumber || order.orderNumber)}</div>
           <div style="color:#555;">${order.createdAt ? esc(new Date(order.createdAt).toLocaleString()) : "—"}</div>
         </div>
         </div>
