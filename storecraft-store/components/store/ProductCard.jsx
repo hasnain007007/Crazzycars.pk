@@ -243,54 +243,6 @@ export function ProductCard({ product, compact = false }) {
             </>
           ) : null}
         </div>
-
-        {badgeConfig.showCodBadge ? (
-          <div
-            className="mt-3 inline-flex max-w-full items-center gap-1.5 px-2.5 py-1"
-            style={{
-              background: "#111111",
-              color: "#FFFFFF",
-              borderRadius: 2,
-            }}
-            title={badgeConfig.codBadgeText || "Cash on delivery"}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden
-              style={{ flexShrink: 0 }}
-            >
-              <path
-                d="M3 7h11v8H3V7z"
-                stroke="#C41E1E"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M14 10h4l3 3v2h-7v-5z"
-                stroke="#C41E1E"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              />
-              <circle cx="7" cy="17.5" r="1.6" fill="#C41E1E" />
-              <circle cx="17" cy="17.5" r="1.6" fill="#C41E1E" />
-              <path
-                d="M1 9h1.5M1 12h1.5M1 15h1.5"
-                stroke="#C41E1E"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span
-              className="truncate text-[11px] font-bold uppercase tracking-wide"
-              style={{ fontStyle: "italic", letterSpacing: "0.04em" }}
-            >
-              {badgeConfig.codBadgeText || "Cash on delivery"}
-            </span>
-          </div>
-        ) : null}
       </div>
     </article>
   );
