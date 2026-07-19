@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
+import { invoiceInnerHtml } from "@/components/orders/printOrderDocuments";
 
 export function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
@@ -19,6 +20,7 @@ export function InvoicesPage() {
   const [debounced, setDebounced] = useState("");
   const [loading, setLoading] = useState(true);
   const [storeMeta, setStoreMeta] = useState(null);
+  const [previewInv, setPreviewInv] = useState(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
@@ -142,13 +144,22 @@ export function InvoicesPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3">
-                      <button
-                        type="button"
-                        onClick={() => printPdf(inv)}
-                        className="text-xs font-semibold text-[#1A7A4C] hover:underline"
-                      >
-                        Download PDF
-                      </button>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewInv(inv)}
+                          className="text-xs font-semibold text-slate-700 hover:underline dark:text-slate-200"
+                        >
+                          Preview
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => printPdf(inv)}
+                          className="text-xs font-semibold text-[#1A7A4C] hover:underline"
+                        >
+                          Download PDF
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -179,6 +190,44 @@ export function InvoicesPage() {
           >
             Next
           </button>
+        </div>
+      ) : null}
+
+      {previewInv ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-900">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Preview · {previewInv.invoiceNumber}
+                </h2>
+                <p className="text-xs text-slate-400">Professional invoice layout</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => printPdf(previewInv)}
+                  className="rounded-lg bg-[#1A7A4C] px-3 py-1.5 text-xs font-bold text-white"
+                >
+                  Download PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewInv(null)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold dark:border-slate-600"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            <iframe
+              title={`Preview ${previewInv.invoiceNumber}`}
+              className="min-h-0 flex-1 w-full bg-white"
+              style={{ height: "75vh" }}
+              sandbox=""
+              srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:ui-sans-serif,system-ui,sans-serif;margin:0;padding:20px;background:#fff}</style></head><body>${invoiceInnerHtml(previewInv, storeMeta || {})}</body></html>`}
+            />
+          </div>
         </div>
       ) : null}
     </div>

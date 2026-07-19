@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
+import { invoiceInnerHtml } from "@/components/orders/printOrderDocuments";
 
 function lineTotal(qty, unitPrice) {
   return Math.round(Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0) * 100) / 100;
@@ -222,7 +223,7 @@ export function CreateInvoiceForm() {
       return;
     }
     if (!lines.length) {
-      toast.error("Add at least one product from the catalog.");
+      toast.error("Add at least one item (catalog or manual).");
       return;
     }
 
@@ -273,6 +274,68 @@ export function CreateInvoiceForm() {
   }
 
   const hasMore = catalog.length < catalogTotal;
+
+  const previewDraft = useMemo(() => {
+    const method = paymentMethod === "card" ? "bankTransfer" : paymentMethod;
+    return {
+      invoiceNumber: "PREVIEW",
+      createdAt: new Date().toISOString(),
+      customer: {
+        name: customer.name.trim() || "Customer name",
+        phone: customer.phone.trim() || "—",
+        email: customer.email.trim(),
+      },
+      shippingAddress: {
+        name: customer.name.trim(),
+        phone: customer.phone.trim(),
+        email: customer.email.trim(),
+        street: customer.address.trim(),
+        city: customer.city.trim(),
+        country: "Pakistan",
+      },
+      billingAddress: {
+        street: customer.address.trim(),
+        city: customer.city.trim(),
+        country: "Pakistan",
+      },
+      items: lines.map((line) => ({
+        name: line.name,
+        variation: line.variation || "",
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+        total: lineTotal(line.quantity, line.unitPrice),
+      })),
+      pricing: {
+        subtotal,
+        discount: discountNum,
+        shippingCost: shipNum,
+        total,
+      },
+      paymentMethod: method,
+      paymentStatus,
+      note: note.trim(),
+      currency: storeMeta?.currency || "PKR",
+    };
+  }, [
+    customer,
+    lines,
+    subtotal,
+    discountNum,
+    shipNum,
+    total,
+    paymentMethod,
+    paymentStatus,
+    note,
+    storeMeta?.currency,
+  ]);
+
+  const previewSrcDoc = useMemo(() => {
+    const body = invoiceInnerHtml(previewDraft, storeMeta || {});
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+      <style>
+        body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background: #fff; color: #111; }
+      </style></head><body>${body}</body></html>`;
+  }, [previewDraft, storeMeta]);
 
   return (
     <>
@@ -653,6 +716,40 @@ export function CreateInvoiceForm() {
                 {saving ? "Saving…" : "Save invoice"}
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Live professional preview */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Invoice preview</h2>
+              <p className="text-xs text-slate-400">
+                Live preview with your logo and store details — updates as you edit.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  downloadInvoicePdf(previewDraft, storeMeta || {});
+                  toast.success("Print dialog opened — choose “Save as PDF” to test.");
+                } catch {
+                  toast.error("Could not open preview print.");
+                }
+              }}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200"
+            >
+              Print preview
+            </button>
+          </div>
+          <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-950">
+            <iframe
+              title="Invoice preview"
+              srcDoc={previewSrcDoc}
+              className="h-[720px] w-full bg-white"
+              sandbox=""
+            />
           </div>
         </div>
       </form>
