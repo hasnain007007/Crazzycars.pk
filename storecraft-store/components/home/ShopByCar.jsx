@@ -1,15 +1,16 @@
 "use client";
 
 /**
- * Find Parts For Your Car — cascading Make → Model → Year via /api/vehicles/*.
+ * Find Parts For Your Car — cascading Make → Model → Year from Car Catalog
+ * (admin → Car Catalog), not product Categories.
  */
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const YEAR_START = 2006;
-const YEAR_END = 2026;
+const YEAR_END = new Date().getFullYear() + 1;
 
-function yearOptions() {
+function yearOptionsFallback() {
   const ys = [];
   for (let y = YEAR_END; y >= YEAR_START; y--) ys.push(y);
   return ys;
@@ -18,67 +19,93 @@ function yearOptions() {
 export default function ShopByCar({ title = "Find Parts For Your Car" }) {
   const router = useRouter();
   const [makes, setMakes] = useState([]);
-  const [models, setModels] = useState([]);
+  const [carData, setCarData] = useState({});
   const [make, setMake] = useState("");
-  const [model, setModel] = useState("");
+  const [modelSlug, setModelSlug] = useState("");
   const [year, setYear] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const years = useMemo(() => yearOptions(), []);
-
   useEffect(() => {
-    fetch("/api/vehicles/makes", { cache: "no-store" })
+    fetch("/api/car-catalog", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
-        const list = data?.makes || data?.data || [];
-        setMakes(Array.isArray(list) ? list : []);
+        setMakes(Array.isArray(data?.makes) ? data.makes : []);
+        setCarData(data?.carData && typeof data.carData === "object" ? data.carData : {});
       })
-      .catch(() => setMakes([]));
+      .catch(() => {
+        setMakes([]);
+        setCarData({});
+      });
   }, []);
 
+  const models = useMemo(() => {
+    if (!make) return [];
+    return Array.isArray(carData[make]) ? carData[make] : [];
+  }, [carData, make]);
+
+  const selectedModel = useMemo(
+    () => models.find((m) => m.slug === modelSlug) || null,
+    [models, modelSlug]
+  );
+
+  const years = useMemo(() => {
+    if (selectedModel?.years?.length) {
+      return [...selectedModel.years].sort((a, b) => b - a);
+    }
+    if (selectedModel?.yearFrom) {
+      const from = selectedModel.yearFrom;
+      const to = selectedModel.yearTo || YEAR_END;
+      const ys = [];
+      for (let y = to; y >= from; y--) ys.push(y);
+      return ys;
+    }
+    return yearOptionsFallback();
+  }, [selectedModel]);
+
   useEffect(() => {
-    setModel("");
+    setModelSlug("");
     setYear("");
-    setModels([]);
-    if (!make) return;
-    fetch(`/api/vehicles/models?make=${encodeURIComponent(make)}`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data) => {
-        const list = data?.models || data?.data || [];
-        setModels(Array.isArray(list) ? list : []);
-      })
-      .catch(() => setModels([]));
   }, [make]);
+
+  useEffect(() => {
+    setYear("");
+  }, [modelSlug]);
 
   const onSubmit = useCallback(
     async (e) => {
       e.preventDefault();
       setError("");
-      if (!make || !model || !year) {
-        setError("Select make, model and year.");
+      if (!make || !modelSlug) {
+        setError("Select make and model.");
         return;
       }
       setLoading(true);
       try {
-        const res = await fetch(
-          `/api/vehicles/find?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&year=${encodeURIComponent(year)}`,
-          { cache: "no-store" }
-        );
-        const json = await res.json();
-        const vehicle = json?.vehicle || json?.data;
-        if (!res.ok || !vehicle?.slug) {
-          setError(json?.error || "No matching generation for that year.");
-          return;
+        // Prefer SEO vehicle page when slug matches Vehicle collection
+        const findUrl = selectedModel
+          ? `/api/vehicles/find?make=${encodeURIComponent(make)}&model=${encodeURIComponent(selectedModel.model || selectedModel.name || "")}&year=${encodeURIComponent(year || selectedModel.yearFrom || YEAR_END)}`
+          : null;
+
+        if (findUrl && year) {
+          const res = await fetch(findUrl, { cache: "no-store" });
+          const json = await res.json();
+          const vehicle = json?.vehicle || json?.data;
+          if (res.ok && vehicle?.slug) {
+            router.push(`/cars/${vehicle.slug}`);
+            return;
+          }
         }
-        router.push(`/cars/${vehicle.slug}`);
+
+        // Fall back to catalog model slug (same as seeded vehicle slug)
+        router.push(`/cars/${modelSlug}${year ? `?year=${year}` : ""}`);
       } catch {
-        setError("Could not find that vehicle. Try again.");
+        setError("Could not open that car. Try again.");
       } finally {
         setLoading(false);
       }
     },
-    [make, model, year, router]
+    [make, modelSlug, year, selectedModel, router]
   );
 
   const selectClass =
@@ -92,7 +119,7 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
         </h2>
         <div className="mx-auto mt-2 h-[3px] w-12 bg-[#C41E1E]" />
         <p className="mx-auto mt-3 max-w-xl text-center text-sm text-[#6B7280]">
-          Select your car to see accessories that fit — Cash on Delivery nationwide.
+          Select your car from the Car Catalog — Cash on Delivery nationwide.
         </p>
 
         <form
@@ -115,15 +142,16 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
 
           <select
             className={selectClass}
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
+            value={modelSlug}
+            onChange={(e) => setModelSlug(e.target.value)}
             disabled={!make}
             aria-label="Select model"
           >
             <option value="">Select Model</option>
             {models.map((m) => (
-              <option key={m} value={m}>
-                {m}
+              <option key={m.slug} value={m.slug}>
+                {m.nickname || m.generation || m.model}
+                {m.yearFrom ? ` (${m.yearFrom}–${m.yearTo || "Present"})` : ""}
               </option>
             ))}
           </select>
@@ -132,7 +160,7 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
             className={selectClass}
             value={year}
             onChange={(e) => setYear(e.target.value)}
-            disabled={!model}
+            disabled={!modelSlug}
             aria-label="Select year"
           >
             <option value="">Select Year</option>

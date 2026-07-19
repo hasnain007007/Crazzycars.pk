@@ -4,33 +4,69 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-/** Shop By Your Vehicle — group GET /api/vehicles by make */
+/**
+ * Shop By Your Vehicle — fed by Car Catalog (admin → Car Catalog), not product Categories.
+ */
 export default function ShopByVehicle() {
-  const [vehicles, setVehicles] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeMake, setActiveMake] = useState("");
 
   useEffect(() => {
-    fetch("/api/vehicles", { cache: "no-store" })
+    fetch("/api/car-catalog", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
-        const list = data?.vehicles || data?.data || [];
-        setVehicles(Array.isArray(list) ? list : []);
+        const popular = Array.isArray(data?.popular) ? data.popular : [];
+        if (popular.length) {
+          setItems(
+            popular.map((p) => ({
+              make: p.make,
+              model: p.nickname || p.generation || p.model,
+              slug: p.slug,
+              yearFrom: p.yearFrom,
+              yearTo: p.yearTo,
+              image: p.image || "",
+              href: `/cars/${p.slug}`,
+            }))
+          );
+          return;
+        }
+        // Flatten all catalog models if none marked popular
+        const carData = data?.carData || {};
+        const flat = [];
+        for (const [make, models] of Object.entries(carData)) {
+          for (const m of models || []) {
+            flat.push({
+              make,
+              model: m.nickname || m.generation || m.model,
+              slug: m.slug,
+              yearFrom: m.yearFrom,
+              yearTo: m.yearTo,
+              image: m.image || "",
+              href: `/cars/${m.slug}`,
+            });
+          }
+        }
+        setItems(flat);
       })
-      .catch(() => setVehicles([]))
+      .catch(() => setItems([]))
       .finally(() => setLoading(false));
   }, []);
 
   const byMake = useMemo(() => {
     const map = new Map();
-    for (const v of vehicles) {
+    for (const v of items) {
       const make = v.make || "Other";
       if (!map.has(make)) map.set(make, []);
       map.get(make).push(v);
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [vehicles]);
+  }, [items]);
 
-  const flat = useMemo(() => vehicles.slice(0, 24), [vehicles]);
+  const visible = useMemo(() => {
+    if (!activeMake) return items;
+    return items.filter((i) => i.make === activeMake);
+  }, [items, activeMake]);
 
   return (
     <section className="homepage-section bg-white py-12 md:py-20">
@@ -41,13 +77,28 @@ export default function ShopByVehicle() {
 
         {!loading && byMake.length > 0 ? (
           <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveMake("")}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                !activeMake ? "border-[#C41E1E] bg-[#C41E1E] text-white" : "border-[#E5E7EB] bg-[#FAFAFA] text-[#374151]"
+              }`}
+            >
+              All · {items.length}
+            </button>
             {byMake.map(([make, list]) => (
-              <span
+              <button
                 key={make}
-                className="rounded-full border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-1 text-xs font-semibold text-[#374151]"
+                type="button"
+                onClick={() => setActiveMake(make)}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                  activeMake === make
+                    ? "border-[#C41E1E] bg-[#C41E1E] text-white"
+                    : "border-[#E5E7EB] bg-[#FAFAFA] text-[#374151]"
+                }`}
               >
                 {make} · {list.length}
-              </span>
+              </button>
             ))}
           </div>
         ) : null}
@@ -57,17 +108,17 @@ export default function ShopByVehicle() {
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="h-[300px] w-[240px] shrink-0 animate-pulse rounded-xl bg-[#F3F4F6] sm:w-auto" />
               ))
-            : flat.map((v) => (
+            : visible.map((v) => (
                 <Link
-                  key={String(v._id || v.slug)}
-                  href={`/cars/${v.slug}`}
+                  key={`${v.make}-${v.slug}`}
+                  href={v.href}
                   className="group relative h-[300px] w-[240px] shrink-0 overflow-hidden rounded-xl border border-[#E5E7EB] transition-all duration-200 hover:scale-[1.02] hover:border-[#C41E1E] hover:shadow-[0_0_20px_rgba(196,30,30,0.25)] sm:w-auto"
                 >
                   <div className="relative h-[60%] w-full bg-[#111111]">
                     {v.image ? (
                       <Image
                         src={v.image}
-                        alt={v.displayName || `${v.make} ${v.model}`}
+                        alt={`${v.make} ${v.model} accessories`}
                         fill
                         className="object-cover transition-transform duration-200 group-hover:scale-105"
                         sizes="240px"
@@ -78,11 +129,9 @@ export default function ShopByVehicle() {
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 h-[42%] bg-gradient-to-t from-[#111111] to-[#1f1f1f]/90 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#F5A623]">{v.make}</p>
-                    <p className="font-heading text-lg font-bold leading-tight text-white">
-                      {v.generation || v.model}
-                    </p>
+                    <p className="font-heading text-lg font-bold leading-tight text-white">{v.model}</p>
                     <p className="mt-1 text-xs text-[#9CA3AF]">
-                      {v.yearFrom}–{v.yearTo == null ? "Present" : v.yearTo}
+                      {v.yearFrom}–{v.yearTo == null || v.yearTo >= new Date().getFullYear() ? "Present" : v.yearTo}
                     </p>
                     <span className="mt-3 inline-flex rounded bg-[#C41E1E] px-3 py-1 text-xs font-semibold text-white">
                       Shop Now →
