@@ -188,10 +188,10 @@ export function invoiceInnerHtml(order, options = {}) {
         <div style="flex:1;min-width:220px;">
           ${
             logoUrl
-              ? `<img src="${esc(logoUrl)}" alt="${esc(name)}" style="max-height:64px;max-width:200px;object-fit:contain;display:block;" />`
+              ? `<img src="${esc(logoUrl)}" alt="${esc(name)}" style="max-height:96px;max-width:280px;object-fit:contain;display:block;" />`
               : `<div style="font-size:22px;font-weight:800;color:${esc(accent)};">${esc(name)}</div>`
           }
-          ${logoUrl ? `<div style="margin-top:8px;font-size:16px;font-weight:800;">${esc(name)}</div>` : ""}
+          ${logoUrl ? `<div style="margin-top:10px;font-size:16px;font-weight:800;">${esc(name)}</div>` : ""}
           <div style="margin-top:8px;font-size:12px;line-height:1.55;color:#475569;">
             ${companyBits.map((l) => `<div>${esc(l)}</div>`).join("")}
             ${taxBits.length ? `<div style="margin-top:4px;">${taxBits.map(esc).join(" · ")}</div>` : ""}
