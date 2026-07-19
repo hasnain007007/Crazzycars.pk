@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
-import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
+import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
 import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
 
 function lineTotal(qty, unitPrice) {
@@ -242,13 +242,27 @@ export function CreateInvoiceForm() {
     setLines((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  function handlePdfYes() {
+  async function handlePdfYes() {
+    if (savedInvoice) {
+      const toastId = toast.loading("Preparing PDF…");
+      try {
+        await downloadInvoicePdf(savedInvoice, storeMeta || {});
+        toast.success("PDF downloaded.", { id: toastId });
+      } catch {
+        toast.error("Could not download PDF.", { id: toastId });
+      }
+    }
+    setShowPdfPrompt(false);
+    router.push("/invoices");
+  }
+
+  async function handlePdfPrint() {
     if (savedInvoice) {
       try {
-        downloadInvoicePdf(savedInvoice, storeMeta || {});
-        toast.success("Print dialog opened — choose “Save as PDF”.");
+        printInvoice(savedInvoice, storeMeta || {});
+        toast.success("Print dialog opened.");
       } catch {
-        toast.error("Could not open PDF print.");
+        toast.error("Could not print invoice.");
       }
     }
     setShowPdfPrompt(false);
@@ -829,20 +843,37 @@ export function CreateInvoiceForm() {
                 Live preview with your logo and store details — updates as you edit.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                try {
-                  downloadInvoicePdf(previewDraft, storeMeta || {});
-                  toast.success("Print dialog opened — choose “Save as PDF” to test.");
-                } catch {
-                  toast.error("Could not open preview print.");
-                }
-              }}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200"
-            >
-              Print preview
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    printInvoice(previewDraft, storeMeta || {});
+                    toast.success("Print dialog opened.");
+                  } catch {
+                    toast.error("Could not print preview.");
+                  }
+                }}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200"
+              >
+                Print
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const toastId = toast.loading("Preparing PDF…");
+                  try {
+                    await downloadInvoicePdf(previewDraft, storeMeta || {});
+                    toast.success("PDF downloaded.", { id: toastId });
+                  } catch {
+                    toast.error("Could not download PDF.", { id: toastId });
+                  }
+                }}
+                className="rounded-lg bg-[#1A7A4C] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#15663f]"
+              >
+                Download PDF
+              </button>
+            </div>
           </div>
           <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-950">
             <InvoicePreviewFrame
@@ -864,7 +895,7 @@ export function CreateInvoiceForm() {
               Invoices (not Orders). Download PDF now?
             </p>
             <p className="mt-1 text-xs text-slate-400">
-              In the print dialog, choose “Save as PDF” / “Microsoft Print to PDF”.
+              Download saves a PDF file. Print opens your printer dialog.
             </p>
             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
               <button
@@ -873,6 +904,13 @@ export function CreateInvoiceForm() {
                 className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200"
               >
                 Not now
+              </button>
+              <button
+                type="button"
+                onClick={handlePdfPrint}
+                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200"
+              >
+                Print
               </button>
               <button
                 type="button"

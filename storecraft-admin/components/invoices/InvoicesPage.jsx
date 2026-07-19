@@ -9,7 +9,7 @@ import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
-import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
+import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
 import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
 
 export function InvoicesPage() {
@@ -85,12 +85,31 @@ export function InvoicesPage() {
     }
   }
 
-  function printPdf(inv) {
+  async function loadFullInvoice(inv) {
+    const res = await fetch(`/api/invoices/${inv.id}`, { credentials: "include" });
+    const json = await res.json();
+    if (!res.ok || !json.success || !json.invoice) {
+      throw new Error(json.error || "Could not load invoice.");
+    }
+    return json.invoice;
+  }
+
+  function handlePrint(inv) {
     try {
-      downloadInvoicePdf(inv, storeMeta || {});
-      toast.success("Print dialog opened — choose “Save as PDF”.");
+      printInvoice(inv, storeMeta || {});
+      toast.success("Print dialog opened.");
     } catch {
-      toast.error("Could not open PDF.");
+      toast.error("Could not print invoice.");
+    }
+  }
+
+  async function handleDownloadPdf(inv) {
+    const toastId = toast.loading("Preparing PDF…");
+    try {
+      await downloadInvoicePdf(inv, storeMeta || {});
+      toast.success("PDF downloaded.", { id: toastId });
+    } catch {
+      toast.error("Could not download PDF.", { id: toastId });
     }
   }
 
@@ -220,14 +239,24 @@ export function InvoicesPage() {
                           type="button"
                           onClick={async () => {
                             try {
-                              const res = await fetch(`/api/invoices/${inv.id}`, {
-                                credentials: "include",
-                              });
-                              const json = await res.json();
-                              if (json.success) printPdf(json.invoice);
-                              else toast.error("Could not load invoice.");
-                            } catch {
-                              toast.error("Could not open PDF.");
+                              const full = await loadFullInvoice(inv);
+                              handlePrint(full);
+                            } catch (err) {
+                              toast.error(err.message || "Could not print.");
+                            }
+                          }}
+                          className="text-xs font-semibold text-slate-700 hover:underline dark:text-slate-200"
+                        >
+                          Print
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const full = await loadFullInvoice(inv);
+                              await handleDownloadPdf(full);
+                            } catch (err) {
+                              toast.error(err.message || "Could not download PDF.");
                             }
                           }}
                           className="text-xs font-semibold text-[#1A7A4C] hover:underline"
@@ -293,7 +322,14 @@ export function InvoicesPage() {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => printPdf(previewInv)}
+                  onClick={() => handlePrint(previewInv)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold dark:border-slate-600"
+                >
+                  Print
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadPdf(previewInv)}
                   className="rounded-lg bg-[#1A7A4C] px-3 py-1.5 text-xs font-bold text-white"
                 >
                   Download PDF

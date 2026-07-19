@@ -188,7 +188,7 @@ export function invoiceInnerHtml(order, options = {}) {
         <div style="flex:1;min-width:220px;">
           ${
             logoUrl
-              ? `<img src="${esc(logoUrl)}" alt="${esc(name)}" style="height:120px;max-height:120px;max-width:320px;width:auto;object-fit:contain;display:block;" />`
+              ? `<img src="${esc(logoUrl)}" alt="${esc(name)}" crossorigin="anonymous" style="height:120px;max-height:120px;max-width:320px;width:auto;object-fit:contain;display:block;" />`
               : `<div style="font-size:22px;font-weight:800;color:${esc(accent)};">${esc(name)}</div>`
           }
           ${logoUrl ? `<div style="margin-top:10px;font-size:16px;font-weight:800;">${esc(name)}</div>` : ""}

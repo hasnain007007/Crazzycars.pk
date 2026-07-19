@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
-import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
+import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
 import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
 
 function lineTotal(qty, unitPrice) {
@@ -351,12 +351,28 @@ export function EditInvoiceForm() {
             type="button"
             onClick={() => {
               try {
-                downloadInvoicePdf(previewDraft, storeMeta || {});
+                printInvoice(previewDraft, storeMeta || {});
+                toast.success("Print dialog opened.");
               } catch {
                 toast.error("Could not print.");
               }
             }}
             className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-600"
+          >
+            Print
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              const toastId = toast.loading("Preparing PDF…");
+              try {
+                await downloadInvoicePdf(previewDraft, storeMeta || {});
+                toast.success("PDF downloaded.", { id: toastId });
+              } catch {
+                toast.error("Could not download PDF.", { id: toastId });
+              }
+            }}
+            className="rounded-lg bg-[#1A7A4C] px-3 py-2 text-sm font-bold text-white hover:bg-[#15663f]"
           >
             Download PDF
           </button>
