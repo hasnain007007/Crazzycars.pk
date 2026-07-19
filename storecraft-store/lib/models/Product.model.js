@@ -70,8 +70,11 @@ const variationCombinationSchema = new mongoose.Schema(
     priceDelta: { type: Number, default: 0 },
     weightDelta: { type: Number, default: 0 },
     price: { type: Number, default: 0 },
+    compareAtPrice: { type: Number, default: 0 },
     weight: { type: Number, default: 0 },
     stock: { type: Number, default: 0 },
+    sku: { type: String, default: "" },
+    image: { type: String, default: "" },
   },
   { _id: true }
 );
@@ -188,6 +191,10 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
     featured: { type: Boolean, default: false, index: true },
+    /** Alias used by Shopify seed / homepage featured flags */
+    isFeatured: { type: Boolean, default: false, index: true },
+    /** Hot Deals section */
+    isDeal: { type: Boolean, default: false, index: true },
     newArrival: { type: Boolean, default: false },
     productType: { type: String, default: "", trim: true },
     vendor: { type: String, default: "", trim: true },
@@ -208,6 +215,8 @@ productSchema.index({ slug: 1 });
 productSchema.index({ status: 1, createdAt: -1 });
 productSchema.index({ categories: 1, status: 1 });
 productSchema.index({ featured: 1, status: 1 });
+productSchema.index({ isFeatured: 1, status: 1 });
+productSchema.index({ isDeal: 1, status: 1 });
 productSchema.index({ newArrival: 1, status: 1 });
 productSchema.index({ isUniversal: 1, status: 1 });
 productSchema.index({ compatibleVehicles: 1, status: 1 });

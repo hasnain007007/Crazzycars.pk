@@ -10,7 +10,9 @@
     "seed:categories": "node --env-file=.env.local scripts/categories/seedCategories.mjs",
     "seed:vehicles": "node --env-file=.env.local scripts/vehicles/seedVehicles.mjs",
     "seed:car-catalog": "node --env-file=.env.local scripts/vehicles/seedCarCatalog.mjs",
-    "seed:car-catalog:replace": "node --env-file=.env.local scripts/vehicles/replaceCarCatalog.mjs"
+    "seed:car-catalog:replace": "node --env-file=.env.local scripts/vehicles/replaceCarCatalog.mjs",
+    "seed:products": "node --env-file=.env.local scripts/products/seedProducts.mjs",
+    "seed:all": "npm run seed:categories && npm run seed:vehicles && npm run seed:car-catalog:replace && npm run seed:products"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.3.0",

@@ -33,6 +33,7 @@ function dealsExpr(filter) {
     return {
       $or: [
         { isFlashDeal: true },
+        { isDeal: true },
         { tags: { $elemMatch: { $regex: /^flash$/i } } },
         { $expr: { $gt: ["$pricing.regularPrice", "$pricing.salePrice"] } },
       ],
