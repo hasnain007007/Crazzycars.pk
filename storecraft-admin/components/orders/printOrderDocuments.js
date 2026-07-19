@@ -90,71 +90,177 @@ export function packingSlipInnerHtml(order, options = {}) {
 }
 
 export function invoiceInnerHtml(order, options = {}) {
-  const name = options.storeName || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+  const name = options.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
   const logoUrl = options.logoUrl || "";
+  const phone = options.phone || "";
+  const email = options.email || "";
+  const website = options.website || "";
+  const address = options.address || "";
+  const accent = options.primaryColor || "#1A7A4C";
+  const ntn = options.ntn || "";
+  const strn = options.strn || "";
+  const bankName = options.bankName || "";
+  const bankAccountTitle = options.bankAccountTitle || "";
+  const bankAccountNumber = options.bankAccountNumber || "";
+  const bankIban = options.bankIban || "";
+  const terms =
+    options.terms ||
+    "Goods once sold are non-returnable unless defective. Please retain this invoice for your records.";
+  const footerNote = options.footerNote || options.footerText || "Thank you for your business.";
   const p = order.pricing || { subtotal: 0, discount: 0, shippingCost: 0, total: 0 };
   const items = order.items || [];
+  const invNo = order.invoiceNumber || order.orderNumber || "—";
+  const dateStr = order.createdAt
+    ? new Date(order.createdAt).toLocaleDateString("en-PK", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+  const timeStr = order.createdAt
+    ? new Date(order.createdAt).toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit" })
+    : "";
+
+  const paymentMethodLabels = {
+    cod: "Cash / COD",
+    jazzcash: "JazzCash",
+    easypaisa: "Easypaisa",
+    bankTransfer: "Bank Transfer",
+    hbl: "HBL",
+    meezan: "Meezan",
+    ubl: "UBL",
+    stripe: "Card (Stripe)",
+    paypal: "PayPal",
+  };
+  const payMethod =
+    paymentMethodLabels[order.paymentMethod] || order.paymentMethod || "—";
+  const payStatus = String(order.paymentStatus || "—").toUpperCase();
+
   const rows = items
-    .map(
-      (i) => `<tr>
-      <td style="padding:6px 8px;border-bottom:1px solid #ddd;">${esc(i.name)}${measurementHtml(i)}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #ddd;color:#555;">${esc(i.variation || "—")}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">${i.quantity}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">${formatMoney(i.unitPrice)}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;font-weight:600;">${formatMoney(i.total)}</td>
-    </tr>`
-    )
+    .map((i, idx) => {
+      const lineTotal =
+        i.total != null
+          ? Number(i.total)
+          : Math.round((Number(i.quantity) || 0) * (Number(i.unitPrice) || 0) * 100) / 100;
+      return `<tr>
+      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;color:#64748b;width:36px;">${idx + 1}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;">
+        <div style="font-weight:600;color:#0f172a;">${esc(i.name)}</div>
+        ${i.variation ? `<div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(i.variation)}</div>` : ""}
+        ${measurementHtml(i)}
+      </td>
+      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:center;">${i.quantity}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatMoney(i.unitPrice)}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;">${formatMoney(lineTotal)}</td>
+    </tr>`;
+    })
     .join("");
-  const ship = formatAddrLines(order.shippingAddress).join("<br/>");
+
+  const billLines = [
+    order.customer?.name,
+    order.customer?.phone,
+    order.customer?.email,
+    order.shippingAddress?.street || order.billingAddress?.street,
+    [order.shippingAddress?.city || order.billingAddress?.city, order.shippingAddress?.country || order.billingAddress?.country]
+      .filter(Boolean)
+      .join(", "),
+  ].filter(Boolean);
+
+  const companyBits = [address, phone ? `Tel: ${phone}` : "", email, website].filter(Boolean);
+  const taxBits = [ntn ? `NTN: ${ntn}` : "", strn ? `STRN: ${strn}` : ""].filter(Boolean);
+
+  const bankBlock =
+    bankName || bankAccountTitle || bankAccountNumber || bankIban
+      ? `<div style="margin-top:20px;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:#64748b;margin-bottom:8px;">BANK DETAILS</div>
+          ${bankName ? `<div style="font-size:12px;"><strong>Bank:</strong> ${esc(bankName)}</div>` : ""}
+          ${bankAccountTitle ? `<div style="font-size:12px;"><strong>Title:</strong> ${esc(bankAccountTitle)}</div>` : ""}
+          ${bankAccountNumber ? `<div style="font-size:12px;"><strong>Account:</strong> ${esc(bankAccountNumber)}</div>` : ""}
+          ${bankIban ? `<div style="font-size:12px;"><strong>IBAN:</strong> ${esc(bankIban)}</div>` : ""}
+        </div>`
+      : "";
 
   return `
-    <div class="inv">
-      <div style="border-bottom:1px solid #000;padding-bottom:16px;">
-        <div style="text-align:center; margin-bottom:20px">
-          ${logoUrl ? `<img src="${esc(logoUrl)}" height="50" style="object-fit:contain" />` : ""}
-          <h1 style="margin:10px 0 0 0;font-size:24px;font-weight:800;">${esc(name)}</h1>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div>
-            <div style="font-size:12px;color:#555;margin-top:4px;">Invoice</div>
+    <div class="inv" style="max-width:800px;margin:0 auto;color:#0f172a;">
+      <div style="height:6px;background:${esc(accent)};border-radius:4px 4px 0 0;margin:-16px -16px 20px;"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:220px;">
+          ${
+            logoUrl
+              ? `<img src="${esc(logoUrl)}" alt="${esc(name)}" style="max-height:64px;max-width:200px;object-fit:contain;display:block;" />`
+              : `<div style="font-size:22px;font-weight:800;color:${esc(accent)};">${esc(name)}</div>`
+          }
+          ${logoUrl ? `<div style="margin-top:8px;font-size:16px;font-weight:800;">${esc(name)}</div>` : ""}
+          <div style="margin-top:8px;font-size:12px;line-height:1.55;color:#475569;">
+            ${companyBits.map((l) => `<div>${esc(l)}</div>`).join("")}
+            ${taxBits.length ? `<div style="margin-top:4px;">${taxBits.map(esc).join(" · ")}</div>` : ""}
           </div>
-        <div style="text-align:right;font-size:13px;">
-          <div style="font-family:monospace;font-weight:700;">${esc(order.invoiceNumber || order.orderNumber)}</div>
-          <div style="color:#555;">${order.createdAt ? esc(new Date(order.createdAt).toLocaleString()) : "—"}</div>
         </div>
-        </div>
-      </div>
-      <div style="display:flex;gap:32px;margin-top:20px;font-size:13px;">
-        <div style="flex:1;">
-          <div style="font-size:10px;font-weight:700;color:#666;">BILL TO</div>
-          <div style="margin-top:6px;font-weight:600;">${esc(order.customer?.name || "—")}</div>
-          <div>${esc(order.customer?.email || "")}</div>
-          <div>${esc(order.customer?.phone || "")}</div>
-        </div>
-        <div style="flex:1;">
-          <div style="font-size:10px;font-weight:700;color:#666;">SHIP TO</div>
-          <div style="margin-top:6px;line-height:1.45;">${ship}</div>
+        <div style="text-align:right;min-width:180px;">
+          <div style="display:inline-block;background:${esc(accent)};color:#fff;font-size:11px;font-weight:800;letter-spacing:0.12em;padding:6px 14px;border-radius:999px;">INVOICE</div>
+          <div style="margin-top:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:800;">${esc(invNo)}</div>
+          <div style="margin-top:6px;font-size:12px;color:#64748b;">Date: <strong style="color:#0f172a;">${esc(dateStr)}</strong>${timeStr ? ` · ${esc(timeStr)}` : ""}</div>
+          <div style="margin-top:8px;font-size:12px;">
+            <span style="display:inline-block;padding:3px 10px;border-radius:999px;background:${payStatus === "PAID" ? "#ecfdf5" : "#fff7ed"};color:${payStatus === "PAID" ? "#047857" : "#c2410c"};font-weight:700;font-size:11px;">${esc(payStatus)}</span>
+          </div>
         </div>
       </div>
-      <table style="width:100%;border-collapse:collapse;margin-top:24px;font-size:13px;">
-        <thead><tr style="border-bottom:1px solid #000;">
-          <th style="text-align:left;padding:6px 8px;">Product</th>
-          <th style="text-align:left;padding:6px 8px;">Variation</th>
-          <th style="text-align:right;padding:6px 8px;">Qty</th>
-          <th style="text-align:right;padding:6px 8px;">Unit</th>
-          <th style="text-align:right;padding:6px 8px;">Total</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
+
+      <div style="display:flex;gap:20px;margin-top:28px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:10px;">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:${esc(accent)};">BILL TO</div>
+          <div style="margin-top:8px;font-size:13px;line-height:1.55;">
+            ${billLines.map((l, i) => `<div style="${i === 0 ? "font-weight:700;font-size:14px;" : ""}">${esc(l)}</div>`).join("") || "<div>—</div>"}
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:10px;">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:${esc(accent)};">PAYMENT</div>
+          <div style="margin-top:8px;font-size:13px;line-height:1.7;">
+            <div><span style="color:#64748b;">Method:</span> <strong>${esc(payMethod)}</strong></div>
+            <div><span style="color:#64748b;">Status:</span> <strong>${esc(payStatus)}</strong></div>
+            <div><span style="color:#64748b;">Currency:</span> <strong>${esc(options.currency || order.currency || "PKR")}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;margin-top:28px;font-size:13px;">
+        <thead>
+          <tr style="background:${esc(accent)};color:#fff;">
+            <th style="text-align:left;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">#</th>
+            <th style="text-align:left;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">DESCRIPTION</th>
+            <th style="text-align:center;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">QTY</th>
+            <th style="text-align:right;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">UNIT</th>
+            <th style="text-align:right;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">AMOUNT</th>
+          </tr>
+        </thead>
+        <tbody>${rows || `<tr><td colspan="5" style="padding:16px;text-align:center;color:#94a3b8;">No items</td></tr>`}</tbody>
       </table>
+
       <div style="margin-top:20px;display:flex;justify-content:flex-end;">
-        <div style="width:260px;font-size:13px;">
-          <div style="display:flex;justify-content:space-between;"><span>Subtotal</span><span>${formatMoney(p.subtotal)}</span></div>
-          ${p.discount > 0 ? `<div style="display:flex;justify-content:space-between;color:#0a0;"><span>Discount</span><span>−${formatMoney(p.discount)}</span></div>` : ""}
-          <div style="display:flex;justify-content:space-between;"><span>Shipping</span><span>${formatMoney(p.shippingCost)}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid #000;font-size:15px;font-weight:800;"><span>Total</span><span>${formatMoney(p.total)}</span></div>
+        <div style="width:280px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;color:#475569;"><span>Subtotal</span><span>${formatMoney(p.subtotal)}</span></div>
+          ${Number(p.discount) > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#047857;"><span>Discount</span><span>−${formatMoney(p.discount)}</span></div>` : ""}
+          ${Number(p.shippingCost) > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#475569;"><span>Shipping</span><span>${formatMoney(p.shippingCost)}</span></div>` : ""}
+          <div style="display:flex;justify-content:space-between;margin-top:8px;padding:12px 14px;background:${esc(accent)};color:#fff;border-radius:8px;font-size:15px;font-weight:800;">
+            <span>Total</span><span>${formatMoney(p.total)}</span>
+          </div>
         </div>
       </div>
-      <div style="margin-top:32px;text-align:center;font-size:12px;color:#666;border-top:1px solid #ccc;padding-top:16px;">Thank you for shopping with Crazzycars.pk.</div>
+
+      ${bankBlock}
+
+      ${
+        order.note
+          ? `<div style="margin-top:18px;font-size:12px;color:#475569;"><strong>Note:</strong> ${esc(order.note)}</div>`
+          : ""
+      }
+
+      <div style="margin-top:28px;padding-top:16px;border-top:1px solid #e2e8f0;">
+        <div style="font-size:11px;color:#64748b;line-height:1.55;"><strong style="color:#334155;">Terms:</strong> ${esc(terms)}</div>
+        <div style="margin-top:14px;text-align:center;font-size:13px;font-weight:700;color:${esc(accent)};">${esc(footerNote)}</div>
+        <div style="margin-top:6px;text-align:center;font-size:10px;color:#94a3b8;">${esc(name)} · Computer-generated invoice</div>
+      </div>
     </div>
   `;
 }

@@ -75,6 +75,11 @@ export async function PUT(request) {
       mergeNested(doc.general, body.general);
     }
     if (body.notifications) mergeNested(doc.notifications, body.notifications);
+    if (body.invoice !== undefined && body.invoice !== null && typeof body.invoice === "object") {
+      if (!doc.invoice) doc.set("invoice", {});
+      mergeNested(doc.invoice, body.invoice);
+      doc.markModified("invoice");
+    }
     if (body.payment !== undefined) {
       if (!doc.payment) doc.payment = {};
       mergeNested(doc.payment, body.payment);

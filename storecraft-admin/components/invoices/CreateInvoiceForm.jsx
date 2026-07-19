@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
-import { getAdminSettings } from "@/lib/adminSettingsCache";
+import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
 
 function lineTotal(qty, unitPrice) {
@@ -66,7 +66,7 @@ export function CreateInvoiceForm() {
   const [saving, setSaving] = useState(false);
   const [savedInvoice, setSavedInvoice] = useState(null);
   const [showPdfPrompt, setShowPdfPrompt] = useState(false);
-  const [storeMeta, setStoreMeta] = useState({ storeName: "Crazzycars.pk", logoUrl: "" });
+  const [storeMeta, setStoreMeta] = useState(null);
 
   const [catalog, setCatalog] = useState([]);
   const [catalogTotal, setCatalogTotal] = useState(0);
@@ -76,15 +76,7 @@ export function CreateInvoiceForm() {
   const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    getAdminSettings()
-      .then((s) => {
-        if (!s) return;
-        setStoreMeta({
-          storeName: s.storeName || "Crazzycars.pk",
-          logoUrl: s.logoUrl || "",
-        });
-      })
-      .catch(() => {});
+    getInvoiceStoreMeta().then(setStoreMeta).catch(() => {});
   }, []);
 
   const loadCatalogPage = useCallback(async (page, append) => {
@@ -204,7 +196,7 @@ export function CreateInvoiceForm() {
   function handlePdfYes() {
     if (savedInvoice) {
       try {
-        downloadInvoicePdf(savedInvoice, storeMeta);
+        downloadInvoicePdf(savedInvoice, storeMeta || {});
         toast.success("Print dialog opened — choose “Save as PDF”.");
       } catch {
         toast.error("Could not open PDF print.");

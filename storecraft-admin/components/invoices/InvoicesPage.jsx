@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
-import { getAdminSettings } from "@/lib/adminSettingsCache";
+import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
 
 export function InvoicesPage() {
@@ -18,7 +18,7 @@ export function InvoicesPage() {
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [loading, setLoading] = useState(true);
-  const [storeMeta, setStoreMeta] = useState({ storeName: "Crazzycars.pk", logoUrl: "" });
+  const [storeMeta, setStoreMeta] = useState(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
@@ -30,15 +30,7 @@ export function InvoicesPage() {
   }, [debounced]);
 
   useEffect(() => {
-    getAdminSettings()
-      .then((s) => {
-        if (!s) return;
-        setStoreMeta({
-          storeName: s.storeName || "Crazzycars.pk",
-          logoUrl: s.logoUrl || "",
-        });
-      })
-      .catch(() => {});
+    getInvoiceStoreMeta().then(setStoreMeta).catch(() => {});
   }, []);
 
   const load = useCallback(async () => {
@@ -68,7 +60,7 @@ export function InvoicesPage() {
 
   function printPdf(inv) {
     try {
-      downloadInvoicePdf(inv, storeMeta);
+      downloadInvoicePdf(inv, storeMeta || {});
       toast.success("Print dialog opened — choose “Save as PDF”.");
     } catch {
       toast.error("Could not open PDF.");

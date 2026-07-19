@@ -32,7 +32,11 @@ export async function getAdminSettings() {
       const data = json.settings || json.data || {};
       const next = {
         storeName: data.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk',
-        logoUrl: typeof data.general?.logo === "string" ? data.general.logo : data.general?.logo?.url || "",
+        logoUrl:
+          (typeof data.general?.logoUrl === "string" && data.general.logoUrl) ||
+          (typeof data.general?.logo === "string" && data.general.logo) ||
+          data.general?.logo?.url ||
+          "",
       };
       memory = next;
       memoryTs = Date.now();

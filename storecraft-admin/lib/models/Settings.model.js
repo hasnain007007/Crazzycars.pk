@@ -104,6 +104,24 @@ const settingsSchema = new mongoose.Schema(
       emailOnNewReview: { type: Boolean, default: false },
       notificationEmail: { type: String, default: "" },
     },
+    /** Professional invoice PDF / print branding extras */
+    invoice: {
+      ntn: { type: String, default: "" },
+      strn: { type: String, default: "" },
+      bankName: { type: String, default: "" },
+      bankAccountTitle: { type: String, default: "" },
+      bankAccountNumber: { type: String, default: "" },
+      bankIban: { type: String, default: "" },
+      terms: {
+        type: String,
+        default:
+          "Goods once sold are non-returnable unless defective. Please retain this invoice for your records.",
+      },
+      footerNote: {
+        type: String,
+        default: "Thank you for your business.",
+      },
+    },
     payment: {
       stripe: {
         publishableKey: { type: String, default: "" },

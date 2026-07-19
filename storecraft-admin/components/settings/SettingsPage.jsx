@@ -102,6 +102,7 @@ function buildGeneralSavePayload(general) {
     email: String(g.email ?? "").trim(),
     website: String(g.website ?? "").trim(),
     footerText: String(g.footerText ?? "").trim(),
+    address: String(g.address ?? "").trim(),
     currency: "PKR",
     timezone: "Asia/Karachi",
     defaultCountry: "Pakistan",
@@ -594,9 +595,80 @@ export function SettingsPage() {
             </button>
           </div>
 
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-800/40">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Invoice branding</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Shown on professional invoice PDFs (logo &amp; store details come from General above).
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Field
+                label="Business address"
+                value={g.address || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, address: v } })}
+                multiline
+              />
+              <Field
+                label="NTN"
+                value={s.invoice?.ntn || ""}
+                onChange={(v) => setS({ ...s, invoice: { ...(s.invoice || {}), ntn: v } })}
+              />
+              <Field
+                label="STRN"
+                value={s.invoice?.strn || ""}
+                onChange={(v) => setS({ ...s, invoice: { ...(s.invoice || {}), strn: v } })}
+              />
+              <Field
+                label="Bank name"
+                value={s.invoice?.bankName || ""}
+                onChange={(v) => setS({ ...s, invoice: { ...(s.invoice || {}), bankName: v } })}
+              />
+              <Field
+                label="Account title"
+                value={s.invoice?.bankAccountTitle || ""}
+                onChange={(v) => setS({ ...s, invoice: { ...(s.invoice || {}), bankAccountTitle: v } })}
+              />
+              <Field
+                label="Account number"
+                value={s.invoice?.bankAccountNumber || ""}
+                onChange={(v) => setS({ ...s, invoice: { ...(s.invoice || {}), bankAccountNumber: v } })}
+              />
+              <Field
+                label="IBAN"
+                value={s.invoice?.bankIban || ""}
+                onChange={(v) => setS({ ...s, invoice: { ...(s.invoice || {}), bankIban: v } })}
+              />
+              <Field
+                label="Invoice terms"
+                value={s.invoice?.terms || ""}
+                onChange={(v) => setS({ ...s, invoice: { ...(s.invoice || {}), terms: v } })}
+                multiline
+              />
+              <Field
+                label="Invoice footer note"
+                value={s.invoice?.footerNote || ""}
+                onChange={(v) => setS({ ...s, invoice: { ...(s.invoice || {}), footerNote: v } })}
+                multiline
+              />
+            </div>
+          </div>
+
           <button
             type="button"
-            onClick={() => save({ general: buildGeneralSavePayload(s.general) })}
+            onClick={() =>
+              save({
+                general: buildGeneralSavePayload({ ...s.general, address: g.address }),
+                invoice: {
+                  ntn: String(s.invoice?.ntn || "").trim(),
+                  strn: String(s.invoice?.strn || "").trim(),
+                  bankName: String(s.invoice?.bankName || "").trim(),
+                  bankAccountTitle: String(s.invoice?.bankAccountTitle || "").trim(),
+                  bankAccountNumber: String(s.invoice?.bankAccountNumber || "").trim(),
+                  bankIban: String(s.invoice?.bankIban || "").trim(),
+                  terms: String(s.invoice?.terms || "").trim(),
+                  footerNote: String(s.invoice?.footerNote || "").trim(),
+                },
+              })
+            }
             className="rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white"
           >
             Save general

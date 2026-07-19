@@ -182,10 +182,27 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
       const json = await res.json();
       if (json.success) {
         const settings = json.settings || json.data || {};
+        const g = settings.general || {};
+        const inv = settings.invoice || {};
+        const appearance = settings.appearance || {};
         return {
-          storeName:
-            settings.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Store",
-          logoUrl: settings.general?.logo?.url || "",
+          storeName: g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Store",
+          logoUrl: g.logoUrl || g.logo?.url || "",
+          phone: g.phone || "",
+          email: g.email || "",
+          website: g.website || "",
+          address: g.address || "",
+          footerText: g.footerText || "",
+          currency: g.currency || g.defaultCurrency || "PKR",
+          primaryColor: appearance.primaryColor || "#1A7A4C",
+          ntn: inv.ntn || "",
+          strn: inv.strn || "",
+          bankName: inv.bankName || "",
+          bankAccountTitle: inv.bankAccountTitle || "",
+          bankAccountNumber: inv.bankAccountNumber || "",
+          bankIban: inv.bankIban || "",
+          terms: inv.terms || "",
+          footerNote: inv.footerNote || "",
         };
       }
     } catch {
