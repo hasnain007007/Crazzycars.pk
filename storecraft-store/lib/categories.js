@@ -1,15 +1,15 @@
 /**
  * Category helpers for storefront routes.
- * Catalog categories come from MongoDB (admin → Categories), not this file.
- * Keep this list empty so the store starts clean until you add categories in admin.
+ * Catalog categories come from MongoDB (admin → Categories / seed script).
  */
-export const CRAZZYCARS_CATEGORIES = [];
-
 export function categoryHref(slug) {
   const s = String(slug || "").trim();
   if (!s) return "/categories";
   return `/categories/${s}`;
 }
+
+/** @deprecated Prefer GET /api/categories/tree — kept for legacy header fallbacks. */
+export const CRAZZYCARS_CATEGORIES = [];
 
 export function getCategoryBySlug(slug) {
   const s = String(slug || "").trim().toLowerCase();
@@ -17,7 +17,7 @@ export function getCategoryBySlug(slug) {
   return CRAZZYCARS_CATEGORIES.find((c) => c.slug === s) || null;
 }
 
-/** Mega-menu columns — empty until you configure categories in admin / settings. */
+/** Mega-menu columns — empty; live mega-menu uses /api/categories/tree. */
 export function getCategoryMegaColumns() {
   return [];
 }

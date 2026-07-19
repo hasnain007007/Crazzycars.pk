@@ -7,11 +7,17 @@ const categorySchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    /** Primary parent (admin UI / breadcrumbs). Empty = top-level. */
     parentCategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       default: null,
     },
+    /**
+     * Multi-parent support (AutoJin-style: e.g. Side Mirror Covers under Exterior + Carbon Fiber).
+     * Prefer this for mega-menu trees; keep parentCategory as the first / primary parent.
+     */
+    parents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
     /** Mirrors admin catalog — used for breadcrumbs when synced from same DB */
     ancestors: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
     level: { type: Number, default: 0 },
@@ -22,6 +28,8 @@ const categorySchema = new mongoose.Schema(
       url: { type: String, default: "" },
       publicId: { type: String, default: "" },
     },
+    /** Small icon URL for mega-menu rows */
+    icon: { type: String, default: "" },
     status: {
       type: String,
       enum: ["active", "inactive", "draft"],
@@ -42,6 +50,9 @@ const categorySchema = new mongoose.Schema(
       metaDescription: { type: String, default: "" },
       metaKeywords: { type: [String], default: [] },
     },
+    /** Shopify collection mapping (migration) */
+    shopifyHandle: { type: String, default: "" },
+    shopifyId: { type: String, default: "" },
   },
   { timestamps: true }
 );
@@ -51,6 +62,7 @@ categorySchema.index({ name: 1 });
 categorySchema.index({ slug: 1 });
 categorySchema.index({ status: 1 });
 categorySchema.index({ parentCategory: 1 });
+categorySchema.index({ parents: 1, sortOrder: 1 });
 
 export default mongoose.models.Category ||
   mongoose.model("Category", categorySchema);

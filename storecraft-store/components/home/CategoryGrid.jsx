@@ -5,15 +5,23 @@ import { useEffect, useState } from "react";
 import { categoryHref } from "@/lib/categories";
 
 function CategoryCard({ c }) {
+  const imageUrl = c.imageUrl || "";
   return (
     <Link
       href={c.href}
       className={`group relative overflow-hidden rounded-xl border border-[#E5E7EB] transition duration-200 hover:shadow-[0_10px_30px_rgba(0,0,0,0.12)] ${c.span}`}
     >
-      <div className="relative min-h-[180px] bg-gradient-to-br from-[#1a1a1a] to-[#3a1111] p-6">
-        <div className="absolute inset-0 bg-black/10 transition duration-200 group-hover:bg-[#C41E1E]/45" />
-        <span className="relative z-10 text-3xl">{c.homepageIcon || "🚗"}</span>
-        <div className="absolute inset-0 transition duration-200 group-hover:scale-105" />
+      <div className="relative min-h-[180px] overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#3a1111] p-6">
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt={c.name}
+            className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-black/35 transition duration-200 group-hover:bg-[#C41E1E]/45" />
+        {!imageUrl ? <span className="relative z-10 text-3xl">{c.homepageIcon || "🚗"}</span> : null}
         <div className="absolute bottom-4 left-4 right-4 z-10">
           <h3 className="font-heading text-2xl font-bold text-white">{c.name}</h3>
           <p className="text-xs text-white/80">Shop collection</p>
@@ -23,31 +31,46 @@ function CategoryCard({ c }) {
   );
 }
 
+function mapCat(c) {
+  const imageUrl =
+    typeof c.image === "string"
+      ? c.image
+      : c.image?.url || c.imageUrl || "";
+  return {
+    name: c.name,
+    slug: c.slug,
+    href: categoryHref(c.slug),
+    homepageIcon: c.homepageIcon || "🚗",
+    imageUrl,
+  };
+}
+
 export default function CategoryGrid({ title = "Shop by Category", viewAllText = "View all →", categories: injected }) {
   const [fetched, setFetched] = useState([]);
 
   useEffect(() => {
     if (Array.isArray(injected) && injected.length) return;
     let cancelled = false;
-    fetch("/api/categories?showOnHomepage=true", { cache: "no-store" })
+    // Prefer featured parents from the tree endpoint (AutoJin-style)
+    fetch("/api/categories/tree", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
-        let cats = data?.categories || data?.data || [];
-        if (!Array.isArray(cats) || !cats.length) {
-          return fetch("/api/categories", { cache: "no-store" })
-            .then((r) => r.json())
-            .then((all) => {
-              if (cancelled) return;
-              const list = all?.categories || all?.data || [];
-              setFetched(
-                (Array.isArray(list) ? list : [])
-                  .filter((c) => c?.slug && c?.name && !c.parentId)
-                  .slice(0, 12)
-              );
-            });
+        const tree = data?.categories || data?.data || [];
+        const parents = (Array.isArray(tree) ? tree : []).filter((c) => c?.slug && c?.name);
+        const featured = parents.filter((c) => c.isFeatured);
+        const list = (featured.length ? featured : parents).slice(0, 12);
+        if (list.length) {
+          setFetched(list);
+          return;
         }
-        setFetched(Array.isArray(cats) ? cats.filter((c) => c?.slug && c?.name) : []);
+        return fetch("/api/categories?showOnHomepage=true", { cache: "no-store" })
+          .then((r) => r.json())
+          .then((all) => {
+            if (cancelled) return;
+            const cats = all?.categories || all?.data || [];
+            setFetched((Array.isArray(cats) ? cats : []).filter((c) => c?.slug && c?.name && !c.parentId));
+          });
       })
       .catch(() => {
         if (!cancelled) setFetched([]);
@@ -59,13 +82,11 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
 
   const categories =
     Array.isArray(injected) && injected.length
-      ? injected
-      : fetched.map((c) => ({
-          name: c.name,
-          slug: c.slug,
-          href: categoryHref(c.slug),
-          homepageIcon: c.homepageIcon || "🚗",
-        }));
+      ? injected.map((c) => ({
+          ...mapCat(c),
+          href: c.href || categoryHref(c.slug),
+        }))
+      : fetched.map(mapCat);
 
   if (!categories.length) return null;
 

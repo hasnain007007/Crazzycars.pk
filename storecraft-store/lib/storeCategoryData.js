@@ -7,11 +7,35 @@ import Product from "@/lib/models/Product.model";
 
 const ACTIVE = { $regex: /^active$/i };
 
+/** Resolve all parent ids for a category (multi-parent `parents` + legacy `parentCategory`). */
+export function resolveParentIds(cat) {
+  const ids = [];
+  const seen = new Set();
+  if (Array.isArray(cat.parents) && cat.parents.length) {
+    for (const p of cat.parents) {
+      const id = String(p?._id || p || "");
+      if (id && !seen.has(id)) {
+        seen.add(id);
+        ids.push(id);
+      }
+    }
+  }
+  const legacy = cat.parentCategory?._id
+    ? String(cat.parentCategory._id)
+    : cat.parentCategory
+      ? String(cat.parentCategory)
+      : cat.parentId
+        ? String(cat.parentId)
+        : "";
+  if (legacy && !seen.has(legacy)) ids.push(legacy);
+  return ids;
+}
+
 /** All strict descendant category _ids (active categories only). */
 export async function getActiveDescendantCategoryIds(parentId) {
   const children = await Category.find({
-    parentCategory: parentId,
     status: ACTIVE,
+    $or: [{ parentCategory: parentId }, { parents: parentId }],
   })
     .select("_id")
     .lean();
@@ -54,8 +78,9 @@ function buildChildrenIdMap(rows) {
     if (!map.has(id)) map.set(id, []);
   }
   for (const c of rows) {
-    const pid = c.parentCategory?._id ? String(c.parentCategory._id) : c.parentCategory ? String(c.parentCategory) : "";
-    if (pid && map.has(pid)) map.get(pid).push(String(c._id));
+    for (const pid of resolveParentIds(c)) {
+      if (map.has(pid)) map.get(pid).push(String(c._id));
+    }
   }
   return map;
 }
@@ -73,6 +98,9 @@ function strictDescendantIdSet(rootId, childrenMap) {
   return seen;
 }
 
+/**
+ * Build AutoJin-style tree. Children with multiple parents appear under each parent.
+ */
 export function buildCategoryTree(categories) {
   const map = {};
   const roots = [];
@@ -80,18 +108,40 @@ export function buildCategoryTree(categories) {
     map[String(cat._id)] = { ...cat, children: [] };
   });
   categories.forEach((cat) => {
-    const parentId = cat.parentCategory?._id
-      ? String(cat.parentCategory._id)
-      : cat.parentCategory
-        ? String(cat.parentCategory)
-        : "";
-    if (!parentId) {
+    const parentIds = resolveParentIds(cat);
+    if (!parentIds.length) {
       roots.push(map[String(cat._id)]);
       return;
     }
-    if (map[parentId]) map[parentId].children.push(map[String(cat._id)]);
+    for (const parentId of parentIds) {
+      if (map[parentId]) {
+        map[parentId].children.push(map[String(cat._id)]);
+      }
+    }
   });
+  roots.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || String(a.name).localeCompare(String(b.name)));
+  for (const node of Object.values(map)) {
+    if (Array.isArray(node.children) && node.children.length > 1) {
+      node.children.sort(
+        (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || String(a.name).localeCompare(String(b.name))
+      );
+    }
+  }
   return roots;
+}
+
+/** Slim tree payload for mega-menu / GET /api/categories/tree */
+export function serializeCategoryTreeNode(node) {
+  return {
+    _id: node._id,
+    name: node.name,
+    slug: node.slug,
+    image: typeof node.image === "string" ? node.image : node.image?.url || "",
+    icon: node.icon || node.homepageIcon || "",
+    sortOrder: node.sortOrder || 0,
+    isFeatured: Boolean(node.isFeatured || node.featured),
+    children: Array.isArray(node.children) ? node.children.map(serializeCategoryTreeNode) : [],
+  };
 }
 
 /** Active categories with product counts (self + all active subcategories); returns tree when wantTree. */
@@ -112,6 +162,7 @@ export async function loadStoreCategoriesTree(wantTree, opts = {}) {
 
   const rows = await Category.find(filter)
     .populate("parentCategory", "name slug")
+    .populate("parents", "name slug")
     .sort({ level: 1, sortOrder: 1, name: 1 })
     .lean();
 
@@ -128,19 +179,19 @@ export async function loadStoreCategoriesTree(wantTree, opts = {}) {
   const childrenMap = buildChildrenIdMap(rows);
 
   const categories = rows.map((c) => {
-    const parentId = c.parentCategory?._id
-      ? String(c.parentCategory._id)
-      : c.parentCategory
-        ? String(c.parentCategory)
-        : null;
+    const parentIds = resolveParentIds(c);
+    const parentId = parentIds[0] || null;
     const self = String(c._id);
     const scope = new Set([self, ...strictDescendantIdSet(c._id, childrenMap)]);
     const scoped = new Set([...scope].filter((id) => idStrSet.has(id)));
     return {
       ...c,
       parentId,
+      parentIds,
       parentName: c.parentCategory?.name || "",
-      parentCategory: parentId ? { _id: parentId, name: c.parentCategory?.name || "" } : null,
+      parentCategory: parentId
+        ? { _id: parentId, name: c.parentCategory?.name || "" }
+        : null,
       productCount: countProductsInScope(products, scoped),
       subcategoryCount: (childrenMap.get(self) || []).length,
     };
@@ -155,6 +206,7 @@ export async function loadStoreCategoryDetail(slugStr) {
     status: { $regex: /^active$/i },
   })
     .populate("parentCategory", "name slug")
+    .populate("parents", "name slug")
     .populate("ancestors", "name slug")
     .lean();
 
@@ -171,8 +223,8 @@ export async function loadStoreCategoryDetail(slugStr) {
 
   const [subcategories, products] = await Promise.all([
     Category.find({
-      parentCategory: catId,
       status: { $regex: /^active$/i },
+      $or: [{ parentCategory: catId }, { parents: catId }],
     })
       .select("name slug image shortDescription level sortOrder")
       .sort({ sortOrder: 1, name: 1 })

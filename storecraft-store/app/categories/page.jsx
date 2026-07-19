@@ -24,6 +24,7 @@ export default async function CategoriesPage() {
       level: Number(c.level || 0),
       href: categoryHref(c.slug),
       productCount: Number(c.productCount || 0),
+      image: c.image || null,
       children: Array.isArray(c.children)
         ? c.children.map((ch) => ({
             _id: String(ch._id),
@@ -31,6 +32,7 @@ export default async function CategoriesPage() {
             slug: ch.slug,
             href: categoryHref(ch.slug),
             productCount: Number(ch.productCount || 0),
+            image: ch.image || null,
           }))
         : [],
       homepageOrder: Number(c.homepageOrder || i),

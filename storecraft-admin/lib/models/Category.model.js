@@ -16,6 +16,8 @@ const CategorySchema = new mongoose.Schema(
       ref: "Category",
       default: null,
     },
+    /** Multi-parent (AutoJin-style); parentCategory remains primary. */
+    parents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
     level: { type: Number, default: 0 },
     ancestors: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
     status: {
@@ -30,12 +32,15 @@ const CategorySchema = new mongoose.Schema(
     showOnHomepage: { type: Boolean, default: false },
     homepageOrder: { type: Number, default: 0 },
     homepageIcon: { type: String, default: "" },
+    icon: { type: String, default: "" },
     sortOrder: { type: Number, default: 0 },
     seo: {
       metaTitle: { type: String, default: "" },
       metaDescription: { type: String, default: "" },
       metaKeywords: [{ type: String }],
     },
+    shopifyHandle: { type: String, default: "" },
+    shopifyId: { type: String, default: "" },
   },
   { timestamps: true }
 );

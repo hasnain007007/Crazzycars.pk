@@ -11,6 +11,7 @@ import { trimmedLogoUrl } from "@/lib/storeLogo";
 import { getCodFreeDeliveryProgress, getProgressBarThreshold } from "@/lib/freeDelivery";
 import { getCategoryMegaColumns } from "@/lib/categories";
 import { useCustomer } from "@/lib/customerAuth";
+import MegaMenu from "@/components/store/MegaMenu";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -301,9 +302,27 @@ export function StoreHeader() {
   const { brand, nav, megaCols, megaEnabled } = config;
 
   const [activeMegaItem, setActiveMegaItem] = useState(null);
+  const [treeCategories, setTreeCategories] = useState([]);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/categories/tree", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const list = data?.categories || data?.data || [];
+        setTreeCategories(Array.isArray(list) ? list : []);
+      })
+      .catch(() => {
+        if (!cancelled) setTreeCategories([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -411,9 +430,6 @@ export function StoreHeader() {
       active ? "" : "hover:text-[#C41E1E]"
     }`;
   };
-
-  const dropdownCols =
-    activeMegaItem?.columns?.length > 0 ? activeMegaItem.columns : megaCols;
 
   return (
     <header className="sticky top-0 z-[7000]">
@@ -611,30 +627,8 @@ export function StoreHeader() {
             </div>
           ))}
         </div>
-        {megaEnabled && megaOpen && dropdownCols.length > 0 ? (
-          <div
-            className="absolute left-0 right-0 border-t bg-white shadow-lg"
-            style={{ borderColor: "#E5E7EB", zIndex: 7010 }}
-          >
-            <div className="store-container grid grid-cols-3 gap-8 py-8">
-              {dropdownCols.map((col) => (
-                <div key={col.title}>
-                  <h4 className="font-heading mb-3 text-sm font-bold" style={{ color: "#111111" }}>
-                    {col.title}
-                  </h4>
-                  <ul className="space-y-2">
-                    {col.links.map((l) => (
-                      <li key={l.label}>
-                        <Link href={l.href} className="text-sm text-[#6B7280] transition hover:text-[#C41E1E]">
-                          {l.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
+        {megaEnabled && megaOpen ? (
+          <MegaMenu isOpen={megaOpen} onClose={() => setMegaOpen(false)} />
         ) : null}
       </nav>
 
@@ -690,19 +684,41 @@ export function StoreHeader() {
                       </button>
                       {drawerExpanded[item.label] ? (
                         <ul className="pb-3 pl-3">
-                          {(item.columns?.length ? item.columns : megaCols)
-                            .flatMap((c) => c.links)
-                            .map((l) => (
-                            <li key={l.label}>
-                              <Link
-                                href={l.href}
-                                className="block py-2 text-sm text-[#6B7280]"
-                                onClick={() => setMenuOpen(false)}
-                              >
-                                {l.label}
-                              </Link>
-                            </li>
-                          ))}
+                          {treeCategories.length
+                            ? treeCategories.map((cat) => (
+                                <li key={String(cat._id)}>
+                                  <Link
+                                    href={`/categories/${cat.slug}`}
+                                    className="block py-2 text-sm font-semibold text-[#111111]"
+                                    onClick={() => setMenuOpen(false)}
+                                  >
+                                    {cat.name}
+                                  </Link>
+                                  {(cat.children || []).map((sub) => (
+                                    <Link
+                                      key={String(sub._id)}
+                                      href={`/categories/${sub.slug}`}
+                                      className="block py-1.5 pl-3 text-sm text-[#6B7280]"
+                                      onClick={() => setMenuOpen(false)}
+                                    >
+                                      {sub.name}
+                                    </Link>
+                                  ))}
+                                </li>
+                              ))
+                            : (item.columns?.length ? item.columns : megaCols)
+                                .flatMap((c) => c.links)
+                                .map((l) => (
+                                  <li key={l.label}>
+                                    <Link
+                                      href={l.href}
+                                      className="block py-2 text-sm text-[#6B7280]"
+                                      onClick={() => setMenuOpen(false)}
+                                    >
+                                      {l.label}
+                                    </Link>
+                                  </li>
+                                ))}
                         </ul>
                       ) : null}
                     </>

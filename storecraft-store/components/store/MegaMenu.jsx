@@ -2,53 +2,30 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { categoryHref } from "@/lib/categories";
 
-const buildMenuCategories = (cats) => {
-  if (!Array.isArray(cats)) return [];
-
-  const getParentId = (c) => {
-    const pid = c.parentId || c.parent || c.parentCategory?._id || c.parentCategory;
-    return pid ? String(pid) : null;
-  };
-
-  const parents = cats.filter((c) => !getParentId(c));
-
-  return parents.map((parent) => {
-    const parentId = String(parent._id);
-
-    const subs = cats.filter((c) => getParentId(c) === parentId);
-
-    const subsWithChildren = subs.map((sub) => {
-      const subId = String(sub._id);
-      const subSubs = cats.filter((c) => getParentId(c) === subId);
-      return { ...sub, subcategories: subSubs };
-    });
-
-    return {
-      ...parent,
-      subcategories: subsWithChildren,
-    };
-  });
-};
-
-export default function MegaMenu({ isOpen, onClose, settings }) {
+/**
+ * AutoJin-style mega-menu: parents on the left, children on hover.
+ * Reads from GET /api/categories/tree
+ */
+export default function MegaMenu({ isOpen, onClose }) {
   const [menuCategories, setMenuCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
-  const [localSettings, setLocalSettings] = useState(null);
+  const [loading, setLoading] = useState(false);
   const menuRef = useRef(null);
 
   const loadCategories = useCallback(() => {
-    fetch("/api/categories", { cache: "no-store" })
+    setLoading(true);
+    fetch("/api/categories/tree", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         const cats = data?.categories || data?.data || [];
-        const withSubs = buildMenuCategories(cats);
-
-        setMenuCategories(withSubs);
-        if (withSubs.length > 0) {
+        const list = Array.isArray(cats) ? cats : [];
+        setMenuCategories(list);
+        if (list.length > 0) {
           setActiveCategory((prev) => {
-            if (prev && withSubs.some((c) => String(c._id) === String(prev))) return prev;
-            return withSubs[0]._id;
+            if (prev && list.some((c) => String(c._id) === String(prev))) return prev;
+            return list[0]._id;
           });
         } else {
           setActiveCategory(null);
@@ -57,7 +34,8 @@ export default function MegaMenu({ isOpen, onClose, settings }) {
       .catch(() => {
         setMenuCategories([]);
         setActiveCategory(null);
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -69,42 +47,20 @@ export default function MegaMenu({ isOpen, onClose, settings }) {
   }, [isOpen, loadCategories]);
 
   useEffect(() => {
-    if (menuCategories.length > 0 && !activeCategory) {
-      setActiveCategory(menuCategories[0]._id);
-    }
-  }, [menuCategories, activeCategory]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    fetch(`/api/settings?_=${Date.now()}`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data) => {
-        const mm = data?.data?.megaMenu || {};
-        setLocalSettings({
-          showSubcategories: mm.showSubcategories !== false,
-          featuredTitle: mm.featuredTitle || "",
-        });
-      })
-      .catch(() => {});
-  }, [isOpen]);
-
-  useEffect(() => {
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
-        onClose();
+        onClose?.();
       }
     };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClick);
-    }
+    if (isOpen) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [isOpen, onClose]);
 
-  if (!isOpen || menuCategories.length === 0) return null;
+  if (!isOpen) return null;
+  if (!loading && menuCategories.length === 0) return null;
 
-  const showSubcategories = localSettings?.showSubcategories ?? settings?.showSubcategories ?? true;
   const activeParent = menuCategories.find((c) => String(c._id) === String(activeCategory));
-  const activeSubs = showSubcategories ? activeParent?.subcategories || [] : [];
+  const activeSubs = activeParent?.children || [];
 
   return (
     <div
@@ -114,128 +70,154 @@ export default function MegaMenu({ isOpen, onClose, settings }) {
         position: "absolute",
         top: "100%",
         left: 0,
+        right: 0,
         background: "#FFFFFF",
-        border: "1px solid #E5E5E5",
-        borderTop: "2px solid #111111",
-        boxShadow: "0 8px 20px rgba(0,0,0,0.10)",
-        zIndex: 9999,
+        borderTop: "2px solid #C41E1E",
+        boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
+        zIndex: 7010,
         animation: "fadeSlideDown 0.18s ease",
-        display: "flex",
-        width: "auto",
-        minWidth: 180,
       }}
     >
-      <div className="mega-menu-left" style={{ minWidth: 180, padding: "6px 0" }}>
-        {menuCategories.map((cat) => (
-          <Link
-            key={String(cat._id)}
-            href={`/${cat.slug}`}
-            onClick={onClose}
-            onMouseEnter={() => setActiveCategory(cat._id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "10px 16px",
-              fontSize: 14,
-              fontWeight: 500,
-              color: String(activeCategory) === String(cat._id) ? "#111111" : "#444444",
-              textDecoration: "none",
-              background: String(activeCategory) === String(cat._id) ? "#F8F8F8" : "transparent",
-              borderLeft: String(activeCategory) === String(cat._id) ? "2px solid #D72323" : "2px solid transparent",
-              gap: 24,
-              whiteSpace: "nowrap",
-              transition: "all 0.1s",
-              borderRadius: 4,
-            }}
-          >
-            <span>{cat.name}</span>
-            {cat.subcategories?.length > 0 && showSubcategories ? (
-              <span style={{ fontSize: 10, color: "#AAAAAA" }}>›</span>
-            ) : null}
-          </Link>
-        ))}
-
-        <div style={{ borderTop: "1px solid #F0F0F0", margin: "4px 0 0" }}>
-          <Link
-            href="/categories"
-            onClick={onClose}
-            style={{
-              display: "block",
-              padding: "9px 16px",
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#D72323",
-              textDecoration: "none",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              whiteSpace: "nowrap",
-            }}
-          >
-            View All →
-          </Link>
-        </div>
-      </div>
-
-      {activeSubs.length > 0 ? (
-        <div className="mega-menu-right" style={{ minWidth: 200, borderLeft: "1px solid #F0F0F0", padding: "6px 0", background: "#FAFAFA" }}>
-          <p
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              color: "#D72323",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              margin: "6px 16px 8px",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {activeParent?.name}
-          </p>
-          {activeSubs.map((sub) => (
-            <div key={String(sub._id)} style={{ marginBottom: 12 }}>
+      <div className="store-container flex" style={{ minHeight: 280 }}>
+        <div
+          className="mega-menu-left"
+          style={{
+            minWidth: 220,
+            maxWidth: 280,
+            padding: "12px 0",
+            borderRight: "1px solid #F0F0F0",
+            flexShrink: 0,
+          }}
+        >
+          {loading && !menuCategories.length ? (
+            <p style={{ padding: "12px 18px", fontSize: 13, color: "#9CA3AF" }}>Loading…</p>
+          ) : null}
+          {menuCategories.map((cat) => {
+            const active = String(activeCategory) === String(cat._id);
+            return (
               <Link
-                href={`/${sub.slug}`}
-                onClick={onClose}
+                key={String(cat._id)}
+                href={categoryHref(cat.slug)}
+                onClick={() => onClose?.()}
+                onMouseEnter={() => setActiveCategory(cat._id)}
                 style={{
-                  display: "block",
-                  padding: "6px 16px",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#111111",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "11px 18px",
+                  fontSize: 14,
+                  fontWeight: active ? 700 : 500,
+                  color: active ? "#111111" : "#444444",
                   textDecoration: "none",
-                  whiteSpace: "nowrap",
+                  background: active ? "#F8F8F8" : "transparent",
+                  borderLeft: active ? "3px solid #C41E1E" : "3px solid transparent",
+                  gap: 16,
+                  transition: "all 0.1s",
                 }}
               >
-                {sub.name}
+                <span>{cat.name}</span>
+                {cat.children?.length > 0 ? (
+                  <span style={{ fontSize: 12, color: "#AAAAAA" }}>›</span>
+                ) : null}
               </Link>
-              {sub.subcategories?.map((subsub) => (
-                <Link
-                  key={String(subsub._id)}
-                  href={`/${subsub.slug}`}
-                  onClick={onClose}
+            );
+          })}
+
+          <div style={{ borderTop: "1px solid #F0F0F0", marginTop: 8 }}>
+            <Link
+              href="/categories"
+              onClick={() => onClose?.()}
+              style={{
+                display: "block",
+                padding: "12px 18px",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#C41E1E",
+                textDecoration: "none",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              Shop by Category →
+            </Link>
+          </div>
+        </div>
+
+        <div
+          className="mega-menu-right"
+          style={{
+            flex: 1,
+            padding: "16px 28px 24px",
+            background: "#FAFAFA",
+            minHeight: 280,
+          }}
+        >
+          {activeParent ? (
+            <>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <p
                   style={{
-                    display: "block",
-                    padding: "4px 16px 4px 28px",
-                    fontSize: 12,
-                    color: "#666666",
-                    textDecoration: "none",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#111111";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "#666666";
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: "#C41E1E",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    margin: 0,
                   }}
                 >
-                  › {subsub.name}
+                  {activeParent.name}
+                </p>
+                <Link
+                  href={categoryHref(activeParent.slug)}
+                  onClick={() => onClose?.()}
+                  style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", textDecoration: "none" }}
+                >
+                  View all
                 </Link>
-              ))}
-            </div>
-          ))}
+              </div>
+
+              {activeSubs.length > 0 ? (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                    gap: "4px 24px",
+                  }}
+                >
+                  {activeSubs.map((sub) => (
+                    <Link
+                      key={String(sub._id)}
+                      href={categoryHref(sub.slug)}
+                      onClick={() => onClose?.()}
+                      style={{
+                        display: "block",
+                        padding: "8px 0",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: "#111111",
+                        textDecoration: "none",
+                        borderBottom: "1px solid transparent",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = "#C41E1E";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = "#111111";
+                      }}
+                    >
+                      {sub.name}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 8 }}>
+                  Browse all {activeParent.name} products.
+                </p>
+              )}
+            </>
+          ) : null}
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }
