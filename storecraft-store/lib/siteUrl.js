@@ -35,16 +35,30 @@ export function isIndexableEnvironment() {
   return true;
 }
 
+const BLOCKED_CANONICAL_HOSTS = new Set([
+  "sialkotmotorsports.com",
+  "www.sialkotmotorsports.com",
+  "sialkotmotorssports.com",
+  "www.sialkotmotorssports.com",
+]);
+
 /** Reject leftover foreign canonicals from old template DB settings. */
 export function sanitizeCanonicalUrl(candidate) {
   const site = getSiteUrl();
   const raw = String(candidate || "").trim();
   if (!raw) return site;
   try {
-    const u = new URL(raw);
-    const siteHost = new URL(site).hostname.replace(/^www\./, "");
-    const host = u.hostname.replace(/^www\./, "");
-    if (host !== siteHost) return site;
+    const u = new URL(raw, `${site}/`);
+    const siteHost = new URL(site).hostname.replace(/^www\./, "").toLowerCase();
+    const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    if (BLOCKED_CANONICAL_HOSTS.has(u.hostname.toLowerCase()) || BLOCKED_CANONICAL_HOSTS.has(host)) {
+      const path = u.pathname === "/" ? "" : u.pathname;
+      return `${site}${path}${u.search || ""}`.replace(/\/$/, "") || site;
+    }
+    if (host !== siteHost) {
+      const path = u.pathname === "/" ? "" : u.pathname;
+      return `${site}${path}${u.search || ""}`.replace(/\/$/, "") || site;
+    }
     return u.toString().replace(/\/$/, "");
   } catch {
     return site;

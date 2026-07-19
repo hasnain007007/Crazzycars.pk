@@ -605,6 +605,21 @@ export function StoreHeader() {
         onMouseLeave={() => setMegaOpen(false)}
       >
         <div className="store-container flex items-center gap-1">
+          <button
+            type="button"
+            className="mr-2 flex items-center gap-2 rounded px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-white"
+            style={{ background: "#C41E1E" }}
+            onMouseEnter={() => {
+              setMegaOpen(true);
+              setActiveMegaItem({ label: "Categories", href: "/categories", mega: true });
+            }}
+            onClick={() => setMegaOpen((o) => !o)}
+            aria-expanded={megaOpen}
+            aria-haspopup="true"
+          >
+            <span aria-hidden>☰</span>
+            Shop by Category
+          </button>
           {nav.map((item) => (
             <div
               key={item.label}

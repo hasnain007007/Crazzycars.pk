@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { CategoryDetailPageClient } from "@/components/store/CategoryDetailPageClient";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
@@ -111,8 +112,28 @@ export default async function CategoryPage({ params }) {
     })
   );
 
+  const crumbItems = [
+    { name: "Home", url: "/" },
+    { name: "Categories", url: "/categories" },
+    ...(Array.isArray(data.breadcrumbs)
+      ? data.breadcrumbs.map((b) => ({ name: b.name, url: `/categories/${b.slug}` }))
+      : [{ name: data.category.name, url: `/categories/${data.category.slug}` }]),
+  ];
+  // Avoid duplicate last crumb if breadcrumbs already include self
+  const seen = new Set();
+  const uniqueCrumbs = crumbItems.filter((c) => {
+    const key = c.url;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(uniqueCrumbs)) }}
+      />
       <CategoryDetailPageClient
         initialCategory={data.category}
         initialSubcategories={data.subcategories}

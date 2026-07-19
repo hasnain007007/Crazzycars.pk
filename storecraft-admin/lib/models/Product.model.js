@@ -164,7 +164,10 @@ const productSchema = new mongoose.Schema(
       metaKeywords: [{ type: String, trim: true }],
     },
     isUniversal: { type: Boolean, default: false, index: true },
+    compatibleVehicles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Vehicle" }],
     compatibleCars: { type: [compatibleCarSchema], default: [] },
+    metaTitle: { type: String, default: "" },
+    metaDescription: { type: String, default: "" },
     vehicleCompatibility: {
       fitmentType: {
         type: String,

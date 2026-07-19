@@ -12,6 +12,7 @@ import { StoreProviders } from "@/components/store/StoreProviders";
 import { CustomerProvider } from "@/lib/customerAuth";
 import { getPublicStoreSettings } from "@/lib/serverSettings";
 import { getSiteUrl, isIndexableEnvironment, sanitizeCanonicalUrl, absoluteUrl } from "@/lib/siteUrl";
+import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import "./globals.css";
 
 /** Cache HTML for 60s — major TTFB win vs force-dynamic. */
@@ -181,43 +182,15 @@ export default async function RootLayout({ children }) {
   const description =
     seo.metaDescription?.trim() || seo.defaultMetaDescription?.trim() || FALLBACK_DESCRIPTION;
 
-  const organizationJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
+  const organizationJsonLd = buildOrgLd({
     name: storeName,
-    url: baseUrl,
     logo: `${baseUrl}/og-image.jpg`,
-    description,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: general.address || "Gujranwala",
-      addressLocality: "Gujranwala",
-      addressRegion: "Punjab",
-      postalCode: "52250",
-      addressCountry: "PK",
-    },
-    contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "customer service",
-      availableLanguage: ["English", "Urdu"],
-    },
-    sameAs: [],
-  };
+    email: general.email || undefined,
+    telephone: general.phone || undefined,
+    streetAddress: general.address || undefined,
+  });
 
-  const websiteJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: storeName,
-    url: baseUrl,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${baseUrl}/products?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
-  };
+  const websiteJsonLd = buildWebsiteLd({ name: storeName });
 
   const bodyFont = appearance.fontFamily || undefined;
 

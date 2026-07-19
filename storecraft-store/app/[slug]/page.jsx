@@ -5,16 +5,18 @@ import { CategoryDetailPageClient } from "@/components/store/CategoryDetailPageC
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Page from "@/lib/models/Page.model";
-import Category from "@/lib/models/Category.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { serializeStoreProductDetail } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
+import {
+  productJsonLd as buildProductJsonLd,
+  breadcrumbJsonLd as buildBreadcrumbJsonLd,
+} from "@/lib/seo/jsonld";
 
 export const dynamic = "force-dynamic";
 
 const BASE_URL = getSiteUrl();
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
-const CURRENCY = process.env.NEXT_PUBLIC_CURRENCY || "PKR";
+const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Crazzycars.pk";
 
 function stripHtml(s) {
   return String(s || "").replace(/<[^>]*>/g, "");
@@ -29,7 +31,7 @@ async function loadContent(slug) {
     status: { $regex: /^active$/i },
   })
     .select(
-      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications seo averageRating ratingAverage rating reviewCount totalReviews numReviews"
+      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal compatibleVehicles"
     )
     .populate("categories", "name slug")
     .lean();
@@ -80,9 +82,9 @@ export async function generateMetadata({ params }) {
 
   if (content.type === "product") {
     const p = content.data;
-    const title = (p.seo?.metaTitle || "").trim() || p.name;
+    const title = (p.metaTitle || p.seo?.metaTitle || "").trim() || p.name;
     const description =
-      (p.seo?.metaDescription || "").trim() ||
+      (p.metaDescription || p.seo?.metaDescription || "").trim() ||
       stripHtml(p.shortDescription || "").slice(0, 160) ||
       stripHtml(p.longDescription || "").slice(0, 160) ||
       `Buy ${p.name} at ${BRAND}. Premium car accessories.`;
@@ -94,7 +96,10 @@ export async function generateMetadata({ params }) {
       alternates: { canonical },
       openGraph: {
         title,
-        description: (p.seo?.metaDescription || "").trim() || stripHtml(p.shortDescription || "").slice(0, 200) || `Buy ${p.name} at ${BRAND}`,
+        description:
+          (p.metaDescription || p.seo?.metaDescription || "").trim() ||
+          stripHtml(p.shortDescription || "").slice(0, 200) ||
+          `Buy ${p.name} at ${BRAND}`,
         type: "website",
         url: canonical,
         images: mainImg ? [{ url: mainImg, width: 800, height: 800, alt: p.name }] : [],
@@ -102,7 +107,7 @@ export async function generateMetadata({ params }) {
       twitter: {
         card: "summary_large_image",
         title,
-        description: (p.seo?.metaDescription || "").trim() || stripHtml(p.shortDescription || "").slice(0, 200) || `Buy ${p.name} at ${BRAND}`,
+        description,
         images: mainImg ? [mainImg] : [],
       },
     };
@@ -149,66 +154,43 @@ export async function generateMetadata({ params }) {
   };
 }
 
-function productJsonLd(product) {
-  const desc = stripHtml(product.shortDescription || product.longDescription || "").slice(0, 5000);
-  const images = (product.media?.images || product.images || []).map((i) => (typeof i === "string" ? i : i?.url)).filter(Boolean);
-
-  const displayPrice = Number(
-    product.isOnSale && product.salePrice ? product.salePrice : product.price || product.regularPrice || 0
-  ).toFixed(2);
-
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "Product",
+function toProductLd(product) {
+  const images = (product.media?.images || product.images || [])
+    .map((i) => (typeof i === "string" ? i : i?.url))
+    .filter(Boolean);
+  const price = Number(
+    product.isOnSale && product.salePrice
+      ? product.salePrice
+      : product.price || product.regularPrice || product.pricing?.salePrice || product.pricing?.regularPrice || 0
+  );
+  const stock = Number(product.inventory?.quantity ?? (product.inStock === false ? 0 : 1));
+  return buildProductJsonLd({
     name: product.name,
-    description: desc || `${product.name} — premium car accessories from ${BRAND}.`,
-    image: images,
-    sku: product.articleNo || product.id || "",
-    mpn: product.articleNo || "",
-    brand: { "@type": "Brand", name: BRAND },
-    category: product.categories?.[0]?.name || "",
-    offers: {
-      "@type": "Offer",
-      url: `${BASE_URL}/${product.slug}`,
-      priceCurrency: CURRENCY,
-      price: displayPrice,
-      priceValidUntil: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
-      itemCondition: "https://schema.org/NewCondition",
-      availability: product.inStock !== false ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: BRAND },
-    },
-  };
-
-  if (product.specifications?.length > 0) {
-    schema.additionalProperty = product.specifications.map((s) => ({
-      "@type": "PropertyValue",
-      name: s.label,
-      value: s.value,
-    }));
-  }
-
-  return schema;
+    slug: product.slug,
+    urlPath: `/${product.slug}`,
+    images,
+    metaDescription: product.metaDescription || product.seo?.metaDescription,
+    shortDescription: stripHtml(product.shortDescription || product.longDescription || ""),
+    sku: product.articleNo || product.inventory?.sku,
+    brand: BRAND,
+    salePrice: price,
+    price,
+    stock,
+    ratingValue: product.averageRating || product.rating,
+    reviewCount: product.reviewCount || product.numReviews,
+  });
 }
 
-function breadcrumbJsonLd(product) {
+function toBreadcrumbLd(product) {
   const cat = product.categories?.[0];
-  const items = [
-    { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
-  ];
-
-  if (cat) {
-    items.push({ "@type": "ListItem", position: 2, name: cat.name, item: `${BASE_URL}/${cat.slug}` });
-    items.push({ "@type": "ListItem", position: 3, name: product.name, item: `${BASE_URL}/${product.slug}` });
+  const items = [{ name: "Home", url: "/" }];
+  if (cat?.slug) {
+    items.push({ name: cat.name, url: `/categories/${cat.slug}` });
   } else {
-    items.push({ "@type": "ListItem", position: 2, name: "Products", item: `${BASE_URL}/products` });
-    items.push({ "@type": "ListItem", position: 3, name: product.name, item: `${BASE_URL}/${product.slug}` });
+    items.push({ name: "Products", url: "/shop" });
   }
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: items,
-  };
+  items.push({ name: product.name, url: `/${product.slug}` });
+  return buildBreadcrumbJsonLd(items);
 }
 
 export default async function ProductPage({ params }) {
@@ -221,8 +203,14 @@ export default async function ProductPage({ params }) {
   if (content.type === "product") {
     return (
       <>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(content.data)) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(content.data)) }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(toProductLd(content.data)) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(toBreadcrumbLd(content.data)) }}
+        />
         <ProductDetailMedico product={content.data} />
       </>
     );

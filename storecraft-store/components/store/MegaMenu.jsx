@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { categoryHref } from "@/lib/categories";
 
 /**
- * AutoJin-style mega-menu: parents on the left, children on hover.
- * Reads from GET /api/categories/tree
+ * AutoJin-style mega-menu: parents left, children (name + image) on hover.
+ * Fed by GET /api/categories/tree
  */
 export default function MegaMenu({ isOpen, onClose }) {
   const [menuCategories, setMenuCategories] = useState([]);
@@ -48,9 +49,7 @@ export default function MegaMenu({ isOpen, onClose }) {
 
   useEffect(() => {
     const handleClick = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        onClose?.();
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target)) onClose?.();
     };
     if (isOpen) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -75,12 +74,10 @@ export default function MegaMenu({ isOpen, onClose }) {
         borderTop: "2px solid #C41E1E",
         boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
         zIndex: 7010,
-        animation: "fadeSlideDown 0.18s ease",
       }}
     >
-      <div className="store-container flex" style={{ minHeight: 280 }}>
+      <div className="store-container flex" style={{ minHeight: 300 }}>
         <div
-          className="mega-menu-left"
           style={{
             minWidth: 220,
             maxWidth: 280,
@@ -112,17 +109,13 @@ export default function MegaMenu({ isOpen, onClose }) {
                   background: active ? "#F8F8F8" : "transparent",
                   borderLeft: active ? "3px solid #C41E1E" : "3px solid transparent",
                   gap: 16,
-                  transition: "all 0.1s",
                 }}
               >
                 <span>{cat.name}</span>
-                {cat.children?.length > 0 ? (
-                  <span style={{ fontSize: 12, color: "#AAAAAA" }}>›</span>
-                ) : null}
+                {cat.children?.length > 0 ? <span style={{ fontSize: 12, color: "#AAAAAA" }}>›</span> : null}
               </Link>
             );
           })}
-
           <div style={{ borderTop: "1px solid #F0F0F0", marginTop: 8 }}>
             <Link
               href="/categories"
@@ -143,15 +136,7 @@ export default function MegaMenu({ isOpen, onClose }) {
           </div>
         </div>
 
-        <div
-          className="mega-menu-right"
-          style={{
-            flex: 1,
-            padding: "16px 28px 24px",
-            background: "#FAFAFA",
-            minHeight: 280,
-          }}
-        >
+        <div style={{ flex: 1, padding: "16px 28px 24px", background: "#FAFAFA", minHeight: 300 }}>
           {activeParent ? (
             <>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -180,34 +165,48 @@ export default function MegaMenu({ isOpen, onClose }) {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-                    gap: "4px 24px",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                    gap: 16,
                   }}
                 >
-                  {activeSubs.map((sub) => (
-                    <Link
-                      key={String(sub._id)}
-                      href={categoryHref(sub.slug)}
-                      onClick={() => onClose?.()}
-                      style={{
-                        display: "block",
-                        padding: "8px 0",
-                        fontSize: 14,
-                        fontWeight: 500,
-                        color: "#111111",
-                        textDecoration: "none",
-                        borderBottom: "1px solid transparent",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = "#C41E1E";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color = "#111111";
-                      }}
-                    >
-                      {sub.name}
-                    </Link>
-                  ))}
+                  {activeSubs.map((sub) => {
+                    const img = typeof sub.image === "string" ? sub.image : sub.image?.url || "";
+                    return (
+                      <Link
+                        key={String(sub._id)}
+                        href={categoryHref(sub.slug)}
+                        onClick={() => onClose?.()}
+                        style={{ textDecoration: "none", color: "#111111" }}
+                        className="group"
+                      >
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            aspectRatio: "1",
+                            borderRadius: 8,
+                            overflow: "hidden",
+                            background: "#EEE",
+                            border: "1px solid #E5E7EB",
+                            marginBottom: 8,
+                          }}
+                        >
+                          {img ? (
+                            <Image
+                              src={img}
+                              alt={sub.name}
+                              fill
+                              className="object-cover transition group-hover:scale-105"
+                              sizes="140px"
+                            />
+                          ) : (
+                            <div style={{ display: "grid", placeItems: "center", height: "100%", fontSize: 24 }}>📦</div>
+                          )}
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{sub.name}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               ) : (
                 <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 8 }}>

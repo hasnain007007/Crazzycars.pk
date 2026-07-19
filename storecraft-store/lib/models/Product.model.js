@@ -162,7 +162,12 @@ const productSchema = new mongoose.Schema(
       metaKeywords: [{ type: String, trim: true }],
     },
     isUniversal: { type: Boolean, default: false, index: true },
+    /** Vehicle ObjectIds (Shop by Car generations) — preferred over legacy string rows */
+    compatibleVehicles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Vehicle" }],
     compatibleCars: { type: [compatibleCarSchema], default: [] },
+    /** Top-level SEO aliases (also mirrored under seo.*) */
+    metaTitle: { type: String, default: "" },
+    metaDescription: { type: String, default: "" },
     vehicleCompatibility: {
       fitmentType: {
         type: String,
@@ -205,6 +210,7 @@ productSchema.index({ categories: 1, status: 1 });
 productSchema.index({ featured: 1, status: 1 });
 productSchema.index({ newArrival: 1, status: 1 });
 productSchema.index({ isUniversal: 1, status: 1 });
+productSchema.index({ compatibleVehicles: 1, status: 1 });
 productSchema.index({ "inventory.quantity": 1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ "compatibleCars.make": 1, "compatibleCars.model": 1, status: 1 });
