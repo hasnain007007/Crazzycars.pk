@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
-import { invoiceInnerHtml } from "@/components/orders/printOrderDocuments";
+import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
 
 function lineTotal(qty, unitPrice) {
   return Math.round(Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0) * 100) / 100;
@@ -378,14 +378,6 @@ export function CreateInvoiceForm() {
     note,
     storeMeta?.currency,
   ]);
-
-  const previewSrcDoc = useMemo(() => {
-    const body = invoiceInnerHtml(previewDraft, storeMeta || {});
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
-      <style>
-        body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background: #fff; color: #111; }
-      </style></head><body>${body}</body></html>`;
-  }, [previewDraft, storeMeta]);
 
   return (
     <>
@@ -853,11 +845,11 @@ export function CreateInvoiceForm() {
             </button>
           </div>
           <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-950">
-            <iframe
-              title="Invoice preview"
-              srcDoc={previewSrcDoc}
+            <InvoicePreviewFrame
+              invoice={previewDraft}
+              storeMeta={storeMeta}
               className="h-[720px] w-full bg-white"
-              sandbox=""
+              title="Invoice preview"
             />
           </div>
         </div>

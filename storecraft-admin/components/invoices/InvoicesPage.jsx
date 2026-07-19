@@ -1,5 +1,5 @@
 /**
- * Invoices list — separate from Orders; filter by customer.
+ * Invoices list — preview loads full invoice; edit link to change items/rates.
  */
 "use client";
 
@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
-import { invoiceInnerHtml } from "@/components/orders/printOrderDocuments";
+import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
 
 export function InvoicesPage() {
   const searchParams = useSearchParams();
@@ -26,6 +26,7 @@ export function InvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [storeMeta, setStoreMeta] = useState(null);
   const [previewInv, setPreviewInv] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
@@ -65,6 +66,24 @@ export function InvoicesPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function openPreview(inv) {
+    setPreviewLoading(true);
+    setPreviewInv(null);
+    try {
+      const res = await fetch(`/api/invoices/${inv.id}`, { credentials: "include" });
+      const json = await res.json();
+      if (!res.ok || !json.success || !json.invoice) {
+        toast.error(json.error || "Could not load invoice for preview.");
+        return;
+      }
+      setPreviewInv(json.invoice);
+    } catch {
+      toast.error("Could not load invoice for preview.");
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
 
   function printPdf(inv) {
     try {
@@ -186,14 +205,31 @@ export function InvoicesPage() {
                       <div className="flex flex-wrap gap-3">
                         <button
                           type="button"
-                          onClick={() => setPreviewInv(inv)}
+                          onClick={() => openPreview(inv)}
                           className="text-xs font-semibold text-slate-700 hover:underline dark:text-slate-200"
                         >
                           Preview
                         </button>
+                        <Link
+                          href={`/invoices/${inv.id}`}
+                          className="text-xs font-semibold text-[#1d6fb8] hover:underline"
+                        >
+                          Edit
+                        </Link>
                         <button
                           type="button"
-                          onClick={() => printPdf(inv)}
+                          onClick={async () => {
+                            try {
+                              const res = await fetch(`/api/invoices/${inv.id}`, {
+                                credentials: "include",
+                              });
+                              const json = await res.json();
+                              if (json.success) printPdf(json.invoice);
+                              else toast.error("Could not load invoice.");
+                            } catch {
+                              toast.error("Could not open PDF.");
+                            }
+                          }}
                           className="text-xs font-semibold text-[#1A7A4C] hover:underline"
                         >
                           Download PDF
@@ -232,17 +268,29 @@ export function InvoicesPage() {
         </div>
       ) : null}
 
+      {previewLoading ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <p className="rounded-xl bg-white px-6 py-4 text-sm font-semibold shadow-lg">Loading preview…</p>
+        </div>
+      ) : null}
+
       {previewInv ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-900">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
+          <div className="flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-900">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
               <div>
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                   Preview · {previewInv.invoiceNumber}
                 </h2>
-                <p className="text-xs text-slate-400">Professional invoice layout</p>
+                <p className="text-xs text-slate-400">Full invoice with logo, items &amp; totals</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href={`/invoices/${previewInv.id}`}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold dark:border-slate-600"
+                >
+                  Edit
+                </Link>
                 <button
                   type="button"
                   onClick={() => printPdf(previewInv)}
@@ -259,13 +307,15 @@ export function InvoicesPage() {
                 </button>
               </div>
             </div>
-            <iframe
-              title={`Preview ${previewInv.invoiceNumber}`}
-              className="min-h-0 flex-1 w-full bg-white"
-              style={{ height: "75vh" }}
-              sandbox=""
-              srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"/><style>body{font-family:ui-sans-serif,system-ui,sans-serif;margin:0;padding:20px;background:#fff}</style></head><body>${invoiceInnerHtml(previewInv, storeMeta || {})}</body></html>`}
-            />
+            <div className="min-h-0 flex-1 overflow-auto bg-slate-100 p-3 dark:bg-slate-950">
+              <InvoicePreviewFrame
+                invoice={previewInv}
+                storeMeta={storeMeta}
+                className="min-h-[80vh] w-full rounded-lg bg-white shadow-sm"
+                style={{ height: "80vh" }}
+                title={`Preview ${previewInv.invoiceNumber}`}
+              />
+            </div>
           </div>
         </div>
       ) : null}
