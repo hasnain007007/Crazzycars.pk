@@ -1,10 +1,11 @@
 /**
- * Invoices list — separate from Orders.
+ * Invoices list — separate from Orders; filter by customer.
  */
 "use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
@@ -12,6 +13,10 @@ import { downloadInvoicePdf } from "@/lib/downloadInvoicePdf";
 import { invoiceInnerHtml } from "@/components/orders/printOrderDocuments";
 
 export function InvoicesPage() {
+  const searchParams = useSearchParams();
+  const customerIdFilter = searchParams.get("customerId") || "";
+  const customerNameHint = searchParams.get("customerName") || "";
+
   const [invoices, setInvoices] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -29,7 +34,7 @@ export function InvoicesPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debounced]);
+  }, [debounced, customerIdFilter]);
 
   useEffect(() => {
     getInvoiceStoreMeta().then(setStoreMeta).catch(() => {});
@@ -40,6 +45,7 @@ export function InvoicesPage() {
     try {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (debounced) params.set("search", debounced);
+      if (customerIdFilter) params.set("customerId", customerIdFilter);
       const res = await fetch(`/api/invoices?${params}`, { credentials: "include" });
       const json = await res.json();
       if (!res.ok || !json.success) {
@@ -54,7 +60,7 @@ export function InvoicesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debounced]);
+  }, [page, debounced, customerIdFilter]);
 
   useEffect(() => {
     load();
@@ -75,8 +81,24 @@ export function InvoicesPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Invoices</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {total} invoice{total === 1 ? "" : "s"} · separate from online orders
+            {total} invoice{total === 1 ? "" : "s"}
+            {customerIdFilter
+              ? ` for ${customerNameHint || "this customer"}`
+              : " · separate from online orders"}
           </p>
+          {customerIdFilter ? (
+            <div className="mt-2 flex flex-wrap gap-3 text-xs">
+              <Link
+                href={`/customers/${customerIdFilter}`}
+                className="font-semibold text-[#1A7A4C] hover:underline"
+              >
+                Open customer profile
+              </Link>
+              <Link href="/invoices" className="font-semibold text-slate-500 hover:underline">
+                Clear customer filter
+              </Link>
+            </div>
+          ) : null}
         </div>
         <Link
           href="/invoices/new"
@@ -120,9 +142,26 @@ export function InvoicesPage() {
                     </td>
                     <td className="px-5 py-3">
                       <div className="font-medium text-slate-800 dark:text-slate-100">
-                        {inv.customer?.name}
+                        {inv.customerId ? (
+                          <Link
+                            href={`/customers/${inv.customerId}`}
+                            className="hover:text-[#1A7A4C] hover:underline"
+                          >
+                            {inv.customer?.name}
+                          </Link>
+                        ) : (
+                          inv.customer?.name
+                        )}
                       </div>
                       <div className="text-xs text-slate-400">{inv.customer?.phone}</div>
+                      {inv.customerId ? (
+                        <Link
+                          href={`/invoices?customerId=${inv.customerId}&customerName=${encodeURIComponent(inv.customer?.name || "")}`}
+                          className="text-[10px] font-semibold text-[#1A7A4C] hover:underline"
+                        >
+                          All invoices for customer
+                        </Link>
+                      ) : null}
                     </td>
                     <td className="whitespace-nowrap px-5 py-3 text-slate-500">
                       {inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : "—"}

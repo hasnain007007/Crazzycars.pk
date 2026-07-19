@@ -16,6 +16,7 @@ function serializeInvoice(doc) {
     createdAt: o.createdAt,
     updatedAt: o.updatedAt,
     customer: o.customer || {},
+    customerId: o.customerId ? String(o.customerId) : null,
     billingAddress: o.billingAddress || {},
     shippingAddress: {
       name: o.customer?.name || "",

@@ -25,6 +25,12 @@ const invoiceSchema = new mongoose.Schema(
       email: { type: String, default: "", trim: true },
       phone: { type: String, default: "", trim: true },
     },
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
+      default: null,
+      index: true,
+    },
     billingAddress: {
       street: { type: String, default: "" },
       city: { type: String, default: "" },
@@ -68,5 +74,6 @@ const invoiceSchema = new mongoose.Schema(
 invoiceSchema.index({ createdAt: -1 });
 invoiceSchema.index({ "customer.name": 1 });
 invoiceSchema.index({ "customer.phone": 1 });
+invoiceSchema.index({ customerId: 1, createdAt: -1 });
 
 export default mongoose.models.Invoice || mongoose.model("Invoice", invoiceSchema);

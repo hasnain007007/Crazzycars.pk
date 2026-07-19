@@ -296,6 +296,7 @@ export function CustomerDetailPage({ customerId }) {
   const c = data.customer;
   const s = data.stats || {};
   const orders = data.orders || [];
+  const invoices = data.invoices || [];
   const isAccountBlocked =
     c.status === "blocked" || c.status === "inactive" || c.isActive === false;
 
@@ -406,6 +407,71 @@ export function CustomerDetailPage({ customerId }) {
               </table>
             </div>
           </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Invoices</h2>
+              <div className="flex flex-wrap gap-3 text-xs font-semibold">
+                <Link
+                  href={`/invoices?customerId=${c.id}&customerName=${encodeURIComponent(c.name || "")}`}
+                  className="text-[#1A7A4C] hover:underline"
+                >
+                  View all invoices
+                </Link>
+                <Link href="/invoices/new" className="text-[#1d6fb8] hover:underline">
+                  + New invoice
+                </Link>
+              </div>
+            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              {s.totalInvoices || invoices.length} invoice
+              {(s.totalInvoices || invoices.length) === 1 ? "" : "s"} · total{" "}
+              {formatMoney(s.invoiceTotal || 0)}
+            </p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="border-b text-left text-xs uppercase text-slate-500 dark:border-slate-700">
+                  <tr>
+                    <th className="py-2 pr-2">Invoice</th>
+                    <th className="py-2 pr-2">Date</th>
+                    <th className="py-2 pr-2">Total</th>
+                    <th className="py-2">Payment</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y dark:divide-slate-800">
+                  {invoices.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-6 text-center text-slate-500">
+                        No invoices for this customer yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    invoices.map((inv) => (
+                      <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                        <td className="py-2 pr-2 font-mono text-xs font-semibold text-slate-800 dark:text-slate-100">
+                          {inv.invoiceNumber}
+                        </td>
+                        <td className="py-2 pr-2 text-slate-600">
+                          {inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : "—"}
+                        </td>
+                        <td className="py-2 pr-2 tabular-nums">{formatMoney(inv.total)}</td>
+                        <td className="py-2">
+                          <span
+                            className={[
+                              "rounded-full px-2 py-0.5 text-xs font-medium capitalize",
+                              paymentStatusBadgeClass(inv.paymentStatus),
+                            ].join(" ")}
+                          >
+                            {inv.paymentStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -415,6 +481,8 @@ export function CustomerDetailPage({ customerId }) {
               ["Total spent", formatMoney(s.totalSpent)],
               ["Avg order", formatMoney(s.avgOrderValue)],
               ["Last order", s.lastOrderDate ? new Date(s.lastOrderDate).toLocaleDateString() : "—"],
+              ["Invoices", s.totalInvoices ?? invoices.length],
+              ["Invoice total", formatMoney(s.invoiceTotal || 0)],
             ].map(([k, v]) => (
               <div key={k} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <p className="text-xs font-semibold uppercase text-slate-500">{k}</p>

@@ -10,6 +10,7 @@ import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
 import Invoice from "@/lib/models/Invoice.model";
 import Product from "@/lib/models/Product.model";
 import { syncStockAlertForProduct } from "@/lib/productMutations";
+import { upsertInvoiceCustomer } from "@/lib/upsertInvoiceCustomer";
 
 const PAYMENT_METHODS = new Set([
   "cod",
@@ -53,6 +54,7 @@ function serializeInvoice(doc) {
     createdAt: o.createdAt,
     updatedAt: o.updatedAt,
     customer: o.customer || {},
+    customerId: o.customerId ? String(o.customerId) : null,
     billingAddress: o.billingAddress || {},
     shippingAddress: {
       name: o.customer?.name || "",
@@ -93,8 +95,12 @@ export async function GET(request) {
     const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit"), 10) || 20));
     const search = (searchParams.get("search") || "").trim();
+    const customerId = (searchParams.get("customerId") || "").trim();
 
     const filter = {};
+    if (customerId && mongoose.Types.ObjectId.isValid(customerId)) {
+      filter.customerId = customerId;
+    }
     if (search) {
       const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
       filter.$or = [
@@ -214,9 +220,42 @@ export async function POST(request) {
     const invoiceNumber = await allocateInvoiceNumber();
     const adminLabel = user.name || user.email || "Admin";
 
+    const saveCustomer = body.saveCustomer !== false;
+    let linkedCustomerId = null;
+    let savedCustomerEmail = email;
+
+    if (saveCustomer) {
+      try {
+        const upserted = await upsertInvoiceCustomer({
+          name,
+          email,
+          phone,
+          city,
+          address: street,
+          customerId: customerIn.customerId,
+        });
+        linkedCustomerId = upserted.customerId;
+        if (upserted.customer?.email && !String(upserted.customer.email).includes("@guest.invoice")) {
+          savedCustomerEmail = upserted.customer.email;
+        } else if (email) {
+          savedCustomerEmail = email;
+        } else {
+          savedCustomerEmail = "";
+        }
+      } catch (err) {
+        return NextResponse.json(
+          { success: false, error: err.message || "Could not save customer." },
+          { status: 400 }
+        );
+      }
+    } else if (customerIn.customerId && mongoose.Types.ObjectId.isValid(String(customerIn.customerId))) {
+      linkedCustomerId = customerIn.customerId;
+    }
+
     const invoice = await Invoice.create({
       invoiceNumber,
-      customer: { name, email, phone },
+      customer: { name, email: savedCustomerEmail || email, phone },
+      customerId: linkedCustomerId,
       billingAddress: {
         street,
         city,
@@ -251,7 +290,12 @@ export async function POST(request) {
       action: `Invoice ${invoiceNumber} created`,
       resource: "Invoice",
       resourceId: invoice._id.toString(),
-      details: { invoiceNumber, total, itemCount: normalizedItems.length },
+      details: {
+        invoiceNumber,
+        total,
+        itemCount: normalizedItems.length,
+        customerId: linkedCustomerId ? String(linkedCustomerId) : null,
+      },
       type: "create",
       ip: requestIp(request),
     });

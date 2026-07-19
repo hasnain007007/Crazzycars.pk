@@ -53,7 +53,12 @@ export function CreateInvoiceForm() {
     email: "",
     city: "",
     address: "",
+    customerId: null,
   });
+  const [saveCustomer, setSaveCustomer] = useState(true);
+  const [customerQuery, setCustomerQuery] = useState("");
+  const [customerHits, setCustomerHits] = useState([]);
+  const [customerSearching, setCustomerSearching] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [paymentStatus, setPaymentStatus] = useState("paid");
   const [deliveryOn, setDeliveryOn] = useState(false);
@@ -79,6 +84,49 @@ export function CreateInvoiceForm() {
   useEffect(() => {
     getInvoiceStoreMeta().then(setStoreMeta).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const q = customerQuery.trim();
+    if (q.length < 2) {
+      setCustomerHits([]);
+      return undefined;
+    }
+    const t = setTimeout(async () => {
+      setCustomerSearching(true);
+      try {
+        const res = await fetch(
+          `/api/customers?search=${encodeURIComponent(q)}&limit=8&status=active`,
+          { credentials: "include" }
+        );
+        const json = await res.json();
+        if (json.success) setCustomerHits(Array.isArray(json.customers) ? json.customers : []);
+        else setCustomerHits([]);
+      } catch {
+        setCustomerHits([]);
+      } finally {
+        setCustomerSearching(false);
+      }
+    }, 280);
+    return () => clearTimeout(t);
+  }, [customerQuery]);
+
+  function pickCustomer(c) {
+    setCustomer({
+      name: c.name || "",
+      phone: c.phone || "",
+      email: c.email && !String(c.email).includes("@guest.") ? c.email : "",
+      city: "",
+      address: "",
+      customerId: c.id,
+    });
+    setCustomerQuery("");
+    setCustomerHits([]);
+    toast.success(`Loaded ${c.name}`);
+  }
+
+  function clearLinkedCustomer() {
+    setCustomer((prev) => ({ ...prev, customerId: null }));
+  }
 
   const loadCatalogPage = useCallback(async (page, append) => {
     if (append) setLoadingMore(true);
@@ -241,7 +289,9 @@ export function CreateInvoiceForm() {
             email: customer.email.trim(),
             city: customer.city.trim(),
             address: customer.address.trim(),
+            customerId: customer.customerId,
           },
+          saveCustomer,
           items: lines.map((line) => ({
             productId: line.productId,
             name: line.name,
@@ -442,7 +492,66 @@ export function CreateInvoiceForm() {
 
           <div className="space-y-5 lg:col-span-7">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Customer</h2>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Customer</h2>
+                <label className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={saveCustomer}
+                    onChange={(e) => setSaveCustomer(e.target.checked)}
+                    className="rounded border-slate-300"
+                  />
+                  Save / update customer record
+                </label>
+              </div>
+
+              <div className="relative mt-3">
+                <label className="block text-xs font-medium text-slate-500">
+                  Find existing customer
+                  <input
+                    type="search"
+                    value={customerQuery}
+                    onChange={(e) => setCustomerQuery(e.target.value)}
+                    placeholder="Search by name, phone, or email…"
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                  />
+                </label>
+                {customerSearching ? (
+                  <p className="mt-1 text-xs text-slate-400">Searching…</p>
+                ) : null}
+                {customerHits.length > 0 ? (
+                  <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-900">
+                    {customerHits.map((c) => (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          onClick={() => pickCustomer(c)}
+                          className="flex w-full flex-col px-3 py-2 text-left text-sm hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                        >
+                          <span className="font-medium text-slate-800 dark:text-slate-100">{c.name}</span>
+                          <span className="text-xs text-slate-400">
+                            {c.phone || "—"} · {c.email || "—"}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+
+              {customer.customerId ? (
+                <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400">
+                  Linked to saved customer ·{" "}
+                  <Link href={`/customers/${customer.customerId}`} className="font-semibold underline">
+                    View profile
+                  </Link>
+                  {" · "}
+                  <button type="button" onClick={clearLinkedCustomer} className="font-semibold underline">
+                    Unlink
+                  </button>
+                </p>
+              ) : null}
+
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block text-xs font-medium text-slate-500 sm:col-span-2">
                   Name *

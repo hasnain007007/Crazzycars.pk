@@ -5,6 +5,7 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import Customer from "@/lib/models/Customer.model";
 import Order from "@/lib/models/Order.model";
+import Invoice from "@/lib/models/Invoice.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
 import { requestIp } from "@/lib/requestIp";
 
@@ -24,19 +25,32 @@ export async function GET(request, context) {
     }
 
     const oid = new mongoose.Types.ObjectId(id);
-    const orders = await Order.find({
-      $or: [{ "customer.customerId": oid }, { "customer.email": customer.email }],
-    })
-      .sort({ createdAt: -1 })
-      .select("orderNumber createdAt orderStatus paymentStatus pricing total items.quantity")
-      .lean();
+    const [orders, invoices] = await Promise.all([
+      Order.find({
+        $or: [{ "customer.customerId": oid }, { "customer.email": customer.email }],
+      })
+        .sort({ createdAt: -1 })
+        .select("orderNumber createdAt orderStatus paymentStatus pricing total items.quantity")
+        .lean(),
+      Invoice.find({
+        $or: [
+          { customerId: oid },
+          ...(customer.phone
+            ? [{ "customer.phone": customer.phone }]
+            : []),
+          ...(customer.email && !String(customer.email).includes("@guest.")
+            ? [{ "customer.email": customer.email }]
+            : []),
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean(),
+    ]);
 
     let totalSpent = 0;
-    let paidCount = 0;
     for (const o of orders) {
-      const t = orderGrandTotal(o);
-      totalSpent += t;
-      if (o.paymentStatus === "paid" || o.paymentStatus === "partial") paidCount += 1;
+      totalSpent += orderGrandTotal(o);
     }
     const avgOrder = orders.length ? totalSpent / orders.length : 0;
     const lastOrder = orders[0]?.createdAt || null;
@@ -48,8 +62,27 @@ export async function GET(request, context) {
       total: orderGrandTotal(o),
       orderStatus: o.orderStatus,
       paymentStatus: o.paymentStatus,
-      itemCount: Array.isArray(o.items) ? o.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0) : 0,
+      itemCount: Array.isArray(o.items)
+        ? o.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0)
+        : 0,
     }));
+
+    let invoiceTotal = 0;
+    const invoiceRows = invoices.map((inv) => {
+      const t = Number(inv.pricing?.total) || 0;
+      invoiceTotal += t;
+      return {
+        id: inv._id.toString(),
+        invoiceNumber: inv.invoiceNumber,
+        createdAt: inv.createdAt,
+        total: t,
+        paymentStatus: inv.paymentStatus,
+        paymentMethod: inv.paymentMethod,
+        itemCount: Array.isArray(inv.items)
+          ? inv.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0)
+          : 0,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -69,8 +102,11 @@ export async function GET(request, context) {
         totalSpent: Math.round(totalSpent * 100) / 100,
         avgOrderValue: Math.round(avgOrder * 100) / 100,
         lastOrderDate: lastOrder,
+        totalInvoices: invoices.length,
+        invoiceTotal: Math.round(invoiceTotal * 100) / 100,
       },
       orders: orderRows,
+      invoices: invoiceRows,
     });
   } catch (error) {
     return NextResponse.json(
