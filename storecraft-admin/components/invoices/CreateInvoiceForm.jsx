@@ -60,6 +60,9 @@ export function CreateInvoiceForm() {
   const [discount, setDiscount] = useState("0");
   const [note, setNote] = useState("");
   const [lines, setLines] = useState([]);
+  const [manualName, setManualName] = useState("");
+  const [manualQty, setManualQty] = useState("1");
+  const [manualPrice, setManualPrice] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedInvoice, setSavedInvoice] = useState(null);
   const [showPdfPrompt, setShowPdfPrompt] = useState(false);
@@ -155,6 +158,32 @@ export function CreateInvoiceForm() {
     });
     toast.success(`Added ${product.name || "product"}`);
   }, []);
+
+  const addManualItem = useCallback(() => {
+    const name = manualName.trim();
+    if (!name) {
+      toast.error("Enter an item name.");
+      return;
+    }
+    const quantity = Math.max(1, Math.min(999, Math.round(Number(manualQty) || 1)));
+    const unitPrice = Math.max(0, Number(manualPrice) || 0);
+    setLines((prev) => [
+      ...prev,
+      {
+        key: `manual-${Date.now()}`,
+        productId: null,
+        name,
+        image: "",
+        variation: "Manual",
+        quantity,
+        unitPrice,
+      },
+    ]);
+    setManualName("");
+    setManualQty("1");
+    setManualPrice("");
+    toast.success("Manual item added");
+  }, [manualName, manualQty, manualPrice]);
 
   const updateLine = useCallback((index, patch) => {
     setLines((prev) =>
@@ -408,9 +437,59 @@ export function CreateInvoiceForm() {
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Line items</h2>
+              <p className="mt-1 text-xs text-slate-400">
+                Pick from catalog or add a custom / manual item below.
+              </p>
+
+              <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800/50">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Manual item
+                </p>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-12">
+                  <input
+                    type="text"
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value)}
+                    placeholder="Item name *"
+                    className="sm:col-span-5 rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addManualItem();
+                      }
+                    }}
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    max={999}
+                    value={manualQty}
+                    onChange={(e) => setManualQty(e.target.value)}
+                    placeholder="Qty"
+                    className="sm:col-span-2 rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={manualPrice}
+                    onChange={(e) => setManualPrice(e.target.value)}
+                    placeholder="Unit price"
+                    className="sm:col-span-3 rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                  />
+                  <button
+                    type="button"
+                    onClick={addManualItem}
+                    className="sm:col-span-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
+                  >
+                    + Add
+                  </button>
+                </div>
+              </div>
+
               {!lines.length ? (
                 <p className="mt-6 text-center text-sm text-slate-400">
-                  Click a product on the left to add it here.
+                  No items yet — use the catalog or add a manual item.
                 </p>
               ) : (
                 <div className="mt-3 overflow-x-auto">
@@ -428,7 +507,17 @@ export function CreateInvoiceForm() {
                       {lines.map((line, idx) => (
                         <tr key={line.key}>
                           <td className="py-2 pr-2 font-medium text-slate-800 dark:text-slate-100">
-                            {line.name}
+                            <input
+                              type="text"
+                              value={line.name}
+                              onChange={(e) => updateLine(idx, { name: e.target.value })}
+                              className="w-full min-w-[8rem] rounded border border-transparent bg-transparent px-1 py-0.5 text-sm hover:border-slate-200 focus:border-slate-300 dark:focus:border-slate-600"
+                            />
+                            {!line.productId ? (
+                              <span className="ml-1 text-[10px] font-semibold uppercase text-slate-400">
+                                manual
+                              </span>
+                            ) : null}
                           </td>
                           <td className="py-2 px-2">
                             <input
