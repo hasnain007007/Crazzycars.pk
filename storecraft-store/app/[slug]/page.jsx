@@ -82,17 +82,22 @@ export async function generateMetadata({ params }) {
 
   if (content.type === "product") {
     const p = content.data;
-    const title = (p.metaTitle || p.seo?.metaTitle || "").trim() || p.name;
+    const title =
+      (p.metaTitle || p.seo?.metaTitle || "").trim() || `${p.name} | ${BRAND}`;
     const description =
       (p.metaDescription || p.seo?.metaDescription || "").trim() ||
       stripHtml(p.shortDescription || "").slice(0, 160) ||
       stripHtml(p.longDescription || "").slice(0, 160) ||
-      `Buy ${p.name} at ${BRAND}. Premium car accessories.`;
+      `Buy ${p.name} at ${BRAND}. Cash on Delivery nationwide.`;
+    const keywords = Array.isArray(p.seo?.metaKeywords)
+      ? p.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
+      : [];
     const mainImg = p.media?.images?.find((i) => i?.isMain)?.url || p.media?.images?.[0]?.url;
 
     return {
       title,
       description,
+      ...(keywords.length ? { keywords } : {}),
       alternates: { canonical },
       openGraph: {
         title,
@@ -111,21 +116,26 @@ export async function generateMetadata({ params }) {
         images: mainImg ? [mainImg] : [],
       },
     };
+    };
   }
 
   if (content.type === "category") {
     const cat = content.data.category;
-    const title = (cat.seo?.metaTitle || "").trim() || cat.name;
+    const title = (cat.seo?.metaTitle || "").trim() || `${cat.name} | ${BRAND}`;
     const description =
       (cat.seo?.metaDescription || "").trim() ||
-      `Shop ${cat.name} at ${BRAND}. Premium car accessories collection.`;
+      `Shop ${cat.name} at ${BRAND}. Premium car accessories with Cash on Delivery nationwide.`;
+    const keywords = Array.isArray(cat.seo?.metaKeywords)
+      ? cat.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
+      : [];
     return {
       title,
       description,
+      ...(keywords.length ? { keywords } : {}),
       alternates: { canonical },
       openGraph: {
         title,
-        description: `Shop ${cat.name} at ${BRAND}`,
+        description,
         url: canonical,
         images: cat.image?.url ? [{ url: cat.image.url }] : [],
       },
