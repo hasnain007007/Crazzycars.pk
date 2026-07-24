@@ -12,6 +12,32 @@ const nextConfig = {
         destination: "/blogs/:slug",
         permanent: true,
       },
+      // Shopify-era CMS slugs that do not match new-site paths (must be before /pages/:slug)
+      {
+        source: "/pages/track-your-order",
+        destination: "/track-order",
+        permanent: true,
+      },
+      {
+        source: "/pages/contact-1",
+        destination: "/contact",
+        permanent: true,
+      },
+      {
+        source: "/pages/shipping-and-delivery-policy",
+        destination: "/shipping-policy",
+        permanent: true,
+      },
+      {
+        source: "/pages/return-refund-policy",
+        destination: "/returns-policy",
+        permanent: true,
+      },
+      {
+        source: "/pages/terms-of-service",
+        destination: "/terms-conditions",
+        permanent: true,
+      },
       {
         source: "/pages/:slug",
         destination: "/:slug",
