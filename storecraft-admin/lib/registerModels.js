@@ -15,6 +15,7 @@ import "./models/Customer.model";
 import "./models/FeaturedMedia.model";
 import "./models/Order.model";
 import "./models/Page.model";
+import "./models/PostexWebhookLog.model";
 import "./models/Product.model";
 import "./models/ProductOption.model";
 import "./models/Redirect.model";
