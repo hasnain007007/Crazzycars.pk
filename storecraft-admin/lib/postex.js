@@ -9,6 +9,10 @@ export const POSTEX_ORDER_API_BASE =
 export const POSTEX_CITIES_API_BASE =
   "https://api.postex.pk/services/integration/api/order/v2";
 
+/** Single-parcel tracking lives on v1 (not v3 get-order-detail). */
+export const POSTEX_TRACK_API_BASE =
+  "https://api.postex.pk/services/integration/api/order/v1";
+
 export function resolvePostexApiKey(settingsCourier) {
   const fromEnv = String(process.env.POSTEX_API_KEY || "").trim();
   if (fromEnv) return fromEnv;
@@ -232,12 +236,12 @@ export async function fetchPostexTracking(trackingNumber, options = {}) {
     return { success: false, error: "Tracking unavailable" };
   }
 
-  const url = new URL(`${POSTEX_ORDER_API_BASE}/get-order-detail`);
-  url.searchParams.set("trackingNumber", id);
+  // Correct endpoint: GET /order/v1/track-order/{trackingNumber}
+  const url = `${POSTEX_TRACK_API_BASE}/track-order/${encodeURIComponent(id)}`;
 
   let res;
   try {
-    res = await fetch(url.toString(), {
+    res = await fetch(url, {
       method: "GET",
       headers: {
         token: apiKey,
@@ -256,8 +260,11 @@ export async function fetchPostexTracking(trackingNumber, options = {}) {
     json = null;
   }
 
-  const apiStatus = String(json?.status || "").toUpperCase();
+  const apiStatus = String(json?.statusCode || json?.status || "").toUpperCase();
   if (apiStatus === "ERROR" || apiStatus === "FAILED") {
+    return classifyPostexError(res.status, json, false);
+  }
+  if (apiStatus && apiStatus !== "200" && !json?.dist) {
     return classifyPostexError(res.status, json, false);
   }
 
