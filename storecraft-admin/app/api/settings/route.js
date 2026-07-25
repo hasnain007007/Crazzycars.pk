@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { requestIp } from "@/lib/requestIp";
 
@@ -61,9 +62,8 @@ export async function GET(request) {
 export async function PUT(request) {
   try {
     const user = getRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "admin");
+    if (denied) return denied;
     await dbConnect();
     let doc = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY });
     if (!doc) {

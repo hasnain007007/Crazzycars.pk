@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { hashPassword, logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { isSuperadmin, requireAuth } from "@/lib/requireRole";
+import { denyUnlessMinRole, requireAuth } from "@/lib/requireRole";
 import User from "@/lib/models/User.model";
 import { requestIp } from "@/lib/requestIp";
 
@@ -35,12 +35,8 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    if (!requireAuth(user)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-    if (!isSuperadmin(user)) {
-      return NextResponse.json({ success: false, error: "Superadmin only." }, { status: 403 });
-    }
+    const denied = denyUnlessMinRole(user, "superadmin");
+    if (denied) return denied;
     await dbConnect();
     const body = await request.json();
     const name = String(body.name || "").trim();

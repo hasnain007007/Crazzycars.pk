@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import Order from "@/lib/models/Order.model";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { requestIp } from "@/lib/requestIp";
@@ -20,9 +21,8 @@ function titleCaseStatus(s) {
 export async function PUT(request) {
   try {
     const user = getRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     await dbConnect();
 
     const body = await request.json().catch(() => ({}));

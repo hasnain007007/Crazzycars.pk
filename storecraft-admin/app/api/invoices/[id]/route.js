@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import Invoice from "@/lib/models/Invoice.model";
 import Product from "@/lib/models/Product.model";
 import { upsertInvoiceCustomer } from "@/lib/upsertInvoiceCustomer";
@@ -155,9 +156,8 @@ export async function GET(request, context) {
 export async function PUT(request, context) {
   try {
     const user = getRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: "Invalid invoice id." }, { status: 400 });

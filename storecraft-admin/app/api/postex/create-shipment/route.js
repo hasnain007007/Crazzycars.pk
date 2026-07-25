@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
@@ -78,9 +79,8 @@ function applyShipmentToOrder(order, { trackingNumber, label, adminName }) {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
 
     const body = await request.json().catch(() => ({}));
     const orderId = String(body.orderId || "").trim();

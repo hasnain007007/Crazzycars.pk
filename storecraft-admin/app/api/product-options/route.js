@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import ProductOption from "@/lib/models/ProductOption.model";
 
 const validStatuses = ["published", "draft", "active", "inactive"];
@@ -30,9 +31,8 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const user = getRequestUser(req);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     await dbConnect();
     const body = await req.json();
     if (!body.name || !body.name.trim()) {

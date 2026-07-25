@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import FeaturedMedia from "@/lib/models/FeaturedMedia.model";
 
 export async function PUT(request, context) {
   try {
-    if (!getRequestUser(request)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(request);
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });
@@ -42,9 +43,9 @@ export async function PUT(request, context) {
 
 export async function DELETE(request, context) {
   try {
-    if (!getRequestUser(request)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(request);
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });

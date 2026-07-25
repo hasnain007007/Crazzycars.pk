@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import Customer from "@/lib/models/Customer.model";
 
 function escapeHtml(value) {
@@ -16,9 +17,8 @@ function escapeHtml(value) {
 export async function POST(req, context) {
   try {
     const user = getRequestUser(req);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "admin");
+    if (denied) return denied;
 
     await dbConnect();
     const { id } = await context.params;

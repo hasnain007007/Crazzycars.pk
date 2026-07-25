@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import ProductOption from "@/lib/models/ProductOption.model";
 
 const validStatuses = ["published", "draft", "active", "inactive"];
@@ -35,9 +36,8 @@ export async function GET(req, { params }) {
 export async function PUT(req, { params }) {
   try {
     const user = getRequestUser(req);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     const { id } = await params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });
@@ -71,9 +71,8 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     const user = getRequestUser(req);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     const { id } = await params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });

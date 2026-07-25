@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import FeaturedMedia from "@/lib/models/FeaturedMedia.model";
 
 export async function GET(request) {
@@ -22,9 +23,9 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    if (!getRequestUser(request)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(request);
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     await dbConnect();
     const body = await request.json();
     const item = await FeaturedMedia.create({

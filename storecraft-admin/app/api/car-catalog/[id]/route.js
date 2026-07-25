@@ -5,6 +5,7 @@ import { slugify } from "@/lib/carCatalogUtils";
 import { normalizeCatalogModels, serializeCatalogModelForDb } from "@/lib/carCatalogNormalize";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import CarCatalog from "@/lib/models/CarCatalog.model";
 import { requestIp } from "@/lib/requestIp";
 
@@ -32,9 +33,8 @@ export async function GET(request, context) {
 export async function PUT(request, context) {
   try {
     const user = getRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });
@@ -106,9 +106,8 @@ export async function PUT(request, context) {
 export async function DELETE(request, context) {
   try {
     const user = getRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });

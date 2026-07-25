@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
 import Invoice from "@/lib/models/Invoice.model";
 import Product from "@/lib/models/Product.model";
@@ -135,9 +136,8 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
 
     await dbConnect();
     const body = await request.json().catch(() => ({}));

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { getCloudinaryCloudName } from "@/lib/cloudinaryConfig";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 
 cloudinary.config({
   cloud_name: getCloudinaryCloudName(),
@@ -43,9 +44,9 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    if (!getRequestUser(req)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(req);
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     const body = await req.json();
     const { publicId } = body;
     if (!publicId) {
@@ -67,9 +68,9 @@ export async function POST(req) {
 
 export async function DELETE(req) {
   try {
-    if (!getRequestUser(req)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(req);
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
     const body = await req.json();
     const { publicId, resourceType } = body;
     if (!publicId) {

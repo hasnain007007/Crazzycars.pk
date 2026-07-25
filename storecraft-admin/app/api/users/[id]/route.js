@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { hashPassword, logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { isSuperadmin, requireAuth } from "@/lib/requireRole";
+import { denyUnlessMinRole, requireAuth } from "@/lib/requireRole";
 import User from "@/lib/models/User.model";
 import { requestIp } from "@/lib/requestIp";
 
@@ -32,12 +32,8 @@ export async function GET(request, context) {
 export async function PUT(request, context) {
   try {
     const user = getRequestUser(request);
-    if (!requireAuth(user)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-    if (!isSuperadmin(user)) {
-      return NextResponse.json({ success: false, error: "Superadmin only." }, { status: 403 });
-    }
+    const denied = denyUnlessMinRole(user, "superadmin");
+    if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });
@@ -100,12 +96,8 @@ export async function PUT(request, context) {
 export async function DELETE(request, context) {
   try {
     const user = getRequestUser(request);
-    if (!requireAuth(user)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-    if (!isSuperadmin(user)) {
-      return NextResponse.json({ success: false, error: "Superadmin only." }, { status: 403 });
-    }
+    const denied = denyUnlessMinRole(user, "superadmin");
+    if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });

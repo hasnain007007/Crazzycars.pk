@@ -9,6 +9,7 @@ import path from "path";
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import { getCloudinaryCloudName } from "@/lib/cloudinaryConfig";
 
 function sanitizeFolder(raw) {
@@ -38,9 +39,9 @@ function configureCloudinary() {
 
 export async function POST(request) {
   try {
-    if (!getRequestUser(request)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(request);
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
 
     const formData = await request.formData();
     const file = formData.get("file");

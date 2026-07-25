@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessMinRole } from "@/lib/requireRole";
 import { POSTEX_ORDER_API_BASE, resolvePostexApiKey } from "@/lib/postex";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
@@ -10,9 +11,9 @@ import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
  */
 export async function POST(request) {
   try {
-    if (!getRequestUser(request)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(request);
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
 
     await dbConnect();
     const settings =
