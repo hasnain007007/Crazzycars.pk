@@ -391,10 +391,8 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
   const handling =
     String(opts.handling || "").trim() === "Fragile" ? "Fragile" : "Normal";
   const invoiceDivision = Math.max(1, Math.round(Number(opts.invoiceDivision) || 1));
-  const codAmount =
-    opts.codAmount !== undefined && opts.codAmount !== null && opts.codAmount !== ""
-      ? Math.max(0, Math.round(Number(opts.codAmount) || 0))
-      : Math.round(total);
+  // Hard-lock: always collect order total — never trust client-submitted codAmount.
+  const codAmount = Math.round(total);
 
   const customerName =
     String(addr.name || "").trim() ||

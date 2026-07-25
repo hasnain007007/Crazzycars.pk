@@ -1177,7 +1177,6 @@ export function OrderDetail({ orderId }) {
           orderId: order.id || order._id,
           rebook: postexRebook,
           handling: postexHandling,
-          codAmount: postexCodAmount,
           weight: postexWeight,
           pieces: postexPieces,
           remarks: postexRemarks,
@@ -1407,16 +1406,23 @@ export function OrderDetail({ orderId }) {
               <input
                 type="number"
                 value={postexCodAmount}
-                disabled={orderPrepaid}
-                onChange={(e) => setPostexCodAmount(Number(e.target.value))}
+                disabled
+                readOnly
+                title="COD is locked to the order total. Edit the order total first if you need a different amount."
                 style={{
                   width: "100%",
                   padding: "8px 10px",
                   border: "1px solid #E5E7EB",
                   borderRadius: 6,
                   fontSize: 13,
+                  background: "#F9FAFB",
+                  color: "#6B7280",
+                  cursor: "not-allowed",
                 }}
               />
+              <p style={{ margin: "6px 0 0", fontSize: 11, color: "#6B7280" }}>
+                Locked to order total. Update the order pricing first if COD must change.
+              </p>
             </div>
 
             <div>

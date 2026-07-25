@@ -119,10 +119,10 @@ export async function POST(request) {
       pieces: body.pieces,
       invoiceDivision: body.invoiceDivision,
       remarks: body.remarks,
-      codAmount: body.codAmount,
       weight: body.weight,
       pickupAddressCode: body.pickupAddressCode,
       paymentMethod: body.paymentMethod,
+      // COD is hard-locked to order.pricing.total in buildPostexCreatePayload
     };
 
     const result = await createPostexShipment(
