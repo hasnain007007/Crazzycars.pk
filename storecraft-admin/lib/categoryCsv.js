@@ -1,0 +1,61 @@
+/**
+ * Category CSV column contract (import + export + template).
+ */
+export const CATEGORY_CSV_HEADERS = [
+  "name",
+  "slug",
+  "parentSlug",
+  "description",
+  "status",
+  "sortOrder",
+  "isFeatured",
+  "showInNav",
+  "showInFooter",
+  "showOnHomepage",
+  "imageUrl",
+  "imageAlt",
+  "imageTitle",
+  "metaTitle",
+  "metaDescription",
+  "metaKeywords",
+];
+
+export const CATEGORY_CSV_SAMPLE_ROWS = [
+  {
+    name: "Exterior",
+    slug: "exterior",
+    parentSlug: "",
+    description: "Body kits, splitters, spoilers and exterior styling.",
+    status: "active",
+    sortOrder: "1",
+    isFeatured: "true",
+    showInNav: "true",
+    showInFooter: "true",
+    showOnHomepage: "true",
+    imageUrl: "https://cdn.example.com/exterior.jpg",
+    imageAlt: "Car exterior accessories",
+    imageTitle: "Exterior – CrazzyCars.pk",
+    metaTitle: "Car Exterior Accessories in Pakistan | CrazzyCars.pk",
+    metaDescription:
+      "Shop car exterior accessories in Pakistan — body kits, splitters, spoilers. Cash on Delivery.",
+    metaKeywords: "exterior accessories|body kits|spoilers pakistan",
+  },
+  {
+    name: "Body Kits & Extensions",
+    slug: "body-kits-extensions",
+    parentSlug: "exterior",
+    description: "Front lips, side skirts and body kit extensions.",
+    status: "active",
+    sortOrder: "1",
+    isFeatured: "false",
+    showInNav: "true",
+    showInFooter: "false",
+    showOnHomepage: "false",
+    imageUrl: "https://cdn.example.com/body-kits.jpg",
+    imageAlt: "Body kits for cars",
+    imageTitle: "Body Kits – CrazzyCars.pk",
+    metaTitle: "Car Body Kits in Pakistan | CrazzyCars.pk",
+    metaDescription: "Buy car body kits and extensions online in Pakistan at CrazzyCars.pk.",
+    metaKeywords: "body kits pakistan|car body kit|front lip",
+  },
+];
