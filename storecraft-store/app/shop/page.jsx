@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { ProductsBrowseMedico } from "@/components/store/ProductsBrowseMedico";
+import { fetchProductsServer } from "@/lib/serverProductFetch";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const metadata = buildPageMetadata({
@@ -22,11 +23,25 @@ function Fallback() {
   );
 }
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  const {
+    products: initialProducts,
+    total: initialTotal,
+    totalPages: initialTotalPages,
+  } = await fetchProductsServer({
+    limit: 24,
+    page: 1,
+  });
+
   return (
     <div className="min-h-screen bg-[#F8F8F8]">
       <Suspense fallback={<Fallback />}>
-        <ProductsBrowseMedico />
+        <ProductsBrowseMedico
+          initialProducts={initialProducts}
+          initialTotal={initialTotal}
+          initialPage={1}
+          initialTotalPages={initialTotalPages}
+        />
       </Suspense>
     </div>
   );

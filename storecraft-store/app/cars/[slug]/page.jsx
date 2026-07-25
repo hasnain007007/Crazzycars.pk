@@ -64,7 +64,7 @@ export default async function VehicleSlugPage({ params }) {
   const products = rawProducts.map(serializeVehicleProduct);
 
   const yearLabel =
-    vehicle.yearTo == null
+    vehicle.yearTo == null || Number(vehicle.yearTo) >= new Date().getFullYear()
       ? `${vehicle.yearFrom}–Present`
       : `${vehicle.yearFrom}–${vehicle.yearTo}`;
 
@@ -75,66 +75,181 @@ export default async function VehicleSlugPage({ params }) {
   ];
   const breadcrumbLd = breadcrumbJsonLd(crumbs);
 
+  const heroDesc =
+    (vehicle.metaDescription || "").trim() ||
+    `Upgrade your ${vehicle.displayName} with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber. Cash on Delivery nationwide.`;
+
   return (
-    <div style={{ background: "#FFFFFF", minHeight: "100vh", color: "#111111" }}>
+    <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
-      <section className="border-b border-[#E5E7EB] bg-gradient-to-b from-[#111111] to-[#1a1a1a]">
-        <div className="store-container grid gap-8 py-10 md:grid-cols-2 md:items-center md:py-14">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#C41E1E]">
-              {vehicle.make} · {yearLabel}
-            </p>
-            <h1 className="font-heading mt-2 text-3xl font-bold text-white md:text-4xl">
-              {vehicle.displayName} Accessories &amp; Body Kits
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/75">
-              {(vehicle.metaDescription || "").trim() ||
-                `Browse premium accessories for your ${vehicle.displayName}. Fitment-matched parts plus universal upgrades — Cash on Delivery nationwide from ${BRAND}.`}
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href="/shop"
-                className="rounded-lg bg-[#C41E1E] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#a81818]"
+      <section
+        className="vehicle-page-hero"
+        style={{
+          background: "linear-gradient(135deg, #141414 0%, #1f1f1f 55%, #2a1515 100%)",
+          borderBottom: "1px solid #2a2a2a",
+        }}
+      >
+        <div
+          className="store-container"
+          style={{
+            display: "grid",
+            gap: 24,
+            alignItems: "center",
+            padding: "28px 16px 32px",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gap: 24,
+              alignItems: "center",
+              gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 0.9fr)",
+            }}
+            className="vehicle-hero-grid"
+          >
+            <div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "#F87171",
+                }}
               >
-                Shop all accessories
-              </Link>
-              <Link
-                href="/categories"
-                className="rounded-lg border border-white/30 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
+                {vehicle.make} · {yearLabel}
+              </p>
+              <h1
+                style={{
+                  margin: "10px 0 0",
+                  fontFamily: "var(--font-heading), Rajdhani, sans-serif",
+                  fontSize: "clamp(22px, 3.2vw, 34px)",
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  color: "#FFFFFF",
+                }}
               >
-                Browse categories
-              </Link>
+                {vehicle.displayName}
+              </h1>
+              <p
+                style={{
+                  margin: "6px 0 0",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "#E5E7EB",
+                }}
+              >
+                Accessories &amp; Body Kits
+              </p>
+              <p
+                style={{
+                  margin: "12px 0 0",
+                  maxWidth: 480,
+                  fontSize: 14,
+                  lineHeight: 1.65,
+                  color: "#D1D5DB",
+                }}
+              >
+                {heroDesc}
+              </p>
+              <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 10 }}>
+                <Link
+                  href="#compatible-products"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    borderRadius: 8,
+                    background: "#C41E1E",
+                    color: "#FFFFFF",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    padding: "10px 18px",
+                    textDecoration: "none",
+                  }}
+                >
+                  Shop compatible parts
+                </Link>
+                <Link
+                  href="/categories"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.45)",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "#FFFFFF",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    padding: "10px 18px",
+                    textDecoration: "none",
+                  }}
+                >
+                  Browse categories
+                </Link>
+              </div>
             </div>
-          </div>
-          <div className="relative mx-auto aspect-[16/10] w-full max-w-lg overflow-hidden rounded-xl border border-white/10 bg-[#222]">
-            {vehicle.image ? (
-              <Image
-                src={vehicle.image}
-                alt={`${vehicle.displayName} accessories in Pakistan`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 512px"
-                priority
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-5xl text-white/40">🚗</div>
-            )}
+
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: 440,
+                marginLeft: "auto",
+                marginRight: "auto",
+                aspectRatio: "16 / 10",
+                overflow: "hidden",
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "#0f0f0f",
+                boxShadow: "0 16px 40px rgba(0,0,0,0.35)",
+              }}
+            >
+              {vehicle.image ? (
+                <Image
+                  src={vehicle.image}
+                  alt={`${vehicle.displayName} accessories in Pakistan`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 440px"
+                  priority
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    height: "100%",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 48,
+                    color: "rgba(255,255,255,0.35)",
+                  }}
+                >
+                  🚗
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="store-container py-10 md:py-14">
-        <div className="mb-6 flex items-end justify-between gap-4">
+      <section id="compatible-products" className="store-container py-8 md:py-10">
+        <div className="mb-5 flex items-end justify-between gap-4">
           <div>
-            <h2 className="font-heading text-2xl font-bold text-[#111111]">Compatible products</h2>
+            <h2
+              className="font-heading text-xl font-bold md:text-2xl"
+              style={{ color: "#111111", margin: 0 }}
+            >
+              Compatible products
+            </h2>
             <p className="mt-1 text-sm text-[#6B7280]">
               {products.length
-                ? `${products.length} product${products.length === 1 ? "" : "s"} for this vehicle (includes universal fit)`
-                : "No linked products yet — universal and fitment products will appear here."}
+                ? `${products.length} product${products.length === 1 ? "" : "s"} linked to this vehicle`
+                : "No products linked to this vehicle yet."}
             </p>
           </div>
         </div>
@@ -173,8 +288,8 @@ export default async function VehicleSlugPage({ params }) {
         ) : (
           <div className="rounded-xl border border-dashed border-[#E5E7EB] bg-[#FAFAFA] px-6 py-12 text-center">
             <p className="text-sm text-[#6B7280]">
-              Products for this car will show once assigned via <code>compatibleVehicles</code> or marked{" "}
-              <code>isUniversal</code>.
+              Products for this car will show once you assign them in admin (compatible vehicles / car catalog).
+              Universal products are not listed here unless you add them to this car.
             </p>
             <Link href="/shop" className="mt-4 inline-block text-sm font-bold text-[#C41E1E] hover:underline">
               Browse the shop →

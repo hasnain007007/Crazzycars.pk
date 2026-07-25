@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { formatPrice } from "@/lib/currency";
 import { ProductCard } from "./ProductCard";
 import { CAR_MAKES } from "@/lib/carCatalog";
 
 /** Real vehicle brands only — not product attributes like Universal/Premium. */
 const SHOP_BRANDS = ["Honda", "Toyota", "Suzuki", "KIA", "Hyundai", "Changan", "MG"];
+const PAGE_SIZE = 24;
 
 function Section({ title, children }) {
   const [open, setOpen] = useState(true);
@@ -22,27 +23,68 @@ function Section({ title, children }) {
   );
 }
 
+function buildPageHref(pathname, searchParams, pageNum) {
+  const qs = new URLSearchParams(searchParams.toString());
+  if (pageNum <= 1) qs.delete("page");
+  else qs.set("page", String(pageNum));
+  const q = qs.toString();
+  return q ? `${pathname}?${q}` : pathname;
+}
+
+function pageWindow(page, totalPages) {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+  const out = new Set([1, totalPages, page - 1, page, page + 1, page - 2, page + 2]);
+  return [...out].filter((n) => n >= 1 && n <= totalPages).sort((a, b) => a - b);
+}
+
+function resolveInitialTotalPages(initialTotal, initialProductsLength, initialTotalPages) {
+  const fromProp = Number(initialTotalPages);
+  if (Number.isFinite(fromProp) && fromProp > 1) return Math.floor(fromProp);
+  const total = Number(initialTotal);
+  if (Number.isFinite(total) && total > 0) {
+    return Math.max(1, Math.ceil(total / PAGE_SIZE));
+  }
+  if (Number.isFinite(fromProp) && fromProp >= 1) return Math.floor(fromProp);
+  return Math.max(1, Math.ceil((initialProductsLength || 0) / PAGE_SIZE) || 1);
+}
+
 export function ProductsBrowseMedico({
   initialProducts = [],
   initialTotal = 0,
+  initialPage = 1,
+  initialTotalPages = 1,
 }) {
+  const router = useRouter();
+  const pathname = usePathname() || "/shop";
   const searchParams = useSearchParams();
+
   const category = searchParams.get("category") || "";
   const saleOnly = searchParams.get("sale") === "true";
-  const dealsParam = searchParams.get("deals") === "true";
+  const dealsParam = searchParams.get("deals") === "true" || searchParams.get("deals") === "1";
   const carMake = searchParams.get("make") || searchParams.get("carMake") || "";
   const carModel = searchParams.get("model") || searchParams.get("carModel") || "";
   const carYear = searchParams.get("year") || searchParams.get("carYear") || "";
   const searchQ = searchParams.get("q") || "";
+  const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
+
   const hasUrlFilters = Boolean(
-    category || saleOnly || dealsParam || carMake || carModel || carYear || searchQ.trim()
+    category || saleOnly || dealsParam || carMake || carModel || carYear || searchQ.trim() || page > 1
   );
-  const hasInitial = !hasUrlFilters && initialProducts.length > 0;
+  const seededTotal = Number(initialTotal) || initialProducts.length || 0;
+  const seededPages = resolveInitialTotalPages(
+    seededTotal,
+    initialProducts.length,
+    initialTotalPages
+  );
+  // Only treat SSR payload as complete when it matches the browse page size (or the full catalog).
+  const initialPageComplete =
+    initialProducts.length > 0 &&
+    (initialProducts.length >= PAGE_SIZE || initialProducts.length >= seededTotal);
+  const hasInitial = !hasUrlFilters && initialPageComplete && page === (initialPage || 1);
+
   const [products, setProducts] = useState(hasInitial ? initialProducts : []);
-  const [allProducts, setAllProducts] = useState(hasInitial ? initialProducts : []);
-  const [totalCount, setTotalCount] = useState(
-    hasInitial ? initialTotal || initialProducts.length : 0
-  );
+  const [totalCount, setTotalCount] = useState(hasInitial ? seededTotal : 0);
+  const [totalPages, setTotalPages] = useState(hasInitial ? seededPages : 1);
   const [loading, setLoading] = useState(!hasInitial);
   const [sort, setSort] = useState("newest");
   const [inStock, setInStock] = useState(false);
@@ -53,101 +95,137 @@ export function ProductsBrowseMedico({
   const [filterBrand, setFilterBrand] = useState("");
   const [filterMake, setFilterMake] = useState(carMake);
   const [grid, setGrid] = useState(true);
+  const [highest, setHighest] = useState(0);
+
+  const goToPage = useCallback(
+    (nextPage, { replace = false } = {}) => {
+      const href = buildPageHref(pathname, searchParams, nextPage);
+      if (replace) router.replace(href, { scroll: false });
+      else router.push(href, { scroll: true });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const setFilterParam = useCallback(
+    (key, value) => {
+      const qs = new URLSearchParams(searchParams.toString());
+      if (value) qs.set(key, value);
+      else qs.delete(key);
+      qs.delete("page");
+      const q = qs.toString();
+      router.push(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      if (carMake) {
-        const fitQs = new URLSearchParams({ make: carMake, limit: "48" });
-        if (carModel) fitQs.set("model", carModel);
-        if (carYear) fitQs.set("year", carYear);
-        const res = await fetch(`/api/products/fitment?${fitQs.toString()}`);
-        const json = await res.json();
-        if (json.success) {
-          setAllProducts(json.products || []);
-          setTotalCount(json.total ?? json.products?.length ?? 0);
-        } else {
-          setAllProducts([]);
-          setTotalCount(0);
-        }
-        return;
-      }
-
-      const qs = new URLSearchParams({ limit: "48" });
-      if (category) qs.set("category", category);
+      const qs = new URLSearchParams({
+        limit: String(PAGE_SIZE),
+        page: String(page),
+        sort,
+      });
+      const activeCategory = filterCategory || category;
+      if (activeCategory) qs.set("category", activeCategory);
       if (saleOnly) qs.set("sale", "true");
       if (dealsParam) qs.set("deals", "true");
+      if (searchQ.trim()) qs.set("q", searchQ.trim());
+
+      const make = filterMake || carMake;
+      if (make) qs.set("carMake", make);
+      if (carModel) qs.set("carModel", carModel);
+      if (carYear) qs.set("carYear", carYear);
+
+      if (filterBrand) qs.set("brand", filterBrand);
+      if (priceFrom !== "") qs.set("minPrice", String(priceFrom));
+      if (priceTo !== "") qs.set("maxPrice", String(priceTo));
+      if (inStock && !outOfStock) qs.set("inStock", "true");
+      if (outOfStock && !inStock) qs.set("outOfStock", "true");
+
       const res = await fetch(`/api/products?${qs.toString()}`);
       const json = await res.json();
       if (json.success) {
-        setAllProducts(json.products || []);
-        setTotalCount(json.total ?? json.products?.length ?? 0);
+        const rows = json.products || [];
+        setProducts(rows);
+        setTotalCount(Number(json.total) || 0);
+        setTotalPages(Math.max(1, Number(json.totalPages) || 1));
+        if (rows.length) {
+          setHighest((prev) => Math.max(prev, ...rows.map((p) => Number(p.price) || 0)));
+        }
+      } else {
+        setProducts([]);
+        setTotalCount(0);
+        setTotalPages(1);
       }
     } finally {
       setLoading(false);
     }
-  }, [category, saleOnly, dealsParam, carMake, carModel, carYear]);
+  }, [
+    page,
+    sort,
+    category,
+    filterCategory,
+    saleOnly,
+    dealsParam,
+    searchQ,
+    carMake,
+    carModel,
+    carYear,
+    filterMake,
+    filterBrand,
+    priceFrom,
+    priceTo,
+    inStock,
+    outOfStock,
+  ]);
 
   useEffect(() => {
-    if (hasInitial) return;
+    const canUseSeed =
+      hasInitial &&
+      page === 1 &&
+      sort === "newest" &&
+      !filterBrand &&
+      !filterMake &&
+      !priceFrom &&
+      !priceTo &&
+      !inStock &&
+      !outOfStock &&
+      !filterCategory;
+    if (canUseSeed) return;
     void load();
-  }, [load, hasInitial]);
+  }, [load, hasInitial, page, sort, filterBrand, filterMake, priceFrom, priceTo, inStock, outOfStock, filterCategory]);
 
+  // Keep local category/make selects in sync with URL.
   useEffect(() => {
-    let next = [...allProducts];
-    if (saleOnly) {
-      next = next.filter((p) => {
-        const regular = Number(p.regularPrice ?? p.compareAt ?? p.price ?? 0);
-        const sale = Number(p.salePrice ?? 0);
-        return Boolean(sale && regular && sale < regular);
-      });
-    }
-    if (inStock && !outOfStock) next = next.filter((p) => p.inStock);
-    if (outOfStock && !inStock) next = next.filter((p) => !p.inStock);
-    const min = Number(priceFrom || 0);
-    const max = Number(priceTo || Number.MAX_SAFE_INTEGER);
-    next = next.filter((p) => (Number(p.price) || 0) >= min && (Number(p.price) || 0) <= max);
-    if (filterCategory) {
-      const fc = filterCategory.toLowerCase();
-      next = next.filter((p) => {
-        const cat = String(p.category || p.categorySlug || "").toLowerCase();
-        const tags = (p.tags || []).join(" ").toLowerCase();
-        return cat.includes(fc) || tags.includes(fc) || String(p.name).toLowerCase().includes(fc);
-      });
-    }
-    if (filterBrand) {
-      const fb = filterBrand.toLowerCase();
-      next = next.filter((p) => {
-        const brand = String(p.brand || p.vendor || "").toLowerCase();
-        return brand.includes(fb);
-      });
-    }
-    if (filterMake) {
-      const fm = filterMake.toLowerCase();
-      next = next.filter((p) => {
-        const hay = `${p.name || ""} ${(p.tags || []).join(" ")} ${p.description || ""}`.toLowerCase();
-        return hay.includes(fm);
-      });
-    }
-    if (searchQ.trim()) {
-      const q = searchQ.trim().toLowerCase();
-      next = next.filter((p) => {
-        const hay = `${p.name || ""} ${(p.tags || []).join(" ")} ${p.shortDescription || ""}`.toLowerCase();
-        return hay.includes(q);
-      });
-    }
-    if (sort === "name") next.sort((a, b) => String(a.name).localeCompare(String(b.name)));
-    if (sort === "price-asc") next.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
-    if (sort === "price-desc") next.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
-    if (sort === "newest") next.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-    if (sort === "popular") next.sort((a, b) => (Number(b.reviewCount) || 0) - (Number(a.reviewCount) || 0));
-    setProducts(next);
-  }, [allProducts, inStock, outOfStock, priceFrom, priceTo, sort, saleOnly, filterCategory, filterBrand, filterMake, searchQ]);
+    setFilterCategory(category);
+  }, [category]);
+  useEffect(() => {
+    setFilterMake(carMake);
+  }, [carMake]);
 
-  const inCount = useMemo(() => allProducts.filter((p) => p.inStock).length, [allProducts]);
-  const outCount = Math.max(0, allProducts.length - inCount);
-  const highest = useMemo(() => Math.max(0, ...allProducts.map((p) => Number(p.price) || 0)), [allProducts]);
-  const catalogEmpty = !loading && allProducts.length === 0;
+  // If filters shrink results below current page, snap back.
+  useEffect(() => {
+    const pages = Math.max(
+      totalPages,
+      totalCount > 0 ? Math.ceil(totalCount / PAGE_SIZE) : 1
+    );
+    if (!loading && pages > 0 && page > pages) {
+      goToPage(pages, { replace: true });
+    }
+  }, [loading, page, totalPages, totalCount, goToPage]);
+
+  const effectiveTotalPages = Math.max(
+    totalPages,
+    totalCount > 0 ? Math.ceil(totalCount / PAGE_SIZE) : 1
+  );
+  const pageNumbers = useMemo(
+    () => pageWindow(page, effectiveTotalPages),
+    [page, effectiveTotalPages]
+  );
+  const showingFrom = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const showingTo = Math.min(page * PAGE_SIZE, totalCount);
+  const catalogEmpty = !loading && totalCount === 0 && products.length === 0;
 
   return (
     <div>
@@ -186,37 +264,61 @@ export function ProductsBrowseMedico({
             <h3 className="text-base font-bold" style={{ color: "#111111" }}>Filter:</h3>
             <Section title="Availability">
               <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-[#333333]">
-                <input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} className="accent-[#D72323]" /> In stock ({inCount})
+                <input
+                  type="checkbox"
+                  checked={inStock}
+                  onChange={(e) => {
+                    setInStock(e.target.checked);
+                    goToPage(1, { replace: true });
+                  }}
+                  className="accent-[#D72323]"
+                />{" "}
+                In stock
               </label>
               <label className="flex cursor-pointer items-center gap-2 text-sm text-[#333333]">
-                <input type="checkbox" checked={outOfStock} onChange={(e) => setOutOfStock(e.target.checked)} className="accent-[#D72323]" /> Out of stock ({outCount})
+                <input
+                  type="checkbox"
+                  checked={outOfStock}
+                  onChange={(e) => {
+                    setOutOfStock(e.target.checked);
+                    goToPage(1, { replace: true });
+                  }}
+                  className="accent-[#D72323]"
+                />{" "}
+                Out of stock
               </label>
             </Section>
-            {highest > 0 ? (
-              <Section title="Price">
+            <Section title="Price">
+              {highest > 0 ? (
                 <p className="text-xs text-[#555555]">
-                  The highest price is <span className="price">{formatPrice(highest)}</span>
+                  The highest price on this page is <span className="price">{formatPrice(highest)}</span>
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <input
-                    value={priceFrom}
-                    onChange={(e) => setPriceFrom(e.target.value)}
-                    placeholder="From"
-                    className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111] placeholder:text-[#777777]"
-                  />
-                  <input
-                    value={priceTo}
-                    onChange={(e) => setPriceTo(e.target.value)}
-                    placeholder="To"
-                    className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111] placeholder:text-[#777777]"
-                  />
-                </div>
-              </Section>
-            ) : null}
+              ) : null}
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <input
+                  value={priceFrom}
+                  onChange={(e) => setPriceFrom(e.target.value)}
+                  onBlur={() => goToPage(1, { replace: true })}
+                  placeholder="From"
+                  className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111] placeholder:text-[#777777]"
+                />
+                <input
+                  value={priceTo}
+                  onChange={(e) => setPriceTo(e.target.value)}
+                  onBlur={() => goToPage(1, { replace: true })}
+                  placeholder="To"
+                  className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111] placeholder:text-[#777777]"
+                />
+              </div>
+            </Section>
             <Section title="Category">
               <select
                 value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFilterCategory(v);
+                  setFilterParam("category", v);
+                }}
                 className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
               >
                 <option value="">All categories</option>
@@ -225,7 +327,10 @@ export function ProductsBrowseMedico({
             <Section title="Brand">
               <select
                 value={filterBrand}
-                onChange={(e) => setFilterBrand(e.target.value)}
+                onChange={(e) => {
+                  setFilterBrand(e.target.value);
+                  goToPage(1, { replace: true });
+                }}
                 className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
               >
                 <option value="">All brands</option>
@@ -239,7 +344,11 @@ export function ProductsBrowseMedico({
             <Section title="Car Make">
               <select
                 value={filterMake}
-                onChange={(e) => setFilterMake(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFilterMake(v);
+                  setFilterParam("make", v);
+                }}
                 className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
               >
                 <option value="">Any vehicle</option>
@@ -255,13 +364,18 @@ export function ProductsBrowseMedico({
           <div className="min-w-0 flex-1">
             <div className="mb-4 flex flex-col gap-3 rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-[#333333]">
-                Showing {products.length} of {totalCount || allProducts.length} products
+                {totalCount > 0
+                  ? `Showing ${showingFrom}–${showingTo} of ${totalCount} products`
+                  : "No products"}
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <label className="text-sm text-[#333333]">Sort by</label>
                 <select
                   value={sort}
-                  onChange={(e) => setSort(e.target.value)}
+                  onChange={(e) => {
+                    setSort(e.target.value);
+                    goToPage(1, { replace: true });
+                  }}
                   className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111]"
                 >
                   <option value="newest">Newest</option>
@@ -296,13 +410,62 @@ export function ProductsBrowseMedico({
             ) : (
               <div className={`grid gap-4 ${grid ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"}`}>
                 {products.map((p) => (
-                  <div key={p.id} className={!grid ? "max-w-md" : ""}>
+                  <div key={p.id || p._id || p.slug} className={!grid ? "max-w-md" : ""}>
                     <ProductCard product={p} />
                   </div>
                 ))}
               </div>
             )}
             {!products.length && !loading ? <p className="mt-6 text-sm text-[#555555]">No products match current filters.</p> : null}
+
+            {effectiveTotalPages > 1 ? (
+              <nav
+                className="mt-8 flex flex-wrap items-center justify-center gap-2"
+                aria-label="Product pagination"
+              >
+                {page > 1 ? (
+                  <Link
+                    href={buildPageHref(pathname, searchParams, page - 1)}
+                    className="rounded border border-[rgba(0,0,0,0.12)] bg-white px-3 py-2 text-sm font-semibold text-[#D72323] hover:border-[#D72323]"
+                  >
+                    Prev
+                  </Link>
+                ) : (
+                  <span className="rounded border border-transparent px-3 py-2 text-sm text-[#AAAAAA]">Prev</span>
+                )}
+                {pageNumbers.map((n, idx) => {
+                  const prev = pageNumbers[idx - 1];
+                  const showEllipsis = prev != null && n - prev > 1;
+                  return (
+                    <span key={n} className="contents">
+                      {showEllipsis ? <span className="px-1 text-sm text-[#888888]">…</span> : null}
+                      <Link
+                        href={buildPageHref(pathname, searchParams, n)}
+                        aria-current={n === page ? "page" : undefined}
+                        className={`inline-flex min-w-[36px] items-center justify-center rounded border px-2 py-2 text-sm font-semibold ${
+                          n === page
+                            ? "border-[#111111] bg-[#111111] text-white"
+                            : "border-[rgba(0,0,0,0.12)] bg-white text-[#555555] hover:border-[#D72323] hover:text-[#D72323]"
+                        }`}
+                      >
+                        {n}
+                      </Link>
+                    </span>
+                  );
+                })}
+                {page < effectiveTotalPages ? (
+                  <Link
+                    href={buildPageHref(pathname, searchParams, page + 1)}
+                    className="rounded border border-[rgba(0,0,0,0.12)] bg-white px-3 py-2 text-sm font-semibold text-[#D72323] hover:border-[#D72323]"
+                  >
+                    Next
+                  </Link>
+                ) : (
+                  <span className="rounded border border-transparent px-3 py-2 text-sm text-[#AAAAAA]">Next</span>
+                )}
+              </nav>
+            ) : null}
+
             <div className="mt-6">
               <Link href="/shop" className="text-sm text-[#D72323] underline underline-offset-2 hover:text-[#a01818]">
                 Reset filters

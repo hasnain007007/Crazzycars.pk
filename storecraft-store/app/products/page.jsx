@@ -24,8 +24,12 @@ function Fallback() {
 }
 
 export default async function Page() {
-  const { products: initialProducts, total: initialTotal } = await fetchProductsServer({
-    limit: 12,
+  const {
+    products: initialProducts,
+    total: initialTotal,
+    totalPages: initialTotalPages,
+  } = await fetchProductsServer({
+    limit: 24,
     page: 1,
   });
 
@@ -50,6 +54,8 @@ export default async function Page() {
         <ProductsBrowseMedico
           initialProducts={initialProducts}
           initialTotal={initialTotal}
+          initialPage={1}
+          initialTotalPages={initialTotalPages}
         />
       </Suspense>
     </div>

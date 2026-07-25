@@ -2,11 +2,8 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { productMatchesVehicle, vehicleMatchScore } from "@/lib/vehicleCompatibility";
+import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
-
-function escapeRegex(s) {
-  return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 /** GET /api/products/fitment?make=Toyota&model=Yaris&year=2022&variant=GLI */
 export async function GET(request) {
@@ -27,51 +24,16 @@ export async function GET(request) {
       );
     }
 
-    const mkRx = new RegExp(`^${escapeRegex(make)}$`, "i");
-    const mdRx = model ? new RegExp(escapeRegex(model), "i") : null;
-
-    const orClauses = [
-      { "vehicleCompatibility.fitmentType": "universal" },
-      { isUniversal: true },
-    ];
-
-    if (model) {
-      orClauses.push({
-        "vehicleCompatibility.fitmentType": "specific",
-        "vehicleCompatibility.vehicles": {
-          $elemMatch: {
-            make: mkRx,
-            model: mdRx,
-          },
-        },
-      });
-      orClauses.push({
-        compatibleCars: {
-          $elemMatch: {
-            make: mkRx,
-            model: mdRx,
-          },
-        },
-      });
-    } else {
-      orClauses.push({
-        "vehicleCompatibility.vehicles": {
-          $elemMatch: { make: mkRx },
-        },
-      });
-      orClauses.push({
-        compatibleCars: {
-          $elemMatch: { make: mkRx },
-        },
-      });
-    }
+    // Explicit vehicle links (+ legacy specific/semi-universal fitment). Universal is not auto-included.
+    const { $or: orClauses, vehicleIds } = await buildMakeModelProductOr(make, model, year);
+    const vehicleIdSet = new Set((vehicleIds || []).map((id) => String(id)));
 
     const candidates = await Product.find({
-      status: { $regex: /^active$/i },
+      status: "active",
       $or: orClauses,
     })
       .select(
-        "name slug media pricing inventory status featured newArrival categories vehicleCompatibility isUniversal compatibleCars rating reviewCount createdAt shortDescription tags brand vendor"
+        "name slug media.images pricing inventory status featured newArrival categories vehicleCompatibility isUniversal compatibleCars compatibleVehicles rating reviewCount createdAt shortDescription tags brand vendor"
       )
       .populate("categories", "name slug")
       .sort({ featured: -1, createdAt: -1 })
@@ -79,7 +41,23 @@ export async function GET(request) {
       .lean();
 
     const products = candidates
-      .filter((p) => productMatchesVehicle(p, make, model, year, variant))
+      .filter((p) => {
+        // Only trust ObjectId links that match this make/model/year query set.
+        const linkedToQueryVehicle = (p.compatibleVehicles || []).some((id) =>
+          vehicleIdSet.has(String(id))
+        );
+        if (linkedToQueryVehicle) {
+          // Year already scoped via Vehicle docs; still honor variant notes when present.
+          if (!variant) return true;
+          return productMatchesVehicle(p, make, model, year, variant);
+        }
+
+        // Legacy / string fitment must pass year + variant checks (specific/semi only).
+        if (p.isUniversal || p.vehicleCompatibility?.fitmentType === "universal") {
+          return false;
+        }
+        return productMatchesVehicle(p, make, model, year, variant);
+      })
       .map((p) => ({
         product: serializeStoreProductSummary(p),
         score: vehicleMatchScore(p, make, model, year, variant),
@@ -88,15 +66,22 @@ export async function GET(request) {
       .slice(0, limit)
       .map((row) => row.product);
 
-    return NextResponse.json({
-      success: true,
-      make,
-      model: model || null,
-      year: year != null && Number.isFinite(year) ? year : null,
-      variant: variant || null,
-      count: products.length,
-      products,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        make,
+        model: model || null,
+        year: year != null && Number.isFinite(year) ? year : null,
+        variant: variant || null,
+        count: products.length,
+        products,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to load fitment products." },

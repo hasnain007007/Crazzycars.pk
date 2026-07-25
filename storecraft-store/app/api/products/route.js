@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
+import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 
 function escapeRegex(s) {
@@ -39,9 +40,15 @@ export async function GET(request) {
 
     const countOnly = searchParams.get("countOnly") === "true";
     const maxPriceRaw = searchParams.get("maxPrice");
+    const minPriceRaw = searchParams.get("minPrice");
     const minDiscountRaw = searchParams.get("minDiscount");
-    const carMake = (searchParams.get("carMake") || "").trim();
-    const carModel = (searchParams.get("carModel") || "").trim();
+    const brand = (searchParams.get("brand") || "").trim();
+    const inStockOnly =
+      searchParams.get("inStock") === "true" || searchParams.get("inStock") === "1";
+    const outOfStockOnly =
+      searchParams.get("outOfStock") === "true" || searchParams.get("outOfStock") === "1";
+    const carMake = (searchParams.get("carMake") || searchParams.get("make") || "").trim();
+    const carModel = (searchParams.get("carModel") || searchParams.get("model") || "").trim();
     const carGeneration = (searchParams.get("carGeneration") || "").trim();
 
     const featuredFlag =
@@ -52,7 +59,7 @@ export async function GET(request) {
       searchParams.get("new") === "1";
     const saleParam = searchParams.get("sale") === "true" || searchParams.get("deals") === "true";
 
-    const filter = { status: { $regex: /^active$/i } };
+    const filter = { status: "active" };
     const andParts = [];
 
     if (featuredFlag) {
@@ -63,8 +70,23 @@ export async function GET(request) {
     }
 
     if (categorySlug) {
-      const cat = await Category.findOne({ slug: categorySlug, status: "active" }).select("_id").lean();
-      if (cat?._id) filter.categories = cat._id;
+      const cat = await Category.findOne({
+        slug: categorySlug,
+        status: "active",
+      })
+        .select("_id")
+        .lean();
+      if (cat?._id) {
+        const { getActiveDescendantCategoryIds } = await import("@/lib/storeCategoryData");
+        const descendantIds = await getActiveDescendantCategoryIds(cat._id);
+        const allIds = [cat._id, ...descendantIds];
+        andParts.push({
+          $or: [{ categories: { $in: allIds } }, { category: { $in: allIds } }],
+        });
+      } else {
+        // Unknown slug → empty result set
+        filter._id = null;
+      }
     }
 
     if (q) {
@@ -75,26 +97,19 @@ export async function GET(request) {
     }
 
     if (carMake || carModel || carGeneration) {
-      const mkRx = carMake ? new RegExp(`^${escapeRegex(carMake)}$`, "i") : null;
-      const mdRx = carModel ? new RegExp(`^${escapeRegex(carModel)}$`, "i") : null;
-      const universalOr = [{ isUniversal: true }, { "vehicleCompatibility.fitmentType": "universal" }];
-      const legacyMatch = {};
-      if (carMake) legacyMatch.make = mkRx;
-      if (carModel) legacyMatch.model = mdRx;
-      if (carGeneration) legacyMatch.generation = new RegExp(`^${escapeRegex(carGeneration)}$`, "i");
-      if (Object.keys(legacyMatch).length) {
-        universalOr.push({ compatibleCars: { $elemMatch: legacyMatch } });
+      // Prefer Vehicle ObjectId fitment: compatibleVehicles (+ legacy specific). Universal not auto-included.
+      // Also keep legacy string fitment fields for older products.
+      const carYear = (searchParams.get("carYear") || searchParams.get("year") || "").trim();
+      const { $or: vehicleOr } = await buildMakeModelProductOr(
+        carMake,
+        carModel,
+        carYear || null
+      );
+      if (carGeneration) {
+        const genRx = new RegExp(`^${escapeRegex(carGeneration)}$`, "i");
+        vehicleOr.push({ compatibleCars: { $elemMatch: { generation: genRx } } });
       }
-      const vcMatch = {};
-      if (carMake) vcMatch.make = mkRx;
-      if (carModel) vcMatch.model = mdRx;
-      if (Object.keys(vcMatch).length) {
-        universalOr.push({
-          "vehicleCompatibility.fitmentType": "specific",
-          "vehicleCompatibility.vehicles": { $elemMatch: vcMatch },
-        });
-      }
-      andParts.push({ $or: universalOr });
+      andParts.push({ $or: vehicleOr });
     }
 
     if (saleParam) {
@@ -108,12 +123,46 @@ export async function GET(request) {
       });
     }
 
+    const minPrice = minPriceRaw != null && minPriceRaw !== "" ? Number(minPriceRaw) : null;
+    if (minPrice != null && Number.isFinite(minPrice) && minPrice >= 0) {
+      andParts.push({
+        $expr: {
+          $gte: [effectivePriceExpr(), minPrice],
+        },
+      });
+    }
+
     const maxPrice = maxPriceRaw != null && maxPriceRaw !== "" ? Number(maxPriceRaw) : null;
     if (maxPrice != null && Number.isFinite(maxPrice) && maxPrice >= 0) {
       andParts.push({
         $expr: {
           $lte: [effectivePriceExpr(), maxPrice],
         },
+      });
+    }
+
+    if (brand) {
+      const brandRx = new RegExp(escapeRegex(brand), "i");
+      andParts.push({
+        $or: [{ vendor: brandRx }, { brand: brandRx }, { tags: brandRx }],
+      });
+    }
+
+    // Soft stock hints — storefront also marks allowBackorder / trackInventory in serialize.
+    if (inStockOnly && !outOfStockOnly) {
+      andParts.push({
+        $or: [
+          { "inventory.trackInventory": false },
+          { "inventory.allowBackorder": true },
+          { "inventory.quantity": { $gt: 0 } },
+          { "inventory.stock": { $gt: 0 } },
+        ],
+      });
+    } else if (outOfStockOnly && !inStockOnly) {
+      andParts.push({
+        "inventory.trackInventory": { $ne: false },
+        "inventory.allowBackorder": { $ne: true },
+        "inventory.quantity": { $lte: 0 },
       });
     }
 

@@ -1,6 +1,7 @@
 /**
  * Vehicle model — Shop by Car generations (Make → Model → Year).
- * Products link via compatibleVehicles: [ObjectId] or isUniversal: true.
+ * Products link via compatibleVehicles: [ObjectId].
+ * Universal products are not auto-included on car pages — add them explicitly.
  */
 import mongoose from "mongoose";
 
