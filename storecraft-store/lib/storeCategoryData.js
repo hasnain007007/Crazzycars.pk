@@ -5,7 +5,9 @@
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
 
-const ACTIVE = { $regex: /^active$/i };
+/** Canonical storefront status — prefer equality over case-insensitive regex (index-friendly). */
+export const ACTIVE_STATUS = "active";
+const ACTIVE = ACTIVE_STATUS;
 
 /** Resolve all parent ids for a category (multi-parent `parents` + legacy `parentCategory`). */
 export function resolveParentIds(cat) {
@@ -31,18 +33,28 @@ export function resolveParentIds(cat) {
   return ids;
 }
 
-/** All strict descendant category _ids (active categories only). */
+/**
+ * All strict descendant category _ids (active only).
+ * Leaf categories: one cheap exists() and return [].
+ * Parents: one category scan + in-memory BFS (no recursive DB round-trips).
+ */
 export async function getActiveDescendantCategoryIds(parentId) {
-  const children = await Category.find({
+  const childFilter = {
     status: ACTIVE,
     $or: [{ parentCategory: parentId }, { parents: parentId }],
-  })
-    .select("_id")
+  };
+  const hasChild = await Category.exists(childFilter);
+  if (!hasChild) return [];
+
+  const rows = await Category.find({ status: ACTIVE })
+    .select("_id parents parentCategory parentId")
     .lean();
-  if (!children.length) return [];
-  const childIds = children.map((c) => c._id);
-  const nested = await Promise.all(childIds.map((id) => getActiveDescendantCategoryIds(id)));
-  return [...childIds, ...nested.flat()];
+  if (!rows.length) return [];
+  const childrenMap = buildChildrenIdMap(rows);
+  const idSet = strictDescendantIdSet(parentId, childrenMap);
+  if (!idSet.size) return [];
+  const byId = new Map(rows.map((r) => [String(r._id), r._id]));
+  return [...idSet].map((id) => byId.get(id)).filter(Boolean);
 }
 
 function productRefsForCounting(p) {
@@ -144,11 +156,32 @@ export function serializeCategoryTreeNode(node) {
   };
 }
 
+/**
+ * Slim nested tree for mega-menu / header / footer / homepage grid.
+ * Skips product counting and parent populates (not needed for navigation UI).
+ */
+export async function loadStoreCategoriesTreeSlim() {
+  const rows = await Category.find({ status: ACTIVE })
+    .select(
+      "name slug image icon homepageIcon sortOrder isFeatured featured level parents parentCategory parentId"
+    )
+    .sort({ level: 1, sortOrder: 1, name: 1 })
+    .lean();
+
+  const categories = rows.map((c) => ({
+    ...c,
+    isFeatured: Boolean(c.isFeatured || c.featured),
+  }));
+
+  return buildCategoryTree(categories);
+}
+
 /** Active categories with product counts (self + all active subcategories); returns tree when wantTree. */
 export async function loadStoreCategoriesTree(wantTree, opts = {}) {
   const featuredOnly = Boolean(opts.featuredOnly);
   const showInFooterOnly = Boolean(opts.showInFooterOnly);
   const showOnHomepageOnly = Boolean(opts.showOnHomepageOnly);
+  const includeProductCounts = opts.includeProductCounts !== false;
   const filter = { status: ACTIVE };
   if (featuredOnly) {
     filter.$or = [{ featured: true }, { isFeatured: true }];
@@ -168,15 +201,17 @@ export async function loadStoreCategoriesTree(wantTree, opts = {}) {
 
   const categoryIds = rows.map((c) => c._id);
   const idStrSet = new Set(categoryIds.map(String));
-
-  const products = await Product.find({
-    status: ACTIVE,
-    $or: [{ categories: { $in: categoryIds } }, { category: { $in: categoryIds } }],
-  })
-    .select("categories category")
-    .lean();
-
   const childrenMap = buildChildrenIdMap(rows);
+
+  let products = [];
+  if (includeProductCounts && categoryIds.length) {
+    products = await Product.find({
+      status: ACTIVE,
+      $or: [{ categories: { $in: categoryIds } }, { category: { $in: categoryIds } }],
+    })
+      .select("categories category")
+      .lean();
+  }
 
   const categories = rows.map((c) => {
     const parentIds = resolveParentIds(c);
@@ -192,7 +227,7 @@ export async function loadStoreCategoriesTree(wantTree, opts = {}) {
       parentCategory: parentId
         ? { _id: parentId, name: c.parentCategory?.name || "" }
         : null,
-      productCount: countProductsInScope(products, scoped),
+      productCount: includeProductCounts ? countProductsInScope(products, scoped) : 0,
       subcategoryCount: (childrenMap.get(self) || []).length,
     };
   });
@@ -200,10 +235,20 @@ export async function loadStoreCategoriesTree(wantTree, opts = {}) {
   return wantTree ? buildCategoryTree(categories) : categories;
 }
 
-export async function loadStoreCategoryDetail(slugStr) {
+/** Max products embedded in category SSR payload (first page only). Matches shop default. */
+const CATEGORY_PAGE_PRODUCT_LIMIT = 40;
+
+export async function loadStoreCategoryDetail(slugStr, opts = {}) {
+  const limit = Math.min(
+    48,
+    Math.max(1, Number(opts.limit) || CATEGORY_PAGE_PRODUCT_LIMIT)
+  );
+  const page = Math.max(1, Number(opts.page) || 1);
+  const skip = (page - 1) * limit;
+
   const category = await Category.findOne({
     slug: slugStr,
-    status: { $regex: /^active$/i },
+    status: ACTIVE,
   })
     .populate("parentCategory", "name slug")
     .populate("parents", "name slug")
@@ -213,28 +258,35 @@ export async function loadStoreCategoryDetail(slugStr) {
   if (!category) return null;
 
   const catId = category._id;
-  const descendantIds = await getActiveDescendantCategoryIds(catId);
-  const allCategoryIds = [catId, ...descendantIds];
 
-  const productQuery = {
-    status: ACTIVE,
-    $or: [{ categories: { $in: allCategoryIds } }, { category: { $in: allCategoryIds } }],
-  };
-
-  const [subcategories, products] = await Promise.all([
+  const [subcategories, descendantIds] = await Promise.all([
     Category.find({
-      status: { $regex: /^active$/i },
+      status: ACTIVE,
       $or: [{ parentCategory: catId }, { parents: catId }],
     })
       .select("name slug image shortDescription level sortOrder")
       .sort({ sortOrder: 1, name: 1 })
       .lean(),
+    getActiveDescendantCategoryIds(catId),
+  ]);
+
+  const allCategoryIds = [catId, ...descendantIds];
+  const productQuery = {
+    status: ACTIVE,
+    $or: [{ categories: { $in: allCategoryIds } }, { category: { $in: allCategoryIds } }],
+  };
+
+  const [products, productCount] = await Promise.all([
     Product.find(productQuery)
       .select(
-        "name slug media pricing inventory simpleVariations variationCombinations featured newArrival categories category status createdAt"
+        "name slug media.images pricing.regularPrice pricing.salePrice inventory featured newArrival status createdAt shortDescription articleNo categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
+      .populate("categories", "name slug")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean(),
+    Product.countDocuments(productQuery),
   ]);
 
   const breadcrumbs = [];
@@ -252,8 +304,6 @@ export async function loadStoreCategoryDetail(slugStr) {
   }
   breadcrumbs.push({ _id: category._id, name: category.name, slug: category.slug });
 
-  const productCount = products.length;
-
   return {
     category,
     subcategories,
@@ -263,5 +313,8 @@ export async function loadStoreCategoryDetail(slugStr) {
     breadcrumb: breadcrumbs,
     productCount,
     totalIncludingSubcategories: productCount,
+    page,
+    limit,
+    totalPages: Math.ceil(productCount / limit) || 1,
   };
 }
