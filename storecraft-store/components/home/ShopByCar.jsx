@@ -1,25 +1,28 @@
 "use client";
 
 /**
- * Find Parts For Your Car — cascading Make → Model → Year from Car Catalog
- * (admin → Car Catalog), not product Categories.
+ * Filter By Car — AutoJin-style card (Make → Model | Year → FILTER)
+ * Data from Car Catalog (admin).
  */
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const YEAR_START = 2006;
 const YEAR_END = new Date().getFullYear() + 1;
 
-function yearOptionsFallback() {
-  const ys = [];
-  for (let y = YEAR_END; y >= YEAR_START; y--) ys.push(y);
-  return ys;
+function formatYearRange(m) {
+  if (!m?.yearFrom) return "";
+  const to = m.yearTo == null || Number(m.yearTo) >= new Date().getFullYear() ? "Present" : m.yearTo;
+  return `${m.yearFrom}–${to}`;
 }
 
-export default function ShopByCar({ title = "Find Parts For Your Car" }) {
+export default function ShopByCar({ title = "Filter By Car", initialCatalog = null }) {
   const router = useRouter();
-  const [makes, setMakes] = useState([]);
-  const [carData, setCarData] = useState({});
+  const [makes, setMakes] = useState(() =>
+    Array.isArray(initialCatalog?.makes) ? initialCatalog.makes : []
+  );
+  const [carData, setCarData] = useState(() =>
+    initialCatalog?.carData && typeof initialCatalog.carData === "object" ? initialCatalog.carData : {}
+  );
   const [make, setMake] = useState("");
   const [modelSlug, setModelSlug] = useState("");
   const [year, setYear] = useState("");
@@ -27,17 +30,33 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/car-catalog", { cache: "no-store" })
+    if (Array.isArray(initialCatalog?.makes) && initialCatalog.makes.length) {
+      setMakes(initialCatalog.makes);
+      setCarData(
+        initialCatalog.carData && typeof initialCatalog.carData === "object"
+          ? initialCatalog.carData
+          : {}
+      );
+      return undefined;
+    }
+    let cancelled = false;
+    fetch("/api/car-catalog")
       .then((r) => r.json())
       .then((data) => {
+        if (cancelled) return;
         setMakes(Array.isArray(data?.makes) ? data.makes : []);
         setCarData(data?.carData && typeof data.carData === "object" ? data.carData : {});
       })
       .catch(() => {
-        setMakes([]);
-        setCarData({});
+        if (!cancelled) {
+          setMakes([]);
+          setCarData({});
+        }
       });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [initialCatalog]);
 
   const models = useMemo(() => {
     if (!make) return [];
@@ -49,18 +68,28 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
     [models, modelSlug]
   );
 
-  const years = useMemo(() => {
-    if (selectedModel?.years?.length) {
-      return [...selectedModel.years].sort((a, b) => b - a);
+  /** Year options: full generation range first, then individual years */
+  const yearOptions = useMemo(() => {
+    if (!selectedModel) return [];
+    const opts = [];
+    const rangeLabel = formatYearRange(selectedModel);
+    if (rangeLabel) {
+      opts.push({ value: "range", label: rangeLabel });
     }
-    if (selectedModel?.yearFrom) {
-      const from = selectedModel.yearFrom;
-      const to = selectedModel.yearTo || YEAR_END;
-      const ys = [];
-      for (let y = to; y >= from; y--) ys.push(y);
-      return ys;
+    if (selectedModel.years?.length) {
+      for (const y of [...selectedModel.years].sort((a, b) => b - a)) {
+        opts.push({ value: String(y), label: String(y) });
+      }
+      return opts;
     }
-    return yearOptionsFallback();
+    if (selectedModel.yearFrom) {
+      const from = Number(selectedModel.yearFrom);
+      const to = Number(selectedModel.yearTo) || YEAR_END;
+      for (let y = to; y >= from; y--) {
+        opts.push({ value: String(y), label: String(y) });
+      }
+    }
+    return opts;
   }, [selectedModel]);
 
   useEffect(() => {
@@ -77,18 +106,20 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
       e.preventDefault();
       setError("");
       if (!make || !modelSlug) {
-        setError("Select make and model.");
+        setError("Please select make and model.");
         return;
       }
       setLoading(true);
       try {
-        // Prefer SEO vehicle page when slug matches Vehicle collection
+        const yearParam = year && year !== "range" ? year : "";
+        const modelName = selectedModel?.model || selectedModel?.name || "";
+        const findYear = yearParam || selectedModel?.yearFrom || YEAR_END;
         const findUrl = selectedModel
-          ? `/api/vehicles/find?make=${encodeURIComponent(make)}&model=${encodeURIComponent(selectedModel.model || selectedModel.name || "")}&year=${encodeURIComponent(year || selectedModel.yearFrom || YEAR_END)}`
+          ? `/api/vehicles/find?make=${encodeURIComponent(make)}&model=${encodeURIComponent(modelName)}&year=${encodeURIComponent(findYear)}&catalogSlug=${encodeURIComponent(modelSlug)}`
           : null;
 
-        if (findUrl && year) {
-          const res = await fetch(findUrl, { cache: "no-store" });
+        if (findUrl) {
+          const res = await fetch(findUrl);
           const json = await res.json();
           const vehicle = json?.vehicle || json?.data;
           if (res.ok && vehicle?.slug) {
@@ -97,8 +128,8 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
           }
         }
 
-        // Fall back to catalog model slug (same as seeded vehicle slug)
-        router.push(`/cars/${modelSlug}${year ? `?year=${year}` : ""}`);
+        // Fallback: catalog model slug (store page resolves → Vehicle automatically)
+        router.push(`/cars/${modelSlug}${yearParam ? `?year=${yearParam}` : ""}`);
       } catch {
         setError("Could not open that car. Try again.");
       } finally {
@@ -108,83 +139,70 @@ export default function ShopByCar({ title = "Find Parts For Your Car" }) {
     [make, modelSlug, year, selectedModel, router]
   );
 
-  const selectClass =
-    "h-12 w-full rounded-lg border border-[#E5E7EB] bg-white px-3 text-sm text-[#111111] outline-none focus:border-[#C41E1E]";
-
   return (
-    <section id="shop-by-car" className="homepage-section bg-[#F8F8F8] py-12 md:py-16">
+    <section id="shop-by-car" className="filter-by-car-section">
       <div className="store-container">
-        <h2 className="font-heading text-center text-[28px] font-bold text-[#111111] md:text-[32px]">
-          {title}
-        </h2>
-        <div className="mx-auto mt-2 h-[3px] w-12 bg-[#C41E1E]" />
-        <p className="mx-auto mt-3 max-w-xl text-center text-sm text-[#6B7280]">
-          Select your car from the Car Catalog — Cash on Delivery nationwide.
-        </p>
+        <form onSubmit={onSubmit} className="filter-by-car-card">
+          <h2 className="filter-by-car-title">{title === "Find Parts For Your Car" ? "Filter By Car" : title}</h2>
 
-        <form
-          onSubmit={onSubmit}
-          className="mx-auto mt-8 grid max-w-4xl gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm sm:grid-cols-4 sm:p-5"
-        >
-          <select
-            className={selectClass}
-            value={make}
-            onChange={(e) => setMake(e.target.value)}
-            aria-label="Select make"
-          >
-            <option value="">Select Make</option>
-            {makes.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+          <div className="filter-by-car-fields">
+            <select
+              className="filter-by-car-select"
+              value={make}
+              onChange={(e) => setMake(e.target.value)}
+              aria-label="Select make"
+            >
+              <option value="">SELECT MAKE</option>
+              {makes.map((m) => (
+                <option key={m} value={m}>
+                  {String(m).toUpperCase()}
+                </option>
+              ))}
+            </select>
 
-          <select
-            className={selectClass}
-            value={modelSlug}
-            onChange={(e) => setModelSlug(e.target.value)}
-            disabled={!make}
-            aria-label="Select model"
-          >
-            <option value="">Select Model</option>
-            {models.map((m) => (
-              <option key={m.slug} value={m.slug}>
-                {m.nickname || m.generation || m.model}
-                {m.yearFrom ? ` (${m.yearFrom}–${m.yearTo || "Present"})` : ""}
-              </option>
-            ))}
-          </select>
+            <div className="filter-by-car-row">
+              <select
+                className="filter-by-car-select"
+                value={modelSlug}
+                onChange={(e) => setModelSlug(e.target.value)}
+                disabled={!make}
+                aria-label="Select model"
+              >
+                <option value="">SELECT MODEL</option>
+                {models.map((m) => (
+                  <option key={m.slug} value={m.slug}>
+                    {(m.nickname || m.generation || m.model || "").toUpperCase()}
+                  </option>
+                ))}
+              </select>
 
-          <select
-            className={selectClass}
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            disabled={!modelSlug}
-            aria-label="Select year"
-          >
-            <option value="">Select Year</option>
-            {years.map((y) => (
-              <option key={y} value={String(y)}>
-                {y}
-              </option>
-            ))}
-          </select>
+              <select
+                className="filter-by-car-select"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                disabled={!modelSlug}
+                aria-label="Select year"
+              >
+                <option value="">SELECT YEAR</option>
+                {yearOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="h-12 rounded-lg bg-[#C41E1E] text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#a81818] disabled:opacity-60"
-          >
-            {loading ? "Finding…" : "Find Parts"}
+          {error ? (
+            <p className="filter-by-car-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <button type="submit" disabled={loading} className="filter-by-car-btn">
+            {loading ? "…" : "FILTER"}
           </button>
         </form>
-
-        {error ? (
-          <p className="mt-3 text-center text-sm font-medium text-[#C41E1E]" role="alert">
-            {error}
-          </p>
-        ) : null}
       </div>
     </section>
   );

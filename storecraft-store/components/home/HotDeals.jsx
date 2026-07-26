@@ -17,8 +17,9 @@ export default function HotDeals({ settings, initialProducts = null }) {
   );
   const [active, setActive] = useState(tabs[0]?.filter || "all");
   const hasInitial = Array.isArray(initialProducts);
+  const defaultFilter = tabs[0]?.filter || "all";
   const [products, setProducts] = useState(hasInitial ? initialProducts : []);
-  const [loading, setLoading] = useState(!hasInitial);
+  const [loading, setLoading] = useState(!(hasInitial && (tabs[0]?.filter || "all") === "all"));
   const [seconds, setSeconds] = useState(6 * 60 * 60);
 
   useEffect(() => {
@@ -34,7 +35,12 @@ export default function HotDeals({ settings, initialProducts = null }) {
   }, [hasDeals]);
 
   useEffect(() => {
-    if (hasInitial) return undefined;
+    // Use SSR seed for the default tab; fetch only when the shopper changes tabs.
+    if (hasInitial && active === defaultFilter) {
+      setProducts(initialProducts);
+      setLoading(false);
+      return undefined;
+    }
     let cancelled = false;
     setLoading(true);
     fetch(`/api/products/deals?filter=${encodeURIComponent(active)}&limit=12`)
@@ -52,7 +58,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
     return () => {
       cancelled = true;
     };
-  }, [active, hasInitial]);
+  }, [active, hasInitial, initialProducts, defaultFilter]);
 
   if (section.enabled === false) return null;
 

@@ -58,6 +58,7 @@ export function HomePage({
   initialBestSellers = [],
   initialHotDeals = null,
   initialHeroSlides = null,
+  initialCarCatalog = null,
 }) {
   const ctx = useStoreSettings();
 
@@ -80,8 +81,12 @@ export function HomePage({
       ) : null}
       <StatsBar settings={{ brandStory, stats: homepageSettings?.stats }} />
       {sectionEnabled("shopByCar") && homepageSettings.sections?.showShopByCar !== false ? (
-        <ShopByCar title={homepageSettings.sectionTitles?.shopByCar} />
+        <ShopByCar
+          title={homepageSettings.sectionTitles?.shopByCar}
+          initialCatalog={initialCarCatalog}
+        />
       ) : null}
+      <ShopByVehicle initialCatalog={initialCarCatalog} />
       {sectionEnabled("categories") && homepageSettings.sections?.showCategories !== false ? (
         <CategoryGrid
           title={homepageSettings.categories?.title || homepageSettings.sectionTitles?.categories}
@@ -94,7 +99,6 @@ export function HomePage({
       {sectionEnabled("bestSellers") && homepageSettings.sections?.showBestSellers !== false ? (
         <BestSellers initialProducts={initialBestSellers} settings={homepageSettings} />
       ) : null}
-      <ShopByVehicle />
       {sectionEnabled("brands") && homepageSettings.sections?.showBrands !== false ? (
         <BrandCarousel settings={homepageSettings} />
       ) : null}

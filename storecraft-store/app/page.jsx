@@ -1,5 +1,7 @@
 import { HomePage } from "@/components/store/HomePage";
 import { fetchProductsServer } from "@/lib/serverProductFetch";
+import { fetchHotDealsServer } from "@/lib/serverHotDeals";
+import { fetchCarCatalogServer } from "@/lib/serverCarCatalog";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getHeroSlides } from "@/lib/heroBanners";
 import { getBestSellingProducts, getHotDealProducts, isShopifyEnabled } from "@/lib/shopify";
@@ -15,12 +17,13 @@ export const metadata = buildPageMetadata({
 
 export default async function Page() {
   const shopify = isShopifyEnabled();
-  const [bestSellers, hotDeals, heroSlides] = await Promise.all([
+  const [bestSellers, hotDeals, heroSlides, carCatalog] = await Promise.all([
     shopify
       ? getBestSellingProducts(8)
       : fetchProductsServer({ limit: 4, sort: "popular" }).then((r) => r.products),
-    shopify ? getHotDealProducts(12) : Promise.resolve(null),
+    shopify ? getHotDealProducts(12) : fetchHotDealsServer({ filter: "all", limit: 12 }),
     getHeroSlides(),
+    fetchCarCatalogServer(),
   ]);
 
   const preloadUrl = heroSlides[0]?.imageUrl || "";
@@ -35,6 +38,7 @@ export default async function Page() {
         initialBestSellers={bestSellers}
         initialHotDeals={hotDeals}
         initialHeroSlides={heroSlides}
+        initialCarCatalog={carCatalog}
       />
     </>
   );
