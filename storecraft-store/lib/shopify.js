@@ -32,8 +32,14 @@ const PRODUCT_FIELDS = /* GraphQL */ `
   }
 `;
 
+/**
+ * Low-level Storefront GraphQL fetch.
+ * When Shopify is not configured, return null instead of throwing — same
+ * defensive pattern as shopifyCart server actions, so a forgotten
+ * isShopifyEnabled() check at a call site cannot 500 the page.
+ */
 export async function shopifyFetch({ query, variables = {}, tags = [], revalidate = 300 }) {
-  if (!isShopifyEnabled()) throw new Error("Shopify Storefront API is not configured.");
+  if (!isShopifyEnabled()) return null;
 
   const response = await fetch(
     `https://${process.env.SHOPIFY_STORE_DOMAIN}/api/${API_VERSION}/graphql.json`,
@@ -96,6 +102,7 @@ export async function getCollections() {
     query: `query Collections { collections(first: 100) { nodes { handle title image { url altText } } } }`,
     tags: ["shopify-collections"],
   });
+  if (!data?.collections?.nodes) return [];
   return data.collections.nodes.map((collection) => ({
     handle: collection.handle,
     title: collection.title,
@@ -114,7 +121,7 @@ export async function getCollectionByHandle(handle, { first = 24, after = null }
     variables: { handle, first, after },
     tags: [`shopify-collection-${handle}`],
   });
-  if (!data.collection) return null;
+  if (!data?.collection) return null;
   return {
     ...data.collection,
     products: data.collection.products.nodes.map(mapShopifyProduct),
@@ -128,6 +135,7 @@ export async function getProductByHandle(handle) {
     variables: { handle },
     tags: [`shopify-product-${handle}`],
   });
+  if (!data) return null;
   return mapShopifyProduct(data.product);
 }
 
@@ -139,6 +147,7 @@ export async function getProducts({ first = 24, sortKey = "RELEVANCE", query = "
     variables: { first, sortKey, query: query || null },
     tags: ["shopify-products"],
   });
+  if (!data?.products?.nodes) return [];
   return data.products.nodes.map(mapShopifyProduct);
 }
 
