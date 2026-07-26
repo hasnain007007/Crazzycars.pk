@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import LivePresence from "@/lib/models/LivePresence.model";
+import { geoFromRequest } from "@/lib/presenceGeo";
 
 const SESSION_RE = /^[a-zA-Z0-9_-]{8,80}$/;
 
@@ -17,19 +18,27 @@ export async function POST(request) {
 
     const ua = String(request.headers.get("user-agent") || "").slice(0, 300);
     const now = new Date();
+    const geo = geoFromRequest(request);
+
+    const $set = {
+      sessionId,
+      path,
+      lastSeen: now,
+      userAgent: ua,
+    };
+    // Only write geo when known so heartbeats without geo don't wipe prior values
+    if (geo.city) $set.city = geo.city.slice(0, 80);
+    if (geo.region) $set.region = geo.region.slice(0, 80);
+    if (geo.countryCode) $set.countryCode = geo.countryCode;
+    if (geo.country) $set.country = geo.country.slice(0, 80);
 
     await dbConnect();
+    // returnDocument: 'after' is the non-deprecated equivalent of new: true
+    // (return value unused today — response is always { success, ok }).
     await LivePresence.findOneAndUpdate(
       { sessionId },
-      {
-        $set: {
-          sessionId,
-          path,
-          lastSeen: now,
-          userAgent: ua,
-        },
-      },
-      { upsert: true, new: true }
+      { $set },
+      { upsert: true, returnDocument: "after" }
     );
 
     return NextResponse.json({ success: true, ok: true });
