@@ -4,6 +4,7 @@ import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
 import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
+import { queryProductsWithSearch } from "@/lib/productSearch";
 
 function escapeRegex(s) {
   return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -89,12 +90,7 @@ export async function GET(request) {
       }
     }
 
-    if (q) {
-      const rx = new RegExp(escapeRegex(q), "i");
-      andParts.push({
-        $or: [{ name: rx }, { slug: rx }, { articleNo: rx }, { shortDescription: rx }],
-      });
-    }
+    // Search (`q`) applied in queryProductsWithSearch ($text → regex fallback).
 
     if (carMake || carModel || carGeneration) {
       // Prefer Vehicle ObjectId fitment: compatibleVehicles (+ legacy specific). Universal not auto-included.
@@ -212,8 +208,26 @@ export async function GET(request) {
     if (sort === "name") sortSpec = { name: 1 };
     if (sort === "featured") sortSpec = { featured: -1, createdAt: -1 };
     if (sort === "popular") sortSpec = { reviewCount: -1, createdAt: -1 };
+    if (sort === "rating") {
+      sortSpec = { averageRating: -1, ratingAverage: -1, rating: -1, reviewCount: -1 };
+    }
 
     if (countOnly) {
+      if (q) {
+        const { total } = await queryProductsWithSearch(Product, filter, q, {
+          limit: 1,
+          skip: 0,
+          sortSpec,
+        });
+        return NextResponse.json(
+          { success: true, count: total },
+          {
+            headers: {
+              "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+            },
+          }
+        );
+      }
       const total = await Product.countDocuments(filter);
       return NextResponse.json(
         { success: true, count: total },
@@ -225,18 +239,33 @@ export async function GET(request) {
       );
     }
 
-    const [rows, total] = await Promise.all([
-      Product.find(filter)
-        .select(
-          "name slug media.images pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
-        )
-        .populate("categories", "name slug")
-        .sort(sortSpec)
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      Product.countDocuments(filter),
-    ]);
+    let rows;
+    let total;
+    if (q) {
+      const result = await queryProductsWithSearch(Product, filter, q, {
+        limit,
+        skip,
+        sortSpec,
+        select:
+          "name slug media pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo createdAt tags",
+        populate: "categories",
+      });
+      rows = result.rows;
+      total = result.total;
+    } else {
+      [rows, total] = await Promise.all([
+        Product.find(filter)
+          .select(
+            "name slug media pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo createdAt tags"
+          )
+          .populate("categories", "name slug")
+          .sort(sortSpec)
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Product.countDocuments(filter),
+      ]);
+    }
 
     return NextResponse.json(
       {
