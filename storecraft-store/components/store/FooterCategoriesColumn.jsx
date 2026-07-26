@@ -16,18 +16,29 @@ const colHeading = {
   whiteSpace: "nowrap",
 };
 
-/** Footer categories from GET /api/categories/tree (real parents + children). */
-export function FooterCategoriesColumn() {
-  const [parents, setParents] = useState([]);
+/** Footer categories — prefer SSR tree from layout; fall back to GET /api/categories/tree. */
+export function FooterCategoriesColumn({ initialCategoryTree = null }) {
+  const [parents, setParents] = useState(() =>
+    Array.isArray(initialCategoryTree)
+      ? initialCategoryTree.filter((c) => c?.slug && c?.name)
+      : []
+  );
 
   useEffect(() => {
+    if (Array.isArray(initialCategoryTree) && initialCategoryTree.length) {
+      import("@/lib/fetchCategoryTree").then(({ seedCategoryTree }) => {
+        seedCategoryTree(initialCategoryTree);
+      });
+      setParents(initialCategoryTree.filter((c) => c?.slug && c?.name));
+      return undefined;
+    }
     let cancelled = false;
-    fetch("/api/categories/tree", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data) => {
-        if (cancelled) return;
-        const tree = data?.categories || data?.data || [];
-        setParents(Array.isArray(tree) ? tree.filter((c) => c?.slug && c?.name) : []);
+    import("@/lib/fetchCategoryTree")
+      .then(({ fetchCategoryTree }) => fetchCategoryTree())
+      .then((tree) => {
+        if (!cancelled) {
+          setParents(Array.isArray(tree) ? tree.filter((c) => c?.slug && c?.name) : []);
+        }
       })
       .catch(() => {
         if (!cancelled) setParents([]);
@@ -35,7 +46,7 @@ export function FooterCategoriesColumn() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialCategoryTree]);
 
   return (
     <div>

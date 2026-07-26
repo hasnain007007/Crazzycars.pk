@@ -11,6 +11,8 @@ import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreProviders } from "@/components/store/StoreProviders";
 import { CustomerProvider } from "@/lib/customerAuth";
 import { getPublicStoreSettings } from "@/lib/serverSettings";
+import { isShopifyEnabled } from "@/lib/shopify";
+import { fetchCategoryTreeServer } from "@/lib/serverCategoryTree";
 import { getSiteUrl, isIndexableEnvironment, sanitizeCanonicalUrl, absoluteUrl } from "@/lib/siteUrl";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import "./globals.css";
@@ -80,15 +82,25 @@ export async function generateMetadata() {
 
     const ogTitle = seo.ogTitle?.trim() || title;
     const ogDescription = seo.ogDescription?.trim() || description;
-    // Prefer local OG asset on our domain — never inherit foreign absolute URLs from old CMS.
+    // Allow site-relative, same-host, and Cloudinary uploads from admin SEO settings.
     const configuredOg = seo.ogImage?.trim() || "";
     let ogSafe = "";
     if (configuredOg) {
       try {
-        const host = new URL(configuredOg, siteUrl).hostname.replace(/^www\./, "");
-        const siteHost = new URL(siteUrl).hostname.replace(/^www\./, "");
-        if (host === siteHost || configuredOg.startsWith("/")) {
-          ogSafe = configuredOg.startsWith("http") ? configuredOg : absoluteUrl(configuredOg);
+        if (configuredOg.startsWith("/")) {
+          ogSafe = absoluteUrl(configuredOg);
+        } else {
+          const parsed = new URL(configuredOg, siteUrl);
+          const host = parsed.hostname.replace(/^www\./, "");
+          const siteHost = new URL(siteUrl).hostname.replace(/^www\./, "");
+          const isHttps = parsed.protocol === "https:" || parsed.protocol === "http:";
+          const allowed =
+            host === siteHost ||
+            host === "res.cloudinary.com" ||
+            host.endsWith(".cloudinary.com");
+          if (isHttps && allowed) {
+            ogSafe = parsed.href;
+          }
         }
       } catch {
         ogSafe = "";
@@ -170,6 +182,8 @@ export default async function RootLayout({ children }) {
     console.error("RootLayout settings error:", e);
   }
 
+  const categoryTree = await fetchCategoryTreeServer();
+
   const appearance = settings?.appearance || {};
   const general = settings?.general || {};
   const seo = settings?.seo || {};
@@ -221,14 +235,14 @@ export default async function RootLayout({ children }) {
           }}
         />
         <CustomerProvider>
-          <StoreProviders settings={settings}>
+          <StoreProviders settings={settings} shopifyEnabled={isShopifyEnabled()}>
             <AnnouncementBar />
             <Suspense fallback={null}>
-              <StoreHeader />
+              <StoreHeader initialCategoryTree={categoryTree} />
             </Suspense>
             <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">{children}</main>
             <Suspense fallback={null}>
-              <StoreFooter settings={settings} />
+              <StoreFooter settings={settings} initialCategoryTree={categoryTree} />
             </Suspense>
             <ClientOnlyWidgets />
             <MobileBottomNav />

@@ -1,32 +1,68 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { categoryHref } from "@/lib/categories";
 
+/** Category display picture (main image → icon → homepage icon). */
+function catImage(node) {
+  if (!node) return "";
+  if (typeof node.image === "string" && node.image) return node.image;
+  if (node.image?.url) return node.image.url;
+  if (typeof node.icon === "string" && node.icon) return node.icon;
+  if (typeof node.homepageIcon === "string" && node.homepageIcon) return node.homepageIcon;
+  return "";
+}
+
 /**
- * AutoJin-style mega-menu: parents left, children (name + image) on hover.
- * Fed by GET /api/categories/tree
+ * AutoJin-style mega-menu:
+ *  left  — parent categories + chevrons
+ *  center — compact 2-col subcategory rows (label + small thumb)
+ *  right  — one display picture for the hovered category (sub → parent)
  */
-export default function MegaMenu({ isOpen, onClose }) {
-  const [menuCategories, setMenuCategories] = useState([]);
-  const [activeCategory, setActiveCategory] = useState(null);
+export default function MegaMenu({ isOpen, onClose, initialCategories = null }) {
+  const [menuCategories, setMenuCategories] = useState(() =>
+    Array.isArray(initialCategories) ? initialCategories : []
+  );
+  const [activeCategory, setActiveCategory] = useState(() =>
+    Array.isArray(initialCategories) && initialCategories[0]?._id
+      ? initialCategories[0]._id
+      : null
+  );
+  const [hoveredSubId, setHoveredSubId] = useState(null);
   const [loading, setLoading] = useState(false);
   const menuRef = useRef(null);
 
+  useEffect(() => {
+    if (Array.isArray(initialCategories) && initialCategories.length) {
+      setMenuCategories(initialCategories);
+      setActiveCategory((prev) => {
+        if (prev && initialCategories.some((c) => String(c._id) === String(prev))) return prev;
+        return initialCategories[0]._id;
+      });
+    }
+  }, [initialCategories]);
+
   const loadCategories = useCallback(() => {
+    if (Array.isArray(initialCategories) && initialCategories.length) {
+      setMenuCategories(initialCategories);
+      setActiveCategory((prev) => {
+        if (prev && initialCategories.some((c) => String(c._id) === String(prev))) return prev;
+        return initialCategories[0]._id;
+      });
+      return;
+    }
     setLoading(true);
-    fetch("/api/categories/tree", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data) => {
-        const cats = data?.categories || data?.data || [];
-        const list = Array.isArray(cats) ? cats : [];
-        setMenuCategories(list);
-        if (list.length > 0) {
+    import("@/lib/fetchCategoryTree")
+      .then(({ fetchCategoryTree }) => fetchCategoryTree())
+      .then((list) => {
+        const cats = Array.isArray(list) ? list : [];
+        setMenuCategories(cats);
+        if (cats.length > 0) {
           setActiveCategory((prev) => {
-            if (prev && list.some((c) => String(c._id) === String(prev))) return prev;
-            return list[0]._id;
+            if (prev && cats.some((c) => String(c._id) === String(prev))) return prev;
+            return cats[0]._id;
           });
         } else {
           setActiveCategory(null);
@@ -37,15 +73,15 @@ export default function MegaMenu({ isOpen, onClose }) {
         setActiveCategory(null);
       })
       .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
+  }, [initialCategories]);
 
   useEffect(() => {
     if (isOpen) loadCategories();
   }, [isOpen, loadCategories]);
+
+  useEffect(() => {
+    setHoveredSubId(null);
+  }, [activeCategory]);
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -55,166 +91,137 @@ export default function MegaMenu({ isOpen, onClose }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-  if (!loading && menuCategories.length === 0) return null;
-
   const activeParent = menuCategories.find((c) => String(c._id) === String(activeCategory));
   const activeSubs = activeParent?.children || [];
 
+  const hoveredSub = useMemo(
+    () => activeSubs.find((s) => String(s._id) === String(hoveredSubId)) || null,
+    [activeSubs, hoveredSubId]
+  );
+
+  /** Right panel shows hovered subcategory display pic, else parent. */
+  const focusCat = hoveredSub || activeParent || null;
+  const focusImage = catImage(focusCat) || catImage(activeParent);
+  const focusHref = focusCat?.slug ? categoryHref(focusCat.slug) : "/categories";
+  const focusLabel = focusCat?.name || "Shop";
+
+  if (!isOpen) return null;
+  if (!loading && menuCategories.length === 0) return null;
+
   return (
-    <div
-      ref={menuRef}
-      className="mega-menu"
-      style={{
-        position: "absolute",
-        top: "100%",
-        left: 0,
-        right: 0,
-        background: "#FFFFFF",
-        borderTop: "2px solid #C41E1E",
-        boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
-        zIndex: 7010,
-      }}
-    >
-      <div className="store-container flex" style={{ minHeight: 300 }}>
-        <div
-          style={{
-            minWidth: 220,
-            maxWidth: 280,
-            padding: "12px 0",
-            borderRight: "1px solid #F0F0F0",
-            flexShrink: 0,
-          }}
-        >
+    <div ref={menuRef} className="mega-menu">
+      <div className="store-container mega-menu__grid">
+        <aside className="mega-menu__parents">
           {loading && !menuCategories.length ? (
-            <p style={{ padding: "12px 18px", fontSize: 13, color: "#9CA3AF" }}>Loading…</p>
+            <p className="mega-menu__loading">Loading…</p>
           ) : null}
           {menuCategories.map((cat) => {
             const active = String(activeCategory) === String(cat._id);
             return (
-              <Link
+              <button
                 key={String(cat._id)}
-                href={categoryHref(cat.slug)}
-                onClick={() => onClose?.()}
-                onMouseEnter={() => setActiveCategory(cat._id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "11px 18px",
-                  fontSize: 14,
-                  fontWeight: active ? 700 : 500,
-                  color: active ? "#111111" : "#444444",
-                  textDecoration: "none",
-                  background: active ? "#F8F8F8" : "transparent",
-                  borderLeft: active ? "3px solid #C41E1E" : "3px solid transparent",
-                  gap: 16,
+                type="button"
+                className={`mega-menu__parent${active ? " is-active" : ""}`}
+                onMouseEnter={() => {
+                  setActiveCategory(cat._id);
+                  setHoveredSubId(null);
+                }}
+                onFocus={() => {
+                  setActiveCategory(cat._id);
+                  setHoveredSubId(null);
+                }}
+                onClick={() => {
+                  setActiveCategory(cat._id);
+                  setHoveredSubId(null);
                 }}
               >
                 <span>{cat.name}</span>
-                {cat.children?.length > 0 ? <span style={{ fontSize: 12, color: "#AAAAAA" }}>›</span> : null}
-              </Link>
+                {cat.children?.length > 0 ? <span className="mega-menu__chevron">›</span> : null}
+              </button>
             );
           })}
-          <div style={{ borderTop: "1px solid #F0F0F0", marginTop: 8 }}>
-            <Link
-              href="/categories"
-              onClick={() => onClose?.()}
-              style={{
-                display: "block",
-                padding: "12px 18px",
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#C41E1E",
-                textDecoration: "none",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
+          <div className="mega-menu__parents-foot">
+            <Link href="/categories" onClick={() => onClose?.()} className="mega-menu__all-link">
               Shop by Category →
             </Link>
           </div>
-        </div>
+        </aside>
 
-        <div style={{ flex: 1, padding: "16px 28px 24px", background: "#FAFAFA", minHeight: 300 }}>
+        <div className="mega-menu__subs" onMouseLeave={() => setHoveredSubId(null)}>
           {activeParent ? (
             <>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <p
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 800,
-                    color: "#C41E1E",
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    margin: 0,
-                  }}
-                >
-                  {activeParent.name}
-                </p>
+              <div className="mega-menu__subs-head">
+                <p className="mega-menu__subs-title">{activeParent.name}</p>
                 <Link
                   href={categoryHref(activeParent.slug)}
                   onClick={() => onClose?.()}
-                  style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", textDecoration: "none" }}
+                  className="mega-menu__view-all"
                 >
-                  View all
+                  View all →
                 </Link>
               </div>
 
               {activeSubs.length > 0 ? (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-                    gap: 16,
-                  }}
-                >
+                <div className="mega-menu__subs-grid">
                   {activeSubs.map((sub) => {
-                    const img = typeof sub.image === "string" ? sub.image : sub.image?.url || "";
+                    const img = catImage(sub);
+                    const isHover = String(hoveredSubId) === String(sub._id);
                     return (
                       <Link
                         key={String(sub._id)}
                         href={categoryHref(sub.slug)}
                         onClick={() => onClose?.()}
-                        style={{ textDecoration: "none", color: "#111111" }}
-                        className="group"
+                        onMouseEnter={() => setHoveredSubId(sub._id)}
+                        onFocus={() => setHoveredSubId(sub._id)}
+                        className={`mega-menu__sub-row${isHover ? " is-hover" : ""}`}
                       >
-                        <div
-                          style={{
-                            position: "relative",
-                            width: "100%",
-                            aspectRatio: "1",
-                            borderRadius: 8,
-                            overflow: "hidden",
-                            background: "#EEE",
-                            border: "1px solid #E5E7EB",
-                            marginBottom: 8,
-                          }}
-                        >
+                        <span className="mega-menu__sub-name">{sub.name}</span>
+                        <span className="mega-menu__sub-thumb">
                           {img ? (
-                            <Image
-                              src={img}
-                              alt={sub.name}
-                              fill
-                              className="object-cover transition group-hover:scale-105"
-                              sizes="140px"
-                            />
+                            <Image src={img} alt="" fill className="object-cover" sizes="44px" />
                           ) : (
-                            <div style={{ display: "grid", placeItems: "center", height: "100%", fontSize: 24 }}>📦</div>
+                            <span className="mega-menu__sub-thumb-empty">·</span>
                           )}
-                        </div>
-                        <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{sub.name}</span>
+                        </span>
                       </Link>
                     );
                   })}
                 </div>
               ) : (
-                <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 8 }}>
-                  Browse all {activeParent.name} products.
-                </p>
+                <div className="mega-menu__empty">
+                  <p>Browse all {activeParent.name} products.</p>
+                  <Link
+                    href={categoryHref(activeParent.slug)}
+                    onClick={() => onClose?.()}
+                    className="mega-menu__shop-btn"
+                  >
+                    Shop {activeParent.name}
+                  </Link>
+                </div>
               )}
             </>
           ) : null}
+        </div>
+
+        {/* Single contained display picture — updates on hover */}
+        <div className="mega-menu__promo">
+          <Link href={focusHref} onClick={() => onClose?.()} className="mega-menu__promo-card">
+            {focusImage ? (
+              <Image
+                key={focusImage}
+                src={focusImage}
+                alt={focusLabel}
+                fill
+                className="object-cover"
+                sizes="248px"
+                priority
+              />
+            ) : (
+              <span className="mega-menu__promo-fallback" />
+            )}
+            <span className="mega-menu__promo-scrim" />
+            <span className="mega-menu__promo-label">{focusLabel}</span>
+          </Link>
         </div>
       </div>
     </div>

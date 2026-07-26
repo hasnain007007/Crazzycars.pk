@@ -12,6 +12,7 @@ import { getCodFreeDeliveryProgress, getProgressBarThreshold } from "@/lib/freeD
 import { getCategoryMegaColumns } from "@/lib/categories";
 import { useCustomer } from "@/lib/customerAuth";
 import MegaMenu from "@/components/store/MegaMenu";
+import { SearchSuggest } from "@/components/store/SearchSuggest";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -267,14 +268,17 @@ function HeaderAction({ href, onClick, label, icon, badge }) {
     );
   }
 
+  // Account/wishlist are low-priority for homepage prefetch and are linked from
+  // multiple places (header + mobile nav + footer) — skip auto-prefetch to cut RSC spam.
+  const skipPrefetch = href === "/wishlist" || href?.startsWith("/account");
   return (
-    <Link href={href} className={className} aria-label={label}>
+    <Link href={href} className={className} aria-label={label} prefetch={skipPrefetch ? false : undefined}>
       {inner}
     </Link>
   );
 }
 
-export function StoreHeader() {
+export function StoreHeader({ initialCategoryTree = null }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -284,7 +288,7 @@ export function StoreHeader() {
   const storePayment = useStorePayment();
   const wishCount = useWishlistCount();
   const [cartToast, setCartToast] = useState(null);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(() => searchParams?.get("q") || "");
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
@@ -302,20 +306,31 @@ export function StoreHeader() {
   const { brand, nav, megaCols, megaEnabled } = config;
 
   const [activeMegaItem, setActiveMegaItem] = useState(null);
-  const [treeCategories, setTreeCategories] = useState([]);
+  const [treeCategories, setTreeCategories] = useState(() =>
+    Array.isArray(initialCategoryTree) ? initialCategoryTree : []
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
+    setQ(searchParams?.get("q") || "");
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (Array.isArray(initialCategoryTree) && initialCategoryTree.length) {
+      import("@/lib/fetchCategoryTree").then(({ seedCategoryTree }) => {
+        seedCategoryTree(initialCategoryTree);
+      });
+      setTreeCategories(initialCategoryTree);
+      return undefined;
+    }
     let cancelled = false;
-    fetch("/api/categories/tree", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data) => {
-        if (cancelled) return;
-        const list = data?.categories || data?.data || [];
-        setTreeCategories(Array.isArray(list) ? list : []);
+    import("@/lib/fetchCategoryTree")
+      .then(({ fetchCategoryTree }) => fetchCategoryTree())
+      .then((list) => {
+        if (!cancelled) setTreeCategories(Array.isArray(list) ? list : []);
       })
       .catch(() => {
         if (!cancelled) setTreeCategories([]);
@@ -323,7 +338,7 @@ export function StoreHeader() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialCategoryTree]);
 
   useEffect(() => {
     if (hasCtxSettings) return;
@@ -379,6 +394,13 @@ export function StoreHeader() {
     else router.push("/products");
   }
 
+  function submitSearchTerm(term) {
+    const t = String(term || q).trim();
+    setMobileSearchOpen(false);
+    if (t) router.push(`/products?q=${encodeURIComponent(t)}`);
+    else router.push("/products");
+  }
+
   function isNavItemActive(item) {
     const href = String(item?.href || "");
     const [pathPart, query = ""] = href.split("?");
@@ -426,8 +448,8 @@ export function StoreHeader() {
 
   const navLinkClass = (item) => {
     const active = isNavItemActive(item);
-    return `px-3 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-      active ? "" : "hover:text-[#C41E1E]"
+    return `store-header-nav-link px-3 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+      active ? "is-active" : ""
     }`;
   };
 
@@ -471,9 +493,9 @@ export function StoreHeader() {
           </div>
         </div>
       ) : null}
-      {/* Row 1 — main */}
-      <div className="border-b bg-white" style={{ borderColor: "#E5E7EB" }}>
-        <div className="store-container flex h-[72px] items-center gap-4">
+      {/* Row 1 — main (above nav so search dropdown is never covered) */}
+      <div className="relative z-[80] border-b bg-white" style={{ borderColor: "#E5E7EB" }}>
+        <div className="store-container relative flex h-[72px] items-center gap-4">
           <button
             type="button"
             className="flex h-10 w-10 shrink-0 items-center justify-center md:hidden"
@@ -511,23 +533,17 @@ export function StoreHeader() {
           </Link>
           <form onSubmit={search} className="mx-auto hidden max-w-[480px] flex-1 md:block">
             <div className="relative">
-              <input
-                type="search"
+              <SearchSuggest
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={setQ}
+                onSubmit={submitSearchTerm}
                 placeholder="Search products..."
-                className="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-sm outline-none transition"
-                style={{ borderColor: "#E5E7EB" }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#C41E1E";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#E5E7EB";
-                }}
+                inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-sm outline-none transition"
+                inputStyle={{ borderColor: "#E5E7EB" }}
               />
               <button
                 type="submit"
-                className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
+                className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
                 style={{ background: "#C41E1E" }}
                 aria-label="Search"
               >
@@ -575,18 +591,19 @@ export function StoreHeader() {
           <div className="border-t px-4 py-3 md:hidden" style={{ borderColor: "#E5E7EB" }}>
             <form onSubmit={search}>
               <div className="relative">
-                <input
-                  type="search"
+                <SearchSuggest
                   value={q}
-                  onChange={(e) => setQ(e.target.value)}
+                  onChange={setQ}
+                  onSubmit={submitSearchTerm}
                   placeholder="Search products..."
                   autoFocus
-                  className="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-sm outline-none"
-                  style={{ borderColor: "#C41E1E" }}
+                  variant="mobile"
+                  inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-sm outline-none"
+                  inputStyle={{ borderColor: "#C41E1E" }}
                 />
                 <button
                   type="submit"
-                  className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
+                  className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
                   style={{ background: "#C41E1E" }}
                   aria-label="Search"
                 >
@@ -600,7 +617,7 @@ export function StoreHeader() {
 
       {/* Row 3 — nav */}
       <nav
-        className="relative hidden border-b-2 bg-white md:block"
+        className="relative z-10 hidden border-b-2 bg-white md:block"
         style={{ borderBottomColor: "#C41E1E" }}
         onMouseLeave={() => setMegaOpen(false)}
       >
@@ -634,7 +651,6 @@ export function StoreHeader() {
               <Link
                 href={item.href}
                 className={navLinkClass(item)}
-                style={{ color: isNavItemActive(item) ? "#C41E1E" : "#111111" }}
                 aria-current={isNavItemActive(item) ? "page" : undefined}
               >
                 {item.label}
@@ -643,7 +659,11 @@ export function StoreHeader() {
           ))}
         </div>
         {megaEnabled && megaOpen ? (
-          <MegaMenu isOpen={megaOpen} onClose={() => setMegaOpen(false)} />
+          <MegaMenu
+            isOpen={megaOpen}
+            onClose={() => setMegaOpen(false)}
+            initialCategories={treeCategories}
+          />
         ) : null}
       </nav>
 
@@ -691,7 +711,7 @@ export function StoreHeader() {
                     <>
                       <button
                         type="button"
-                        className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-[#111111]"
+                        className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
                         onClick={() => setDrawerExpanded((s) => ({ ...s, [item.label]: !s[item.label] }))}
                       >
                         {item.label}
@@ -704,7 +724,7 @@ export function StoreHeader() {
                                 <li key={String(cat._id)}>
                                   <Link
                                     href={`/categories/${cat.slug}`}
-                                    className="block py-2 text-sm font-semibold text-[#111111]"
+                                    className="block py-2 text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
                                     onClick={() => setMenuOpen(false)}
                                   >
                                     {cat.name}
@@ -713,7 +733,7 @@ export function StoreHeader() {
                                     <Link
                                       key={String(sub._id)}
                                       href={`/categories/${sub.slug}`}
-                                      className="block py-1.5 pl-3 text-sm text-[#6B7280]"
+                                      className="block py-1.5 pl-3 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
                                       onClick={() => setMenuOpen(false)}
                                     >
                                       {sub.name}
@@ -727,7 +747,7 @@ export function StoreHeader() {
                                   <li key={l.label}>
                                     <Link
                                       href={l.href}
-                                      className="block py-2 text-sm text-[#6B7280]"
+                                      className="block py-2 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
                                       onClick={() => setMenuOpen(false)}
                                     >
                                       {l.label}
@@ -740,8 +760,9 @@ export function StoreHeader() {
                   ) : (
                     <Link
                       href={item.href}
-                      className="block py-4 text-sm font-semibold uppercase"
-                      style={{ color: isNavItemActive(item) ? "#C41E1E" : "#111111" }}
+                      className={`block py-4 text-sm font-semibold uppercase transition-colors ${
+                        isNavItemActive(item) ? "text-[#C41E1E]" : "text-[#111111] hover:text-[#C41E1E]"
+                      }`}
                       aria-current={isNavItemActive(item) ? "page" : undefined}
                       onClick={() => setMenuOpen(false)}
                     >
@@ -752,10 +773,10 @@ export function StoreHeader() {
               ))}
             </nav>
             <div className="border-t px-6 py-4" style={{ borderColor: "#E5E7EB" }}>
-              <Link href={accountHref} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
+              <Link href={accountHref} prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
                 Account
               </Link>
-              <Link href="/wishlist" className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
+              <Link href="/wishlist" prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
                 Saved items
               </Link>
             </div>
