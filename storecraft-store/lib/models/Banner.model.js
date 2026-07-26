@@ -111,7 +111,7 @@ const bannerSchema = new mongoose.Schema(
         color: { type: String, default: "rgba(0,0,0,0.4)" },
       },
     },
-    sortOrder: { type: Number, default: 0, index: true },
+    sortOrder: { type: Number, default: 0 },
     status: { type: String, enum: ["active", "inactive"], default: "active", index: true },
     schedule: {
       enabled: { type: Boolean, default: false },
@@ -126,6 +126,5 @@ const bannerSchema = new mongoose.Schema(
 
 bannerSchema.index({ sortOrder: 1, createdAt: -1 });
 bannerSchema.index({ status: 1, placement: 1 });
-bannerSchema.index({ sortOrder: 1 });
 
 export default mongoose.models.Banner || mongoose.model("Banner", bannerSchema);

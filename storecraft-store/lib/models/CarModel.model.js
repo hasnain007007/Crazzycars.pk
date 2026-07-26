@@ -7,7 +7,7 @@ const carModelSchema = new mongoose.Schema(
     generation: { type: String, default: "", trim: true },
     yearFrom: { type: Number },
     yearTo: { type: Number },
-    slug: { type: String, required: true, unique: true, trim: true, index: true },
+    slug: { type: String, required: true, unique: true, trim: true },
     image: {
       url: { type: String, default: "" },
       publicId: { type: String, default: "" },
@@ -20,6 +20,5 @@ const carModelSchema = new mongoose.Schema(
 );
 
 carModelSchema.index({ make: 1, isActive: 1 });
-carModelSchema.index({ slug: 1 });
 
 export default mongoose.models.CarModel || mongoose.model("CarModel", carModelSchema);

@@ -6,9 +6,9 @@ import mongoose from "mongoose";
 
 const livePresenceSchema = new mongoose.Schema(
   {
-    sessionId: { type: String, required: true, unique: true, index: true },
+    sessionId: { type: String, required: true, unique: true },
     path: { type: String, default: "/", trim: true },
-    lastSeen: { type: Date, default: Date.now, index: true },
+    lastSeen: { type: Date, default: Date.now },
     userAgent: { type: String, default: "", trim: true },
   },
   { timestamps: true }

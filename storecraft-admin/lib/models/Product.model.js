@@ -209,7 +209,6 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-productSchema.index({ slug: 1 });
 productSchema.index({ status: 1, createdAt: -1 });
 productSchema.index({ categories: 1, status: 1 });
 productSchema.index({ featured: 1, status: 1 });

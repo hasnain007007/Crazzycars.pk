@@ -59,7 +59,6 @@ const categorySchema = new mongoose.Schema(
 
 categorySchema.index({ createdAt: -1 });
 categorySchema.index({ name: 1 });
-categorySchema.index({ slug: 1 });
 categorySchema.index({ status: 1 });
 categorySchema.index({ parentCategory: 1 });
 categorySchema.index({ parents: 1, sortOrder: 1 });
