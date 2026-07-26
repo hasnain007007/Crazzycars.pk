@@ -1,3 +1,4 @@
+import { Suspense, cache } from "react";
 import { notFound } from "next/navigation";
 import { ProductDetailMedico } from "@/components/store/ProductDetailMedico";
 import PageView from "@/components/store/PageView";
@@ -6,14 +7,20 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Page from "@/lib/models/Page.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
-import { serializeStoreProductDetail } from "@/lib/storeSerialize";
+import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
 import {
   productJsonLd as buildProductJsonLd,
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
 } from "@/lib/seo/jsonld";
 
-export const dynamic = "force-dynamic";
+/**
+ * ISR for product / CMS / category-via-slug pages.
+ * 120s: prices & stock can lag up to ~2 minutes after admin edits
+ * (acceptable vs force-dynamic on every visit). Revalidate webhook can
+ * shorten this later without changing the page.
+ */
+export const revalidate = 120;
 
 const BASE_URL = getSiteUrl();
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Crazzycars.pk";
@@ -22,13 +29,50 @@ function stripHtml(s) {
   return String(s || "").replace(/<[^>]*>/g, "");
 }
 
-async function loadContent(slug) {
+async function loadRelatedProducts(product) {
+  try {
+    const categoryIds = (product?.categories || [])
+      .map((c) => {
+        if (c == null) return null;
+        if (typeof c === "object" && c._id) return c._id;
+        return c;
+      })
+      .filter(Boolean);
+
+    const filter = {
+      status: "active",
+      _id: { $ne: product._id },
+    };
+    if (categoryIds.length) {
+      filter.categories = { $in: categoryIds };
+    }
+
+    const rows = await Product.find(filter)
+      .select(
+        "name slug media pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo createdAt tags"
+      )
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .lean();
+
+    // Ensure RSC → client props are plain JSON (no Date / ObjectId surprises).
+    return JSON.parse(JSON.stringify(rows.map(serializeStoreProductSummary)));
+  } catch (err) {
+    console.error("[loadRelatedProducts]", err?.message || err);
+    return [];
+  }
+}
+
+/**
+ * One Mongo load per request — shared by generateMetadata + page via React.cache.
+ */
+const loadContent = cache(async (slug) => {
   await dbConnect();
   const slugStr = String(slug || "").trim();
 
   const product = await Product.findOne({
     slug: slugStr,
-    status: { $regex: /^active$/i },
+    status: "active",
   })
     .select(
       "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal compatibleVehicles"
@@ -37,9 +81,11 @@ async function loadContent(slug) {
     .lean();
 
   if (product) {
+    const relatedProducts = await loadRelatedProducts(product);
     return {
       type: "product",
       data: serializeStoreProductDetail(product),
+      relatedProducts,
     };
   }
 
@@ -71,7 +117,7 @@ async function loadContent(slug) {
   }
 
   return null;
-}
+});
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -116,7 +162,6 @@ export async function generateMetadata({ params }) {
         images: mainImg ? [mainImg] : [],
       },
     };
-    };
   }
 
   if (content.type === "category") {
@@ -145,7 +190,7 @@ export async function generateMetadata({ params }) {
 
   const page = content.data;
   return {
-    title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+    title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`,
     description: page.seo?.metaDescription || "",
     alternates: {
       canonical: page.seo?.canonical || `${BASE_URL}/${slugStr}`,
@@ -221,7 +266,7 @@ export default async function ProductPage({ params }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(toBreadcrumbLd(content.data)) }}
         />
-        <ProductDetailMedico product={content.data} />
+        <ProductDetailMedico product={content.data} relatedProducts={content.relatedProducts || []} />
       </>
     );
   }
@@ -234,12 +279,15 @@ export default async function ProductPage({ params }) {
     const d = content.data;
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
-        <CategoryDetailPageClient
-          initialCategory={d.category}
-          initialSubcategories={d.subcategories}
-          initialProducts={d.products}
-          initialBreadcrumbs={d.breadcrumbs}
-        />
+        <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-16 text-sm text-[#6B7280]">Loading products…</div>}>
+          <CategoryDetailPageClient
+            initialCategory={d.category}
+            initialSubcategories={d.subcategories}
+            initialProducts={d.products}
+            initialProductCount={d.productCount}
+            initialBreadcrumbs={d.breadcrumbs}
+          />
+        </Suspense>
       </div>
     );
   }
