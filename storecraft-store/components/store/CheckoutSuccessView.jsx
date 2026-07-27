@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCheckoutMessages } from "@/context/StoreSettingsContext";
 import { formatPrice } from "@/lib/currency";
+import { oncePerSession, trackPurchase } from "@/lib/metaPixel";
 import {
   formatAdvancePaymentMessage,
   formatWhatsAppDisplay,
@@ -18,21 +19,27 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   const pm = String(order?.paymentMethod || "").toLowerCase();
   const shipping = Math.max(0, Number(order?.pricing?.shippingCost) || 0);
   const rules = normalizeShippingRules(storePayment);
-  if (
-    !shouldShowAdvancePaymentMessage({
-      paymentMethod: pm,
-      shippingCost: shipping,
-      storePayment: rules,
-    })
-  ) {
+  const advanceRequired = Math.max(0, Number(order?.payment?.advanceRequired) || 0);
+  const advanceMode = String(order?.payment?.advanceMode || "");
+  const advanceMaxPercent = Math.max(0, Number(order?.payment?.advanceMaxPercent) || 0);
+  const remainingCod = Math.max(0, Number(order?.payment?.remainingCod) || 0);
+  const showPercent = advanceMode === "percent" && advanceRequired > 0;
+  const showDelivery = shouldShowAdvancePaymentMessage({
+    paymentMethod: pm,
+    shippingCost: shipping,
+    storePayment: rules,
+  });
+  if (!showPercent && !showDelivery) {
     return null;
   }
 
   const waNum = String(whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || "03284010007").trim();
   const waDisplay = formatWhatsAppDisplay(waNum || "03284010007");
   const messageBody = formatAdvancePaymentMessage(
-    rules.advancePaymentMessage,
-    rules.advancePaymentAmount || shipping || 250,
+    showPercent
+      ? `To confirm your order, please pay at least {amount} in advance (${advanceMaxPercent}% of eligible items).\n\nRemaining on delivery: ${formatPrice(remainingCod)}.\n\nSend payment screenshot on WhatsApp: {whatsapp}`
+      : rules.advancePaymentMessage,
+    showPercent ? advanceRequired : rules.advancePaymentAmount || shipping || 250,
     waDisplay
   );
   const accountLines = getAdvancePaymentAccountLines(
@@ -60,7 +67,7 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
           color: "#92400E",
         }}
       >
-        {rules.advancePaymentMessageTitle}
+        {showPercent ? `Pay at least ${advanceMaxPercent}% advance` : rules.advancePaymentMessageTitle}
       </p>
       <p
         style={{
@@ -145,6 +152,32 @@ export default function CheckoutSuccessView() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [orderId]);
+
+  /** Purchase — real order grand total (pricing.total), once per order per session. */
+  useEffect(() => {
+    if (!order) return;
+    const orderKey = String(order._id || orderId || order.orderNumber || "").trim();
+    if (!orderKey) return;
+    const value = Number(order.total ?? order.pricing?.total ?? 0);
+    if (!Number.isFinite(value) || value < 0) return;
+
+    const contentIds = (Array.isArray(order.items) ? order.items : [])
+      .map((it) => String(it.productId || "").trim())
+      .filter(Boolean);
+    const numItems = (Array.isArray(order.items) ? order.items : []).reduce(
+      (sum, it) => sum + Math.max(1, Number(it.quantity) || 1),
+      0
+    );
+
+    oncePerSession(`meta_purchase_${orderKey}`, () => {
+      trackPurchase({
+        contentIds,
+        value,
+        orderId: order.orderNumber || orderKey,
+        numItems: numItems || undefined,
+      });
+    });
+  }, [order, orderId]);
 
   if (showFailed) {
     return (
@@ -422,6 +455,32 @@ export default function CheckoutSuccessView() {
             pakistaniPaymentMethods={contact.pakistaniPaymentMethods}
           />
         ) : null}
+
+        {(() => {
+          const method = String(order?.paymentMethod || "").toLowerCase();
+          const isCod = method === "cod" || (!method && !paid);
+          const note = isCod
+            ? messages.codAdvanceNote || ""
+            : messages.paymentConfirmedMessage || "";
+          if (!note.trim()) return null;
+          return (
+            <p
+              style={{
+                fontSize: 14,
+                color: "#555555",
+                margin: "0 0 20px",
+                lineHeight: 1.7,
+                textAlign: "left",
+                background: "#F8F8F8",
+                border: "1px solid #E5E5E5",
+                borderRadius: 8,
+                padding: "14px 16px",
+              }}
+            >
+              {note}
+            </p>
+          );
+        })()}
 
         <p
           style={{
