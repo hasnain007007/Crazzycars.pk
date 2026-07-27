@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
+import { resolveProductContentId, trackViewContent } from "@/lib/metaPixel";
 import { ProductCard } from "./ProductCard";
 import { CountdownTimer } from "./CountdownTimer";
 import ProductVariations from "./ProductVariations";
@@ -85,7 +86,56 @@ function normalizeProductTrustBadges(arr) {
 }
 
 function toPlain(html) {
-  return String(html || "").replace(/<[^>]*>/g, "").trim();
+  let s = String(html || "");
+  for (let i = 0; i < 3; i++) {
+    if (!/&(?:amp|lt|gt|quot|nbsp|#0*3[468]|#0*39|#x27);/i.test(s)) break;
+    s = s
+      .replace(/&amp;/gi, "&")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#0*39;/g, "'")
+      .replace(/&#x27;/gi, "'")
+      .replace(/&nbsp;/gi, " ");
+  }
+  return s
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function truncatePlain(text, maxLen = 180) {
+  const plain = String(text || "").trim();
+  if (!plain || plain.length <= maxLen) return plain;
+  const cut = plain.slice(0, maxLen);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trim()}…`;
+}
+
+/** Decode escaped HTML then strip scripts/handlers (server already sanitizes). */
+function sanitizeClientHtml(html) {
+  let raw = String(html || "");
+  if (!raw) return "";
+  // Import/legacy data often stores `&lt;p&gt;…` instead of real tags.
+  for (let i = 0; i < 3; i++) {
+    if (!/&(?:amp|lt|gt|quot|nbsp|#0*3[468]|#0*39|#x27);/i.test(raw)) break;
+    raw = raw
+      .replace(/&amp;/gi, "&")
+      .replace(/&#0*38;/g, "&")
+      .replace(/&lt;/gi, "<")
+      .replace(/&#0*60;/g, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&#0*62;/g, ">")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#0*34;/g, '"')
+      .replace(/&#0*39;/g, "'")
+      .replace(/&#x27;/gi, "'")
+      .replace(/&nbsp;/gi, " ");
+  }
+  return raw
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+    .replace(/on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/javascript:/gi, "");
 }
 
 function AccordionSection({ id, title, icon, isOpen, onToggle, children, badge }) {
@@ -155,18 +205,20 @@ function AccordionSection({ id, title, icon, isOpen, onToggle, children, badge }
 
       <div
         style={{
-          maxHeight: isOpen ? "2000px" : "0",
-          overflow: "hidden",
-          transition: "max-height 0.35s ease",
+          maxHeight: isOpen ? "none" : "0",
+          overflow: isOpen ? "visible" : "hidden",
+          transition: isOpen ? undefined : "max-height 0.35s ease",
         }}
+        hidden={!isOpen}
+        aria-hidden={!isOpen}
       >
-        <div style={{ paddingBottom: 24 }}>{children}</div>
+        {isOpen ? <div style={{ paddingBottom: 24 }}>{children}</div> : null}
       </div>
     </div>
   );
 }
 
-export function ProductDetailMedico({ product: initialProduct = null, relatedProducts = [] }) {
+export function ProductDetailMedico({ product: initialProduct = null, relatedProducts = null }) {
   const { addItem } = useCart();
   const router = useRouter();
   const params = useParams();
@@ -174,7 +226,9 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
 
   const [product, setProduct] = useState(initialProduct);
   const [loading, setLoading] = useState(!initialProduct);
-  const [related, setRelated] = useState(Array.isArray(relatedProducts) ? relatedProducts : []);
+  const [related, setRelated] = useState(
+    Array.isArray(relatedProducts) && relatedProducts.length ? relatedProducts : []
+  );
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [qty, setQty] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -240,13 +294,30 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!product?.categories?.[0]?.slug || (Array.isArray(relatedProducts) && relatedProducts.length)) return;
-      try {
-        const res = await fetch(`/api/products?category=${encodeURIComponent(product.categories[0].slug)}&limit=6`);
-        const json = await res.json();
-        if (!cancelled && json.success) {
-          setRelated((json.products || []).filter((p) => p.slug !== product.slug).slice(0, 5));
+      if (!product?.slug) return;
+
+      if (Array.isArray(relatedProducts) && relatedProducts.length > 0) {
+        if (!cancelled) {
+          setRelated(
+            relatedProducts.filter((p) => p.slug && p.slug !== product.slug).slice(0, 6)
+          );
         }
+        return;
+      }
+
+      const catSlug = product?.categories?.[0]?.slug;
+      try {
+        const url = catSlug
+          ? `/api/products?category=${encodeURIComponent(catSlug)}&limit=8`
+          : `/api/products?limit=8&sort=newest`;
+        const res = await fetch(url);
+        const json = await res.json();
+        if (cancelled || !json.success) return;
+        setRelated(
+          (json.products || [])
+            .filter((p) => p.slug && p.slug !== product.slug)
+            .slice(0, 6)
+        );
       } catch {
         if (!cancelled) setRelated([]);
       }
@@ -254,7 +325,9 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     return () => {
       cancelled = true;
     };
-  }, [product?.categories, product?.slug, relatedProducts]);
+    // Intentionally omit relatedProducts from deps — parent may pass a new [] each SSR pass.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.slug, product?.categories?.[0]?.slug]);
 
   useEffect(() => {
     setReviewCount(0);
@@ -287,7 +360,6 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
   const countdownEndDate = product?.saleSchedule?.endDate || product?.pricing?.saleSchedule?.endDate || null;
   const scheduleEnabled = Boolean(product?.saleSchedule?.enabled || product?.pricing?.saleSchedule?.enabled);
   const salePct = hasSale && regularPrice > 0 ? Math.max(1, Math.round(((regularPrice - basePrice) / regularPrice) * 100)) : 0;
-  const shortDesc = toPlain(product?.shortDescription) || "Quality product with refined finish and modern design.";
   const images = (
     Array.isArray(product?.images)
       ? product.images
@@ -410,9 +482,27 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     : baseStock;
   const quantityForDisplay = usesCombinationStock ? availableStock : baseStock;
 
+  /** Meta Pixel ViewContent — product identity + current display price. */
+  useEffect(() => {
+    if (!product) return;
+    const contentId = resolveProductContentId(product);
+    if (!contentId) return;
+    trackViewContent({
+      contentIds: [contentId],
+      value: displayPrice,
+    });
+  }, [
+    product?._id,
+    product?.id,
+    product?.articleNo,
+    product?.sku,
+    displayPrice,
+  ]);
+
   const variationState = useMemo(() => {
     const tracksStock =
       product?.inventory?.trackInventory !== false && product?.trackInventory !== false;
+    const backorderOk = product?.inventory?.allowBackorder !== false;
     const productStock = Number(product?.inventory?.quantity ?? product?.stock ?? 0);
 
     const hasVariations =
@@ -439,6 +529,15 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     let btnBg = "#111111";
 
     const markOutOfStock = () => {
+      if (backorderOk) {
+        stockStatus = "backorder";
+        stockText = "Available on backorder";
+        stockColor = "#b45309";
+        btnLabel = "Add to Cart";
+        btnDisabled = false;
+        btnBg = "#111111";
+        return;
+      }
       stockStatus = "out";
       stockText = "Out of Stock";
       stockColor = "#dc2626";
@@ -480,7 +579,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
       btnDisabled,
       btnBg,
       canAddToCart: !btnDisabled,
-      inStock: stockStatus === "in_stock",
+      inStock: stockStatus === "in_stock" || stockStatus === "backorder",
     };
   }, [product, selectedOptions, matchedCombo]);
 
@@ -530,6 +629,8 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
       unitPrice: finalUnitPrice,
       price: finalUnitPrice,
       quantity: qty,
+      articleNo: product.articleNo || "",
+      sku: product.sku || "",
       variationLabel: hasProductVariations
         ? Object.entries(selectedOptions)
             .map(([k, v]) => `${k}: ${v}`)
@@ -541,6 +642,11 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
       matchedCombination: matchedCombo || null,
       simpleVariations: product.simpleVariations || [],
       variationCombinations: product.variationCombinations || [],
+      codEnabled: product.codEnabled !== false,
+      advancePercentRequired: Math.min(
+        100,
+        Math.max(0, Number(product.advancePercentRequired) || 0)
+      ),
     });
   }
   function handleAddToCart() {
@@ -624,8 +730,13 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     }
   }
 
-  const descriptionHtml = product.longDescription || product.description;
+  const descriptionHtml = sanitizeClientHtml(
+    product.descriptionHtml || product.longDescription || product.description
+  );
   const descriptionPlain = toPlain(product.shortDescription);
+  const shortDesc =
+    truncatePlain(toPlain(product?.shortDescription), 180) ||
+    "Quality product with refined finish and modern design.";
 
   const freeThreshold = deliveryInfo?.freeShippingThreshold || 2999;
   const majorCityDays = deliveryInfo?.majorCities?.days || "2-3";
@@ -658,24 +769,78 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
           className="product-detail-grid grid items-start gap-10 lg:grid-cols-2 lg:gap-12"
           style={{ alignItems: "flex-start" }}
         >
-          <div
-            className="product-images-col grid min-w-0 grid-cols-[72px_1fr] gap-4"
-            style={{
-              position: "sticky",
-              top: "80px",
-              alignSelf: "flex-start",
-              height: "fit-content",
-              maxHeight: "calc(100vh - 90px)",
-              overflowY: "auto",
-            }}
-          >
-            <div className="flex max-h-[min(520px,70vh)] flex-col gap-3 overflow-y-auto pr-1">
+          <div className="product-images-col min-w-0">
+            <div
+              className="product-main-viewer overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#F8F8F8]"
+              style={{ width: "100%", aspectRatio: "1 / 1" }}
+            >
+              {!selectedItem ? (
+                <div className="grid h-full place-items-center text-sm text-[#707070]">No media available</div>
+              ) : selectedItem.type === "youtube" && selectedItem.youTubeId ? (
+                <div className="relative h-full w-full overflow-hidden rounded bg-black">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${selectedItem.youTubeId}?rel=0`}
+                    title={`${product?.name || "Product"} video`}
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+              ) : selectedItem.type === "uploaded" ? (
+                <video
+                  key={selectedItem.url}
+                  controls
+                  preload="metadata"
+                  poster={selectedItem.thumbnail || ""}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    background: "#000",
+                  }}
+                >
+                  <source src={selectedItem.url} type="video/webm" />
+                  {selectedItem.originalUrl ? <source src={selectedItem.originalUrl} type="video/mp4" /> : null}
+                  Your browser does not support video playback.
+                </video>
+              ) : selectedItem.type === "video" ? (
+                <video
+                  key={selectedItem.url}
+                  src={selectedItem.url}
+                  controls
+                  preload="metadata"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    background: "#000",
+                  }}
+                />
+              ) : (
+                <WatermarkedImage
+                  src={selectedItem.url}
+                  alt={selectedItem.altText || product.name}
+                  watermark={productImageWatermark}
+                  className="h-full w-full"
+                  imgStyle={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center",
+                    transform: "scale(1.06)",
+                  }}
+                />
+              )}
+            </div>
+            <div className="product-thumbs-rail">
               {galleryItems.map((item, index) => (
                 <button
                   key={`${item.type}-${item.url}-${index}`}
                   type="button"
                   onClick={() => setSelectedIndex(index)}
                   aria-label={item.type === "image" ? `Image ${index + 1}` : "Product video"}
+                  className="product-thumb-btn transition"
                   style={{
                     width: 72,
                     height: 72,
@@ -689,7 +854,6 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                     background: "#F8F8F8",
                     padding: 0,
                   }}
-                  className="transition"
                 >
                   {item.type === "image" ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
@@ -751,68 +915,6 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   )}
                 </button>
               ))}
-            </div>
-            <div
-              className="overflow-hidden rounded border border-[#E5E5E5] bg-[#F8F8F8]"
-              style={{ width: "100%", aspectRatio: "1 / 1" }}
-            >
-              {!selectedItem ? (
-                <div className="grid h-full place-items-center text-sm text-[#707070]">No media available</div>
-              ) : selectedItem.type === "youtube" && selectedItem.youTubeId ? (
-                <div className="relative h-full w-full overflow-hidden rounded bg-black">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${selectedItem.youTubeId}?rel=0`}
-                    title={`${product?.name || "Product"} video`}
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute inset-0 h-full w-full"
-                  />
-                </div>
-              ) : selectedItem.type === "uploaded" ? (
-                <video
-                  key={selectedItem.url}
-                  controls
-                  preload="metadata"
-                  poster={selectedItem.thumbnail || ""}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    background: "#000",
-                  }}
-                >
-                  <source src={selectedItem.url} type="video/webm" />
-                  {selectedItem.originalUrl ? <source src={selectedItem.originalUrl} type="video/mp4" /> : null}
-                  Your browser does not support video playback.
-                </video>
-              ) : selectedItem.type === "video" ? (
-                <video
-                  key={selectedItem.url}
-                  src={selectedItem.url}
-                  controls
-                  preload="metadata"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    background: "#000",
-                  }}
-                />
-              ) : (
-                <WatermarkedImage
-                  src={selectedItem.url}
-                  alt={selectedItem.altText || product.name}
-                  watermark={productImageWatermark}
-                  className="h-full w-full"
-                  imgStyle={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    objectPosition: "center",
-                  }}
-                />
-              )}
             </div>
           </div>
 
@@ -895,6 +997,35 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
             >
               {shortDesc}
             </p>
+
+            {Array.isArray(product.categories) && product.categories.length > 0 ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "0 0 16px" }}>
+                {product.categories.map((cat) => {
+                  const slug = cat?.slug;
+                  if (!slug) return null;
+                  return (
+                    <Link
+                      key={cat.id || slug}
+                      href={`/categories/${slug}`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        padding: "4px 10px",
+                        borderRadius: 999,
+                        border: "1px solid #E5E5E5",
+                        background: "#F8F8F8",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "#374151",
+                        textDecoration: "none",
+                      }}
+                    >
+                      {cat.name || slug}
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : null}
 
             {scheduleEnabled && countdownEndDate ? (
               <div className="rounded border border-[#E5E5E5] p-3">
@@ -980,6 +1111,13 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   Total: <span className="price">{formatPrice(finalUnitPrice)}</span>
                 </p>
               </div>
+            ) : null}
+
+            {Number(product?.advancePercentRequired) > 0 ? (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                Pay at least <strong>{Math.round(Number(product.advancePercentRequired))}%</strong> advance
+                required for this product (remaining on delivery with COD).
+              </p>
             ) : null}
 
             {product?.customSizing?.enabled ? (
@@ -1375,8 +1513,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
               >
                 {descriptionHtml ? (
                   <div
-                    className="article-content product-description [&_img]:max-w-full [&_p]:mb-3"
-                    style={{ fontSize: 14, color: "#555555", lineHeight: 1.7, textAlign: "left" }}
+                    className="product-description prose prose-neutral max-w-none"
                     dangerouslySetInnerHTML={{ __html: descriptionHtml }}
                   />
                 ) : descriptionPlain ? (
@@ -1573,7 +1710,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
       {related.length ? (
         <section className="mx-auto mt-12 max-w-7xl px-4">
           <h2 className="mb-6 text-center text-2xl font-bold">You May Also Like</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
             {related.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         </section>
