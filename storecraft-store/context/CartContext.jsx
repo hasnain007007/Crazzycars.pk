@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { cartLinesAdd, cartLinesRemove, cartLinesUpdate, getCart } from "@/lib/shopifyCartClient";
+import { resolveProductContentId, trackAddToCart } from "@/lib/metaPixel";
 
 const STORAGE_KEY = "cart_items";
 const LEGACY_STORAGE_KEY = "sialkot_store_cart_v1";
@@ -66,7 +67,7 @@ function computeRequiresVariant(row) {
   return Boolean(hasSimple || multiCombo);
 }
 
-export function CartProvider({ children }) {
+export function CartProvider({ children, shopifyEnabled = false }) {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState("");
@@ -79,15 +80,22 @@ export function CartProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    // Skip Server Action POST when Shopify Storefront is not configured.
+    // Calling getCart() anyway used to throw → POST / 500 on every page load.
+    if (!shopifyEnabled) return undefined;
+    let cancelled = false;
     getCart()
       .then((cart) => {
-        if (!cart) return;
+        if (cancelled || !cart) return;
         setItems(cart.lines);
         setCheckoutUrl(cart.checkoutUrl || "");
         setShopifyActive(true);
       })
       .catch(() => {});
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [shopifyEnabled]);
 
   useEffect(() => {
     saveCart(items);
@@ -96,6 +104,18 @@ export function CartProvider({ children }) {
   const addItem = useCallback(async (productOrRow, quantityArg = 1) => {
     const row = productOrRow || {};
     const normalizedQty = Math.max(1, Math.min(99, Number(row.quantity ?? quantityArg) || 1));
+    const unit = Number(row.unitPrice ?? row.price) || 0;
+    const contentId = resolveProductContentId(row);
+
+    const fireAddToCart = () => {
+      if (!contentId) return;
+      trackAddToCart({
+        contentIds: [contentId],
+        value: unit * normalizedQty,
+        quantity: normalizedQty,
+      });
+    };
+
     if (row.source === "shopify" && (row.merchandiseId || row.variantId)) {
       try {
         const cart = await cartLinesAdd(row.merchandiseId || row.variantId, normalizedQty);
@@ -103,6 +123,7 @@ export function CartProvider({ children }) {
         setCheckoutUrl(cart.checkoutUrl || "");
         setShopifyActive(true);
         setOpen(true);
+        fireAddToCart();
         return;
       } catch {
         // Continue into the local cart flow if Shopify credentials are unavailable.
@@ -148,6 +169,8 @@ export function CartProvider({ children }) {
             estimatedShipping: Number(row.estimatedShipping) || 0,
             estimatedShippingRates: Array.isArray(row.estimatedShippingRates) ? row.estimatedShippingRates : [],
             customMeasurements: normalizeMeasurements(row.customMeasurements),
+            articleNo: row.articleNo || "",
+            sku: row.sku || "",
           },
         ];
       }
@@ -160,6 +183,7 @@ export function CartProvider({ children }) {
       return next;
     });
     setOpen(true);
+    fireAddToCart();
   }, []);
 
   const removeItem = useCallback(async (itemId) => {

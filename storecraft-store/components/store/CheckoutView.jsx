@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import {
@@ -21,6 +21,7 @@ import {
   normalizeShippingRules,
   shouldShowAdvancePaymentMessage,
 } from "@/lib/freeDelivery";
+import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import {
   getEnabledPakistaniMethods,
   isAdvancePaymentMethod,
@@ -31,6 +32,7 @@ import { PakistaniPaymentIcon } from "./PakistaniPaymentIcons";
 import { formatPrice } from "@/lib/currency";
 import { useCustomer } from "@/lib/customerAuth";
 import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
+import { resolveProductContentId, trackInitiateCheckout } from "@/lib/metaPixel";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -237,15 +239,29 @@ export function CheckoutView() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [fieldErrors, setFieldErrors] = useState({});
   const [showStreet2, setShowStreet2] = useState(false);
+  const initiateCheckoutFired = useRef(false);
   const checkoutMessages = useCheckoutMessages();
   const storePayment = useStorePayment();
   const settings = useStoreSettings();
   const shippingRules = useMemo(() => normalizeShippingRules(storePayment), [storePayment]);
   const pakistaniPaymentRaw = usePakistaniPaymentMethods();
-  const pakistaniMethods = useMemo(
-    () => getEnabledPakistaniMethods(normalizePakistaniPaymentMethods(pakistaniPaymentRaw)),
-    [pakistaniPaymentRaw]
+  const cartAllowsCod = useMemo(
+    () => items.every((x) => x?.codEnabled !== false),
+    [items]
   );
+  const pakistaniMethods = useMemo(() => {
+    const list = getEnabledPakistaniMethods(normalizePakistaniPaymentMethods(pakistaniPaymentRaw));
+    if (cartAllowsCod) return list;
+    return list.filter((m) => String(m.key || "").toLowerCase() !== "cod");
+  }, [pakistaniPaymentRaw, cartAllowsCod]);
+
+  useEffect(() => {
+    if (cartAllowsCod) return;
+    if (String(paymentMethod || "").toLowerCase() === "cod") {
+      const fallback = pakistaniMethods[0]?.key || "bankTransfer";
+      setPaymentMethod(fallback);
+    }
+  }, [cartAllowsCod, paymentMethod, pakistaniMethods]);
   const freeThreshold = useMemo(
     () => getFreeShippingThreshold(settings?.storePayment || storePayment),
     [settings?.storePayment, storePayment]
@@ -272,6 +288,19 @@ export function CheckoutView() {
       })
       .catch(() => {});
   }, []);
+
+  /** Meta Pixel InitiateCheckout — once when checkout opens with a non-empty cart. */
+  useEffect(() => {
+    if (initiateCheckoutFired.current || !items.length) return;
+    initiateCheckoutFired.current = true;
+    const contentIds = items.map((it) => resolveProductContentId(it)).filter(Boolean);
+    const numItems = items.reduce((sum, it) => sum + Math.max(1, Number(it.quantity) || 1), 0);
+    trackInitiateCheckout({
+      contentIds,
+      value: subtotal,
+      numItems,
+    });
+  }, [items, subtotal]);
 
   const phonePlaceholder = "+92 3XX XXXXXXX";
   const zipPlaceholder = "51310 (5 digits, optional)";
@@ -453,9 +482,28 @@ export function CheckoutView() {
     shippingCost: displayShippingCost,
     storePayment,
   });
+  const productAdvanceDue = useMemo(
+    () =>
+      computeCodAdvanceDue({
+        items,
+        paymentMethod,
+        shippingCost: displayShippingCost,
+        storeAdvanceAmount: shippingRules.advancePaymentAmount,
+        advanceMessageEnabled: shippingRules.advancePaymentMessageEnabled !== false,
+      }),
+    [items, paymentMethod, displayShippingCost, shippingRules]
+  );
+  const effectiveAdvanceAmount =
+    productAdvanceDue.mode === "percent"
+      ? productAdvanceDue.amount
+      : shippingRules.advancePaymentAmount || displayShippingCost || 250;
+  const showProductAdvanceBox =
+    paymentMethod === "cod" && productAdvanceDue.mode === "percent" && productAdvanceDue.amount > 0;
   const advanceMessageBody = formatAdvancePaymentMessage(
-    shippingRules.advancePaymentMessage,
-    shippingRules.advancePaymentAmount || displayShippingCost || 250,
+    showProductAdvanceBox
+      ? `To confirm your order, please pay at least {amount} in advance (${productAdvanceDue.maxPercent}% of eligible items).\n\nSend payment screenshot on WhatsApp: {whatsapp}`
+      : shippingRules.advancePaymentMessage,
+    effectiveAdvanceAmount,
     whatsappDisplay
   );
   const advanceAccountLines = useMemo(
@@ -1108,6 +1156,11 @@ export function CheckoutView() {
 
           <h2 className="mb-2 text-base font-semibold text-zinc-900">Payment</h2>
           <p className="mb-2 text-xs text-zinc-600">{freeDeliveryNote}</p>
+          {!cartAllowsCod ? (
+            <p className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              Cash on Delivery is not available for one or more items in your cart. Please use advance payment.
+            </p>
+          ) : null}
           <div
             style={{
               background: "#FFFFFF",
@@ -1262,7 +1315,7 @@ export function CheckoutView() {
               </p>
             ) : null}
 
-            {showAdvanceMessage ? (
+            {showAdvanceMessage || showProductAdvanceBox ? (
               <div
                 style={{
                   marginTop: 10,
@@ -1274,11 +1327,22 @@ export function CheckoutView() {
                 }}
               >
                 <p style={{ margin: "0 0 6px", fontWeight: 700, fontSize: 13, color: "#92400E" }}>
-                  {shippingRules.advancePaymentMessageTitle}
+                  {showProductAdvanceBox
+                    ? `Pay at least ${productAdvanceDue.maxPercent}% advance`
+                    : shippingRules.advancePaymentMessageTitle}
                 </p>
                 <p style={{ margin: "0 0 8px", fontSize: 12, color: "#78350F", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
                   {advanceMessageBody}
                 </p>
+                {showProductAdvanceBox && productAdvanceDue.lines.length ? (
+                  <ul style={{ margin: "0 0 8px", paddingLeft: 16, fontSize: 12, color: "#78350F", lineHeight: 1.6 }}>
+                    {productAdvanceDue.lines.map((line) => (
+                      <li key={`${line.name}-${line.percent}`}>
+                        {line.name}: {line.percent}% = {formatPrice(line.amount)}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 {advanceAccountLines.length > 0 ? (
                   <ul style={{ margin: "0 0 8px", paddingLeft: 16, fontSize: 12, color: "#78350F", lineHeight: 1.6 }}>
                     {advanceAccountLines.map((line) => (
@@ -1354,6 +1418,23 @@ export function CheckoutView() {
                   <span>Advance payment ({advanceDiscountInfo.percent}% off)</span>
                   <span className="price">−{formatPrice(advanceDiscount, addr.country)}</span>
                 </div>
+              ) : null}
+              {showProductAdvanceBox ? (
+                <>
+                  <div className="flex justify-between text-amber-800">
+                    <span>Advance due now ({productAdvanceDue.maxPercent}%)</span>
+                    <span className="price">{formatPrice(productAdvanceDue.amount, addr.country)}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-600">
+                    <span>Remaining on delivery</span>
+                    <span className="price">
+                      {formatPrice(
+                        Math.max(0, total - productAdvanceDue.amount),
+                        addr.country
+                      )}
+                    </span>
+                  </div>
+                </>
               ) : null}
               {shippingApplied.freeReason === "order_above" && shippingRules.freeShippingOnOrderAboveEnabled ? (
                 <p style={{ fontSize: 13, color: "#16A34A", margin: "0 0 8px", fontWeight: 500 }}>
