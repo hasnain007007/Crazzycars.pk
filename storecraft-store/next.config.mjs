@@ -55,6 +55,8 @@ const nextConfig = {
       },
     ];
   },
+  // Required for Docker/Coolify (output: .next/standalone)
+  output: "standalone",
   poweredByHeader: false,
   compress: true,
   reactStrictMode: false,
@@ -158,6 +160,24 @@ const nextConfig = {
           {
             key: "Cache-Control",
             value: "public, s-maxage=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/api/categories/tree",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        source: "/api/products/fitment",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
