@@ -738,12 +738,12 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     truncatePlain(toPlain(product?.shortDescription), 180) ||
     "Quality product with refined finish and modern design.";
 
-  const freeThreshold = deliveryInfo?.freeShippingThreshold || 2999;
+  const freeThreshold = deliveryInfo?.freeShippingThreshold || 9999;
   const majorCityDays = deliveryInfo?.majorCities?.days || "2-3";
   const otherAreaDays = deliveryInfo?.otherAreas?.days || "4-7";
   const freeShippingText =
     deliveryInfo?.freeShippingText ||
-    `Free delivery on orders over Rs. ${freeThreshold.toLocaleString()}`;
+    `Free delivery on orders over Rs. ${Number(freeThreshold).toLocaleString("en-PK")}`;
 
   return (
     <>
@@ -1574,7 +1574,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                       <li>Major cities (Karachi, Lahore, Islamabad, Rawalpindi): 2-3 business days</li>
                       <li>Other cities: 3-5 business days</li>
                       <li>Remote areas: 5-7 business days</li>
-                      <li>Free delivery on orders over Rs. 2,999</li>
+                      <li>Free delivery on orders over {freeShippingText.replace(/^Free delivery on orders over\s+/i, "")}</li>
                       <li>Cash on Delivery available nationwide</li>
                     </ul>
                   </div>

@@ -16,6 +16,10 @@ const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "Order Tracking", href: "/track-order" },
   { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms & Conditions", href: "/terms-conditions" },
+  { label: "Shipping Policy", href: "/shipping-policy" },
+  { label: "Returns Policy", href: "/returns-policy" },
 ]
 
 function SocialIcon({ platform, size = 16 }) {

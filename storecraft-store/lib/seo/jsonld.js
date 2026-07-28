@@ -1,11 +1,32 @@
 /**
- * SEO helpers — JSON-LD structured data for Google rich results.
- * Adapted from crazzycars-vehicles/seo/jsonld.js for ESM + getSiteUrl().
+ * SEO helpers — JSON-LD structured data for Google / AI shopping citation.
  */
 import { getSiteUrl } from "@/lib/siteUrl";
 
 function site() {
   return getSiteUrl();
+}
+
+function absoluteProductUrl(path) {
+  const SITE = site();
+  const p = path?.startsWith("/") ? path : `/${path || ""}`;
+  return `${SITE}${p}`;
+}
+
+function conditionUrl(condition) {
+  const c = String(condition || "new").toLowerCase();
+  if (c === "used") return "https://schema.org/UsedCondition";
+  if (c === "refurbished") return "https://schema.org/RefurbishedCondition";
+  return "https://schema.org/NewCondition";
+}
+
+function availabilityUrl({ stock, trackInventory, allowBackorder }) {
+  const track = trackInventory !== false;
+  const qty = Number(stock) || 0;
+  if (!track || qty > 0 || allowBackorder === true) {
+    return "https://schema.org/InStock";
+  }
+  return "https://schema.org/OutOfStock";
 }
 
 /** Product schema — every product page */
@@ -17,34 +38,75 @@ export function productJsonLd(p) {
     ? p.images
     : p.media?.images?.map((i) => i.url).filter(Boolean) || [];
   const path = p.urlPath || `/${p.slug}`;
+  const url = absoluteProductUrl(path);
+  const sku = p.sku || p.articleNo || p.inventory?.sku || undefined;
+  const gtin = String(p.gtin || p.ean || "").replace(/\D/g, "");
+  const mpn = String(p.mpn || p.partNumber || "").trim() || undefined;
+  const categoryName =
+    p.category ||
+    (Array.isArray(p.categories) ? p.categories.map((c) => c?.name).filter(Boolean).join(" > ") : "") ||
+    undefined;
 
-  return {
+  const priceNum = Number(price);
+  const priceValidUntil = (() => {
+    if (p.priceValidUntil) return String(p.priceValidUntil).slice(0, 10);
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().slice(0, 10);
+  })();
+
+  const ld = {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": `${url}#product`,
     name: p.name,
+    url,
     image: images,
     description: p.metaDescription || p.seo?.metaDescription || p.shortDescription || "",
-    sku: p.sku || p.inventory?.sku || undefined,
+    sku: sku || undefined,
     brand: { "@type": "Brand", name: p.brand || "CrazzyCars.pk" },
     offers: {
       "@type": "Offer",
-      url: `${SITE}${path.startsWith("/") ? path : `/${path}`}`,
+      url,
       priceCurrency: "PKR",
-      price: String(price),
-      availability:
-        stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/NewCondition",
+      price: Number.isFinite(priceNum) ? priceNum.toFixed(2) : String(price),
+      priceValidUntil,
+      availability: availabilityUrl({
+        stock,
+        trackInventory: p.trackInventory ?? p.inventory?.trackInventory,
+        allowBackorder: p.allowBackorder ?? p.inventory?.allowBackorder,
+      }),
+      itemCondition: conditionUrl(p.condition),
+      seller: {
+        "@type": "Organization",
+        name: "CrazzyCars.pk",
+        url: SITE,
+      },
     },
-    ...(p.ratingValue || p.averageRating || p.rating
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: String(p.ratingValue || p.averageRating || p.rating),
-            reviewCount: String(p.reviewCount || p.numReviews || 1),
-          },
-        }
-      : {}),
   };
+
+  if (gtin.length >= 8) {
+    if (gtin.length === 13) ld.gtin13 = gtin;
+    else if (gtin.length === 12) ld.gtin12 = gtin;
+    else if (gtin.length === 14) ld.gtin14 = gtin;
+    else ld.gtin = gtin;
+  }
+  if (mpn) ld.mpn = mpn;
+  if (categoryName) ld.category = categoryName;
+
+  const ratingValue = Number(p.ratingValue || p.averageRating || p.rating) || 0;
+  const reviewCount = Number(p.reviewCount || p.numReviews) || 0;
+  if (ratingValue > 0 && reviewCount > 0) {
+    ld.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(ratingValue),
+      reviewCount: String(reviewCount),
+      bestRating: "5",
+      worstRating: "1",
+    };
+  }
+
+  return ld;
 }
 
 /** BreadcrumbList — items: [{ name, url }] where url is path starting with / */

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Banner from "@/lib/models/Banner.model";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 const PLACEMENTS = ["hero_slider", "promo_strip", "promo_card", "popup_banner"];
 
@@ -91,7 +91,7 @@ export async function GET() {
     await dbConnect();
 
     const rows = await Banner.find({
-      status: { $regex: /^active$/i },
+      status: { $in: ["active", "published"] },
     })
       .sort({ sortOrder: 1 })
       .lean();
@@ -115,7 +115,7 @@ export async function GET() {
       },
           {
             headers: {
-              "Cache-Control": "public, s-maxage=30, stale-while-revalidate=0",
+              "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
             },
           }
     );

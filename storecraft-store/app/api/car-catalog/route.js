@@ -53,10 +53,42 @@ function buildPopularList(activeMakes) {
         generation: mod.generation || "",
         nickname: mod.nickname || "",
         popularOrder: Number(mod.popularOrder) || 0,
+        isPopular: true,
       });
     }
   }
   return items.sort((a, b) => a.popularOrder - b.popularOrder);
+}
+
+/** All active models for homepage vehicle grid (popular first). */
+function buildAllModelsList(activeMakes) {
+  const popular = buildPopularList(activeMakes);
+  const popularSlugs = new Set(popular.map((p) => p.slug));
+  const rest = [];
+  for (const make of activeMakes) {
+    for (const mod of make.models || []) {
+      if (popularSlugs.has(mod.slug)) continue;
+      const years = Array.isArray(mod.years) ? [...mod.years].sort((a, b) => b - a) : [];
+      rest.push({
+        make: make.name,
+        model: mod.name,
+        slug: mod.slug,
+        years,
+        yearFrom: mod.yearFrom ?? (years.length ? years[years.length - 1] : null),
+        yearTo: mod.yearTo ?? (years.length ? years[0] : null),
+        bodyStyle: mod.bodyStyle || "Sedan",
+        image: mod.image || "",
+        description: mod.description || "",
+        popularAccessories: Array.isArray(mod.popularAccessories) ? mod.popularAccessories : [],
+        generation: mod.generation || "",
+        nickname: mod.nickname || "",
+        popularOrder: 9999,
+        isPopular: false,
+      });
+    }
+  }
+  rest.sort((a, b) => String(a.make).localeCompare(String(b.make)) || String(a.model).localeCompare(String(b.model)));
+  return [...popular, ...rest];
 }
 
 export async function GET(request) {
@@ -115,9 +147,10 @@ export async function GET(request) {
         makesMeta: makesMeta || {},
         quickPills: quickPills.length ? quickPills : QUICK_CAR_PILLS,
         popular: buildPopularList(activeMakes),
+        vehicles: buildAllModelsList(activeMakes),
       },
       {
-        headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" },
+        headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" },
       }
     );
   } catch (error) {

@@ -2,7 +2,7 @@ import { formatPrice } from "@/lib/currency";
 import { isAdvancePaymentMethod } from "@/lib/pakistaniPaymentMethods";
 
 /** Default COD free-delivery threshold (Rs.) when settings omit a value. */
-export const DEFAULT_FREE_SHIPPING_THRESHOLD = 2999;
+export const DEFAULT_FREE_SHIPPING_THRESHOLD = 9999;
 
 const DEFAULT_ADVANCE_MESSAGE =
   "To confirm your order, please pay delivery charges of {amount} in advance.\n\nSend payment screenshot on WhatsApp: {whatsapp}";
@@ -93,13 +93,28 @@ export function getFreeShippingThreshold(storePayment) {
   return Number.isFinite(t) && t > 0 ? t : DEFAULT_FREE_SHIPPING_THRESHOLD;
 }
 
-/** Progress bar threshold: large-order rule when enabled, else legacy COD threshold. */
+/**
+ * Single customer-facing free-delivery threshold (Rs.).
+ * Prefer the enabled "order above" rule; otherwise the COD freeShippingThreshold.
+ * All UI (hero, cart, checkout, announcement copy helpers) must use this — not hardcodes.
+ */
 export function getProgressBarThreshold(storePayment) {
   const sp = normalizeShippingRules(storePayment);
   if (sp.freeShippingOnOrderAboveEnabled && sp.freeShippingOnOrderAbove > 0) {
     return sp.freeShippingOnOrderAbove;
   }
   return getFreeShippingThreshold(sp);
+}
+
+/** Alias — the one source of truth for free-delivery messaging + eligibility. */
+export function getEffectiveFreeDeliveryThreshold(storePayment) {
+  return getProgressBarThreshold(storePayment);
+}
+
+/** e.g. "Rs. 9,999" */
+export function formatFreeDeliveryThreshold(storePayment) {
+  const n = getEffectiveFreeDeliveryThreshold(storePayment);
+  return `Rs. ${Number(n).toLocaleString("en-PK")}`;
 }
 
 /** Progress toward free delivery (cart subtotal vs threshold). */
@@ -141,9 +156,11 @@ export function applyShippingRules({
         : Math.max(0, Number(zoneShippingCost) || 0);
   let freeReason = flat > 0 ? null : zoneIsFree ? "zone" : null;
 
-  if (sp.freeShippingOnOrderAboveEnabled && sp.freeShippingOnOrderAbove > 0 && total >= sp.freeShippingOnOrderAbove) {
+  // Same threshold the UI shows (progress bar / hero / checkout note).
+  const freeAt = getProgressBarThreshold(sp);
+  if (freeAt > 0 && total >= freeAt) {
     cost = 0;
-    freeReason = "order_above";
+    freeReason = sp.freeShippingOnOrderAboveEnabled ? "order_above" : "threshold";
   }
 
   // Only free for advance payment when admin explicitly enables it
@@ -158,6 +175,7 @@ export function applyShippingRules({
     freeReason,
     orderAboveThreshold: sp.freeShippingOnOrderAbove,
     orderAboveEnabled: sp.freeShippingOnOrderAboveEnabled,
+    freeDeliveryThreshold: freeAt,
   };
 }
 

@@ -79,8 +79,15 @@ export async function POST(req) {
     });
 
     if (!result.success) {
+      console.error("[contact] send failed:", result.error);
       return NextResponse.json(
-        { success: false, error: "Failed to send message. Please try again later." },
+        {
+          success: false,
+          error: "Failed to send message. Please try again later.",
+          // Surface Resend's real reason so we can unblock launch without digging logs.
+          detail: result.error || null,
+          usedFallback: result.usedFallback || false,
+        },
         { status: 500 }
       );
     }
@@ -88,9 +95,14 @@ export async function POST(req) {
     return NextResponse.json({
       success: true,
       message: "Message sent successfully!",
+      messageId: result.messageId || null,
+      usedFallback: result.usedFallback || false,
     });
   } catch (e) {
     console.error("Contact form error:", e);
-    return NextResponse.json({ success: false, error: "Failed to send message" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to send message", detail: e?.message || String(e) },
+      { status: 500 }
+    );
   }
 }

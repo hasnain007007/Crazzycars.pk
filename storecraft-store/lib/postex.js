@@ -6,6 +6,10 @@
 export const POSTEX_ORDER_API_BASE =
   "https://api.postex.pk/services/integration/api/order/v3";
 
+/** Single-parcel tracking lives on v1 (not v3 get-order-detail). */
+export const POSTEX_TRACK_API_BASE =
+  "https://api.postex.pk/services/integration/api/order/v1";
+
 export function resolvePostexApiKey(settingsCourier) {
   const fromEnv = String(process.env.POSTEX_API_KEY || "").trim();
   if (fromEnv) return fromEnv;
@@ -45,11 +49,23 @@ function formatEventDateTime(raw) {
 function normalizeEvent(entry) {
   if (!entry || typeof entry !== "object") return null;
   const { date, time } = formatEventDateTime(
-    entry.transactionDateTime || entry.statusDateTime || entry.dateTime || entry.timestamp || entry.date
+    entry.updatedAt ||
+      entry.transactionDateTime ||
+      entry.statusDateTime ||
+      entry.dateTime ||
+      entry.timestamp ||
+      entry.date
   );
   const status =
-    pick(entry, "transactionStatus", "orderStatus", "status", "statusName", "transactionStatusName") ||
-    "Update";
+    pick(
+      entry,
+      "transactionStatusMessage",
+      "transactionStatus",
+      "orderStatus",
+      "status",
+      "statusName",
+      "transactionStatusName"
+    ) || "Update";
   return {
     date: entry.date || date,
     time: entry.time || time,
@@ -58,7 +74,13 @@ function normalizeEvent(entry) {
     description:
       pick(entry, "remarks", "description", "transactionStatusMessage", "message", "comment") ||
       status,
-    sortAt: new Date(entry.transactionDateTime || entry.statusDateTime || entry.dateTime || Date.now()).getTime(),
+    sortAt: new Date(
+      entry.updatedAt ||
+        entry.transactionDateTime ||
+        entry.statusDateTime ||
+        entry.dateTime ||
+        Date.now()
+    ).getTime(),
   };
 }
 
@@ -124,11 +146,16 @@ export function parsePostexOrderDetail(json, trackingNumber) {
 
   const tn = pick(dist, "trackingNumber", "trackingNo") || String(trackingNumber || "").trim();
   const { status, statusCode } = mapStatusLabel(dist);
-  const weightRaw = dist.weight ?? dist.orderWeight ?? dist.totalWeight;
+  const weightRaw =
+    dist.weight ?? dist.actualWeight ?? dist.bookingWeight ?? dist.orderWeight ?? dist.totalWeight;
   const weight =
     weightRaw != null && weightRaw !== ""
       ? `${weightRaw}${String(weightRaw).includes("kg") ? "" : "kg"}`
       : "";
+
+  const events = extractHistory(dist);
+  const destinationCity = pick(dist, "cityName", "deliveryCity", "destinationCity", "operationalCity");
+  const locationInsight = derivePostexLocationInsight(status, events, destinationCity);
 
   return {
     success: true,
@@ -136,7 +163,7 @@ export function parsePostexOrderDetail(json, trackingNumber) {
     status,
     statusCode,
     courier: "Postex",
-    events: extractHistory(dist),
+    events,
     estimatedDelivery: pick(
       dist,
       "expectedDeliveryDate",
@@ -144,10 +171,99 @@ export function parsePostexOrderDetail(json, trackingNumber) {
       "deliveryDate",
       "edd"
     ),
-    origin: pick(dist, "pickupCity", "originCity", "merchantCity", "pickupAddress") || "Gujranwala",
-    destination: pick(dist, "deliveryCity", "cityName", "destinationCity", "deliveryAddress"),
+    // Never expose raw pickup/delivery street addresses on the public tracking page.
+    origin: "CrazzyCars.pk Warehouse",
+    destination: destinationCity,
+    currentLocation: locationInsight.currentLocation,
+    currentLocationDetail: locationInsight.currentLocationDetail,
+    destinationReceived: locationInsight.destinationReceived,
+    destinationReceivedLabel: locationInsight.destinationReceivedLabel,
+    lastScanAt: locationInsight.lastScanAt,
     weight,
     pieces: Number(dist.items ?? dist.pieces ?? dist.itemCount) || 1,
+  };
+}
+
+/**
+ * Infer live parcel whereabouts from Postex status + transactionStatusHistory.
+ * Examples of history lines:
+ *  - "Arrived at Transit Hub PHL"
+ *  - "Departed to PHALIA"
+ *  - "Received at GUJ Warehouse"
+ *  - "At Crazzycars Warehouse"
+ */
+export function derivePostexLocationInsight(status, events = [], destinationCity = "") {
+  const dest = String(destinationCity || "").trim();
+  const destKey = dest.toLowerCase().replace(/[^a-z]/g, "");
+  const latest = Array.isArray(events) && events.length ? events[0] : null;
+  const latestText = String(latest?.status || latest?.description || "").trim();
+  const statusText = String(status || "").trim();
+  const haystack = `${latestText} ${statusText}`.toLowerCase();
+
+  let currentLocation = "";
+  let currentLocationDetail = latestText || statusText || "Awaiting first scan";
+
+  if (/warehouse|unbook/i.test(haystack)) {
+    currentLocation = "CrazzyCars.pk Warehouse";
+  } else if (/enroute for delivery|out for delivery|waiting for delivery/i.test(haystack)) {
+    currentLocation = dest ? `Out for delivery in ${dest}` : "Out for delivery";
+  } else if (/arrived at transit hub\s+([a-z0-9]+)/i.test(latestText)) {
+    const code = latestText.match(/arrived at transit hub\s+([a-z0-9]+)/i)?.[1] || "";
+    currentLocation = `Transit hub ${code.toUpperCase()}${dest ? ` (${dest})` : ""}`;
+  } else if (/arrived at\s+(.+)/i.test(latestText)) {
+    currentLocation = latestText.replace(/^arrived at\s+/i, "").trim();
+  } else if (/received at\s+(.+)/i.test(latestText)) {
+    currentLocation = latestText.replace(/^received at\s+/i, "").trim();
+  } else if (/departed to\s+(.+)/i.test(latestText)) {
+    const to = latestText.replace(/^departed to\s+/i, "").trim();
+    currentLocation = `In transit to ${to}`;
+  } else if (latestText) {
+    currentLocation = latestText;
+  } else {
+    currentLocation = statusText || "Processing";
+  }
+
+  const historyText = (Array.isArray(events) ? events : [])
+    .map((e) => `${e.status || ""} ${e.description || ""} ${e.location || ""}`)
+    .join(" · ")
+    .toLowerCase();
+
+  let destinationReceived = false;
+  let destinationReceivedLabel = dest
+    ? `Not yet received in ${dest}`
+    : "Destination city pending";
+
+  const arrivedAtDest =
+    Boolean(destKey) &&
+    (new RegExp(`arrived at transit hub\\s+${destKey.slice(0, 3)}`, "i").test(historyText) ||
+      new RegExp(`arrived at\\s+.*${destKey}`, "i").test(historyText) ||
+      new RegExp(`departed to\\s+${destKey}`, "i").test(historyText) ||
+      new RegExp(`received at\\s+.*${destKey}`, "i").test(historyText) ||
+      /waiting for delivery|enroute for delivery|out for delivery/i.test(historyText) ||
+      (/deliver/i.test(statusText) && !/unbook/i.test(statusText)));
+
+  if (/deliver/i.test(statusText) && !/out for|attempt|waiting/i.test(statusText)) {
+    destinationReceived = true;
+    destinationReceivedLabel = dest ? `Delivered in ${dest}` : "Delivered";
+  } else if (arrivedAtDest) {
+    destinationReceived = true;
+    destinationReceivedLabel = dest ? `Received in ${dest}` : "Received at destination city";
+  } else if (/transit|hub|depart|arriv|dispatch/i.test(historyText)) {
+    destinationReceivedLabel = dest ? `In transit toward ${dest}` : "In transit";
+  } else if (/warehouse|unbook/i.test(haystack)) {
+    destinationReceivedLabel = dest
+      ? `Still at warehouse · heading to ${dest}`
+      : "Still at CrazzyCars.pk Warehouse";
+  }
+
+  const lastScanAt = [latest?.date, latest?.time].filter(Boolean).join(" · ");
+
+  return {
+    currentLocation,
+    currentLocationDetail,
+    destinationReceived,
+    destinationReceivedLabel,
+    lastScanAt,
   };
 }
 
@@ -175,8 +291,9 @@ export function classifyPostexError(status, json, networkError) {
 
 /**
  * Fetch live tracking from Postex.
+ * Correct endpoint: GET /order/v1/track-order/{trackingNumber}
  * @param {string} trackingNumber
- * @param {{ postexApiKey?: string }} [options]
+ * @param {{ postexApiKey?: string, settingsCourier?: object }} [options]
  */
 export async function fetchPostexTracking(trackingNumber, options = {}) {
   const id = String(trackingNumber || "").trim();
@@ -184,19 +301,20 @@ export async function fetchPostexTracking(trackingNumber, options = {}) {
     return { success: false, error: "Invalid tracking number" };
   }
 
-  const apiKey = resolvePostexApiKey(
-    options.settingsCourier ? { postexApiKey: options.settingsCourier } : options
-  );
+  const courier =
+    options.settingsCourier && typeof options.settingsCourier === "object"
+      ? options.settingsCourier
+      : options;
+  const apiKey = resolvePostexApiKey(courier);
   if (!apiKey) {
     return { success: false, error: "Tracking unavailable" };
   }
 
-  const url = new URL(`${POSTEX_ORDER_API_BASE}/get-order-detail`);
-  url.searchParams.set("trackingNumber", id);
+  const url = `${POSTEX_TRACK_API_BASE}/track-order/${encodeURIComponent(id)}`;
 
   let res;
   try {
-    res = await fetch(url.toString(), {
+    res = await fetch(url, {
       method: "GET",
       headers: {
         token: apiKey,
@@ -215,8 +333,11 @@ export async function fetchPostexTracking(trackingNumber, options = {}) {
     json = null;
   }
 
-  const apiStatus = String(json?.status || "").toUpperCase();
+  const apiStatus = String(json?.statusCode || json?.status || "").toUpperCase();
   if (apiStatus === "ERROR" || apiStatus === "FAILED") {
+    return classifyPostexError(res.status, json, false);
+  }
+  if (apiStatus && apiStatus !== "200" && !json?.dist) {
     return classifyPostexError(res.status, json, false);
   }
 

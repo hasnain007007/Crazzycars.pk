@@ -5,14 +5,22 @@ import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 
+/** Resend sandbox sender — works before a custom domain is verified. */
+export const RESEND_SANDBOX_FROM = "Crazzycars.pk <onboarding@resend.dev>";
+
 /** Resend-verified sender (use FROM_EMAIL env once domain is verified). */
 export function getFromEmail() {
-  return process.env.FROM_EMAIL;
+  const raw = String(process.env.FROM_EMAIL || "").trim();
+  return raw || null;
 }
 
 /** Admin inbox for order alerts and test emails. */
 export function getAdminEmail() {
-  return process.env.ADMIN_EMAIL || "delivered@resend.dev";
+  return (
+    String(process.env.CONTACT_EMAIL || "").trim() ||
+    String(process.env.ADMIN_EMAIL || "").trim() ||
+    "delivered@resend.dev"
+  );
 }
 
 function getResend() {
@@ -24,50 +32,120 @@ function getResend() {
   return new Resend(apiKey);
 }
 
+function formatResendError(error) {
+  if (!error) return "Unknown Resend error";
+  if (typeof error === "string") return error;
+  const msg = error.message || error.name || "Resend send failed";
+  const bits = [msg];
+  if (error.statusCode) bits.push(`status=${error.statusCode}`);
+  if (error.name && error.name !== msg) bits.push(`name=${error.name}`);
+  try {
+    bits.push(`raw=${JSON.stringify(error)}`);
+  } catch {
+    /* ignore */
+  }
+  return bits.join(" | ");
+}
+
+function isUnverifiedSenderError(error) {
+  const text = formatResendError(error).toLowerCase();
+  return (
+    text.includes("domain is not verified") ||
+    text.includes("not verified") ||
+    text.includes("invalid from") ||
+    text.includes("from address") ||
+    text.includes("validation_error")
+  );
+}
+
+function buildSender(fromOverride) {
+  const fromName = process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const fromEmail = getFromEmail();
+  if (fromOverride && String(fromOverride).trim()) return String(fromOverride).trim();
+  if (!fromEmail) return null;
+  if (fromEmail.includes("<") && fromEmail.includes(">")) return fromEmail;
+  return `${fromName} <${fromEmail}>`;
+}
+
+/**
+ * Send via Resend. If FROM_EMAIL uses an unverified custom domain, retries once
+ * with Resend's sandbox sender (onboarding@resend.dev).
+ */
 export async function sendEmail({ to, subject, html, from }) {
-  const fromName = process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
-  const fromEmail = process.env.FROM_EMAIL;
-  const sender = from || `${fromName} <${fromEmail}>`;
   try {
     const resend = getResend();
-    if (!resend) return { success: false, error: "Email not configured" };
-    const { data, error } = await resend.emails.send({
-      from: sender,
-      to,
-      subject,
-      html,
-    });
-    if (error) {
-      console.error("Resend error:", error);
-      return { success: false, error: error.message };
+    if (!resend) return { success: false, error: "Email not configured (RESEND_API_KEY missing)" };
+
+    const recipients = Array.isArray(to) ? to : [to];
+    if (!recipients.length || !recipients[0]) {
+      return { success: false, error: "No recipient address" };
     }
-    return { success: true, messageId: data?.id };
+
+    const primary = buildSender(from);
+    const attempts = [];
+    if (primary) attempts.push(primary);
+    // Always allow sandbox fallback when primary is custom / missing.
+    if (!primary || !primary.includes("onboarding@resend.dev")) {
+      attempts.push(RESEND_SANDBOX_FROM);
+    }
+
+    let lastError = null;
+    for (let i = 0; i < attempts.length; i++) {
+      const sender = attempts[i];
+      const replyTo = getFromEmail() || undefined;
+      const { data, error } = await resend.emails.send({
+        from: sender,
+        to: recipients,
+        subject,
+        html,
+        ...(replyTo ? { replyTo } : {}),
+      });
+
+      if (!error) {
+        if (i > 0) {
+          console.warn(
+            `[email] Primary FROM failed; sent via sandbox fallback. from=${sender} id=${data?.id}`
+          );
+        }
+        return {
+          success: true,
+          messageId: data?.id,
+          from: sender,
+          usedFallback: i > 0,
+        };
+      }
+
+      lastError = error;
+      const detail = formatResendError(error);
+      console.error(`[email] Resend error (from=${sender}):`, detail);
+
+      // Only retry when the failure looks like an unverified/invalid sender.
+      if (i === 0 && attempts.length > 1 && isUnverifiedSenderError(error)) {
+        continue;
+      }
+      // Also retry once for any first-attempt failure when we still have sandbox left
+      // (covers empty/malformed FROM that Resend rejects differently).
+      if (i === 0 && attempts.length > 1) continue;
+      break;
+    }
+
+    return { success: false, error: formatResendError(lastError) };
   } catch (error) {
-    console.error("Email send error:", error);
-    return { success: false, error: error.message };
+    const detail = error?.message || String(error);
+    console.error("[email] Email send exception:", detail);
+    return { success: false, error: detail };
   }
 }
 
-/** Send a test message to ADMIN_EMAIL using FROM_EMAIL. */
-export async function sendTestEmail() {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: "RESEND_API_KEY not set" };
-  }
-
-  const { data, error } = await resend.emails.send({
-    from: process.env.FROM_EMAIL,
-    to: getAdminEmail(),
-    subject: `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} - Email Test`,
-    html: "<h1>Email test working!</h1>",
+/** Send a test message to ADMIN_EMAIL / CONTACT_EMAIL (uses sendEmail + sandbox fallback). */
+export async function sendTestEmail(toOverride) {
+  const to = String(toOverride || "").trim() || getAdminEmail();
+  const result = await sendEmail({
+    to,
+    subject: `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} - Email Test`,
+    html: `<h1>Email test working!</h1><p>Sent at ${new Date().toISOString()}</p>`,
   });
-
-  if (error) {
-    console.error("Resend test email error:", error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, messageId: data?.id, to: getAdminEmail() };
+  return { ...result, to };
 }
 
 /** Append to order.emailHistory after customer-facing sends (Mongo). */

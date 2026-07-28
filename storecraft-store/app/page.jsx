@@ -17,14 +17,25 @@ export const metadata = buildPageMetadata({
 
 export default async function Page() {
   const shopify = isShopifyEnabled();
-  const [bestSellers, hotDeals, heroSlides, carCatalog] = await Promise.all([
-    shopify
-      ? getBestSellingProducts(8)
-      : fetchProductsServer({ limit: 4, sort: "popular" }).then((r) => r.products),
-    shopify ? getHotDealProducts(12) : fetchHotDealsServer({ filter: "all", limit: 12 }),
-    getHeroSlides(),
-    fetchCarCatalogServer(),
-  ]);
+  let bestSellers = [];
+  let hotDeals = [];
+  let heroSlides = [];
+  let carCatalog = null;
+
+  // Never let a single Mongo/Shopify failure 500 the document — degrade to empty SSR props
+  // (client components can still fall back to their own fetches if needed).
+  try {
+    [bestSellers, hotDeals, heroSlides, carCatalog] = await Promise.all([
+      shopify
+        ? getBestSellingProducts(8)
+        : fetchProductsServer({ limit: 4, sort: "popular" }).then((r) => r.products),
+      shopify ? getHotDealProducts(12) : fetchHotDealsServer({ filter: "all", limit: 12 }),
+      getHeroSlides(),
+      fetchCarCatalogServer(),
+    ]);
+  } catch (err) {
+    console.error("[homepage] SSR data load failed:", err?.message || err);
+  }
 
   const preloadUrl = heroSlides[0]?.imageUrl || "";
 

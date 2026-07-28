@@ -21,7 +21,7 @@ export default function AnnouncementBar() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/settings?_=${Date.now()}`, { cache: "no-store" })
+    fetch("/api/settings")
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;

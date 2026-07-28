@@ -1,8 +1,10 @@
 import Link from "next/link";
 import InfoBar from "./InfoBar";
+import { sanitizePageHtml } from "@/lib/sanitizeHtml";
 
 export default function PageView({ page, slug }) {
   if (!page) return null;
+  const safeContent = sanitizePageHtml(page.content);
 
   return (
     <div
@@ -84,7 +86,7 @@ export default function PageView({ page, slug }) {
             }}
           />
 
-          {page.content ? (
+          {safeContent ? (
             <div
               className="article-content"
               style={{
@@ -93,7 +95,7 @@ export default function PageView({ page, slug }) {
                 color: "#444444",
               }}
               dangerouslySetInnerHTML={{
-                __html: page.content,
+                __html: safeContent,
               }}
             />
           ) : (

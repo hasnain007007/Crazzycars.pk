@@ -6,6 +6,7 @@ const LEGACY_EMAILS = new Set([
   "support@chaingang.com",
   "support@chaingang.eu",
   "info@thechaingang.eu",
+  // Pre-rebrand store emails still stored on footer.contactEmail in some Settings docs
   "sialkotmotorssports@gmail.com",
   "sialkotmotorsports@gmail.com",
 ]);

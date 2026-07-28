@@ -33,12 +33,17 @@ async function persistCartId(cartId) {
   });
 }
 
-function unavailable() {
-  if (!isShopifyEnabled()) throw new Error("Shopify cart is not configured.");
+/**
+ * Shopify is optional for this storefront. Never throw when disabled —
+ * Server Actions POST to the current page URL, so a throw becomes a
+ * document-looking POST / 500 in DevTools on every homepage load.
+ */
+function shopifyReady() {
+  return isShopifyEnabled();
 }
 
 export async function getShopifyCart() {
-  unavailable();
+  if (!shopifyReady()) return null;
   const cartId = await currentCartId();
   if (!cartId) return null;
   const cart = await fetchCart(cartId);
@@ -46,7 +51,7 @@ export async function getShopifyCart() {
 }
 
 export async function addShopifyCartLine({ merchandiseId, quantity = 1 }) {
-  unavailable();
+  if (!shopifyReady()) return null;
   if (!merchandiseId) throw new Error("A Shopify variant ID is required.");
   const cartId = await currentCartId();
   const line = { merchandiseId, quantity: Math.max(1, Number(quantity) || 1) };
@@ -56,7 +61,7 @@ export async function addShopifyCartLine({ merchandiseId, quantity = 1 }) {
 }
 
 export async function updateShopifyCartLine({ lineId, quantity }) {
-  unavailable();
+  if (!shopifyReady()) return null;
   const cartId = await currentCartId();
   if (!cartId || !lineId) throw new Error("Shopify cart line not found.");
   if (Number(quantity) < 1) return removeShopifyCartLine({ lineId });
@@ -64,7 +69,7 @@ export async function updateShopifyCartLine({ lineId, quantity }) {
 }
 
 export async function removeShopifyCartLine({ lineId }) {
-  unavailable();
+  if (!shopifyReady()) return null;
   const cartId = await currentCartId();
   if (!cartId || !lineId) throw new Error("Shopify cart line not found.");
   return mapShopifyCart(await cartLinesRemove(cartId, [lineId]));

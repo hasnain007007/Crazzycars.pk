@@ -9,7 +9,7 @@ import {
 } from "@/lib/vehiclePageData";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
-import { formatPrice } from "@/lib/currency";
+import { VehicleProductsListing } from "@/components/cars/VehicleProductsListing";
 
 export const revalidate = 300;
 
@@ -60,7 +60,7 @@ export default async function VehicleSlugPage({ params }) {
   const vehicle = await loadVehicleBySlug(slugStr);
   if (!vehicle) notFound();
 
-  const rawProducts = await loadProductsForVehicle(vehicle._id);
+  const rawProducts = await loadProductsForVehicle(vehicle);
   const products = rawProducts.map(serializeVehicleProduct);
 
   const yearLabel =
@@ -238,64 +238,15 @@ export default async function VehicleSlugPage({ params }) {
       </section>
 
       <section id="compatible-products" className="store-container py-8 md:py-10">
-        <div className="mb-5 flex items-end justify-between gap-4">
-          <div>
-            <h2
-              className="font-heading text-xl font-bold md:text-2xl"
-              style={{ color: "#111111", margin: 0 }}
-            >
-              Compatible products
-            </h2>
-            <p className="mt-1 text-sm text-[#6B7280]">
-              {products.length
-                ? `${products.length} product${products.length === 1 ? "" : "s"} linked to this vehicle`
-                : "No products linked to this vehicle yet."}
-            </p>
-          </div>
-        </div>
-
-        {products.length ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((p) => (
-              <Link
-                key={p.id}
-                href={p.href}
-                className="group overflow-hidden rounded-xl border border-[#E5E7EB] bg-white transition hover:border-[#C41E1E] hover:shadow-md"
-              >
-                <div className="relative aspect-square bg-[#F3F4F6]">
-                  {p.image ? (
-                    <Image
-                      src={p.image}
-                      alt={p.name}
-                      fill
-                      className="object-cover transition group-hover:scale-105"
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                    />
-                  ) : null}
-                  {p.isUniversal ? (
-                    <span className="absolute left-2 top-2 rounded bg-[#111111]/85 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                      Universal
-                    </span>
-                  ) : null}
-                </div>
-                <div className="p-3">
-                  <p className="line-clamp-2 text-sm font-semibold text-[#111111]">{p.name}</p>
-                  <p className="mt-1 text-sm font-bold text-[#C41E1E]">{formatPrice(p.price)}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-[#E5E7EB] bg-[#FAFAFA] px-6 py-12 text-center">
-            <p className="text-sm text-[#6B7280]">
-              Products for this car will show once you assign them in admin (compatible vehicles / car catalog).
-              Universal products are not listed here unless you add them to this car.
-            </p>
-            <Link href="/shop" className="mt-4 inline-block text-sm font-bold text-[#C41E1E] hover:underline">
-              Browse the shop →
-            </Link>
-          </div>
-        )}
+        <VehicleProductsListing
+          title="Compatible products"
+          subtitle={
+            products.length
+              ? undefined
+              : "Products for this car will show once you assign them in admin (compatible vehicles / car catalog). Universal products are not listed here unless you add them to this car."
+          }
+          products={products}
+        />
       </section>
     </div>
   );

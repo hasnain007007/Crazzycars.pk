@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatPrice } from "@/lib/currency";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
 function getCountdown(endTimeIso) {
@@ -40,7 +41,7 @@ function FlashProductCard({ product }) {
   const regular = Number(product.regularPrice ?? product.compareAt ?? product.price ?? 0);
   const sale = Number(product.salePrice ?? product.price ?? regular);
   const onSale = sale < regular && regular > 0;
-  const imageUrl = getImage(product);
+  const imageUrl = cardImageUrl(getImage(product), 360) || getImage(product);
 
   return (
     <Link

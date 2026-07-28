@@ -1,6 +1,7 @@
-import { effectiveUnitPrice } from "@/lib/storePricing";
+import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 import { serializeStoreOption } from "@/lib/variationOptions";
 import { combinationSignature } from "@/lib/variantMatrix";
+import { sanitizeProductHtml, toPlainText } from "@/lib/sanitizeHtml";
 
 function getStock(product) {
   return (
@@ -13,6 +14,9 @@ function getStock(product) {
 
 function isInStock(product) {
   if (product?.inventory?.trackInventory === false) {
+    return true;
+  }
+  if (product?.inventory?.allowBackorder !== false) {
     return true;
   }
   return getStock(product) > 0;
@@ -47,11 +51,7 @@ export function serializeStoreProductSummary(p) {
   const regularPrice = Number(p.pricing?.regularPrice) || 0;
   const salePrice = Number(p.pricing?.salePrice) || 0;
   const schedule = p.pricing?.saleSchedule || null;
-  const scheduleActive =
-    !schedule?.enabled ||
-    ((schedule?.startDate ? Date.now() >= new Date(schedule.startDate).getTime() : true) &&
-      (schedule?.endDate ? Date.now() <= new Date(schedule.endDate).getTime() : true));
-  const isOnSale = salePrice > 0 && salePrice < regularPrice && scheduleActive;
+  const isOnSale = salePrice > 0 && salePrice < regularPrice && isSaleCurrentlyActive(p.pricing);
   const price = isOnSale ? salePrice : effectiveUnitPrice(p) || regularPrice;
   const stock = getStock(p);
   const inStock = isInStock(p);
@@ -66,8 +66,15 @@ export function serializeStoreProductSummary(p) {
     id: p._id.toString(),
     name: p.name,
     slug: p.slug,
+    articleNo: p.articleNo || p.inventory?.sku || "",
+    shortDescription: toPlainText(p.shortDescription || ""),
     image: summaryImage,
     images: summaryImages,
+    media: {
+      images: Array.isArray(p?.media?.images)
+        ? p.media.images.map((i) => ({ url: i?.url || "", isMain: !!i?.isMain, altText: i?.altText || "" }))
+        : [],
+    },
     price,
     regularPrice,
     salePrice,
@@ -76,6 +83,19 @@ export function serializeStoreProductSummary(p) {
     isOnSale,
     featured: !!p.featured,
     newArrival: !!p.newArrival,
+    codEnabled: p.codEnabled !== false,
+    advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
+    createdAt: p.createdAt || null,
+    categories: Array.isArray(p.categories)
+      ? p.categories
+          .map((c) =>
+            typeof c === "object" && c
+              ? { id: c._id?.toString?.() || c.id, name: c.name, slug: c.slug }
+              : null
+          )
+          .filter((c) => c?.name)
+      : [],
+    tags: Array.isArray(p.tags) ? p.tags : [],
     inStock,
     stock,
     quantity: stock,
@@ -84,6 +104,8 @@ export function serializeStoreProductSummary(p) {
       ...(p.inventory || {}),
       quantity: Number(p?.inventory?.quantity) || 0,
       trackInventory: p?.inventory?.trackInventory ?? true,
+      allowBackorder: p?.inventory?.allowBackorder !== false,
+      sku: p?.inventory?.sku || p.articleNo || "",
     },
     rating: Number(p?.rating) || 0,
     averageRating: Number(p?.averageRating) || 0,
@@ -119,11 +141,7 @@ export function serializeStoreProductDetail(p) {
   const regularPrice = Number(p.pricing?.regularPrice) || 0;
   const salePrice = Number(p.pricing?.salePrice) || 0;
   const schedule = p.pricing?.saleSchedule || null;
-  const scheduleActive =
-    !schedule?.enabled ||
-    ((schedule?.startDate ? Date.now() >= new Date(schedule.startDate).getTime() : true) &&
-      (schedule?.endDate ? Date.now() <= new Date(schedule.endDate).getTime() : true));
-  const isOnSale = salePrice > 0 && salePrice < regularPrice && scheduleActive;
+  const isOnSale = salePrice > 0 && salePrice < regularPrice && isSaleCurrentlyActive(p.pricing);
   const price = isOnSale ? salePrice : effectiveUnitPrice(p) || regularPrice;
   const variationTypes = (p.variationTypes || [])
     .map((t, idx) => ({
@@ -137,7 +155,7 @@ export function serializeStoreProductDetail(p) {
   const usesVariantMatrix = variationTypes.length > 0 && serializedVariants.length > 0;
   const stock = Number(p?.inventory?.quantity) || 0;
   const inStock =
-    p?.inventory?.trackInventory === false
+    p?.inventory?.trackInventory === false || p?.inventory?.allowBackorder !== false
       ? true
       : stock > 0;
 
@@ -146,8 +164,13 @@ export function serializeStoreProductDetail(p) {
     name: p.name,
     slug: p.slug,
     articleNo: p.articleNo || "",
-    shortDescription: p.shortDescription || "",
-    longDescription: p.longDescription || "",
+    ean: p.ean || "",
+    partNumber: p.partNumber || "",
+    condition: p.condition || "new",
+    vendor: p.vendor || "",
+    shortDescription: toPlainText(p.shortDescription || ""),
+    longDescription: sanitizeProductHtml(p.longDescription || ""),
+    descriptionHtml: sanitizeProductHtml(p.longDescription || p.descriptionHtml || ""),
     price,
     regularPrice,
     salePrice,
@@ -187,6 +210,7 @@ export function serializeStoreProductDetail(p) {
     quantityAvailable: stock,
     stock,
     trackInventory: p?.inventory?.trackInventory ?? true,
+    allowBackorder: p?.inventory?.allowBackorder !== false,
     shippingBaseWeight: Number(p.inventory?.weight) || 0,
     shippingBaseWeightUnit: p.inventory?.weightUnit || "kg",
     seo: p.seo || {},
@@ -194,6 +218,8 @@ export function serializeStoreProductDetail(p) {
     reviewCount: Number(p.reviewCount) || Number(p.totalReviews) || Number(p.numReviews) || 0,
     features: p.features || [],
     specifications: Array.isArray(p.specifications) ? p.specifications.filter((s) => s.label && s.value) : [],
+    codEnabled: p.codEnabled !== false,
+    advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     addOns: Array.isArray(p.addOns)
       ? p.addOns.map((a) => ({
           name: a?.name || "",

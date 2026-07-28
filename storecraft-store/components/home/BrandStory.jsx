@@ -66,7 +66,7 @@ export default function BrandStory({ story: storyProp }) {
                   <img
                     src={image1Url}
                     alt={story.heading || "Our story"}
-                    loading="eager"
+                    loading="lazy"
                     fetchPriority="low"
                     decoding="async"
                     className="h-full w-full rounded-xl object-cover shadow-md"

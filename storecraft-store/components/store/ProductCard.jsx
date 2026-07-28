@@ -14,7 +14,14 @@ const WISHLIST_KEY = "sialkot_wishlist";
 function getStock(product) {
   const q = Number(product?.inventory?.quantity ?? product?.stock ?? product?.quantity ?? 0);
   if (product?.inventory?.trackInventory === false) return 99;
+  if (product?.inventory?.allowBackorder !== false) return Math.max(q, 1);
   return q;
+}
+
+function canSell(product) {
+  if (product?.inventory?.trackInventory === false) return true;
+  if (product?.inventory?.allowBackorder !== false) return true;
+  return getStock(product) > 0;
 }
 
 function getProductImages(product) {
@@ -56,7 +63,10 @@ export function ProductCard({ product, compact = false }) {
   const { productImageWatermark: rawWatermark } = useStoreSettings();
   const productImageWatermark = normalizeProductImageWatermark(rawWatermark);
   const [wish, setWish] = useState(false);
-  const inStock = getStock(product) > 0;
+  const [hoverReady, setHoverReady] = useState(false);
+  const inStock = canSell(product);
+  const qtyLeft = Number(product?.inventory?.quantity ?? product?.stock ?? 0);
+  const onBackorder = inStock && product?.inventory?.trackInventory !== false && qtyLeft <= 0;
   const images = getProductImages(product);
   const imageUrl = images[0] || "";
   const hoverImageUrl = images[1] || "";
@@ -124,6 +134,11 @@ export function ProductCard({ product, compact = false }) {
       variantId: variant?.id || "",
       merchandiseId: variant?.id || "",
       source: product.source,
+      codEnabled: product.codEnabled !== false,
+      advancePercentRequired: Math.min(
+        100,
+        Math.max(0, Number(product.advancePercentRequired) || 0)
+      ),
     });
     toast.success("Added to cart");
   }
@@ -132,13 +147,19 @@ export function ProductCard({ product, compact = false }) {
     <article
       className="group relative flex h-full flex-col overflow-hidden rounded-xl border bg-white transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.10)]"
       style={{ borderColor: "#F3F4F6" }}
+      onMouseEnter={() => hoverImageUrl && setHoverReady(true)}
+      onFocusCapture={() => hoverImageUrl && setHoverReady(true)}
     >
-      <Link href={href} className="relative block aspect-square overflow-hidden rounded-lg m-3 mb-0" style={{ background: "#F9FAFB" }}>
+      <Link
+        href={href}
+        className="relative block aspect-square overflow-hidden bg-[#F9FAFB]"
+        onTouchStart={() => hoverImageUrl && setHoverReady(true)}
+      >
         {imageUrl ? (
           <div className="relative h-full w-full">
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
-                hoverImageUrl ? "group-hover:opacity-0" : ""
+                hoverImageUrl && hoverReady ? "group-hover:opacity-0" : ""
               }`}
             >
               <WatermarkedImage
@@ -149,10 +170,12 @@ export function ProductCard({ product, compact = false }) {
                 imgClassName={`h-full w-full object-cover transition-transform duration-300 ${
                   hoverImageUrl ? "" : "group-hover:scale-[1.02]"
                 }`}
-                imgStyle={{ height: "100%", objectFit: "cover" }}
+                imgStyle={{ height: "100%", width: "100%", objectFit: "cover" }}
+                width={480}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
             </div>
-            {hoverImageUrl ? (
+            {hoverImageUrl && hoverReady ? (
               <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 <WatermarkedImage
                   src={hoverImageUrl}
@@ -160,13 +183,20 @@ export function ProductCard({ product, compact = false }) {
                   watermark={productImageWatermark}
                   className="h-full w-full"
                   imgClassName="h-full w-full object-cover"
-                  imgStyle={{ height: "100%", objectFit: "cover" }}
+                  imgStyle={{ height: "100%", width: "100%", objectFit: "cover" }}
+                  width={480}
+                  loading="eager"
                 />
               </div>
             ) : null}
           </div>
         ) : (
-          <div className="flex h-full items-center justify-center text-3xl text-[#D1D5DB]">—</div>
+          <div className="flex h-full flex-col items-center justify-center gap-1 px-3 text-center">
+            <span className="text-2xl text-[#D1D5DB]">—</span>
+            <span className="line-clamp-2 text-[11px] font-medium text-[#9CA3AF]">
+              {product.name || "No image"}
+            </span>
+          </div>
         )}
 
         {onSale && badgeConfig.showSaleBadge ? (
@@ -205,7 +235,7 @@ export function ProductCard({ product, compact = false }) {
             className="absolute bottom-0 left-0 right-0 translate-y-full py-3 text-sm font-semibold text-white opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100"
             style={{ background: "#C41E1E" }}
           >
-            Add to Cart
+            {onBackorder ? "Order (backorder)" : "Add to Cart"}
           </button>
         )}
       </Link>

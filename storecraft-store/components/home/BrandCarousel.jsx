@@ -1,15 +1,4 @@
-const BRAND_ORDER = [
-  "honda",
-  "toyota",
-  "suzuki",
-  "kia",
-  "hyundai",
-  "mg",
-  "changan",
-  "haval",
-  "isuzu",
-  "audi",
-];
+import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
 function WordmarkLogo({ label, fontSize = 18, letterSpacing = 1, fontWeight = 700 }) {
   return (
@@ -150,7 +139,20 @@ function BrandLogoItem({ name }) {
   );
 }
 
-const DEFAULT_BRANDS = BRAND_ORDER.map((id) => id.charAt(0).toUpperCase() + id.slice(1));
+const DEFAULT_BRANDS = (DEFAULT_HOMEPAGE_SETTINGS.brands || [])
+  .filter((b) => b.isActive !== false && String(b.name || "").trim())
+  .map((b) => String(b.name).trim());
+
+/** Repeat brands until one marquee half is wide enough (avoids empty right side). */
+function expandBrandHalf(names, minCount = 12) {
+  const list = (names || []).map((n) => String(n || "").trim()).filter(Boolean);
+  if (!list.length) return [];
+  const half = [];
+  while (half.length < minCount) {
+    half.push(...list);
+  }
+  return half;
+}
 
 export default function BrandCarousel({ settings }) {
   const fromSettings = (settings?.brands || [])
@@ -158,8 +160,11 @@ export default function BrandCarousel({ settings }) {
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     .map((b) => String(b.name).trim());
 
+  // Prefer CMS list; never pad with hardcoded extras (Isuzu/Audi, etc.).
   const brandNames = fromSettings.length ? fromSettings : DEFAULT_BRANDS;
-  const items = [...brandNames, ...brandNames];
+  const half = expandBrandHalf(brandNames, Math.max(12, brandNames.length * 2));
+  // Two identical halves → translateX(-50%) loops seamlessly while running.
+  const items = [...half, ...half];
 
   return (
     <section
@@ -174,8 +179,8 @@ export default function BrandCarousel({ settings }) {
         <h2 className="font-heading text-[32px] font-bold text-[#111111]">{settings?.sectionTitles?.brands || "Trusted Brands"}</h2>
         <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8, marginBottom: 24 }} />
       </div>
-      <div className="brand-marquee-wrap group" style={{ height: 62 }}>
-        <div className="brand-marquee items-center group-hover:[animation-play-state:paused]" style={{ animationDuration: "20s", animationTimingFunction: "ease-in-out" }}>
+      <div className="brand-marquee-wrap group" style={{ height: 62 }} aria-label="Trusted brands">
+        <div className="brand-marquee items-center">
           {items.map((name, i) => (
             <BrandLogoItem key={`${name}-${i}`} name={name} />
           ))}

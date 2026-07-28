@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ProductCard from "@/components/store/ProductCard";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
@@ -15,16 +15,18 @@ export default function HotDeals({ settings, initialProducts = null }) {
         .sort((a, b) => (a.order || 0) - (b.order || 0)),
     [section.tabs]
   );
-  const [active, setActive] = useState(tabs[0]?.filter || "all");
-  const hasInitial = Array.isArray(initialProducts);
   const defaultFilter = tabs[0]?.filter || "all";
-  const [products, setProducts] = useState(hasInitial ? initialProducts : []);
-  const [loading, setLoading] = useState(!(hasInitial && (tabs[0]?.filter || "all") === "all"));
+  const ssrSeed = Array.isArray(initialProducts) ? initialProducts : null;
+  const ssrSeedRef = useRef(ssrSeed);
+  const [active, setActive] = useState(defaultFilter);
+  const [products, setProducts] = useState(ssrSeed || []);
+  const [loading, setLoading] = useState(ssrSeed == null);
   const [seconds, setSeconds] = useState(6 * 60 * 60);
 
+  // Keep default tab in sync if settings change the first filter key — do not wipe SSR seed.
   useEffect(() => {
-    setActive(tabs[0]?.filter || "all");
-  }, [tabs]);
+    setActive((prev) => (prev ? prev : defaultFilter));
+  }, [defaultFilter]);
 
   const hasDeals = products.length > 0;
 
@@ -35,9 +37,10 @@ export default function HotDeals({ settings, initialProducts = null }) {
   }, [hasDeals]);
 
   useEffect(() => {
-    // Use SSR seed for the default tab; fetch only when the shopper changes tabs.
-    if (hasInitial && active === defaultFilter) {
-      setProducts(initialProducts);
+    const seed = ssrSeedRef.current;
+    // SSR / first paint for the default tab — never hit the network.
+    if (seed && active === defaultFilter) {
+      setProducts(seed);
       setLoading(false);
       return undefined;
     }
@@ -58,7 +61,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
     return () => {
       cancelled = true;
     };
-  }, [active, hasInitial, initialProducts, defaultFilter]);
+  }, [active, defaultFilter]);
 
   if (section.enabled === false) return null;
 

@@ -3,27 +3,51 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-function statusStyle(status) {
+const WAREHOUSE_LABEL = "CrazzyCars.pk Warehouse";
+
+const PIPELINE = [
+  { id: "warehouse", label: "Warehouse", match: (s) => /warehouse|unbook|booked|created|pickup/i.test(s) },
+  { id: "transit", label: "Transit", match: (s) => /transit|hub|depart|arriv|dispatch|received|departed/i.test(s) },
+  { id: "out", label: "Out", match: (s) => /out for|enroute|waiting for delivery|attempt/i.test(s) },
+  { id: "delivered", label: "Delivered", match: (s) => /deliver/i.test(s) && !/out for|attempt|waiting/i.test(s) },
+];
+
+function statusTone(status) {
   const s = String(status || "").toLowerCase();
-  if (s.includes("deliver")) return { bg: "#DCFCE7", color: "#16A34A", border: "#86EFAC" };
-  if (s.includes("transit") || s.includes("dispatch") || s.includes("hub")) {
-    return { bg: "#DBEAFE", color: "#2563EB", border: "#93C5FD" };
-  }
-  if (s.includes("out for") || s.includes("attempt") || s.includes("delivery")) {
-    return { bg: "#FFEDD5", color: "#D97706", border: "#FCD34D" };
-  }
-  if (s.includes("return") || s.includes("cancel") || s.includes("fail")) {
-    return { bg: "#FEE2E2", color: "#DC2626", border: "#FECACA" };
-  }
-  return { bg: "#F3F4F6", color: "#6B7280", border: "#E5E7EB" };
+  if (s.includes("deliver") && !s.includes("out for") && !s.includes("attempt")) return "ok";
+  if (s.includes("out for") || s.includes("enroute") || s.includes("waiting for delivery")) return "warn";
+  if (s.includes("transit") || s.includes("hub") || s.includes("depart") || s.includes("arriv")) return "info";
+  if (s.includes("return") || s.includes("cancel") || s.includes("fail")) return "bad";
+  return "muted";
 }
 
-function eventIcon(status) {
+function eventGlyph(status) {
   const s = String(status || "").toLowerCase();
-  if (s.includes("deliver")) return "✓";
-  if (s.includes("transit") || s.includes("dispatch")) return "🚚";
+  if (s.includes("deliver") && !s.includes("out for")) return "✓";
+  if (s.includes("out for") || s.includes("enroute")) return "→";
+  if (s.includes("transit") || s.includes("depart") || s.includes("arriv") || s.includes("hub")) return "◎";
+  if (s.includes("warehouse") || s.includes("unbook")) return "⌂";
   if (s.includes("return")) return "↩";
   return "•";
+}
+
+function friendlyCity(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  if (s.length > 40 || /road|street|gali|muhalla|near|house|chowk|bank/i.test(s)) return "";
+  return s.replace(/\s+/g, " ");
+}
+
+function pipelineStep(status, events = []) {
+  const texts = [String(status || ""), ...events.map((e) => `${e.status || ""} ${e.description || ""}`)];
+  let active = 0;
+  for (const text of texts) {
+    PIPELINE.forEach((step, i) => {
+      if (step.match(text)) active = Math.max(active, i);
+    });
+  }
+  if (/unbook/i.test(String(status || ""))) return Math.min(active, 0);
+  return active;
 }
 
 export default function OrderTrackingView() {
@@ -33,17 +57,20 @@ export default function OrderTrackingView() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [data, setData] = useState(null);
+  const [appeared, setAppeared] = useState(false);
 
   const track = useCallback(async (num) => {
     const id = String(num || "").trim();
     if (!id) {
       setError("Please enter a tracking number.");
       setData(null);
+      setAppeared(false);
       return;
     }
     setLoading(true);
     setError("");
     setData(null);
+    setAppeared(false);
     try {
       const res = await fetch(`/api/tracking?trackingNumber=${encodeURIComponent(id)}`);
       const json = await res.json();
@@ -56,6 +83,7 @@ export default function OrderTrackingView() {
         return;
       }
       setData(json);
+      requestAnimationFrame(() => setAppeared(true));
     } catch {
       setError("Could not connect to courier. Please try again.");
     } finally {
@@ -67,193 +95,125 @@ export default function OrderTrackingView() {
     if (initial) track(initial);
   }, [initial, track]);
 
-  const badge = useMemo(() => (data ? statusStyle(data.status) : null), [data]);
+  const tone = useMemo(() => (data ? statusTone(data.status) : "muted"), [data]);
+  const dest = useMemo(() => friendlyCity(data?.destination), [data]);
+  const events = data?.events || [];
+  const step = useMemo(() => (data ? pipelineStep(data.status, events) : 0), [data, events]);
+  const nowAt = data?.currentLocation || events[0]?.status || data?.status || "";
+  const destLabel = data?.destinationReceivedLabel || (dest ? `Heading to ${dest}` : "");
+  const destOk = Boolean(data?.destinationReceived);
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 80px" }}>
-      <h1
-        style={{
-          fontFamily: "var(--font-heading)",
-          fontSize: 28,
-          fontWeight: 700,
-          color: "#111111",
-          margin: "0 0 8px",
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-        }}
-      >
-        Track Your Order
-      </h1>
-      <p style={{ fontSize: 14, color: "#6B7280", margin: "0 0 28px", lineHeight: 1.6 }}>
-        Enter your Postex tracking number to see live delivery updates.
-      </p>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          track(input);
-        }}
-        style={{ display: "flex", gap: 10, marginBottom: 32, flexWrap: "wrap" }}
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="e.g. CX-123456789"
-          style={{
-            flex: "1 1 200px",
-            padding: "12px 16px",
-            border: "1px solid #E5E5E5",
-            borderRadius: 8,
-            fontSize: 15,
-          }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: "12px 28px",
-            background: loading ? "#9CA3AF" : "#C41E1E",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: 8,
-            fontSize: 14,
-            fontWeight: 700,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            cursor: loading ? "default" : "pointer",
-          }}
-        >
-          {loading ? "Tracking…" : "Track"}
-        </button>
-      </form>
-
-      {error ? (
-        <div
-          style={{
-            padding: "16px 20px",
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
-            borderRadius: 8,
-            color: "#991B1B",
-            fontSize: 14,
-          }}
-        >
-          {error}
-        </div>
-      ) : null}
-
-      {data ? (
-        <div>
-          <div
-            style={{
-              display: "inline-block",
-              padding: "10px 20px",
-              borderRadius: 8,
-              fontSize: 18,
-              fontWeight: 700,
-              marginBottom: 24,
-              background: badge.bg,
-              color: badge.color,
-              border: `1px solid ${badge.border}`,
-            }}
-          >
-            {data.status}
+    <div className="cc-track cc-track--compact">
+      <div className="cc-track__shell">
+        <header className="cc-track__top">
+          <div className="cc-track__top-copy">
+            <p className="cc-track__eyebrow">
+              <span className="cc-track__live" aria-hidden />
+              Live Postex
+            </p>
+            <h1 className="cc-track__title">Track order</h1>
           </div>
 
-          <div
-            style={{
-              background: "#F9FAFB",
-              border: "1px solid #E5E7EB",
-              borderRadius: 8,
-              padding: "20px 24px",
-              marginBottom: 28,
-              fontSize: 14,
-              lineHeight: 1.8,
+          <form
+            className="cc-track__form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              track(input);
             }}
           >
-            <p style={{ margin: "0 0 6px" }}>
-              <strong>Tracking Number:</strong> {data.trackingNumber}
-            </p>
-            <p style={{ margin: "0 0 6px" }}>
-              <strong>Courier:</strong> {data.courier || "Postex"}
-            </p>
-            {data.origin || data.destination ? (
-              <p style={{ margin: "0 0 6px" }}>
-                <strong>Route:</strong> {data.origin || "—"} → {data.destination || "—"}
-              </p>
-            ) : null}
-            {data.estimatedDelivery ? (
-              <p style={{ margin: "0 0 6px" }}>
-                <strong>Estimated delivery:</strong> {data.estimatedDelivery}
-              </p>
-            ) : null}
-            {data.weight ? (
-              <p style={{ margin: 0 }}>
-                <strong>Weight:</strong> {data.weight}
-                {data.pieces > 1 ? ` · ${data.pieces} pieces` : ""}
-              </p>
-            ) : null}
-          </div>
+            <input
+              className="cc-track__input"
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Postex tracking number"
+              aria-label="Postex tracking number"
+              autoComplete="off"
+            />
+            <button className="cc-track__submit" type="submit" disabled={loading}>
+              {loading ? "…" : "Track"}
+            </button>
+          </form>
+        </header>
 
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111111", margin: "0 0 16px" }}>
-            Shipment timeline
-          </h2>
-          <div style={{ position: "relative", paddingLeft: 28 }}>
-            {(data.events || []).map((ev, i) => (
-              <div
-                key={`${ev.date}-${ev.time}-${ev.status}-${i}`}
-                style={{
-                  position: "relative",
-                  paddingBottom: i < (data.events?.length || 0) - 1 ? 24 : 0,
-                  borderLeft: i < (data.events?.length || 0) - 1 ? "2px solid #E5E7EB" : "none",
-                  marginLeft: 8,
-                  paddingLeft: 24,
-                }}
-              >
-                <span
-                  style={{
-                    position: "absolute",
-                    left: -21,
-                    top: 0,
-                    width: 28,
-                    height: 28,
-                    borderRadius: "50%",
-                    background: i === 0 ? "#C41E1E" : "#FFFFFF",
-                    border: `2px solid ${i === 0 ? "#C41E1E" : "#D1D5DB"}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 12,
-                    color: i === 0 ? "#fff" : "#6B7280",
-                  }}
-                >
-                  {eventIcon(ev.status)}
-                </span>
-                <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: 14, color: "#111111" }}>
-                  {ev.status}
-                </p>
-                {(ev.date || ev.time) && (
-                  <p style={{ margin: "0 0 4px", fontSize: 12, color: "#6B7280" }}>
-                    {[ev.date, ev.time].filter(Boolean).join(" · ")}
-                  </p>
-                )}
-                {ev.location ? (
-                  <p style={{ margin: "0 0 4px", fontSize: 13, color: "#374151" }}>{ev.location}</p>
-                ) : null}
-                {ev.description && ev.description !== ev.status ? (
-                  <p style={{ margin: 0, fontSize: 13, color: "#6B7280", lineHeight: 1.5 }}>
-                    {ev.description}
-                  </p>
-                ) : null}
+        {error ? <div className="cc-track__error" role="alert">{error}</div> : null}
+
+        {!data && !loading && !error ? (
+          <p className="cc-track__hint">Enter a tracking number to see live parcel location.</p>
+        ) : null}
+
+        {data ? (
+          <div className={`cc-track__card ${appeared ? "is-in" : ""} tone-${tone}`}>
+            <div className="cc-track__card-head">
+              <div>
+                <p className="cc-track__kicker">Status</p>
+                <h2 className="cc-track__status">{data.status}</h2>
               </div>
-            ))}
-            {!(data.events || []).length ? (
-              <p style={{ fontSize: 14, color: "#6B7280" }}>No detailed events yet.</p>
-            ) : null}
+              <div className="cc-track__ids">
+                <span>{data.courier || "Postex"}</span>
+                <span className="cc-track__mono">{data.trackingNumber}</span>
+              </div>
+            </div>
+
+            <div className="cc-track__pipeline" aria-label="Delivery progress">
+              {PIPELINE.map((p, i) => {
+                const done = i <= step;
+                const current = i === step;
+                return (
+                  <div
+                    key={p.id}
+                    className={`cc-track__pipe ${done ? "is-done" : ""} ${current ? "is-current" : ""}`}
+                  >
+                    <span className="cc-track__pipe-dot">{done ? (current && step < 3 ? "" : "✓") : ""}</span>
+                    <small>{p.label}</small>
+                    {i < PIPELINE.length - 1 ? <i className="cc-track__pipe-line" aria-hidden /> : null}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="cc-track__facts">
+              <div>
+                <p className="cc-track__kicker">Now at</p>
+                <strong>{nowAt}</strong>
+                {data.lastScanAt ? <span>{data.lastScanAt}</span> : null}
+              </div>
+              <div>
+                <p className="cc-track__kicker">Route</p>
+                <strong>
+                  {WAREHOUSE_LABEL} → {dest || "City"}
+                </strong>
+                <span className={destOk ? "ok" : "pending"}>{destLabel}</span>
+              </div>
+            </div>
+
+            <div className="cc-track__timeline-wrap">
+              <div className="cc-track__timeline-head">
+                <p className="cc-track__kicker">Postex scans</p>
+                <span>{events.length}</span>
+              </div>
+              {events.length ? (
+                <ol className="cc-track__timeline">
+                  {events.map((ev, i) => (
+                    <li key={`${ev.date}-${ev.time}-${ev.status}-${i}`} className={i === 0 ? "is-latest" : ""}>
+                      <span className="cc-track__event-dot" aria-hidden>
+                        {eventGlyph(ev.status)}
+                      </span>
+                      <div>
+                        <strong>{ev.status}</strong>
+                        <time>{[ev.date, ev.time].filter(Boolean).join(" · ")}</time>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="cc-track__hint">No scans yet.</p>
+              )}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }

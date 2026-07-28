@@ -17,7 +17,7 @@ import {
   formatWhatsAppDisplay,
   getAdvancePaymentAccountLines,
   getCodFreeDeliveryProgress,
-  getFreeShippingThreshold,
+  getEffectiveFreeDeliveryThreshold,
   normalizeShippingRules,
   shouldShowAdvancePaymentMessage,
 } from "@/lib/freeDelivery";
@@ -263,7 +263,7 @@ export function CheckoutView() {
     }
   }, [cartAllowsCod, paymentMethod, pakistaniMethods]);
   const freeThreshold = useMemo(
-    () => getFreeShippingThreshold(settings?.storePayment || storePayment),
+    () => getEffectiveFreeDeliveryThreshold(settings?.storePayment || storePayment),
     [settings?.storePayment, storePayment]
   );
 

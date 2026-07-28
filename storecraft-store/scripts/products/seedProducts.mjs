@@ -101,12 +101,21 @@ function mapStatus(p) {
   return "active";
 }
 
-function toStoreProduct(p, categoryIds, vehicleIds) {
+function toStoreProduct(p, categoryIds, vehicleDocs) {
   const pricing = mapPricing(p);
   const { simpleVariations, variationCombinations } = mapVariants(p.variants);
   const featured = Boolean(p.isFeatured);
   const isDeal = Boolean(p.isDeal);
   const isUniversal = Boolean(p.isUniversal);
+  const vehicleIds = vehicleDocs.map((v) => v._id);
+  const vcVehicles = vehicleDocs.map((v) => ({
+    make: v.make || "",
+    model: v.model || "",
+    yearFrom: v.yearFrom ?? null,
+    yearTo: v.yearTo ?? null,
+    bodyStyle: "All",
+    notes: v.displayName || "",
+  }));
 
   return {
     name: p.name,
@@ -154,9 +163,18 @@ function toStoreProduct(p, categoryIds, vehicleIds) {
     vehicleCompatibility: {
       fitmentType: isUniversal ? "universal" : vehicleIds.length ? "specific" : "universal",
       universalNote: "Fits all car makes and models",
-      vehicles: [],
+      vehicles: isUniversal ? [] : vcVehicles,
       categories: [],
     },
+    compatibleCars: isUniversal
+      ? []
+      : vehicleDocs.map((v) => ({
+          make: v.make || "",
+          model: v.model || "",
+          generation: v.generation || "",
+          yearFrom: v.yearFrom ?? null,
+          yearTo: v.yearTo ?? null,
+        })),
     condition: "new",
   };
 }
@@ -177,9 +195,12 @@ async function run() {
   console.log("Connected — seeding products into StoreCraft schema");
 
   const catDocs = await Category.find({}, "slug _id").lean();
-  const vehDocs = await Vehicle.find({}, "slug _id").lean();
+  const vehDocs = await Vehicle.find(
+    {},
+    "slug _id make model yearFrom yearTo displayName generation"
+  ).lean();
   const catId = Object.fromEntries(catDocs.map((c) => [c.slug, c._id]));
-  const vehId = Object.fromEntries(vehDocs.map((v) => [v.slug, v._id]));
+  const vehBySlug = Object.fromEntries(vehDocs.map((v) => [v.slug, v]));
 
   if (!catDocs.length) throw new Error("No categories — run seed:categories first");
   if (!vehDocs.length) throw new Error("No vehicles — run seed:vehicles first");
@@ -191,18 +212,20 @@ async function run() {
   const missing = [];
   for (const p of products) {
     const categoryIds = (p.categorySlugs || []).map((s) => catId[s]).filter(Boolean);
-    const vehicleIds = (p.vehicleSlugs || []).map((s) => vehId[s]).filter(Boolean);
+    const vehicleDocsForP = (p.vehicleSlugs || []).map((s) => vehBySlug[s]).filter(Boolean);
     if (categoryIds.length !== (p.categorySlugs || []).length) {
       missing.push(`category miss on ${p.slug}: ${(p.categorySlugs || []).filter((s) => !catId[s]).join(",")}`);
     }
-    if (vehicleIds.length !== (p.vehicleSlugs || []).length) {
-      missing.push(`vehicle miss on ${p.slug}: ${(p.vehicleSlugs || []).filter((s) => !vehId[s]).join(",")}`);
+    if (vehicleDocsForP.length !== (p.vehicleSlugs || []).length) {
+      missing.push(
+        `vehicle miss on ${p.slug}: ${(p.vehicleSlugs || []).filter((s) => !vehBySlug[s]).join(",")}`
+      );
     }
     if (!categoryIds.length) {
       missing.push(`NO categories on ${p.slug}`);
     }
 
-    const doc = toStoreProduct(p, categoryIds, vehicleIds);
+    const doc = toStoreProduct(p, categoryIds, vehicleDocsForP);
 
     await Product.findOneAndUpdate(
       { slug: p.slug },

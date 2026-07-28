@@ -23,14 +23,18 @@ function Fallback() {
   );
 }
 
-export default async function Page() {
+export default async function Page({ searchParams }) {
+  const sp = (await searchParams) || {};
+  const q = String(sp.q || "").trim();
+  const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
   const {
     products: initialProducts,
     total: initialTotal,
     totalPages: initialTotalPages,
   } = await fetchProductsServer({
-    limit: 24,
-    page: 1,
+    limit: 40,
+    page,
+    q,
   });
 
   return (
@@ -46,16 +50,18 @@ export default async function Page() {
             maxWidth: 720,
           }}
         >
-          Browse our complete collection of premium car accessories. Shop splitters, LED lights,
-          body kits, spoilers, carbon fiber parts, and more — with cash on delivery across Pakistan.
+          {q
+            ? `Search results for “${q}”.`
+            : "Browse our complete collection of premium car accessories. Shop splitters, LED lights, body kits, spoilers, carbon fiber parts, and more — with cash on delivery across Pakistan."}
         </p>
       </div>
       <Suspense fallback={<Fallback />}>
         <ProductsBrowseMedico
           initialProducts={initialProducts}
           initialTotal={initialTotal}
-          initialPage={1}
+          initialPage={page}
           initialTotalPages={initialTotalPages}
+          initialQuery={q}
         />
       </Suspense>
     </div>

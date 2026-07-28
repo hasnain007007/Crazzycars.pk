@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
-import { buildStoreSettingsPayload } from "@/lib/normalizeStoreSettings";
+import { buildStoreSettingsPayload, toPublicClientSettings } from "@/lib/normalizeStoreSettings";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+/** Public storefront settings — short CDN cache; admin changes appear within ~60s. */
+export const revalidate = 60;
 
 export async function GET() {
   try {
@@ -13,7 +13,8 @@ export async function GET() {
       (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
       (await Settings.findOne({}).lean()) ||
       {};
-    const data = buildStoreSettingsPayload(settings);
+    // Never expose Stripe/PayPal secrets on this public endpoint.
+    const data = toPublicClientSettings(buildStoreSettingsPayload(settings));
     return NextResponse.json(
       {
         success: true,
@@ -30,10 +31,7 @@ export async function GET() {
       },
       {
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-          "Surrogate-Control": "no-store",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
         },
       }
     );

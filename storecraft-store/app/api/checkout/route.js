@@ -16,6 +16,7 @@ import {
   computeAdvancePaymentDiscount,
   normalizeShippingRules,
 } from "@/lib/freeDelivery";
+import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import {
   isOfflinePakistaniPayment,
   normalizePakistaniPaymentMethods,
@@ -23,6 +24,8 @@ import {
 import { quoteShipping } from "@/lib/shippingZoneWeight";
 import { toKg } from "@/lib/shippingEstimate";
 import { effectiveUnitPrice } from "@/lib/storePricing";
+import { allowsBackorder } from "@/lib/inventoryPolicy";
+import { readAiAttributionFromRequest } from "@/lib/aiAttribution";
 
 function isValidCustomerEmail(email) {
   const e = String(email || "").trim().toLowerCase();
@@ -228,12 +231,12 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
   }
   const base = effectiveUnitPrice(p);
   const baseWeightKg = toKg(p.inventory?.weight, p.inventory?.weightUnit || "kg");
+  // Never trust client unitPrice / shipping surcharge / weight — price from DB only.
   if (!selectedVariation) {
-    const cw = Number(raw.calculatedWeight);
     return {
-      unitPrice: Math.round((Number(raw.unitPrice) > 0 ? Number(raw.unitPrice) : base) * 100) / 100,
-      perUnitWeightKg: cw > 0 ? Math.max(0, cw) : baseWeightKg,
-      surcharge: Number(raw.shippingPriceSurcharge) || 0,
+      unitPrice: Math.round(base * 100) / 100,
+      perUnitWeightKg: baseWeightKg,
+      surcharge: 0,
       variant: null,
     };
   }
@@ -258,24 +261,19 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
   }
   const addShipKg = toKg(selectedVariation?.additionalShippingWeight ?? 0, "kg");
   const surcharge = Number(selectedVariation?.shippingPriceSurcharge) || 0;
-  const cw = Number(raw.calculatedWeight);
-  if (cw > 0) {
-    return {
-      unitPrice: Math.round((Number(raw.unitPrice) > 0 ? Number(raw.unitPrice) : base) * 100) / 100,
-      perUnitWeightKg: Math.max(0, cw),
-      surcharge: surcharge || Number(raw.shippingPriceSurcharge) || 0,
-      variant: null,
-    };
-  }
-  const perUnitWeightKg = Math.max(0, baseWeightKg + addShipKg);
-  const unitPrice = Math.round((Number(raw.unitPrice) > 0 ? Number(raw.unitPrice) : base) * 100) / 100;
-  return { unitPrice, perUnitWeightKg, surcharge, variant: null };
+  return {
+    unitPrice: Math.round(base * 100) / 100,
+    perUnitWeightKg: Math.max(0, baseWeightKg + addShipKg),
+    surcharge,
+    variant: null,
+  };
 }
 
 export async function POST(request) {
   try {
     await dbConnect();
     const body = await request.json().catch(() => ({}));
+    const aiAttribution = readAiAttributionFromRequest(request);
     const itemsIn = Array.isArray(body.items) ? body.items : [];
     if (!itemsIn.length) {
       return NextResponse.json({ success: false, error: "Cart is empty." }, { status: 400 });
@@ -347,16 +345,39 @@ export async function POST(request) {
     const productIds = [
       ...new Set([...byProduct.keys(), ...[...byVariant.keys()].map((k) => k.split("::")[0])]),
     ];
-    const products = await Product.find({ _id: { $in: productIds }, status: "active" }).lean();
+    const products = await Product.find({
+      _id: { $in: productIds },
+      status: { $regex: /^active$/i },
+    }).lean();
     if (products.length !== productIds.length) {
       return NextResponse.json({ success: false, error: "One or more products are unavailable." }, { status: 400 });
     }
 
     const byId = new Map(products.map((p) => [p._id.toString(), p]));
+
+    if (paymentMethod === "cod") {
+      const blocked = products.filter((p) => p.codEnabled === false);
+      if (blocked.length) {
+        const names = blocked
+          .slice(0, 3)
+          .map((p) => p.name)
+          .join(", ");
+        const more = blocked.length > 3 ? ` (+${blocked.length - 3} more)` : "";
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Cash on Delivery is not available for: ${names}${more}. Choose advance payment instead.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     for (const [pid, need] of byProduct.entries()) {
       const p = byId.get(pid);
       if (!p) continue;
       if ((p.variants || []).length) continue;
+      if (allowsBackorder(p)) continue;
       if (p.inventory?.trackInventory && (Number(p.inventory.quantity) || 0) < need) {
         return NextResponse.json(
           { success: false, error: `Insufficient stock for ${p.name}.` },
@@ -375,6 +396,7 @@ export async function POST(request) {
           { status: 400 }
         );
       }
+      if (allowsBackorder(p)) continue;
       if (v.trackStock !== false && (Number(v.stock) || 0) < need) {
         return NextResponse.json(
           { success: false, error: `Insufficient stock for ${p.name} (${(v.combination || []).join(" / ")}).` },
@@ -407,7 +429,7 @@ export async function POST(request) {
 
       if (hasLegacyVariants && !variantDoc) {
         if (resolvedCombo) {
-          if (p.inventory?.trackInventory !== false) {
+          if (p.inventory?.trackInventory !== false && !allowsBackorder(p)) {
             const cs = resolvedCombo.stock;
             if (cs !== undefined && cs !== null && Number.isFinite(Number(cs)) && Number(cs) < qty) {
               return NextResponse.json(
@@ -466,6 +488,10 @@ export async function POST(request) {
         "";
       const lineTotal = Math.round(unitPrice * qty * 100) / 100;
       const unitCost = Math.max(0, Number(p.pricing?.costPerItem) || 0);
+      const advancePercentRequired = Math.min(
+        100,
+        Math.max(0, Math.round(Number(p.advancePercentRequired) || 0))
+      );
       subtotal += lineTotal;
       lineItems.push({
         productId: p._id,
@@ -480,6 +506,7 @@ export async function POST(request) {
         unitPrice: unitPrice,
         unitCost,
         total: lineTotal,
+        advancePercentRequired,
       });
     }
 
@@ -582,11 +609,33 @@ export async function POST(request) {
         `Advance payment discount ${adv.percent}% (−Rs. ${advancePaymentDiscount})`
       );
     }
-    if (paymentMethod === "cod" && shippingCost > 0 && advanceNote) {
+
+    const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+    const advanceDue = computeCodAdvanceDue({
+      items: lineItems.map((li) => ({
+        name: li.name,
+        unitPrice: li.unitPrice,
+        quantity: li.quantity,
+        advancePercentRequired: li.advancePercentRequired,
+      })),
+      paymentMethod,
+      shippingCost,
+      storeAdvanceAmount: storePayment.advancePaymentAmount,
+      advanceMessageEnabled: storePayment.advancePaymentMessageEnabled !== false,
+    });
+    const advanceRequired = Math.min(total, Math.max(0, Number(advanceDue.amount) || 0));
+    const remainingCod =
+      paymentMethod === "cod" ? Math.max(0, Math.round((total - advanceRequired) * 100) / 100) : 0;
+
+    if (advanceDue.mode === "percent" && advanceRequired > 0) {
+      statusNotes.push(
+        `Pay at least ${advanceDue.maxPercent}% advance: Rs. ${advanceRequired}` +
+          (remainingCod > 0 ? ` (remaining COD Rs. ${remainingCod})` : "")
+      );
+    } else if (paymentMethod === "cod" && shippingCost > 0 && advanceNote) {
       statusNotes.push(advanceNote);
     }
     const placedNote = statusNotes.length ? statusNotes.join(" | ") : "Order placed";
-    const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
 
     let customerId = null;
     let existing = email
@@ -708,6 +757,14 @@ export async function POST(request) {
       const cs = combo.stock;
       if (cs === undefined || cs === null || !Number.isFinite(Number(cs))) continue;
       const oid = combo._id;
+      if (allowsBackorder(p)) {
+        await Product.updateOne(
+          { _id: p._id },
+          { $inc: { "variationCombinations.$[el].stock": -qty } },
+          { arrayFilters: [{ "el._id": oid }] }
+        );
+        continue;
+      }
       const r = await Product.updateOne(
         { _id: p._id },
         { $inc: { "variationCombinations.$[el].stock": -qty } },
@@ -722,6 +779,10 @@ export async function POST(request) {
       const p = byId.get(pid);
       if (!p?.inventory?.trackInventory) continue;
       if ((p.variants || []).length) continue;
+      if (allowsBackorder(p)) {
+        await Product.updateOne({ _id: pid }, { $inc: { "inventory.quantity": -qty } });
+        continue;
+      }
       const updated = await Product.findOneAndUpdate(
         { _id: pid, "inventory.quantity": { $gte: qty } },
         { $inc: { "inventory.quantity": -qty } },
@@ -753,6 +814,14 @@ export async function POST(request) {
       orderStatus: initialStatus,
       paymentStatus,
       paymentMethod,
+      payment: {
+        amount: total,
+        paidAmount: 0,
+        remainingCod,
+        advanceRequired,
+        advanceMode: advanceDue.mode || "",
+        advanceMaxPercent: advanceDue.maxPercent || 0,
+      },
       shippingAddress,
       couponCode,
       statusHistory: [
@@ -771,6 +840,12 @@ export async function POST(request) {
           by: "customer",
         },
       ],
+      ...(aiAttribution
+        ? {
+            aiAttributedSource: aiAttribution.source,
+            aiAttributedAt: aiAttribution.firstTouchAt,
+          }
+        : {}),
     });
 
     if (isValidCustomerEmail(order.customer?.email)) {

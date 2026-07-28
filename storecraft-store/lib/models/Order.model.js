@@ -12,6 +12,7 @@ const orderItemSchema = new mongoose.Schema(
     /** Snapshot of product cost at checkout (admin margin / profit). */
     unitCost: { type: Number, default: 0, min: 0 },
     total: { type: Number, required: true, min: 0 },
+    advancePercentRequired: { type: Number, default: 0, min: 0, max: 100 },
   },
   { _id: false }
 );
@@ -121,6 +122,9 @@ const orderSchema = new mongoose.Schema(
       amount: { type: Number, default: 0, min: 0 },
       paidAmount: { type: Number, default: 0, min: 0 },
       remainingCod: { type: Number, default: 0, min: 0 },
+      advanceRequired: { type: Number, default: 0, min: 0 },
+      advanceMode: { type: String, default: "", trim: true },
+      advanceMaxPercent: { type: Number, default: 0, min: 0, max: 100 },
     },
     currency: { type: String, default: "PKR" },
     shippingAddress: {
@@ -152,6 +156,11 @@ const orderSchema = new mongoose.Schema(
       carrier: { type: String, default: "", trim: true },
       url: { type: String, default: "", trim: true },
       notifiedAt: { type: Date, default: null },
+      lastStatus: { type: String, default: "", trim: true },
+      lastStatusAt: { type: Date, default: null },
+      currentLocation: { type: String, default: "", trim: true },
+      destinationCity: { type: String, default: "", trim: true },
+      destinationReceived: { type: Boolean, default: false },
     },
     statusHistory: { type: [statusHistoryEntrySchema], default: [] },
     internalNotes: { type: [internalNoteSchema], default: [] },
@@ -159,6 +168,36 @@ const orderSchema = new mongoose.Schema(
     emailHistory: { type: [emailHistoryEntrySchema], default: [] },
     whatsappNotified: { type: Boolean, default: false },
     codConfirmed: { type: Boolean, default: false },
+    /**
+     * Optional first-touch AI referrer attribution (14-day cookie window).
+     * Absent on most orders — expected.
+     */
+    aiAttributedSource: {
+      type: String,
+      default: "",
+      trim: true,
+      index: true,
+      enum: [
+        "",
+        "chatgpt",
+        "copilot",
+        "perplexity",
+        "claude",
+        "gemini",
+        "grok",
+        "meta",
+        "deepseek",
+        "you",
+        "google_extended",
+        "bing",
+        "apple",
+        "amazon",
+        "bytespider",
+        "other_ai",
+      ],
+    },
+    /** Timestamp of the first AI-referrer touch that attributed this order. */
+    aiAttributedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -170,5 +209,6 @@ orderSchema.index({ "customer.email": 1 });
 orderSchema.index({ "customer.phone": 1 });
 orderSchema.index({ whatsappNotified: 1 });
 orderSchema.index({ codConfirmed: 1 });
+orderSchema.index({ aiAttributedSource: 1, createdAt: -1 });
 
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);

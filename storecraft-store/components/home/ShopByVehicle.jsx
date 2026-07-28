@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { fetchCarCatalogClient, seedCarCatalogClient } from "@/lib/fetchCarCatalogClient";
 
 function yearLabel(v) {
   const from = v.yearFrom;
@@ -58,13 +59,13 @@ export default function ShopByVehicle({ initialCatalog = null }) {
   useEffect(() => {
     const fromProps = mapCatalogToItems(initialCatalog);
     if (fromProps.length) {
+      seedCarCatalogClient(initialCatalog);
       setItems(fromProps);
       setLoading(false);
       return undefined;
     }
     let cancelled = false;
-    fetch("/api/car-catalog")
-      .then((r) => r.json())
+    fetchCarCatalogClient()
       .then((data) => {
         if (cancelled) return;
         setItems(mapCatalogToItems(data));

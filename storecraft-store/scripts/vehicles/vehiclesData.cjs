@@ -196,6 +196,23 @@ const vehicles = [
     sortOrder: 15,
   },
 
+  {
+    make: "Honda",
+    model: "Vezel",
+    generation: "1st Gen",
+    displayName: "Honda Vezel (2013–2018)",
+    yearFrom: 2013,
+    yearTo: 2018,
+    slug: "honda-vezel-2013-2018",
+    image: "",
+    metaTitle: "Honda Vezel 2013–2018 Accessories in Pakistan | CrazzyCars.pk",
+    metaDescription:
+      "Shop Honda Vezel 2013-2018 accessories in Pakistan — body kits & styling upgrades. Cash on Delivery nationwide.",
+    shopifyHandle: "",
+    shopifyId: "",
+    sortOrder: 16,
+  },
+
   /* ================= HYUNDAI ================= */
   {
     make: "Hyundai",

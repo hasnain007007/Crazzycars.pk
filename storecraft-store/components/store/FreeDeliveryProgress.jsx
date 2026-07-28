@@ -2,7 +2,7 @@
 
 import { formatPrice } from "@/lib/currency";
 import { useStorePayment } from "@/context/StoreSettingsContext";
-import { getCodFreeDeliveryProgress, getFreeShippingThreshold } from "@/lib/freeDelivery";
+import { getCodFreeDeliveryProgress, getEffectiveFreeDeliveryThreshold } from "@/lib/freeDelivery";
 
 /**
  * COD free-delivery progress (cart subtotal vs store threshold).
@@ -12,7 +12,7 @@ export function FreeDeliveryProgress({ cartTotal, threshold: thresholdProp, clas
   const threshold =
     thresholdProp != null && Number(thresholdProp) > 0
       ? Number(thresholdProp)
-      : getFreeShippingThreshold(storePayment);
+      : getEffectiveFreeDeliveryThreshold(storePayment);
 
   const progress = getCodFreeDeliveryProgress(cartTotal, threshold);
 

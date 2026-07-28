@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
+import { categoryImageUrl } from "@/lib/cloudinaryImage";
 
 function CategoriesPageInner({ initialCategories }) {
   const searchParams = useSearchParams();
@@ -57,10 +58,12 @@ function CategoriesPageInner({ initialCategories }) {
                   {cat.image?.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={cat.image.url}
+                      src={categoryImageUrl(cat.image.url, 400)}
                       alt={cat.image?.altText || cat.name}
+                      title={cat.image?.title || cat.name}
                       className="category-image"
                       loading="lazy"
+                      decoding="async"
                       style={{
                         position: "absolute",
                         top: 0,
@@ -86,6 +89,17 @@ function CategoriesPageInner({ initialCategories }) {
                       Category
                     </div>
                   )}
+                  {cat.image?.url ? (
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background:
+                          "linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  ) : null}
                 </div>
                 <div style={{ padding: 12, background: "#FFFFFF" }}>
                   <p style={{ margin: 0, fontWeight: 700, color: "#111111" }}>{cat.name}</p>
@@ -124,6 +138,7 @@ function CategoriesPageInner({ initialCategories }) {
                           <img
                             src={cat.image.url}
                             alt={cat.image?.altText || cat.name}
+                            title={cat.image?.title || cat.name}
                             className="category-image"
                             loading="lazy"
                             style={{

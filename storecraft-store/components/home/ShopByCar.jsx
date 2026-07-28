@@ -6,6 +6,7 @@
  */
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchCarCatalogClient, seedCarCatalogClient } from "@/lib/fetchCarCatalogClient";
 
 const YEAR_END = new Date().getFullYear() + 1;
 
@@ -31,6 +32,7 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
 
   useEffect(() => {
     if (Array.isArray(initialCatalog?.makes) && initialCatalog.makes.length) {
+      seedCarCatalogClient(initialCatalog);
       setMakes(initialCatalog.makes);
       setCarData(
         initialCatalog.carData && typeof initialCatalog.carData === "object"
@@ -40,8 +42,7 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
       return undefined;
     }
     let cancelled = false;
-    fetch("/api/car-catalog")
-      .then((r) => r.json())
+    fetchCarCatalogClient()
       .then((data) => {
         if (cancelled) return;
         setMakes(Array.isArray(data?.makes) ? data.makes : []);

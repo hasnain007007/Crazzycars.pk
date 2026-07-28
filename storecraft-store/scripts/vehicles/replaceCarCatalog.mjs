@@ -1,5 +1,5 @@
 /**
- * REPLACE Car Catalog with real CrazzyCars data (5 makes, 17 models).
+ * REPLACE Car Catalog with real CrazzyCars data (5 makes, 18 models incl. Honda Vezel).
  * Wipes all CarCatalog documents first.
  *
  * Actual schema: CarCatalog (Make) with embedded models[] — no separate Make/CarModel.
@@ -102,8 +102,8 @@ async function run() {
   const makes = await CarCatalog.find({}).sort({ order: 1 }).lean();
   const totalModels = makes.reduce((n, m) => n + (m.models || []).length, 0);
   console.log(`Done. Makes: ${makes.length}, Models: ${totalModels}`);
-  if (makes.length !== 5 || totalModels !== 17) {
-    console.error(`Expected 5 makes / 17 models, got ${makes.length} / ${totalModels}`);
+  if (makes.length !== 5 || totalModels !== 18) {
+    console.error(`Expected 5 makes / 18 models, got ${makes.length} / ${totalModels}`);
     process.exit(1);
   }
   await mongoose.disconnect();

@@ -1,18 +1,37 @@
 /**
  * GET /api/categories/tree — AutoJin-style nested category tree for mega-menu.
+ * Slim payload (no product counts) + short CDN/SWR cache + warm-instance memory cache.
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import {
-  loadStoreCategoriesTree,
+  loadStoreCategoriesTreeSlim,
   serializeCategoryTreeNode,
 } from "@/lib/storeCategoryData";
+import {
+  getCachedCategoryTreePayload,
+  setCachedCategoryTreePayload,
+} from "@/lib/categoryTreeServerCache";
 
 export async function GET() {
   try {
+    const cached = getCachedCategoryTreePayload();
+    if (cached) {
+      return NextResponse.json(
+        { success: true, categories: cached, data: cached },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+            "X-Category-Tree-Cache": "HIT",
+          },
+        }
+      );
+    }
+
     await dbConnect();
-    const tree = await loadStoreCategoriesTree(true);
+    const tree = await loadStoreCategoriesTreeSlim();
     const payload = (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode);
+    setCachedCategoryTreePayload(payload);
 
     return NextResponse.json(
       {
@@ -22,7 +41,8 @@ export async function GET() {
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+          "X-Category-Tree-Cache": "MISS",
         },
       }
     );

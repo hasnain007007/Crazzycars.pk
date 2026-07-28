@@ -1,9 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ProductCard } from "@/components/store/ProductCard";
+import { ProductListingRow } from "@/components/store/ProductListingRow";
+import {
+  ProductListingPagination,
+  ProductListingToolbar,
+} from "@/components/store/ProductListingToolbar";
+import {
+  DEFAULT_LISTING_PAGE_SIZE,
+  LISTING_VIEWS,
+  normalizeListingPageSize,
+  normalizeListingSort,
+  normalizeListingView,
+  sortProductsClient,
+} from "@/lib/productListing";
 import {
   activeVariants,
   fitmentModelName,
@@ -33,6 +46,7 @@ function pillClass(active) {
 
 export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialYear, initialVariant }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +54,10 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
 
   const year = searchParams.get("year") || initialYear || "";
   const variant = searchParams.get("variant") || initialVariant || "";
+  const sort = normalizeListingSort(searchParams.get("sort"));
+  const view = normalizeListingView(searchParams.get("view"));
+  const pageSize = normalizeListingPageSize(searchParams.get("per_page") || searchParams.get("show"), DEFAULT_LISTING_PAGE_SIZE);
+  const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
 
   const { makeName, entry } = carContext || {};
   const displayName = formatModelShortLabel(entry) || entry?.model || modelSlug;
@@ -48,15 +66,32 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
   const variants = useMemo(() => activeVariants(entry, year || null), [entry, year]);
 
   const updateQuery = useCallback(
-    (patch) => {
+    (patch, { resetPage = false } = {}) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(patch).forEach(([key, val]) => {
-        if (val == null || val === "") params.delete(key);
-        else params.set(key, String(val));
+        if (val == null || val === "") {
+          params.delete(key);
+          return;
+        }
+        if (key === "sort" && val === "default") {
+          params.delete(key);
+          return;
+        }
+        if (key === "view" && val === "grid") {
+          params.delete(key);
+          return;
+        }
+        if (key === "per_page" && Number(val) === DEFAULT_LISTING_PAGE_SIZE) {
+          params.delete(key);
+          return;
+        }
+        params.set(key, String(val));
       });
-      router.replace(`/cars/${makeSlug}/${modelSlug}?${params.toString()}`, { scroll: false });
+      if (resetPage) params.delete("page");
+      const q = params.toString();
+      router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
     },
-    [router, makeSlug, modelSlug, searchParams]
+    [router, pathname, searchParams]
   );
 
   const loadProducts = useCallback(async () => {
@@ -66,7 +101,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
       const qs = new URLSearchParams({
         make: makeName,
         model: fitmentModel,
-        limit: "48",
+        limit: "100",
       });
       if (year) qs.set("year", year);
       if (variant) qs.set("variant", variant);
@@ -92,6 +127,38 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
       return filter.keywords.some((kw) => hay.includes(kw));
     });
   }, [products, category]);
+
+  const sortedProducts = useMemo(
+    () => sortProductsClient(filteredProducts, sort),
+    [filteredProducts, sort]
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / pageSize) || 1);
+  const safePage = Math.min(page, totalPages);
+  const pageSlice = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return sortedProducts.slice(start, start + pageSize);
+  }, [sortedProducts, safePage, pageSize]);
+
+  useEffect(() => {
+    if (page > totalPages && totalPages >= 1) {
+      updateQuery({ page: totalPages === 1 ? "" : totalPages });
+    }
+  }, [page, totalPages, updateQuery]);
+
+  const buildPageHref = useCallback(
+    (pageNum) => {
+      const qs = new URLSearchParams(searchParams.toString());
+      if (pageNum <= 1) qs.delete("page");
+      else qs.set("page", String(pageNum));
+      const q = qs.toString();
+      return q ? `${pathname}?${q}` : pathname;
+    },
+    [pathname, searchParams]
+  );
+
+  const viewMeta = LISTING_VIEWS.find((v) => v.id === view) || LISTING_VIEWS[0];
+  const isRowView = view === "list" || view === "detail";
 
   const summaryParts = [makeName, displayName];
   if (year) summaryParts.push(String(year));
@@ -152,7 +219,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Year</p>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className={pillClass(!year)} onClick={() => updateQuery({ year: "", variant: "" })}>
+                <button type="button" className={pillClass(!year)} onClick={() => updateQuery({ year: "", variant: "" }, { resetPage: true })}>
                   All
                 </button>
                 {years.map((y) => (
@@ -160,7 +227,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
                     key={y}
                     type="button"
                     className={pillClass(String(year) === String(y))}
-                    onClick={() => updateQuery({ year: y, variant: "" })}
+                    onClick={() => updateQuery({ year: y, variant: "" }, { resetPage: true })}
                   >
                     {y}
                   </button>
@@ -175,7 +242,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
                   <button
                     type="button"
                     className={pillClass(!variant)}
-                    onClick={() => updateQuery({ variant: "" })}
+                    onClick={() => updateQuery({ variant: "" }, { resetPage: true })}
                   >
                     All
                   </button>
@@ -184,7 +251,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
                       key={v.name}
                       type="button"
                       className={pillClass(variant === v.name)}
-                      onClick={() => updateQuery({ variant: v.name })}
+                      onClick={() => updateQuery({ variant: v.name }, { resetPage: true })}
                     >
                       {v.name}
                     </button>
@@ -207,7 +274,10 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
                 <button
                   key={f.id || "all"}
                   type="button"
-                  onClick={() => setCategory(f.id)}
+                  onClick={() => {
+                    setCategory(f.id);
+                    updateQuery({ page: "" }, { resetPage: true });
+                  }}
                   className={`text-left ${pillClass(category === f.id)} lg:w-full`}
                 >
                   {f.label}
@@ -217,25 +287,44 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
           </aside>
 
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-bold text-[#111111]">
-              Accessories for {makeName} {displayName}
-            </h2>
-            <p className="mt-1 text-sm text-[#6B7280]">
-              {loading ? "Loading…" : `${filteredProducts.length} product${filteredProducts.length === 1 ? "" : "s"}`}
-            </p>
+            <ProductListingToolbar
+              title={`Accessories for ${makeName} ${displayName}`}
+              total={sortedProducts.length}
+              page={safePage}
+              pageSize={pageSize}
+              sort={sort}
+              view={view}
+              onSortChange={(v) => updateQuery({ sort: v }, { resetPage: true })}
+              onPageSizeChange={(n) => updateQuery({ per_page: n }, { resetPage: true })}
+              onViewChange={(v) => updateQuery({ view: v })}
+            />
 
             {loading ? (
-              <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <div className={`grid gap-4 ${viewMeta.cols}`}>
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-[#E5E7EB]" />
                 ))}
               </div>
-            ) : filteredProducts.length ? (
-              <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-                {filteredProducts.map((p) => (
-                  <ProductCard key={p.id || p.slug} product={p} />
-                ))}
-              </div>
+            ) : pageSlice.length ? (
+              isRowView ? (
+                <div className="pl-rows">
+                  {pageSlice.map((p) => (
+                    <ProductListingRow
+                      key={p.id || p.slug}
+                      product={p}
+                      mode={view === "detail" ? "detail" : "list"}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className={`grid gap-4 ${viewMeta.cols}`}>
+                  {pageSlice.map((p) => (
+                    <div key={p.id || p.slug}>
+                      <ProductCard product={p} />
+                    </div>
+                  ))}
+                </div>
+              )
             ) : (
               <div className="mt-10 rounded-xl border border-dashed border-[#E5E7EB] bg-white p-10 text-center">
                 <p className="text-[#374151]">No accessories found for this selection yet.</p>
@@ -244,6 +333,13 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
                 </Link>
               </div>
             )}
+
+            <ProductListingPagination
+              page={safePage}
+              totalPages={totalPages}
+              buildHref={buildPageHref}
+              onPageChange={(n) => updateQuery({ page: n <= 1 ? "" : n })}
+            />
           </div>
         </div>
       </div>

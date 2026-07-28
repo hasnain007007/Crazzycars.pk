@@ -27,6 +27,20 @@ const categorySchema = new mongoose.Schema(
     image: {
       url: { type: String, default: "" },
       publicId: { type: String, default: "" },
+      altText: { type: String, default: "" },
+      title: { type: String, default: "" },
+    },
+    /** Optional collage images for category page banner (left / mid / right). */
+    bannerImages: {
+      type: [
+        {
+          url: { type: String, default: "" },
+          publicId: { type: String, default: "" },
+          altText: { type: String, default: "" },
+          title: { type: String, default: "" },
+        },
+      ],
+      default: [],
     },
     /** Small icon URL for mega-menu rows */
     icon: { type: String, default: "" },

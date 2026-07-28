@@ -5,7 +5,7 @@ import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 export const DEFAULT_ANNOUNCEMENT_BAR = {
   enabled: true,
   items: [
-    { text: "Free Delivery on Orders Over Rs. 2,999", link: "", enabled: true },
+    { text: "Free Delivery on Orders Over Rs. 9,999", link: "/shipping-policy", enabled: true },
     { text: "Cash on Delivery Available", link: "", enabled: true },
   ],
   backgroundColor: "#111111",
@@ -46,6 +46,10 @@ export const DEFAULT_CHECKOUT_MESSAGES = {
   codInstructions: "Pay cash when your order arrives.",
   shippingNote: "Free delivery on orders over Rs. 2,999",
   cartEmptyMessage: "Your cart is empty",
+  paymentConfirmedMessage:
+    "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at 0328-4010007 for confirmation, and our team will begin processing your order.",
+  codAdvanceNote:
+    "Thank you for your order! Since this is a Cash on Delivery order, please send a screenshot of your advance payment to our WhatsApp at 0328-4010007 to confirm your booking. The remaining balance will be collected on delivery.",
 };
 
 export const DEFAULT_STORE_PAYMENT = {
@@ -54,7 +58,7 @@ export const DEFAULT_STORE_PAYMENT = {
   codDescription: "Pay when your order arrives at your doorstep.",
   codFee: 0,
   minimumOrderAmount: 0,
-  freeShippingThreshold: 2999,
+  freeShippingThreshold: 9999,
   freeShippingOnAdvancePayment: false,
   freeShippingOnOrderAbove: 10000,
   freeShippingOnOrderAboveEnabled: false,
@@ -155,7 +159,9 @@ export function normalizeCheckoutMessages(raw, storefront = {}) {
     cartEmptyMessage: m.cartEmptyMessage?.trim() || DEFAULT_CHECKOUT_MESSAGES.cartEmptyMessage,
     failedTitle: cx.failedTitle?.trim() || "Payment Failed",
     failedMessage: cx.failedMessage?.trim() || "Your payment could not be processed.",
-    paymentConfirmedMessage: cx.paymentConfirmedMessage?.trim() || "",
+    paymentConfirmedMessage:
+      cx.paymentConfirmedMessage?.trim() || DEFAULT_CHECKOUT_MESSAGES.paymentConfirmedMessage,
+    codAdvanceNote: cx.codAdvanceNote?.trim() || DEFAULT_CHECKOUT_MESSAGES.codAdvanceNote,
     footerMessage: cx.footerMessage?.trim() || "",
     emailSubject: cx.emailSubject?.trim() || "",
     emailMessage: cx.emailMessage?.trim() || "",

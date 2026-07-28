@@ -1,15 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { formatPrice } from "@/lib/currency";
 import { ProductCard } from "./ProductCard";
+import { ProductListingRow } from "./ProductListingRow";
+import {
+  ProductListingPagination,
+  ProductListingToolbar,
+} from "./ProductListingToolbar";
 import { CAR_MAKES } from "@/lib/carCatalog";
+import {
+  DEFAULT_LISTING_PAGE_SIZE,
+  LISTING_VIEWS,
+  listingSortToApi,
+  normalizeListingPageSize,
+  normalizeListingSort,
+  normalizeListingView,
+} from "@/lib/productListing";
 
 /** Real vehicle brands only — not product attributes like Universal/Premium. */
 const SHOP_BRANDS = ["Honda", "Toyota", "Suzuki", "KIA", "Hyundai", "Changan", "MG"];
-const PAGE_SIZE = 24;
+const DEFAULT_PAGE_SIZE = DEFAULT_LISTING_PAGE_SIZE;
 
 function Section({ title, children }) {
   const [open, setOpen] = useState(true);
@@ -31,21 +44,16 @@ function buildPageHref(pathname, searchParams, pageNum) {
   return q ? `${pathname}?${q}` : pathname;
 }
 
-function pageWindow(page, totalPages) {
-  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-  const out = new Set([1, totalPages, page - 1, page, page + 1, page - 2, page + 2]);
-  return [...out].filter((n) => n >= 1 && n <= totalPages).sort((a, b) => a - b);
-}
-
-function resolveInitialTotalPages(initialTotal, initialProductsLength, initialTotalPages) {
+function resolveInitialTotalPages(initialTotal, initialProductsLength, initialTotalPages, pageSize) {
+  const size = pageSize || DEFAULT_PAGE_SIZE;
   const fromProp = Number(initialTotalPages);
   if (Number.isFinite(fromProp) && fromProp > 1) return Math.floor(fromProp);
   const total = Number(initialTotal);
   if (Number.isFinite(total) && total > 0) {
-    return Math.max(1, Math.ceil(total / PAGE_SIZE));
+    return Math.max(1, Math.ceil(total / size));
   }
   if (Number.isFinite(fromProp) && fromProp >= 1) return Math.floor(fromProp);
-  return Math.max(1, Math.ceil((initialProductsLength || 0) / PAGE_SIZE) || 1);
+  return Math.max(1, Math.ceil((initialProductsLength || 0) / size) || 1);
 }
 
 export function ProductsBrowseMedico({
@@ -53,6 +61,7 @@ export function ProductsBrowseMedico({
   initialTotal = 0,
   initialPage = 1,
   initialTotalPages = 1,
+  initialQuery = "",
 }) {
   const router = useRouter();
   const pathname = usePathname() || "/shop";
@@ -64,29 +73,53 @@ export function ProductsBrowseMedico({
   const carMake = searchParams.get("make") || searchParams.get("carMake") || "";
   const carModel = searchParams.get("model") || searchParams.get("carModel") || "";
   const carYear = searchParams.get("year") || searchParams.get("carYear") || "";
-  const searchQ = searchParams.get("q") || "";
+  const searchQ = (searchParams.get("q") || "").trim();
   const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
+  const listingSort = normalizeListingSort(searchParams.get("sort"));
+  const apiSort = listingSortToApi(listingSort);
+  const view = normalizeListingView(searchParams.get("view"));
+  const pageSize = normalizeListingPageSize(
+    searchParams.get("per_page") || searchParams.get("show"),
+    DEFAULT_PAGE_SIZE
+  );
 
-  const hasUrlFilters = Boolean(
-    category || saleOnly || dealsParam || carMake || carModel || carYear || searchQ.trim() || page > 1
+  const seedQuery = String(initialQuery || "").trim();
+  const seedMatchesSearch = seedQuery === searchQ;
+  const hasExtraClientFilters = Boolean(
+    category ||
+      saleOnly ||
+      dealsParam ||
+      carMake ||
+      carModel ||
+      carYear ||
+      listingSort !== "default" ||
+      view !== "grid" ||
+      pageSize !== DEFAULT_PAGE_SIZE
   );
   const seededTotal = Number(initialTotal) || initialProducts.length || 0;
   const seededPages = resolveInitialTotalPages(
     seededTotal,
     initialProducts.length,
-    initialTotalPages
+    initialTotalPages,
+    pageSize
   );
-  // Only treat SSR payload as complete when it matches the browse page size (or the full catalog).
   const initialPageComplete =
     initialProducts.length > 0 &&
-    (initialProducts.length >= PAGE_SIZE || initialProducts.length >= seededTotal);
-  const hasInitial = !hasUrlFilters && initialPageComplete && page === (initialPage || 1);
+    (initialProducts.length >= Math.min(pageSize, seededTotal || pageSize) ||
+      initialProducts.length >= seededTotal);
+  // Seed when SSR payload matches current search (including empty q) and no extra filters.
+  const hasInitial =
+    seedMatchesSearch &&
+    !hasExtraClientFilters &&
+    page === (initialPage || 1) &&
+    apiSort === "newest" &&
+    (initialPageComplete || (searchQ && seededTotal === 0 && initialProducts.length === 0));
 
   const [products, setProducts] = useState(hasInitial ? initialProducts : []);
   const [totalCount, setTotalCount] = useState(hasInitial ? seededTotal : 0);
   const [totalPages, setTotalPages] = useState(hasInitial ? seededPages : 1);
   const [loading, setLoading] = useState(!hasInitial);
-  const [sort, setSort] = useState("newest");
+  const [fetchError, setFetchError] = useState("");
   const [inStock, setInStock] = useState(false);
   const [outOfStock, setOutOfStock] = useState(false);
   const [priceFrom, setPriceFrom] = useState("");
@@ -94,8 +127,26 @@ export function ProductsBrowseMedico({
   const [filterCategory, setFilterCategory] = useState(category);
   const [filterBrand, setFilterBrand] = useState("");
   const [filterMake, setFilterMake] = useState(carMake);
-  const [grid, setGrid] = useState(true);
   const [highest, setHighest] = useState(0);
+
+  const patchListingQuery = useCallback(
+    (patch, { resetPage = false, replace = true } = {}) => {
+      const qs = new URLSearchParams(searchParams.toString());
+      Object.entries(patch).forEach(([key, val]) => {
+        if (val == null || val === "") qs.delete(key);
+        else if (key === "sort" && val === "default") qs.delete(key);
+        else if (key === "view" && val === "grid") qs.delete(key);
+        else if (key === "per_page" && Number(val) === DEFAULT_PAGE_SIZE) qs.delete(key);
+        else qs.set(key, String(val));
+      });
+      if (resetPage) qs.delete("page");
+      const q = qs.toString();
+      const href = q ? `${pathname}?${q}` : pathname;
+      if (replace) router.replace(href, { scroll: false });
+      else router.push(href, { scroll: true });
+    },
+    [pathname, router, searchParams]
+  );
 
   const goToPage = useCallback(
     (nextPage, { replace = false } = {}) => {
@@ -120,17 +171,18 @@ export function ProductsBrowseMedico({
 
   const load = useCallback(async () => {
     setLoading(true);
+    setFetchError("");
     try {
       const qs = new URLSearchParams({
-        limit: String(PAGE_SIZE),
+        limit: String(pageSize),
         page: String(page),
-        sort,
+        sort: apiSort,
       });
       const activeCategory = filterCategory || category;
       if (activeCategory) qs.set("category", activeCategory);
       if (saleOnly) qs.set("sale", "true");
       if (dealsParam) qs.set("deals", "true");
-      if (searchQ.trim()) qs.set("q", searchQ.trim());
+      if (searchQ) qs.set("q", searchQ);
 
       const make = filterMake || carMake;
       if (make) qs.set("carMake", make);
@@ -144,7 +196,7 @@ export function ProductsBrowseMedico({
       if (outOfStock && !inStock) qs.set("outOfStock", "true");
 
       const res = await fetch(`/api/products?${qs.toString()}`);
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (json.success) {
         const rows = json.products || [];
         setProducts(rows);
@@ -157,13 +209,20 @@ export function ProductsBrowseMedico({
         setProducts([]);
         setTotalCount(0);
         setTotalPages(1);
+        setFetchError(json.error || "Could not load products.");
       }
+    } catch {
+      setProducts([]);
+      setTotalCount(0);
+      setTotalPages(1);
+      setFetchError("Could not load products.");
     } finally {
       setLoading(false);
     }
   }, [
     page,
-    sort,
+    pageSize,
+    apiSort,
     category,
     filterCategory,
     saleOnly,
@@ -183,18 +242,44 @@ export function ProductsBrowseMedico({
   useEffect(() => {
     const canUseSeed =
       hasInitial &&
-      page === 1 &&
-      sort === "newest" &&
+      page === (initialPage || 1) &&
+      apiSort === "newest" &&
+      pageSize === DEFAULT_PAGE_SIZE &&
       !filterBrand &&
       !filterMake &&
       !priceFrom &&
       !priceTo &&
       !inStock &&
       !outOfStock &&
-      !filterCategory;
-    if (canUseSeed) return;
+      !filterCategory &&
+      seedMatchesSearch;
+    if (canUseSeed) {
+      setProducts(initialProducts);
+      setTotalCount(seededTotal);
+      setTotalPages(seededPages);
+      setLoading(false);
+      return;
+    }
     void load();
-  }, [load, hasInitial, page, sort, filterBrand, filterMake, priceFrom, priceTo, inStock, outOfStock, filterCategory]);
+  }, [
+    load,
+    hasInitial,
+    page,
+    initialPage,
+    apiSort,
+    pageSize,
+    filterBrand,
+    filterMake,
+    priceFrom,
+    priceTo,
+    inStock,
+    outOfStock,
+    filterCategory,
+    seedMatchesSearch,
+    initialProducts,
+    seededTotal,
+    seededPages,
+  ]);
 
   // Keep local category/make selects in sync with URL.
   useEffect(() => {
@@ -208,24 +293,39 @@ export function ProductsBrowseMedico({
   useEffect(() => {
     const pages = Math.max(
       totalPages,
-      totalCount > 0 ? Math.ceil(totalCount / PAGE_SIZE) : 1
+      totalCount > 0 ? Math.ceil(totalCount / pageSize) : 1
     );
     if (!loading && pages > 0 && page > pages) {
       goToPage(pages, { replace: true });
     }
-  }, [loading, page, totalPages, totalCount, goToPage]);
+  }, [loading, page, totalPages, totalCount, pageSize, goToPage]);
 
   const effectiveTotalPages = Math.max(
     totalPages,
-    totalCount > 0 ? Math.ceil(totalCount / PAGE_SIZE) : 1
+    totalCount > 0 ? Math.ceil(totalCount / pageSize) : 1
   );
-  const pageNumbers = useMemo(
-    () => pageWindow(page, effectiveTotalPages),
-    [page, effectiveTotalPages]
-  );
-  const showingFrom = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const showingTo = Math.min(page * PAGE_SIZE, totalCount);
-  const catalogEmpty = !loading && totalCount === 0 && products.length === 0;
+  // Only treat as empty catalog when browsing with no search/filters.
+  const catalogEmpty =
+    !loading &&
+    !searchQ &&
+    !hasExtraClientFilters &&
+    !filterBrand &&
+    !filterMake &&
+    !priceFrom &&
+    !priceTo &&
+    !inStock &&
+    !outOfStock &&
+    totalCount === 0 &&
+    products.length === 0;
+  const viewMeta = LISTING_VIEWS.find((v) => v.id === view) || LISTING_VIEWS[0];
+  const isRowView = view === "list" || view === "detail";
+  const listingTitle = searchQ
+    ? `Results for “${searchQ}”`
+    : saleOnly || dealsParam
+      ? "Hot Deals"
+      : carMake
+        ? `Parts for ${carMake}${carModel ? ` ${carModel}` : ""}${carYear ? ` ${carYear}` : ""}`
+        : "Products";
 
   return (
     <div>
@@ -235,11 +335,7 @@ export function ProductsBrowseMedico({
             className="font-heading text-2xl font-bold uppercase tracking-[0.05em]"
             style={{ color: "#111111", letterSpacing: "0.06em" }}
           >
-            {saleOnly || dealsParam
-              ? "Hot Deals"
-              : carMake
-                ? `Parts for ${carMake}${carModel ? ` ${carModel}` : ""}${carYear ? ` ${carYear}` : ""}`
-                : "Products"}
+            {listingTitle}
           </h1>
           <p className="text-sm text-[#555555]">Home / Shop</p>
         </div>
@@ -362,109 +458,70 @@ export function ProductsBrowseMedico({
           </aside>
 
           <div className="min-w-0 flex-1">
-            <div className="mb-4 flex flex-col gap-3 rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-[#333333]">
-                {totalCount > 0
-                  ? `Showing ${showingFrom}–${showingTo} of ${totalCount} products`
-                  : "No products"}
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="text-sm text-[#333333]">Sort by</label>
-                <select
-                  value={sort}
-                  onChange={(e) => {
-                    setSort(e.target.value);
-                    goToPage(1, { replace: true });
-                  }}
-                  className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111]"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="popular">Popular</option>
-                  <option value="name">Alphabetically A-Z</option>
-                </select>
-                <button
-                  type="button"
-                  className={`rounded border px-2 py-1 text-[#555555] ${grid ? "border-[#D72323] text-[#D72323]" : "border-[rgba(0,0,0,0.12)]"}`}
-                  onClick={() => setGrid(true)}
-                >
-                  ⊞
-                </button>
-                <button
-                  type="button"
-                  className={`rounded border px-2 py-1 text-[#555555] ${!grid ? "border-[#D72323] text-[#D72323]" : "border-[rgba(0,0,0,0.12)]"}`}
-                  onClick={() => setGrid(false)}
-                >
-                  ☰
-                </button>
-              </div>
-            </div>
+            <ProductListingToolbar
+              title={listingTitle}
+              total={loading && !products.length ? -1 : totalCount}
+              page={page}
+              pageSize={pageSize}
+              sort={listingSort}
+              view={view}
+              loading={loading}
+              onSortChange={(v) => patchListingQuery({ sort: v }, { resetPage: true })}
+              onPageSizeChange={(n) => patchListingQuery({ per_page: n }, { resetPage: true })}
+              onViewChange={(v) => patchListingQuery({ view: v })}
+            />
 
-            {loading ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {highest > 0 ? (
+              <p className="mb-3 text-xs text-[#555555] lg:hidden">
+                Highest on this page: <span className="price">{formatPrice(highest)}</span>
+              </p>
+            ) : null}
+
+            {fetchError ? (
+              <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {fetchError}
+              </p>
+            ) : null}
+
+            {loading && !products.length ? (
+              <div className={`grid gap-4 ${viewMeta.cols}`}>
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="h-72 animate-pulse rounded border border-[rgba(0,0,0,0.12)] bg-[#EFEFEF]" />
                 ))}
               </div>
-            ) : (
-              <div className={`grid gap-4 ${grid ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"}`}>
+            ) : isRowView ? (
+              <div className="pl-rows">
                 {products.map((p) => (
-                  <div key={p.id || p._id || p.slug} className={!grid ? "max-w-md" : ""}>
+                  <ProductListingRow
+                    key={p.id || p._id || p.slug}
+                    product={p}
+                    mode={view === "detail" ? "detail" : "list"}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className={`grid gap-4 ${viewMeta.cols}`}>
+                {products.map((p) => (
+                  <div key={p.id || p._id || p.slug}>
                     <ProductCard product={p} />
                   </div>
                 ))}
               </div>
             )}
-            {!products.length && !loading ? <p className="mt-6 text-sm text-[#555555]">No products match current filters.</p> : null}
-
-            {effectiveTotalPages > 1 ? (
-              <nav
-                className="mt-8 flex flex-wrap items-center justify-center gap-2"
-                aria-label="Product pagination"
-              >
-                {page > 1 ? (
-                  <Link
-                    href={buildPageHref(pathname, searchParams, page - 1)}
-                    className="rounded border border-[rgba(0,0,0,0.12)] bg-white px-3 py-2 text-sm font-semibold text-[#D72323] hover:border-[#D72323]"
-                  >
-                    Prev
-                  </Link>
-                ) : (
-                  <span className="rounded border border-transparent px-3 py-2 text-sm text-[#AAAAAA]">Prev</span>
-                )}
-                {pageNumbers.map((n, idx) => {
-                  const prev = pageNumbers[idx - 1];
-                  const showEllipsis = prev != null && n - prev > 1;
-                  return (
-                    <span key={n} className="contents">
-                      {showEllipsis ? <span className="px-1 text-sm text-[#888888]">…</span> : null}
-                      <Link
-                        href={buildPageHref(pathname, searchParams, n)}
-                        aria-current={n === page ? "page" : undefined}
-                        className={`inline-flex min-w-[36px] items-center justify-center rounded border px-2 py-2 text-sm font-semibold ${
-                          n === page
-                            ? "border-[#111111] bg-[#111111] text-white"
-                            : "border-[rgba(0,0,0,0.12)] bg-white text-[#555555] hover:border-[#D72323] hover:text-[#D72323]"
-                        }`}
-                      >
-                        {n}
-                      </Link>
-                    </span>
-                  );
-                })}
-                {page < effectiveTotalPages ? (
-                  <Link
-                    href={buildPageHref(pathname, searchParams, page + 1)}
-                    className="rounded border border-[rgba(0,0,0,0.12)] bg-white px-3 py-2 text-sm font-semibold text-[#D72323] hover:border-[#D72323]"
-                  >
-                    Next
-                  </Link>
-                ) : (
-                  <span className="rounded border border-transparent px-3 py-2 text-sm text-[#AAAAAA]">Next</span>
-                )}
-              </nav>
+            {!products.length && !loading ? (
+              <p className="mt-6 text-sm text-[#555555]">
+                {searchQ
+                  ? `No products match “${searchQ}”. Try another keyword or browse the shop.`
+                  : "No products match current filters."}
+              </p>
             ) : null}
+
+            <ProductListingPagination
+              page={page}
+              totalPages={effectiveTotalPages}
+              buildHref={(n) => buildPageHref(pathname, searchParams, n)}
+              onPageChange={(n) => goToPage(n)}
+            />
 
             <div className="mt-6">
               <Link href="/shop" className="text-sm text-[#D72323] underline underline-offset-2 hover:text-[#a01818]">

@@ -299,7 +299,16 @@ const settingsSchema = new mongoose.Schema(
         failedMessage: { type: String, default: "" },
         emailSubject: { type: String, default: "" },
         emailMessage: { type: String, default: "" },
-        paymentConfirmedMessage: { type: String, default: "" },
+        paymentConfirmedMessage: {
+          type: String,
+          default:
+            "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at 0328-4010007 for confirmation, and our team will begin processing your order.",
+        },
+        codAdvanceNote: {
+          type: String,
+          default:
+            "Thank you for your order! Since this is a Cash on Delivery order, please send a screenshot of your advance payment to our WhatsApp at 0328-4010007 to confirm your booking. The remaining balance will be collected on delivery.",
+        },
         footerMessage: { type: String, default: "" },
       },
     },

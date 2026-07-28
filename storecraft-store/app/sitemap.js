@@ -1,13 +1,14 @@
+import { headers } from "next/headers";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Category from "@/lib/models/Category.model";
 import Vehicle from "@/lib/models/Vehicle.model";
 import BlogPost from "@/lib/models/BlogPost.model";
-import { getSiteUrl, isIndexableEnvironment } from "@/lib/siteUrl";
+import { getSiteUrl } from "@/lib/siteUrl";
 
 export default async function sitemap() {
-  if (!isIndexableEnvironment()) return [];
-  const BASE_URL = getSiteUrl();
+  const h = await headers();
+  const BASE_URL = getSiteUrl({ headers: h });
   const now = new Date().toISOString();
 
   const staticPages = [
@@ -19,6 +20,8 @@ export default async function sitemap() {
     { url: `${BASE_URL}/sale`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE_URL}/llms.txt`, lastModified: now, changeFrequency: "weekly", priority: 0.3 },
+    { url: `${BASE_URL}/feed/products.xml`, lastModified: now, changeFrequency: "daily", priority: 0.4 },
   ];
 
   try {

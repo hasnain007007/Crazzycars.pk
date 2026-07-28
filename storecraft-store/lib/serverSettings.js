@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import { buildStoreSettingsPayload, toPublicClientSettings } from "@/lib/normalizeStoreSettings";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
@@ -16,12 +17,18 @@ function toPlain(value) {
 /** Server-only: load settings once per request (layout, metadata). */
 export const getServerStoreSettings = cache(async () => {
   try {
-    await dbConnect();
-    const doc =
-      (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
-      (await Settings.findOne({}).lean()) ||
-      {};
-    return toPlain(buildStoreSettingsPayload(doc));
+    return await unstable_cache(
+      async () => {
+        await dbConnect();
+        const doc =
+          (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
+          (await Settings.findOne({}).lean()) ||
+          {};
+        return toPlain(buildStoreSettingsPayload(doc));
+      },
+      ["server-store-settings-v1"],
+      { revalidate: 60, tags: ["store-settings"] }
+    )();
   } catch (e) {
     console.error("getServerStoreSettings error:", e);
     return buildStoreSettingsPayload({});

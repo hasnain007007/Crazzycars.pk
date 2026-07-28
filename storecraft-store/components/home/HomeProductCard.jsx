@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
 import { cardImageUrl } from "@/lib/cloudinaryImage";
@@ -20,8 +21,9 @@ export function HomeProductCard({ product }) {
   push(product.image);
   for (const img of product.images || []) push(img);
   for (const img of product.media?.images || []) push(img);
-  const imageUrl = cardImageUrl(images[0] || "") || images[0] || "";
-  const hoverImageUrl = cardImageUrl(images[1] || "") || images[1] || "";
+  const imageUrl = cardImageUrl(images[0] || "", 400) || images[0] || "";
+  const hoverImageUrl = cardImageUrl(images[1] || "", 400) || images[1] || "";
+  const [hoverLoaded, setHoverLoaded] = useState(false);
   const regular = Number(product.regularPrice ?? product.compareAt ?? 0);
   const saleVal = Number(product.salePrice ?? 0);
   const onSale =
@@ -33,7 +35,11 @@ export function HomeProductCard({ product }) {
   function handleAdd(e) {
     e.preventDefault();
     e.stopPropagation();
-    if (!product.inStock && product.inventory?.trackInventory !== false) return;
+    const allow =
+      product.inventory?.trackInventory === false ||
+      product.inventory?.allowBackorder !== false ||
+      product.inStock;
+    if (!allow) return;
     addItem({
       id: product.id,
       slug: product.slug,
@@ -50,7 +56,12 @@ export function HomeProductCard({ product }) {
 
   return (
     <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm transition hover:shadow-md">
-      <Link href={`/${product.slug}`} className="relative block aspect-square overflow-hidden bg-[#f9fafb]">
+      <Link
+        href={`/${product.slug}`}
+        className="relative block aspect-square overflow-hidden bg-[#f9fafb]"
+        onMouseEnter={() => hoverImageUrl && setHoverLoaded(true)}
+        onFocus={() => hoverImageUrl && setHoverLoaded(true)}
+      >
         {imageUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -62,13 +73,14 @@ export function HomeProductCard({ product }) {
               }`}
               loading="lazy"
             />
-            {hoverImageUrl ? (
+            {hoverImageUrl && hoverLoaded ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={hoverImageUrl}
                 alt=""
                 className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 loading="lazy"
+                decoding="async"
               />
             ) : null}
           </>
@@ -149,7 +161,11 @@ export function HomeProductCard({ product }) {
         <button
           type="button"
           onClick={handleAdd}
-          disabled={product.inventory?.trackInventory !== false && !product.inStock}
+          disabled={
+            product.inventory?.trackInventory !== false &&
+            product.inventory?.allowBackorder === false &&
+            !product.inStock
+          }
           className="mt-3 w-full rounded-lg bg-[#111111] py-2.5 text-sm font-semibold text-white transition hover:bg-[#333333] disabled:cursor-not-allowed disabled:opacity-40"
         >
           Add to Cart

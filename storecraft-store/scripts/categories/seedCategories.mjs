@@ -1,47 +1,18 @@
 /**
- * Seed CrazzyCars category tree into MongoDB (StoreCraft schema).
+ * Seed CrazzyCars category tree (StoreCraft schema).
+ * Source: crazzycars-categories/data/categories.js
  *
- * Usage (from storecraft-store):
- *   node --env-file=.env.local scripts/categories/seedCategories.mjs
- *
- * Upserts by slug — safe to re-run.
+ * Usage: node --env-file=.env.local scripts/categories/seedCategories.mjs
  */
 import mongoose from "mongoose";
-import { parents, children } from "./seedData.mjs";
+import { createRequire } from "module";
 import Category from "../../lib/models/Category.model.js";
 
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+const require = createRequire(import.meta.url);
+const { mapPackRow } = require("../../../crazzycars-categories/seed/mapToStoreCraft.js");
+const { parents, children } = require("../../../crazzycars-categories/data/categories.js");
 
-function toDocFields(row, { level, parentCategory, parents, ancestors }) {
-  const featured = Boolean(row.isFeatured);
-  return {
-    name: row.name,
-    slug: row.slug,
-    description: row.description || "",
-    image: { url: row.imageUrl || "", publicId: "" },
-    icon: row.icon || "",
-    seo: {
-      metaTitle: row.metaTitle || "",
-      metaDescription: row.metaDescription || "",
-      metaKeywords: [],
-    },
-    shopifyHandle: row.shopifyHandle || "",
-    shopifyId: row.shopifyId || "",
-    sortOrder: row.sortOrder ?? 0,
-    homepageOrder: featured ? row.sortOrder ?? 0 : 0,
-    status: "active",
-    isFeatured: featured,
-    featured,
-    showOnHomepage: featured,
-    showInNav: true,
-    showInFooter: level === 0,
-    isTopCategory: level === 0,
-    level,
-    parentCategory: parentCategory || null,
-    parents: parents || [],
-    ancestors: ancestors || [],
-  };
-}
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 async function run() {
   if (!MONGO_URI) {
@@ -50,11 +21,11 @@ async function run() {
   }
 
   await mongoose.connect(MONGO_URI);
-  console.log("Connected to MongoDB");
+  console.log("Connected — seeding categories with full SEO");
 
   const parentIdBySlug = {};
   for (const p of parents) {
-    const fields = toDocFields(p, { level: 0, parentCategory: null, parents: [], ancestors: [] });
+    const fields = mapPackRow(p, { level: 0, parentCategory: null, parents: [], ancestors: [] });
     const doc = await Category.findOneAndUpdate(
       { slug: p.slug },
       { $set: fields },
@@ -71,7 +42,7 @@ async function run() {
       return id;
     });
     const primary = parentIds[0] || null;
-    const fields = toDocFields(c, {
+    const fields = mapPackRow(c, {
       level: 1,
       parentCategory: primary,
       parents: parentIds,
@@ -86,12 +57,7 @@ async function run() {
   }
 
   const total = await Category.countDocuments({ status: "active" });
-  const roots = await Category.countDocuments({
-    status: "active",
-    $or: [{ parentCategory: null }, { parentCategory: { $exists: false } }],
-    parents: { $size: 0 },
-  });
-  console.log(`\nDone. ${parents.length} parents + ${children.length} children (active in DB: ${total}, roots≈${roots})`);
+  console.log(`\nDone. ${parents.length} parents + ${children.length} children (active in DB: ${total})`);
   await mongoose.disconnect();
 }
 

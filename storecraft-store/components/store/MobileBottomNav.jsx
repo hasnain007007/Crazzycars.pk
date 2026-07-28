@@ -154,6 +154,7 @@ export default function MobileBottomNav() {
           );
         }
 
+        const skipPrefetch = item.href === "/wishlist" || item.href === "/account";
         return (
           <Link
             key={item.href}
@@ -161,6 +162,7 @@ export default function MobileBottomNav() {
             className="flex flex-1 flex-col items-center justify-center gap-0.5"
             aria-label={item.label}
             aria-current={active ? "page" : undefined}
+            prefetch={skipPrefetch ? false : undefined}
           >
             {content}
           </Link>

@@ -3,6 +3,10 @@ import { dbConnect } from "@/lib/db";
 import ShippingZone from "@/lib/models/Shipping.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { getZoneEstimatedDays } from "@/lib/shippingZoneWeight";
+import {
+  DEFAULT_FREE_SHIPPING_THRESHOLD,
+  getEffectiveFreeDeliveryThreshold,
+} from "@/lib/freeDelivery";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +18,12 @@ function normalizeDays(raw, fallback) {
 }
 
 function buildResponse({ freeShippingThreshold, majorDays, otherDays, freeShippingText, zones }) {
-  const threshold = Math.max(0, Number(freeShippingThreshold) || 2999) || 2999;
+  const threshold =
+    Math.max(0, Number(freeShippingThreshold) || DEFAULT_FREE_SHIPPING_THRESHOLD) ||
+    DEFAULT_FREE_SHIPPING_THRESHOLD;
   const text =
     String(freeShippingText || "").trim() ||
-    `Free delivery on orders over Rs. ${Math.round(threshold).toLocaleString("en-GB")}`;
+    `Free delivery on orders over Rs. ${Math.round(threshold).toLocaleString("en-PK")}`;
 
   return {
     success: true,
@@ -41,14 +47,13 @@ export async function GET() {
       (await Settings.findOne({}).lean());
 
     const sp = settings?.storePayment || {};
-    const settingsThreshold = Number(sp.freeShippingThreshold);
-    const freeShippingThreshold =
-      Number.isFinite(settingsThreshold) && settingsThreshold > 0 ? settingsThreshold : 2999;
+    const freeShippingThreshold = getEffectiveFreeDeliveryThreshold(sp);
 
     const majorDays = String(sp.majorCitiesDays || "").trim() || "2-3";
     const otherDays = String(sp.otherAreasDays || "").trim() || "4-7";
     const freeShippingText =
-      String(sp.deliveryNote || "").trim() || "Free delivery on orders over Rs. 2,999";
+      String(sp.deliveryNote || "").trim() ||
+      `Free delivery on orders over Rs. ${Math.round(freeShippingThreshold).toLocaleString("en-PK")}`;
 
     const zonesPayload = zones.map((z) => ({
       id: z._id?.toString?.() || String(z._id || ""),
@@ -71,10 +76,10 @@ export async function GET() {
   } catch {
     return NextResponse.json(
       buildResponse({
-        freeShippingThreshold: 2999,
+        freeShippingThreshold: DEFAULT_FREE_SHIPPING_THRESHOLD,
         majorDays: "2-3",
         otherDays: "4-7",
-        freeShippingText: "Free delivery on orders over Rs. 2,999",
+        freeShippingText: `Free delivery on orders over Rs. ${DEFAULT_FREE_SHIPPING_THRESHOLD.toLocaleString("en-PK")}`,
         zones: [],
       })
     );

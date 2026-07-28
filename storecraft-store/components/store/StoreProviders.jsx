@@ -6,7 +6,7 @@ import { StoreSettingsProvider } from "@/context/StoreSettingsContext";
 import { setStoreCurrency } from "@/lib/currency";
 import { clearSettingsCache } from "@/lib/settingsCache";
 
-export function StoreProviders({ children, settings }) {
+export function StoreProviders({ children, settings, shopifyEnabled = false }) {
   useEffect(() => {
     const code = settings?.general?.currency || settings?.currency || "PKR";
     setStoreCurrency(code);
@@ -21,7 +21,7 @@ export function StoreProviders({ children, settings }) {
 
   return (
     <StoreSettingsProvider settings={settings}>
-      <CartProvider>{children}</CartProvider>
+      <CartProvider shopifyEnabled={shopifyEnabled}>{children}</CartProvider>
     </StoreSettingsProvider>
   );
 }

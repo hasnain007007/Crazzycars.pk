@@ -23,14 +23,18 @@ function Fallback() {
   );
 }
 
-export default async function ShopPage() {
+export default async function ShopPage({ searchParams }) {
+  const sp = (await searchParams) || {};
+  const q = String(sp.q || "").trim();
+  const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
   const {
     products: initialProducts,
     total: initialTotal,
     totalPages: initialTotalPages,
   } = await fetchProductsServer({
-    limit: 24,
-    page: 1,
+    limit: 40,
+    page,
+    q,
   });
 
   return (
@@ -39,8 +43,9 @@ export default async function ShopPage() {
         <ProductsBrowseMedico
           initialProducts={initialProducts}
           initialTotal={initialTotal}
-          initialPage={1}
+          initialPage={page}
           initialTotalPages={initialTotalPages}
+          initialQuery={q}
         />
       </Suspense>
     </div>

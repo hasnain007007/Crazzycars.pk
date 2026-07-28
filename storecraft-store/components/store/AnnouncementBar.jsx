@@ -9,7 +9,10 @@ function deriveBar(bar) {
   }
   const active = (bar.items || [])
     .filter((m) => m.enabled !== false && String(m.text || "").trim())
-    .map((m) => String(m.text).trim());
+    .map((m) => ({
+      text: String(m.text).trim(),
+      link: String(m.link || "").trim(),
+    }));
   return {
     hidden: active.length === 0,
     messages: active,
@@ -41,9 +44,12 @@ export default function AnnouncementBar() {
 
   useEffect(() => {
     setIndex(0);
-  }, [messages.join("|")]);
+  }, [messages.map((m) => `${m.text}|${m.link}`).join("||")]);
 
   if (hidden || !messages.length) return null;
+
+  const current = messages[index % messages.length];
+  const href = current?.link || "";
 
   return (
     <div
@@ -67,7 +73,9 @@ export default function AnnouncementBar() {
           letter-spacing: 0.3px;
           white-space: nowrap;
           text-align: center;
+          text-decoration: none;
         }
+        a.ann-msg:hover { text-decoration: underline; }
         .ann-msg.hidden { opacity: 0; transform: translateY(6px); }
         .ann-msg.shown { opacity: 1; transform: translateY(0); }
         .ann-dot {
@@ -87,7 +95,16 @@ export default function AnnouncementBar() {
         }
         .ann-dot span.active { opacity: 1; }
       `}</style>
-      <p className={`ann-msg ${visible ? "shown" : "hidden"}`}>{messages[index % messages.length]}</p>
+      {href ? (
+        <a
+          href={href}
+          className={`ann-msg ${visible ? "shown" : "hidden"}`}
+        >
+          {current.text}
+        </a>
+      ) : (
+        <p className={`ann-msg ${visible ? "shown" : "hidden"}`}>{current.text}</p>
+      )}
       {messages.length > 1 ? (
         <div className="ann-dot" aria-hidden>
           {messages.map((_, i) => (

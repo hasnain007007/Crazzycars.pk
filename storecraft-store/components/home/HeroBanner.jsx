@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { heroImageUrl, heroImageUrlMobile } from '@/lib/cloudinaryImage'
 
 /** Section min-height from admin imageDisplay.height */
 const getSplitMinHeight = (height) => {
@@ -87,8 +88,8 @@ function resolveBannerImages(banner) {
   )
 
   return {
-    desktopImageUrl: desktopImageUrl ? String(desktopImageUrl).trim() : null,
-    mobileImageUrl: mobileImageUrl ? String(mobileImageUrl).trim() : null,
+    desktopImageUrl: desktopImageUrl ? heroImageUrl(String(desktopImageUrl).trim()) : null,
+    mobileImageUrl: mobileImageUrl ? heroImageUrlMobile(String(mobileImageUrl).trim()) : null,
     desktopPosition,
     mobilePosition,
   }
@@ -379,12 +380,6 @@ export default function HeroBanner() {
     mobilePosition,
   } = resolveBannerImages(banner)
 
-  if (banner) {
-    console.log('Banner data:', banner)
-    console.log('Desktop image:', desktopImageUrl)
-    console.log('Mobile image:', mobileImageUrl)
-  }
-
   const heading =
     (banner?.content?.heading?.text ?? '').trim()
 
@@ -481,38 +476,27 @@ export default function HeroBanner() {
               ['--hero-mobile-object-position']: mobilePosition,
             }}
           >
-            <img
-              src={desktopImageUrl}
-              alt={alt}
-              loading="eager"
-              decoding="async"
-              className="hero-split-img hero-banner-img hero-banner-img--desktop"
-              style={{
-                display: 'block',
-                width: '100%',
-                height: 'auto',
-                maxHeight: 560,
-                objectFit: 'cover',
-                objectPosition: desktopPosition,
-              }}
-            />
-            <img
-              src={mobileImageUrl || desktopImageUrl}
-              alt=""
-              loading="eager"
-              decoding="async"
-              className="hero-split-img hero-banner-img hero-banner-img--mobile"
-              style={{
-                display: 'none',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: mobilePosition,
-              }}
-            />
+            <picture>
+              {mobileImageUrl && mobileImageUrl !== desktopImageUrl ? (
+                <source media="(max-width: 768px)" srcSet={mobileImageUrl} />
+              ) : null}
+              <img
+                src={desktopImageUrl}
+                alt={alt}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                className="hero-split-img hero-banner-img hero-banner-img--desktop"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  height: 'auto',
+                  maxHeight: 560,
+                  objectFit: 'cover',
+                  objectPosition: desktopPosition,
+                }}
+              />
+            </picture>
           </div>
           <div className="hero-mobile-text">
             {heading ? <h2>{heading}</h2> : null}

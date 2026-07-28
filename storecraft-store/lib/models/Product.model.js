@@ -79,6 +79,43 @@ const variationCombinationSchema = new mongoose.Schema(
   { _id: true }
 );
 
+const addOnSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: "", trim: true },
+    price: { type: Number, default: 0 },
+    required: { type: Boolean, default: false },
+  },
+  { _id: true }
+);
+
+const customSizingFieldSchema = new mongoose.Schema(
+  {
+    fieldName: { type: String, default: "", trim: true },
+    label: { type: String, default: "", trim: true },
+    placeholder: { type: String, default: "", trim: true },
+    required: { type: Boolean, default: true },
+    minValue: { type: Number },
+    maxValue: { type: Number },
+    helpText: { type: String, default: "", trim: true },
+  },
+  { _id: true }
+);
+
+const customSizingSchema = new mongoose.Schema(
+  {
+    enabled: { type: Boolean, default: false },
+    title: { type: String, default: "Enter Your Measurements", trim: true },
+    description: {
+      type: String,
+      default: "Enter your measurements for a perfect fit",
+      trim: true,
+    },
+    unit: { type: String, enum: ["cm", "inches", "both"], default: "cm" },
+    fields: { type: [customSizingFieldSchema], default: [] },
+  },
+  { _id: false }
+);
+
 const compatibleCarSchema = new mongoose.Schema(
   {
     make: { type: String, required: true, trim: true },
@@ -140,6 +177,8 @@ const productSchema = new mongoose.Schema(
         default: "g",
       },
       trackInventory: { type: Boolean, default: true },
+      /** When true (default), customers can still order if quantity is 0. */
+      allowBackorder: { type: Boolean, default: false },
       lowStockThreshold: { type: Number, default: 5 },
       sku: { type: String, default: "" },
     },
@@ -152,6 +191,8 @@ const productSchema = new mongoose.Schema(
     variations: { type: [variationSchema], default: [] },
     simpleVariations: { type: [simpleVariationSchema], default: [] },
     variationCombinations: { type: [variationCombinationSchema], default: [] },
+    addOns: { type: [addOnSchema], default: [] },
+    customSizing: { type: customSizingSchema, default: () => ({}) },
     features: [{ type: String, trim: true }],
     specifications: [
       {
@@ -196,6 +237,10 @@ const productSchema = new mongoose.Schema(
     /** Hot Deals section */
     isDeal: { type: Boolean, default: false, index: true },
     newArrival: { type: Boolean, default: false },
+    /** When false, Cash on Delivery is not offered for carts that include this product. */
+    codEnabled: { type: Boolean, default: true, index: true },
+    /** Require customer to pay at least this % of the line total in advance (0 = none). */
+    advancePercentRequired: { type: Number, default: 0, min: 0, max: 100 },
     productType: { type: String, default: "", trim: true },
     vendor: { type: String, default: "", trim: true },
     collections: [{ type: String, trim: true }],
@@ -228,5 +273,28 @@ productSchema.index({
   "vehicleCompatibility.vehicles.model": 1,
   status: 1,
 });
+// Typeahead / storefront search — weights favor product name & SKU.
+productSchema.index(
+  {
+    name: "text",
+    articleNo: "text",
+    tags: "text",
+    slug: "text",
+    "compatibleCars.make": "text",
+    "compatibleCars.model": "text",
+  },
+  {
+    name: "product_text_search",
+    weights: {
+      name: 10,
+      articleNo: 8,
+      tags: 6,
+      slug: 4,
+      "compatibleCars.make": 5,
+      "compatibleCars.model": 7,
+    },
+    default_language: "english",
+  }
+);
 
 export default mongoose.models.Product || mongoose.model("Product", productSchema);

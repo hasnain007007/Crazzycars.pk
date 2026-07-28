@@ -1,11 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
-import { heroImageUrl } from "@/lib/cloudinaryImage";
+import { heroImageUrl, heroImageUrlMobile } from "@/lib/cloudinaryImage";
+import { useStorePayment } from "@/context/StoreSettingsContext";
+import { formatFreeDeliveryThreshold } from "@/lib/freeDelivery";
 
-const TRUST = ["✓ COD Available", "✓ Free Delivery Rs.2999+", "✓ Easy Returns"];
+function useTrustBadges() {
+  const storePayment = useStorePayment();
+  return useMemo(
+    () => [
+      "✓ COD Available",
+      `✓ Free Delivery ${formatFreeDeliveryThreshold(storePayment)}+`,
+      "✓ Easy Returns",
+    ],
+    [storePayment]
+  );
+}
 
 function splitHeadline(headline) {
   const text = headline || "";
@@ -87,6 +99,7 @@ function HeroButtons({ buttons, defaultTextColor = "#FFFFFF" }) {
 }
 
 function FallbackHero({ settings }) {
+  const trust = useTrustBadges();
   const hp = settings || DEFAULT_HOMEPAGE_SETTINGS;
   const { line1, line2 } = splitHeadline(hp.heroHeadline);
   const subtext = hp.heroSubtext || DEFAULT_HOMEPAGE_SETTINGS.heroSubtext;
@@ -126,7 +139,7 @@ function FallbackHero({ settings }) {
             </Link>
           </div>
           <ul className="mt-6 flex flex-wrap gap-2">
-            {TRUST.map((t) => (
+            {trust.map((t) => (
               <li key={t} className="rounded-full border border-white/40 px-3 py-1 text-xs text-white/90">
                 {t}
               </li>
@@ -139,6 +152,7 @@ function FallbackHero({ settings }) {
 }
 
 function HeroSlideContent({ slide }) {
+  const trust = useTrustBadges();
   const { line1, line2 } = splitHeadline(slide.title);
   return (
     <div className="relative z-10 max-w-[560px]">
@@ -173,7 +187,7 @@ function HeroSlideContent({ slide }) {
         defaultTextColor={slide.textColor}
       />
       <ul className="mt-6 flex flex-wrap gap-2">
-        {TRUST.map((t) => (
+        {trust.map((t) => (
           <li key={t} className="rounded-full border border-white/40 px-3 py-1 text-xs text-white/90">
             {t}
           </li>
@@ -200,7 +214,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
       return undefined;
     }
     let cancelled = false;
-    fetch("/api/banners", { cache: "no-store" })
+    fetch("/api/banners")
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -213,6 +227,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
               title: String(b?.content?.heading?.text || "").trim(),
               subtitle: String(b?.content?.subheading?.text || "").trim(),
               imageUrl: raw ? heroImageUrl(raw) : null,
+              imageUrlMobile: raw ? heroImageUrlMobile(raw) : null,
               buttons: (Array.isArray(b?.content?.buttons) ? b.content.buttons : []).map((btn) => ({
                 text: btn?.text || "",
                 url: btn?.url || btn?.link || b?.targetUrl || "/shop",
@@ -268,20 +283,27 @@ export default function HomeHero({ settings, initialSlides = null }) {
 
   const slide = slides[index];
   const bgImage = slide.imageUrl;
+  const bgImageMobile = slide.imageUrlMobile || bgImage;
 
   return (
     <section className="relative overflow-hidden" style={{ minHeight: 600, background: slide.backgroundColor || "#111111" }}>
       {bgImage ? (
-        // eslint-disable-next-line @next/next/no-img-element -- LCP hero; Cloudinary-optimized src
-        <img
-          src={bgImage}
-          alt=""
-          fetchPriority={index === 0 ? "high" : "low"}
-          decoding={index === 0 ? "sync" : "async"}
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
-          style={{ opacity: 1 }}
-          key={slide.id}
-        />
+        <picture className="absolute inset-0 block h-full w-full">
+          {bgImageMobile && bgImageMobile !== bgImage ? (
+            <source media="(max-width: 768px)" srcSet={bgImageMobile} />
+          ) : null}
+          {/* eslint-disable-next-line @next/next/no-img-element -- LCP hero; Cloudinary-optimized src */}
+          <img
+            src={bgImage}
+            alt=""
+            fetchPriority={index === 0 ? "high" : "low"}
+            loading={index === 0 ? "eager" : "lazy"}
+            decoding={index === 0 ? "async" : "async"}
+            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+            style={{ opacity: 1 }}
+            key={slide.id}
+          />
+        </picture>
       ) : (
         <div
           className="absolute inset-0"

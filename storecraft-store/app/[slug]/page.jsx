@@ -218,7 +218,7 @@ function toProductLd(product) {
       ? product.salePrice
       : product.price || product.regularPrice || product.pricing?.salePrice || product.pricing?.regularPrice || 0
   );
-  const stock = Number(product.inventory?.quantity ?? (product.inStock === false ? 0 : 1));
+  const stock = Number(product.inventory?.quantity ?? product.stock ?? (product.inStock === false ? 0 : 1));
   return buildProductJsonLd({
     name: product.name,
     slug: product.slug,
@@ -227,10 +227,19 @@ function toProductLd(product) {
     metaDescription: product.metaDescription || product.seo?.metaDescription,
     shortDescription: stripHtml(product.shortDescription || product.longDescription || ""),
     sku: product.articleNo || product.inventory?.sku,
+    articleNo: product.articleNo,
+    ean: product.ean,
+    partNumber: product.partNumber,
+    mpn: product.partNumber || product.articleNo,
     brand: BRAND,
+    vendor: product.vendor,
+    condition: product.condition || "new",
+    categories: product.categories,
     salePrice: price,
     price,
     stock,
+    trackInventory: product.trackInventory ?? product.inventory?.trackInventory,
+    allowBackorder: product.allowBackorder ?? product.inventory?.allowBackorder,
     ratingValue: product.averageRating || product.rating,
     reviewCount: product.reviewCount || product.numReviews,
   });
