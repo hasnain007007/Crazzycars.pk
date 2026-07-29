@@ -33,6 +33,7 @@ export default function CategoriesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [view, setView] = useState("tree");
   const [expanded, setExpanded] = useState({});
+  const [busyFeatured, setBusyFeatured] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -90,6 +91,82 @@ export default function CategoriesPage() {
     const top = flatRows.filter((c) => Number(c.level || 0) === 0).length;
     return { total, top, sub: total - top };
   }, [flatRows]);
+
+  const isFeatured = (row) => Boolean(row?.featured ?? row?.isFeatured);
+
+  const toggleFeatured = async (row) => {
+    const id = String(row._id);
+    const next = !isFeatured(row);
+    setBusyFeatured(id);
+    try {
+      const res = await fetch(`/api/categories/${row._id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ featured: next, isFeatured: next }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Featured update failed");
+      const patch = (cat) =>
+        String(cat._id) === id ? { ...cat, featured: next, isFeatured: next } : cat;
+      const patchTree = (nodes) =>
+        (nodes || []).map((n) => ({
+          ...patch(n),
+          children: n.children?.length ? patchTree(n.children) : n.children,
+        }));
+      setFlatRows((rows) => rows.map(patch));
+      setTreeRows((rows) => patchTree(rows));
+    } catch (error) {
+      toast.error(error.message || "Featured update failed");
+    } finally {
+      setBusyFeatured(null);
+    }
+  };
+
+  const featuredToggle = (row) => {
+    const featured = isFeatured(row);
+    const id = String(row._id);
+    const busy = busyFeatured === id;
+    return (
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => toggleFeatured(row)}
+        aria-pressed={featured}
+        aria-label={featured ? "Unfeature category" : "Make category featured"}
+        title={featured ? "Featured — click to remove" : "Make featured"}
+        style={{
+          position: "relative",
+          display: "inline-flex",
+          height: 24,
+          width: 44,
+          flexShrink: 0,
+          cursor: busy ? "wait" : "pointer",
+          borderRadius: 999,
+          border: "2px solid transparent",
+          padding: 0,
+          background: featured ? "#1d6fb8" : "#e5e7eb",
+          opacity: busy ? 0.6 : 1,
+          transition: "background 0.15s ease, opacity 0.15s ease",
+          verticalAlign: "middle",
+        }}
+      >
+        <span
+          style={{
+            pointerEvents: "none",
+            display: "inline-block",
+            height: 20,
+            width: 20,
+            borderRadius: "50%",
+            background: "#fff",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
+            transform: featured ? "translateX(20px)" : "translateX(2px)",
+            transition: "transform 0.15s ease",
+          }}
+        />
+      </button>
+    );
+  };
 
   const tryDelete = async (row) => {
     const ok = window.confirm(
@@ -154,7 +231,11 @@ export default function CategoriesPage() {
                 </div>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 600 }}>Featured</span>
+                {featuredToggle(node)}
+              </div>
               <Link href={`/catalog/categories/new?parent=${node._id}`}>
                 <button style={smallBtn}>Add Sub</button>
               </Link>
@@ -236,7 +317,7 @@ export default function CategoriesPage() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#f9fafb" }}>
-                  {["Image", "Name", "Parent", "Products", "Status", "Actions"].map((h) => (
+                  {["Image", "Name", "Parent", "Products", "Status", "Featured", "Actions"].map((h) => (
                     <th key={h} style={thStyle}>{h}</th>
                   ))}
                 </tr>
@@ -262,6 +343,7 @@ export default function CategoriesPage() {
                       <td style={tdStyle}>{row.parentName || "—"}</td>
                       <td style={tdStyle}>{row.productCount || 0}</td>
                       <td style={tdStyle}><span style={sb.style}>{sb.label}</span></td>
+                      <td style={tdStyle}>{featuredToggle(row)}</td>
                       <td style={tdStyle}>
                         <div style={{ display: "flex", gap: 8 }}>
                           <Link href={`/catalog/categories/new?parent=${row._id}`}><button style={smallBtn}>Add Sub</button></Link>
