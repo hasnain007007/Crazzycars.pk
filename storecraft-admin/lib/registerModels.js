@@ -13,6 +13,7 @@ import "./models/Category.model";
 import "./models/Coupon.model";
 import "./models/Customer.model";
 import "./models/FeaturedMedia.model";
+import "./models/LoginAttempt.model";
 import "./models/Order.model";
 import "./models/Page.model";
 import "./models/PostexWebhookLog.model";

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
+import { checkLoginRateLimit, loginRateLimitKey, recordAttempt } from "@/lib/loginRateLimit";
 import Customer from "@/lib/models/Customer.model";
+import { requestIp } from "@/lib/requestIp";
 import jwt from "jsonwebtoken";
 import { Resend } from "resend";
 
@@ -19,6 +21,17 @@ export async function POST(req) {
     }
 
     await dbConnect();
+
+    // Every request counts here, not only failures — the abuse case is
+    // mailbombing an address rather than guessing a secret. A limited request
+    // returns the same generic success as any other, so the response still says
+    // nothing about whether the address is registered.
+    const limitKey = loginRateLimitKey("customer-password-reset", email, requestIp(req));
+    const limit = await checkLoginRateLimit(limitKey);
+    if (limit.limited) {
+      return NextResponse.json({ success: true });
+    }
+    await recordAttempt(limitKey);
 
     const customer = await Customer.findOne({
       email: email.toLowerCase().trim(),

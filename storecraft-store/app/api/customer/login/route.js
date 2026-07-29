@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
+import {
+  checkLoginRateLimit,
+  clearLoginAttempts,
+  loginRateLimitKey,
+  rateLimitMessage,
+  rateLimitResponseInit,
+  recordAttempt,
+} from "@/lib/loginRateLimit";
 import Customer from "@/lib/models/Customer.model";
+import { requestIp } from "@/lib/requestIp";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
@@ -35,6 +44,17 @@ export async function POST(req) {
       );
     }
 
+    // Checked before the customer lookup and bcrypt compare: cheaper under
+    // attack, and locked-out responses cannot leak whether the account exists.
+    const limitKey = loginRateLimitKey("customer-login", email, requestIp(req));
+    const limit = await checkLoginRateLimit(limitKey);
+    if (limit.limited) {
+      return NextResponse.json(
+        { success: false, error: rateLimitMessage(limit.retryAfterSeconds) },
+        rateLimitResponseInit(limit.retryAfterSeconds)
+      );
+    }
+
     let customer;
     try {
       customer = await Customer.findOne({
@@ -49,6 +69,7 @@ export async function POST(req) {
     }
 
     if (!customer) {
+      await recordAttempt(limitKey);
       return NextResponse.json(
         { success: false, error: "Invalid email or password" },
         { status: 401 }
@@ -60,6 +81,7 @@ export async function POST(req) {
       const passwordToCheck = customer.password || customer.passwordHash || "";
 
       if (!passwordToCheck) {
+        await recordAttempt(limitKey);
         return NextResponse.json(
           {
             success: false,
@@ -79,11 +101,14 @@ export async function POST(req) {
     }
 
     if (!isValid) {
+      await recordAttempt(limitKey);
       return NextResponse.json(
         { success: false, error: "Invalid email or password" },
         { status: 401 }
       );
     }
+
+    await clearLoginAttempts(limitKey);
 
     if (!process.env.JWT_SECRET) {
       console.error("[customer/login] jwt: JWT_SECRET is not set");

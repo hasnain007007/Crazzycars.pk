@@ -13,6 +13,7 @@ export { default as Coupon } from "./Coupon.model";
 export { default as Customer } from "./Customer.model";
 export { default as FeaturedMedia } from "./FeaturedMedia.model";
 export { default as LivePresence } from "./LivePresence.model";
+export { default as LoginAttempt } from "./LoginAttempt.model";
 export { default as Order } from "./Order.model";
 export { default as Page } from "./Page.model";
 export { default as Product } from "./Product.model";

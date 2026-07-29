@@ -13,7 +13,16 @@ import {
 } from "@/lib/auth";
 import { JWT_COOKIE_NAME } from "@/lib/constants";
 import { dbConnect } from "@/lib/db";
+import {
+  checkLoginRateLimit,
+  clearLoginAttempts,
+  loginRateLimitKey,
+  rateLimitMessage,
+  rateLimitResponseInit,
+  recordAttempt,
+} from "@/lib/loginRateLimit";
 import User from "@/lib/models/User.model";
+import { requestIp } from "@/lib/requestIp";
 
 export async function POST(request) {
   try {
@@ -35,8 +44,20 @@ export async function POST(request) {
       );
     }
 
+    // Checked before the user lookup and bcrypt compare: cheaper under attack,
+    // and it keeps locked-out responses from leaking whether the account exists.
+    const limitKey = loginRateLimitKey("admin-login", email, requestIp(request));
+    const limit = await checkLoginRateLimit(limitKey);
+    if (limit.limited) {
+      return NextResponse.json(
+        { success: false, error: rateLimitMessage(limit.retryAfterSeconds) },
+        rateLimitResponseInit(limit.retryAfterSeconds)
+      );
+    }
+
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
+      await recordAttempt(limitKey);
       return NextResponse.json(
         { success: false, error: "Invalid email or password." },
         { status: 401 }
@@ -45,11 +66,14 @@ export async function POST(request) {
 
     const isPasswordValid = bcrypt.compareSync(password, user.password);
     if (!isPasswordValid) {
+      await recordAttempt(limitKey);
       return NextResponse.json(
         { success: false, error: "Invalid email or password." },
         { status: 401 }
       );
     }
+
+    await clearLoginAttempts(limitKey);
 
     if (user.status !== "active") {
       return NextResponse.json(
