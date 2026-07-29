@@ -2,6 +2,8 @@
 const storefrontOrigin = process.env.STOREFRONT_ORIGIN || process.env.NEXT_PUBLIC_STORE_URL || "";
 
 const nextConfig = {
+  // Required for Docker/Coolify (output: .next/standalone)
+  output: "standalone",
   poweredByHeader: false,
   compress: true,
   reactStrictMode: false,
