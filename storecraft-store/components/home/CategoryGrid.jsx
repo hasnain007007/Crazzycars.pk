@@ -94,6 +94,17 @@ function mapCat(c) {
   };
 }
 
+const HOMEPAGE_CATEGORY_LIMIT = 10;
+
+function pickHomepageCategories(parents) {
+  const list = (Array.isArray(parents) ? parents : []).filter((c) => c?.slug && c?.name);
+  const featured = list.filter((c) => c.isFeatured || c.featured);
+  if (!featured.length) return list.slice(0, HOMEPAGE_CATEGORY_LIMIT);
+  const featuredIds = new Set(featured.map((c) => String(c._id || c.slug)));
+  const rest = list.filter((c) => !featuredIds.has(String(c._id || c.slug)));
+  return [...featured, ...rest].slice(0, HOMEPAGE_CATEGORY_LIMIT);
+}
+
 export default function CategoryGrid({ title = "Shop by Category", viewAllText = "View all →", categories: injected }) {
   const [fetched, setFetched] = useState([]);
 
@@ -105,8 +116,7 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
       .then((tree) => {
         if (cancelled) return;
         const parents = (Array.isArray(tree) ? tree : []).filter((c) => c?.slug && c?.name);
-        const featured = parents.filter((c) => c.isFeatured);
-        const list = (featured.length ? featured : parents).slice(0, 12);
+        const list = pickHomepageCategories(parents);
         if (list.length) {
           setFetched(list);
           return null;
@@ -116,7 +126,8 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
       .then((all) => {
         if (cancelled || !all) return;
         const cats = all?.categories || all?.data || [];
-        setFetched((Array.isArray(cats) ? cats : []).filter((c) => c?.slug && c?.name && !c.parentId));
+        const parents = (Array.isArray(cats) ? cats : []).filter((c) => c?.slug && c?.name && !c.parentId);
+        setFetched(pickHomepageCategories(parents));
       })
       .catch(() => {
         if (!cancelled) setFetched([]);
@@ -128,7 +139,7 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
 
   const categories =
     Array.isArray(injected) && injected.length
-      ? injected.map((c) => ({
+      ? pickHomepageCategories(injected).map((c) => ({
           ...mapCat(c),
           href: c.href || categoryHref(c.slug),
         }))
@@ -136,20 +147,14 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
 
   if (!categories.length) return null;
 
+  const viewAllLabel = String(viewAllText || "View all →").replace(/\s*→\s*$/, "").trim() || "View all";
+
   return (
     <section className="homepage-section bg-white py-12 md:py-20">
       <div className="store-container">
-        <div className="mb-3 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="font-heading text-[28px] font-bold text-[#111111] sm:text-[32px]">{title}</h2>
-            <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, borderRadius: 2 }} />
-          </div>
-          <Link
-            href="/categories"
-            className="mb-1 shrink-0 text-sm font-semibold text-[#C41E1E] transition hover:underline"
-          >
-            {viewAllText}
-          </Link>
+        <div className="mb-3">
+          <h2 className="font-heading text-[28px] font-bold text-[#111111] sm:text-[32px]">{title}</h2>
+          <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, borderRadius: 2 }} />
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {categories.map((c) => (
@@ -161,6 +166,15 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
               }}
             />
           ))}
+        </div>
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/categories"
+            className="inline-flex items-center gap-2 rounded-full border border-[#111111] bg-[#111111] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#C41E1E] hover:border-[#C41E1E]"
+          >
+            {viewAllLabel}
+            <span aria-hidden>→</span>
+          </Link>
         </div>
       </div>
     </section>
