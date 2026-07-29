@@ -5,6 +5,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessMinRole } from "@/lib/requireRole";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { requestIp } from "@/lib/requestIp";
+import { revalidateStorefront } from "@/lib/revalidateStorefront";
 
 function mergeNested(target, patch) {
   if (!patch || typeof patch !== "object") return;
@@ -196,7 +197,10 @@ export async function PUT(request) {
       ip: requestIp(request),
     });
 
-    return NextResponse.json({ success: true, settings: doc.toObject() });
+    // Storefront caches settings for 60s; purge now so edits show immediately.
+    const revalidated = await revalidateStorefront(["/", "/api/settings"]);
+
+    return NextResponse.json({ success: true, settings: doc.toObject(), revalidated });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Update failed." },
