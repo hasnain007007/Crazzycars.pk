@@ -98,11 +98,9 @@ const HOMEPAGE_CATEGORY_LIMIT = 10;
 
 function pickHomepageCategories(parents) {
   const list = (Array.isArray(parents) ? parents : []).filter((c) => c?.slug && c?.name);
-  const featured = list.filter((c) => c.isFeatured || c.featured);
-  if (!featured.length) return list.slice(0, HOMEPAGE_CATEGORY_LIMIT);
-  const featuredIds = new Set(featured.map((c) => String(c._id || c.slug)));
-  const rest = list.filter((c) => !featuredIds.has(String(c._id || c.slug)));
-  return [...featured, ...rest].slice(0, HOMEPAGE_CATEGORY_LIMIT);
+  return list
+    .filter((c) => c.isFeatured || c.featured)
+    .slice(0, HOMEPAGE_CATEGORY_LIMIT);
 }
 
 export default function CategoryGrid({ title = "Shop by Category", viewAllText = "View all →", categories: injected }) {
