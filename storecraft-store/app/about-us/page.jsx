@@ -7,6 +7,7 @@ export const metadata = buildPageMetadata({
   title: "About Us | Crazzycars.pk",
   description: "Learn about Crazzycars.pk and our premium car accessories.",
   path: "/about-us",
+  absoluteTitle: true,
 });
 
 export default async function AboutUsPage() {

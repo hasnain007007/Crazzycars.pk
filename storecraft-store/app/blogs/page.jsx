@@ -8,6 +8,7 @@ export const metadata = buildPageMetadata({
   description:
     `Expert car accessories advice, aftercare guides, accessories care tips and style inspiration from ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} automotive specialists — read our blog.`,
   path: "/blogs",
+  absoluteTitle: true,
 });
 
 export default async function BlogPage({ searchParams }) {

@@ -15,6 +15,7 @@ export async function generateMetadata() {
     title,
     description,
     path: "/contact",
+    absoluteTitle: true,
   });
 }
 

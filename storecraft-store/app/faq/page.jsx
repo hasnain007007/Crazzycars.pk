@@ -5,6 +5,7 @@ export const metadata = buildPageMetadata({
   title: "Frequently Asked Questions | Crazzycars.pk",
   description: "Answers to common questions about shopping at Crazzycars.pk.",
   path: "/faq",
+  absoluteTitle: true,
 });
 
 const faqs = [

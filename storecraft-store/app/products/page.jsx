@@ -8,6 +8,7 @@ export const metadata = buildPageMetadata({
   description:
     "Browse premium car accessories in Pakistan — splitters, LED headlights, body kits, spoilers, carbon fiber parts, and more. Cash on delivery available.",
   path: "/products",
+  absoluteTitle: true,
 });
 
 function Fallback() {

@@ -7,6 +7,7 @@ export const metadata = buildPageMetadata({
   description:
     "Shop sale deals on car accessories — splitters, LED lights, body kits, and more from Crazzycars.pk.",
   path: "/sale",
+  absoluteTitle: true,
 });
 
 export default function SalePage() {

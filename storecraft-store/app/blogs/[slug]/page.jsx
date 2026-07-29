@@ -52,8 +52,12 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const post = await loadBlogPost(slug);
   if (!post) return { title: "Blog Not Found" };
+  const metaTitle =
+    post.seo?.metaTitle ||
+    `${post.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} Blog`;
   return {
-    title: post.seo?.metaTitle || `${post.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} Blog`,
+    // Absolute so the root layout does not append the store name a second time.
+    title: { absolute: metaTitle },
     description: post.seo?.metaDescription || post.excerpt || post.title,
     authors: [{ name: post.author?.name || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk" }],
     publishedTime: post.createdAt,
