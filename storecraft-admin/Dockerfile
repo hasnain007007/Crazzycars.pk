@@ -25,8 +25,6 @@ ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME \
 # Some routes may touch DB during `next build` page collection
 ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
-ARG JWT_SECRET
-ENV JWT_SECRET=$JWT_SECRET
 RUN npm run build
 
 FROM node:20-bookworm-slim AS runner
