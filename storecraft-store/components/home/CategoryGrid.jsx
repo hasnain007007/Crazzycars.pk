@@ -96,11 +96,32 @@ function mapCat(c) {
 
 const HOMEPAGE_CATEGORY_LIMIT = 10;
 
-function pickHomepageCategories(parents) {
-  const list = (Array.isArray(parents) ? parents : []).filter((c) => c?.slug && c?.name);
-  return list
-    .filter((c) => c.isFeatured || c.featured)
-    .slice(0, HOMEPAGE_CATEGORY_LIMIT);
+/** Flatten the category tree — featured subcategories must surface too, not just roots. */
+function flattenTree(nodes, depth = 0, out = []) {
+  for (const node of Array.isArray(nodes) ? nodes : []) {
+    if (!node) continue;
+    out.push({ node, depth });
+    flattenTree(node.children, depth + 1, out);
+  }
+  return out;
+}
+
+function pickHomepageCategories(input) {
+  const seen = new Set();
+  const byDepth = [];
+
+  for (const { node, depth } of flattenTree(input)) {
+    if (!node.slug || !node.name) continue;
+    if (!(node.isFeatured || node.featured)) continue;
+    // A category can hang off several parents, so the same node repeats in the tree.
+    const key = String(node._id || node.slug);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    (byDepth[depth] ||= []).push(node);
+  }
+
+  // Top-level categories keep priority; featured subcategories fill the rest.
+  return byDepth.flatMap((group) => group || []).slice(0, HOMEPAGE_CATEGORY_LIMIT);
 }
 
 export default function CategoryGrid({ title = "Shop by Category", viewAllText = "View all →", categories: injected }) {
@@ -113,19 +134,21 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
       .then(({ fetchCategoryTree }) => fetchCategoryTree())
       .then((tree) => {
         if (cancelled) return;
-        const parents = (Array.isArray(tree) ? tree : []).filter((c) => c?.slug && c?.name);
-        const list = pickHomepageCategories(parents);
+        const list = pickHomepageCategories(tree);
         if (list.length) {
           setFetched(list);
           return null;
         }
-        return fetch("/api/categories?showOnHomepage=true").then((r) => r.json());
+        return fetch("/api/categories?featured=true").then((r) => r.json());
       })
       .then((all) => {
         if (cancelled || !all) return;
         const cats = all?.categories || all?.data || [];
-        const parents = (Array.isArray(cats) ? cats : []).filter((c) => c?.slug && c?.name && !c.parentId);
-        setFetched(pickHomepageCategories(parents));
+        // Flat payload: sort shallowest-first so roots still lead the grid.
+        const sorted = (Array.isArray(cats) ? cats : [])
+          .slice()
+          .sort((a, b) => Number(a?.level || 0) - Number(b?.level || 0));
+        setFetched(pickHomepageCategories(sorted));
       })
       .catch(() => {
         if (!cancelled) setFetched([]);
@@ -168,7 +191,9 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
         <div className="mt-8 flex justify-center">
           <Link
             href="/categories"
-            className="inline-flex items-center gap-2 rounded-full border border-[#111111] bg-[#111111] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#C41E1E] hover:border-[#C41E1E]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#111111] bg-[#111111] px-6 py-3 text-sm font-semibold transition hover:bg-[#C41E1E] hover:border-[#C41E1E]"
+            // Inline: the unlayered `a { color: inherit }` in globals.css outranks Tailwind's layered text-white.
+            style={{ color: "#FFFFFF" }}
           >
             {viewAllLabel}
             <span aria-hidden>→</span>
