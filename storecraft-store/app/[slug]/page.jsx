@@ -24,9 +24,51 @@ export const revalidate = 120;
 
 const BASE_URL = getSiteUrl();
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Crazzycars.pk";
+const PRODUCT_TITLE_BRAND = "CrazzyCars";
+const PRODUCT_TITLE_SUFFIX = ` | ${PRODUCT_TITLE_BRAND}`;
+const PRODUCT_TITLE_MAX_LENGTH = 60;
 
 function stripHtml(s) {
   return String(s || "").replace(/<[^>]*>/g, "");
+}
+
+function stripTrailingProductTitleBrand(value) {
+  let title = String(value || "").trim();
+  const trailingBrand =
+    /\s*[|\u2013\u2014-]\s*(?:CrazzyCars(?:\.pk)?|Crazzycars\.pk)\s*$/i;
+
+  for (let i = 0; i < 3; i += 1) {
+    const stripped = title
+      .replace(trailingBrand, "")
+      .replace(/[\s|\u2013\u2014-]+$/g, "")
+      .trim();
+    if (stripped === title) break;
+    title = stripped;
+  }
+
+  return title;
+}
+
+function truncateProductTitleAtWord(value, maxLength) {
+  const title = String(value || "").trim();
+  if (title.length <= maxLength) return title;
+
+  const withinLimit = title.slice(0, maxLength);
+  const lastSpace = withinLimit.lastIndexOf(" ");
+  const truncated = (lastSpace > 0 ? withinLimit.slice(0, lastSpace) : withinLimit)
+    .replace(/[\s|\u2013\u2014,;:-]+$/g, "")
+    .trim();
+
+  return truncated || withinLimit.trim();
+}
+
+function buildProductSeoTitle({ name, metaTitle }) {
+  const source = String(metaTitle || "").trim() || String(name || "").trim();
+  const unbrandedTitle = stripTrailingProductTitleBrand(source);
+  const titleBudget = PRODUCT_TITLE_MAX_LENGTH - PRODUCT_TITLE_SUFFIX.length;
+  const truncatedTitle = truncateProductTitleAtWord(unbrandedTitle, titleBudget);
+
+  return `${truncatedTitle}${PRODUCT_TITLE_SUFFIX}`;
 }
 
 async function loadRelatedProducts(product) {
@@ -128,8 +170,10 @@ export async function generateMetadata({ params }) {
 
   if (content.type === "product") {
     const p = content.data;
-    const title =
-      (p.metaTitle || p.seo?.metaTitle || "").trim() || `${p.name} | ${BRAND}`;
+    const title = buildProductSeoTitle({
+      name: p.name,
+      metaTitle: p.metaTitle || p.seo?.metaTitle,
+    });
     const description =
       (p.metaDescription || p.seo?.metaDescription || "").trim() ||
       stripHtml(p.shortDescription || "").slice(0, 160) ||
@@ -141,12 +185,12 @@ export async function generateMetadata({ params }) {
     const mainImg = p.media?.images?.find((i) => i?.isMain)?.url || p.media?.images?.[0]?.url;
 
     return {
-      title,
+      title: { absolute: title },
       description,
       ...(keywords.length ? { keywords } : {}),
       alternates: { canonical },
       openGraph: {
-        title,
+        title: title,
         description:
           (p.metaDescription || p.seo?.metaDescription || "").trim() ||
           stripHtml(p.shortDescription || "").slice(0, 200) ||
