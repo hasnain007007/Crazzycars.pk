@@ -48,7 +48,10 @@ export async function GET(request, context) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });
     }
     await dbConnect();
-    const doc = await Product.findById(id).populate("categories", "name slug").lean();
+    const doc = await Product.findById(id)
+      .populate("categories", "name slug")
+      .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
+      .lean();
     if (!doc) {
       return NextResponse.json({ success: false, error: "Not found." }, { status: 404 });
     }
@@ -93,7 +96,10 @@ export async function PUT(request, context) {
         type: "update",
         ip: requestIp(request),
       });
-      const lean = await Product.findById(id).populate("categories", "name slug").lean();
+      const lean = await Product.findById(id)
+        .populate("categories", "name slug")
+        .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
+        .lean();
       return NextResponse.json({ success: true, data: withProductSaleComputed(lean) });
     }
 
@@ -177,6 +183,10 @@ export async function PUT(request, context) {
         : existing.inventory?.weightUnit || "g",
       trackInventory:
         incomingTrackInventory !== undefined ? incomingTrackInventory !== false : existing.inventory?.trackInventory !== false,
+      allowBackorder:
+        body.inventory?.allowBackorder !== undefined
+          ? body.inventory.allowBackorder === true
+          : existing.inventory?.allowBackorder === true,
       lowStockThreshold: Math.max(
         0,
         Number(body.inventory?.lowStockThreshold ?? existing.inventory?.lowStockThreshold) || 5
@@ -231,6 +241,13 @@ export async function PUT(request, context) {
     }
     if (body.featured !== undefined) existing.featured = Boolean(body.featured);
     if (body.newArrival !== undefined) existing.newArrival = Boolean(body.newArrival);
+    if (body.codEnabled !== undefined) existing.codEnabled = body.codEnabled !== false;
+    if (body.advancePercentRequired !== undefined) {
+      const pct = Number(body.advancePercentRequired);
+      existing.advancePercentRequired = Number.isFinite(pct)
+        ? Math.min(100, Math.max(0, Math.round(pct)))
+        : 0;
+    }
 
     if (body.productType !== undefined) {
       existing.productType = normalizeProductOrganisation({ productType: body.productType }).productType;
@@ -297,7 +314,10 @@ export async function PUT(request, context) {
       ip: requestIp(request),
     });
 
-    const populated = await Product.findById(id).populate("categories", "name slug").lean();
+    const populated = await Product.findById(id)
+      .populate("categories", "name slug")
+      .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
+      .lean();
     return NextResponse.json({ success: true, data: withProductSaleComputed(populated) });
   } catch (error) {
     return NextResponse.json(

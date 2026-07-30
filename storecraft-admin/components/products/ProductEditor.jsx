@@ -12,6 +12,7 @@ import { normalizeMetaKeywords } from "@/lib/seoKeywords";
 import { richTextPlainLength } from "@/lib/richTextPlain";
 import { generateSlugFromProductName } from "@/lib/slugify";
 import { toDatetimeLocalValue } from "@/lib/datetimeLocal";
+import { getStorefrontBaseUrl } from "@/lib/storefrontUrl";
 import { TabBasicInfo, CategoryPicker } from "./TabBasicInfo";
 import { TabPricing } from "./TabPricing";
 import { TabSettings } from "./TabSettings";
@@ -164,6 +165,8 @@ function emptyForm() {
     status: "draft",
     featured: false,
     newArrival: false,
+    codEnabled: true,
+    advancePercentRequired: 0,
     isUniversal: false,
     compatibleCars: [],
     vehicleCompatibility: emptyVehicleCompatibility(),
@@ -214,10 +217,10 @@ function productToForm(p) {
       weightUnit: p.inventory?.weightUnit || "g",
       sku: p.inventory?.sku || "",
       trackInventory: p.inventory?.trackInventory !== false && p.inventory?.trackQuantity !== false,
-      allowBackorder: Boolean(p.inventory?.allowBackorder),
+      allowBackorder: p.inventory?.allowBackorder === true,
     },
     media: {
-      images: (p.media?.images || []).map((img) => ({
+      images: (p.media?.images || []).map((img, index) => ({
         url: img.url || "",
         publicId: img.publicId || "",
         originalSize: img.originalSize,
@@ -231,7 +234,7 @@ function productToForm(p) {
           img.focalPoint && Number.isFinite(Number(img.focalPoint.x)) && Number.isFinite(Number(img.focalPoint.y))
             ? { x: Number(img.focalPoint.x), y: Number(img.focalPoint.y) }
             : undefined,
-        _localId: img._localId,
+        _localId: img._localId || img.publicId || `loaded-${index}-${String(img.url || "").slice(-24)}`,
       })),
       videoUrl: p.media?.videoUrl || "",
       videos: Array.isArray(p.media?.videos) ? p.media.videos : [],
@@ -290,6 +293,8 @@ function productToForm(p) {
     status: p.status || "draft",
     featured: Boolean(p.featured),
     newArrival: Boolean(p.newArrival),
+    codEnabled: p.codEnabled !== false,
+    advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     ...(() => {
       const fit = vehicleCompatibilityFromProduct(p);
       const synced = buildVehicleCompatibilityPayload(fit);
@@ -347,7 +352,7 @@ function buildApiPayload(form) {
       sku: form.inventory.sku.trim(),
       trackInventory: form.inventory.trackInventory,
       trackQuantity: form.inventory.trackInventory,
-      allowBackorder: form.inventory.allowBackorder || false,
+      allowBackorder: form.inventory.allowBackorder === true,
     },
     media: {
       images: (form.media.images || []).map((img) => ({
@@ -391,6 +396,8 @@ function buildApiPayload(form) {
     status: form.status,
     featured: form.featured,
     newArrival: form.newArrival,
+    codEnabled: form.codEnabled !== false,
+    advancePercentRequired: Math.min(100, Math.max(0, Number(form.advancePercentRequired) || 0)),
     ...buildVehicleCompatibilityPayload(form.vehicleCompatibility || emptyVehicleCompatibility()),
     productType: String(form.productType || "").trim(),
     vendor: String(form.vendor || "").trim(),
@@ -556,12 +563,7 @@ export function ProductEditor({ mode, productId }) {
     }
   }, [displaySlug, form.slug, isEdit, productId]);
 
-  const storeBase = (
-    process.env.NEXT_PUBLIC_STORE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "https://crazzycars.pk"
-  ).replace(/\/$/, "");
-
+  const storeBase = getStorefrontBaseUrl();
   const previewUrl = `${storeBase}/${displaySlug}`;
 
   const handleSave = async () => {
@@ -712,13 +714,16 @@ export function ProductEditor({ mode, productId }) {
             <h2 className="mb-4 text-base font-semibold text-gray-900">Vehicle Fitment 🚗</h2>
             <TabVehicleFitment
               value={form.vehicleCompatibility}
-              onChange={(vehicleCompatibility) =>
+              onChange={(vehicleCompatibility) => {
+                const payload = buildVehicleCompatibilityPayload(vehicleCompatibility);
                 setForm((f) => ({
                   ...f,
+                  // Keep editor rows (incl. empty drafts + stable _rowId)
                   vehicleCompatibility,
-                  ...buildVehicleCompatibilityPayload(vehicleCompatibility),
-                }))
-              }
+                  isUniversal: payload.isUniversal,
+                  compatibleCars: payload.compatibleCars,
+                }));
+              }}
             />
           </section>
 
@@ -979,6 +984,42 @@ export function ProductEditor({ mode, productId }) {
                   <span className="text-xs text-gray-500">Mark as new arrival for 30 days.</span>
                 </span>
               </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <input
+                  type="checkbox"
+                  checked={form.codEnabled !== false}
+                  onChange={(e) => setForm((f) => ({ ...f, codEnabled: e.target.checked }))}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#1d6fb8] focus:ring-[#1d6fb8]"
+                />
+                <span>
+                  <span className="block text-sm font-semibold text-gray-900">Cash on Delivery (COD)</span>
+                  <span className="text-xs text-gray-500">
+                    Allow COD at checkout when this product is in the cart. Turn off for prepaid-only items.
+                  </span>
+                </span>
+              </label>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <label className="block text-sm font-semibold text-gray-900">Advance payment required</label>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Customer must pay at least this % of the item total before dispatch (e.g. 50%).
+                </p>
+                <select
+                  value={String(form.advancePercentRequired || 0)}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      advancePercentRequired: Number(e.target.value) || 0,
+                    }))
+                  }
+                  className="mt-2 h-9 w-full rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-900"
+                >
+                  <option value="0">None</option>
+                  <option value="25">Pay at least 25% advance</option>
+                  <option value="50">Pay at least 50% advance</option>
+                  <option value="75">Pay at least 75% advance</option>
+                  <option value="100">Pay 100% in advance</option>
+                </select>
+              </div>
             </div>
           </div>
 
