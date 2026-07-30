@@ -254,6 +254,16 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Catalogue and Meta Pixel use articleNo as the canonical product identifier.
+// A partial index (rather than sparse) excludes legacy/draft empty strings.
+productSchema.index(
+  { articleNo: 1 },
+  {
+    name: "articleNo_unique_nonempty",
+    unique: true,
+    partialFilterExpression: { articleNo: { $type: "string", $gt: "" } },
+  }
+);
 productSchema.index({ status: 1, createdAt: -1 });
 productSchema.index({ categories: 1, status: 1 });
 productSchema.index({ featured: 1, status: 1 });
