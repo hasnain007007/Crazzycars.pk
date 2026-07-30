@@ -293,6 +293,10 @@ export function buildStoreSettingsPayload(settings = {}) {
     (typeof g.logoUrl === "string" ? g.logoUrl.trim() : "") ||
     (typeof g.logo === "string" ? g.logo : g.logo?.url) ||
     "";
+  const faviconString =
+    (typeof g.faviconUrl === "string" ? g.faviconUrl.trim() : "") ||
+    (typeof g.favicon === "string" ? g.favicon : g.favicon?.url) ||
+    "";
   const f = settings.footer || {};
   const wa = settings.whatsapp || {};
   const checkoutSuccess = settings.storefront?.checkoutSuccess || settings.checkoutSuccess || {};
@@ -325,6 +329,8 @@ export function buildStoreSettingsPayload(settings = {}) {
     ...(typeof settings?.general === "object" && settings.general ? settings.general : {}),
     logo: logoString,
     logoUrl: logoString,
+    favicon: faviconString,
+    faviconUrl: faviconString,
     showStoreName: g.showStoreName !== false,
     address: g.address?.trim() || f.registeredAddress?.trim() || f.contact?.address?.trim() || "",
   };
@@ -444,6 +450,8 @@ export function toPublicClientSettings(full = {}) {
       storeName: full.general?.storeName || full.storeName || "",
       logo: full.general?.logo || full.logoUrl || "",
       logoUrl: full.general?.logoUrl || full.logoUrl || "",
+      favicon: full.general?.favicon || "",
+      faviconUrl: full.general?.faviconUrl || "",
       showStoreName: full.general?.showStoreName !== false,
       phone: full.general?.phone || full.phone || "",
       email: full.general?.email || full.email || "",

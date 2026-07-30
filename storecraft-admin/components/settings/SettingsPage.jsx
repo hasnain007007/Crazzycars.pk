@@ -7,6 +7,7 @@ import AnnouncementBarSettings from "@/components/settings/AnnouncementBarSettin
 import CheckoutSettings from "@/components/settings/CheckoutSettings";
 import BrandStorySettings from "@/components/settings/BrandStorySettings";
 import AboutPageSettings from "@/components/settings/AboutPageSettings";
+import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import ContactPageSettings from "@/components/settings/ContactPageSettings";
 import { FooterSettings } from "@/components/settings/FooterSettings";
 import MegaMenuSettings from "@/components/settings/MegaMenuSettings";
@@ -16,7 +17,6 @@ import HomepageSettings from "@/components/settings/HomepageSettings";
 import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
 import WhatsAppTemplateSettings from "@/components/settings/WhatsAppTemplateSettings";
 import PakistaniPaymentSettings from "@/components/settings/PakistaniPaymentSettings";
-import { ImageUploader } from "@/components/ui/ImageUploader";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { defaultOrderNumberConfig, formatOrderNumber, previewNextSequence } from "@/lib/orderNumberFormat";
 import { clearStorefrontBrowserCache } from "@/lib/clearStorefrontBrowserCache";
@@ -115,6 +115,11 @@ function buildGeneralSavePayload(general) {
       g.logo && typeof g.logo === "object"
         ? { url: g.logo.url || g.logoUrl || "", publicId: g.logo.publicId || "" }
         : { url: g.logoUrl || "", publicId: "" },
+    faviconUrl: typeof g.faviconUrl === "string" ? g.faviconUrl : g.favicon?.url || "",
+    favicon:
+      g.favicon && typeof g.favicon === "object"
+        ? { url: g.favicon.url || g.faviconUrl || "", publicId: g.favicon.publicId || "" }
+        : { url: g.faviconUrl || "", publicId: "" },
   };
 }
 
@@ -366,97 +371,10 @@ export function SettingsPage() {
             <Field label="Email" value={g.email} onChange={(v) => setS({ ...s, general: { ...g, email: v } })} />
             <Field label="Website" value={g.website} onChange={(v) => setS({ ...s, general: { ...g, website: v } })} />
           </div>
-          <div style={{ marginBottom: 16 }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#374151",
-                marginBottom: 8,
-              }}
-              className="dark:!text-slate-300"
-            >
-              Store Logo
-            </label>
-            {(g.logoUrl || g.logo?.url) ? (
-              <div
-                style={{
-                  marginBottom: 12,
-                  padding: 12,
-                  background: "#111111",
-                  borderRadius: 8,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={g.logoUrl || g.logo?.url}
-                  alt="Current logo"
-                  style={{
-                    width: 220,
-                    height: 72,
-                    objectFit: "contain",
-                    display: "block",
-                  }}
-                />
-              </div>
-            ) : null}
-
-            <div className="max-w-md">
-              <ImageUploader
-                value={g.logo || { url: g.logoUrl || "", publicId: g.logo?.publicId || "" }}
-                onChange={(logo) => {
-                  const nextLogo = logo && typeof logo === "object" ? logo : { url: "", publicId: "" };
-                  setS({
-                    ...s,
-                    general: {
-                      ...g,
-                      logo: nextLogo,
-                      logoUrl: nextLogo.url || "",
-                    },
-                  });
-                }}
-                uploadFolder="storecraft/logo"
-                maxSizeMB={2}
-                showControls={false}
-              />
-            </div>
-            <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 8 }}>
-              Recommended: PNG with transparent background. Displays at 220×72px on the storefront.
-            </p>
-
-            {(g.logoUrl || g.logo?.url) ? (
-              <button
-                type="button"
-                onClick={() =>
-                  setS({
-                    ...s,
-                    general: {
-                      ...g,
-                      logoUrl: "",
-                      logo: { url: "", publicId: "" },
-                    },
-                  })
-                }
-                style={{
-                  marginTop: 8,
-                  padding: "6px 14px",
-                  background: "#FEE2E2",
-                  border: "1px solid #FCA5A5",
-                  borderRadius: 6,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#DC2626",
-                  cursor: "pointer",
-                }}
-              >
-                × Remove Logo
-              </button>
-            ) : null}
-          </div>
+          <BrandingSettings
+            general={g}
+            onChange={(nextGeneral) => setS({ ...s, general: nextGeneral })}
+          />
           <Field label="Footer text" value={g.footerText} onChange={(v) => setS({ ...s, general: { ...g, footerText: v } })} multiline />
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -938,6 +856,7 @@ export function SettingsPage() {
                   })
                 }
                 multiline
+                rows={4}
               />
               <Field
                 label="Payment confirmed note (when paid online)"
@@ -951,6 +870,23 @@ export function SettingsPage() {
                     },
                   })
                 }
+                multiline
+                rows={4}
+              />
+              <Field
+                label="COD advance payment note (Cash on Delivery)"
+                value={cx.codAdvanceNote || ""}
+                onChange={(v) =>
+                  setS({
+                    ...s,
+                    storefront: {
+                      ...(s.storefront || {}),
+                      checkoutSuccess: { ...(s.storefront?.checkoutSuccess || {}), codAdvanceNote: v },
+                    },
+                  })
+                }
+                multiline
+                rows={4}
               />
               <Field
                 label="Footer note (e.g. email confirmation)"
@@ -965,6 +901,7 @@ export function SettingsPage() {
                   })
                 }
                 multiline
+                rows={4}
               />
             </div>
           </section>
@@ -979,6 +916,7 @@ export function SettingsPage() {
                     title: String(s.storefront?.checkoutSuccess?.title ?? ""),
                     thankYouMessage: String(s.storefront?.checkoutSuccess?.thankYouMessage ?? ""),
                     paymentConfirmedMessage: String(s.storefront?.checkoutSuccess?.paymentConfirmedMessage ?? ""),
+                    codAdvanceNote: String(s.storefront?.checkoutSuccess?.codAdvanceNote ?? ""),
                     footerMessage: String(s.storefront?.checkoutSuccess?.footerMessage ?? ""),
                   },
                 },
@@ -1510,7 +1448,7 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
   );
 }
 
-function Field({ label, value, onChange, multiline, password }) {
+function Field({ label, value, onChange, multiline, password, rows = 4 }) {
   return (
     <div>
       <label className="text-xs font-medium text-slate-600">{label}</label>
@@ -1518,8 +1456,8 @@ function Field({ label, value, onChange, multiline, password }) {
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          rows={3}
-          className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+          rows={rows}
+          className="mt-1 min-h-[6rem] w-full resize-y rounded-lg border border-slate-200 px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words dark:border-slate-600 dark:bg-slate-800"
         />
       ) : (
         <input

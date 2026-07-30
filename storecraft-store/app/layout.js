@@ -14,6 +14,7 @@ import { getPublicStoreSettings } from "@/lib/serverSettings";
 import { isShopifyEnabled } from "@/lib/shopify";
 import { fetchCategoryTreeServer } from "@/lib/serverCategoryTree";
 import { getSiteUrl, isIndexableEnvironment, sanitizeCanonicalUrl, absoluteUrl } from "@/lib/siteUrl";
+import { buildFaviconMetadata } from "@/lib/faviconUrl";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import "./globals.css";
 
@@ -111,6 +112,8 @@ export async function generateMetadata() {
     const gsc = seo.googleSearchConsoleId?.trim();
     const verification = gsc ? { google: gsc } : {};
 
+    const icons = buildFaviconMetadata(general);
+
     return {
       metadataBase: new URL(siteUrl),
       title: {
@@ -118,6 +121,7 @@ export async function generateMetadata() {
         template: `%s | ${storeName}`,
       },
       description,
+      icons,
       authors: [{ name: storeName }],
       creator: storeName,
       publisher: storeName,
@@ -148,6 +152,7 @@ export async function generateMetadata() {
       metadataBase: new URL(getSiteUrl()),
       title: "CrazzyCars.pk | Car Accessories Pakistan",
       description: FALLBACK_DESCRIPTION,
+      icons: buildFaviconMetadata(),
       robots: isIndexableEnvironment() ? undefined : { index: false, follow: false },
       openGraph: {
         images: [{ url: absoluteUrl("/og-image.jpg"), width: 1200, height: 630, alt: "CrazzyCars.pk" }],

@@ -32,6 +32,8 @@ const settingsSchema = new mongoose.Schema(
       website: { type: String, default: "" },
       logo: imageSchema,
       logoUrl: { type: String, default: "" },
+      favicon: imageSchema,
+      faviconUrl: { type: String, default: "" },
       footerText: { type: String, default: "" },
       currency: { type: String, default: "PKR" },
       timezone: { type: String, default: "Asia/Karachi" },
