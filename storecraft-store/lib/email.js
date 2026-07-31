@@ -21,9 +21,10 @@ export function getFromEmail() {
  * Sync helper — env only (tests / debug). Prefer resolveAdminOrderEmail() at runtime.
  */
 export function getAdminEmail() {
+  // Prefer ADMIN_EMAIL for order/staff alerts; CONTACT_EMAIL is used by the contact form.
   return (
-    String(process.env.CONTACT_EMAIL || "").trim() ||
     String(process.env.ADMIN_EMAIL || "").trim() ||
+    String(process.env.CONTACT_EMAIL || "").trim() ||
     DEFAULT_ORDER_ADMIN_EMAIL
   );
 }
