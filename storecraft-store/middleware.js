@@ -6,6 +6,7 @@ import {
 } from "@/lib/constants";
 import { classifyAiTraffic, shouldSkipAiVisitPath } from "@/lib/aiAgentTraffic";
 import { applyAiAttributionCookies } from "@/lib/aiAttribution";
+import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
 
 /**
  * - Log AI crawler / AI-referrer traffic (non-blocking).
@@ -41,8 +42,7 @@ export async function middleware(request) {
     const referrer = request.headers.get("referer") || "";
     aiHit = classifyAiTraffic({ userAgent, referrer });
     if (aiHit?.matched) {
-      // Call Node on loopback so Edge middleware does not need runtime secrets inlined.
-      // Public URL fetch would go through Traefik and require x-ai-visit-secret.
+      // Loopback avoids Traefik; internal token works in Edge without runtime secrets.
       const port = process.env.PORT || "3000";
       const ingestUrl = `http://127.0.0.1:${port}/api/analytics/ai-visit`;
       const secret =
@@ -52,10 +52,9 @@ export async function middleware(request) {
         "";
       const headers = {
         "content-type": "application/json",
-        "x-internal-ai-ingest": "1",
+        "x-internal-ai-ingest": AI_INGEST_INTERNAL_TOKEN,
       };
       if (secret) headers["x-ai-visit-secret"] = secret;
-      // Fire-and-forget — Edge runtime must not await Mongo work here.
       fetch(ingestUrl, {
         method: "POST",
         headers,

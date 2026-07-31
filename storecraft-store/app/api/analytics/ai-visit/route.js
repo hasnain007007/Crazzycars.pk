@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import AiAgentVisit from "@/lib/models/AiAgentVisit.model";
 import { AI_SOURCES, classifyAiTraffic } from "@/lib/aiAgentTraffic";
+import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
 
 export const dynamic = "force-dynamic";
 
 const ALLOWED_SOURCES = new Set(AI_SOURCES);
 
-/** Prefer dedicated secret; fall back to other server secrets so ingest is never open. */
+/** Prefer dedicated secret; fall back to other server secrets so public ingest is never open. */
 export function resolveAiVisitIngestSecret() {
   return String(
     process.env.AI_VISIT_INGEST_SECRET ||
@@ -17,16 +18,13 @@ export function resolveAiVisitIngestSecret() {
   ).trim();
 }
 
-/**
- * Middleware calls this via http://127.0.0.1 (same container) with x-internal-ai-ingest.
- * External/proxy traffic always has x-forwarded-for — rejected without a valid secret.
- */
-function isTrustedInternalIngest(request) {
-  if (String(request.headers.get("x-internal-ai-ingest") || "") !== "1") return false;
-  if (request.headers.get("x-forwarded-for")) return false;
-  if (request.headers.get("x-real-ip")) return false;
-  const host = String(request.headers.get("host") || "").toLowerCase();
-  return host.startsWith("127.0.0.1") || host.startsWith("localhost");
+function isAuthorizedIngest(request) {
+  const secret = resolveAiVisitIngestSecret();
+  const gotSecret = String(request.headers.get("x-ai-visit-secret") || "").trim();
+  if (secret && gotSecret && gotSecret === secret) return true;
+
+  const internal = String(request.headers.get("x-internal-ai-ingest") || "").trim();
+  return internal === AI_INGEST_INTERNAL_TOKEN;
 }
 
 /**
@@ -35,12 +33,8 @@ function isTrustedInternalIngest(request) {
  */
 export async function POST(request) {
   try {
-    const secret = resolveAiVisitIngestSecret();
-    const got = String(request.headers.get("x-ai-visit-secret") || "").trim();
-    const secretOk = Boolean(secret && got && got === secret);
-    const internalOk = isTrustedInternalIngest(request);
-
-    if (!secretOk && !internalOk) {
+    if (!isAuthorizedIngest(request)) {
+      const secret = resolveAiVisitIngestSecret();
       if (!secret) {
         return NextResponse.json({ success: false, error: "Ingest not configured" }, { status: 503 });
       }
