@@ -1652,20 +1652,22 @@ textarea::placeholder {
 }
 
 .home-hero__inner {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
   display: flex;
-  align-items: center;
-  min-height: inherit;
+  align-items: flex-end;
   width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 40px 24px 48px;
+  max-width: none;
+  margin: 0;
+  padding: 40px 24px 52px;
 }
 
 .home-hero__copy {
   max-width: 34rem;
   width: 100%;
+  margin: 0 auto;
+  padding: 0 max(0px, calc((100% - 1280px) / 2));
   animation: home-hero-rise 0.55s ease-out both;
 }
 
@@ -1857,6 +1859,7 @@ textarea::placeholder {
   }
 
   .home-hero__inner {
+    align-items: center;
     padding: 56px 8% 64px;
   }
 
@@ -1867,14 +1870,14 @@ textarea::placeholder {
 
 @media (max-width: 768px) {
   .home-hero {
-    min-height: auto;
-    aspect-ratio: 4 / 5;
-    max-height: min(78vh, 560px);
+    min-height: min(68vh, 520px);
+    aspect-ratio: auto;
+    max-height: none;
   }
 
   .home-hero__inner {
     align-items: flex-end;
-    padding: 28px 18px calc(44px + env(safe-area-inset-bottom, 0px));
+    padding: 24px 20px calc(48px + env(safe-area-inset-bottom, 0px));
   }
 
   .home-hero__veil {
@@ -1917,7 +1920,7 @@ textarea::placeholder {
   }
 
   .home-hero__dots {
-    bottom: 10px;
+    bottom: 12px;
   }
 
   .home-hero__img {
