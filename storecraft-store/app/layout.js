@@ -13,7 +13,8 @@ import { CustomerProvider } from "@/lib/customerAuth";
 import { getPublicStoreSettings } from "@/lib/serverSettings";
 import { isShopifyEnabled } from "@/lib/shopify";
 import { fetchCategoryTreeServer } from "@/lib/serverCategoryTree";
-import { getSiteUrl, isIndexableEnvironment, sanitizeCanonicalUrl, absoluteUrl } from "@/lib/siteUrl";
+import { getSiteUrl, isIndexableEnvironment, absoluteUrl } from "@/lib/siteUrl";
+import { buildFaviconMetadata } from "@/lib/faviconUrl";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import "./globals.css";
 
@@ -78,7 +79,7 @@ export async function generateMetadata() {
       seo.defaultMetaDescription?.trim() ||
       FALLBACK_DESCRIPTION;
     const siteUrl = getSiteUrl();
-    const canonical = sanitizeCanonicalUrl(seo.canonicalUrl?.trim() || siteUrl);
+    // Homepage canonical is set in app/page.jsx — keep root layout free of a sitewide canonical.
 
     const ogTitle = seo.ogTitle?.trim() || title;
     const ogDescription = seo.ogDescription?.trim() || description;
@@ -111,6 +112,8 @@ export async function generateMetadata() {
     const gsc = seo.googleSearchConsoleId?.trim();
     const verification = gsc ? { google: gsc } : {};
 
+    const icons = buildFaviconMetadata(general);
+
     return {
       metadataBase: new URL(siteUrl),
       title: {
@@ -118,6 +121,7 @@ export async function generateMetadata() {
         template: `%s | ${storeName}`,
       },
       description,
+      icons,
       authors: [{ name: storeName }],
       creator: storeName,
       publisher: storeName,
@@ -128,7 +132,7 @@ export async function generateMetadata() {
         locale: "en_US",
         type: "website",
         siteName: storeName,
-        url: canonical,
+        url: siteUrl,
         images: [{ url: ogImageUrl, width: 1200, height: 630, alt: storeName }],
       },
       twitter: {
@@ -137,9 +141,8 @@ export async function generateMetadata() {
         description: ogDescription,
         images: [ogImageUrl],
       },
-      alternates: {
-        canonical,
-      },
+      // Do NOT set alternates.canonical here — a sitewide homepage canonical
+      // makes every page look like a duplicate of /. Child routes set their own.
       verification,
     };
   } catch (e) {
@@ -148,6 +151,7 @@ export async function generateMetadata() {
       metadataBase: new URL(getSiteUrl()),
       title: "CrazzyCars.pk | Car Accessories Pakistan",
       description: FALLBACK_DESCRIPTION,
+      icons: buildFaviconMetadata(),
       robots: isIndexableEnvironment() ? undefined : { index: false, follow: false },
       openGraph: {
         images: [{ url: absoluteUrl("/og-image.jpg"), width: 1200, height: 630, alt: "CrazzyCars.pk" }],

@@ -8,9 +8,11 @@ function escapeRegex(value) {
 /**
  * Resolve a URL slug/handle to an active product.
  *
- * Meta carousel ads still use Shopify-era handles that omit the
- * `-crazzycars-pk` suffix we added on migration. Exact slug miss → try
- * `${slug}-crazzycars-pk`, then case-insensitive match.
+ * Handles Shopify / Meta leftovers:
+ * - exact slug
+ * - `-crazzycars-pk` suffix added on migration
+ * - shortened handles that are a prefix of the current slug
+ * - year-range drift (2021-2024 → 2021-2026) with same stem
  *
  * @returns {Promise<{ _id: unknown, slug: string } | null>}
  */
@@ -52,6 +54,41 @@ export async function findActiveProductBySlugParam(rawSlug) {
       .select(select)
       .lean();
     if (ciBrand) return ciBrand;
+  }
+
+  // Short Shopify handles that grew longer after migration
+  // e.g. deal-5-complete-body-kit → deal-5-complete-body-kit-deal-front-...
+  if (slug.length >= 8) {
+    const prefixHits = await Product.find({
+      status: "active",
+      slug: { $regex: `^${escapeRegex(slug)}(-|$)`, $options: "i" },
+    })
+      .select(select)
+      .limit(8)
+      .lean();
+    if (prefixHits.length === 1) return prefixHits[0];
+    if (prefixHits.length > 1) {
+      prefixHits.sort((a, b) => String(a.slug).length - String(b.slug).length);
+      return prefixHits[0];
+    }
+  }
+
+  // Year-range drift: honda-city-2021-2024-carbon-fiber-steering-wheel
+  // → honda-city-2021-2026-carbon-fiber-steering-wheel-...
+  if (/\d{4}-\d{4}/.test(slug)) {
+    const flex = escapeRegex(slug).replace(/\d{4}-\d{4}/g, "\\d{4}-\\d{4}");
+    const yearHits = await Product.find({
+      status: "active",
+      slug: { $regex: `^${flex}`, $options: "i" },
+    })
+      .select(select)
+      .limit(8)
+      .lean();
+    if (yearHits.length === 1) return yearHits[0];
+    if (yearHits.length > 1) {
+      yearHits.sort((a, b) => String(a.slug).length - String(b.slug).length);
+      return yearHits[0];
+    }
   }
 
   return null;

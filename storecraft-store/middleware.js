@@ -11,7 +11,42 @@ import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
 function redirectPath(request, pathname, status = 308) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
+  // Drop Shopify / tracking junk so Google consolidates on clean canonicals.
+  stripTrackingParams(url.searchParams);
   return NextResponse.redirect(url, status);
+}
+
+/** Query keys Google still crawls from the old Shopify store. */
+const STRIP_QUERY_KEYS = new Set([
+  "variant",
+  "country",
+  "currency",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "gclid",
+  "fbclid",
+  "mc_cid",
+  "mc_eid",
+  "_pos",
+  "_fid",
+  "_ss",
+  "_v",
+  "pb",
+]);
+
+function stripTrackingParams(searchParams) {
+  let changed = false;
+  for (const key of [...searchParams.keys()]) {
+    const lower = String(key).toLowerCase();
+    if (STRIP_QUERY_KEYS.has(lower) || lower.startsWith("utm_")) {
+      searchParams.delete(key);
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 /**
@@ -59,12 +94,19 @@ export async function middleware(request) {
     return redirectPath(request, "/blogs", 308);
   }
 
-  // Shopify-era product URLs (Meta carousel ads, old bookmarks) → /[slug] PDP.
-  // Keep /products (listing) as-is; only redirect /products/:slug.
-  if (pathname.startsWith("/products/")) {
-    const rest = pathname.slice("/products/".length).replace(/\/+$/, "");
+  // Shopify-era product URLs (+ variant/country/currency) → clean /[slug] in one hop.
+  if (lower.startsWith("/products/")) {
+    const rest = lower.slice("/products/".length).replace(/\/+$/, "");
     if (rest && !rest.includes("/")) {
       return redirectPath(request, `/${rest}`, 308);
+    }
+  }
+
+  // Self-canonicalizing: strip leftover Shopify/tracking params on any other URL.
+  {
+    const cleanUrl = request.nextUrl.clone();
+    if (stripTrackingParams(cleanUrl.searchParams)) {
+      return NextResponse.redirect(cleanUrl, 308);
     }
   }
 

@@ -189,7 +189,12 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const content = await loadContent(slugStr);
-  if (!content) return { title: "Not Found" };
+  if (!content) {
+    return {
+      title: "Page not found",
+      robots: { index: false, follow: true },
+    };
+  }
   if (content.type === "redirect") {
     permanentRedirect(content.to);
   }

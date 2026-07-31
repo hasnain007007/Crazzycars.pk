@@ -4,7 +4,8 @@ import { canonicalProductPathForSlug } from "@/lib/resolveProductSlug";
 /**
  * Shopify-era PDP route used by Meta carousel ads (`/products/[handle]`).
  * Resolve the handle to the canonical Mongo slug (incl. `-crazzycars-pk`
- * suffix migration) and 308 there so the customer lands on the real PDP.
+ * suffix migration / shortened handles) and 308 there.
+ * Unknown handles go to /shop so Google stops seeing soft/hard 404s.
  */
 export default async function LegacyShopifyProductRedirect({ params }) {
   const { handle } = await params;
@@ -14,6 +15,5 @@ export default async function LegacyShopifyProductRedirect({ params }) {
   const canonical = await canonicalProductPathForSlug(raw);
   if (canonical) permanentRedirect(canonical);
 
-  // Last resort: still send to /[handle] so next.config / [slug] can try.
-  permanentRedirect(`/${raw}`);
+  permanentRedirect("/shop");
 }
