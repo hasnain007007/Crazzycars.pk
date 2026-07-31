@@ -551,24 +551,27 @@ export function StoreHeader({ initialCategoryTree = null }) {
         <div className="store-container relative flex h-[72px] items-center gap-4">
           <button
             type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center md:hidden"
+            className="relative z-[2] flex h-10 w-10 shrink-0 items-center justify-center md:hidden"
             aria-label="Open menu"
             onClick={() => setMenuOpen(true)}
           >
             <span className="text-xl text-[#111111]">☰</span>
           </button>
 
-          <Link href="/" className="min-w-0 shrink flex items-center gap-2 leading-none">
+          <Link
+            href="/"
+            className="absolute left-1/2 top-1/2 z-[1] flex min-w-0 max-w-[min(200px,52vw)] -translate-x-1/2 -translate-y-1/2 items-center justify-center leading-none md:static md:left-auto md:top-auto md:z-auto md:max-w-none md:shrink md:translate-x-0 md:translate-y-0 md:justify-start"
+          >
             {brand.logo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={trimmedLogoUrl(brand.logo)}
                 alt={brand.storeName}
-                className="h-12 max-w-[min(160px,42vw)] object-contain md:h-16 md:max-w-[220px]"
+                className="h-12 max-w-full object-contain md:h-16 md:max-w-[220px]"
                 style={{ width: "auto", objectFit: "contain" }}
               />
             ) : brand.showStoreName ? (
-              <span className="flex min-w-0 flex-col">
+              <span className="flex min-w-0 flex-col items-center md:items-start">
                 <span className="font-heading text-lg font-bold tracking-tight md:text-xl" style={{ color: "#111111" }}>
                   {line1}
                 </span>
@@ -614,7 +617,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
             <HeaderAction label="Cart" icon={<IconBag />} badge={badgeCart} onClick={() => setOpen(true)} />
           </div>
 
-          <div className="ml-auto flex items-center gap-3 md:hidden">
+          <div className="relative z-[2] ml-auto flex items-center gap-1 md:hidden">
             <button
               type="button"
               onClick={() => setMobileSearchOpen((v) => !v)}
