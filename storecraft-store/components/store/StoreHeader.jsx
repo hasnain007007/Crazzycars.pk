@@ -392,6 +392,16 @@ export function StoreHeader({ initialCategoryTree = null }) {
     };
   }, [mobileSearchOpen, isMdUp]);
 
+  // Lock body scroll while the full-screen mobile nav is open.
+  useEffect(() => {
+    if (!menuOpen || isMdUp) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen, isMdUp]);
+
   // Keep the sheet pinned to the visible viewport (iOS keyboard / URL bar).
   useEffect(() => {
     if (!mobileSearchOpen || isMdUp) return undefined;
@@ -548,10 +558,10 @@ export function StoreHeader({ initialCategoryTree = null }) {
       ) : null}
       {/* Row 1 — main (above nav so search dropdown is never covered) */}
       <div className="relative z-[80] border-b bg-white" style={{ borderColor: "#E5E7EB" }}>
-        <div className="store-container relative flex h-[72px] items-center gap-4">
+        <div className="store-container relative grid h-[72px] grid-cols-[88px_1fr_88px] items-center md:flex md:gap-4">
           <button
             type="button"
-            className="relative z-[2] flex h-10 w-10 shrink-0 items-center justify-center md:hidden"
+            className="relative z-[2] flex h-10 w-10 shrink-0 items-center justify-center justify-self-start md:hidden"
             aria-label="Open menu"
             onClick={() => setMenuOpen(true)}
           >
@@ -560,14 +570,14 @@ export function StoreHeader({ initialCategoryTree = null }) {
 
           <Link
             href="/"
-            className="absolute left-1/2 top-1/2 z-[1] flex min-w-0 max-w-[min(200px,52vw)] -translate-x-1/2 -translate-y-1/2 items-center justify-center leading-none md:static md:left-auto md:top-auto md:z-auto md:max-w-none md:shrink md:translate-x-0 md:translate-y-0 md:justify-start"
+            className="col-start-2 flex min-w-0 max-w-full items-center justify-center justify-self-center leading-none md:col-auto md:mr-0 md:max-w-none md:shrink md:justify-start"
           >
             {brand.logo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={trimmedLogoUrl(brand.logo)}
                 alt={brand.storeName}
-                className="h-12 max-w-full object-contain md:h-16 md:max-w-[220px]"
+                className="h-12 max-w-[min(180px,46vw)] object-contain md:h-16 md:max-w-[220px]"
                 style={{ width: "auto", objectFit: "contain" }}
               />
             ) : brand.showStoreName ? (
@@ -617,7 +627,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
             <HeaderAction label="Cart" icon={<IconBag />} badge={badgeCart} onClick={() => setOpen(true)} />
           </div>
 
-          <div className="relative z-[2] ml-auto flex items-center gap-1 md:hidden">
+          <div className="relative z-[2] col-start-3 flex items-center justify-end gap-0.5 justify-self-end md:hidden">
             <button
               type="button"
               onClick={() => setMobileSearchOpen((v) => !v)}
@@ -746,122 +756,135 @@ export function StoreHeader({ initialCategoryTree = null }) {
         ) : null}
       </nav>
 
-      {/* Mobile overlay */}
-      {menuOpen ? (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-[7500] bg-black/40 md:hidden"
-            aria-label="Close menu"
-            onClick={() => setMenuOpen(false)}
-          />
-          <aside className="fixed inset-0 z-[7600] flex flex-col bg-white md:hidden">
-            <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: "#E5E7EB" }}>
-              <Link href="/" className="flex flex-col leading-none" onClick={() => setMenuOpen(false)}>
-                {brand.logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={trimmedLogoUrl(brand.logo)}
-                    alt={brand.storeName}
-                    className="h-10 max-w-[150px] object-contain"
-                    style={{ height: 40, width: "auto", maxWidth: 150, objectFit: "contain" }}
-                  />
-                ) : (
-                  <>
-                    <span className="font-heading text-lg font-bold" style={{ color: "#111111" }}>
-                      {line1}
-                    </span>
-                    {line2 ? (
-                      <span className="font-heading text-sm" style={{ color: "#C41E1E" }}>
-                        {line2}
+      {/* Mobile nav — portaled to body so sticky header doesn't clip fixed inset */}
+      {mounted && menuOpen && isMdUp === false
+        ? createPortal(
+            <div className="store-mobile-nav md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+              <button
+                type="button"
+                className="store-mobile-nav__backdrop"
+                aria-label="Close menu"
+                onClick={() => setMenuOpen(false)}
+              />
+              <aside className="store-mobile-nav__panel">
+                <div className="store-mobile-nav__head">
+                  <span className="store-mobile-nav__head-spacer" aria-hidden />
+                  <Link
+                    href="/"
+                    className="store-mobile-nav__logo"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {brand.logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={trimmedLogoUrl(brand.logo)}
+                        alt={brand.storeName}
+                        className="h-10 max-w-[160px] object-contain"
+                        style={{ height: 40, width: "auto", maxWidth: 160, objectFit: "contain" }}
+                      />
+                    ) : (
+                      <span className="flex flex-col items-center leading-none">
+                        <span className="font-heading text-lg font-bold" style={{ color: "#111111" }}>
+                          {line1}
+                        </span>
+                        {line2 ? (
+                          <span className="font-heading text-sm" style={{ color: "#C41E1E" }}>
+                            {line2}
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
-                  </>
-                )}
-              </Link>
-              <button type="button" className="text-2xl text-[#111111]" onClick={() => setMenuOpen(false)} aria-label="Close">
-                ×
-              </button>
-            </div>
-            <nav className="flex-1 overflow-y-auto px-6 py-4">
-              {nav.map((item) => (
-                <div key={item.label} className="border-b" style={{ borderColor: "#F3F4F6" }}>
-                  {megaEnabled && item.mega ? (
-                    <>
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
-                        onClick={() => setDrawerExpanded((s) => ({ ...s, [item.label]: !s[item.label] }))}
-                      >
-                        {item.label}
-                        <span className="text-[#9CA3AF]">{drawerExpanded[item.label] ? "−" : "+"}</span>
-                      </button>
-                      {drawerExpanded[item.label] ? (
-                        <ul className="pb-3 pl-3">
-                          {treeCategories.length
-                            ? treeCategories.map((cat) => (
-                                <li key={String(cat._id)}>
-                                  <Link
-                                    href={`/categories/${cat.slug}`}
-                                    className="block py-2 text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
-                                    onClick={() => setMenuOpen(false)}
-                                  >
-                                    {cat.name}
-                                  </Link>
-                                  {(cat.children || []).map((sub) => (
-                                    <Link
-                                      key={String(sub._id)}
-                                      href={`/categories/${sub.slug}`}
-                                      className="block py-1.5 pl-3 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
-                                      onClick={() => setMenuOpen(false)}
-                                    >
-                                      {sub.name}
-                                    </Link>
-                                  ))}
-                                </li>
-                              ))
-                            : (item.columns?.length ? item.columns : megaCols)
-                                .flatMap((c) => c.links)
-                                .map((l) => (
-                                  <li key={l.label}>
-                                    <Link
-                                      href={l.href}
-                                      className="block py-2 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
-                                      onClick={() => setMenuOpen(false)}
-                                    >
-                                      {l.label}
-                                    </Link>
-                                  </li>
-                                ))}
-                        </ul>
-                      ) : null}
-                    </>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      className={`block py-4 text-sm font-semibold uppercase transition-colors ${
-                        isNavItemActive(item) ? "text-[#C41E1E]" : "text-[#111111] hover:text-[#C41E1E]"
-                      }`}
-                      aria-current={isNavItemActive(item) ? "page" : undefined}
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  )}
+                    )}
+                  </Link>
+                  <button
+                    type="button"
+                    className="store-mobile-nav__close"
+                    onClick={() => setMenuOpen(false)}
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
                 </div>
-              ))}
-            </nav>
-            <div className="border-t px-6 py-4" style={{ borderColor: "#E5E7EB" }}>
-              <Link href={accountHref} prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
-                Account
-              </Link>
-              <Link href="/wishlist" prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
-                Saved items
-              </Link>
-            </div>
-          </aside>
-        </>
-      ) : null}
+                <nav className="store-mobile-nav__links">
+                  {nav.map((item) => (
+                    <div key={item.label} className="border-b" style={{ borderColor: "#F3F4F6" }}>
+                      {megaEnabled && item.mega ? (
+                        <>
+                          <button
+                            type="button"
+                            className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
+                            onClick={() => setDrawerExpanded((s) => ({ ...s, [item.label]: !s[item.label] }))}
+                          >
+                            {item.label}
+                            <span className="text-[#9CA3AF]">{drawerExpanded[item.label] ? "−" : "+"}</span>
+                          </button>
+                          {drawerExpanded[item.label] ? (
+                            <ul className="pb-3 pl-3">
+                              {treeCategories.length
+                                ? treeCategories.map((cat) => (
+                                    <li key={String(cat._id)}>
+                                      <Link
+                                        href={`/categories/${cat.slug}`}
+                                        className="block py-2 text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
+                                        onClick={() => setMenuOpen(false)}
+                                      >
+                                        {cat.name}
+                                      </Link>
+                                      {(cat.children || []).map((sub) => (
+                                        <Link
+                                          key={String(sub._id)}
+                                          href={`/categories/${sub.slug}`}
+                                          className="block py-1.5 pl-3 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
+                                          onClick={() => setMenuOpen(false)}
+                                        >
+                                          {sub.name}
+                                        </Link>
+                                      ))}
+                                    </li>
+                                  ))
+                                : (item.columns?.length ? item.columns : megaCols)
+                                    .flatMap((c) => c.links)
+                                    .map((l) => (
+                                      <li key={l.label}>
+                                        <Link
+                                          href={l.href}
+                                          className="block py-2 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
+                                          onClick={() => setMenuOpen(false)}
+                                        >
+                                          {l.label}
+                                        </Link>
+                                      </li>
+                                    ))}
+                            </ul>
+                          ) : null}
+                        </>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className={`block py-4 text-sm font-semibold uppercase transition-colors ${
+                            isNavItemActive(item) ? "text-[#C41E1E]" : "text-[#111111] hover:text-[#C41E1E]"
+                          }`}
+                          aria-current={isNavItemActive(item) ? "page" : undefined}
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </nav>
+                <div className="store-mobile-nav__foot">
+                  <Link href={accountHref} prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
+                    Account
+                  </Link>
+                  <Link href="/wishlist" prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
+                    Saved items
+                  </Link>
+                </div>
+              </aside>
+            </div>,
+            document.body
+          )
+        : null}
     </header>
   );
 }

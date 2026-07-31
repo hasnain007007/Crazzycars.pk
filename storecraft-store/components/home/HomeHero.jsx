@@ -34,14 +34,17 @@ function normalizeButtonUrl(url) {
   return `/${u}`;
 }
 
-function HeroButtons({ buttons, defaultTextColor = "#FFFFFF" }) {
-  const list = Array.isArray(buttons)
+function HeroButtons({ buttons, defaultTextColor = "#FFFFFF", mobilePrimaryOnly = false }) {
+  let list = Array.isArray(buttons)
     ? buttons.filter((b) => String(b?.text || "").trim())
     : [];
+  if (mobilePrimaryOnly && list.length > 1) {
+    list = list.slice(0, 1);
+  }
   if (!list.length) return null;
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 32 }}>
+    <div className={`home-hero__ctas${mobilePrimaryOnly ? " home-hero__ctas--mobile" : ""}`}>
       {list.map((button, i) => {
         const text = String(button.text || "").trim();
         const href = normalizeButtonUrl(button.url || button.link);
@@ -50,46 +53,21 @@ function HeroButtons({ buttons, defaultTextColor = "#FFFFFF" }) {
         const styleKey = String(button.style || "primary").toLowerCase();
         const isSecondary = styleKey === "secondary" || styleKey === "outline";
 
+        const className = isSecondary ? "home-hero__btn home-hero__btn--ghost" : "home-hero__btn home-hero__btn--primary";
         const style = isSecondary
-          ? {
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textDecoration: "none",
-              background: "transparent",
-              color: textColor,
-              padding: "12px 30px",
-              borderRadius: 8,
-              border: `2px solid ${textColor}`,
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: "pointer",
-            }
-          : {
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textDecoration: "none",
-              background: bgColor,
-              color: textColor,
-              padding: "14px 32px",
-              borderRadius: 8,
-              fontWeight: 700,
-              fontSize: 15,
-              border: "none",
-              cursor: "pointer",
-            };
+          ? { color: textColor, borderColor: textColor }
+          : { background: bgColor, color: textColor };
 
         if (href.startsWith("http://") || href.startsWith("https://")) {
           return (
-            <a key={i} href={href} style={style} target="_blank" rel="noopener noreferrer">
+            <a key={i} href={href} className={className} style={style} target="_blank" rel="noopener noreferrer">
               {text}
             </a>
           );
         }
 
         return (
-          <Link key={i} href={href} style={style}>
+          <Link key={i} href={href} className={className} style={style}>
             {text}
           </Link>
         );
@@ -107,42 +85,27 @@ function FallbackHero({ settings }) {
   const ctaUrl = hp.heroCtaUrl || DEFAULT_HOMEPAGE_SETTINGS.heroCtaUrl;
 
   return (
-    <section
-      className="relative overflow-hidden"
-      style={{
-        minHeight: "580px",
-        background: "linear-gradient(135deg, #0F0F0F 0%, #1A1A1A 50%, #111111 100%)",
-      }}
-    >
-      <div className="relative mx-auto flex h-full min-h-[420px] max-w-[1400px] items-center px-6 py-16 md:min-h-[580px] md:pl-[8%] md:pr-8">
-        <div className="relative z-10 max-w-[560px]">
-          <p className="mb-4 font-body uppercase" style={{ fontSize: 12, letterSpacing: "2px", color: "#E8941A" }}>
-            Pakistan&apos;s Car Accessories Store
-          </p>
-          <h1 className="font-heading font-bold leading-none" style={{ fontSize: "clamp(42px, 8vw, 72px)" }}>
-            <span className="block text-white">{line1 || "UPGRADE"}</span>
-            {line2 ? (
-              <span className="block" style={{ color: "#C41E1E" }}>
-                {line2}
-              </span>
-            ) : null}
+    <section className="home-hero home-hero--fallback" aria-label="Welcome">
+      <div className="home-hero__veil" aria-hidden />
+      <div className="home-hero__inner">
+        <div className="home-hero__copy">
+          <p className="home-hero__eyebrow">Pakistan&apos;s Car Accessories Store</p>
+          <h1 className="home-hero__title">
+            <span className="home-hero__title-line">{line1 || "UPGRADE"}</span>
+            {line2 ? <span className="home-hero__title-brand">{line2}</span> : null}
           </h1>
-          <p className="mt-5 max-w-md font-body leading-relaxed" style={{ fontSize: 16, color: "#9CA3AF" }}>
-            {subtext}
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href={ctaUrl} className="inline-flex items-center rounded-md px-8 py-3 text-[15px] font-bold text-white transition hover:opacity-90" style={{ background: "#C41E1E" }}>
-              {ctaText} →
+          {subtext ? <p className="home-hero__sub home-hero__sub--desktop">{subtext}</p> : null}
+          <div className="home-hero__ctas">
+            <Link href={ctaUrl} className="home-hero__btn home-hero__btn--primary">
+              {ctaText}
             </Link>
-            <Link href="/categories" className="inline-flex items-center rounded-md border border-white px-8 py-3 text-[15px] font-semibold text-white transition hover:bg-white/10">
+            <Link href="/categories" className="home-hero__btn home-hero__btn--ghost home-hero__btn--desktop">
               Browse Categories
             </Link>
           </div>
-          <ul className="mt-6 flex flex-wrap gap-2">
+          <ul className="home-hero__trust home-hero__trust--desktop">
             {trust.map((t) => (
-              <li key={t} className="rounded-full border border-white/40 px-3 py-1 text-xs text-white/90">
-                {t}
-              </li>
+              <li key={t}>{t}</li>
             ))}
           </ul>
         </div>
@@ -154,43 +117,26 @@ function FallbackHero({ settings }) {
 function HeroSlideContent({ slide }) {
   const trust = useTrustBadges();
   const { line1, line2 } = splitHeadline(slide.title);
+  const primaryButtons = slide.buttons?.length
+    ? slide.buttons
+    : [{ text: "Shop Now", url: "/shop", style: "primary", bgColor: "#C41E1E" }];
+
   return (
-    <div className="relative z-10 max-w-[560px]">
-      <p className="mb-4 font-body uppercase" style={{ fontSize: 12, letterSpacing: "2px", color: "#E8941A" }}>
-        Pakistan&apos;s Car Accessories Store
-      </p>
-      <h1
-        className="font-heading font-bold leading-none"
-        style={{ fontSize: "clamp(42px, 8vw, 72px)", color: slide.textColor }}
-      >
-        <span className="block">{line1 || slide.title}</span>
-        {line2 ? (
-          <span className="block" style={{ color: "#C41E1E" }}>
-            {line2}
-          </span>
-        ) : null}
+    <div className="home-hero__copy">
+      <p className="home-hero__eyebrow">Pakistan&apos;s Car Accessories Store</p>
+      <h1 className="home-hero__title" style={{ color: slide.textColor }}>
+        <span className="home-hero__title-line">{line1 || slide.title}</span>
+        {line2 ? <span className="home-hero__title-brand">{line2}</span> : null}
       </h1>
       {slide.subtitle ? (
-        <p className="mt-5 max-w-md font-body leading-relaxed" style={{ fontSize: 16, color: slide.subColor }}>
+        <p className="home-hero__sub home-hero__sub--desktop" style={{ color: slide.subColor }}>
           {slide.subtitle}
         </p>
       ) : null}
-      <HeroButtons
-        buttons={
-          slide.buttons?.length
-            ? slide.buttons
-            : [
-                { text: "Shop Now", url: "/shop", style: "primary" },
-                { text: "Browse Categories", url: "/categories", style: "outline" },
-              ]
-        }
-        defaultTextColor={slide.textColor}
-      />
-      <ul className="mt-6 flex flex-wrap gap-2">
+      <HeroButtons buttons={primaryButtons} defaultTextColor={slide.textColor} />
+      <ul className="home-hero__trust home-hero__trust--desktop">
         {trust.map((t) => (
-          <li key={t} className="rounded-full border border-white/40 px-3 py-1 text-xs text-white/90">
-            {t}
-          </li>
+          <li key={t}>{t}</li>
         ))}
       </ul>
     </div>
@@ -268,13 +214,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
   }, [slides.length, go]);
 
   if (loading) {
-    return (
-      <section
-        className="relative overflow-hidden"
-        style={{ minHeight: 600, background: "#111111" }}
-        aria-busy="true"
-      />
-    );
+    return <section className="home-hero home-hero--loading" aria-busy="true" />;
   }
 
   if (!slides.length) {
@@ -286,9 +226,14 @@ export default function HomeHero({ settings, initialSlides = null }) {
   const bgImageMobile = slide.imageUrlMobile || bgImage;
 
   return (
-    <section className="relative overflow-hidden" style={{ minHeight: 600, background: slide.backgroundColor || "#111111" }}>
+    <section
+      className="home-hero"
+      style={{ background: slide.backgroundColor || "#0a0a0a" }}
+      aria-roledescription="carousel"
+      aria-label="Featured"
+    >
       {bgImage ? (
-        <picture className="absolute inset-0 block h-full w-full">
+        <picture className="home-hero__media">
           {bgImageMobile && bgImageMobile !== bgImage ? (
             <source media="(max-width: 768px)" srcSet={bgImageMobile} />
           ) : null}
@@ -298,24 +243,16 @@ export default function HomeHero({ settings, initialSlides = null }) {
             alt=""
             fetchPriority={index === 0 ? "high" : "low"}
             loading={index === 0 ? "eager" : "lazy"}
-            decoding={index === 0 ? "async" : "async"}
-            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
-            style={{ opacity: 1 }}
+            decoding="async"
+            className="home-hero__img"
             key={slide.id}
           />
         </picture>
       ) : (
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(circle at 20% 30%, rgba(196,30,30,0.35), transparent 40%), linear-gradient(120deg, #111111 0%, #1a1a1a 40%, #2a0f0f 100%)",
-          }}
-          aria-hidden
-        />
+        <div className="home-hero__media home-hero__media--gradient" aria-hidden />
       )}
-      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)" }} aria-hidden />
-      <div className="relative mx-auto flex min-h-[420px] max-w-[1400px] items-center px-6 py-12 md:min-h-[600px] md:py-20 md:pl-[8%] md:pr-8">
+      <div className="home-hero__veil" aria-hidden />
+      <div className="home-hero__inner">
         <HeroSlideContent slide={slide} />
       </div>
 
@@ -325,7 +262,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
             type="button"
             onClick={() => go(-1)}
             aria-label="Previous slide"
-            className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/40 px-3 py-2 text-white hover:bg-black/60"
+            className="home-hero__arrow home-hero__arrow--prev home-hero__arrow--desktop"
           >
             ‹
           </button>
@@ -333,26 +270,19 @@ export default function HomeHero({ settings, initialSlides = null }) {
             type="button"
             onClick={() => go(1)}
             aria-label="Next slide"
-            className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/40 px-3 py-2 text-white hover:bg-black/60"
+            className="home-hero__arrow home-hero__arrow--next home-hero__arrow--desktop"
           >
             ›
           </button>
-          <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+          <div className="home-hero__dots">
             {slides.map((s, i) => (
               <button
                 key={s.id}
                 type="button"
                 aria-label={`Go to slide ${i + 1}`}
+                aria-current={i === index ? "true" : undefined}
                 onClick={() => setIndex(i)}
-                style={{
-                  width: i === index ? 24 : 8,
-                  height: 8,
-                  borderRadius: 99,
-                  border: "none",
-                  background: i === index ? "#C41E1E" : "rgba(255,255,255,0.5)",
-                  cursor: "pointer",
-                  transition: "width 0.2s",
-                }}
+                className={i === index ? "is-active" : undefined}
               />
             ))}
           </div>
