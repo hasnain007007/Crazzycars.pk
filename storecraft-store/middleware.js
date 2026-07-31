@@ -8,22 +8,63 @@ import { classifyAiTraffic, shouldSkipAiVisitPath } from "@/lib/aiAgentTraffic";
 import { applyAiAttributionCookies } from "@/lib/aiAttribution";
 import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
 
+function redirectPath(request, pathname, status = 308) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  return NextResponse.redirect(url, status);
+}
+
 /**
+ * - Fix Shopify-era / Google-indexed URLs (collections, case, cart, search).
  * - Log AI crawler / AI-referrer traffic (non-blocking).
  * - Tag first-touch AI-referrer attribution cookies (14-day window).
  * - Protect storefront account pages (login/register excluded via path checks).
  */
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
+  const lower = pathname.toLowerCase();
+
+  // Linux hosts are case-sensitive — Google indexes /Categories/Exterior etc.
+  if (pathname !== lower) {
+    const caseSensitivePrefixes = [
+      "/categories",
+      "/collections",
+      "/products",
+      "/pages",
+      "/blogs",
+      "/cars",
+      "/shop",
+      "/sale",
+      "/about",
+      "/contact",
+      "/faq",
+      "/cart",
+      "/search",
+      "/account",
+      "/checkout",
+      "/track-order",
+    ];
+    if (caseSensitivePrefixes.some((p) => lower === p || lower.startsWith(`${p}/`))) {
+      return redirectPath(request, lower, 308);
+    }
+  }
+
+  // Shopify singular /collection/:handle
+  if (lower.startsWith("/collection/") && !lower.startsWith("/collections/")) {
+    return redirectPath(request, `/collections/${lower.slice("/collection/".length)}`, 308);
+  }
+
+  // Shopify blog home
+  if (lower === "/blogs/news" || lower === "/blog/news") {
+    return redirectPath(request, "/blogs", 308);
+  }
 
   // Shopify-era product URLs (Meta carousel ads, old bookmarks) → /[slug] PDP.
   // Keep /products (listing) as-is; only redirect /products/:slug.
   if (pathname.startsWith("/products/")) {
     const rest = pathname.slice("/products/".length).replace(/\/+$/, "");
     if (rest && !rest.includes("/")) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${rest}`;
-      return NextResponse.redirect(url, 308);
+      return redirectPath(request, `/${rest}`, 308);
     }
   }
 

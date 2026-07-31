@@ -49,6 +49,32 @@ const nextConfig = {
         destination: "/:slug",
         permanent: true,
       },
+      // Shopify blog / cart / search leftovers
+      {
+        source: "/blogs/news",
+        destination: "/blogs",
+        permanent: true,
+      },
+      {
+        source: "/blog/news",
+        destination: "/blogs",
+        permanent: true,
+      },
+      {
+        source: "/cart",
+        destination: "/shop",
+        permanent: true,
+      },
+      {
+        source: "/search",
+        destination: "/shop",
+        permanent: true,
+      },
+      {
+        source: "/collection/:slug",
+        destination: "/collections/:slug",
+        permanent: true,
+      },
       {
         source: "/tracking",
         destination: "/track-order",
