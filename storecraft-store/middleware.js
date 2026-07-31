@@ -15,6 +15,17 @@ import { applyAiAttributionCookies } from "@/lib/aiAttribution";
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
+  // Shopify-era product URLs (Meta carousel ads, old bookmarks) → /[slug] PDP.
+  // Keep /products (listing) as-is; only redirect /products/:slug.
+  if (pathname.startsWith("/products/")) {
+    const rest = pathname.slice("/products/".length).replace(/\/+$/, "");
+    if (rest && !rest.includes("/")) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${rest}`;
+      return NextResponse.redirect(url, 308);
+    }
+  }
+
   const isAccountProtected =
     pathname.startsWith("/account/") &&
     !pathname.startsWith("/account/login") &&

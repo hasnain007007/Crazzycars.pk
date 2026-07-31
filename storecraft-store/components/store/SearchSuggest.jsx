@@ -23,8 +23,7 @@ function cacheSet(q, payload) {
 
 function productHref(product) {
   const slug = product?.slug || product?.handle || "";
-  if (!slug) return "/products";
-  if (product?.source === "shopify" || product?.handle) return `/products/${slug}`;
+  if (!slug) return "/shop";
   return `/${slug}`;
 }
 
