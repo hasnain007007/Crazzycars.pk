@@ -67,8 +67,8 @@ export function storefrontTrackingUrl(trackingNumber, storeUrl = "") {
     return `${siteBase}/track-order?tracking=${encodeURIComponent(id)}`;
   }
 
-  // Last resort — live admin beta host
-  return `https://storecraft-admin-beta.vercel.app/track-order?tracking=${encodeURIComponent(id)}`;
+  // Last resort — branded production admin host
+  return `https://admin.crazzycars.pk/track-order?tracking=${encodeURIComponent(id)}`;
 }
 
 function pick(obj, ...keys) {
@@ -362,9 +362,13 @@ export function isPrepaidOrder(order) {
   return advance.some((k) => pm.includes(k));
 }
 
-export function isCodOrder(order, bookingOptions = {}) {
+export function isCodOrder(order, bookingOptions = {}, settingsCourier = {}) {
   const pm = String(bookingOptions.paymentMethod || "").trim();
   if (pm) return pm.toUpperCase() === "COD";
+  // When enabled, paid / prepaid orders are booked with invoicePayment 0.
+  if (settingsCourier.paidOrdersCodZero !== false && isPrepaidOrder(order)) {
+    return false;
+  }
   return !isPrepaidOrder(order);
 }
 
@@ -373,6 +377,77 @@ function normalizeBookingOptions(bookingOptions) {
     return { pickupAddressCode: bookingOptions };
   }
   return bookingOptions && typeof bookingOptions === "object" ? bookingOptions : {};
+}
+
+/** Collapse whitespace + lowercase for address duplicate detection. */
+function normalizeAddressCompare(raw) {
+  return String(raw || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Checkout mirrors street into line1 + address — never join those raw.
+ * Keep the longest unique line; append only truly different parts (e.g. street2).
+ */
+export function buildCleanStreetAddress(addr = {}) {
+  const candidates = [addr.street, addr.line1, addr.address, addr.street2, addr.line2]
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+
+  let result = "";
+  for (const part of candidates) {
+    const n = normalizeAddressCompare(part);
+    if (!n) continue;
+    if (!result) {
+      result = part;
+      continue;
+    }
+    const rn = normalizeAddressCompare(result);
+    if (rn === n) continue;
+    if (rn.includes(n)) continue;
+    if (n.includes(rn)) {
+      result = part;
+      continue;
+    }
+    result = `${result}, ${part}`;
+  }
+  return result.trim();
+}
+
+/**
+ * PostEx deliveryAddress = street (+ area/zip if distinct).
+ * City stays in cityName only — do not re-append it (avoids double/triple text).
+ */
+export function buildPostexDeliveryAddress(addr = {}, cityName = "") {
+  const street = buildCleanStreetAddress(addr);
+  const area = String(addr.area || "").trim();
+  const zip = String(addr.zip || addr.postcode || "").trim();
+  const parts = [];
+  let blob = "";
+
+  function pushUnique(part) {
+    const p = String(part || "").trim();
+    if (!p) return;
+    const n = normalizeAddressCompare(p);
+    if (!n) return;
+    if (normalizeAddressCompare(blob).includes(n)) return;
+    parts.push(p);
+    blob = parts.join(", ");
+  }
+
+  pushUnique(street);
+  pushUnique(area);
+  pushUnique(zip);
+
+  // Last resort only — prefer empty street over repeating city into address.
+  if (!parts.length) {
+    const city = String(cityName || addr.city || "").trim();
+    if (city) return city;
+  }
+  return parts.join(", ");
 }
 
 export function buildPostexCreatePayload(order, settings = {}, bookingOptions = {}) {
@@ -385,7 +460,10 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
   const customer = order.customer || {};
   const pricing = order.pricing || {};
   const total = Math.max(0, Number(pricing.total ?? order.total) || 0);
-  const cod = isCodOrder(order, opts);
+  const cod = isCodOrder(order, opts, courier);
+  // Explicit setting: force paid orders to zero COD collection.
+  const forcePaidZero = Boolean(courier.paidOrdersCodZero) && isPrepaidOrder(order);
+  const invoicePayment = forcePaidZero || !cod ? 0 : Math.round(total);
   const items = Array.isArray(order.items) ? order.items : [];
   const itemCount = items.reduce((s, i) => s + Math.max(1, Number(i.quantity) || 1), 0) || 1;
   const pieces = Math.max(1, Math.round(Number(opts.pieces) || itemCount));
@@ -393,13 +471,13 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
   const orderDetail =
     items.map((i) => `${i.quantity}x ${i.name}`).join(", ").slice(0, 500) || "Order items";
   const grams = Number(pricing.totalWeightGrams) || 0;
-  const defaultWeightKg = grams > 0 ? Math.round((grams / 1000) * 100) / 100 : 0.5;
+  const defaultWeightFromSettings = Number(courier.defaultWeight) || 0.5;
+  const defaultWeightKg =
+    grams > 0 ? Math.round((grams / 1000) * 100) / 100 : defaultWeightFromSettings;
   const weight = Math.max(0.5, Number(opts.weight) || defaultWeightKg);
-  const handling =
-    String(opts.handling || "").trim() === "Fragile" ? "Fragile" : "Normal";
+  const handlingRaw = String(opts.handling || courier.defaultHandling || "").trim();
+  const handling = handlingRaw === "Fragile" ? "Fragile" : "Normal";
   const invoiceDivision = Math.max(1, Math.round(Number(opts.invoiceDivision) || 1));
-  // Hard-lock: always collect order total — never trust client-submitted codAmount.
-  const codAmount = Math.round(total);
 
   const customerName =
     String(addr.name || "").trim() ||
@@ -407,9 +485,14 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
     String(customer.name || "").trim() ||
     "Customer";
 
-  const street = [addr.street, addr.line1, addr.address].filter(Boolean).join(" ").trim();
-  const city = String(addr.city || addr.state || addr.province || "").trim();
-  const deliveryAddress = [street, city, addr.zip || addr.postcode].filter(Boolean).join(", ");
+  const overrideCity = String(opts.cityName || opts.city || "").trim();
+  const city = overrideCity || String(addr.city || addr.state || addr.province || "").trim();
+  const overrideDelivery = String(opts.deliveryAddress || "").trim();
+  const deliveryAddress =
+    overrideDelivery ||
+    buildPostexDeliveryAddress(addr, city) ||
+    city ||
+    "Address not provided";
 
   const internalNotes = (order.internalNotes || [])
     .map((n) => String(n?.note || "").trim())
@@ -418,10 +501,17 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
     .join(" | ");
 
   const remarksInput = String(opts.remarks ?? "").trim();
-  const specialInstructions = (
-    remarksInput ||
-    [DEFAULT_POSTEX_REMARKS, internalNotes].filter(Boolean).join(" ")
-  ).slice(0, 500);
+  const shipperRemarks =
+    String(courier.shipperRemarks || "").trim() || DEFAULT_POSTEX_REMARKS;
+  const includeOrderNotes = Boolean(courier.addOrderNotesInRemarks);
+  // PostEx label "Remarks" maps to create-order field `transactionNotes` (not specialInstructions).
+  const transactionNotes = [
+    remarksInput || shipperRemarks,
+    includeOrderNotes ? internalNotes : "",
+  ]
+    .filter(Boolean)
+    .join(" | ")
+    .slice(0, 500);
 
   const originCity =
     String(courier.originCity || "").trim() ||
@@ -434,7 +524,7 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
 
   return {
     orderRefNumber: orderRef,
-    invoicePayment: cod ? codAmount : 0,
+    invoicePayment,
     orderDetail,
     customerName,
     customerPhone: normalized || "",
@@ -443,14 +533,18 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
     cityName: city,
     quantity,
     weight,
-    orderType: "Normal",
+    orderType: String(opts.type || courier.defaultShipperType || "Normal").trim() || "Normal",
     airwayBillCopies: 1,
     pickupAddressCode: pickupAddressCode || "",
     handling,
     pieces,
     invoiceDivision,
-    paymentMethod: cod ? "COD" : "Prepaid",
-    specialInstructions,
+    paymentMethod: invoicePayment > 0 ? "COD" : "Prepaid",
+    /** Official PostEx field shown as Remarks on airway bill / invoice PDF */
+    transactionNotes,
+    /** Kept for older integrations / debugging — PostEx label uses transactionNotes */
+    specialInstructions: transactionNotes,
+    remarks: transactionNotes,
   };
 }
 
@@ -527,53 +621,357 @@ async function postexFetch(url, { apiKey, method = "GET", body }) {
 
 let citiesCache = { at: 0, list: null };
 
+/** PostEx uses singular `get-operational-city` (v1 raw array, v2 `{ dist: [] }`). */
+const POSTEX_CITY_ENDPOINTS = [
+  `${POSTEX_CITIES_API_BASE}/get-operational-city`,
+  `${POSTEX_TRACK_API_BASE}/get-operational-city`,
+];
+
+function parseOperationalCitiesPayload(json) {
+  const raw =
+    json?.dist ||
+    json?.data ||
+    json?.operationalCities ||
+    json?.cities ||
+    (Array.isArray(json) ? json : []);
+  return (Array.isArray(raw) ? raw : [])
+    .map((c) => {
+      if (typeof c === "string") return c.trim();
+      return String(c?.operationalCityName || c?.cityName || c?.name || "").trim();
+    })
+    .filter(Boolean);
+}
+
 export async function fetchPostexOperationalCities(apiKey) {
   if (!apiKey) return [];
   const now = Date.now();
-  if (citiesCache.list && now - citiesCache.at < 60 * 60 * 1000) {
+  if (citiesCache.list?.length && now - citiesCache.at < 60 * 60 * 1000) {
     return citiesCache.list;
   }
-  const url = `${POSTEX_CITIES_API_BASE}/get-operational-cities`;
+  for (const url of POSTEX_CITY_ENDPOINTS) {
+    try {
+      const res = await postexFetch(url, { apiKey });
+      if (!res.ok) continue;
+      const json = await res.json().catch(() => ({}));
+      const list = parseOperationalCitiesPayload(json);
+      if (list.length) {
+        citiesCache = { at: now, list };
+        return list;
+      }
+    } catch {
+      /* try next */
+    }
+  }
+  return citiesCache.list?.length ? citiesCache.list : [];
+}
+
+const CITY_STOPWORDS = new Set([
+  "pakistan",
+  "pk",
+  "district",
+  "dist",
+  "tehsil",
+  "tehseel",
+  "tahsil",
+  "city",
+  "town",
+  "village",
+  "near",
+  "mohalla",
+  "muhalla",
+  "colony",
+  "phase",
+  "street",
+  "road",
+  "rd",
+  "house",
+  "no",
+  "number",
+  "plot",
+  "block",
+  "sector",
+  "the",
+  "and",
+  "of",
+  "area",
+  "uc",
+  "union",
+  "council",
+]);
+
+const CITY_ALIASES = {
+  lhr: "LAHORE",
+  khi: "KARACHI",
+  isb: "ISLAMABAD",
+  rwp: "RAWALPINDI",
+  fsd: "FAISALABAD",
+  gwr: "GUJRANWALA",
+  gujranwala: "GUJRANWALA",
+  "gujran wala": "GUJRANWALA",
+  "lahore city": "LAHORE",
+  "karachi city": "KARACHI",
+  "islamabad capital": "ISLAMABAD",
+  "rawalpindi cantt": "RAWALPINDI",
+  "fatehjang": "FATEH JANG",
+  "fateh jang": "FATEH JANG",
+  "fateh jung": "FATEH JANG",
+  "tehseel fatehjang": "FATEH JANG",
+  "tehsil fatehjang": "FATEH JANG",
+  "tehsil fateh jang": "FATEH JANG",
+  attock: "ATTOCK",
+  "attock city": "ATTOCK",
+  "district attock": "ATTOCK",
+  bahawalnagar: "BAHAWALNAGAR",
+  "bahawal nagar": "BAHAWALNAGAR",
+};
+
+export function normalizeCityKey(raw) {
+  return String(raw || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function compactCityKey(raw) {
+  return normalizeCityKey(raw).replace(/\s+/g, "");
+}
+
+function stripCityNoise(raw) {
+  const tokens = normalizeCityKey(raw)
+    .split(" ")
+    .filter((t) => t && !CITY_STOPWORDS.has(t) && !/^\d+$/.test(t));
+  return tokens.join(" ");
+}
+
+function levenshtein(a, b) {
+  const s = String(a || "");
+  const t = String(b || "");
+  if (s === t) return 0;
+  if (!s.length) return t.length;
+  if (!t.length) return s.length;
+  const rows = s.length + 1;
+  const cols = t.length + 1;
+  const prev = new Array(cols);
+  const curr = new Array(cols);
+  for (let j = 0; j < cols; j++) prev[j] = j;
+  for (let i = 1; i < rows; i++) {
+    curr[0] = i;
+    const sc = s.charCodeAt(i - 1);
+    for (let j = 1; j < cols; j++) {
+      const cost = sc === t.charCodeAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j < cols; j++) prev[j] = curr[j];
+  }
+  return prev[t.length];
+}
+
+function findCityByAliasOrExact(needle, cities) {
+  const key = normalizeCityKey(needle);
+  const compact = compactCityKey(needle);
+  if (!key) return "";
+
+  const aliasTarget = CITY_ALIASES[key] || CITY_ALIASES[compact];
+  if (aliasTarget) {
+    const hit = cities.find((c) => normalizeCityKey(c) === normalizeCityKey(aliasTarget));
+    if (hit) return hit;
+  }
+
+  const exact = cities.find((c) => normalizeCityKey(c) === key || compactCityKey(c) === compact);
+  return exact || "";
+}
+
+/**
+ * Map messy customer city/address text → PostEx operational city name.
+ * Uses exact, alias, substring, token, and fuzzy (edit-distance) matching.
+ */
+export function resolvePostexCityName(input, cities, extras = {}) {
+  const list = Array.isArray(cities) ? cities.filter(Boolean) : [];
+  const rawCity = String(input || "").trim();
+  const haystack = [
+    rawCity,
+    extras.street,
+    extras.state,
+    extras.province,
+    extras.address,
+  ]
+    .map((v) => String(v || "").trim())
+    .filter(Boolean)
+    .join(" ");
+
+  if (!rawCity && !haystack) {
+    return { ok: false, matched: "", reason: "CITY_EMPTY", suggestions: [] };
+  }
+  if (!list.length) {
+    return { ok: true, matched: rawCity, reason: "NO_CITY_LIST", suggestions: [] };
+  }
+
+  const forced = findCityByAliasOrExact(rawCity, list);
+  if (forced) return { ok: true, matched: forced, reason: "EXACT", suggestions: [] };
+
+  const cleanedCity = stripCityNoise(rawCity);
+  const cleanedCityHit = findCityByAliasOrExact(cleanedCity, list);
+  if (cleanedCityHit) {
+    return { ok: true, matched: cleanedCityHit, reason: "CLEANED", suggestions: [] };
+  }
+
+  const hayKey = stripCityNoise(haystack) || normalizeCityKey(haystack);
+  const hayCompact = compactCityKey(hayKey);
+  const hayTokens = hayKey.split(" ").filter((t) => t.length >= 3);
+
+  let best = null;
+  const scored = [];
+
+  for (const city of list) {
+    const cityKey = normalizeCityKey(city);
+    const cityCompact = compactCityKey(city);
+    if (!cityCompact || cityCompact.length < 3) continue;
+
+    let score = 0;
+    let reason = "";
+
+    if (hayCompact === cityCompact) {
+      score = 10000 + cityCompact.length;
+      reason = "COMPACT_EXACT";
+    } else if (hayCompact.includes(cityCompact)) {
+      // Prefer longer city names (FATEH JANG over ATTOCK when both appear).
+      score = 8000 + cityCompact.length * 10;
+      reason = "CONTAINS";
+    } else if (cityCompact.includes(hayCompact) && hayCompact.length >= 4) {
+      score = 7000 + hayCompact.length;
+      reason = "CITY_CONTAINS_INPUT";
+    } else {
+      const cityTokens = cityKey.split(" ").filter(Boolean);
+      const allTokensPresent =
+        cityTokens.length > 0 &&
+        cityTokens.every((ct) =>
+          hayTokens.some(
+            (ht) =>
+              ht === ct ||
+              compactCityKey(ht) === compactCityKey(ct) ||
+              (ct.length >= 4 && ht.includes(ct)) ||
+              (ht.length >= 4 && ct.includes(ht))
+          )
+        );
+      if (allTokensPresent) {
+        score = 6000 + cityCompact.length * 8;
+        reason = "TOKENS";
+      } else {
+        // Fuzzy: compare compact city to each hay token / sliding join
+        let minDist = Infinity;
+        for (const ht of hayTokens) {
+          const hc = compactCityKey(ht);
+          if (hc.length < 4) continue;
+          minDist = Math.min(minDist, levenshtein(hc, cityCompact));
+          if (cityTokens.length > 1) {
+            minDist = Math.min(minDist, levenshtein(hc, compactCityKey(cityTokens.join(""))));
+          }
+        }
+        // Also compare cleaned city string alone
+        const cleanedCompact = compactCityKey(cleanedCity);
+        if (cleanedCompact.length >= 4) {
+          minDist = Math.min(minDist, levenshtein(cleanedCompact, cityCompact));
+        }
+        const maxLen = Math.max(cityCompact.length, cleanedCompact.length || 1);
+        const threshold = cityCompact.length <= 5 ? 1 : cityCompact.length <= 9 ? 2 : 3;
+        if (minDist <= threshold && minDist < Infinity) {
+          score = 4000 + Math.round((1 - minDist / maxLen) * 500) + cityCompact.length;
+          reason = "FUZZY";
+        }
+      }
+    }
+
+    if (score > 0) {
+      scored.push({ city, score, reason });
+      if (!best || score > best.score) best = { city, score, reason };
+    }
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+  const suggestions = [...new Set(scored.slice(0, 5).map((s) => s.city))];
+
+  if (best && best.score >= 4000) {
+    return {
+      ok: true,
+      matched: best.city,
+      reason: best.reason,
+      suggestions,
+      original: rawCity,
+    };
+  }
+
+  return {
+    ok: false,
+    matched: "",
+    reason: "CITY_MISMATCH",
+    suggestions,
+    original: rawCity,
+  };
+}
+
+let merchantAddressCache = { at: 0, list: null };
+
+/**
+ * Merchant pickup / return addresses registered in PostEx portal.
+ */
+export async function fetchPostexMerchantAddresses(apiKey) {
+  if (!apiKey) return [];
+  const now = Date.now();
+  if (merchantAddressCache.list && now - merchantAddressCache.at < 30 * 60 * 1000) {
+    return merchantAddressCache.list;
+  }
+  const url = `${POSTEX_TRACK_API_BASE}/get-merchant-address`;
   try {
     const res = await postexFetch(url, { apiKey });
     const json = await res.json().catch(() => ({}));
-    const raw =
-      json?.dist ||
-      json?.data ||
-      json?.operationalCities ||
-      json?.cities ||
-      (Array.isArray(json) ? json : []);
+    const raw = json?.dist || json?.data || [];
     const list = (Array.isArray(raw) ? raw : [])
-      .map((c) => {
-        if (typeof c === "string") return c.trim();
-        return String(c?.cityName || c?.name || c?.operationalCityName || "").trim();
-      })
-      .filter(Boolean);
-    citiesCache = { at: now, list };
+      .map((a) => ({
+        addressCode: String(a?.addressCode || "").trim(),
+        address: String(a?.address || "").trim(),
+        cityName: String(a?.cityName || "").trim(),
+        contactPersonName: String(a?.contactPersonName || "").trim(),
+        phone1: String(a?.phone1 || "").trim(),
+        phone2: String(a?.phone2 || "").trim(),
+        addressType: String(a?.addressType || "").trim(),
+        merchantAddressId: a?.merchantAddressId,
+      }))
+      .filter((a) => a.addressCode);
+    merchantAddressCache = { at: now, list };
     return list;
   } catch {
     return [];
   }
 }
 
-export async function validatePostexDestinationCity(cityName, apiKey) {
+export async function validatePostexDestinationCity(cityName, apiKey, extras = {}) {
   const city = String(cityName || "").trim();
-  if (!city) {
+  if (!city && !extras.street && !extras.state) {
     return { ok: false, error: "Shipping city is required for Postex booking." };
   }
   const cities = await fetchPostexOperationalCities(apiKey);
-  if (!cities.length) {
-    return { ok: true, matched: city };
-  }
-  const lower = city.toLowerCase();
-  const matched = cities.find((c) => c.toLowerCase() === lower || c.toLowerCase().includes(lower) || lower.includes(c.toLowerCase()));
-  if (!matched) {
+  const resolved = resolvePostexCityName(city, cities, extras);
+  if (resolved.ok && resolved.matched) {
     return {
-      ok: false,
-      error: `"${city}" is not a Postex serviceable city. Choose a valid operational city.`,
+      ok: true,
+      matched: resolved.matched,
+      reason: resolved.reason,
+      original: city,
+      suggestions: resolved.suggestions || [],
     };
   }
-  return { ok: true, matched };
+  const hint = resolved.suggestions?.length
+    ? ` Did you mean: ${resolved.suggestions.slice(0, 3).join(", ")}?`
+    : " Map the city in PostEx → Add Booking, or fix the shipping city on the order.";
+  return {
+    ok: false,
+    error: `"${city || "unknown"}" is not a Postex serviceable city.${hint}`,
+    suggestions: resolved.suggestions || [],
+    original: city,
+  };
 }
 
 export async function createPostexShipment(orderData, options = {}) {
@@ -604,13 +1002,21 @@ export async function createPostexShipment(orderData, options = {}) {
         "Postex Pickup Address Code is required. Add it in Settings → Courier (from Postex portal → Pickup Addresses).",
     };
   }
+  const addr = order.shippingAddress || {};
   if (!payload.cityName) {
     return { success: false, error: "Shipping city is required for Postex booking." };
   }
 
-  const cityCheck = await validatePostexDestinationCity(payload.cityName, apiKey);
+  const cityCheck = await validatePostexDestinationCity(payload.cityName, apiKey, {
+    street: addr.street || addr.line1 || addr.address || "",
+    state: addr.state || addr.province || "",
+  });
   if (!cityCheck.ok) {
-    return { success: false, error: cityCheck.error };
+    return {
+      success: false,
+      error: cityCheck.error,
+      suggestions: cityCheck.suggestions || [],
+    };
   }
   if (cityCheck.matched) {
     payload.cityName = cityCheck.matched;
@@ -624,10 +1030,30 @@ export async function createPostexShipment(orderData, options = {}) {
       const json = await res.json().catch(() => ({}));
       const apiStatus = String(json?.status || "").toUpperCase();
       if (apiStatus === "ERROR" || apiStatus === "FAILED") {
-        return classifyCreateError(res.status, json, false);
+        // If PostEx still rejects city, try top suggestion once.
+        const classified = classifyCreateError(res.status, json, false);
+        if (
+          allowRetry &&
+          classified.error?.toLowerCase().includes("city") &&
+          cityCheck.suggestions?.length
+        ) {
+          const next = cityCheck.suggestions.find((c) => c !== payload.cityName);
+          if (next) {
+            payload.cityName = next;
+            return attempt(false);
+          }
+        }
+        return classified;
       }
       const parsed = parseCreateOrderResponse(json);
-      if (parsed) return parsed;
+      if (parsed) {
+        return {
+          ...parsed,
+          matchedCity: payload.cityName,
+          cityResolvedFrom: cityCheck.original || "",
+          cityMatchReason: cityCheck.reason || "",
+        };
+      }
       if (!res.ok) return classifyCreateError(res.status, json, false);
       return classifyCreateError(res.status, json, false);
     } catch (err) {
@@ -639,41 +1065,121 @@ export async function createPostexShipment(orderData, options = {}) {
   return attempt(true);
 }
 
-export async function fetchPostexLabel(trackingNumber, options = {}) {
-  const id = String(trackingNumber || "").trim();
-  if (!id) return { success: false, error: "Tracking number required." };
+export async function fetchPostexLabel(trackingNumberOrList, options = {}) {
+  const ids = (
+    Array.isArray(trackingNumberOrList)
+      ? trackingNumberOrList
+      : String(trackingNumberOrList || "").split(",")
+  )
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+  if (!ids.length) return { success: false, error: "Tracking number required." };
 
   const apiKey = resolvePostexApiKey(options.settingsCourier);
   if (!apiKey) return { success: false, error: "Postex API key not configured." };
 
-  const endpoints = [
-    `${POSTEX_ORDER_API_BASE}/get-airway-bill?trackingNumber=${encodeURIComponent(id)}`,
-    `${POSTEX_ORDER_API_BASE}/print-label?trackingNumber=${encodeURIComponent(id)}`,
-    `${POSTEX_CITIES_API_BASE}/get-airway-bill?trackingNumber=${encodeURIComponent(id)}`,
-  ];
+  function labelFromJson(json) {
+    const dist = json?.dist || json?.data || json;
+    return (
+      (typeof dist === "string" && dist.length > 80 ? dist : "") ||
+      pick(dist, "label", "airwayBill", "pdf", "base64") ||
+      pick(json, "label", "airwayBill") ||
+      ""
+    );
+  }
 
-  for (const url of endpoints) {
-    try {
-      const res = await postexFetch(url, { apiKey });
-      const json = await res.json().catch(() => ({}));
-      const dist = json?.dist || json?.data || json;
-      const label =
-        (typeof dist === "string" ? dist : "") ||
-        pick(dist, "label", "airwayBill", "pdf", "base64") ||
-        pick(json, "label", "airwayBill");
-      if (label) {
-        return { success: true, label, contentType: "application/pdf" };
+  function isPdfBuffer(buf) {
+    return buf?.length > 80 && buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46;
+  }
+
+  // Official PostEx invoice/label endpoint — supports multiple CNs in one PDF.
+  const invoiceUrl = `${POSTEX_TRACK_API_BASE}/get-invoice?trackingNumbers=${encodeURIComponent(ids.join(","))}`;
+  try {
+    const res = await postexFetch(invoiceUrl, { apiKey });
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (res.ok && isPdfBuffer(buf)) {
+      return { success: true, label: buf.toString("base64"), contentType: "application/pdf" };
+    }
+    if (buf.length > 20) {
+      try {
+        const json = JSON.parse(buf.toString("utf8"));
+        const label = labelFromJson(json);
+        if (label) return { success: true, label, contentType: "application/pdf" };
+      } catch {
+        /* not json */
       }
-      if (res.ok && json?.status === "OK" && json?.dist) {
-        const asStr = JSON.stringify(json.dist);
-        if (asStr.length > 100) {
-          return { success: true, label: pick(json.dist, "label", "airwayBill") || asStr, contentType: "application/pdf" };
+    }
+  } catch {
+    /* fall through */
+  }
+
+  // Single-CN fallbacks only (legacy endpoints).
+  if (ids.length === 1) {
+    const id = ids[0];
+    const endpoints = [
+      `${POSTEX_ORDER_API_BASE}/get-airway-bill?trackingNumber=${encodeURIComponent(id)}`,
+      `${POSTEX_ORDER_API_BASE}/print-label?trackingNumber=${encodeURIComponent(id)}`,
+      `${POSTEX_CITIES_API_BASE}/get-airway-bill?trackingNumber=${encodeURIComponent(id)}`,
+    ];
+
+    for (const url of endpoints) {
+      try {
+        const res = await postexFetch(url, { apiKey });
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (res.ok && isPdfBuffer(buf)) {
+          return { success: true, label: buf.toString("base64"), contentType: "application/pdf" };
         }
+        try {
+          const json = JSON.parse(buf.toString("utf8"));
+          const label = labelFromJson(json);
+          if (label) return { success: true, label, contentType: "application/pdf" };
+        } catch {
+          /* try next */
+        }
+      } catch {
+        /* try next endpoint */
       }
-    } catch {
-      /* try next endpoint */
     }
   }
 
-  return { success: false, error: "Label not available from Postex for this tracking number." };
+  return {
+    success: false,
+    error:
+      ids.length > 1
+        ? "Combined labels not available from Postex for these tracking numbers."
+        : "Label not available from Postex for this tracking number.",
+  };
+}
+
+/**
+ * Cancel a booked PostEx parcel (blocked after pick-up by PostEx).
+ */
+export async function cancelPostexOrder(trackingNumber, options = {}) {
+  const id = String(trackingNumber || "").trim();
+  if (!id) return { success: false, error: "Tracking number required." };
+  const apiKey = resolvePostexApiKey(options.settingsCourier);
+  if (!apiKey) return { success: false, error: "Postex API key not configured." };
+
+  const url = `${POSTEX_TRACK_API_BASE}/cancel-order`;
+  try {
+    const res = await postexFetch(url, {
+      apiKey,
+      method: "PUT",
+      body: { trackingNumber: id },
+    });
+    const json = await res.json().catch(() => ({}));
+    const apiStatus = String(json?.status || "").toUpperCase();
+    if (!res.ok || apiStatus === "ERROR" || apiStatus === "FAILED") {
+      return {
+        success: false,
+        error:
+          pick(json, "message", "statusMessage", "error") ||
+          pick(json?.dist, "message") ||
+          `Could not cancel shipment (${res.status}).`,
+      };
+    }
+    return { success: true, data: json?.dist || json?.data || json };
+  } catch (e) {
+    return { success: false, error: e.message || "Cancel request failed." };
+  }
 }

@@ -11,6 +11,7 @@ import { orderGrandTotal } from "@/lib/orderFormat";
 import {
   createPostexShipment,
   fetchPostexLabel,
+  buildCleanStreetAddress,
   isPrepaidOrder,
   storefrontTrackingUrl,
 } from "@/lib/postex";
@@ -122,8 +123,26 @@ export async function POST(request) {
       weight: body.weight,
       pickupAddressCode: body.pickupAddressCode,
       paymentMethod: body.paymentMethod,
+      cityName: body.cityName || body.city || "",
+      deliveryAddress: body.deliveryAddress || "",
       // COD is hard-locked to order.pricing.total in buildPostexCreatePayload
     };
+
+    // Optional pre-book edits from PostEx recheck modal.
+    if (body.shippingAddress && typeof body.shippingAddress === "object") {
+      const sa = body.shippingAddress;
+      if (!order.shippingAddress) order.shippingAddress = {};
+      if (sa.street != null || sa.address != null) {
+        const street = String(sa.street || sa.address || "").trim();
+        order.shippingAddress.street = street;
+        order.shippingAddress.line1 = street;
+        order.shippingAddress.address = street;
+      }
+      if (sa.area != null) order.shippingAddress.area = String(sa.area || "").trim();
+      if (sa.phone != null) order.shippingAddress.phone = String(sa.phone || "").trim();
+      if (sa.city != null) order.shippingAddress.city = String(sa.city || "").trim();
+      order.markModified("shippingAddress");
+    }
 
     const result = await createPostexShipment(
       { order: order.toObject(), settings },
@@ -131,13 +150,45 @@ export async function POST(request) {
     );
 
     if (!result.success) {
-      return NextResponse.json({ success: false, error: result.error || "Booking failed." }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error || "Booking failed.",
+          suggestions: result.suggestions || [],
+        },
+        { status: 400 }
+      );
     }
 
     let label = result.label || "";
     if (!label) {
       const labelRes = await fetchPostexLabel(result.trackingNumber, { settingsCourier: settings.courier });
       if (labelRes.success) label = labelRes.label;
+    }
+
+    // Persist cleaned street (dedupe line1/address clones) + mapped city.
+    const matchedCity = String(result.matchedCity || "").trim();
+    if (order.shippingAddress) {
+      const cleanStreet = buildCleanStreetAddress(order.shippingAddress);
+      if (cleanStreet) {
+        order.shippingAddress.street = cleanStreet;
+        order.shippingAddress.line1 = cleanStreet;
+        order.shippingAddress.address = cleanStreet;
+      }
+      const prevCity = String(order.shippingAddress.city || "").trim();
+      if (matchedCity && prevCity !== matchedCity) {
+        order.shippingAddress.city = matchedCity;
+        if (!Array.isArray(order.timeline)) order.timeline = [];
+        order.timeline.push({
+          status: "city_mapped",
+          title: "City mapped for PostEx",
+          description: `Customer city "${prevCity || "—"}" → PostEx "${matchedCity}"`,
+          timestamp: new Date(),
+          by: "admin",
+        });
+        order.markModified("timeline");
+      }
+      order.markModified("shippingAddress");
     }
 
     applyShipmentToOrder(order, {
@@ -161,12 +212,18 @@ export async function POST(request) {
     const total = orderGrandTotal(order);
     return NextResponse.json({
       success: true,
-      message: `Shipment booked successfully.`,
+      message: matchedCity && result.cityResolvedFrom && matchedCity !== result.cityResolvedFrom
+        ? `Shipment booked (city mapped: ${result.cityResolvedFrom} → ${matchedCity}).`
+        : `Shipment booked successfully.`,
       trackingNumber: result.trackingNumber,
       orderReference: result.orderReference || "",
       trackingUrl: order.trackingUrl,
+      matchedCity: matchedCity || "",
+      cityResolvedFrom: result.cityResolvedFrom || "",
       label: label ? true : false,
       hasLabel: Boolean(label),
+      /** Client opens this to auto-download the shipping slip PDF after booking. */
+      labelDownloadUrl: `/api/postex/label?trackingNumber=${encodeURIComponent(result.trackingNumber)}&orderId=${encodeURIComponent(orderId)}&download=1`,
       order: {
         id: order._id.toString(),
         orderNumber: order.orderNumber,

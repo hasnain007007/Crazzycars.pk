@@ -22,6 +22,7 @@ const PATH_TITLES = [
   { prefix: "/pages-manager", title: "Pages" },
   { prefix: "/banners", title: "Banners" },
   { prefix: "/product-options", title: "Product Options" },
+  { prefix: "/postex", title: "PostEx Courier" },
   { prefix: "/shipping", title: "Shipping" },
   { prefix: "/redirects", title: "Redirects" },
   { prefix: "/reports/stock", title: "Stock Report" },

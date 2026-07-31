@@ -45,6 +45,7 @@ const NAV = [
     label: "STORE",
     items: [
       { href: "/shipping", label: "Shipping", icon: "shippingEmoji" },
+      { href: "/postex", label: "PostEx", icon: "truck" },
       { href: "/redirects", label: "Redirects", icon: "arrow" },
     ],
   },
