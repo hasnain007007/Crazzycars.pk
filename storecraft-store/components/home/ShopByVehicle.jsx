@@ -18,7 +18,6 @@ function mapCatalogToItems(data) {
   if (!data) return [];
   const vehicles = Array.isArray(data?.vehicles) ? data.vehicles : [];
   const popular = Array.isArray(data?.popular) ? data.popular : [];
-  // Prefer ordered full list (popular first from server), else popular slice.
   const source = vehicles.length ? vehicles : popular;
   if (source.length) {
     return source.map((p, idx) => {
@@ -64,7 +63,7 @@ function mapCatalogToItems(data) {
 }
 
 /**
- * Vehicle browser — horizontal slider (~4 cards visible), ordered by popular then A–Z.
+ * Vehicle browser — square photo cards + auto-scrolling horizontal slider.
  */
 export default function ShopByVehicle({ initialCatalog = null }) {
   const seeded = mapCatalogToItems(initialCatalog);
@@ -72,6 +71,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
   const [loading, setLoading] = useState(!seeded.length);
   const [activeMake, setActiveMake] = useState("");
   const scrollerRef = useRef(null);
+  const pausedRef = useRef(false);
 
   useEffect(() => {
     const fromProps = mapCatalogToItems(initialCatalog);
@@ -121,9 +121,61 @@ export default function ShopByVehicle({ initialCatalog = null }) {
     const el = scrollerRef.current;
     if (!el) return;
     const card = el.querySelector("[data-vehicle-card]");
-    const step = card ? card.getBoundingClientRect().width + 10 : el.clientWidth * 0.8;
-    el.scrollBy({ left: dir * step * 2, behavior: "smooth" });
+    const step = card ? card.getBoundingClientRect().width + 12 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
   }
+
+  // Auto-scroll: advance one card; loop to start at the end. Pause on hover/touch/focus.
+  useEffect(() => {
+    if (loading || visible.length < 3) return undefined;
+    const el = scrollerRef.current;
+    if (!el) return undefined;
+
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (reduce) return undefined;
+
+    const pause = () => {
+      pausedRef.current = true;
+    };
+    const resume = () => {
+      pausedRef.current = false;
+    };
+
+    el.addEventListener("mouseenter", pause);
+    el.addEventListener("mouseleave", resume);
+    el.addEventListener("focusin", pause);
+    el.addEventListener("focusout", resume);
+    el.addEventListener("touchstart", pause, { passive: true });
+    el.addEventListener("touchend", resume, { passive: true });
+
+    const tick = () => {
+      if (pausedRef.current || !scrollerRef.current) return;
+      const node = scrollerRef.current;
+      const max = node.scrollWidth - node.clientWidth;
+      if (max <= 8) return;
+      const card = node.querySelector("[data-vehicle-card]");
+      const gap = 12;
+      const step = card ? card.getBoundingClientRect().width + gap : Math.max(160, node.clientWidth * 0.35);
+      if (node.scrollLeft >= max - 12) {
+        node.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        node.scrollBy({ left: step, behavior: "smooth" });
+      }
+    };
+
+    const id = window.setInterval(tick, 3200);
+    return () => {
+      window.clearInterval(id);
+      el.removeEventListener("mouseenter", pause);
+      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("focusin", pause);
+      el.removeEventListener("focusout", resume);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("touchend", resume);
+    };
+  }, [loading, visible.length, activeMake]);
 
   if (!loading && !items.length) return null;
 
@@ -172,13 +224,13 @@ export default function ShopByVehicle({ initialCatalog = null }) {
         </div>
 
         <div className="relative mt-4">
-          {visible.length > 4 ? (
+          {visible.length > 3 ? (
             <>
               <button
                 type="button"
                 aria-label="Scroll vehicles left"
                 onClick={() => scrollByCards(-1)}
-                className="absolute -left-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-lg shadow-sm md:flex"
+                className="absolute -left-1 top-[38%] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-lg shadow-sm md:flex"
               >
                 ‹
               </button>
@@ -186,7 +238,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                 type="button"
                 aria-label="Scroll vehicles right"
                 onClick={() => scrollByCards(1)}
-                className="absolute -right-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-lg shadow-sm md:flex"
+                className="absolute -right-1 top-[38%] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-lg shadow-sm md:flex"
               >
                 ›
               </button>
@@ -195,7 +247,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
 
           <div
             ref={scrollerRef}
-            className="shop-by-vehicle-slider flex gap-2.5 overflow-x-auto pb-2 sm:gap-3"
+            className="shop-by-vehicle-slider flex gap-3 overflow-x-auto pb-2"
             style={{
               scrollSnapType: "x mandatory",
               WebkitOverflowScrolling: "touch",
@@ -203,31 +255,34 @@ export default function ShopByVehicle({ initialCatalog = null }) {
             }}
           >
             {loading
-              ? Array.from({ length: 4 }).map((_, i) => (
+              ? Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-[148px] w-[42%] shrink-0 animate-pulse rounded-xl bg-[#E8E8E8] sm:w-[23%]"
-                  />
+                    className="w-[46%] shrink-0 animate-pulse sm:w-[18%]"
+                  >
+                    <div className="aspect-square rounded-xl bg-[#E8E8E8]" />
+                    <div className="mt-2 h-10 rounded bg-[#E8E8E8]" />
+                  </div>
                 ))
               : visible.map((v) => (
                   <Link
                     key={`${v.make}-${v.slug}`}
                     href={v.href}
                     data-vehicle-card
-                    className="group w-[42%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md sm:w-[23%]"
+                    className="group w-[46%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md sm:w-[18%]"
                     style={{ scrollSnapAlign: "start" }}
                   >
-                    <div className="relative h-[88px] w-full overflow-hidden bg-[#F3F4F6] sm:h-[100px]">
+                    <div className="relative aspect-square w-full overflow-hidden bg-[#F3F4F6]">
                       {v.image ? (
                         <Image
                           src={v.image}
                           alt={`${v.make} ${v.model}`}
                           fill
-                          className="object-cover object-center transition duration-300 group-hover:scale-105"
-                          sizes="(max-width: 768px) 42vw, 23vw"
+                          className="object-contain object-center p-2 transition duration-300 group-hover:scale-105 sm:p-3"
+                          sizes="(max-width: 640px) 46vw, 18vw"
                         />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-2xl text-[#9CA3AF]">🚗</div>
+                        <div className="flex h-full items-center justify-center text-3xl text-[#9CA3AF]">🚗</div>
                       )}
                     </div>
                     <div className="px-2.5 py-2">
