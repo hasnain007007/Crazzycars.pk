@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { allocateOrderNumber } from "@/lib/orderNumber";
@@ -495,6 +496,7 @@ export async function POST(request) {
       subtotal += lineTotal;
       lineItems.push({
         productId: p._id,
+        articleNo: String(p.articleNo || "").trim(),
         name: p.name,
         image: img,
         variation,
@@ -793,8 +795,11 @@ export async function POST(request) {
       }
     }
 
+    const publicAccessToken = randomBytes(24).toString("base64url");
+
     const order = await Order.create({
       orderNumber,
+      publicAccessToken,
       customer: {
         name,
         email,
@@ -874,6 +879,7 @@ export async function POST(request) {
       success: true,
       orderId: order._id.toString(),
       orderNumber: order.orderNumber,
+      accessToken: publicAccessToken,
       total,
       paymentStatus,
       order: {

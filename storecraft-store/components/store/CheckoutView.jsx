@@ -678,6 +678,7 @@ export function CheckoutView() {
         return;
       }
       const nextOrderId = json.orderId || json.order?._id || null;
+      const accessToken = String(json.accessToken || "").trim();
       if (!nextOrderId) {
         toast.error("Order created but missing order id.");
         return;
@@ -692,7 +693,9 @@ export function CheckoutView() {
           /* ignore */
         }
       }
-      window.location.href = `/checkout/success?order_id=${nextOrderId}`;
+      const qs = new URLSearchParams({ order_id: String(nextOrderId) });
+      if (accessToken) qs.set("t", accessToken);
+      window.location.href = `/checkout/success?${qs.toString()}`;
     } catch {
       toast.error("Network error");
     } finally {

@@ -54,20 +54,11 @@ function CardForm({
 
     if (oid) {
       try {
-        const amountPaid =
-          typeof paymentIntent.amount_received === 'number' && paymentIntent.amount_received > 0
-            ? paymentIntent.amount_received / 100
-            : (paymentIntent.amount || 0) / 100
         const res = await fetch(`/api/orders/${oid}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            paymentStatus: 'paid',
-            orderStatus: 'processing',
-            status: 'processing',
-            'payment.stripePaymentIntentId': paymentIntent.id,
-            'payment.paidAt': new Date().toISOString(),
-            'payment.amount': amountPaid,
+            paymentIntentId: paymentIntent.id,
           }),
         })
         const data = await res.json().catch(() => ({}))
@@ -99,7 +90,16 @@ function CardForm({
       console.warn('onSuccess is not defined (parent callback)')
     }
 
-    const redirectUrl = `/checkout/success?order_id=${encodeURIComponent(String(oid))}&paid=true`
+    const accessToken =
+      typeof window !== 'undefined'
+        ? String(window.__orderAccessToken || '').trim()
+        : ''
+    const qs = new URLSearchParams({
+      order_id: String(oid),
+      paid: 'true',
+    })
+    if (accessToken) qs.set('t', accessToken)
+    const redirectUrl = `/checkout/success?${qs.toString()}`
     console.log('Will redirect to:', redirectUrl)
     setTimeout(() => {
       console.log('REDIRECTING NOW', redirectUrl)
