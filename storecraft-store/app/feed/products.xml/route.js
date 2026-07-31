@@ -39,7 +39,7 @@ export async function GET() {
     return new NextResponse(xml, {
       status: 200,
       headers: {
-        "Content-Type": "application/xml; charset=utf-8",
+        "Content-Type": "text/xml; charset=utf-8",
         "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=86400",
       },
     });
