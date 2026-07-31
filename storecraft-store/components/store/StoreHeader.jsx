@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useCart } from "@/context/CartContext";
 import { useStorePayment, useStoreSettings } from "@/context/StoreSettingsContext";
 import { formatPrice } from "@/lib/currency";
@@ -291,6 +292,9 @@ export function StoreHeader({ initialCategoryTree = null }) {
   const [q, setQ] = useState(() => searchParams?.get("q") || "");
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  // null until matchMedia runs — never mount desktop+mobile SearchSuggest together.
+  const [isMdUp, setIsMdUp] = useState(null);
+  const [mobileSearchTop, setMobileSearchTop] = useState(0);
   const [megaOpen, setMegaOpen] = useState(false);
   const [drawerExpanded, setDrawerExpanded] = useState({});
   // Badges read cart/wishlist from localStorage after mount — keep them at 0
@@ -312,6 +316,18 @@ export function StoreHeader({ initialCategoryTree = null }) {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => {
+      setIsMdUp(mq.matches);
+      if (mq.matches) setMobileSearchOpen(false);
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
   }, []);
 
   useEffect(() => {
@@ -365,6 +381,43 @@ export function StoreHeader({ initialCategoryTree = null }) {
     window.addEventListener("open-mobile-search", open);
     return () => window.removeEventListener("open-mobile-search", open);
   }, []);
+
+  // Lock body scroll while the fixed mobile search sheet is open.
+  useEffect(() => {
+    if (!mobileSearchOpen || isMdUp) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileSearchOpen, isMdUp]);
+
+  // Keep the sheet pinned to the visible viewport (iOS keyboard / URL bar).
+  useEffect(() => {
+    if (!mobileSearchOpen || isMdUp) return undefined;
+    const sync = () => {
+      const vv = window.visualViewport;
+      setMobileSearchTop(vv ? vv.offsetTop : 0);
+    };
+    sync();
+    window.visualViewport?.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("scroll", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, [mobileSearchOpen, isMdUp]);
+
+  useEffect(() => {
+    if (!mobileSearchOpen || isMdUp) return undefined;
+    function onKey(e) {
+      if (e.key === "Escape") setMobileSearchOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileSearchOpen, isMdUp]);
 
   useEffect(() => {
     const onAdded = (e) => {
@@ -454,7 +507,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
   };
 
   return (
-    <header className="sticky top-0 z-[7000]">
+    <header className={`sticky top-0 z-[7000]${mobileSearchOpen && isMdUp === false ? " store-header--mobile-search-open" : ""}`}>
       {cartToast ? (
         <div
           role="status"
@@ -505,42 +558,45 @@ export function StoreHeader({ initialCategoryTree = null }) {
             <span className="text-xl text-[#111111]">☰</span>
           </button>
 
-          <Link href="/" className="flex shrink-0 items-center gap-2 leading-none">
+          <Link href="/" className="min-w-0 shrink flex items-center gap-2 leading-none">
             {brand.logo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={trimmedLogoUrl(brand.logo)}
                 alt={brand.storeName}
-                className="h-16 max-w-[220px] object-contain"
-                style={{ height: 64, width: "auto", maxWidth: 220, objectFit: "contain" }}
+                className="h-12 max-w-[min(160px,42vw)] object-contain md:h-16 md:max-w-[220px]"
+                style={{ width: "auto", objectFit: "contain" }}
               />
             ) : brand.showStoreName ? (
-              <span className="flex flex-col">
-                <span className="font-heading text-xl font-bold tracking-tight" style={{ color: "#111111" }}>
+              <span className="flex min-w-0 flex-col">
+                <span className="font-heading text-lg font-bold tracking-tight md:text-xl" style={{ color: "#111111" }}>
                   {line1}
                 </span>
                 {line2 ? (
-                  <span className="font-heading text-base font-normal" style={{ color: "#C41E1E" }}>
+                  <span className="font-heading text-sm font-normal md:text-base" style={{ color: "#C41E1E" }}>
                     {line2}
                   </span>
                 ) : null}
               </span>
             ) : (
-              <span className="font-heading text-xl font-bold" style={{ color: "#111111" }}>
+              <span className="font-heading truncate text-lg font-bold md:text-xl" style={{ color: "#111111" }}>
                 {brand.storeName}
               </span>
             )}
           </Link>
           <form onSubmit={search} className="mx-auto hidden max-w-[480px] flex-1 md:block">
             <div className="relative">
-              <SearchSuggest
-                value={q}
-                onChange={setQ}
-                onSubmit={submitSearchTerm}
-                placeholder="Search products..."
-                inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-sm outline-none transition"
-                inputStyle={{ borderColor: "#E5E7EB" }}
-              />
+              {isMdUp === true ? (
+                <SearchSuggest
+                  value={q}
+                  onChange={setQ}
+                  onSubmit={submitSearchTerm}
+                  placeholder="Search products..."
+                  variant="desktop"
+                  inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-base outline-none transition md:text-sm"
+                  inputStyle={{ borderColor: "#E5E7EB" }}
+                />
+              ) : null}
               <button
                 type="submit"
                 className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
@@ -587,33 +643,53 @@ export function StoreHeader({ initialCategoryTree = null }) {
           </div>
         </div>
 
-        {mobileSearchOpen ? (
-          <div className="border-t px-4 py-3 md:hidden" style={{ borderColor: "#E5E7EB" }}>
-            <form onSubmit={search}>
-              <div className="relative">
-                <SearchSuggest
-                  value={q}
-                  onChange={setQ}
-                  onSubmit={submitSearchTerm}
-                  placeholder="Search products..."
-                  autoFocus
-                  variant="mobile"
-                  inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-sm outline-none"
-                  inputStyle={{ borderColor: "#C41E1E" }}
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
-                  style={{ background: "#C41E1E" }}
-                  aria-label="Search"
-                >
-                  <IconSearch />
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : null}
       </div>
+
+      {/* Fixed mobile search sheet — keeps the field on-screen with keyboard / scroll */}
+      {mounted && mobileSearchOpen && isMdUp === false
+        ? createPortal(
+            <div className="store-mobile-search-sheet md:hidden" role="dialog" aria-modal="true" aria-label="Search">
+              <button
+                type="button"
+                className="store-mobile-search-sheet__backdrop"
+                aria-label="Close search"
+                onClick={() => setMobileSearchOpen(false)}
+              />
+              <div className="store-mobile-search-sheet__panel" style={{ top: mobileSearchTop }}>
+                <form onSubmit={search} className="flex items-center gap-2">
+                  <div className="relative min-w-0 flex-1">
+                    <SearchSuggest
+                      value={q}
+                      onChange={setQ}
+                      onSubmit={submitSearchTerm}
+                      placeholder="Search products..."
+                      autoFocus
+                      variant="mobile"
+                      inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-base outline-none"
+                      inputStyle={{ borderColor: "#C41E1E", fontSize: 16 }}
+                    />
+                    <button
+                      type="submit"
+                      className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
+                      style={{ background: "#C41E1E" }}
+                      aria-label="Search"
+                    >
+                      <IconSearch />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="shrink-0 px-2 text-sm font-semibold text-[#6B7280]"
+                    onClick={() => setMobileSearchOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                </form>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
 
       {/* Row 3 — nav */}
       <nav
