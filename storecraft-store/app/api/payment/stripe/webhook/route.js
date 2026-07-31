@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
-import { recordEmailSent, resolveOrderConfirmationEmail, sendEmail, sendAdminOrderNotification } from "@/lib/email";
+import { sendAdminOrderNotification, sendCustomerOrderConfirmation } from "@/lib/email";
 
 async function getStripeConfig() {
   try {
@@ -92,24 +92,14 @@ export async function POST(req) {
           console.log("Order updated to paid:", orderId);
 
           const paidOrder = await Order.findById(orderId).lean();
-          if (paidOrder?.customer?.email) {
+          if (paidOrder) {
             const siteSettings =
               (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).select("general").lean()) || {};
-            const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk';
+            const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
             const logoUrl = siteSettings?.general?.logo?.url || "";
-            resolveOrderConfirmationEmail(paidOrder, storeName, logoUrl)
-              .then(({ subject, html: emailHtml }) =>
-                sendEmail({
-                  to: paidOrder.customer.email,
-                  subject,
-                  html: emailHtml,
-                }).then(async (sent) => {
-                  if (sent?.success) {
-                    await recordEmailSent(orderId, "order_confirmation", subject, paidOrder.customer.email);
-                  }
-                })
-              )
-              .catch((e) => console.error("Stripe order email failed:", e));
+            sendCustomerOrderConfirmation(paidOrder, { storeName, logoUrl }).catch((e) =>
+              console.error("Stripe order email failed:", e)
+            );
             sendAdminOrderNotification(paidOrder).catch((e) =>
               console.error("Stripe admin notification failed:", e)
             );

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import Order from "@/lib/models/Order.model";
-import { recordEmailSent, resolveOrderConfirmationEmail, sendEmail, sendAdminOrderNotification } from "@/lib/email";
+import { sendAdminOrderNotification, sendCustomerOrderConfirmation } from "@/lib/email";
 
 async function getPayPalToken(clientId, secret, mode) {
   const base =
@@ -71,23 +71,13 @@ export async function POST(req) {
 
       if (orderId) {
         const fullOrder = await Order.findById(orderId).lean();
-        if (fullOrder?.customer?.email) {
+        if (fullOrder) {
           const siteSettings = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean();
-          const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk';
+          const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
           const logoUrl = siteSettings?.general?.logo?.url || "";
-          resolveOrderConfirmationEmail(fullOrder, storeName, logoUrl)
-            .then(({ subject, html: emailHtml }) =>
-              sendEmail({
-                to: fullOrder.customer.email,
-                subject,
-                html: emailHtml,
-              }).then(async (sent) => {
-                if (sent?.success) {
-                  await recordEmailSent(orderId, "order_confirmation", subject, fullOrder.customer.email);
-                }
-              })
-            )
-            .catch((e) => console.error("PayPal order email failed:", e));
+          sendCustomerOrderConfirmation(fullOrder, { storeName, logoUrl }).catch((e) =>
+            console.error("PayPal order email failed:", e)
+          );
           sendAdminOrderNotification(fullOrder).catch((e) =>
             console.error("PayPal admin notification failed:", e)
           );

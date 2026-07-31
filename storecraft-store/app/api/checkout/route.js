@@ -10,7 +10,7 @@ import Product from "@/lib/models/Product.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import ShippingZone from "@/lib/models/Shipping.model";
 import { computeCouponDiscount } from "@/lib/couponCompute";
-import { recordEmailSent, resolveOrderConfirmationEmail, sendEmail, sendAdminOrderNotification } from "@/lib/email";
+import { sendAdminOrderNotification, sendCustomerOrderConfirmation } from "@/lib/email";
 import {
   applyShippingRules,
   buildAdvancePaymentOrderNote,
@@ -857,15 +857,7 @@ export async function POST(request) {
       try {
         const storeName = settingsDoc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
         const logoUrl = settingsDoc?.general?.logo?.url || "";
-        const { subject, html: emailHtml } = await resolveOrderConfirmationEmail(order, storeName, logoUrl);
-        const sent = await sendEmail({
-          to: order.customer.email,
-          subject,
-          html: emailHtml,
-        });
-        if (sent?.success) {
-          await recordEmailSent(order._id, "order_confirmation", subject, order.customer.email);
-        }
+        await sendCustomerOrderConfirmation(order, { storeName, logoUrl });
       } catch (emailError) {
         console.error("Order confirmation email failed:", emailError);
       }

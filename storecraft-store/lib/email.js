@@ -8,18 +8,58 @@ import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods"
 /** Resend sandbox sender — works before a custom domain is verified. */
 export const RESEND_SANDBOX_FROM = "Crazzycars.pk <onboarding@resend.dev>";
 
+/** Default staff inbox when Settings / env are empty. */
+export const DEFAULT_ORDER_ADMIN_EMAIL = "ordersatall@gmail.com";
+
 /** Resend-verified sender (use FROM_EMAIL env once domain is verified). */
 export function getFromEmail() {
   const raw = String(process.env.FROM_EMAIL || "").trim();
   return raw || null;
 }
 
-/** Admin inbox for order alerts and test emails. */
+/**
+ * Sync helper — env only (tests / debug). Prefer resolveAdminOrderEmail() at runtime.
+ */
 export function getAdminEmail() {
   return (
     String(process.env.CONTACT_EMAIL || "").trim() ||
     String(process.env.ADMIN_EMAIL || "").trim() ||
-    "delivered@resend.dev"
+    DEFAULT_ORDER_ADMIN_EMAIL
+  );
+}
+
+/**
+ * Resolve new-order admin inbox from Settings → env → default.
+ * Respects notifications.emailOnNewOrder.
+ */
+export async function resolveAdminOrderEmail() {
+  try {
+    await dbConnect();
+    const doc =
+      (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY })
+        .select("notifications")
+        .lean()) || (await Settings.findOne({}).select("notifications").lean());
+    const n = doc?.notifications || {};
+    if (n.emailOnNewOrder === false) {
+      return { enabled: false, email: "" };
+    }
+    const fromSettings = String(n.notificationEmail || "").trim().toLowerCase();
+    if (fromSettings && fromSettings.includes("@")) {
+      return { enabled: true, email: fromSettings };
+    }
+  } catch (e) {
+    console.error("[email] resolveAdminOrderEmail settings:", e?.message || e);
+  }
+  return { enabled: true, email: getAdminEmail() };
+}
+
+/** True if this order already logged a successful email of the given type. */
+export function orderHasEmailType(order, emailType) {
+  const history = Array.isArray(order?.emailHistory) ? order.emailHistory : [];
+  return history.some(
+    (e) =>
+      String(e?.type || "") === String(emailType) &&
+      String(e?.status || "sent") !== "failed"
   );
 }
 
@@ -170,8 +210,24 @@ export async function recordEmailSent(orderId, emailType, subject, to, resultSta
 }
 
 export async function sendAdminOrderNotification(order) {
-  const adminEmail = getAdminEmail();
-  const storeName = process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+  const { enabled, email: adminEmail } = await resolveAdminOrderEmail();
+  if (!enabled) {
+    return { success: false, skipped: true, error: "Admin new-order email disabled in Settings" };
+  }
+  if (!adminEmail) {
+    return { success: false, error: "No admin notification email configured" };
+  }
+  if (orderHasEmailType(order, "admin_new_order")) {
+    return { success: true, skipped: true, error: "Admin already notified for this order" };
+  }
+
+  const storeName = process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`;
+  const adminBase = String(process.env.NEXT_PUBLIC_ADMIN_URL || "https://admin.crazzycars.pk").replace(
+    /\/$/,
+    ""
+  );
+  const orderId = order?._id ? String(order._id) : "";
+  const orderUrl = orderId ? `${adminBase}/orders/${orderId}` : `${adminBase}/orders`;
 
   const html = `
     <!DOCTYPE html>
@@ -199,9 +255,15 @@ export async function sendAdminOrderNotification(order) {
               </td>
             </tr>
             <tr>
+              <td style="padding:6px 0;font-size:14px;color:#888;">Phone</td>
+              <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
+                ${order.customer?.phone || order.shippingAddress?.phone || ""}
+              </td>
+            </tr>
+            <tr>
               <td style="padding:6px 0;font-size:14px;color:#888;">Email</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.customer?.email || ""}
+                ${order.customer?.email || "—"}
               </td>
             </tr>
             <tr>
@@ -213,7 +275,7 @@ export async function sendAdminOrderNotification(order) {
             <tr>
               <td style="padding:6px 0;font-size:14px;color:#888;">Payment</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.paymentMethod || "N/A"}
+                ${order.paymentMethod || "N/A"} · ${order.paymentStatus || ""}
               </td>
             </tr>
             <tr>
@@ -224,8 +286,8 @@ export async function sendAdminOrderNotification(order) {
             </tr>
           </table>
           <div style="text-align:center;margin-top:24px;">
-            <a href="${process.env.NEXT_PUBLIC_ADMIN_URL || process.env.NEXT_PUBLIC_ADMIN_URL}/orders"
-              style="display:inline-block;padding:12px 28px;background:#009688;color:#fff;text-decoration:none;font-weight:700;border-radius:6px;font-size:13px;">
+            <a href="${orderUrl}"
+              style="display:inline-block;padding:12px 28px;background:#C41E1E;color:#fff;text-decoration:none;font-weight:700;border-radius:6px;font-size:13px;">
               View Order in Admin
             </a>
           </div>
@@ -240,11 +302,37 @@ export async function sendAdminOrderNotification(order) {
     </html>
   `;
 
-  return sendEmail({
+  const subject = `New Order: ${order.orderNumber || order._id} - ${formatPrice(order.pricing?.total || order.total || 0)}`;
+  const sent = await sendEmail({
     to: adminEmail,
-    subject: `New Order: ${order.orderNumber || order._id} - ${formatPrice(order.pricing?.total || order.total || 0)}`,
+    subject,
     html,
   });
+  if (sent?.success && order?._id) {
+    await recordEmailSent(order._id, "admin_new_order", subject, adminEmail);
+  }
+  return sent;
+}
+
+/**
+ * Send customer order confirmation once per order (skips if already in emailHistory).
+ */
+export async function sendCustomerOrderConfirmation(order, { storeName, logoUrl } = {}) {
+  const to = String(order?.customer?.email || "").trim().toLowerCase();
+  if (!to || !to.includes("@") || to.includes("@guest.")) {
+    return { success: false, skipped: true, error: "No customer email" };
+  }
+  if (orderHasEmailType(order, "order_confirmation")) {
+    return { success: true, skipped: true, error: "Confirmation already sent" };
+  }
+  const name =
+    storeName || process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const { subject, html } = await resolveOrderConfirmationEmail(order, name, logoUrl || "");
+  const sent = await sendEmail({ to, subject, html });
+  if (sent?.success && order?._id) {
+    await recordEmailSent(order._id, "order_confirmation", subject, to);
+  }
+  return sent;
 }
 
 function applyTemplateVars(str, vars = {}) {

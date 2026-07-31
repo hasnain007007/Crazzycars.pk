@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
-import { recordEmailSent, resolveOrderConfirmationEmail, sendEmail, sendAdminOrderNotification } from "@/lib/email";
+import { sendAdminOrderNotification, sendCustomerOrderConfirmation } from "@/lib/email";
 
 async function getStripeSecretKey() {
   try {
@@ -26,19 +26,12 @@ async function getStripeSecretKey() {
 
 async function sendPaidOrderEmail(orderId) {
   const order = await Order.findById(orderId).lean();
-  if (!order?.customer?.email) return;
+  if (!order) return;
   const settings = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean();
   const storeName = settings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
   const logoUrl = settings?.general?.logo?.url || "";
-  const { subject, html } = await resolveOrderConfirmationEmail(order, storeName, logoUrl);
-  const sent = await sendEmail({
-    to: order.customer.email,
-    subject,
-    html,
-  });
-  if (sent?.success) {
-    await recordEmailSent(orderId, "order_confirmation", subject, order.customer.email);
-  }
+  await sendCustomerOrderConfirmation(order, { storeName, logoUrl });
+  await sendAdminOrderNotification(order);
 }
 
 /**
@@ -141,11 +134,6 @@ export async function PUT(req, { params }) {
 
     if (existing.paymentStatus !== "paid") {
       sendPaidOrderEmail(id).catch((e) => console.error("Paid order email failed:", e));
-      Order.findById(id)
-        .lean()
-        .then((o) => {
-          if (o) sendAdminOrderNotification(o).catch((e) => console.error("Admin notification failed:", e));
-        });
     }
 
     return NextResponse.json({

@@ -1137,7 +1137,7 @@ export function CheckoutView() {
           </div>
 
           <div style={{ marginBottom: 14 }}>
-            <label style={CHECKOUT_LABEL}>Email (optional)</label>
+            <label style={CHECKOUT_LABEL}>Email (for order confirmation)</label>
             <input
               type="text"
               inputMode="email"
@@ -1150,6 +1150,9 @@ export function CheckoutView() {
               placeholder="your@email.com"
               style={checkoutInputStyle(Boolean(fieldErrors.email))}
             />
+            <p style={{ fontSize: 11, color: "#6b7280", margin: "4px 0 0" }}>
+              Add your email to receive the order confirmation. Optional if you prefer WhatsApp/phone only.
+            </p>
             {fieldErrors.email ? (
               <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
                 ⚠ {fieldErrors.email}
