@@ -11,6 +11,7 @@ import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
 import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
+import { useInvoiceProductCatalog } from "@/components/invoices/useInvoiceProductCatalog";
 
 function lineTotal(qty, unitPrice) {
   return Math.round(Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0) * 100) / 100;
@@ -60,7 +61,9 @@ export function CreateInvoiceForm() {
   const [customerHits, setCustomerHits] = useState([]);
   const [customerSearching, setCustomerSearching] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [paymentStatus, setPaymentStatus] = useState("paid");
+  const [paymentStatus, setPaymentStatus] = useState("unpaid");
+  const [receivedAmount, setReceivedAmount] = useState("0");
+  const [previousBalance, setPreviousBalance] = useState(0);
   const [deliveryOn, setDeliveryOn] = useState(false);
   const [shippingCost, setShippingCost] = useState("250");
   const [discount, setDiscount] = useState("0");
@@ -74,12 +77,15 @@ export function CreateInvoiceForm() {
   const [showPdfPrompt, setShowPdfPrompt] = useState(false);
   const [storeMeta, setStoreMeta] = useState(null);
 
-  const [catalog, setCatalog] = useState([]);
-  const [catalogTotal, setCatalogTotal] = useState(0);
-  const [catalogPage, setCatalogPage] = useState(1);
-  const [catalogLoading, setCatalogLoading] = useState(true);
-  const [catalogFilter, setCatalogFilter] = useState("");
-  const [loadingMore, setLoadingMore] = useState(false);
+  const {
+    catalog,
+    catalogTotal,
+    catalogLoading,
+    searching,
+    catalogFilter,
+    setCatalogFilter,
+    refreshCatalog,
+  } = useInvoiceProductCatalog();
 
   useEffect(() => {
     getInvoiceStoreMeta().then(setStoreMeta).catch(() => {});
@@ -122,50 +128,22 @@ export function CreateInvoiceForm() {
     setCustomerQuery("");
     setCustomerHits([]);
     toast.success(`Loaded ${c.name}`);
+    void (async () => {
+      try {
+        const res = await fetch(`/api/customers/${c.id}/ledger?mode=ar`, { credentials: "include" });
+        const json = await res.json();
+        if (json.success) setPreviousBalance(Number(json.ar?.outstanding) || 0);
+        else setPreviousBalance(0);
+      } catch {
+        setPreviousBalance(0);
+      }
+    })();
   }
 
   function clearLinkedCustomer() {
     setCustomer((prev) => ({ ...prev, customerId: null }));
+    setPreviousBalance(0);
   }
-
-  const loadCatalogPage = useCallback(async (page, append) => {
-    if (append) setLoadingMore(true);
-    else setCatalogLoading(true);
-    try {
-      const res = await fetch(`/api/products?status=active&limit=100&page=${page}`, {
-        credentials: "include",
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        if (!append) toast.error(json.error || "Could not load products.");
-        return;
-      }
-      const rows = Array.isArray(json.data) ? json.data : [];
-      setCatalog((prev) => (append ? [...prev, ...rows] : rows));
-      setCatalogTotal(Number(json.total) || rows.length);
-      setCatalogPage(page);
-    } catch {
-      if (!append) toast.error("Could not load products.");
-    } finally {
-      setCatalogLoading(false);
-      setLoadingMore(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadCatalogPage(1, false);
-  }, [loadCatalogPage]);
-
-  const filteredCatalog = useMemo(() => {
-    const q = catalogFilter.trim().toLowerCase();
-    if (!q) return catalog;
-    return catalog.filter((p) => {
-      const name = String(p.name || "").toLowerCase();
-      const sku = String(p.inventory?.sku || "").toLowerCase();
-      const article = String(p.articleNo || "").toLowerCase();
-      return name.includes(q) || sku.includes(q) || article.includes(q);
-    });
-  }, [catalog, catalogFilter]);
 
   const subtotal = useMemo(
     () => lines.reduce((sum, line) => sum + lineTotal(line.quantity, line.unitPrice), 0),
@@ -174,6 +152,9 @@ export function CreateInvoiceForm() {
   const discountNum = Math.max(0, Number(discount) || 0);
   const shipNum = deliveryOn ? Math.max(0, Number(shippingCost) || 0) : 0;
   const total = Math.max(0, Math.round((subtotal - discountNum + shipNum) * 100) / 100);
+  const receivedNum = Math.max(0, Math.round((Number(receivedAmount) || 0) * 100) / 100);
+  const invoiceBalance = Math.max(0, Math.round((total - Math.min(receivedNum, total)) * 100) / 100);
+  const totalReceivables = Math.round((invoiceBalance + previousBalance) * 100) / 100;
 
   const addProduct = useCallback((product) => {
     const id = productId(product);
@@ -319,6 +300,7 @@ export function CreateInvoiceForm() {
           discount: discountNum,
           paymentMethod: method,
           paymentStatus,
+          receivedAmount: receivedNum,
           note: note.trim(),
         }),
       });
@@ -336,8 +318,6 @@ export function CreateInvoiceForm() {
       setSaving(false);
     }
   }
-
-  const hasMore = catalog.length < catalogTotal;
 
   const previewDraft = useMemo(() => {
     const method = paymentMethod === "card" ? "bankTransfer" : paymentMethod;
@@ -377,6 +357,10 @@ export function CreateInvoiceForm() {
       },
       paymentMethod: method,
       paymentStatus,
+      amountPaid: Math.min(receivedNum, total),
+      remainingBalance: invoiceBalance,
+      previousBalance,
+      totalReceivables,
       note: note.trim(),
       currency: storeMeta?.currency || "PKR",
     };
@@ -389,6 +373,10 @@ export function CreateInvoiceForm() {
     total,
     paymentMethod,
     paymentStatus,
+    receivedNum,
+    invoiceBalance,
+    previousBalance,
+    totalReceivables,
     note,
     storeMeta?.currency,
   ]);
@@ -412,20 +400,25 @@ export function CreateInvoiceForm() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
-          <div className="lg:col-span-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          {/* Catalog first on mobile so products are easy to find; sticky on desktop */}
+          <div className="order-1 lg:order-none lg:col-span-5">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:sticky lg:top-4">
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Product catalog</h2>
                   <p className="text-xs text-slate-400">
                     {catalogLoading
                       ? "Loading…"
-                      : `${catalogTotal} active product${catalogTotal === 1 ? "" : "s"}`}
+                      : searching
+                        ? "Searching…"
+                        : catalogFilter.trim()
+                          ? `${catalog.length} match${catalog.length === 1 ? "" : "es"}`
+                          : `${catalogTotal} active product${catalogTotal === 1 ? "" : "s"}`}
                   </p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => loadCatalogPage(1, false)}
+                  onClick={() => refreshCatalog()}
                   className="text-xs font-semibold text-[#1A7A4C] hover:underline"
                 >
                   Refresh
@@ -435,18 +428,21 @@ export function CreateInvoiceForm() {
                 type="search"
                 value={catalogFilter}
                 onChange={(e) => setCatalogFilter(e.target.value)}
-                placeholder="Filter loaded products…"
-                className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                placeholder="Search all products (e.g. corolla)…"
+                autoComplete="off"
+                className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-950"
               />
-              <div className="mt-3 max-h-[28rem] space-y-1 overflow-y-auto">
-                {catalogLoading ? (
+              <div className="mt-3 max-h-[min(28rem,55vh)] space-y-1 overflow-y-auto overscroll-contain sm:max-h-[32rem]">
+                {catalogLoading && !catalog.length ? (
                   <p className="py-10 text-center text-sm text-slate-400">Fetching products…</p>
-                ) : !filteredCatalog.length ? (
+                ) : !catalog.length ? (
                   <p className="py-10 text-center text-sm text-slate-400">
-                    No products found. Add products in Catalog first.
+                    {catalogFilter.trim()
+                      ? `No products match “${catalogFilter.trim()}”.`
+                      : "No products found. Add products in Catalog first."}
                   </p>
                 ) : (
-                  filteredCatalog.map((p) => {
+                  catalog.map((p) => {
                     const id = productId(p);
                     const stock = Number(p.inventory?.quantity);
                     return (
@@ -454,17 +450,18 @@ export function CreateInvoiceForm() {
                         key={id}
                         type="button"
                         onClick={() => addProduct(p)}
-                        className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                        className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-emerald-50 active:bg-emerald-100 dark:hover:bg-emerald-950/30"
                       >
                         {productImage(p) ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={productImage(p)}
                             alt=""
-                            className="h-10 w-10 rounded-lg object-cover bg-slate-100"
+                            className="h-10 w-10 shrink-0 rounded-lg object-cover bg-slate-100"
+                            loading="lazy"
                           />
                         ) : (
-                          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-xs text-slate-400">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs text-slate-400">
                             —
                           </span>
                         )}
@@ -483,20 +480,13 @@ export function CreateInvoiceForm() {
                   })
                 )}
               </div>
-              {hasMore ? (
-                <button
-                  type="button"
-                  disabled={loadingMore}
-                  onClick={() => loadCatalogPage(catalogPage + 1, true)}
-                  className="mt-3 w-full rounded-lg border border-slate-200 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200"
-                >
-                  {loadingMore ? "Loading…" : `Load more (${catalog.length}/${catalogTotal})`}
-                </button>
+              {searching ? (
+                <p className="mt-2 text-center text-[11px] text-slate-400">Updating results…</p>
               ) : null}
             </div>
           </div>
 
-          <div className="space-y-5 lg:col-span-7">
+          <div className="order-2 space-y-5 lg:order-none lg:col-span-7">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Customer</h2>
@@ -662,7 +652,61 @@ export function CreateInvoiceForm() {
                   No items yet — use the catalog or add a manual item.
                 </p>
               ) : (
-                <div className="mt-3 overflow-x-auto">
+                <>
+                  {/* Mobile cards */}
+                  <div className="mt-3 space-y-3 sm:hidden">
+                    {lines.map((line, idx) => (
+                      <div
+                        key={line.key}
+                        className="rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40"
+                      >
+                        <input
+                          type="text"
+                          value={line.name}
+                          onChange={(e) => updateLine(idx, { name: e.target.value })}
+                          className="w-full rounded border border-transparent bg-transparent text-sm font-medium text-slate-800 dark:text-slate-100"
+                        />
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <label className="text-[10px] uppercase text-slate-400">
+                            Qty
+                            <input
+                              type="number"
+                              min={1}
+                              max={999}
+                              value={line.quantity}
+                              onChange={(e) => updateLine(idx, { quantity: e.target.value })}
+                              className="mt-0.5 w-full rounded border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+                            />
+                          </label>
+                          <label className="text-[10px] uppercase text-slate-400">
+                            Price
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={line.unitPrice}
+                              onChange={(e) => updateLine(idx, { unitPrice: e.target.value })}
+                              className="mt-0.5 w-full rounded border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+                            />
+                          </label>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className="text-sm font-semibold tabular-nums">
+                            {formatAdminPrice(lineTotal(line.quantity, line.unitPrice))}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeLine(idx)}
+                            className="text-xs font-semibold text-red-600"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Desktop table */}
+                  <div className="mt-3 hidden overflow-x-auto sm:block">
                   <table className="min-w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-slate-100 text-[10px] uppercase tracking-wider text-slate-400">
@@ -725,7 +769,8 @@ export function CreateInvoiceForm() {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                  </div>
+                </>
               )}
             </div>
 
@@ -753,10 +798,27 @@ export function CreateInvoiceForm() {
                     onChange={(e) => setPaymentStatus(e.target.value)}
                     className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
                   >
-                    <option value="paid">Paid</option>
-                    <option value="unpaid">Unpaid</option>
+                    <option value="unpaid">Unpaid (installments)</option>
                     <option value="partial">Partial</option>
+                    <option value="paid">Paid</option>
                   </select>
+                </label>
+                <label className="block text-xs font-medium text-slate-500">
+                  Received amount (this bill)
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={receivedAmount}
+                    onChange={(e) => {
+                      setReceivedAmount(e.target.value);
+                      const n = Math.max(0, Number(e.target.value) || 0);
+                      if (n <= 0) setPaymentStatus("unpaid");
+                      else if (n + 0.009 >= total) setPaymentStatus("paid");
+                      else setPaymentStatus("partial");
+                    }}
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                  />
                 </label>
                 <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
                   <input
@@ -802,24 +864,38 @@ export function CreateInvoiceForm() {
 
               <div className="mt-4 space-y-1 border-t border-slate-100 pt-4 text-sm dark:border-slate-800">
                 <div className="flex justify-between text-slate-500">
-                  <span>Subtotal</span>
+                  <span>Total</span>
                   <span className="tabular-nums">{formatAdminPrice(subtotal)}</span>
                 </div>
-                {discountNum > 0 ? (
-                  <div className="flex justify-between text-slate-500">
-                    <span>Discount</span>
-                    <span className="tabular-nums">−{formatAdminPrice(discountNum)}</span>
-                  </div>
-                ) : null}
+                <div className="flex justify-between text-slate-500">
+                  <span>Invoice Discount</span>
+                  <span className="tabular-nums">{formatAdminPrice(discountNum)}</span>
+                </div>
                 {shipNum > 0 ? (
                   <div className="flex justify-between text-slate-500">
-                    <span>Shipping</span>
+                    <span>Delivery</span>
                     <span className="tabular-nums">{formatAdminPrice(shipNum)}</span>
                   </div>
                 ) : null}
+                <div className="flex justify-between font-semibold text-slate-800 dark:text-slate-100">
+                  <span>Net Amount</span>
+                  <span className="tabular-nums">{formatAdminPrice(total)}</span>
+                </div>
+                <div className="flex justify-between text-emerald-700">
+                  <span>Received Amount</span>
+                  <span className="tabular-nums">{formatAdminPrice(Math.min(receivedNum, total))}</span>
+                </div>
+                <div className="flex justify-between text-amber-700">
+                  <span>Invoice Balance</span>
+                  <span className="tabular-nums">{formatAdminPrice(invoiceBalance)}</span>
+                </div>
+                <div className="flex justify-between text-slate-500">
+                  <span>Previous Balance</span>
+                  <span className="tabular-nums">{formatAdminPrice(previousBalance)}</span>
+                </div>
                 <div className="flex justify-between text-base font-bold text-slate-900 dark:text-white">
-                  <span>Total</span>
-                  <span className="tabular-nums text-[#1A7A4C]">{formatAdminPrice(total)}</span>
+                  <span>Total Receivables</span>
+                  <span className="tabular-nums text-[#1A7A4C]">{formatAdminPrice(totalReceivables)}</span>
                 </div>
               </div>
 
@@ -879,7 +955,7 @@ export function CreateInvoiceForm() {
             <InvoicePreviewFrame
               invoice={previewDraft}
               storeMeta={storeMeta}
-              className="h-[720px] w-full bg-white"
+              className="h-[min(720px,70vh)] w-full bg-white sm:h-[720px]"
               title="Invoice preview"
             />
           </div>

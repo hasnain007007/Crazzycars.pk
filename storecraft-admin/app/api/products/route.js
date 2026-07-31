@@ -50,16 +50,34 @@ export async function GET(request) {
     }
     await dbConnect();
     const { searchParams } = new URL(request.url);
+    const lite = searchParams.get("lite") === "1" || searchParams.get("lite") === "true";
+    const includeStats =
+      !lite &&
+      (searchParams.get("includeStats") === "1" ||
+        searchParams.get("includeStats") === "true" ||
+        searchParams.get("stats") !== "0");
     const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit"), 10) || 20));
-    const search = (searchParams.get("search") || "").trim();
+    const maxLimit = lite ? 500 : 100;
+    const limit = Math.min(maxLimit, Math.max(1, parseInt(searchParams.get("limit"), 10) || (lite ? 500 : 50)));
+    const search = (searchParams.get("search") || searchParams.get("q") || "").trim();
     const status = (searchParams.get("status") || "").trim();
     const categoryId = (searchParams.get("category") || "").trim();
 
     const filter = {};
     if (search) {
       const rx = new RegExp(escapeRegex(search), "i");
-      filter.$or = [{ name: rx }, { articleNo: rx }, { "inventory.sku": rx }];
+      filter.$or = [
+        { name: rx },
+        { slug: rx },
+        { articleNo: rx },
+        { "inventory.sku": rx },
+        { shortDescription: rx },
+        { tags: rx },
+        { "compatibleCars.make": rx },
+        { "compatibleCars.model": rx },
+        { "vehicleCompatibility.vehicles.make": rx },
+        { "vehicleCompatibility.vehicles.model": rx },
+      ];
     }
     if (status && ["active", "inactive", "draft"].includes(status)) {
       filter.status = status;
@@ -69,48 +87,68 @@ export async function GET(request) {
     }
 
     const skip = (page - 1) * limit;
+    const selectFields = lite
+      ? "name status media.images pricing.regularPrice pricing.salePrice pricing.saleSchedule inventory.quantity inventory.sku articleNo"
+      : "name slug status media pricing inventory featured newArrival createdAt updatedAt categories articleNo vehicleCompatibility isUniversal compatibleCars shortDescription tags";
 
-    const [items, total, statTotal, statActive, statDraft, statLow] = await Promise.all([
-      Product.find(filter)
-        .select(
-          "name slug status media pricing inventory featured newArrival createdAt updatedAt categories articleNo vehicleCompatibility isUniversal compatibleCars"
-        )
-        .populate("categories", "name slug")
-        .sort({ updatedAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      Product.countDocuments(filter),
-      Product.countDocuments({}),
-      Product.countDocuments({ status: "active" }),
-      Product.countDocuments({ status: "draft" }),
-      Product.countDocuments({
-        $and: [
-          { $or: [{ "inventory.trackInventory": true }, { "inventory.trackInventory": { $exists: false } }] },
-          {
-            $expr: {
-              $lte: [
-                { $toDouble: { $ifNull: ["$inventory.quantity", 0] } },
-                { $toDouble: { $ifNull: ["$inventory.lowStockThreshold", 5] } },
-              ],
+    const listQuery = Product.find(filter)
+      .select(selectFields)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    if (!lite) {
+      listQuery.populate("categories", "name slug");
+    }
+
+    const tasks = [listQuery, Product.countDocuments(filter)];
+    if (includeStats) {
+      tasks.push(
+        Product.countDocuments({}),
+        Product.countDocuments({ status: "active" }),
+        Product.countDocuments({ status: "draft" }),
+        Product.countDocuments({
+          $and: [
+            { $or: [{ "inventory.trackInventory": true }, { "inventory.trackInventory": { $exists: false } }] },
+            {
+              $expr: {
+                $lte: [
+                  { $toDouble: { $ifNull: ["$inventory.quantity", 0] } },
+                  { $toDouble: { $ifNull: ["$inventory.lowStockThreshold", 5] } },
+                ],
+              },
             },
-          },
-        ],
-      }),
-    ]);
+          ],
+        })
+      );
+    }
 
-    return NextResponse.json({
+    const results = await Promise.all(tasks);
+    const items = results[0];
+    const total = results[1];
+
+    const payload = {
       success: true,
       data: items.map(withProductSaleComputed),
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1,
-      stats: {
-        total: statTotal,
-        active: statActive,
-        draft: statDraft,
-        lowStock: statLow,
-      },
+    };
+
+    if (includeStats) {
+      payload.stats = {
+        total: results[2],
+        active: results[3],
+        draft: results[4],
+        lowStock: results[5],
+      };
+    }
+
+    return NextResponse.json(payload, {
+      headers: lite
+        ? { "Cache-Control": "private, max-age=15" }
+        : undefined,
     });
   } catch (error) {
     return NextResponse.json(
@@ -190,6 +228,7 @@ export async function POST(request) {
           ? body.inventory.weightUnit
           : "g",
         trackInventory: body.inventory?.trackInventory !== false,
+        allowBackorder: body.inventory?.allowBackorder === true,
         lowStockThreshold: Math.max(0, Number(body.inventory?.lowStockThreshold) || 5),
         sku: (body.inventory?.sku || "").trim(),
       },
@@ -216,6 +255,11 @@ export async function POST(request) {
       status: statusNext,
       featured: Boolean(body.featured),
       newArrival: Boolean(body.newArrival),
+      codEnabled: body.codEnabled !== false,
+      advancePercentRequired: (() => {
+        const pct = Number(body.advancePercentRequired);
+        return Number.isFinite(pct) ? Math.min(100, Math.max(0, Math.round(pct))) : 0;
+      })(),
       productType: org.productType,
       vendor: org.vendor,
       collections: org.collections,
