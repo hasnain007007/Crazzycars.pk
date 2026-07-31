@@ -759,12 +759,12 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
         }
       `}</style>
       <div className="bg-[#F8F8F8] py-3 border-b border-[#E5E5E5]">
-        <div className="mx-auto max-w-7xl px-4 text-sm text-[#888888]">
+        <div className="mx-auto max-w-7xl px-4 text-sm text-[#888888] leading-snug break-words">
           <Link href="/">Home</Link> / <span>{product.name}</span>
         </div>
       </div>
 
-      <div className="mx-auto mt-8 max-w-7xl px-4">
+      <div className="mx-auto mt-4 max-w-7xl px-4 md:mt-8">
         <div
           className="product-detail-grid grid items-start gap-10 lg:grid-cols-2 lg:gap-12"
           style={{ alignItems: "flex-start" }}
@@ -826,9 +826,8 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   imgStyle={{
                     width: "100%",
                     height: "100%",
-                    objectFit: "cover",
+                    objectFit: "contain",
                     objectPosition: "center",
-                    transform: "scale(1.06)",
                   }}
                 />
               )}
@@ -952,7 +951,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                       fontSize: 26,
                       fontWeight: 700,
                       color: "#111111",
-                      lineHeight: 1,
+                      lineHeight: 1.2,
                     }}
                   >
                     {formatPrice(displayPrice)}
@@ -965,7 +964,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                       fontWeight: 700,
                       color: "#888888",
                       textDecoration: "line-through",
-                      lineHeight: 1,
+                      lineHeight: 1.2,
                     }}
                   >
                     {formatPrice(regularPrice)}
@@ -979,7 +978,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                     fontSize: 26,
                     fontWeight: 700,
                     color: "#111111",
-                    lineHeight: 1,
+                    lineHeight: 1.2,
                   }}
                 >
                   {formatPrice(displayPrice)}
@@ -992,40 +991,11 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                 fontSize: 14,
                 color: "#555555",
                 lineHeight: 1.7,
-                margin: "12px 0",
+                margin: "12px 0 16px",
               }}
             >
               {shortDesc}
             </p>
-
-            {Array.isArray(product.categories) && product.categories.length > 0 ? (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "0 0 16px" }}>
-                {product.categories.map((cat) => {
-                  const slug = cat?.slug;
-                  if (!slug) return null;
-                  return (
-                    <Link
-                      key={cat.id || slug}
-                      href={`/categories/${slug}`}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        padding: "4px 10px",
-                        borderRadius: 999,
-                        border: "1px solid #E5E5E5",
-                        background: "#F8F8F8",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: "#374151",
-                        textDecoration: "none",
-                      }}
-                    >
-                      {cat.name || slug}
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : null}
 
             {scheduleEnabled && countdownEndDate ? (
               <div className="rounded border border-[#E5E5E5] p-3">
@@ -1374,9 +1344,10 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                 if (visible.length === 0) return null;
                 return (
                   <div
+                    className="product-trust-grid"
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(4, 1fr)",
+                      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
                       gap: 6,
                       padding: "12px 0",
                       borderTop: "1px solid #F0F0F0",
