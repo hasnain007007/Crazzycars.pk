@@ -17,6 +17,34 @@ const invoiceItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
+/** Shopkeeper installment / partial payment entry */
+const invoicePaymentSchema = new mongoose.Schema(
+  {
+    amount: { type: Number, required: true, min: 0 },
+    paidAt: { type: Date, default: Date.now },
+    method: {
+      type: String,
+      enum: [
+        "cod",
+        "cash",
+        "jazzcash",
+        "easypaisa",
+        "bankTransfer",
+        "hbl",
+        "meezan",
+        "ubl",
+        "other",
+      ],
+      default: "cash",
+    },
+    note: { type: String, default: "", trim: true },
+    recordedBy: { type: String, default: "", trim: true },
+    /** Links payment to a single-receiving Receipt (BR-…) for edit/delete */
+    receiptNumber: { type: String, default: "", trim: true, index: true },
+  },
+  { _id: true, timestamps: { createdAt: true, updatedAt: false } }
+);
+
 const invoiceSchema = new mongoose.Schema(
   {
     invoiceNumber: { type: String, required: true, unique: true, index: true },
@@ -46,7 +74,7 @@ const invoiceSchema = new mongoose.Schema(
     paymentStatus: {
       type: String,
       enum: ["unpaid", "paid", "partial"],
-      default: "paid",
+      default: "unpaid",
       index: true,
     },
     paymentMethod: {
@@ -61,12 +89,32 @@ const invoiceSchema = new mongoose.Schema(
         "ubl",
         "stripe",
         "paypal",
+        "cash",
+        "other",
       ],
       default: "cod",
     },
+    /** Running total of installment payments received */
+    amountPaid: { type: Number, default: 0, min: 0 },
+    /** pricing.total − amountPaid (never negative) */
+    remainingBalance: { type: Number, default: 0, min: 0 },
+    /**
+     * Other bills outstanding for this shopkeeper at invoice create time
+     * (for print: Previous Balance → Total Receivables).
+     */
+    previousBalance: { type: Number, default: 0 },
+    payments: { type: [invoicePaymentSchema], default: [] },
     currency: { type: String, default: "PKR" },
     note: { type: String, default: "", trim: true },
     createdBy: { type: String, default: "Admin", trim: true },
+    /** Linked fulfillment Order created via “Add to orders” (optional). */
+    orderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+      index: true,
+    },
+    orderNumber: { type: String, default: "", trim: true, index: true },
   },
   { timestamps: true }
 );

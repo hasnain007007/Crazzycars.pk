@@ -288,7 +288,7 @@ export function CreateInvoiceForm() {
           },
           saveCustomer,
           items: lines.map((line) => ({
-            productId: line.productId,
+            productId: line.productId || null,
             name: line.name,
             image: line.image,
             variation: line.variation,
@@ -304,16 +304,32 @@ export function CreateInvoiceForm() {
           note: note.trim(),
         }),
       });
-      const json = await res.json();
+      const raw = await res.text();
+      let json = {};
+      try {
+        json = raw ? JSON.parse(raw) : {};
+      } catch {
+        toast.error(
+          res.status === 401 || res.status === 403
+            ? "Session expired — please log in again."
+            : `Could not save invoice (HTTP ${res.status}).`
+        );
+        return;
+      }
       if (!res.ok || !json.success) {
-        toast.error(json.error || "Could not save invoice.");
+        toast.error(json.error || `Could not save invoice (HTTP ${res.status}).`);
+        return;
+      }
+      if (!json.invoice?.invoiceNumber) {
+        toast.error("Invoice saved but response was incomplete. Check the invoices list.");
+        router.push("/invoices");
         return;
       }
       toast.success(`Invoice ${json.invoice.invoiceNumber} saved`);
       setSavedInvoice(json.invoice);
       setShowPdfPrompt(true);
     } catch {
-      toast.error("Network error.");
+      toast.error("Network error — invoice may not have saved. Check the invoices list.");
     } finally {
       setSaving(false);
     }
@@ -383,7 +399,7 @@ export function CreateInvoiceForm() {
 
   return (
     <>
-      <form onSubmit={submit} className="mx-auto max-w-7xl space-y-5">
+      <form noValidate onSubmit={submit} className="mx-auto max-w-7xl space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">New invoice</h1>
@@ -428,6 +444,9 @@ export function CreateInvoiceForm() {
                 type="search"
                 value={catalogFilter}
                 onChange={(e) => setCatalogFilter(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.preventDefault();
+                }}
                 placeholder="Search all products (e.g. corolla)…"
                 autoComplete="off"
                 className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-950"
@@ -508,6 +527,9 @@ export function CreateInvoiceForm() {
                     type="search"
                     value={customerQuery}
                     onChange={(e) => setCustomerQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.preventDefault();
+                    }}
                     placeholder="Search by name, phone, or email…"
                     className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
                   />
@@ -552,27 +574,31 @@ export function CreateInvoiceForm() {
                 <label className="block text-xs font-medium text-slate-500 sm:col-span-2">
                   Name *
                   <input
-                    required
                     value={customer.name}
                     onChange={(e) => setCustomer((c) => ({ ...c, name: e.target.value }))}
+                    autoComplete="name"
                     className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
                   />
                 </label>
                 <label className="block text-xs font-medium text-slate-500">
                   Phone *
                   <input
-                    required
                     value={customer.phone}
                     onChange={(e) => setCustomer((c) => ({ ...c, phone: e.target.value }))}
+                    inputMode="tel"
+                    autoComplete="tel"
                     className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
                   />
                 </label>
                 <label className="block text-xs font-medium text-slate-500">
                   Email
                   <input
-                    type="email"
+                    type="text"
+                    inputMode="email"
                     value={customer.email}
                     onChange={(e) => setCustomer((c) => ({ ...c, email: e.target.value }))}
+                    autoComplete="email"
+                    placeholder="Optional"
                     className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
                   />
                 </label>

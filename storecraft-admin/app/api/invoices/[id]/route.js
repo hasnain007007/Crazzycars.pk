@@ -1,5 +1,5 @@
 /**
- * Single invoice: read, update.
+ * Single invoice: read, update, delete.
  */
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
@@ -9,7 +9,13 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessMinRole } from "@/lib/requireRole";
 import Invoice from "@/lib/models/Invoice.model";
 import Product from "@/lib/models/Product.model";
+import Receipt from "@/lib/models/Receipt.model";
+import { syncStockAlertForProduct } from "@/lib/productMutations";
 import { upsertInvoiceCustomer } from "@/lib/upsertInvoiceCustomer";
+import {
+  recomputeInvoicePaymentFields,
+  serializeInvoicePayments,
+} from "@/lib/invoicePayments";
 
 const PAYMENT_METHODS = new Set([
   "cod",
@@ -21,6 +27,8 @@ const PAYMENT_METHODS = new Set([
   "ubl",
   "stripe",
   "paypal",
+  "cash",
+  "other",
 ]);
 
 function requestIp(request) {
@@ -46,7 +54,8 @@ function unitPriceFromProduct(p) {
 
 function serializeInvoice(doc) {
   if (!doc) return null;
-  const o = typeof doc.toObject === "function" ? doc.toObject() : doc;
+  const o = typeof doc.toObject === "function" ? doc.toObject() : { ...doc };
+  recomputeInvoicePaymentFields(o);
   return {
     id: o._id.toString(),
     invoiceNumber: o.invoiceNumber,
@@ -76,10 +85,22 @@ function serializeInvoice(doc) {
     pricing: o.pricing || { subtotal: 0, discount: 0, shippingCost: 0, total: 0 },
     paymentStatus: o.paymentStatus,
     paymentMethod: o.paymentMethod,
+    amountPaid: o.amountPaid || 0,
+    remainingBalance: o.remainingBalance ?? (Number(o.pricing?.total) || 0),
+    previousBalance: Number(o.previousBalance) || 0,
+    invoiceBalance: o.remainingBalance ?? (Number(o.pricing?.total) || 0),
+    totalReceivables:
+      Math.round(
+        ((Number(o.remainingBalance) || 0) + (Number(o.previousBalance) || 0)) * 100
+      ) / 100,
+    payments: serializeInvoicePayments(o.payments),
     currency: o.currency || "PKR",
     note: o.note || "",
     createdBy: o.createdBy || "",
+    /** Print helper alias (invoice #). Linked fulfillment order uses linkedOrderNumber. */
     orderNumber: o.invoiceNumber,
+    linkedOrderId: o.orderId ? String(o.orderId) : null,
+    linkedOrderNumber: o.orderNumber || "",
   };
 }
 
@@ -262,6 +283,10 @@ export async function PUT(request, context) {
       invoice.note = String(body.note || "").trim().slice(0, 500);
     }
 
+    // Keep paid / remaining in sync when totals or status change.
+    recomputeInvoicePaymentFields(invoice);
+    invoice.markModified("payments");
+
     await invoice.save();
 
     await logActivity({
@@ -279,6 +304,89 @@ export async function PUT(request, context) {
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Could not update invoice." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request, context) {
+  try {
+    const user = getRequestUser(request);
+    const denied = denyUnlessMinRole(user, "editor");
+    if (denied) return denied;
+
+    const { id } = await context.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, error: "Invalid invoice id." }, { status: 400 });
+    }
+
+    await dbConnect();
+    const invoice = await Invoice.findById(id);
+    if (!invoice) {
+      return NextResponse.json({ success: false, error: "Invoice not found." }, { status: 404 });
+    }
+
+    const invoiceNumber = invoice.invoiceNumber;
+    const oid = invoice._id;
+
+    // Restore stock for catalog lines
+    for (const line of invoice.items || []) {
+      if (!line.productId) continue;
+      try {
+        const product = await Product.findById(line.productId);
+        if (!product || product.inventory?.trackInventory === false) continue;
+        const qty = Number(product.inventory?.quantity) || 0;
+        const add = Math.max(0, Number(line.quantity) || 0);
+        product.inventory = product.inventory || {};
+        product.inventory.quantity = qty + add;
+        await product.save();
+        await syncStockAlertForProduct(product);
+      } catch {
+        /* non-fatal */
+      }
+    }
+
+    // Detach this bill from any single-receiving allocations (keep the cash credit as unallocated)
+    const receipts = await Receipt.find({ "allocations.invoiceId": oid });
+    for (const receipt of receipts) {
+      let moved = 0;
+      const next = [];
+      for (const a of receipt.allocations || []) {
+        if (String(a.invoiceId) === String(oid)) {
+          moved += Number(a.amount) || 0;
+        } else {
+          next.push(a);
+        }
+      }
+      if (moved > 0) {
+        receipt.allocations = next;
+        receipt.unallocatedAmount =
+          Math.round(((Number(receipt.unallocatedAmount) || 0) + moved) * 100) / 100;
+        receipt.markModified("allocations");
+        await receipt.save();
+      }
+    }
+
+    await Invoice.deleteOne({ _id: oid });
+
+    await logActivity({
+      user: user.userId || user.id,
+      userName: user.name || user.email || "Admin",
+      action: `Invoice ${invoiceNumber} deleted`,
+      resource: "Invoice",
+      resourceId: id,
+      details: { invoiceNumber },
+      type: "delete",
+      ip: requestIp(request),
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Invoice ${invoiceNumber} deleted.`,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error.message || "Could not delete invoice." },
       { status: 500 }
     );
   }
