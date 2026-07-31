@@ -43,6 +43,12 @@ const nextConfig = {
         destination: "/:slug",
         permanent: true,
       },
+      // Shopify-era product URLs (/products/[handle] → /[slug])
+      {
+        source: "/products/:slug",
+        destination: "/:slug",
+        permanent: true,
+      },
       {
         source: "/tracking",
         destination: "/track-order",
