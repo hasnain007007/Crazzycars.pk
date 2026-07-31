@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { ImageUploader } from "@/components/ui/ImageUploader";
+import { ModelProductsPanel } from "@/components/car-catalog/ModelProductsPanel";
 import { formatModelCardSubtitle } from "@/lib/carCatalogDisplay";
 import { MODEL_BODY_STYLES } from "@/lib/carCatalogNormalize";
 import { slugify, yearsFromRange } from "@/lib/carCatalogUtils";
@@ -20,38 +21,66 @@ const COUNTRY_FLAGS = {
   Various: "🌐",
 };
 
-/** Slug for catalog model: nickname first, else name + yearFrom for generation splits. */
-function generateModelSlug(name, nickname, yearFrom) {
+/**
+ * Slug for catalog model — must stay unique per make.
+ * Prefer nickname, then generation, then name + year range (matches API normalize).
+ */
+function generateModelSlug(name, nickname, yearFrom, yearTo, generation) {
   const nick = String(nickname || "").trim();
   if (nick) return slugify(nick);
   const modelName = String(name || "").trim();
   if (!modelName) return "";
+  const gen = String(generation || "").trim();
+  if (gen) return slugify(`${modelName}-${gen}`);
   const base = slugify(modelName);
   const yf = yearFrom != null && yearFrom !== "" ? Number(yearFrom) : null;
-  if (base && yf != null && Number.isFinite(yf)) return `${base}-${yf}`;
+  const yt = yearTo != null && yearTo !== "" ? Number(yearTo) : null;
+  if (base && Number.isFinite(yf) && Number.isFinite(yt)) return `${base}-${yf}-${yt}`;
+  if (base && Number.isFinite(yf)) return `${base}-${yf}`;
   return base;
 }
 
 function resolveModelSlugForSave(m) {
+  // Always derive from nickname/generation/years so generations of the same
+  // model name stay unique (stale manual slugs like bare "city" caused false blocks).
+  const derived = generateModelSlug(m?.name, m?.nickname, m?.yearFrom, m?.yearTo, m?.generation);
   const manual = String(m?.slug || "").trim();
-  if (manual) return slugify(manual);
-  return generateModelSlug(m?.name, m?.nickname, m?.yearFrom);
+  if (manual) {
+    const manualSlug = slugify(manual);
+    const bareName = slugify(m?.name);
+    // Keep a custom slug only when it already distinguishes this generation.
+    if (manualSlug && manualSlug !== bareName) return manualSlug;
+  }
+  return derived;
 }
 
-function hasDuplicateModelGenerations(models) {
-  const seen = new Set();
-  return models.some((m) => {
-    const key = `${String(m?.name || "").trim().toLowerCase()}-${m.yearFrom}-${m.yearTo}`;
-    if (seen.has(key)) return true;
-    seen.add(key);
-    return false;
-  });
+/** Returns conflicting slug labels, or [] if all unique. */
+function findDuplicateModelSlugs(models) {
+  const seen = new Map();
+  const conflicts = [];
+  for (const m of models || []) {
+    const slug = resolveModelSlugForSave(m);
+    if (!slug) continue;
+    if (seen.has(slug)) {
+      const label = String(m.nickname || m.generation || m.name || slug).trim();
+      if (!conflicts.includes(label)) conflicts.push(label);
+    } else {
+      seen.set(slug, m);
+    }
+  }
+  return conflicts;
 }
 
 function patchModelSlug(draft) {
   return {
     ...draft,
-    slug: generateModelSlug(draft.name, draft.nickname, draft.yearFrom),
+    slug: generateModelSlug(
+      draft.name,
+      draft.nickname,
+      draft.yearFrom,
+      draft.yearTo,
+      draft.generation
+    ),
   };
 }
 
@@ -227,7 +256,9 @@ function ModelModal({ draft, setDraft, onClose, onSave, saving }) {
             <input
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
               value={draft.generation}
-              onChange={(e) => setDraft((d) => ({ ...d, generation: e.target.value }))}
+              onChange={(e) =>
+                setDraft((d) => patchModelSlug({ ...d, generation: e.target.value }))
+              }
               placeholder="e.g. 10th Gen, 8th Gen"
             />
           </label>
@@ -267,7 +298,9 @@ function ModelModal({ draft, setDraft, onClose, onSave, saving }) {
                 max={2026}
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
                 value={draft.yearTo}
-                onChange={(e) => setDraft((d) => ({ ...d, yearTo: Number(e.target.value) }))}
+                onChange={(e) =>
+                  setDraft((d) => patchModelSlug({ ...d, yearTo: Number(e.target.value) }))
+                }
               />
             </label>
           </div>
@@ -435,6 +468,7 @@ export default function CarCatalogManager() {
   const [modelModal, setModelModal] = useState(null);
   const [modelDraft, setModelDraft] = useState(null);
   const [modelEditIndex, setModelEditIndex] = useState(null);
+  const [productsPanel, setProductsPanel] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -479,14 +513,21 @@ export default function CarCatalogManager() {
   }, [makes, makeSearch]);
 
   async function saveMake() {
+    if (saving) return;
     const name = form.name.trim();
     if (name.length < 2) {
       toast.error("Make name must be at least 2 characters");
       return;
     }
-    if (hasDuplicateModelGenerations(form.models)) {
+
+    const modelsForSave = form.models.map((m) => ({
+      ...m,
+      slug: resolveModelSlugForSave(m),
+    }));
+    const conflicts = findDuplicateModelSlugs(modelsForSave);
+    if (conflicts.length) {
       toast.error(
-        "Duplicate model: same name and year range. Use a different year range for each generation."
+        `Duplicate model slug. Give each generation a unique nickname or generation (conflict: ${conflicts.join(", ")}).`
       );
       return;
     }
@@ -500,10 +541,10 @@ export default function CarCatalogManager() {
         logo: String(form.logo || "").trim(),
         isActive: form.isActive !== false,
         order: Number(form.order) || 0,
-        models: form.models.map((m) => ({
+        models: modelsForSave.map((m) => ({
           _id: m._id,
           name: m.name.trim(),
-          slug: resolveModelSlugForSave(m),
+          slug: m.slug,
           image: String(m.image || "").trim(),
           generation: m.generation || "",
           nickname: m.nickname || "",
@@ -547,7 +588,7 @@ export default function CarCatalogManager() {
         toast.error(data.error || "Save failed");
         return;
       }
-      toast.success("Saved");
+      toast.success("Saved — cars will show on the homepage", { duration: 4000 });
       if (data.make) {
         setForm(makeToForm(data.make));
         setSelectedId(String(data.make._id));
@@ -613,12 +654,18 @@ export default function CarCatalogManager() {
         .map((s) => s.trim())
         .filter(Boolean),
     };
-    setForm((f) => {
-      const models = [...f.models];
-      if (modelEditIndex == null) models.push(row);
-      else models[modelEditIndex] = row;
-      return { ...f, models };
-    });
+    const nextModels =
+      modelEditIndex == null
+        ? [...form.models, row]
+        : form.models.map((m, i) => (i === modelEditIndex ? row : m));
+    const conflicts = findDuplicateModelSlugs(nextModels);
+    if (conflicts.length) {
+      toast.error(
+        `This model conflicts with an existing one. Use a different nickname or generation (e.g. “City Classic” vs “City 2021+”).`
+      );
+      return;
+    }
+    setForm((f) => ({ ...f, models: nextModels }));
     setModelModal(false);
     setModelDraft(null);
   }
@@ -794,7 +841,15 @@ export default function CarCatalogManager() {
           </label>
 
           <div className="mt-6 flex items-center justify-between">
-            <h3 className="font-medium">Models</h3>
+            <div>
+              <h3 className="font-medium">Models</h3>
+              <p className="mt-0.5 text-xs text-slate-500">
+                These cars appear as little cards on the homepage. Click{" "}
+                <strong>Products</strong> to add or remove parts for that car,{" "}
+                <strong>Mark popular</strong> to pin favorites, then{" "}
+                <strong>Save Changes</strong>.
+              </p>
+            </div>
             <button type="button" className="text-sm text-[#C41E1E] font-semibold" onClick={() => openModelModal("new")}>
               + Add Model
             </button>
@@ -853,10 +908,30 @@ export default function CarCatalogManager() {
                       </label>
                     ) : null}
                   </div>
-                  <div className="mt-2 flex gap-2">
-                    <button type="button" className="text-xs text-[#C41E1E]" onClick={() => openModelModal(i)}>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button type="button" className="text-xs font-semibold text-[#C41E1E]" onClick={() => openModelModal(i)}>
                       Edit
                     </button>
+                    {form._id && model._id ? (
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-[#009688]"
+                        onClick={() =>
+                          setProductsPanel({
+                            makeId: String(form._id),
+                            modelId: String(model._id),
+                            makeName: form.name,
+                            modelName: model.name || "Model",
+                          })
+                        }
+                      >
+                        Products
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-slate-400" title="Save the make first">
+                        Products (save first)
+                      </span>
+                    )}
                     <button
                       type="button"
                       className="text-xs text-red-600"
@@ -878,6 +953,16 @@ export default function CarCatalogManager() {
           ) : null}
         </div>
       </div>
+
+      {productsPanel ? (
+        <ModelProductsPanel
+          makeId={productsPanel.makeId}
+          modelId={productsPanel.modelId}
+          makeName={productsPanel.makeName}
+          modelName={productsPanel.modelName}
+          onClose={() => setProductsPanel(null)}
+        />
+      ) : null}
     </div>
   );
 }

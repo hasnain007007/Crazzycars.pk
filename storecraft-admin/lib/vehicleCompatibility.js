@@ -44,7 +44,7 @@ export function normalizeVehicleCompatibility(raw) {
   }
   const fitmentType = FITMENT_TYPES.includes(raw.fitmentType) ? raw.fitmentType : "universal";
   const vehicles = Array.isArray(raw.vehicles)
-    ? raw.vehicles.map(normalizeVehicleRow).filter((v) => v.make || v.model)
+    ? raw.vehicles.map(normalizeVehicleRow)
     : [];
   const categories = Array.isArray(raw.categories)
     ? raw.categories.map((c) => String(c || "").trim().toLowerCase()).filter(Boolean)
@@ -58,17 +58,43 @@ export function normalizeVehicleCompatibility(raw) {
   };
 }
 
-/** Map stored product → editor form (supports legacy isUniversal / compatibleCars). */
+/** Map stored product → editor form (supports legacy isUniversal / compatibleCars / Vehicle refs). */
 export function vehicleCompatibilityFromProduct(product) {
-  if (product?.vehicleCompatibility?.fitmentType) {
-    return normalizeVehicleCompatibility(product.vehicleCompatibility);
-  }
   if (product?.isUniversal) {
     return {
       ...emptyVehicleCompatibility(),
       fitmentType: "universal",
     };
   }
+
+  const vc = product?.vehicleCompatibility;
+  const vcVehicles = Array.isArray(vc?.vehicles) ? vc.vehicles.filter((v) => v?.make || v?.model) : [];
+  if (vc?.fitmentType && (vc.fitmentType !== "specific" || vcVehicles.length > 0)) {
+    return normalizeVehicleCompatibility(vc);
+  }
+
+  // Prefer populated compatibleVehicles ObjectId refs (seed / Vehicle collection).
+  const linked = Array.isArray(product?.compatibleVehicles)
+    ? product.compatibleVehicles.filter((v) => v && typeof v === "object" && (v.make || v.model))
+    : [];
+  if (linked.length) {
+    return {
+      fitmentType: "specific",
+      universalNote: "Fits all car makes and models",
+      vehicles: linked.map((v) =>
+        normalizeVehicleRow({
+          make: v.make,
+          model: v.model,
+          yearFrom: v.yearFrom,
+          yearTo: v.yearTo ?? CURRENT_YEAR,
+          bodyStyle: v.bodyType || "All",
+          notes: v.displayName || v.generation || "",
+        })
+      ),
+      categories: [],
+    };
+  }
+
   const legacy = Array.isArray(product?.compatibleCars) ? product.compatibleCars : [];
   if (legacy.length) {
     return {
@@ -87,6 +113,10 @@ export function vehicleCompatibilityFromProduct(product) {
       categories: [],
     };
   }
+
+  if (vc?.fitmentType) {
+    return normalizeVehicleCompatibility(vc);
+  }
   return emptyVehicleCompatibility();
 }
 
@@ -103,10 +133,13 @@ export function stripVehicleRowIds(vehicles) {
 
 /** Persist vehicleCompatibility and sync legacy fields for existing queries. */
 export function buildVehicleCompatibilityPayload(formVc) {
+  const cleanedVehicles = stripVehicleRowIds(formVc?.vehicles).filter((v) => v.make || v.model);
   const vehicleCompatibility = normalizeVehicleCompatibility({
     ...formVc,
-    vehicles: stripVehicleRowIds(formVc?.vehicles),
+    vehicles: cleanedVehicles,
   });
+  // Persist without editor-only draft/empty rows or ephemeral _rowId
+  vehicleCompatibility.vehicles = cleanedVehicles;
   const isUniversal = vehicleCompatibility.fitmentType === "universal";
   const compatibleCars =
     vehicleCompatibility.fitmentType === "specific" ||

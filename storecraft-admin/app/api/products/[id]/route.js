@@ -11,6 +11,8 @@ import { normalizeMetaKeywords } from "@/lib/seoKeywords";
 import { slugify } from "@/lib/slugify";
 import Product from "@/lib/models/Product.model";
 import StockAlert from "@/lib/models/StockAlert.model";
+// Ensure Vehicle is registered before populate("compatibleVehicles")
+import "@/lib/models/Vehicle.model";
 import {
   normalizeAddOns,
   normalizeCustomSizing,
