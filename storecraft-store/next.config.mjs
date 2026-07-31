@@ -43,12 +43,8 @@ const nextConfig = {
         destination: "/:slug",
         permanent: true,
       },
-      // Shopify-era product URLs (/products/[handle] → /[slug])
-      {
-        source: "/products/:slug",
-        destination: "/:slug",
-        permanent: true,
-      },
+      // /products/:slug is handled in middleware (next.config redirects preserve
+      // ?variant=&country=&currency=, which created GSC "alternate canonical" noise).
       // Shopify blog / cart / search leftovers
       {
         source: "/blogs/news",
