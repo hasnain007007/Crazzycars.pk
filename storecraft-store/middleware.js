@@ -41,13 +41,19 @@ export async function middleware(request) {
     const referrer = request.headers.get("referer") || "";
     aiHit = classifyAiTraffic({ userAgent, referrer });
     if (aiHit?.matched) {
-      const ingestUrl = new URL("/api/analytics/ai-visit", request.url);
+      // Call Node on loopback so Edge middleware does not need runtime secrets inlined.
+      // Public URL fetch would go through Traefik and require x-ai-visit-secret.
+      const port = process.env.PORT || "3000";
+      const ingestUrl = `http://127.0.0.1:${port}/api/analytics/ai-visit`;
       const secret =
         process.env.AI_VISIT_INGEST_SECRET ||
         process.env.REVALIDATE_SECRET ||
         process.env.CRON_SECRET ||
         "";
-      const headers = { "content-type": "application/json" };
+      const headers = {
+        "content-type": "application/json",
+        "x-internal-ai-ingest": "1",
+      };
       if (secret) headers["x-ai-visit-secret"] = secret;
       // Fire-and-forget — Edge runtime must not await Mongo work here.
       fetch(ingestUrl, {

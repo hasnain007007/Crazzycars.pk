@@ -18,18 +18,32 @@ export function resolveAiVisitIngestSecret() {
 }
 
 /**
+ * Middleware calls this via http://127.0.0.1 (same container) with x-internal-ai-ingest.
+ * External/proxy traffic always has x-forwarded-for — rejected without a valid secret.
+ */
+function isTrustedInternalIngest(request) {
+  if (String(request.headers.get("x-internal-ai-ingest") || "") !== "1") return false;
+  if (request.headers.get("x-forwarded-for")) return false;
+  if (request.headers.get("x-real-ip")) return false;
+  const host = String(request.headers.get("host") || "").toLowerCase();
+  return host.startsWith("127.0.0.1") || host.startsWith("localhost");
+}
+
+/**
  * Internal ingest for AI-agent / AI-referrer visits.
  * Called fire-and-forget from middleware — never blocks page response.
- * Always requires a shared secret (fails closed if unset).
  */
 export async function POST(request) {
   try {
     const secret = resolveAiVisitIngestSecret();
-    if (!secret) {
-      return NextResponse.json({ success: false, error: "Ingest not configured" }, { status: 503 });
-    }
     const got = String(request.headers.get("x-ai-visit-secret") || "").trim();
-    if (got !== secret) {
+    const secretOk = Boolean(secret && got && got === secret);
+    const internalOk = isTrustedInternalIngest(request);
+
+    if (!secretOk && !internalOk) {
+      if (!secret) {
+        return NextResponse.json({ success: false, error: "Ingest not configured" }, { status: 503 });
+      }
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 

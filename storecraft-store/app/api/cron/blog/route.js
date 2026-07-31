@@ -1,6 +1,7 @@
 /**
  * GET /api/cron/blog — publish due scheduled posts + apply auto view increases.
- * Auth: Authorization: Bearer $CRON_SECRET  (query-string secrets rejected — they leak in logs/Referer).
+ * Auth: Authorization: Bearer $CRON_SECRET (falls back to REVALIDATE_SECRET).
+ * Query-string secrets are rejected — they leak in logs/Referer.
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -13,8 +14,12 @@ import {
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+function resolveCronSecret() {
+  return String(process.env.CRON_SECRET || process.env.REVALIDATE_SECRET || "").trim();
+}
+
 function authorized(request) {
-  const secret = String(process.env.CRON_SECRET || "").trim();
+  const secret = resolveCronSecret();
   if (!secret) return false;
   const header = request.headers.get("authorization") || "";
   return header === `Bearer ${secret}`;
