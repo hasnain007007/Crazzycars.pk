@@ -7,18 +7,30 @@ export const dynamic = "force-dynamic";
 
 const ALLOWED_SOURCES = new Set(AI_SOURCES);
 
+/** Prefer dedicated secret; fall back to other server secrets so ingest is never open. */
+export function resolveAiVisitIngestSecret() {
+  return String(
+    process.env.AI_VISIT_INGEST_SECRET ||
+      process.env.REVALIDATE_SECRET ||
+      process.env.CRON_SECRET ||
+      ""
+  ).trim();
+}
+
 /**
  * Internal ingest for AI-agent / AI-referrer visits.
  * Called fire-and-forget from middleware — never blocks page response.
+ * Always requires a shared secret (fails closed if unset).
  */
 export async function POST(request) {
   try {
-    const secret = String(process.env.AI_VISIT_INGEST_SECRET || "").trim();
-    if (secret) {
-      const got = String(request.headers.get("x-ai-visit-secret") || "").trim();
-      if (got !== secret) {
-        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-      }
+    const secret = resolveAiVisitIngestSecret();
+    if (!secret) {
+      return NextResponse.json({ success: false, error: "Ingest not configured" }, { status: 503 });
+    }
+    const got = String(request.headers.get("x-ai-visit-secret") || "").trim();
+    if (got !== secret) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json().catch(() => ({}));

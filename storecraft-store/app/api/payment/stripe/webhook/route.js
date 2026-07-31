@@ -51,12 +51,14 @@ export async function POST(req) {
   let event;
 
   try {
-    if (webhookSecret && signature) {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } else {
-      console.warn("No webhook secret or stripe-signature — skipping signature verification");
-      event = JSON.parse(body);
+    if (!webhookSecret) {
+      console.error("Stripe webhook secret not configured");
+      return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
     }
+    if (!signature) {
+      return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
+    }
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (e) {
     console.error("Webhook signature error:", e.message);
     return NextResponse.json({ error: `Webhook error: ${e.message}` }, { status: 400 });

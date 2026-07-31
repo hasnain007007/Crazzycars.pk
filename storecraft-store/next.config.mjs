@@ -131,6 +131,14 @@ const nextConfig = {
             key: "X-DNS-Prefetch-Control",
             value: "on",
           },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests",
+          },
         ],
       },
       {

@@ -662,8 +662,6 @@ export default function StripeCheckout({
               'Content-Type': 'application/json' 
             },
             body: JSON.stringify({
-              amount,
-              currency: 'eur',
               orderId,
               customerEmail,
               customerName

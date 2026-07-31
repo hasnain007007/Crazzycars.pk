@@ -10,8 +10,8 @@ function isAuthorized(request) {
     request.headers.get("x-revalidate-secret") ||
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
     "";
-  const bodySecret = request.nextUrl?.searchParams?.get("secret") || "";
-  return header === secret || bodySecret === secret;
+  // Query-string secrets rejected — they leak via access logs / Referer.
+  return header === secret;
 }
 
 /**

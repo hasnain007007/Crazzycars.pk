@@ -42,7 +42,11 @@ export async function middleware(request) {
     aiHit = classifyAiTraffic({ userAgent, referrer });
     if (aiHit?.matched) {
       const ingestUrl = new URL("/api/analytics/ai-visit", request.url);
-      const secret = process.env.AI_VISIT_INGEST_SECRET || "";
+      const secret =
+        process.env.AI_VISIT_INGEST_SECRET ||
+        process.env.REVALIDATE_SECRET ||
+        process.env.CRON_SECRET ||
+        "";
       const headers = { "content-type": "application/json" };
       if (secret) headers["x-ai-visit-secret"] = secret;
       // Fire-and-forget — Edge runtime must not await Mongo work here.
