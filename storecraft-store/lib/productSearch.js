@@ -1,16 +1,11 @@
 /**
- * Product catalog search: prefer MongoDB $text (product_text_search index),
- * fall back to multi-field regex when text search errors or returns nothing.
- * SKU-like queries (e.g. CC-0001) use articleNo prefix match first — $text
- * tokenizes on hyphens and over-matches.
+ * Product catalog search: smart phrase/type ranking with MongoDB $text recall,
+ * SKU prefix match, and regex fallback.
  */
+import { queryProductsSmart } from "@/lib/smartProductSearch";
+
 function escapeRegex(s) {
   return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function looksLikeSku(term) {
-  const t = String(term || "").trim();
-  return /^[a-z]{1,8}[-_][a-z0-9][-a-z0-9_]*$/i.test(t) || /^cc[-_]?\d+/i.test(t);
 }
 
 export function buildProductRegexOr(q) {
@@ -35,69 +30,69 @@ export function buildProductRegexOr(q) {
  * @param {object} baseFilter - status + category/etc (no $text / $or search yet)
  * @param {string} q
  * @param {{ limit: number, skip: number, sortSpec: object, select?: string, populate?: string }} opts
- * @returns {Promise<{ rows: object[], total: number, mode: "sku"|"text"|"regex"|"none" }>}
+ * @returns {Promise<{ rows: object[], total: number, mode: string }>}
  */
 export async function queryProductsWithSearch(Product, baseFilter, q, opts) {
   const term = String(q || "").trim();
   const { limit, skip, sortSpec, select, populate } = opts;
 
-  async function runFind(filter, sort) {
-    let query = Product.find(filter);
+  // Price / name sorts: keep deterministic catalog order after a smart candidate gather.
+  const userSortsByField =
+    sortSpec &&
+    Object.keys(sortSpec).some((k) => k === "pricing.regularPrice" || k === "name");
+
+  if (!term) {
+    let query = Product.find(baseFilter);
     if (select) query = query.select(select);
     if (populate) query = query.populate(populate, "name slug");
     const [rows, total] = await Promise.all([
-      query.sort(sort).skip(skip).limit(limit).lean(),
-      Product.countDocuments(filter),
+      query.sort(sortSpec).skip(skip).limit(limit).lean(),
+      Product.countDocuments(baseFilter),
     ]);
-    return { rows, total };
-  }
-
-  if (!term) {
-    const { rows, total } = await runFind(baseFilter, sortSpec);
     return { rows, total, mode: "none" };
   }
 
-  // Article / SKU codes: exact-ish articleNo match beats hyphen-tokenized $text.
-  if (looksLikeSku(term)) {
-    const skuFilter = {
-      ...baseFilter,
-      articleNo: new RegExp(`^${escapeRegex(term)}`, "i"),
+  const selectWithSearchFields = select
+    ? `${select} tags articleNo compatibleCars.make compatibleCars.model`
+    : select;
+
+  const result = await queryProductsSmart(Product, baseFilter, term, {
+    limit: userSortsByField ? Math.max(limit + skip, 60) : limit,
+    skip: userSortsByField ? 0 : skip,
+    select: selectWithSearchFields,
+    populate,
+    candidateLimit: Math.max(60, (limit + skip) * 4),
+    countTotal: true,
+    sortSpec: null,
+  });
+
+  if (userSortsByField && result.rows.length) {
+    const key = Object.keys(sortSpec).find(
+      (k) => k === "pricing.regularPrice" || k === "name"
+    );
+    const dir = sortSpec[key] === -1 || sortSpec[key] === "desc" ? -1 : 1;
+    const sorted = [...result.rows].sort((a, b) => {
+      let av;
+      let bv;
+      if (key === "name") {
+        av = String(a.name || "");
+        bv = String(b.name || "");
+        return av.localeCompare(bv) * dir;
+      }
+      av = Number(a.pricing?.regularPrice) || 0;
+      bv = Number(b.pricing?.regularPrice) || 0;
+      return (av - bv) * dir;
+    });
+    return {
+      rows: sorted.slice(skip, skip + limit),
+      total: result.total,
+      mode: result.mode,
     };
-    const sku = await runFind(skuFilter, sortSpec);
-    if (sku.rows.length || sku.total > 0) {
-      return { ...sku, mode: "sku" };
-    }
   }
 
-  // Prefer $text for relevance + index speed.
-  try {
-    const textFilter = { ...baseFilter, $text: { $search: term } };
-    const textSort =
-      sortSpec && Object.keys(sortSpec).some((k) => k === "pricing.regularPrice" || k === "name")
-        ? sortSpec
-        : { score: { $meta: "textScore" }, ...sortSpec };
-
-    let query = Product.find(textFilter, { score: { $meta: "textScore" } });
-    if (select) query = query.select(select);
-    if (populate) query = query.populate(populate, "name slug");
-
-    const [rows, total] = await Promise.all([
-      query.sort(textSort).skip(skip).limit(limit).maxTimeMS(4000).lean(),
-      Product.countDocuments(textFilter).maxTimeMS(4000),
-    ]);
-
-    if (rows.length || total > 0) {
-      return { rows, total, mode: "text" };
-    }
-  } catch {
-    // No text index / query error — fall through to regex.
-  }
-
-  const regexOr = buildProductRegexOr(term);
-  const regexFilter = {
-    ...baseFilter,
-    ...(regexOr ? { $or: regexOr } : {}),
+  return {
+    rows: result.rows,
+    total: result.total,
+    mode: result.mode,
   };
-  const regex = await runFind(regexFilter, sortSpec);
-  return { ...regex, mode: "regex" };
 }

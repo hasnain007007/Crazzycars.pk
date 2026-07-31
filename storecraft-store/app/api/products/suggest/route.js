@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
-
-function escapeRegex(s) {
-  return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+import { queryProductsSmart } from "@/lib/smartProductSearch";
 
 function lightSerialize(p) {
   const regularPrice = Number(p.pricing?.regularPrice) || 0;
@@ -27,10 +24,10 @@ function lightSerialize(p) {
 }
 
 const SELECT =
-  "name slug media.images pricing.regularPrice pricing.salePrice pricing.saleSchedule";
+  "name slug media.images pricing.regularPrice pricing.salePrice pricing.saleSchedule tags articleNo compatibleCars.make compatibleCars.model";
 
 /**
- * Fast typeahead endpoint — minimal fields, no count, no category populate, no aggregation.
+ * Fast typeahead endpoint — minimal fields, smart phrase + type ranking.
  * GET /api/products/suggest?q=corolla&limit=8
  */
 export async function GET(request) {
@@ -52,57 +49,30 @@ export async function GET(request) {
 
     await dbConnect();
 
-    let rows = [];
-
-    // Prefer MongoDB text index when present (much faster than multi-field regex).
-    try {
-      rows = await Product.find(
-        { status: "active", $text: { $search: q } },
-        { score: { $meta: "textScore" } }
-      )
-        .select(SELECT)
-        .sort({ score: { $meta: "textScore" } })
-        .limit(limit)
-        .maxTimeMS(2500)
-        .lean();
-    } catch {
-      rows = [];
-    }
-
-    if (!rows.length) {
-      const rx = new RegExp(escapeRegex(q), "i");
-      rows = await Product.find({
-        status: "active",
-        $or: [
-          { name: rx },
-          { slug: rx },
-          { articleNo: rx },
-          { tags: rx },
-          { "compatibleCars.make": rx },
-          { "compatibleCars.model": rx },
-        ],
-      })
-        .select(SELECT)
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .maxTimeMS(2500)
-        .lean();
-    }
-
-    // Approximate total for “View all” without a second expensive count query.
-    // If we filled the page, there are likely more matches.
-    const total = rows.length < limit ? rows.length : rows.length + 1;
+    const { rows, total, mode } = await queryProductsSmart(
+      Product,
+      { status: "active" },
+      q,
+      {
+        limit,
+        skip: 0,
+        select: SELECT,
+        candidateLimit: Math.max(48, limit * 6),
+        countTotal: false,
+      }
+    );
 
     return NextResponse.json(
       {
         success: true,
         products: rows.map(lightSerialize),
-        total,
+        total: rows.length < limit ? rows.length : Math.max(total, rows.length + 1),
         hasMore: rows.length >= limit,
+        mode,
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
         },
       }
     );
