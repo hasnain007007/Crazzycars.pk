@@ -11,8 +11,15 @@ import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
 function redirectPath(request, pathname, status = 308) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
-  // Drop Shopify / tracking junk so Google consolidates on clean canonicals.
-  stripTrackingParams(url.searchParams);
+  // Rebuild query string — Edge URLSearchParams.delete can be unreliable mid-redirect.
+  const kept = new URLSearchParams();
+  for (const [key, value] of request.nextUrl.searchParams.entries()) {
+    const lower = String(key).toLowerCase();
+    if (STRIP_QUERY_KEYS.has(lower) || lower.startsWith("utm_")) continue;
+    kept.append(key, value);
+  }
+  const qs = kept.toString();
+  url.search = qs ? `?${qs}` : "";
   return NextResponse.redirect(url, status);
 }
 
@@ -36,18 +43,6 @@ const STRIP_QUERY_KEYS = new Set([
   "_v",
   "pb",
 ]);
-
-function stripTrackingParams(searchParams) {
-  let changed = false;
-  for (const key of [...searchParams.keys()]) {
-    const lower = String(key).toLowerCase();
-    if (STRIP_QUERY_KEYS.has(lower) || lower.startsWith("utm_")) {
-      searchParams.delete(key);
-      changed = true;
-    }
-  }
-  return changed;
-}
 
 /**
  * - Fix Shopify-era / Google-indexed URLs (collections, case, cart, search).
@@ -98,15 +93,30 @@ export async function middleware(request) {
   if (lower.startsWith("/products/")) {
     const rest = lower.slice("/products/".length).replace(/\/+$/, "");
     if (rest && !rest.includes("/")) {
-      return redirectPath(request, `/${rest}`, 308);
+      const url = request.nextUrl.clone();
+      url.pathname = `/${rest}`;
+      url.search = "";
+      return NextResponse.redirect(url, 308);
     }
   }
 
   // Self-canonicalizing: strip leftover Shopify/tracking params on any other URL.
   {
-    const cleanUrl = request.nextUrl.clone();
-    if (stripTrackingParams(cleanUrl.searchParams)) {
-      return NextResponse.redirect(cleanUrl, 308);
+    const kept = new URLSearchParams();
+    let changed = false;
+    for (const [key, value] of request.nextUrl.searchParams.entries()) {
+      const k = String(key).toLowerCase();
+      if (STRIP_QUERY_KEYS.has(k) || k.startsWith("utm_")) {
+        changed = true;
+        continue;
+      }
+      kept.append(key, value);
+    }
+    if (changed) {
+      const url = request.nextUrl.clone();
+      const qs = kept.toString();
+      url.search = qs ? `?${qs}` : "";
+      return NextResponse.redirect(url, 308);
     }
   }
 
