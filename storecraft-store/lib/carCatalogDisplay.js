@@ -1,5 +1,14 @@
 /** UI helpers for car catalog entries (storefront). */
 
+/** Strip leading brand from a model display label (e.g. "Honda Vezel" → "Vezel"). */
+export function stripBrandPrefix(make, label) {
+  const m = String(make || "").trim();
+  let text = String(label || "").trim();
+  if (!m || !text) return text;
+  const re = new RegExp(`^${m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s+`, "i");
+  return text.replace(re, "").trim() || text;
+}
+
 export function formatModelLabel(entry) {
   if (!entry) return "";
   const nick = String(entry.nickname || "").trim();
