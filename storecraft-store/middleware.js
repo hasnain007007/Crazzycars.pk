@@ -9,9 +9,8 @@ import { applyAiAttributionCookies } from "@/lib/aiAttribution";
 import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
 
 function redirectPath(request, pathname, status = 308) {
-  const url = request.nextUrl.clone();
-  url.pathname = pathname;
-  // Rebuild query string — Edge URLSearchParams.delete can be unreliable mid-redirect.
+  // Prefer `new URL` over NextURL.clone() so Location never inherits stale search.
+  const dest = new URL(pathname, request.nextUrl.origin);
   const kept = new URLSearchParams();
   for (const [key, value] of request.nextUrl.searchParams.entries()) {
     const lower = String(key).toLowerCase();
@@ -19,8 +18,8 @@ function redirectPath(request, pathname, status = 308) {
     kept.append(key, value);
   }
   const qs = kept.toString();
-  url.search = qs ? `?${qs}` : "";
-  return NextResponse.redirect(url, status);
+  if (qs) dest.search = qs;
+  return NextResponse.redirect(dest, status);
 }
 
 /** Query keys Google still crawls from the old Shopify store. */
@@ -90,13 +89,11 @@ export async function middleware(request) {
   }
 
   // Shopify-era product URLs (+ variant/country/currency) → clean /[slug] in one hop.
+  // Use `new URL` — NextURL.clone() + search="" often keeps the old query string.
   if (lower.startsWith("/products/")) {
     const rest = lower.slice("/products/".length).replace(/\/+$/, "");
     if (rest && !rest.includes("/")) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${rest}`;
-      url.search = "";
-      return NextResponse.redirect(url, 308);
+      return NextResponse.redirect(new URL(`/${rest}`, request.nextUrl.origin), 308);
     }
   }
 
@@ -113,10 +110,10 @@ export async function middleware(request) {
       kept.append(key, value);
     }
     if (changed) {
-      const url = request.nextUrl.clone();
+      const dest = new URL(request.nextUrl.pathname, request.nextUrl.origin);
       const qs = kept.toString();
-      url.search = qs ? `?${qs}` : "";
-      return NextResponse.redirect(url, 308);
+      if (qs) dest.search = qs;
+      return NextResponse.redirect(dest, 308);
     }
   }
 
