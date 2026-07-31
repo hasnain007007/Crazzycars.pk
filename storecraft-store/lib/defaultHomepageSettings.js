@@ -44,6 +44,7 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
   bestSellers: {
     enabled: true,
     title: "Best Sellers",
+    productIds: [],
     tabs: [{ label: "All", categorySlug: "all", enabled: true, order: 1 }],
   },
   hotDeals: {
@@ -51,9 +52,9 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
     title: "Hot Deals",
     subtitle: "Limited-time offers from our catalog",
     tabs: [
-      { label: "All Deals", filter: "all", enabled: true, order: 1 },
-      { label: "Under Rs.1,000", filter: "under1000", enabled: true, order: 2 },
-      { label: "Under Rs.700", filter: "under700", enabled: true, order: 3 },
+      { label: "All Deals", filter: "all", maxPrice: null, enabled: true, order: 1 },
+      { label: "Under Rs.1,000", filter: "under1000", maxPrice: 1000, enabled: true, order: 2 },
+      { label: "Under Rs.700", filter: "under700", maxPrice: 700, enabled: true, order: 3 },
     ],
   },
   sectionOrder: [
@@ -132,6 +133,9 @@ export function normalizeHomepageSettings(raw) {
     bestSellers: {
       enabled: raw.bestSellers?.enabled !== false,
       title: raw.bestSellers?.title || raw.sectionTitles?.bestSellers || d.bestSellers.title,
+      productIds: Array.isArray(raw.bestSellers?.productIds)
+        ? raw.bestSellers.productIds.map((id) => String(id)).filter(Boolean)
+        : [],
       tabs:
         Array.isArray(raw.bestSellers?.tabs) && raw.bestSellers.tabs.length
           ? raw.bestSellers.tabs.map((t, i) => ({
@@ -148,12 +152,26 @@ export function normalizeHomepageSettings(raw) {
       subtitle: raw.hotDeals?.subtitle || d.hotDeals.subtitle,
       tabs:
         Array.isArray(raw.hotDeals?.tabs) && raw.hotDeals.tabs.length
-          ? raw.hotDeals.tabs.map((t, i) => ({
-              label: String(t?.label || ""),
-              filter: String(t?.filter || "all"),
-              enabled: t?.enabled !== false,
-              order: Number.isFinite(Number(t?.order)) ? Number(t.order) : i + 1,
-            }))
+          ? raw.hotDeals.tabs.map((t, i) => {
+              const maxPrice =
+                t?.maxPrice != null && t.maxPrice !== ""
+                  ? Number(t.maxPrice)
+                  : (() => {
+                      const m = String(t?.filter || "").match(/under[_-]?(\d+)/i);
+                      return m ? Number(m[1]) : null;
+                    })();
+              const filter =
+                Number.isFinite(maxPrice) && maxPrice > 0
+                  ? `under${Math.round(maxPrice)}`
+                  : String(t?.filter || "all");
+              return {
+                label: String(t?.label || ""),
+                filter,
+                maxPrice: Number.isFinite(maxPrice) && maxPrice > 0 ? Math.round(maxPrice) : null,
+                enabled: t?.enabled !== false,
+                order: Number.isFinite(Number(t?.order)) ? Number(t.order) : i + 1,
+              };
+            })
           : d.hotDeals.tabs,
     },
     sectionOrder:

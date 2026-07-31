@@ -17,7 +17,7 @@ function matchesTab(product, tabId) {
 }
 
 function SkeletonCard() {
-  return <div className="aspect-square animate-pulse rounded-xl bg-[#F3F4F6]" />;
+  return <div className="aspect-square w-[42%] shrink-0 animate-pulse rounded-xl bg-[#F3F4F6] sm:w-[23%]" />;
 }
 
 export default function BestSellers({ initialProducts = [], settings }) {
@@ -26,15 +26,17 @@ export default function BestSellers({ initialProducts = [], settings }) {
   const [loading, setLoading] = useState(!hasInitial);
   const tabs = useMemo(() => {
     const fromSettings = settings?.bestSellers?.tabs;
-    const source = Array.isArray(fromSettings) && fromSettings.length ? fromSettings : DEFAULT_HOMEPAGE_SETTINGS.bestSellers.tabs;
+    const source =
+      Array.isArray(fromSettings) && fromSettings.length
+        ? fromSettings
+        : DEFAULT_HOMEPAGE_SETTINGS.bestSellers.tabs;
     return source.filter((t) => t.enabled !== false).sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [settings?.bestSellers?.tabs]);
   const [tab, setTab] = useState(tabs[0]?.categorySlug || "all");
-  const [visible, setVisible] = useState(8);
 
   useEffect(() => {
     if (hasInitial) return;
-    fetch("/api/products?limit=4&sort=popular")
+    fetch("/api/products?limit=8&sort=popular")
       .then((r) => r.json())
       .then((data) => {
         const list = data?.products || data?.data || [];
@@ -49,9 +51,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
   }, [tabs]);
 
   const filtered = useMemo(() => products.filter((p) => matchesTab(p, tab)), [products, tab]);
-  const shown = filtered.slice(0, visible);
 
-  // Hide entire section when catalog has no products (after load).
   if (!loading && products.length === 0) return null;
 
   return (
@@ -59,63 +59,61 @@ export default function BestSellers({ initialProducts = [], settings }) {
       <div className="store-container">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <h2 className="font-heading text-[32px] font-bold text-[#111111]">{settings?.bestSellers?.title || "Best Sellers"}</h2>
+            <h2 className="font-heading text-[32px] font-bold text-[#111111]">
+              {settings?.bestSellers?.title || "Best Sellers"}
+            </h2>
             <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8 }} />
           </div>
-          <Link href="/shop" className="text-sm font-semibold text-[#C41E1E] hover:underline">View All →</Link>
+          <Link href="/shop" className="text-sm font-semibold text-[#C41E1E] hover:underline">
+            View All →
+          </Link>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-6 border-b" style={{ borderColor: "#E5E7EB" }}>
-          {tabs.map((t) => (
-            <button
-              key={t.categorySlug}
-              type="button"
-              onClick={() => {
-                setTab(t.categorySlug);
-                setVisible(8);
-              }}
-              className="pb-3 text-sm font-semibold transition"
-              style={{
-                color: tab === t.categorySlug ? "#C41E1E" : "#6B7280",
-                borderBottom: tab === t.categorySlug ? "2px solid #C41E1E" : "2px solid transparent",
-                marginBottom: -1,
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {tabs.length > 1 ? (
+          <div className="mt-6 flex flex-wrap gap-6 border-b" style={{ borderColor: "#E5E7EB" }}>
+            {tabs.map((t) => (
+              <button
+                key={t.categorySlug}
+                type="button"
+                onClick={() => setTab(t.categorySlug)}
+                className="pb-3 text-sm font-semibold transition"
+                style={{
+                  color: tab === t.categorySlug ? "#C41E1E" : "#6B7280",
+                  borderBottom: tab === t.categorySlug ? "2px solid #C41E1E" : "2px solid transparent",
+                  marginBottom: -1,
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         {loading ? (
-          <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
+          <div className="mt-8 flex gap-3 overflow-hidden">
             {Array.from({ length: 4 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
-        ) : shown.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <p className="mt-8 text-sm text-[#6B7280]">No products in this tab yet.</p>
         ) : (
-          <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
-            {shown.map((p) => (
-              <ProductCard key={p.id || p.slug} product={p} />
+          <div
+            className="mt-8 flex gap-3 overflow-x-auto pb-2 md:gap-5"
+            style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+          >
+            {filtered.map((p) => (
+              <div
+                key={p.id || p.slug}
+                className="w-[42%] shrink-0 sm:w-[23%]"
+                style={{ scrollSnapAlign: "start" }}
+              >
+                <ProductCard product={p} />
+              </div>
             ))}
           </div>
         )}
-
-        {visible < filtered.length ? (
-          <div className="mt-10 text-center">
-            <button
-              type="button"
-              onClick={() => setVisible((v) => v + 8)}
-              className="text-sm font-semibold text-[#111111] underline-offset-4 hover:underline"
-            >
-              Load more products
-            </button>
-          </div>
-        ) : null}
       </div>
     </section>
   );
 }
-
-

@@ -5,6 +5,154 @@ import toast from "react-hot-toast";
 import { clearStorefrontBrowserCache } from "@/lib/clearStorefrontBrowserCache";
 import { clearAdminSettingsCache } from "@/lib/adminSettingsCache";
 
+function underFilterFromMax(maxPrice) {
+  const n = Math.round(Number(maxPrice) || 0);
+  return n > 0 ? `under${n}` : "all";
+}
+
+function BestSellerPicker({ productIds = [], onChange }) {
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const ids = (productIds || []).map(String).filter(Boolean);
+    if (!ids.length) {
+      setSelected([]);
+      return undefined;
+    }
+    (async () => {
+      try {
+        const res = await fetch(`/api/products?lite=1&limit=200&status=active`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (cancelled || !res.ok) return;
+        const list = data?.products || data?.data || [];
+        const byId = new Map(list.map((p) => [String(p._id || p.id), p]));
+        setSelected(ids.map((id) => byId.get(id) || { _id: id, name: id }).filter(Boolean));
+      } catch {
+        if (!cancelled) setSelected(ids.map((id) => ({ _id: id, name: id })));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [productIds]);
+
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) {
+      setHits([]);
+      return undefined;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(
+          `/api/products?lite=1&limit=12&search=${encodeURIComponent(term)}&status=active`,
+          { credentials: "include" }
+        );
+        const data = await res.json();
+        if (cancelled) return;
+        setHits(Array.isArray(data?.products) ? data.products : data?.data || []);
+      } catch {
+        if (!cancelled) setHits([]);
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [q]);
+
+  function addProduct(p) {
+    const id = String(p._id || p.id);
+    if (!id || productIds.includes(id)) return;
+    onChange([...productIds, id]);
+    setQ("");
+    setHits([]);
+  }
+
+  function removeAt(idx) {
+    onChange(productIds.filter((_, i) => i !== idx));
+  }
+
+  function move(idx, dir) {
+    const next = [...productIds];
+    const j = idx + dir;
+    if (j < 0 || j >= next.length) return;
+    [next[idx], next[j]] = [next[j], next[idx]];
+    onChange(next);
+  }
+
+  return (
+    <div className="mt-4 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+      <p className="mb-2 text-sm font-medium text-slate-800 dark:text-slate-100">
+        Selected products (homepage order)
+      </p>
+      <p className="mb-3 text-xs text-slate-500">
+        Leave empty to auto-pick popular/featured products. Drag order with ↑ ↓.
+      </p>
+      <ul className="mb-3 space-y-1">
+        {selected.map((p, i) => (
+          <li
+            key={String(p._id || p.id || i)}
+            className="flex items-center gap-2 rounded border border-slate-100 px-2 py-1.5 text-sm dark:border-slate-700"
+          >
+            <span className="min-w-0 flex-1 truncate">{p.name || String(p._id)}</span>
+            <button type="button" className="px-1 text-slate-500" onClick={() => move(i, -1)} aria-label="Move up">
+              ↑
+            </button>
+            <button type="button" className="px-1 text-slate-500" onClick={() => move(i, 1)} aria-label="Move down">
+              ↓
+            </button>
+            <button type="button" className="px-1 text-red-600" onClick={() => removeAt(i)} aria-label="Remove">
+              ×
+            </button>
+          </li>
+        ))}
+        {!selected.length ? (
+          <li className="text-xs text-slate-400">No curated products yet.</li>
+        ) : null}
+      </ul>
+      <input
+        className="w-full rounded border px-3 py-2 text-sm"
+        placeholder="Search products to add…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+      />
+      {searching ? <p className="mt-1 text-xs text-slate-400">Searching…</p> : null}
+      {hits.length ? (
+        <ul className="mt-1 max-h-40 overflow-y-auto rounded border border-slate-200 dark:border-slate-700">
+          {hits.map((p) => {
+            const id = String(p._id || p.id);
+            const already = productIds.includes(id);
+            return (
+              <li key={id}>
+                <button
+                  type="button"
+                  disabled={already}
+                  onClick={() => addProduct(p)}
+                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50 disabled:opacity-40 dark:hover:bg-slate-800"
+                >
+                  <span className="truncate">{p.name}</span>
+                  <span className="shrink-0 text-xs text-slate-400">{already ? "Added" : "+ Add"}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 const DEFAULT_FORM = {
   announcementMessages: [
     { text: "Free delivery on orders over Rs. 2,999 — Pakistan wide", isActive: true },
@@ -27,8 +175,6 @@ const DEFAULT_FORM = {
     { name: "MG", isActive: true, order: 5 },
     { name: "Changan", isActive: true, order: 6 },
     { name: "Haval", isActive: true, order: 7 },
-    { name: "Isuzu", isActive: true, order: 8 },
-    { name: "Audi", isActive: true, order: 9 },
   ],
   flashSaleEnabled: true,
   flashSaleTitle: "Up to 50% Off",
@@ -49,6 +195,7 @@ const DEFAULT_FORM = {
   bestSellers: {
     enabled: true,
     title: "Best Sellers",
+    productIds: [],
     tabs: [{ label: "All", categorySlug: "all", enabled: true, order: 1 }],
   },
   hotDeals: {
@@ -56,11 +203,9 @@ const DEFAULT_FORM = {
     title: "🔥 Hot Deals",
     subtitle: "Limited time offers",
     tabs: [
-      { label: "All Deals", filter: "all", enabled: true, order: 1 },
-      { label: "Under Rs.1,000", filter: "under1000", enabled: true, order: 2 },
-      { label: "Under Rs.700", filter: "under700", enabled: true, order: 3 },
-      { label: "50% OFF", filter: "fiftyoff", enabled: true, order: 4 },
-      { label: "Flash Deals", filter: "flash", enabled: true, order: 5 },
+      { label: "All Deals", filter: "all", maxPrice: null, enabled: true, order: 1 },
+      { label: "Under Rs.1,000", filter: "under1000", maxPrice: 1000, enabled: true, order: 2 },
+      { label: "Under Rs.700", filter: "under700", maxPrice: 700, enabled: true, order: 3 },
     ],
   },
   sectionOrder: [
@@ -416,7 +561,7 @@ export default function HomepageSettings() {
         </label>
       </Section>
 
-      <Section title="Best Sellers Tabs">
+      <Section title="Best Sellers">
         <label className="mb-3 flex items-center gap-2 text-sm">
           <input type="checkbox" checked={form.bestSellers.enabled !== false} onChange={(e) => setForm((f) => ({ ...f, bestSellers: { ...f.bestSellers, enabled: e.target.checked } }))} />
           Enabled
@@ -425,6 +570,13 @@ export default function HomepageSettings() {
           Title
           <input className="mt-1 w-full rounded border px-3 py-2" value={form.bestSellers.title} onChange={(e) => setForm((f) => ({ ...f, bestSellers: { ...f.bestSellers, title: e.target.value } }))} />
         </label>
+        <BestSellerPicker
+          productIds={form.bestSellers.productIds || []}
+          onChange={(productIds) =>
+            setForm((f) => ({ ...f, bestSellers: { ...f.bestSellers, productIds } }))
+          }
+        />
+        <p className="mb-2 mt-4 text-sm font-medium text-slate-700 dark:text-slate-200">Category tabs (optional)</p>
         {(form.bestSellers.tabs || []).map((tab, i) => (
           <div key={i} className="mb-2 grid gap-2 rounded border p-2 sm:grid-cols-5">
             <input className="rounded border px-2 py-1 text-sm" placeholder="Label" value={tab.label} onChange={(e) => setForm((f) => { const tabs=[...(f.bestSellers.tabs||[])]; tabs[i]={...tab,label:e.target.value}; return { ...f, bestSellers: { ...f.bestSellers, tabs } }; })} />
@@ -442,15 +594,129 @@ export default function HomepageSettings() {
         </label>
         <label className="mb-3 block text-sm">Title<input className="mt-1 w-full rounded border px-3 py-2" value={form.hotDeals.title} onChange={(e) => setForm((f) => ({ ...f, hotDeals: { ...f.hotDeals, title: e.target.value } }))} /></label>
         <label className="mb-3 block text-sm">Subtitle<input className="mt-1 w-full rounded border px-3 py-2" value={form.hotDeals.subtitle} onChange={(e) => setForm((f) => ({ ...f, hotDeals: { ...f.hotDeals, subtitle: e.target.value } }))} /></label>
+        <p className="mb-2 text-xs text-slate-500">
+          Price filters auto-fetch sale products under that max price. Use filter <code>all</code>, <code>fiftyoff</code>, <code>flash</code>, or set a Max price.
+        </p>
         {(form.hotDeals.tabs || []).map((tab, i) => (
-          <div key={i} className="mb-2 grid gap-2 rounded border p-2 sm:grid-cols-5">
-            <input className="rounded border px-2 py-1 text-sm" value={tab.label} onChange={(e) => setForm((f) => { const tabs=[...(f.hotDeals.tabs||[])]; tabs[i]={...tab,label:e.target.value}; return { ...f, hotDeals: { ...f.hotDeals, tabs } }; })} />
-            <input className="rounded border px-2 py-1 text-sm" value={tab.filter} onChange={(e) => setForm((f) => { const tabs=[...(f.hotDeals.tabs||[])]; tabs[i]={...tab,filter:e.target.value}; return { ...f, hotDeals: { ...f.hotDeals, tabs } }; })} />
-            <input className="rounded border px-2 py-1 text-sm" type="number" value={tab.order} onChange={(e) => setForm((f) => { const tabs=[...(f.hotDeals.tabs||[])]; tabs[i]={...tab,order:Number(e.target.value)||0}; return { ...f, hotDeals: { ...f.hotDeals, tabs } }; })} />
-            <label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={tab.enabled !== false} onChange={(e) => setForm((f) => { const tabs=[...(f.hotDeals.tabs||[])]; tabs[i]={...tab,enabled:e.target.checked}; return { ...f, hotDeals: { ...f.hotDeals, tabs } }; })} />Enabled</label>
+          <div key={i} className="mb-2 grid gap-2 rounded border p-2 sm:grid-cols-6">
+            <input
+              className="rounded border px-2 py-1 text-sm sm:col-span-2"
+              placeholder="Label (e.g. Under Rs.1,500)"
+              value={tab.label}
+              onChange={(e) =>
+                setForm((f) => {
+                  const tabs = [...(f.hotDeals.tabs || [])];
+                  tabs[i] = { ...tab, label: e.target.value };
+                  return { ...f, hotDeals: { ...f.hotDeals, tabs } };
+                })
+              }
+            />
+            <input
+              className="rounded border px-2 py-1 text-sm"
+              type="number"
+              placeholder="Max price"
+              value={tab.maxPrice ?? ""}
+              onChange={(e) => {
+                const maxPrice = e.target.value === "" ? null : Number(e.target.value);
+                setForm((f) => {
+                  const tabs = [...(f.hotDeals.tabs || [])];
+                  const filter =
+                    maxPrice != null && Number.isFinite(maxPrice) && maxPrice > 0
+                      ? underFilterFromMax(maxPrice)
+                      : tab.filter === "fiftyoff" || tab.filter === "flash" || tab.filter === "all"
+                        ? tab.filter
+                        : "all";
+                  tabs[i] = {
+                    ...tab,
+                    maxPrice: maxPrice != null && Number.isFinite(maxPrice) ? maxPrice : null,
+                    filter,
+                    label:
+                      tab.label ||
+                      (maxPrice > 0 ? `Under Rs.${Math.round(maxPrice).toLocaleString("en-PK")}` : tab.label),
+                  };
+                  return { ...f, hotDeals: { ...f.hotDeals, tabs } };
+                });
+              }}
+            />
+            <input
+              className="rounded border px-2 py-1 text-sm"
+              placeholder="filter key"
+              value={tab.filter}
+              onChange={(e) =>
+                setForm((f) => {
+                  const tabs = [...(f.hotDeals.tabs || [])];
+                  tabs[i] = { ...tab, filter: e.target.value };
+                  return { ...f, hotDeals: { ...f.hotDeals, tabs } };
+                })
+              }
+            />
+            <input
+              className="rounded border px-2 py-1 text-sm"
+              type="number"
+              value={tab.order}
+              onChange={(e) =>
+                setForm((f) => {
+                  const tabs = [...(f.hotDeals.tabs || [])];
+                  tabs[i] = { ...tab, order: Number(e.target.value) || 0 };
+                  return { ...f, hotDeals: { ...f.hotDeals, tabs } };
+                })
+              }
+            />
+            <label className="flex items-center gap-1 text-sm">
+              <input
+                type="checkbox"
+                checked={tab.enabled !== false}
+                onChange={(e) =>
+                  setForm((f) => {
+                    const tabs = [...(f.hotDeals.tabs || [])];
+                    tabs[i] = { ...tab, enabled: e.target.checked };
+                    return { ...f, hotDeals: { ...f.hotDeals, tabs } };
+                  })
+                }
+              />
+              On
+            </label>
+            <button
+              type="button"
+              className="text-left text-xs text-red-600"
+              onClick={() =>
+                setForm((f) => ({
+                  ...f,
+                  hotDeals: {
+                    ...f.hotDeals,
+                    tabs: (f.hotDeals.tabs || []).filter((_, idx) => idx !== i),
+                  },
+                }))
+              }
+            >
+              Remove
+            </button>
           </div>
         ))}
-        <button type="button" className="text-sm text-[#1d6fb8]" onClick={() => setForm((f) => ({ ...f, hotDeals: { ...f.hotDeals, tabs: [...(f.hotDeals.tabs||[]), { label: "", filter: "all", enabled: true, order: (f.hotDeals.tabs||[]).length + 1 }] } }))}>+ Add custom tab</button>
+        <button
+          type="button"
+          className="text-sm text-[#1d6fb8]"
+          onClick={() =>
+            setForm((f) => ({
+              ...f,
+              hotDeals: {
+                ...f.hotDeals,
+                tabs: [
+                  ...(f.hotDeals.tabs || []),
+                  {
+                    label: "Under Rs.1,500",
+                    filter: "under1500",
+                    maxPrice: 1500,
+                    enabled: true,
+                    order: (f.hotDeals.tabs || []).length + 1,
+                  },
+                ],
+              },
+            }))
+          }
+        >
+          + Add price filter tab
+        </button>
       </Section>
 
       <Section title="Section Order">

@@ -95,29 +95,27 @@ export default function HotDeals({ settings, initialProducts = null }) {
           </p>
         ) : null}
 
-        {!loading && hasDeals ? (
-          <div className="scrollbar-hidden mt-6 flex gap-2 overflow-x-auto pb-2">
-            {tabs.map((t) => {
-              const isActive = active === t.filter;
-              return (
-                <button
-                  key={t.filter}
-                  type="button"
-                  onClick={() => setActive(t.filter)}
-                  className="shrink-0 border px-4 py-2 text-sm font-semibold transition duration-200"
-                  style={{
-                    borderRadius: 99,
-                    background: isActive ? "#C41E1E" : "#FFFFFF",
-                    color: isActive ? "#FFFFFF" : "#374151",
-                    borderColor: isActive ? "#C41E1E" : "#E5E7EB",
-                  }}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
+        <div className="scrollbar-hidden mt-6 flex gap-2 overflow-x-auto pb-2">
+          {tabs.map((t) => {
+            const isActive = active === t.filter;
+            return (
+              <button
+                key={`${t.filter}-${t.label}`}
+                type="button"
+                onClick={() => setActive(t.filter)}
+                className="shrink-0 border px-4 py-2 text-sm font-semibold transition duration-200"
+                style={{
+                  borderRadius: 99,
+                  background: isActive ? "#C41E1E" : "#FFFFFF",
+                  color: isActive ? "#FFFFFF" : "#374151",
+                  borderColor: isActive ? "#C41E1E" : "#E5E7EB",
+                }}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
 
         {loading ? (
           <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
@@ -137,7 +135,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
         ) : (
           <div className="mt-8 rounded-xl border border-[#E5E7EB] bg-white px-6 py-10 text-center">
             <p className="text-sm font-medium" style={{ color: "#374151" }}>
-              Coming Soon — fresh deals are being added.
+              No deals match this filter yet — try another option.
             </p>
           </div>
         )}

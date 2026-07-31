@@ -1,10 +1,12 @@
 import { HomePage } from "@/components/store/HomePage";
-import { fetchProductsServer } from "@/lib/serverProductFetch";
 import { fetchHotDealsServer } from "@/lib/serverHotDeals";
+import { fetchBestSellersServer } from "@/lib/serverBestSellers";
 import { fetchCarCatalogServer } from "@/lib/serverCarCatalog";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getHeroSlides } from "@/lib/heroBanners";
 import { getBestSellingProducts, getHotDealProducts, isShopifyEnabled } from "@/lib/shopify";
+import { dbConnect } from "@/lib/db";
+import Product from "@/lib/models/Product.model";
 
 export const revalidate = 60;
 
@@ -21,17 +23,24 @@ export default async function Page() {
   let hotDeals = [];
   let heroSlides = [];
   let carCatalog = null;
+  let activeProductCount = null;
 
   // Never let a single Mongo/Shopify failure 500 the document — degrade to empty SSR props
   // (client components can still fall back to their own fetches if needed).
   try {
-    [bestSellers, hotDeals, heroSlides, carCatalog] = await Promise.all([
-      shopify
-        ? getBestSellingProducts(8)
-        : fetchProductsServer({ limit: 4, sort: "popular" }).then((r) => r.products),
+    [bestSellers, hotDeals, heroSlides, carCatalog, activeProductCount] = await Promise.all([
+      shopify ? getBestSellingProducts(8) : fetchBestSellersServer({ limit: 8 }),
       shopify ? getHotDealProducts(12) : fetchHotDealsServer({ filter: "all", limit: 12 }),
       getHeroSlides(),
       fetchCarCatalogServer(),
+      (async () => {
+        try {
+          await dbConnect();
+          return await Product.countDocuments({ status: { $regex: /^active$/i } });
+        } catch {
+          return null;
+        }
+      })(),
     ]);
   } catch (err) {
     console.error("[homepage] SSR data load failed:", err?.message || err);
@@ -50,6 +59,7 @@ export default async function Page() {
         initialHotDeals={hotDeals}
         initialHeroSlides={heroSlides}
         initialCarCatalog={carCatalog}
+        activeProductCount={activeProductCount}
       />
     </>
   );

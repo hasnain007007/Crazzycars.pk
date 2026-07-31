@@ -32,6 +32,8 @@ const settingsSchema = new mongoose.Schema(
       website: { type: String, default: "" },
       logo: imageSchema,
       logoUrl: { type: String, default: "" },
+      favicon: imageSchema,
+      faviconUrl: { type: String, default: "" },
       footerText: { type: String, default: "" },
       currency: { type: String, default: "PKR" },
       timezone: { type: String, default: "Asia/Karachi" },
@@ -97,6 +99,23 @@ const settingsSchema = new mongoose.Schema(
         default:
           "Your order #{orderNumber} has been shipped via Postex! Track here: {trackingUrl}",
       },
+      /** PostEx booking defaults (PostEx app → Settings) */
+      defaultWeight: { type: Number, default: 0.5 },
+      shipperRemarks: {
+        type: String,
+        default: "Call customer before delivery. Do not leave parcel unattended.",
+      },
+      defaultShipperType: { type: String, default: "Normal" },
+      defaultHandling: { type: String, default: "Normal" },
+      autoSaveTracking: { type: Boolean, default: true },
+      printItemDetails: { type: Boolean, default: false },
+      printItemDetailsSku: { type: Boolean, default: false },
+      autoCalculateWeight: { type: Boolean, default: false },
+      autoCalculatePieces: { type: Boolean, default: false },
+      /** Prepaid / paid orders send invoicePayment 0 to PostEx */
+      paidOrdersCodZero: { type: Boolean, default: false },
+      addOrderNotesInRemarks: { type: Boolean, default: false },
+      testTrackingNumber: { type: String, default: "" },
     },
     notifications: {
       emailOnNewOrder: { type: Boolean, default: true },
@@ -318,7 +337,16 @@ const settingsSchema = new mongoose.Schema(
         failedMessage: { type: String, default: "" },
         emailSubject: { type: String, default: "" },
         emailMessage: { type: String, default: "" },
-        paymentConfirmedMessage: { type: String, default: "" },
+        paymentConfirmedMessage: {
+          type: String,
+          default:
+            "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at 0328-4010007 for confirmation, and our team will begin processing your order.",
+        },
+        codAdvanceNote: {
+          type: String,
+          default:
+            "Thank you for your order! Since this is a Cash on Delivery order, please send a screenshot of your advance payment to our WhatsApp at 0328-4010007 to confirm your booking. The remaining balance will be collected on delivery.",
+        },
         footerMessage: { type: String, default: "" },
       },
     },
@@ -612,6 +640,7 @@ Thank you! 🚗✨`,
           {
             label: { type: String, default: "" },
             filter: { type: String, default: "all" },
+            maxPrice: { type: Number, default: null },
             enabled: { type: Boolean, default: true },
             order: { type: Number, default: 0 },
           },
@@ -620,6 +649,7 @@ Thank you! 🚗✨`,
       bestSellers: {
         enabled: { type: Boolean, default: true },
         title: { type: String, default: "Best Sellers" },
+        productIds: [{ type: String }],
         tabs: [
           {
             label: { type: String, default: "" },

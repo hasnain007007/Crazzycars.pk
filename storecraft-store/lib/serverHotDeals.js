@@ -4,60 +4,7 @@
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
-
-function dealsExpr(filter) {
-  if (filter === "under1000") {
-    return {
-      $and: [
-        { $lt: ["$pricing.salePrice", 1000] },
-        { $gt: ["$pricing.regularPrice", "$pricing.salePrice"] },
-      ],
-    };
-  }
-  if (filter === "under700") {
-    return {
-      $and: [
-        { $lt: ["$pricing.salePrice", 700] },
-        { $gt: ["$pricing.regularPrice", "$pricing.salePrice"] },
-      ],
-    };
-  }
-  if (filter === "fiftyoff") {
-    return {
-      $and: [
-        { $gt: ["$pricing.regularPrice", 0] },
-        { $gt: ["$pricing.regularPrice", "$pricing.salePrice"] },
-        {
-          $gte: [
-            {
-              $multiply: [
-                {
-                  $divide: [
-                    { $subtract: ["$pricing.regularPrice", "$pricing.salePrice"] },
-                    "$pricing.regularPrice",
-                  ],
-                },
-                100,
-              ],
-            },
-            50,
-          ],
-        },
-      ],
-    };
-  }
-  if (filter === "flash") {
-    return {
-      $or: [
-        { isFlashDeal: true },
-        { isDeal: true },
-        { tags: { $elemMatch: { $regex: /^flash$/i } } },
-        { $expr: { $gt: ["$pricing.regularPrice", "$pricing.salePrice"] } },
-      ],
-    };
-  }
-  return { $expr: { $gt: ["$pricing.regularPrice", "$pricing.salePrice"] } };
-}
+import { buildDealsMongoFilter } from "@/lib/dealsFilter";
 
 /**
  * @param {{ filter?: string, limit?: number }} opts
@@ -71,7 +18,7 @@ export async function fetchHotDealsServer({ filter = "all", limit = 12 } = {}) {
     const query = {
       status: "active",
       pricing: { $exists: true },
-      ...dealsExpr(f),
+      ...buildDealsMongoFilter(f),
     };
     const rows = await Product.find(query)
       .select(

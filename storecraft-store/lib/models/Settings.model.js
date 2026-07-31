@@ -32,6 +32,8 @@ const settingsSchema = new mongoose.Schema(
       website: { type: String, default: "" },
       logo: imageSchema,
       logoUrl: { type: String, default: "" },
+      favicon: imageSchema,
+      faviconUrl: { type: String, default: "" },
       footerText: { type: String, default: "" },
       currency: { type: String, default: "PKR" },
       timezone: { type: String, default: "Asia/Karachi" },
@@ -602,6 +604,7 @@ Thank you! 🚗✨`,
           {
             label: { type: String, default: "" },
             filter: { type: String, default: "all" },
+            maxPrice: { type: Number, default: null },
             enabled: { type: Boolean, default: true },
             order: { type: Number, default: 0 },
           },
@@ -610,6 +613,7 @@ Thank you! 🚗✨`,
       bestSellers: {
         enabled: { type: Boolean, default: true },
         title: { type: String, default: "Best Sellers" },
+        productIds: [{ type: String }],
         tabs: [
           {
             label: { type: String, default: "" },
