@@ -7,24 +7,18 @@ import { heroImageUrl, heroImageUrlMobile } from "@/lib/cloudinaryImage";
 import { useStorePayment } from "@/context/StoreSettingsContext";
 import { formatFreeDeliveryThreshold } from "@/lib/freeDelivery";
 
-function useTrustBadges() {
+const BRAND = "Crazzycars.pk";
+
+function useTrustItems() {
   const storePayment = useStorePayment();
   return useMemo(
     () => [
-      "✓ COD Available",
-      `✓ Free Delivery ${formatFreeDeliveryThreshold(storePayment)}+`,
-      "✓ Easy Returns",
+      "Cash on delivery",
+      `Free delivery ${formatFreeDeliveryThreshold(storePayment)}+`,
+      "Easy returns",
     ],
     [storePayment]
   );
-}
-
-function splitHeadline(headline) {
-  const text = headline || "";
-  const parts = text.trim().split(/\s+/);
-  if (parts.length <= 1) return { line1: text, line2: "" };
-  const line2 = parts.pop();
-  return { line1: parts.join(" "), line2 };
 }
 
 function normalizeButtonUrl(url) {
@@ -34,124 +28,160 @@ function normalizeButtonUrl(url) {
   return `/${u}`;
 }
 
-function HeroButtons({ buttons, defaultTextColor = "#FFFFFF", mobilePrimaryOnly = false }) {
-  let list = Array.isArray(buttons)
-    ? buttons.filter((b) => String(b?.text || "").trim())
-    : [];
-  if (mobilePrimaryOnly && list.length > 1) {
-    list = list.slice(0, 1);
-  }
-  if (!list.length) return null;
-
-  return (
-    <div className={`home-hero__ctas${mobilePrimaryOnly ? " home-hero__ctas--mobile" : ""}`}>
-      {list.map((button, i) => {
-        const text = String(button.text || "").trim();
-        const href = normalizeButtonUrl(button.url || button.link);
-        const textColor = button.textColor || button.color || defaultTextColor;
-        const bgColor = button.bgColor || "#C41E1E";
-        const styleKey = String(button.style || "primary").toLowerCase();
-        const isSecondary = styleKey === "secondary" || styleKey === "outline";
-
-        const className = isSecondary ? "home-hero__btn home-hero__btn--ghost" : "home-hero__btn home-hero__btn--primary";
-        const style = isSecondary
-          ? { color: textColor, borderColor: textColor }
-          : { background: bgColor, color: textColor };
-
-        if (href.startsWith("http://") || href.startsWith("https://")) {
-          return (
-            <a key={i} href={href} className={className} style={style} target="_blank" rel="noopener noreferrer">
-              {text}
-            </a>
-          );
-        }
-
-        return (
-          <Link key={i} href={href} className={className} style={style}>
-            {text}
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
-
-function FallbackHero({ settings }) {
-  const trust = useTrustBadges();
+/**
+ * Brand-first copy: brand stays the hero signal; slide title becomes the benefit line
+ * when it is a welcome/brand phrase (common admin banner default).
+ */
+function resolveCopy(slide, settings) {
   const hp = settings || DEFAULT_HOMEPAGE_SETTINGS;
-  const { line1, line2 } = splitHeadline(hp.heroHeadline);
-  const subtext = hp.heroSubtext || DEFAULT_HOMEPAGE_SETTINGS.heroSubtext;
-  const ctaText = hp.heroCtaText || DEFAULT_HOMEPAGE_SETTINGS.heroCtaText;
-  const ctaUrl = hp.heroCtaUrl || DEFAULT_HOMEPAGE_SETTINGS.heroCtaUrl;
+  const rawTitle = String(slide?.title || hp.heroHeadline || "").trim();
+  const rawSub = String(slide?.subtitle || "").trim();
+  const titleLower = rawTitle.toLowerCase();
+  const isBrandish =
+    !rawTitle ||
+    /crazzy\s*cars/i.test(rawTitle) ||
+    /^welcome\b/i.test(rawTitle) ||
+    titleLower === "shop now";
+  const weakSub = !rawSub || rawSub.length < 18;
 
+  let headline;
+  let sub;
+  if (isBrandish) {
+    headline = weakSub
+      ? hp.heroHeadline || "Premium car accessories for every ride"
+      : rawSub;
+    sub =
+      hp.heroSubtext ||
+      "Exterior, interior, lighting — built for Pakistani cars.";
+  } else {
+    headline = rawTitle;
+    sub = weakSub
+      ? hp.heroSubtext || "Exterior, interior, lighting — built for Pakistani cars."
+      : rawSub;
+  }
+
+  const buttons = Array.isArray(slide?.buttons)
+    ? slide.buttons.filter((b) => String(b?.text || "").trim())
+    : [];
+  const primary =
+    buttons[0] ||
+    {
+      text: hp.heroCtaText || "Shop Now",
+      url: hp.heroCtaUrl || "/shop",
+      style: "primary",
+      bgColor: "#C41E1E",
+    };
+  const secondary = buttons.find((b, i) => i > 0 && String(b.style || "").toLowerCase() !== "primary") || buttons[1] || null;
+
+  return { headline, sub, primary, secondary };
+}
+
+function primaryButtonColors(button) {
+  const raw = String(button?.bgColor || "").trim().toLowerCase();
+  // Dark/black admin colors disappear on a dark hero — force brand red.
+  const unusable =
+    !raw ||
+    raw === "#000" ||
+    raw === "#000000" ||
+    raw === "black" ||
+    raw === "#111" ||
+    raw === "#111111" ||
+    raw === "#0a0a0a" ||
+    raw === "#0b0b0b";
+  return {
+    background: unusable ? "#C41E1E" : button.bgColor,
+    color: button?.textColor || "#FFFFFF",
+  };
+}
+
+function CtaLink({ button, className }) {
+  const text = String(button?.text || "Shop Now").trim();
+  const href = normalizeButtonUrl(button?.url || button?.link);
+  const style = className.includes("home-hero__btn--ghost")
+    ? undefined
+    : primaryButtonColors(button);
+
+  if (href.startsWith("http://") || href.startsWith("https://")) {
+    return (
+      <a href={href} className={className} style={style} target="_blank" rel="noopener noreferrer">
+        {text}
+      </a>
+    );
+  }
   return (
-    <section className="home-hero home-hero--fallback" aria-label="Welcome">
-      <div className="home-hero__veil" aria-hidden />
-      <div className="home-hero__inner">
-        <div className="home-hero__copy">
-          <p className="home-hero__eyebrow">Pakistan&apos;s Car Accessories Store</p>
-          <h1 className="home-hero__title">
-            <span className="home-hero__title-line">{line1 || "UPGRADE"}</span>
-            {line2 ? <span className="home-hero__title-brand">{line2}</span> : null}
-          </h1>
-          {subtext ? <p className="home-hero__sub home-hero__sub--desktop">{subtext}</p> : null}
-          <div className="home-hero__ctas">
-            <Link href={ctaUrl} className="home-hero__btn home-hero__btn--primary">
-              {ctaText}
-            </Link>
-            <Link href="/categories" className="home-hero__btn home-hero__btn--ghost home-hero__btn--desktop">
-              Browse Categories
-            </Link>
-          </div>
-          <ul className="home-hero__trust home-hero__trust--desktop">
-            {trust.map((t) => (
-              <li key={t}>{t}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </section>
+    <Link href={href} className={className} style={style}>
+      {text}
+    </Link>
   );
 }
 
-function HeroSlideContent({ slide }) {
-  const trust = useTrustBadges();
-  const { line1, line2 } = splitHeadline(slide.title);
-  const primaryButtons = slide.buttons?.length
-    ? slide.buttons
-    : [{ text: "Shop Now", url: "/shop", style: "primary", bgColor: "#C41E1E" }];
-
+function HeroRail({ items }) {
+  if (!items?.length) return null;
   return (
-    <div className="home-hero__copy">
-      <p className="home-hero__eyebrow">Pakistan&apos;s Car Accessories Store</p>
-      <h1 className="home-hero__title" style={{ color: slide.textColor }}>
-        <span className="home-hero__title-line">{line1 || slide.title}</span>
-        {line2 ? <span className="home-hero__title-brand">{line2}</span> : null}
-      </h1>
-      {slide.subtitle ? (
-        <p className="home-hero__sub home-hero__sub--desktop" style={{ color: slide.subColor }}>
-          {slide.subtitle}
-        </p>
-      ) : null}
-      <HeroButtons buttons={primaryButtons} defaultTextColor={slide.textColor} />
-      <ul className="home-hero__trust home-hero__trust--desktop">
-        {trust.map((t) => (
-          <li key={t}>{t}</li>
+    <div className="home-hero-rail" aria-label="Store benefits">
+      <ul className="home-hero-rail__list">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
         ))}
       </ul>
     </div>
   );
 }
 
+function HeroCopy({ slide, settings, animateKey }) {
+  const { headline, sub, primary, secondary } = resolveCopy(slide, settings);
+
+  return (
+    <div className="home-hero__copy" key={animateKey}>
+      <p className="home-hero__brand">{BRAND}</p>
+      <h1 className="home-hero__title">{headline}</h1>
+      {sub ? <p className="home-hero__sub">{sub}</p> : null}
+      <div className="home-hero__ctas">
+        <CtaLink button={primary} className="home-hero__btn home-hero__btn--primary" />
+        {secondary ? (
+          <CtaLink button={secondary} className="home-hero__btn home-hero__btn--ghost" />
+        ) : (
+          <Link href="/categories" className="home-hero__btn home-hero__btn--ghost">
+            Shop by category
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function mapApiBanner(b) {
+  const raw = String(b?.background?.image?.url || "").trim();
+  return {
+    id: b?._id || b?.id || "hero",
+    title: String(b?.content?.heading?.text || "").trim(),
+    subtitle: String(b?.content?.subheading?.text || "").trim(),
+    imageUrl: raw ? heroImageUrl(raw) : null,
+    imageUrlMobile: raw ? heroImageUrlMobile(raw) : null,
+    buttons: (Array.isArray(b?.content?.buttons) ? b.content.buttons : []).map((btn) => ({
+      text: btn?.text || "",
+      url: btn?.url || btn?.link || b?.targetUrl || "/shop",
+      bgColor: btn?.bgColor || "",
+      textColor: btn?.textColor || btn?.color || "",
+      style: btn?.style || "primary",
+    })),
+    backgroundColor: b?.background?.color || "#0b0b0b",
+    textColor: b?.content?.heading?.color || "#FFFFFF",
+    subColor: b?.content?.subheading?.color || "#D1D5DB",
+  };
+}
+
 /**
+ * Full-bleed homepage hero — brand-first, one CTA composition (ecommerce standard).
  * @param {{ settings?: object, initialSlides?: Array }} props
- * initialSlides from SSR — first paint includes the hero image (no empty flash).
  */
 export default function HomeHero({ settings, initialSlides = null }) {
+  const trust = useTrustItems();
   const hasInitial = Array.isArray(initialSlides);
   const [slides, setSlides] = useState(() => (hasInitial ? initialSlides : []));
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(!hasInitial);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (hasInitial) {
@@ -165,28 +195,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
       .then((data) => {
         if (cancelled) return;
         const heroList = Array.isArray(data?.hero_slider) ? data.hero_slider : [];
-        setSlides(
-          heroList.map((b) => {
-            const raw = String(b?.background?.image?.url || "").trim();
-            return {
-              id: b?._id || b?.id || "hero",
-              title: String(b?.content?.heading?.text || "").trim(),
-              subtitle: String(b?.content?.subheading?.text || "").trim(),
-              imageUrl: raw ? heroImageUrl(raw) : null,
-              imageUrlMobile: raw ? heroImageUrlMobile(raw) : null,
-              buttons: (Array.isArray(b?.content?.buttons) ? b.content.buttons : []).map((btn) => ({
-                text: btn?.text || "",
-                url: btn?.url || btn?.link || b?.targetUrl || "/shop",
-                bgColor: btn?.bgColor || "",
-                textColor: btn?.textColor || btn?.color || "",
-                style: btn?.style || "primary",
-              })),
-              backgroundColor: b?.background?.color || "#111111",
-              textColor: b?.content?.heading?.color || "#FFFFFF",
-              subColor: b?.content?.subheading?.color || "#9CA3AF",
-            };
-          })
-        );
+        setSlides(heroList.map(mapApiBanner));
       })
       .catch(() => {
         if (!cancelled) setSlides([]);
@@ -208,86 +217,120 @@ export default function HomeHero({ settings, initialSlides = null }) {
   );
 
   useEffect(() => {
-    if (slides.length < 2) return undefined;
-    const t = setInterval(() => go(1), 5000);
+    if (slides.length < 2 || paused) return undefined;
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (reduce) return undefined;
+    const t = setInterval(() => go(1), 7000);
     return () => clearInterval(t);
-  }, [slides.length, go]);
+  }, [slides.length, go, paused]);
 
   if (loading) {
-    return <section className="home-hero home-hero--loading" aria-busy="true" />;
+    return (
+      <>
+        <section className="home-hero home-hero--loading" aria-busy="true" />
+        <HeroRail items={trust} />
+      </>
+    );
   }
 
-  if (!slides.length) {
-    return <FallbackHero settings={settings} />;
-  }
+  const slide =
+    slides[index] ||
+    ({
+      id: "fallback",
+      title: settings?.heroHeadline || DEFAULT_HOMEPAGE_SETTINGS.heroHeadline,
+      subtitle: settings?.heroSubtext || DEFAULT_HOMEPAGE_SETTINGS.heroSubtext,
+      buttons: [
+        {
+          text: settings?.heroCtaText || DEFAULT_HOMEPAGE_SETTINGS.heroCtaText,
+          url: settings?.heroCtaUrl || DEFAULT_HOMEPAGE_SETTINGS.heroCtaUrl,
+          style: "primary",
+          bgColor: "#C41E1E",
+        },
+      ],
+      backgroundColor: "#0b0b0b",
+      imageUrl: null,
+      imageUrlMobile: null,
+    });
 
-  const slide = slides[index];
   const bgImage = slide.imageUrl;
   const bgImageMobile = slide.imageUrlMobile || bgImage;
+  const multi = slides.length > 1;
 
   return (
-    <section
-      className="home-hero"
-      style={{ background: slide.backgroundColor || "#0a0a0a" }}
-      aria-roledescription="carousel"
-      aria-label="Featured"
-    >
-      {bgImage ? (
-        <picture className="home-hero__media">
-          {bgImageMobile && bgImageMobile !== bgImage ? (
-            <source media="(max-width: 768px)" srcSet={bgImageMobile} />
-          ) : null}
-          {/* eslint-disable-next-line @next/next/no-img-element -- LCP hero; Cloudinary-optimized src */}
-          <img
-            src={bgImage}
-            alt=""
-            fetchPriority={index === 0 ? "high" : "low"}
-            loading={index === 0 ? "eager" : "lazy"}
-            decoding="async"
-            className="home-hero__img"
-            key={slide.id}
-          />
-        </picture>
-      ) : (
-        <div className="home-hero__media home-hero__media--gradient" aria-hidden />
-      )}
-      <div className="home-hero__veil" aria-hidden />
-      <div className="home-hero__inner">
-        <HeroSlideContent slide={slide} />
-      </div>
+    <>
+      <section
+        className={`home-hero${!bgImage ? " home-hero--fallback" : ""}`}
+        style={{ background: slide.backgroundColor || "#0b0b0b" }}
+        aria-roledescription={multi ? "carousel" : undefined}
+        aria-label="Featured"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false);
+        }}
+      >
+        {bgImage ? (
+          <picture className="home-hero__media">
+            {bgImageMobile && bgImageMobile !== bgImage ? (
+              <source media="(max-width: 768px)" srcSet={bgImageMobile} />
+            ) : null}
+            {/* eslint-disable-next-line @next/next/no-img-element -- LCP hero; Cloudinary-optimized src */}
+            <img
+              src={bgImage}
+              alt=""
+              fetchPriority={index === 0 ? "high" : "low"}
+              loading={index === 0 ? "eager" : "lazy"}
+              decoding="async"
+              className="home-hero__img"
+              key={slide.id}
+            />
+          </picture>
+        ) : (
+          <div className="home-hero__media home-hero__media--gradient" aria-hidden />
+        )}
+        <div className="home-hero__veil" aria-hidden />
+        <div className="home-hero__inner">
+          <HeroCopy slide={slide} settings={settings} animateKey={slide.id || index} />
+        </div>
 
-      {slides.length > 1 ? (
-        <>
-          <button
-            type="button"
-            onClick={() => go(-1)}
-            aria-label="Previous slide"
-            className="home-hero__arrow home-hero__arrow--prev home-hero__arrow--desktop"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            onClick={() => go(1)}
-            aria-label="Next slide"
-            className="home-hero__arrow home-hero__arrow--next home-hero__arrow--desktop"
-          >
-            ›
-          </button>
-          <div className="home-hero__dots">
-            {slides.map((s, i) => (
-              <button
-                key={s.id}
-                type="button"
-                aria-label={`Go to slide ${i + 1}`}
-                aria-current={i === index ? "true" : undefined}
-                onClick={() => setIndex(i)}
-                className={i === index ? "is-active" : undefined}
-              />
-            ))}
-          </div>
-        </>
-      ) : null}
-    </section>
+        {multi ? (
+          <>
+            <button
+              type="button"
+              onClick={() => go(-1)}
+              aria-label="Previous slide"
+              className="home-hero__arrow home-hero__arrow--prev"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={() => go(1)}
+              aria-label="Next slide"
+              className="home-hero__arrow home-hero__arrow--next"
+            >
+              ›
+            </button>
+            <div className="home-hero__dots" role="tablist" aria-label="Hero slides">
+              {slides.map((s, i) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="tab"
+                  aria-label={`Slide ${i + 1}`}
+                  aria-selected={i === index}
+                  onClick={() => setIndex(i)}
+                  className={i === index ? "is-active" : undefined}
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
+      </section>
+      <HeroRail items={trust} />
+    </>
   );
 }

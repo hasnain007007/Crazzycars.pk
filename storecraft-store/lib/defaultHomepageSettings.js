@@ -4,9 +4,9 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
     { text: "Cash on delivery available at checkout", isActive: true },
   ],
   announcementBgColor: "#111111",
-  heroHeadline: "UPGRADE YOUR RIDE.",
+  heroHeadline: "Premium accessories for every Pakistani drive",
   heroSubtext:
-    "Premium car accessories for Pakistani drivers — splitters, LED lighting, body kits, and more.",
+    "Exterior, interior, and lighting — fit-focused parts with COD and nationwide delivery.",
   heroCtaText: "Shop Now",
   heroCtaUrl: "/shop",
   whyChooseUs: [

@@ -1,6 +1,6 @@
 import { dbConnect } from "@/lib/db";
 import Banner from "@/lib/models/Banner.model";
-import { heroImageUrl } from "@/lib/cloudinaryImage";
+import { heroImageUrl, heroImageUrlMobile } from "@/lib/cloudinaryImage";
 
 function isActiveStatus(status) {
   const s = String(status || "").trim().toLowerCase();
@@ -10,7 +10,11 @@ function isActiveStatus(status) {
 /** Map DB/API banner → homepage slide (optimized image URL). */
 export function mapBannerToSlide(banner) {
   const rawUrl = String(banner?.background?.image?.url || "").trim() || null;
+  const mobileRaw =
+    String(banner?.background?.mobileImage?.url || banner?.background?.image?.mobileUrl || "").trim() ||
+    rawUrl;
   const imageUrl = rawUrl ? heroImageUrl(rawUrl) : null;
+  const imageUrlMobile = mobileRaw ? heroImageUrlMobile(mobileRaw) : imageUrl;
   const title = String(banner?.content?.heading?.text || "").trim();
   const subtitle = String(banner?.content?.subheading?.text || "").trim();
   const rawButtons = Array.isArray(banner?.content?.buttons) ? banner.content.buttons : [];
@@ -27,11 +31,12 @@ export function mapBannerToSlide(banner) {
     title,
     subtitle,
     imageUrl,
+    imageUrlMobile,
     imageUrlRaw: rawUrl,
     buttons,
-    backgroundColor: banner?.background?.color || "#111111",
+    backgroundColor: banner?.background?.color || "#0b0b0b",
     textColor: banner?.content?.heading?.color || "#FFFFFF",
-    subColor: banner?.content?.subheading?.color || "#9CA3AF",
+    subColor: banner?.content?.subheading?.color || "#D1D5DB",
   };
 }
 
