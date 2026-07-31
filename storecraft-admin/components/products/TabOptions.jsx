@@ -243,7 +243,16 @@ export function TabOptions({
             onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
             className="h-4 w-4 rounded border-[#d1d5db] text-[#1d6fb8] focus:ring-[#1d6fb8]"
           />
-          <span className="text-sm font-medium text-[#374151]">Featured</span>
+          <span className="text-sm font-medium text-[#374151]">Featured (Best Sellers)</span>
+        </label>
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 md:min-h-[2.5rem] md:self-end">
+          <input
+            type="checkbox"
+            checked={Boolean(form.isDeal)}
+            onChange={(e) => setForm((f) => ({ ...f, isDeal: e.target.checked }))}
+            className="h-4 w-4 rounded border-[#d1d5db] text-[#C41E1E] focus:ring-[#C41E1E]"
+          />
+          <span className="text-sm font-medium text-[#374151]">Hot Deal</span>
         </label>
         <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 md:min-h-[2.5rem] md:self-end">
           <input
@@ -253,6 +262,18 @@ export function TabOptions({
             className="h-4 w-4 rounded border-[#d1d5db] text-[#1d6fb8] focus:ring-[#1d6fb8]"
           />
           <span className="text-sm font-medium text-[#374151]">Track inventory</span>
+        </label>
+        <label
+          className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 md:min-h-[2.5rem] md:self-end"
+          title="When enabled, customers can still place orders if stock is 0"
+        >
+          <input
+            type="checkbox"
+            checked={form.inventory.allowBackorder === true}
+            onChange={(e) => updateFormData("inventory", { ...form.inventory, allowBackorder: e.target.checked })}
+            className="h-4 w-4 rounded border-[#d1d5db] text-[#1d6fb8] focus:ring-[#1d6fb8]"
+          />
+          <span className="text-sm font-medium text-[#374151]">Allow orders when out of stock</span>
         </label>
 
         <div>
@@ -278,6 +299,34 @@ export function TabOptions({
           />
           <span className="text-sm font-medium text-[#374151]">New arrival</span>
         </label>
+        <label
+          className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 md:min-h-[2.5rem] md:self-end"
+          title="When off, checkout will not offer Cash on Delivery for carts that include this product"
+        >
+          <input
+            type="checkbox"
+            checked={form.codEnabled !== false}
+            onChange={(e) => setForm((f) => ({ ...f, codEnabled: e.target.checked }))}
+            className="h-4 w-4 rounded border-[#d1d5db] text-[#1d6fb8] focus:ring-[#1d6fb8]"
+          />
+          <span className="text-sm font-medium text-[#374151]">COD available</span>
+        </label>
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-sm font-medium text-[#374151]">Advance payment</label>
+          <select
+            value={String(form.advancePercentRequired || 0)}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, advancePercentRequired: Number(e.target.value) || 0 }))
+            }
+            className={fieldClass}
+          >
+            <option value="0">None</option>
+            <option value="25">Pay at least 25% advance</option>
+            <option value="50">Pay at least 50% advance</option>
+            <option value="75">Pay at least 75% advance</option>
+            <option value="100">Pay 100% in advance</option>
+          </select>
+        </div>
         <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 md:min-h-[2.5rem] md:self-end">
           <input
             type="checkbox"

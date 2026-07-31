@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { computeProductSaleState } from "@/lib/productSale";
 import { getFitmentBadge } from "@/lib/vehicleCompatibility";
 import { formatAdminPrice } from "@/lib/currency";
+import { getStorefrontBaseUrl } from "@/lib/storefrontUrl";
 import { ProductQrCompact } from "./QRCodeGenerator";
 
 function thumbUrl(p) {
@@ -39,10 +40,7 @@ function StockCell({ row }) {
   return <span className="text-sm font-semibold text-emerald-700">{q}</span>;
 }
 
-const storeBase =
-  typeof process !== "undefined" && process.env.NEXT_PUBLIC_APP_URL
-    ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
-    : "https://crazzycars.pk";
+const storeBase = getStorefrontBaseUrl();
 
 export function ProductsTable({
   rows,
@@ -53,6 +51,7 @@ export function ProductsTable({
   onRefresh,
 }) {
   const [busyFeatured, setBusyFeatured] = useState(null);
+  const [busyDeal, setBusyDeal] = useState(null);
   const [qrRow, setQrRow] = useState(null);
 
   const allIds = useMemo(() => rows.map((r) => String(r._id)), [rows]);
@@ -96,6 +95,25 @@ export function ProductsTable({
     }
   };
 
+  const setHotDeal = async (row, value) => {
+    setBusyDeal(String(row._id));
+    try {
+      const res = await fetch(`/api/products/${row._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ isDeal: value }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Update failed");
+      onRefresh?.();
+    } catch (e) {
+      toast.error(e.message || "Update failed");
+    } finally {
+      setBusyDeal(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="rounded-xl border border-[#e5e7eb] bg-white p-8 text-center text-sm text-[#6b7280]">
@@ -107,7 +125,7 @@ export function ProductsTable({
   return (
     <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[960px] text-left text-sm">
+        <table className="w-full min-w-[1080px] text-left text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb] bg-[#f9fafb] text-[#6b7280]">
               <th className="w-10 px-3 py-3">
@@ -126,7 +144,12 @@ export function ProductsTable({
               <th className="px-3 py-3 font-medium">Price</th>
               <th className="px-3 py-3 font-medium">Stock</th>
               <th className="px-3 py-3 font-medium">Status</th>
-              <th className="px-3 py-3 font-medium">Featured</th>
+              <th className="px-3 py-3 font-medium" title="Shows in Best Sellers on homepage">
+                Featured
+              </th>
+              <th className="px-3 py-3 font-medium" title="Shows in Hot Deals on homepage">
+                Hot Deal
+              </th>
               <th className="min-w-[120px] px-3 py-3 font-medium">Actions</th>
             </tr>
           </thead>
@@ -216,12 +239,35 @@ export function ProductsTable({
                         busyFeatured === id ? "opacity-60" : "",
                       ].join(" ")}
                       aria-pressed={Boolean(row.featured)}
-                      aria-label="Toggle featured"
+                      aria-label="Toggle featured (Best Sellers)"
+                      title="Best Sellers on homepage"
                     >
                       <span
                         className={[
                           "pointer-events-none inline-block h-5 w-5 translate-x-0.5 transform rounded-full bg-white shadow ring-0 transition",
                           row.featured ? "translate-x-5" : "",
+                        ].join(" ")}
+                      />
+                    </button>
+                  </td>
+                  <td className="px-3 py-2">
+                    <button
+                      type="button"
+                      disabled={busyDeal === id}
+                      onClick={() => setHotDeal(row, !row.isDeal)}
+                      className={[
+                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
+                        row.isDeal ? "bg-[#C41E1E]" : "bg-[#e5e7eb]",
+                        busyDeal === id ? "opacity-60" : "",
+                      ].join(" ")}
+                      aria-pressed={Boolean(row.isDeal)}
+                      aria-label="Toggle hot deal"
+                      title="Hot Deals on homepage"
+                    >
+                      <span
+                        className={[
+                          "pointer-events-none inline-block h-5 w-5 translate-x-0.5 transform rounded-full bg-white shadow ring-0 transition",
+                          row.isDeal ? "translate-x-5" : "",
                         ].join(" ")}
                       />
                     </button>

@@ -46,7 +46,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
     }
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/products/deals?filter=${encodeURIComponent(active)}&limit=12`)
+    fetch(`/api/products/deals?filter=${encodeURIComponent(active)}&limit=24`)
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -135,7 +135,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
         ) : (
           <div className="mt-8 rounded-xl border border-[#E5E7EB] bg-white px-6 py-10 text-center">
             <p className="text-sm font-medium" style={{ color: "#374151" }}>
-              No deals match this filter yet — try another option.
+              No Hot Deal products yet — turn on Hot Deal for products in admin.
             </p>
           </div>
         )}

@@ -13,18 +13,18 @@ import { buildDealsMongoFilter } from "@/lib/dealsFilter";
 export async function fetchHotDealsServer({ filter = "all", limit = 12 } = {}) {
   try {
     await dbConnect();
-    const lim = Math.min(24, Math.max(1, Number(limit) || 12));
+    const lim = Math.min(48, Math.max(1, Number(limit) || 24));
     const f = String(filter || "all").toLowerCase();
     const query = {
-      status: "active",
+      status: { $regex: /^active$/i },
       pricing: { $exists: true },
       ...buildDealsMongoFilter(f),
     };
     const rows = await Product.find(query)
       .select(
-        "name slug media.images pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
+        "name slug media.images pricing inventory featured isDeal newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
-      .sort({ featured: -1, createdAt: -1 })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .limit(lim)
       .populate("categories", "name slug")
       .lean();

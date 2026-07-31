@@ -9,7 +9,7 @@ export async function GET(request) {
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const filter = String(searchParams.get("filter") || "all").toLowerCase();
-    const limit = Math.min(24, Math.max(1, Number(searchParams.get("limit") || 12)));
+    const limit = Math.min(48, Math.max(1, Number(searchParams.get("limit") || 24)));
     const query = {
       status: { $regex: /^active$/i },
       pricing: { $exists: true },
@@ -17,9 +17,9 @@ export async function GET(request) {
     };
     const rows = await Product.find(query)
       .select(
-        "name slug media.images pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
+        "name slug media.images pricing inventory featured isDeal newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
-      .sort({ featured: -1, createdAt: -1 })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .limit(limit)
       .populate("categories", "name slug")
       .lean();

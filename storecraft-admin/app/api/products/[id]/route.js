@@ -48,7 +48,10 @@ export async function GET(request, context) {
       return NextResponse.json({ success: false, error: "Invalid id." }, { status: 400 });
     }
     await dbConnect();
-    const doc = await Product.findById(id).populate("categories", "name slug").lean();
+    const doc = await Product.findById(id)
+      .populate("categories", "name slug")
+      .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
+      .lean();
     if (!doc) {
       return NextResponse.json({ success: false, error: "Not found." }, { status: 404 });
     }
@@ -78,22 +81,34 @@ export async function PUT(request, context) {
 
     const body = await request.json();
 
-    /** Featured-only toggle from list */
+    /** Single-flag toggles from products list (Featured / Hot Deal) */
     const keys = Object.keys(body || {});
-    if (keys.length === 1 && keys[0] === "featured") {
-      existing.featured = Boolean(body.featured);
+    if (keys.length === 1 && (keys[0] === "featured" || keys[0] === "isDeal")) {
+      if (keys[0] === "featured") {
+        existing.featured = Boolean(body.featured);
+        existing.isFeatured = existing.featured;
+      } else {
+        existing.isDeal = Boolean(body.isDeal);
+      }
       await existing.save();
       await logActivity({
         user: user.userId,
         userName: user.name,
-        action: "Product featured flag updated",
+        action:
+          keys[0] === "featured" ? "Product featured flag updated" : "Product hot deal flag updated",
         resource: "Product",
         resourceId: id,
-        details: { featured: existing.featured },
+        details:
+          keys[0] === "featured"
+            ? { featured: existing.featured }
+            : { isDeal: existing.isDeal },
         type: "update",
         ip: requestIp(request),
       });
-      const lean = await Product.findById(id).populate("categories", "name slug").lean();
+      const lean = await Product.findById(id)
+        .populate("categories", "name slug")
+        .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
+        .lean();
       return NextResponse.json({ success: true, data: withProductSaleComputed(lean) });
     }
 
@@ -177,6 +192,10 @@ export async function PUT(request, context) {
         : existing.inventory?.weightUnit || "g",
       trackInventory:
         incomingTrackInventory !== undefined ? incomingTrackInventory !== false : existing.inventory?.trackInventory !== false,
+      allowBackorder:
+        body.inventory?.allowBackorder !== undefined
+          ? body.inventory.allowBackorder === true
+          : existing.inventory?.allowBackorder === true,
       lowStockThreshold: Math.max(
         0,
         Number(body.inventory?.lowStockThreshold ?? existing.inventory?.lowStockThreshold) || 5
@@ -229,8 +248,19 @@ export async function PUT(request, context) {
     if (body.status !== undefined && ["active", "inactive", "draft"].includes(body.status)) {
       existing.status = body.status;
     }
-    if (body.featured !== undefined) existing.featured = Boolean(body.featured);
+    if (body.featured !== undefined) {
+      existing.featured = Boolean(body.featured);
+      existing.isFeatured = existing.featured;
+    }
+    if (body.isDeal !== undefined) existing.isDeal = Boolean(body.isDeal);
     if (body.newArrival !== undefined) existing.newArrival = Boolean(body.newArrival);
+    if (body.codEnabled !== undefined) existing.codEnabled = body.codEnabled !== false;
+    if (body.advancePercentRequired !== undefined) {
+      const pct = Number(body.advancePercentRequired);
+      existing.advancePercentRequired = Number.isFinite(pct)
+        ? Math.min(100, Math.max(0, Math.round(pct)))
+        : 0;
+    }
 
     if (body.productType !== undefined) {
       existing.productType = normalizeProductOrganisation({ productType: body.productType }).productType;
@@ -297,7 +327,10 @@ export async function PUT(request, context) {
       ip: requestIp(request),
     });
 
-    const populated = await Product.findById(id).populate("categories", "name slug").lean();
+    const populated = await Product.findById(id)
+      .populate("categories", "name slug")
+      .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
+      .lean();
     return NextResponse.json({ success: true, data: withProductSaleComputed(populated) });
   } catch (error) {
     return NextResponse.json(

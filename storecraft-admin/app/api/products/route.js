@@ -89,7 +89,7 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
     const selectFields = lite
       ? "name status media.images pricing.regularPrice pricing.salePrice pricing.saleSchedule inventory.quantity inventory.sku articleNo"
-      : "name slug status media pricing inventory featured newArrival createdAt updatedAt categories articleNo vehicleCompatibility isUniversal compatibleCars shortDescription tags";
+      : "name slug status media pricing inventory featured isDeal newArrival createdAt updatedAt categories articleNo vehicleCompatibility isUniversal compatibleCars shortDescription tags";
 
     const listQuery = Product.find(filter)
       .select(selectFields)
@@ -254,6 +254,8 @@ export async function POST(request) {
       },
       status: statusNext,
       featured: Boolean(body.featured),
+      isFeatured: Boolean(body.featured),
+      isDeal: Boolean(body.isDeal),
       newArrival: Boolean(body.newArrival),
       codEnabled: body.codEnabled !== false,
       advancePercentRequired: (() => {

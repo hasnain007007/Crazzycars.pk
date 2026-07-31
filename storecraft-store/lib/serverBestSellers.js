@@ -1,48 +1,29 @@
 /**
- * Homepage best sellers — curated productIds from settings, else popular fallback.
+ * Homepage best sellers — products marked Featured in admin.
  */
-import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
-import Settings from "@/lib/models/Settings.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
-import { PRODUCT_CARD_SELECT, fetchProductsServer } from "@/lib/serverProductFetch";
-
-function toObjectId(id) {
-  const s = String(id || "").trim();
-  if (!mongoose.Types.ObjectId.isValid(s)) return null;
-  return new mongoose.Types.ObjectId(s);
-}
+import { PRODUCT_CARD_SELECT } from "@/lib/serverProductFetch";
 
 /**
  * @param {{ limit?: number }} opts
  */
-export async function fetchBestSellersServer({ limit = 8 } = {}) {
-  const lim = Math.min(24, Math.max(1, Number(limit) || 8));
+export async function fetchBestSellersServer({ limit = 100 } = {}) {
+  const lim = Math.min(100, Math.max(1, Number(limit) || 100));
   try {
     await dbConnect();
-    const settings = await Settings.findOne().select("homepageSettings.bestSellers").lean();
-    const bs = settings?.homepageSettings?.bestSellers || {};
-    const ids = (Array.isArray(bs.productIds) ? bs.productIds : [])
-      .map(toObjectId)
-      .filter(Boolean);
+    const rows = await Product.find({
+      status: { $regex: /^active$/i },
+      $or: [{ featured: true }, { isFeatured: true }],
+    })
+      .select(PRODUCT_CARD_SELECT)
+      .populate("categories", "name slug")
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(lim)
+      .lean();
 
-    if (ids.length) {
-      const rows = await Product.find({
-        status: { $regex: /^active$/i },
-        _id: { $in: ids },
-      })
-        .select(PRODUCT_CARD_SELECT)
-        .populate("categories", "name slug")
-        .lean();
-
-      const byId = new Map(rows.map((r) => [String(r._id), r]));
-      const ordered = ids.map((id) => byId.get(String(id))).filter(Boolean).slice(0, lim);
-      return JSON.parse(JSON.stringify(ordered.map(serializeStoreProductSummary)));
-    }
-
-    const fallback = await fetchProductsServer({ limit: lim, sort: "popular" });
-    return fallback.products || [];
+    return JSON.parse(JSON.stringify(rows.map(serializeStoreProductSummary)));
   } catch (err) {
     console.error("[fetchBestSellersServer]", err?.message || err);
     return [];

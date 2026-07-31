@@ -36,7 +36,7 @@ export async function GET(request) {
     const categorySlug = (searchParams.get("category") || "").trim().toLowerCase();
     const sort = (searchParams.get("sort") || "newest").trim();
     const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
-    const limit = Math.min(48, Math.max(1, parseInt(searchParams.get("limit"), 10) || 12));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit"), 10) || 12));
     const skip = (page - 1) * limit;
 
     const countOnly = searchParams.get("countOnly") === "true";
@@ -64,7 +64,7 @@ export async function GET(request) {
     const andParts = [];
 
     if (featuredFlag) {
-      filter.featured = true;
+      andParts.push({ $or: [{ featured: true }, { isFeatured: true }] });
     }
     if (newArrivalTrue) {
       filter.newArrival = true;

@@ -164,6 +164,7 @@ function emptyForm() {
     seo: { metaTitle: "", metaDescription: "", metaKeywords: [] },
     status: "draft",
     featured: false,
+    isDeal: false,
     newArrival: false,
     codEnabled: true,
     advancePercentRequired: 0,
@@ -291,7 +292,8 @@ function productToForm(p) {
       metaKeywords: normalizeMetaKeywords(p.seo?.metaKeywords),
     },
     status: p.status || "draft",
-    featured: Boolean(p.featured),
+    featured: Boolean(p.featured || p.isFeatured),
+    isDeal: Boolean(p.isDeal),
     newArrival: Boolean(p.newArrival),
     codEnabled: p.codEnabled !== false,
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
@@ -395,6 +397,7 @@ function buildApiPayload(form) {
     seo: form.seo,
     status: form.status,
     featured: form.featured,
+    isDeal: Boolean(form.isDeal),
     newArrival: form.newArrival,
     codEnabled: form.codEnabled !== false,
     advancePercentRequired: Math.min(100, Math.max(0, Number(form.advancePercentRequired) || 0)),
@@ -962,6 +965,58 @@ export function ProductEditor({ mode, productId }) {
                       position: "absolute",
                       top: 2,
                       left: form.featured ? 22 : 2,
+                      width: 20,
+                      height: 20,
+                      background: "#fff",
+                      borderRadius: "50%",
+                      transition: "left 0.2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }}
+                  />
+                </label>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "16px 0",
+                  borderBottom: "1px solid #f3f4f6",
+                }}
+              >
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: "0 0 2px" }}>Hot Deal</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Show in Hot Deals section on homepage</p>
+                </div>
+                <label
+                  style={{
+                    position: "relative",
+                    display: "inline-block",
+                    width: 44,
+                    height: 24,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.isDeal || false}
+                    onChange={(e) => setForm((f) => ({ ...f, isDeal: e.target.checked }))}
+                    style={{ display: "none" }}
+                  />
+                  <span
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: form.isDeal ? "#C41E1E" : "#d1d5db",
+                      borderRadius: 99,
+                      transition: "background 0.2s",
+                    }}
+                  />
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      left: form.isDeal ? 22 : 2,
                       width: 20,
                       height: 20,
                       background: "#fff",

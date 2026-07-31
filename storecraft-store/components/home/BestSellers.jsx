@@ -17,7 +17,7 @@ function matchesTab(product, tabId) {
 }
 
 function SkeletonCard() {
-  return <div className="aspect-square w-[42%] shrink-0 animate-pulse rounded-xl bg-[#F3F4F6] sm:w-[23%]" />;
+  return <div className="aspect-square animate-pulse rounded-xl bg-[#F3F4F6]" />;
 }
 
 export default function BestSellers({ initialProducts = [], settings }) {
@@ -36,7 +36,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
 
   useEffect(() => {
     if (hasInitial) return;
-    fetch("/api/products?limit=8&sort=popular")
+    fetch("/api/products?featured=true&limit=100")
       .then((r) => r.json())
       .then((data) => {
         const list = data?.products || data?.data || [];
@@ -90,7 +90,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
         ) : null}
 
         {loading ? (
-          <div className="mt-8 flex gap-3 overflow-hidden">
+          <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -98,18 +98,9 @@ export default function BestSellers({ initialProducts = [], settings }) {
         ) : filtered.length === 0 ? (
           <p className="mt-8 text-sm text-[#6B7280]">No products in this tab yet.</p>
         ) : (
-          <div
-            className="mt-8 flex gap-3 overflow-x-auto pb-2 md:gap-5"
-            style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
-          >
+          <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
             {filtered.map((p) => (
-              <div
-                key={p.id || p.slug}
-                className="w-[42%] shrink-0 sm:w-[23%]"
-                style={{ scrollSnapAlign: "start" }}
-              >
-                <ProductCard product={p} />
-              </div>
+              <ProductCard key={p.id || p.slug} product={p} />
             ))}
           </div>
         )}
