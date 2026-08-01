@@ -413,6 +413,7 @@ export function ProductEditor({ mode, productId }) {
   const router = useRouter();
   const isEdit = mode === "edit";
   const [loading, setLoading] = useState(isEdit);
+  const [loadError, setLoadError] = useState("");
   const [form, setForm] = useState(() => emptyForm());
   const [slugManual, setSlugManual] = useState(false);
   const [slugWarning, setSlugWarning] = useState("");
@@ -472,9 +473,10 @@ export function ProductEditor({ mode, productId }) {
     let cancelled = false;
     (async () => {
       try {
+        setLoadError("");
         const res = await fetch(`/api/products/${productId}`, { credentials: "include" });
         const json = await res.json();
-        if (!res.ok || !json.success) throw new Error(json.error || "Load failed");
+        if (!res.ok || !json.success) throw new Error(json.error || "Product not found");
         if (!cancelled) {
           const loadedForm = productToForm(json.data);
           setForm(loadedForm);
@@ -492,7 +494,11 @@ export function ProductEditor({ mode, productId }) {
           });
         }
       } catch (e) {
-        if (!cancelled) toast.error(e.message || "Failed to load product");
+        if (!cancelled) {
+          const msg = e.message || "Failed to load product";
+          setLoadError(msg);
+          toast.error(msg);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -679,6 +685,21 @@ export function ProductEditor({ mode, productId }) {
       <div className="mx-auto max-w-7xl space-y-4">
         <div className="h-10 w-64 animate-pulse rounded bg-slate-100" />
         <div className="h-96 animate-pulse rounded-xl bg-slate-100" />
+      </div>
+    );
+  }
+
+  if (isEdit && loadError) {
+    return (
+      <div className="mx-auto max-w-lg rounded-xl border border-[#e5e7eb] bg-white p-8 text-center shadow-sm">
+        <h1 className="text-lg font-semibold text-[#111827]">Product not found</h1>
+        <p className="mt-2 text-sm text-[#6b7280]">{loadError}</p>
+        <Link
+          href="/catalog/products"
+          className="mt-6 inline-flex rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-medium text-white hover:bg-[#1e40af]"
+        >
+          Back to Products
+        </Link>
       </div>
     );
   }
