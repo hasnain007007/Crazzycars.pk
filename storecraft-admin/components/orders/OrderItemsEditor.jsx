@@ -1,5 +1,5 @@
 /**
- * Editable order line items: qty, unit price, add/remove products, delivery on/off.
+ * Editable order line items: qty, unit price, variation, add-ons, delivery.
  */
 "use client";
 
@@ -12,20 +12,7 @@ function formatMoney(n) {
 }
 
 function lineTotal(qty, unitPrice) {
-  return Math.round((Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0)) * 100) / 100;
-}
-
-function normalizeLines(items) {
-  return (items || []).map((item, idx) => ({
-    key: `${item.productId || "custom"}-${idx}-${item.name || ""}`,
-    productId: item.productId || null,
-    name: item.name || "",
-    image: item.image || "",
-    variation: item.variation || "",
-    quantity: Math.max(1, Number(item.quantity) || 1),
-    unitPrice: Math.max(0, Number(item.unitPrice) || 0),
-    customMeasurements: item.customMeasurements || item.selectedVariation || null,
-  }));
+  return Math.round(Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0) * 100) / 100;
 }
 
 function productUnitPrice(product) {
@@ -45,6 +32,137 @@ function productImage(product) {
   return product?.image || "";
 }
 
+function enabledSimpleVariations(product) {
+  return (product?.simpleVariations || []).filter(
+    (v) => v?.enabled && Array.isArray(v.tags) && v.tags.length > 0
+  );
+}
+
+function legacyVariationChoices(product) {
+  return (product?.variations || [])
+    .map((v) => {
+      const name = String(v?.name || "").trim();
+      if (!name) return null;
+      const opts = Array.isArray(v.options)
+        ? v.options
+            .map((o) => (typeof o === "string" ? o : o?.value || o?.label || ""))
+            .map((s) => String(s || "").trim())
+            .filter(Boolean)
+        : [];
+      return {
+        name,
+        options: opts,
+        additionalPrice: Number(v.additionalPrice ?? v.extraPrice) || 0,
+      };
+    })
+    .filter(Boolean);
+}
+
+function findMatchedCombo(product, selectedOptions) {
+  const combos = Array.isArray(product?.variationCombinations) ? product.variationCombinations : [];
+  if (!combos.length) return null;
+  const entries = Object.entries(selectedOptions || {}).filter(([, v]) => String(v || "").trim());
+  if (!entries.length) return null;
+  return (
+    combos.find((combo) => {
+      const opts = Array.isArray(combo?.options) ? combo.options : [];
+      if (!opts.length) return false;
+      return opts.every((o) => selectedOptions[o.name] === o.value);
+    }) || null
+  );
+}
+
+function computeUnitPrice(basePrice, combo, selectedAddOns, legacyExtra = 0) {
+  let price = Math.max(0, Number(basePrice) || 0);
+  if (combo) {
+    const comboPrice = Number(combo.price);
+    if (Number.isFinite(comboPrice) && comboPrice > 0) price = comboPrice;
+    else price = price + (Number(combo.priceDelta) || 0);
+  } else {
+    price += Math.max(0, Number(legacyExtra) || 0);
+  }
+  for (const a of selectedAddOns || []) {
+    price += Math.max(0, Number(a.price) || 0);
+  }
+  return Math.max(0, Math.round(price * 100) / 100);
+}
+
+function buildVariationLabel(selectedOptions, selectedAddOns) {
+  const parts = Object.entries(selectedOptions || {})
+    .filter(([, v]) => String(v || "").trim())
+    .map(([k, v]) => `${k}: ${v}`);
+  if ((selectedAddOns || []).length) {
+    parts.push(`Add-ons: ${selectedAddOns.map((a) => a.name).join(", ")}`);
+  }
+  return parts.join(" · ").slice(0, 200);
+}
+
+function parseSelectedOptionsFromVariation(variation) {
+  const out = {};
+  String(variation || "")
+    .split("·")
+    .map((s) => s.trim())
+    .forEach((part) => {
+      if (/^add-ons:/i.test(part)) return;
+      const idx = part.indexOf(":");
+      if (idx > 0) {
+        const key = part.slice(0, idx).trim();
+        const val = part.slice(idx + 1).trim();
+        if (key && val) out[key] = val;
+      }
+    });
+  return out;
+}
+
+function normalizeLines(items) {
+  return (items || []).map((item, idx) => {
+    const selectedAddOns = Array.isArray(item.selectedAddOns)
+      ? item.selectedAddOns
+          .map((a) => ({ name: String(a?.name || "").trim(), price: Math.max(0, Number(a?.price) || 0) }))
+          .filter((a) => a.name)
+      : [];
+    const selectedOptions =
+      item.selectedVariation && typeof item.selectedVariation === "object" && item.selectedVariation.selectedOptions
+        ? item.selectedVariation.selectedOptions
+        : parseSelectedOptionsFromVariation(item.variation);
+    return {
+      key: `${item.productId || "custom"}-${idx}-${item.name || ""}`,
+      productId: item.productId || null,
+      name: item.name || "",
+      image: item.image || "",
+      variation: item.variation || "",
+      selectedOptions,
+      selectedAddOns,
+      quantity: Math.max(1, Number(item.quantity) || 1),
+      unitPrice: Math.max(0, Number(item.unitPrice) || 0),
+      basePrice: Math.max(0, Number(item.unitPrice) || 0),
+      catalog: null,
+    };
+  });
+}
+
+function extractCatalog(product) {
+  if (!product) return null;
+  return {
+    id: String(product._id || product.id || ""),
+    name: product.name || "",
+    basePrice: productUnitPrice(product),
+    image: productImage(product),
+    simpleVariations: enabledSimpleVariations(product),
+    variationCombinations: Array.isArray(product.variationCombinations) ? product.variationCombinations : [],
+    legacyVariations: legacyVariationChoices(product),
+    addOns: Array.isArray(product.addOns)
+      ? product.addOns
+          .map((a) => ({
+            name: String(a?.name || "").trim(),
+            price: Math.max(0, Number(a?.price) || 0),
+            required: Boolean(a?.required),
+          }))
+          .filter((a) => a.name)
+      : [],
+  };
+}
+
 export function OrderItemsEditor({ order, onUpdated }) {
   const discount = Number(order?.pricing?.discount) || 0;
   const [lines, setLines] = useState(() => normalizeLines(order.items));
@@ -58,6 +176,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [loadingMeta, setLoadingMeta] = useState({});
 
   useEffect(() => {
     setLines(normalizeLines(order.items));
@@ -66,6 +185,48 @@ export function OrderItemsEditor({ order, onUpdated }) {
     if (ship > 0) setShippingCost(String(ship));
   }, [order.id, order.items, order?.pricing?.shippingCost]);
 
+  const loadProductMeta = useCallback(async (productId) => {
+    if (!productId) return null;
+    setLoadingMeta((m) => ({ ...m, [productId]: true }));
+    try {
+      const res = await fetch(`/api/products/${productId}`, { credentials: "include" });
+      const json = await res.json();
+      if (!res.ok || !json.success) return null;
+      return extractCatalog(json.data);
+    } catch {
+      return null;
+    } finally {
+      setLoadingMeta((m) => ({ ...m, [productId]: false }));
+    }
+  }, []);
+
+  // Hydrate catalog options for existing lines
+  useEffect(() => {
+    let cancelled = false;
+    const ids = [...new Set(lines.map((l) => l.productId).filter(Boolean))];
+    if (!ids.length) return undefined;
+    (async () => {
+      for (const id of ids) {
+        if (cancelled) return;
+        const already = lines.find((l) => l.productId === id && l.catalog);
+        if (already) continue;
+        const catalog = await loadProductMeta(id);
+        if (!catalog || cancelled) continue;
+        setLines((prev) =>
+          prev.map((line) => {
+            if (line.productId !== id || line.catalog) return line;
+            const base = catalog.basePrice || line.basePrice || line.unitPrice;
+            return { ...line, catalog, basePrice: base };
+          })
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once per order item set
+  }, [order.id, loadProductMeta]);
+
   const subtotal = useMemo(
     () => lines.reduce((sum, line) => sum + lineTotal(line.quantity, line.unitPrice), 0),
     [lines]
@@ -73,17 +234,84 @@ export function OrderItemsEditor({ order, onUpdated }) {
   const shipNum = deliveryOn ? Math.max(0, Number(shippingCost) || 0) : 0;
   const total = Math.max(0, Math.round((subtotal - discount + shipNum) * 100) / 100);
 
-  const updateLine = useCallback((index, patch) => {
-    setLines((prev) =>
-      prev.map((line, i) => {
-        if (i !== index) return line;
-        const next = { ...line, ...patch };
-        if (patch.quantity != null) next.quantity = Math.max(1, Math.min(999, Number(patch.quantity) || 1));
-        if (patch.unitPrice != null) next.unitPrice = Math.max(0, Number(patch.unitPrice) || 0);
-        return next;
-      })
-    );
+  const repriceLine = useCallback((line, patch = {}) => {
+    const next = { ...line, ...patch };
+    const catalog = next.catalog;
+    const selectedOptions = next.selectedOptions || {};
+    const selectedAddOns = next.selectedAddOns || [];
+    const combo = catalog ? findMatchedCombo(catalog, selectedOptions) : null;
+
+    let legacyExtra = 0;
+    if (catalog?.legacyVariations?.length && !catalog.simpleVariations?.length) {
+      for (const lv of catalog.legacyVariations) {
+        const chosen = selectedOptions[lv.name];
+        if (chosen) legacyExtra += Number(lv.additionalPrice) || 0;
+      }
+    }
+
+    const base = Number(next.basePrice);
+    const priceBase = Number.isFinite(base) && base >= 0 ? base : catalog?.basePrice || next.unitPrice;
+    next.unitPrice = computeUnitPrice(priceBase, combo, selectedAddOns, legacyExtra);
+    next.variation = buildVariationLabel(selectedOptions, selectedAddOns);
+    next.selectedVariation = {
+      selectedOptions,
+      combinationId: combo?._id ? String(combo._id) : null,
+    };
+    if (combo?.image) next.image = combo.image;
+    return next;
   }, []);
+
+  const updateLine = useCallback(
+    (index, patch) => {
+      setLines((prev) =>
+        prev.map((line, i) => {
+          if (i !== index) return line;
+          let next = { ...line, ...patch };
+          if (patch.quantity != null) next.quantity = Math.max(1, Math.min(999, Number(patch.quantity) || 1));
+          if (
+            patch.selectedOptions != null ||
+            patch.selectedAddOns != null ||
+            patch.catalog != null ||
+            patch.basePrice != null
+          ) {
+            next = repriceLine(next);
+          } else if (patch.unitPrice != null) {
+            next.unitPrice = Math.max(0, Number(patch.unitPrice) || 0);
+          }
+          return next;
+        })
+      );
+    },
+    [repriceLine]
+  );
+
+  const setOption = useCallback(
+    (index, optionName, value) => {
+      setLines((prev) =>
+        prev.map((line, i) => {
+          if (i !== index) return line;
+          const selectedOptions = { ...(line.selectedOptions || {}), [optionName]: value };
+          return repriceLine({ ...line, selectedOptions });
+        })
+      );
+    },
+    [repriceLine]
+  );
+
+  const toggleAddOn = useCallback(
+    (index, addon, checked) => {
+      setLines((prev) =>
+        prev.map((line, i) => {
+          if (i !== index) return line;
+          const selectedAddOns = checked
+            ? [...(line.selectedAddOns || []).filter((a) => a.name !== addon.name), { name: addon.name, price: addon.price }]
+            : (line.selectedAddOns || []).filter((a) => a.name !== addon.name);
+          return repriceLine({ ...line, selectedAddOns });
+        })
+      );
+    },
+    [repriceLine]
+  );
 
   const removeLine = useCallback((index) => {
     setLines((prev) => {
@@ -95,26 +323,38 @@ export function OrderItemsEditor({ order, onUpdated }) {
     });
   }, []);
 
-  const addProduct = useCallback((product) => {
-    const price = productUnitPrice(product);
-    setLines((prev) => [
-      ...prev,
-      {
-        key: `new-${product._id || product.id}-${Date.now()}`,
-        productId: product._id || product.id || null,
-        name: product.name || "Product",
-        image: productImage(product),
+  const addProduct = useCallback(
+    async (productLite) => {
+      const id = productLite._id || productLite.id;
+      const catalog = id ? await loadProductMeta(id) : extractCatalog(productLite);
+      const base = catalog?.basePrice ?? productUnitPrice(productLite);
+      const selectedOptions = {};
+      for (const v of catalog?.simpleVariations || []) {
+        if (v.tags?.length === 1) selectedOptions[v.name] = v.tags[0];
+      }
+      const requiredAddOns = (catalog?.addOns || []).filter((a) => a.required);
+      let line = {
+        key: `new-${id || "x"}-${Date.now()}`,
+        productId: id || null,
+        name: catalog?.name || productLite.name || "Product",
+        image: catalog?.image || productImage(productLite),
         variation: "",
+        selectedOptions,
+        selectedAddOns: requiredAddOns.map((a) => ({ name: a.name, price: a.price })),
         quantity: 1,
-        unitPrice: price,
-        customMeasurements: null,
-      },
-    ]);
-    setShowAdd(false);
-    setSearch("");
-    setResults([]);
-    toast.success("Product added — save to apply.");
-  }, []);
+        unitPrice: base,
+        basePrice: base,
+        catalog,
+      };
+      line = repriceLine(line);
+      setLines((prev) => [...prev, line]);
+      setShowAdd(false);
+      setSearch("");
+      setResults([]);
+      toast.success("Product added — choose variation/add-ons, then save.");
+    },
+    [loadProductMeta, repriceLine]
+  );
 
   useEffect(() => {
     if (!showAdd) return undefined;
@@ -147,7 +387,11 @@ export function OrderItemsEditor({ order, onUpdated }) {
         productId: line.productId,
         name: line.name,
         image: line.image,
-        variation: line.variation,
+        variation: line.variation || buildVariationLabel(line.selectedOptions, line.selectedAddOns),
+        selectedVariation: line.selectedVariation || {
+          selectedOptions: line.selectedOptions || {},
+        },
+        selectedAddOns: line.selectedAddOns || [],
         quantity: line.quantity,
         unitPrice: line.unitPrice,
         total: lineTotal(line.quantity, line.unitPrice),
@@ -239,7 +483,8 @@ export function OrderItemsEditor({ order, onUpdated }) {
             <tr>
               <th className="py-2 pr-2">Image</th>
               <th className="py-2 pr-2">Product</th>
-              <th className="py-2 pr-2">Variation</th>
+              <th className="py-2 pr-2 min-w-[160px]">Variation</th>
+              <th className="py-2 pr-2 min-w-[160px]">Add-ons</th>
               <th className="py-2 pr-2 text-right">Qty</th>
               <th className="py-2 pr-2 text-right">Unit price</th>
               <th className="py-2 pr-2 text-right">Line total</th>
@@ -247,72 +492,175 @@ export function OrderItemsEditor({ order, onUpdated }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {lines.map((item, idx) => (
-              <tr key={item.key}>
-                <td className="py-2 pr-2">
-                  <div className="h-12 w-12 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
-                    {item.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.image} alt="" className="h-full w-full object-cover" />
+            {lines.map((item, idx) => {
+              const catalog = item.catalog;
+              const simpleVars = catalog?.simpleVariations || [];
+              const legacyVars = !simpleVars.length ? catalog?.legacyVariations || [] : [];
+              const addOns = catalog?.addOns || [];
+              const metaLoading = item.productId && loadingMeta[item.productId] && !catalog;
+
+              return (
+                <tr key={item.key} className="align-top">
+                  <td className="py-2 pr-2">
+                    <div className="h-12 w-12 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
+                      {item.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.image} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="flex h-full items-center justify-center text-[10px] text-slate-400">—</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-2 pr-2 font-medium text-slate-900 dark:text-white">
+                    {item.name}
+                    {item.variation ? (
+                      <p className="mt-0.5 text-[11px] font-normal text-slate-500">{item.variation}</p>
+                    ) : null}
+                  </td>
+                  <td className="py-2 pr-2">
+                    {metaLoading ? (
+                      <span className="text-xs text-slate-400">Loading…</span>
+                    ) : simpleVars.length ? (
+                      <div className="space-y-1.5">
+                        {simpleVars.map((v) => (
+                          <label key={v.name} className="block">
+                            <span className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                              {v.name}
+                            </span>
+                            <select
+                              value={item.selectedOptions?.[v.name] || ""}
+                              onChange={(e) => setOption(idx, v.name, e.target.value)}
+                              className="w-full max-w-[180px] rounded border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-600 dark:bg-slate-800"
+                            >
+                              <option value="">Select…</option>
+                              {v.tags.map((tag) => (
+                                <option key={tag} value={tag}>
+                                  {tag}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        ))}
+                      </div>
+                    ) : legacyVars.length ? (
+                      <div className="space-y-1.5">
+                        {legacyVars.map((v) => (
+                          <label key={v.name} className="block">
+                            <span className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                              {v.name}
+                            </span>
+                            <select
+                              value={item.selectedOptions?.[v.name] || ""}
+                              onChange={(e) => setOption(idx, v.name, e.target.value)}
+                              className="w-full max-w-[180px] rounded border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-600 dark:bg-slate-800"
+                            >
+                              <option value="">Select…</option>
+                              {(v.options.length ? v.options : [v.name]).map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                  {v.additionalPrice ? ` (+${v.additionalPrice})` : ""}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        ))}
+                      </div>
+                    ) : item.productId ? (
+                      <span className="text-xs text-slate-400">No variations</span>
                     ) : (
-                      <span className="flex h-full items-center justify-center text-[10px] text-slate-400">—</span>
+                      <input
+                        type="text"
+                        value={item.variation}
+                        onChange={(e) => updateLine(idx, { variation: e.target.value })}
+                        placeholder="Optional"
+                        className="w-full max-w-[160px] rounded border border-slate-200 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
+                      />
                     )}
-                  </div>
-                </td>
-                <td className="py-2 pr-2 font-medium text-slate-900 dark:text-white">{item.name}</td>
-                <td className="py-2 pr-2 text-slate-600 dark:text-slate-300">{item.variation || "—"}</td>
-                <td className="py-2 pr-2">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      type="button"
-                      aria-label="Decrease quantity"
-                      onClick={() => updateLine(idx, { quantity: item.quantity - 1 })}
-                      className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 text-sm font-bold hover:bg-slate-50 dark:border-slate-600"
-                    >
-                      −
-                    </button>
+                  </td>
+                  <td className="py-2 pr-2">
+                    {metaLoading ? (
+                      <span className="text-xs text-slate-400">Loading…</span>
+                    ) : addOns.length ? (
+                      <div className="space-y-1">
+                        {addOns.map((addon) => {
+                          const checked = (item.selectedAddOns || []).some((a) => a.name === addon.name);
+                          return (
+                            <label
+                              key={addon.name}
+                              className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-200"
+                            >
+                              <input
+                                type="checkbox"
+                                className="mt-0.5"
+                                checked={checked}
+                                onChange={(e) => toggleAddOn(idx, addon, e.target.checked)}
+                              />
+                              <span>
+                                {addon.name}
+                                {addon.required ? " *" : ""}
+                                <span className="text-slate-500"> (+{formatMoney(addon.price)})</span>
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td className="py-2 pr-2">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        aria-label="Decrease quantity"
+                        onClick={() => updateLine(idx, { quantity: item.quantity - 1 })}
+                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 text-sm font-bold hover:bg-slate-50 dark:border-slate-600"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        max={999}
+                        value={item.quantity}
+                        onChange={(e) => updateLine(idx, { quantity: e.target.value })}
+                        className="w-14 rounded border border-slate-200 px-1 py-1 text-right text-sm tabular-nums dark:border-slate-600 dark:bg-slate-800"
+                      />
+                      <button
+                        type="button"
+                        aria-label="Increase quantity"
+                        onClick={() => updateLine(idx, { quantity: item.quantity + 1 })}
+                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 text-sm font-bold hover:bg-slate-50 dark:border-slate-600"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </td>
+                  <td className="py-2 pr-2 text-right">
                     <input
                       type="number"
-                      min={1}
-                      max={999}
-                      value={item.quantity}
-                      onChange={(e) => updateLine(idx, { quantity: e.target.value })}
-                      className="w-14 rounded border border-slate-200 px-1 py-1 text-right text-sm tabular-nums dark:border-slate-600 dark:bg-slate-800"
+                      min={0}
+                      step="1"
+                      value={item.unitPrice}
+                      onChange={(e) => updateLine(idx, { unitPrice: e.target.value })}
+                      className="ml-auto w-24 rounded border border-slate-200 px-2 py-1 text-right text-sm tabular-nums dark:border-slate-600 dark:bg-slate-800"
                     />
+                  </td>
+                  <td className="py-2 pr-2 text-right tabular-nums font-medium">
+                    {formatMoney(lineTotal(item.quantity, item.unitPrice))}
+                  </td>
+                  <td className="py-2 text-right">
                     <button
                       type="button"
-                      aria-label="Increase quantity"
-                      onClick={() => updateLine(idx, { quantity: item.quantity + 1 })}
-                      className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 text-sm font-bold hover:bg-slate-50 dark:border-slate-600"
+                      onClick={() => removeLine(idx)}
+                      className="text-xs font-semibold text-red-600 hover:underline"
                     >
-                      +
+                      Remove
                     </button>
-                  </div>
-                </td>
-                <td className="py-2 pr-2 text-right">
-                  <input
-                    type="number"
-                    min={0}
-                    step="1"
-                    value={item.unitPrice}
-                    onChange={(e) => updateLine(idx, { unitPrice: e.target.value })}
-                    className="ml-auto w-24 rounded border border-slate-200 px-2 py-1 text-right text-sm tabular-nums dark:border-slate-600 dark:bg-slate-800"
-                  />
-                </td>
-                <td className="py-2 pr-2 text-right tabular-nums font-medium">
-                  {formatMoney(lineTotal(item.quantity, item.unitPrice))}
-                </td>
-                <td className="py-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => removeLine(idx)}
-                    className="text-xs font-semibold text-red-600 hover:underline"
-                  >
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

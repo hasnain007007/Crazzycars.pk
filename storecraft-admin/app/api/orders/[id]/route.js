@@ -51,6 +51,13 @@ function serializeOrder(doc) {
       name: i.name,
       image: i.image || "",
       variation: i.variation || "",
+      selectedVariation: i.selectedVariation || null,
+      selectedAddOns: Array.isArray(i.selectedAddOns)
+        ? i.selectedAddOns.map((a) => ({
+            name: String(a?.name || "").trim(),
+            price: Math.max(0, Number(a?.price) || 0),
+          })).filter((a) => a.name)
+        : [],
       quantity: i.quantity,
       unitPrice: i.unitPrice,
       total: i.total,
@@ -331,11 +338,26 @@ export async function PUT(request, context) {
         if (raw?.productId && mongoose.Types.ObjectId.isValid(String(raw.productId))) {
           productId = raw.productId;
         }
+        const selectedAddOns = Array.isArray(raw?.selectedAddOns)
+          ? raw.selectedAddOns
+              .map((a) => ({
+                name: String(a?.name || "").trim().slice(0, 120),
+                price: Math.max(0, Number(a?.price) || 0),
+              }))
+              .filter((a) => a.name)
+              .slice(0, 20)
+          : [];
+        const selectedVariation =
+          raw?.selectedVariation && typeof raw.selectedVariation === "object"
+            ? raw.selectedVariation
+            : null;
         normalizedItems.push({
           productId,
           name: name.slice(0, 300),
           image: String(raw?.image || "").trim().slice(0, 1000),
           variation: String(raw?.variation || "").trim().slice(0, 200),
+          selectedVariation,
+          selectedAddOns,
           quantity,
           unitPrice,
           total: lineTotal,

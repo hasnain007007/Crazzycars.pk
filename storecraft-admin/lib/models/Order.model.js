@@ -9,6 +9,15 @@ const orderItemSchema = new mongoose.Schema(
     image: { type: String, default: "" },
     variation: { type: String, default: "" },
     selectedVariation: { type: Object, default: null },
+    selectedAddOns: {
+      type: [
+        {
+          name: { type: String, default: "", trim: true },
+          price: { type: Number, default: 0, min: 0 },
+        },
+      ],
+      default: [],
+    },
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },
     /** Snapshot of product cost at checkout (admin margin / profit). */
