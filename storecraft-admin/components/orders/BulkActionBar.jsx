@@ -54,6 +54,8 @@ export function BulkActionBar({
 }) {
   const [busy, setBusy] = useState(false);
   const [bulkBookProgress, setBulkBookProgress] = useState("");
+  const [liveProgress, setLiveProgress] = useState("");
+  const [liveResults, setLiveResults] = useState(null);
   const [statusOpen, setStatusOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const statusRef = useRef(null);
@@ -71,7 +73,7 @@ export function BulkActionBar({
   const ids = selectedIds;
 
   const bulkPut = useCallback(
-    async (action, value) => {
+    async (action, value, note = "Bulk update by admin") => {
       if (!ids.length) return;
       setBusy(true);
       try {
@@ -83,7 +85,7 @@ export function BulkActionBar({
             orderIds: ids,
             action,
             value,
-            note: "Bulk update by admin",
+            note,
           }),
         });
         const json = await res.json();
@@ -91,7 +93,8 @@ export function BulkActionBar({
           toast.error(json.error || "Bulk update failed");
           return;
         }
-        toast.success(`Updated ${json.updated ?? 0} order(s).`);
+        const verb = value === "cancelled" ? "Cancelled" : "Updated";
+        toast.success(`${verb} ${json.updated ?? 0} order(s).`);
         onClear();
         onUpdated?.();
       } catch {
@@ -104,6 +107,15 @@ export function BulkActionBar({
     },
     [ids, onClear, onUpdated]
   );
+
+  const cancelSelected = useCallback(async () => {
+    if (!ids.length) return;
+    const ok = window.confirm(
+      `Cancel ${ids.length} selected order${ids.length === 1 ? "" : "s"}?\n\nThis sets their status to Cancelled.`
+    );
+    if (!ok) return;
+    await bulkPut("updateStatus", "cancelled", "Bulk cancelled by admin");
+  }, [ids.length, bulkPut]);
 
   const fetchOrders = useCallback(async () => {
     const list = await Promise.all(
@@ -182,7 +194,11 @@ export function BulkActionBar({
           okCount += 1;
         } else {
           failCount += 1;
-          failures.push(`${json.order?.orderNumber || id}: ${json.error || "Failed"}`);
+          const suggest =
+            Array.isArray(json.suggestions) && json.suggestions.length
+              ? ` (try ${json.suggestions.slice(0, 2).join(" / ")})`
+              : "";
+          failures.push(`${json.order?.orderNumber || id}: ${json.error || "Failed"}${suggest}`);
         }
       } catch {
         failCount += 1;
@@ -199,6 +215,39 @@ export function BulkActionBar({
     onUpdated?.();
     setBusy(false);
   }, [ids, onClear, onUpdated]);
+
+  const refreshLiveStatusBulk = useCallback(async () => {
+    if (!ids.length) return;
+    setBusy(true);
+    setLiveResults(null);
+    setLiveProgress(`Fetching live status for ${ids.length} order(s)…`);
+    try {
+      const res = await fetch("/api/postex/track-bulk", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: ids, syncOrderStatus: true }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast.error(json.error || "Live status refresh failed");
+        return;
+      }
+      setLiveResults(json);
+      const parts = [];
+      if (json.okCount) parts.push(`${json.okCount} updated`);
+      if (json.syncedCount) parts.push(`${json.syncedCount} order status synced`);
+      if (json.skipCount) parts.push(`${json.skipCount} skipped`);
+      if (json.failCount) parts.push(`${json.failCount} failed`);
+      toast.success(parts.join(" · ") || "Done");
+      onUpdated?.();
+    } catch {
+      toast.error("Network error while fetching live status");
+    } finally {
+      setLiveProgress("");
+      setBusy(false);
+    }
+  }, [ids, onUpdated]);
 
   const exportCsv = useCallback(async () => {
     if (!ids.length) return;
@@ -246,6 +295,15 @@ export function BulkActionBar({
             style={{ background: busy ? "#9CA3AF" : "#C41E1E" }}
           >
             {bulkBookProgress || "Book selected with Postex"}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={refreshLiveStatusBulk}
+            className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900 shadow-sm hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100"
+            title="Fetch latest Postex live status for selected orders"
+          >
+            {liveProgress || "↻ Live status"}
           </button>
           <div className="relative" ref={statusRef}>
             <button
@@ -316,6 +374,16 @@ export function BulkActionBar({
           <button
             type="button"
             disabled={busy}
+            onClick={cancelSelected}
+            className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 shadow-sm hover:bg-red-100 disabled:opacity-50 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200 dark:hover:bg-red-950/70"
+            title="Set selected orders to Cancelled"
+          >
+            Cancel selected
+          </button>
+
+          <button
+            type="button"
+            disabled={busy}
             onClick={printPacking}
             className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
           >
@@ -348,6 +416,55 @@ export function BulkActionBar({
           </button>
         </div>
       </div>
+
+      {liveResults ? (
+        <div className="mt-3 max-h-64 overflow-auto rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-900 dark:text-emerald-100">
+              Live status results
+            </p>
+            <button
+              type="button"
+              className="text-xs font-semibold text-emerald-800 hover:underline dark:text-emerald-200"
+              onClick={() => setLiveResults(null)}
+            >
+              Dismiss
+            </button>
+          </div>
+          <ul className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200">
+            {(liveResults.results || []).map((r) => (
+              <li
+                key={r.orderId}
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md bg-white/80 px-2 py-1.5 dark:bg-slate-900/50"
+              >
+                <span className="font-bold">{r.orderNumber || r.orderId}</span>
+                {r.success ? (
+                  <>
+                    <span className="text-emerald-700 dark:text-emerald-300">
+                      {r.status || "OK"}
+                    </span>
+                    {r.currentLocation ? (
+                      <span className="text-slate-500">· {r.currentLocation}</span>
+                    ) : null}
+                    {r.destination ? (
+                      <span className="text-slate-500">→ {r.destination}</span>
+                    ) : null}
+                    {r.orderStatusSynced ? (
+                      <span className="rounded bg-emerald-100 px-1.5 py-0.5 font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
+                        order → {r.orderStatusSynced.to}
+                      </span>
+                    ) : null}
+                  </>
+                ) : (
+                  <span className={r.skipped ? "text-amber-700" : "text-red-600"}>
+                    {r.error || "Failed"}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

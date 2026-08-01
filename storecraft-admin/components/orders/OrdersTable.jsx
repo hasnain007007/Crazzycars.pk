@@ -14,10 +14,30 @@ function formatMoney(n) {
   return formatAdminPrice(n);
 }
 
+function startOfLocalDay(value) {
+  const d = new Date(value);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Relative day labels for the last/next few days; no time. */
 function formatDate(d) {
   if (!d) return "—";
   try {
-    return new Date(d).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    const date = new Date(d);
+    if (Number.isNaN(date.getTime())) return "—";
+
+    const diffDays = Math.round(
+      (startOfLocalDay(date).getTime() - startOfLocalDay(new Date()).getTime()) / 86_400_000
+    );
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === -1) return "Yesterday";
+    if (Math.abs(diffDays) <= 4) {
+      return date.toLocaleDateString(undefined, { weekday: "long" });
+    }
+    return date.toLocaleDateString(undefined, { dateStyle: "medium" });
   } catch {
     return "—";
   }

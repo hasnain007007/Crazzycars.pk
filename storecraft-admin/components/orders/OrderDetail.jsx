@@ -1477,78 +1477,85 @@ export function OrderDetail({ orderId }) {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="print:hidden">
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-3">
           <Link href="/orders" className="text-sm font-medium text-[#1d6fb8] hover:underline">
             ← Orders
           </Link>
-          <div
-            className="inline-flex shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-600 dark:bg-slate-800"
-            role="group"
-            aria-label="Go to previous or next order"
-          >
-            <button
-              type="button"
-              disabled={!neighbors.prev?.id}
-              title={
-                neighbors.prev?.orderNumber
-                  ? `Previous order (${neighbors.prev.orderNumber})`
-                  : "No newer order"
-              }
-              aria-label="Previous order"
-              onClick={() => neighbors.prev?.id && router.push(`/orders/${neighbors.prev.id}`)}
-              className="flex h-10 w-11 items-center justify-center border-r border-slate-200 text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path
-                  fillRule="evenodd"
-                  d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-            <button
-              type="button"
-              disabled={!neighbors.next?.id}
-              title={
-                neighbors.next?.orderNumber
-                  ? `Next order (${neighbors.next.orderNumber})`
-                  : "No older order"
-              }
-              aria-label="Next order"
-              onClick={() => neighbors.next?.id && router.push(`/orders/${neighbors.next.id}`)}
-              className="flex h-10 w-11 items-center justify-center text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path
-                  fillRule="evenodd"
-                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-          </div>
         </div>
 
         <div className="mb-5 border-b border-slate-200 pb-4 dark:border-slate-700">
-          <h1 className="m-0 text-xl font-bold leading-tight text-slate-900 dark:text-white">
-            Order #{order.orderNumber}
-          </h1>
-          {order.invoiceId || order.invoiceNumber ? (
-            <p className="mt-1 mb-0 text-[13px] text-slate-500 dark:text-slate-400">
-              From invoice{" "}
-              {order.invoiceId ? (
-                <Link
-                  href={`/invoices/${order.invoiceId}`}
-                  className="font-semibold text-[#1d6fb8] hover:underline"
-                >
-                  {order.invoiceNumber || "View"}
-                </Link>
-              ) : (
-                <span className="font-semibold">{order.invoiceNumber}</span>
-              )}
-            </p>
-          ) : null}
-          <p className="mt-1 mb-0 text-[13px] text-slate-500 dark:text-slate-400">{placedAt}</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 className="m-0 text-xl font-bold leading-tight text-slate-900 dark:text-white">
+                Order #{order.orderNumber}
+              </h1>
+              {order.invoiceId || order.invoiceNumber ? (
+                <p className="mt-1 mb-0 text-[13px] text-slate-500 dark:text-slate-400">
+                  From invoice{" "}
+                  {order.invoiceId ? (
+                    <Link
+                      href={`/invoices/${order.invoiceId}`}
+                      className="font-semibold text-[#1d6fb8] hover:underline"
+                    >
+                      {order.invoiceNumber || "View"}
+                    </Link>
+                  ) : (
+                    <span className="font-semibold">{order.invoiceNumber}</span>
+                  )}
+                </p>
+              ) : null}
+              <p className="mt-1 mb-0 text-[13px] text-slate-500 dark:text-slate-400">{placedAt}</p>
+            </div>
+
+            <div
+              className="inline-flex shrink-0 overflow-hidden rounded-xl border-2 border-slate-300 bg-white shadow-sm dark:border-slate-500 dark:bg-slate-800"
+              role="group"
+              aria-label="Go to previous or next order"
+            >
+              <button
+                type="button"
+                disabled={!neighbors.prev?.id}
+                title={
+                  neighbors.prev?.orderNumber
+                    ? `Newer order (${neighbors.prev.orderNumber})`
+                    : "No newer order"
+                }
+                aria-label="Previous order (newer)"
+                onClick={() => neighbors.prev?.id && router.push(`/orders/${neighbors.prev.id}`)}
+                className="flex h-11 min-w-[4.5rem] items-center justify-center gap-1.5 border-r border-slate-300 px-3 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-500 dark:text-slate-100 dark:hover:bg-slate-700"
+              >
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path
+                    fillRule="evenodd"
+                    d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Prev
+              </button>
+              <button
+                type="button"
+                disabled={!neighbors.next?.id}
+                title={
+                  neighbors.next?.orderNumber
+                    ? `Older order (${neighbors.next.orderNumber})`
+                    : "No older order"
+                }
+                aria-label="Next order (older)"
+                onClick={() => neighbors.next?.id && router.push(`/orders/${neighbors.next.id}`)}
+                className="flex h-11 min-w-[4.5rem] items-center justify-center gap-1.5 px-3 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-100 dark:hover:bg-slate-700"
+              >
+                Next
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <button
