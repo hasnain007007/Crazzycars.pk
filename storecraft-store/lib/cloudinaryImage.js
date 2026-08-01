@@ -50,12 +50,16 @@ export function cloudinarySrcSet(src, widths = [320, 480, 640]) {
     .join(", ");
 }
 
+/**
+ * Homepage hero — designed banners often include left/right copy in the artwork.
+ * Use limit (no crop) so Cloudinary does not center-crop text off the frame.
+ */
 export function heroImageUrl(src) {
-  return cloudinaryUrl(src, { width: 1400, height: 700, crop: "fill" });
+  return cloudinaryUrl(src, { width: 1600, crop: "limit" });
 }
 
 export function heroImageUrlMobile(src) {
-  return cloudinaryUrl(src, { width: 828, height: 620, crop: "fill" });
+  return cloudinaryUrl(src, { width: 900, crop: "limit" });
 }
 
 /** Product / card thumbnails — default 480px (2× for ~240px slots). */

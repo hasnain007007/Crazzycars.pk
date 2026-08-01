@@ -1645,6 +1645,14 @@ textarea::placeholder {
   position: relative;
   inset: auto;
   height: auto;
+  width: 100%;
+  display: block;
+  line-height: 0;
+}
+
+/* Designed (image-only) banners: full-bleed artwork, no empty side panels */
+.home-hero--image-only.home-hero--h-auto {
+  background: #0b0b0b;
 }
 
 .home-hero__media--gradient {

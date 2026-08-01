@@ -235,7 +235,6 @@ export default function HomeHero({ settings, initialSlides = null }) {
       imageDisplay: normalizeImageDisplay(null),
     });
 
-  const display = normalizeImageDisplay(slide.imageDisplay);
   const bgImage = slide.imageUrl;
   const bgImageMobile = slide.imageUrlMobile || bgImage;
   const multi = slides.length > 1;
@@ -247,6 +246,9 @@ export default function HomeHero({ settings, initialSlides = null }) {
     slide.targetUrl || firstBtnUrl?.url || firstBtnUrl?.link || "/shop"
   );
   const imageOnly = Boolean(bgImage) && !hasTextOverlay;
+  // Re-normalize so image-only designed banners always use auto height + contain
+  // (avoids black side panels / clipped left-side artwork from fixed height + Original/cover).
+  const display = normalizeImageDisplay(slide.imageDisplay, { imageOnly });
   const darkOverlay = overlayStyle(display);
   const heightCss = heroHeightStyle(display.height);
 

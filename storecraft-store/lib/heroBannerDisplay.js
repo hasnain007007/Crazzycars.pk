@@ -16,14 +16,26 @@ export function cssObjectPosition(pos) {
 }
 
 /** Normalize admin imageDisplay for the storefront hero. */
-export function normalizeImageDisplay(raw) {
+export function normalizeImageDisplay(raw, { imageOnly = false } = {}) {
   const d = raw && typeof raw === "object" ? raw : {};
-  const height = ["small", "medium", "large", "full", "auto"].includes(d.height)
+  let height = ["small", "medium", "large", "full", "auto"].includes(d.height)
     ? d.height
     : "large";
-  const objectFit = ["cover", "contain", "fill", "none", "scale-down"].includes(d.objectFit)
+  let objectFit = ["cover", "contain", "fill", "none", "scale-down"].includes(d.objectFit)
     ? d.objectFit
     : "cover";
+
+  // "Original" (none) inside a fixed-height box leaves empty/black side panels and clips artwork.
+  if (objectFit === "none" && height !== "auto") {
+    objectFit = "contain";
+  }
+
+  // Designed banners (no HTML heading) already include their own copy — show the full image.
+  if (imageOnly) {
+    height = "auto";
+    objectFit = objectFit === "fill" ? "fill" : "contain";
+  }
+
   const overlay = d.overlay && typeof d.overlay === "object" ? d.overlay : {};
   const opacityPct = Number(overlay.opacity);
   return {
@@ -76,6 +88,8 @@ export function mapBannerToSlide(banner) {
     style: btn?.style || "primary",
   }));
 
+  const imageOnly = Boolean(rawUrl) && !title && !subtitle;
+
   return {
     id: banner?._id?.toString?.() || banner?.id || title || "hero",
     title,
@@ -88,6 +102,6 @@ export function mapBannerToSlide(banner) {
     backgroundColor: banner?.background?.color || "#0b0b0b",
     textColor: banner?.content?.heading?.color || "#FFFFFF",
     subColor: banner?.content?.subheading?.color || "#D1D5DB",
-    imageDisplay: normalizeImageDisplay(banner?.imageDisplay),
+    imageDisplay: normalizeImageDisplay(banner?.imageDisplay, { imageOnly }),
   };
 }
