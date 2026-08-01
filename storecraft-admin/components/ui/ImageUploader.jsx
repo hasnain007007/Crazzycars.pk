@@ -4,14 +4,21 @@
 "use client";
 
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import Image from "next/image";
+import NextImage from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { useDropzone } from "react-dropzone";
 import { processImageToWebp } from "@/lib/client/processImageToWebp";
 import { FullScreenImageEditor } from "@/components/ui/FullScreenImageEditor";
 import { WatermarkCssOverlay } from "@/components/ui/WatermarkCssOverlay";
+
+/** Always use the browser HTMLImageElement — never shadow with next/image. */
+function createHtmlImage() {
+  if (typeof window === "undefined" || typeof window.Image !== "function") {
+    throw new Error("Image loading is not supported in this browser.");
+  }
+  return new window.Image();
+}
 
 const SMALL_FILE_BYTES = 200 * 1024;
 const WEBP_Q = 0.85;
@@ -53,6 +60,7 @@ function filenameFromUrl(url) {
 }
 
 const STEP_IDS = ["read", "compress", "webp", "upload"];
+const PRESERVE_STEP_IDS = ["read", "upload"];
 
 function UploadIcon() {
   return (
@@ -175,106 +183,123 @@ export function ImageUploader({
   const readImageDimensions = (file) =>
     new Promise((resolve) => {
       const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        const width = img.naturalWidth || 0;
-        const height = img.naturalHeight || 0;
+      let settled = false;
+      const finish = (width, height) => {
+        if (settled) return;
+        settled = true;
         URL.revokeObjectURL(url);
         resolve({ width, height });
       };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        resolve({ width: 0, height: 0 });
-      };
-      img.src = url;
+      try {
+        const img = createHtmlImage();
+        img.onload = () => finish(img.naturalWidth || 0, img.naturalHeight || 0);
+        img.onerror = () => finish(0, 0);
+        // Some mobile browsers never fire load/error for odd formats — don't hang forever.
+        setTimeout(() => finish(0, 0), 12000);
+        img.src = url;
+      } catch {
+        finish(0, 0);
+      }
     });
 
   const processAndUpload = useCallback(
     async (file, imageIndex = 1) => {
       const stepUi = !galleryLayout;
+      const steps = preserveOriginal ? PRESERVE_STEP_IDS : STEP_IDS;
 
       setProcessing(true);
-      if (stepUi) {
-        setDoneSteps(new Set());
-        setCurrentStepIndex(0);
-        await delay(40);
-        setDoneSteps(new Set(["read"]));
-        setCurrentStepIndex(1);
-        await delay(40);
-      }
+      try {
+        if (!(file instanceof Blob) || !file.size) {
+          throw new Error("Invalid image file. Please choose another image.");
+        }
 
-      let blob;
-      let originalSize = Number(file?.size) || 0;
-      let finalSize = originalSize;
-      let previewUrl;
-      let outputWidth = 0;
-      let outputHeight = 0;
-      let uploadName = "image.webp";
+        if (stepUi) {
+          setDoneSteps(new Set());
+          setCurrentStepIndex(0);
+          await delay(30);
+          setDoneSteps(new Set([steps[0]]));
+          setCurrentStepIndex(1);
+        }
 
-      if (preserveOriginal) {
-        blob = file;
-        finalSize = originalSize;
-        previewUrl = URL.createObjectURL(file);
-        const dims = await readImageDimensions(file);
-        outputWidth = dims.width;
-        outputHeight = dims.height;
-        const ext = (file.name && file.name.includes("."))
-          ? file.name.slice(file.name.lastIndexOf("."))
-          : file.type === "image/png"
-            ? ".png"
-            : file.type === "image/webp"
-              ? ".webp"
-              : ".jpg";
-        uploadName = `banner${ext}`;
-      } else {
-        const skipResize = file.size < SMALL_FILE_BYTES;
-        const wm = enableWatermark && watermarkEnabled ? watermarkText : "";
-        const processed = await processImageToWebp(file, {
-          maxWidth: maxImageWidth,
-          skipResize,
-          watermark: Boolean(enableWatermark && watermarkEnabled),
-          watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
-          maxBytes,
-          quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
-        });
-        blob = processed.blob;
-        originalSize = processed.originalSize;
-        finalSize = processed.finalSize;
-        previewUrl = processed.previewUrl;
-        outputWidth = processed.outputWidth;
-        outputHeight = processed.outputHeight;
-      }
-      addRevoke(previewUrl);
+        let blob;
+        let originalSize = Number(file?.size) || 0;
+        let finalSize = originalSize;
+        let previewUrl;
+        let outputWidth = 0;
+        let outputHeight = 0;
+        let uploadName = "image.webp";
 
-      if (stepUi) {
-        setDoneSteps(new Set(["read", "compress"]));
-        setCurrentStepIndex(2);
-        await delay(40);
-        setDoneSteps(new Set(["read", "compress", "webp"]));
-        setCurrentStepIndex(3);
-        await delay(40);
-      }
+        if (preserveOriginal) {
+          // Banner path: upload bytes as-is. Never canvas-decode/compress (that hung Mobile Image).
+          blob = file;
+          finalSize = originalSize;
+          previewUrl = URL.createObjectURL(file);
+          addRevoke(previewUrl);
+          const ext = (file.name && file.name.includes("."))
+            ? file.name.slice(file.name.lastIndexOf("."))
+            : file.type === "image/png"
+              ? ".png"
+              : file.type === "image/webp"
+                ? ".webp"
+                : file.type === "image/jpeg" || file.type === "image/jpg"
+                  ? ".jpg"
+                  : ".bin";
+          uploadName = `banner${ext}`;
+          // Dimensions are optional — never block upload on image decode.
+          readImageDimensions(file).then((dims) => {
+            outputWidth = dims.width;
+            outputHeight = dims.height;
+          }).catch(() => {});
+        } else {
+          const skipResize = file.size < SMALL_FILE_BYTES;
+          const wm = enableWatermark && watermarkEnabled ? watermarkText : "";
+          const processed = await processImageToWebp(file, {
+            maxWidth: maxImageWidth,
+            skipResize,
+            watermark: Boolean(enableWatermark && watermarkEnabled),
+            watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+            maxBytes,
+            quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
+          });
+          blob = processed.blob;
+          originalSize = processed.originalSize;
+          finalSize = processed.finalSize;
+          previewUrl = processed.previewUrl;
+          outputWidth = processed.outputWidth;
+          outputHeight = processed.outputHeight;
+          addRevoke(previewUrl);
+          if (stepUi) {
+            setDoneSteps(new Set(["read", "compress"]));
+            setCurrentStepIndex(2);
+            await delay(30);
+            setDoneSteps(new Set(["read", "compress", "webp"]));
+            setCurrentStepIndex(3);
+          }
+        }
 
-      const data = await uploadBlob(blob, originalSize, imageIndex, uploadName);
-      if (stepUi) {
-        setDoneSteps(new Set(STEP_IDS));
+        const data = await uploadBlob(blob, originalSize, imageIndex, uploadName);
+        if (stepUi) {
+          setDoneSteps(new Set(steps));
+          setCurrentStepIndex(-1);
+        }
+
+        const nm = String(file?.name || "image.webp").replace(/\.\w+$/, "").replace(/[/\\]/g, "-").slice(0, 200);
+        const id = crypto.randomUUID();
+        return {
+          url: data.url,
+          publicId: data.publicId,
+          originalSize: data.originalSize ?? originalSize,
+          finalSize: data.finalSize ?? finalSize,
+          _localId: id,
+          imageName: nm,
+          altText: "",
+          width: outputWidth,
+          height: outputHeight,
+        };
+      } finally {
+        setProcessing(false);
         setCurrentStepIndex(-1);
       }
-      setProcessing(false);
-
-      const nm = String(file?.name || "image.webp").replace(/\.\w+$/, "").replace(/[/\\]/g, "-").slice(0, 200);
-      const id = crypto.randomUUID();
-      return {
-        url: data.url,
-        publicId: data.publicId,
-        originalSize: data.originalSize ?? originalSize,
-        finalSize: data.finalSize ?? finalSize,
-        _localId: id,
-        imageName: nm,
-        altText: "",
-        width: outputWidth,
-        height: outputHeight,
-      };
     },
     [enableWatermark, watermarkEnabled, watermarkText, maxImageWidth, maxBytes, webpQuality, preserveOriginal, uploadBlob, galleryLayout]
   );
@@ -294,9 +319,6 @@ export function ImageUploader({
         if (preserveOriginal) {
           blob = file;
           previewUrl = URL.createObjectURL(file);
-          const dims = await readImageDimensions(file);
-          outputWidth = dims.width;
-          outputHeight = dims.height;
           const ext = (file.name && file.name.includes("."))
             ? file.name.slice(file.name.lastIndexOf("."))
             : file.type === "image/png"
@@ -367,6 +389,7 @@ export function ImageUploader({
             width: r.width,
             height: r.height,
           });
+          toast.success("Image uploaded.");
         } catch (e) {
           console.error(e);
           toast.error(uploadErrorMessage(e));
@@ -468,9 +491,12 @@ export function ImageUploader({
 
   const showDropzone = !multiple ? !single?.url : true;
 
+  const activeStepIds = preserveOriginal ? PRESERVE_STEP_IDS : STEP_IDS;
   const stepLabel = (i) => {
-    const labels = ["Reading file…", "Compressing…", "Converting to WebP…", "Uploading…"];
-    return labels[i] || "";
+    if (preserveOriginal) {
+      return ["Reading file…", "Uploading…"][i] || "";
+    }
+    return ["Reading file…", "Compressing…", "Converting to WebP…", "Uploading…"][i] || "";
   };
 
   return (
@@ -517,9 +543,11 @@ export function ImageUploader({
 
       {processing && showControls && !galleryLayout ? (
         <div className="rounded-lg border border-[#e5e7eb] bg-white p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#6b7280]">Processing</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+            {preserveOriginal ? "Uploading" : "Processing"}
+          </p>
           <ul className="space-y-2">
-            {STEP_IDS.map((id, i) => {
+            {activeStepIds.map((id, i) => {
               const done = doneSteps.has(id);
               const current = currentStepIndex === i;
               return (
@@ -538,6 +566,17 @@ export function ImageUploader({
               );
             })}
           </ul>
+          <button
+            type="button"
+            className="mt-3 text-xs font-semibold text-red-600 hover:underline"
+            onClick={() => {
+              setProcessing(false);
+              setCurrentStepIndex(-1);
+              setDoneSteps(new Set());
+            }}
+          >
+            Cancel
+          </button>
         </div>
       ) : null}
 
@@ -593,6 +632,11 @@ export function ImageUploader({
               <p className="mt-2 text-xs text-[#6b7280]">PNG, JPG, WebP, AVIF accepted</p>
               <p className="mt-1 text-xs text-[#6b7280]">Max {maxSizeMB} MB per image (after compression)</p>
               <p className="mt-1 text-xs text-[#6b7280]">Will be compressed & converted to WebP</p>
+            </>
+          ) : preserveOriginal ? (
+            <>
+              <p className="mt-1 text-xs text-[#6b7280]">Original file is uploaded as-is (no recompression)</p>
+              <p className="mt-2 text-xs text-[#9ca3af]">Max size: {maxSizeMB} MB</p>
             </>
           ) : (
             <>
@@ -793,7 +837,7 @@ function PreviewCard({
         onClick={() => onOpenEdit?.()}
       >
         <div className="relative aspect-square w-full bg-[#f3f4f6]">
-          <Image src={url} alt="" fill className="object-cover" unoptimized sizes="(max-width: 640px) 45vw, 200px" />
+          <NextImage src={url} alt="" fill className="object-cover" unoptimized sizes="(max-width: 640px) 45vw, 200px" />
           <WatermarkCssOverlay watermark={storefrontWatermark} />
           <div className="pointer-events-none absolute inset-0 bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100">
             <div
