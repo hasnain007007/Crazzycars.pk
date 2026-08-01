@@ -46,10 +46,12 @@ export default function WhatsAppButton() {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`fixed z-[9000] flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition hover:scale-105 md:bottom-6 ${isRight ? "right-4 md:right-6" : "left-4 md:left-6"}`}
+      className={`store-whatsapp-fab fixed z-[9000] flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition hover:scale-105 md:bottom-6 ${
+        isRight ? "store-whatsapp-fab--right md:right-6" : "store-whatsapp-fab--left md:left-6"
+      }`}
       style={{
         background: config.buttonColor,
-        bottom: "calc(3.75rem + env(safe-area-inset-bottom, 0px))",
+        bottom: "calc(4.25rem + env(safe-area-inset-bottom, 0px))",
       }}
       aria-label="Chat with us on WhatsApp"
       title="Chat with us on WhatsApp"
