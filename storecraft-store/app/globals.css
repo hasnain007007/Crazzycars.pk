@@ -1378,10 +1378,10 @@ textarea::placeholder {
     width: 100% !important;
   }
 
-  /* Touch targets — skip absolute icon buttons (search submit, etc.) and
-     line-clamped text links where min-height exposes a clipped sliver. */
-  button:not(.absolute):not([class*="absolute"]),
-  a:not([class*="line-clamp"]):not(.absolute):not([class*="absolute"]) {
+  /* Touch targets — skip absolute icon buttons (search submit, etc.),
+     hero CTAs (sized for dual compact row), and line-clamped text links. */
+  button:not(.absolute):not([class*="absolute"]):not(.home-hero__btn),
+  a:not([class*="line-clamp"]):not(.absolute):not([class*="absolute"]):not(.home-hero__btn) {
     min-height: 44px;
   }
 }
@@ -2025,9 +2025,9 @@ textarea::placeholder {
     inset: auto;
     flex: 0 0 auto;
     width: 100%;
-    height: min(52vh, 440px);
-    min-height: 360px;
-    max-height: 480px;
+    height: min(56vh, 460px);
+    min-height: 380px;
+    max-height: 520px;
     line-height: normal;
   }
 
@@ -2037,8 +2037,8 @@ textarea::placeholder {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Keep designed left copy in frame; slight inset avoids edge clipping */
-    object-position: 18% center;
+    /* Flush left so baked-in "CRAZZYCARS.PK" / headline aren't clipped */
+    object-position: left center;
   }
 
   .home-hero__inner {
@@ -2077,9 +2077,9 @@ textarea::placeholder {
     flex: 1 1 0;
     width: auto;
     max-width: none;
-    height: 36px;
-    min-height: 36px;
-    max-height: 36px;
+    height: 38px;
+    min-height: 38px !important;
+    max-height: 38px;
     padding: 0 10px;
     font-size: 10px;
     letter-spacing: 0.05em;
@@ -2142,7 +2142,7 @@ textarea::placeholder {
 
   .home-hero--ctas-only.home-hero--image-only .home-hero__dots {
     bottom: auto;
-    top: calc(min(52vh, 440px) - 18px);
+    top: calc(min(56vh, 460px) - 18px);
   }
 
   .home-hero-rail__list {
