@@ -590,13 +590,15 @@ export function BannerForm({ bannerId }) {
                 value={form.background?.image || { url: "", publicId: "" }}
                 onChange={(img) => setForm((f) => ({ ...f, background: { ...(f.background || {}), type: "image", image: img || {} } }))}
                 multiple={false}
-                maxSizeMB={6}
+                maxSizeMB={8}
                 maxImageWidth={2560}
-                webpQuality={0.92}
+                webpQuality={0.95}
+                preserveOriginal
                 uploadFolder="banners"
               />
               <p style={{ fontSize: 11, color: "#9ca3af", margin: "8px 0 0" }}>
-                Recommended: 1920×768 or wider (up to 2560px). High-quality WebP — avoid tiny exports.
+                Upload PNG/JPEG at <strong>1920×768 or wider</strong> (up to 2560px). Original file is kept — no
+                compression. ChatGPT/AI exports at ~1024px will look soft on desktop.
               </p>
               {form.background?.image?.url ? (
                 <div
@@ -834,9 +836,10 @@ export function BannerForm({ bannerId }) {
                       }))
                     }
                     multiple={false}
-                    maxSizeMB={4}
+                    maxSizeMB={6}
                     maxImageWidth={1600}
-                    webpQuality={0.92}
+                    webpQuality={0.95}
+                    preserveOriginal
                     uploadFolder="banners"
                   />
                   <p
@@ -846,7 +849,7 @@ export function BannerForm({ bannerId }) {
                       margin: "8px 0 0",
                     }}
                   >
-                    Recommended: 1080×1350 or similar portrait (up to 1600px wide) for sharp mobile display.
+                    Recommended: 1080×1350+ portrait. Original file is kept without recompression.
                   </p>
                 </div>
               </div>

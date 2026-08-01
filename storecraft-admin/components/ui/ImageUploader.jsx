@@ -87,6 +87,11 @@ export function ImageUploader({
   maxImageWidth = 1200,
   /** WebP encoder quality 0–1 (higher = sharper, larger files). */
   webpQuality = WEBP_Q,
+  /**
+   * Upload the original file bytes (no canvas resize/WebP).
+   * Use for designed hero banners so text and dark gradients stay sharp.
+   */
+  preserveOriginal = false,
   uploadFolder = "categories",
   enableWatermark = false,
   defaultWatermarkText = "",
@@ -147,9 +152,9 @@ export function ImageUploader({
     revokeUrls.current.clear();
   }, []);
 
-  const uploadBlob = useCallback(async (blob, originalSize, imageIndex = 1) => {
+  const uploadBlob = useCallback(async (blob, originalSize, imageIndex = 1, filename = "image.webp") => {
     const fd = new FormData();
-    fd.append("file", blob, "image.webp");
+    fd.append("file", blob, filename);
     fd.append("originalSize", String(originalSize));
     fd.append("finalSize", String(blob.size));
     fd.append("folder", uploadFolder);
@@ -167,16 +172,25 @@ export function ImageUploader({
 
   const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
+  const readImageDimensions = (file) =>
+    new Promise((resolve) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const width = img.naturalWidth || 0;
+        const height = img.naturalHeight || 0;
+        URL.revokeObjectURL(url);
+        resolve({ width, height });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve({ width: 0, height: 0 });
+      };
+      img.src = url;
+    });
+
   const processAndUpload = useCallback(
     async (file, imageIndex = 1) => {
-      const skipResize = file.size < SMALL_FILE_BYTES;
-      const wm = enableWatermark && watermarkEnabled ? watermarkText : "";
-      console.log("Processing image with watermark settings:", {
-        enableWatermark,
-        watermarkEnabled,
-        watermarkText,
-        finalWatermark: enableWatermark && watermarkEnabled,
-      });
       const stepUi = !galleryLayout;
 
       setProcessing(true);
@@ -189,14 +203,47 @@ export function ImageUploader({
         await delay(40);
       }
 
-      const { blob, originalSize, finalSize, previewUrl, outputWidth, outputHeight } = await processImageToWebp(file, {
-        maxWidth: maxImageWidth,
-        skipResize,
-        watermark: Boolean(enableWatermark && watermarkEnabled),
-        watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
-        maxBytes,
-        quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
-      });
+      let blob;
+      let originalSize = Number(file?.size) || 0;
+      let finalSize = originalSize;
+      let previewUrl;
+      let outputWidth = 0;
+      let outputHeight = 0;
+      let uploadName = "image.webp";
+
+      if (preserveOriginal) {
+        blob = file;
+        finalSize = originalSize;
+        previewUrl = URL.createObjectURL(file);
+        const dims = await readImageDimensions(file);
+        outputWidth = dims.width;
+        outputHeight = dims.height;
+        const ext = (file.name && file.name.includes("."))
+          ? file.name.slice(file.name.lastIndexOf("."))
+          : file.type === "image/png"
+            ? ".png"
+            : file.type === "image/webp"
+              ? ".webp"
+              : ".jpg";
+        uploadName = `banner${ext}`;
+      } else {
+        const skipResize = file.size < SMALL_FILE_BYTES;
+        const wm = enableWatermark && watermarkEnabled ? watermarkText : "";
+        const processed = await processImageToWebp(file, {
+          maxWidth: maxImageWidth,
+          skipResize,
+          watermark: Boolean(enableWatermark && watermarkEnabled),
+          watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+          maxBytes,
+          quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
+        });
+        blob = processed.blob;
+        originalSize = processed.originalSize;
+        finalSize = processed.finalSize;
+        previewUrl = processed.previewUrl;
+        outputWidth = processed.outputWidth;
+        outputHeight = processed.outputHeight;
+      }
       addRevoke(previewUrl);
 
       if (stepUi) {
@@ -208,7 +255,7 @@ export function ImageUploader({
         await delay(40);
       }
 
-      const data = await uploadBlob(blob, originalSize, imageIndex);
+      const data = await uploadBlob(blob, originalSize, imageIndex, uploadName);
       if (stepUi) {
         setDoneSteps(new Set(STEP_IDS));
         setCurrentStepIndex(-1);
@@ -229,31 +276,55 @@ export function ImageUploader({
         height: outputHeight,
       };
     },
-    [enableWatermark, watermarkEnabled, watermarkText, maxImageWidth, maxBytes, webpQuality, uploadBlob, galleryLayout]
+    [enableWatermark, watermarkEnabled, watermarkText, maxImageWidth, maxBytes, webpQuality, preserveOriginal, uploadBlob, galleryLayout]
   );
 
   const replaceAtIndexWithFile = useCallback(
     async (index, file, opts = {}) => {
       try {
-        const skipResize = file.size < SMALL_FILE_BYTES;
-        const wm = enableWatermark && watermarkEnabled ? watermarkText : "";
-        console.log("Processing image with watermark settings:", {
-          enableWatermark,
-          watermarkEnabled,
-          watermarkText,
-          finalWatermark: enableWatermark && watermarkEnabled,
-        });
         setProcessing(true);
-        const { blob, originalSize, finalSize, previewUrl, outputWidth, outputHeight } = await processImageToWebp(file, {
-          maxWidth: maxImageWidth,
-          skipResize,
-          watermark: Boolean(enableWatermark && watermarkEnabled),
-          watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
-          maxBytes,
-          quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
-        });
+        let blob;
+        let originalSize = Number(file?.size) || 0;
+        let finalSize = originalSize;
+        let previewUrl;
+        let outputWidth = 0;
+        let outputHeight = 0;
+        let uploadName = "image.webp";
+
+        if (preserveOriginal) {
+          blob = file;
+          previewUrl = URL.createObjectURL(file);
+          const dims = await readImageDimensions(file);
+          outputWidth = dims.width;
+          outputHeight = dims.height;
+          const ext = (file.name && file.name.includes("."))
+            ? file.name.slice(file.name.lastIndexOf("."))
+            : file.type === "image/png"
+              ? ".png"
+              : file.type === "image/webp"
+                ? ".webp"
+                : ".jpg";
+          uploadName = `banner${ext}`;
+        } else {
+          const skipResize = file.size < SMALL_FILE_BYTES;
+          const wm = enableWatermark && watermarkEnabled ? watermarkText : "";
+          const processed = await processImageToWebp(file, {
+            maxWidth: maxImageWidth,
+            skipResize,
+            watermark: Boolean(enableWatermark && watermarkEnabled),
+            watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+            maxBytes,
+            quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
+          });
+          blob = processed.blob;
+          originalSize = processed.originalSize;
+          finalSize = processed.finalSize;
+          previewUrl = processed.previewUrl;
+          outputWidth = processed.outputWidth;
+          outputHeight = processed.outputHeight;
+        }
         addRevoke(previewUrl);
-        const data = await uploadBlob(blob, originalSize, index + 1);
+        const data = await uploadBlob(blob, originalSize, index + 1, uploadName);
         const prev = Array.isArray(valueRef.current) ? [...valueRef.current] : [];
         if (index < 0 || index >= prev.length) return;
         prev[index] = {
@@ -275,7 +346,7 @@ export function ImageUploader({
         setProcessing(false);
       }
     },
-    [enableWatermark, watermarkEnabled, watermarkText, maxImageWidth, maxBytes, webpQuality, uploadBlob, onChange]
+    [enableWatermark, watermarkEnabled, watermarkText, maxImageWidth, maxBytes, webpQuality, preserveOriginal, uploadBlob, onChange]
   );
 
   const onPickFiles = useCallback(
