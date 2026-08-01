@@ -6,7 +6,6 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { useDropzone } from "react-dropzone";
 import { processImageToWebp } from "@/lib/client/processImageToWebp";
@@ -85,6 +84,8 @@ export function ImageUploader({
   maxSizeMB = 1,
   showControls = true,
   maxImageWidth = 1200,
+  /** WebP encoder quality 0–1 (higher = sharper, larger files). */
+  webpQuality = WEBP_Q,
   uploadFolder = "categories",
   enableWatermark = false,
   defaultWatermarkText = "",
@@ -121,6 +122,8 @@ export function ImageUploader({
   const [lastBatchSummary, setLastBatchSummary] = useState(null);
   const [cropModal, setCropModal] = useState(null);
   const [editPanelIndex, setEditPanelIndex] = useState(null);
+  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
   const revokeUrls = useRef(new Set());
   const valueRef = useRef(value);
 
@@ -193,7 +196,7 @@ export function ImageUploader({
         watermark: Boolean(enableWatermark && watermarkEnabled),
         watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
         maxBytes,
-        quality: WEBP_Q,
+        quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
       });
       addRevoke(previewUrl);
 
@@ -227,7 +230,7 @@ export function ImageUploader({
         height: outputHeight,
       };
     },
-    [enableWatermark, watermarkEnabled, watermarkText, maxImageWidth, maxBytes, uploadBlob, galleryLayout]
+    [enableWatermark, watermarkEnabled, watermarkText, maxImageWidth, maxBytes, webpQuality, uploadBlob, galleryLayout]
   );
 
   const replaceAtIndexWithFile = useCallback(
@@ -248,7 +251,7 @@ export function ImageUploader({
           watermark: Boolean(enableWatermark && watermarkEnabled),
           watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
           maxBytes,
-          quality: WEBP_Q,
+          quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
         });
         addRevoke(previewUrl);
         const data = await uploadBlob(blob, originalSize, index + 1);
@@ -273,7 +276,7 @@ export function ImageUploader({
         setProcessing(false);
       }
     },
-    [enableWatermark, watermarkEnabled, watermarkText, maxImageWidth, maxBytes, uploadBlob, onChange]
+    [enableWatermark, watermarkEnabled, watermarkText, maxImageWidth, maxBytes, webpQuality, uploadBlob, onChange]
   );
 
   const onPickFiles = useCallback(
@@ -387,11 +390,35 @@ export function ImageUploader({
 
   const onDragEnd = (result) => {
     if (!result.destination || !multiple) return;
+    if (result.destination.index === result.source.index) return;
     const prev = Array.isArray(value) ? [...value] : [];
     const [removed] = prev.splice(result.source.index, 1);
     prev.splice(result.destination.index, 0, removed);
+    // Position 0 = main storefront image
+    prev.forEach((it, i) => {
+      if (it && typeof it === "object") it.isMain = i === 0;
+    });
     onChange(prev);
+    valueRef.current = prev;
   };
+
+  const reorderImages = useCallback(
+    (fromIndex, toIndex) => {
+      if (!multiple) return;
+      if (!Number.isFinite(fromIndex) || !Number.isFinite(toIndex)) return;
+      if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+      const prev = Array.isArray(valueRef.current) ? [...valueRef.current] : [];
+      if (fromIndex >= prev.length || toIndex >= prev.length) return;
+      const [removed] = prev.splice(fromIndex, 1);
+      prev.splice(toIndex, 0, removed);
+      prev.forEach((it, i) => {
+        if (it && typeof it === "object") it.isMain = i === 0;
+      });
+      onChange(prev);
+      valueRef.current = prev;
+    },
+    [multiple, onChange]
+  );
 
   const showDropzone = !multiple ? !single?.url : true;
 
@@ -403,7 +430,7 @@ export function ImageUploader({
   return (
     <div
       className={
-        galleryLayout ? "flex min-h-[500px] w-full max-w-full flex-col space-y-3 overflow-visible" : "space-y-3"
+        galleryLayout ? "w-full max-w-full flex-col space-y-3 overflow-visible" : "space-y-3"
       }
     >
       {enableWatermark && !hideWatermarkToolbar ? (
@@ -507,7 +534,7 @@ export function ImageUploader({
           {...getRootProps()}
           className={[
             "cursor-pointer rounded-lg border-2 border-dashed border-[#e5e7eb] bg-[#f9fafb] px-4 text-center transition",
-            galleryLayout ? "min-h-[200px] flex flex-col items-center justify-center py-10" : "py-8",
+            galleryLayout ? "min-h-[120px] flex flex-col items-center justify-center py-6" : "py-8",
             isDragActive ? "border-[#1d6fb8] bg-[#eff6ff]" : "hover:border-[#1d6fb8]/50",
             processing ? "pointer-events-none opacity-60" : "",
           ].join(" ")}
@@ -543,74 +570,138 @@ export function ImageUploader({
         />
       ) : null}
 
-      {multiple && items.length > 0 ? (
+      {multiple && items.length > 0 && galleryLayout ? (
+        <div className="grid w-full grid-cols-2 gap-3">
+          {items.map((item, index) => {
+            const dragId = String(item._localId || item.publicId || item.url || `idx-${index}`);
+            const isDragging = draggingIndex === index;
+            const isOver = dragOverIndex === index && draggingIndex != null && draggingIndex !== index;
+            return (
+              <div
+                key={dragId}
+                className={[
+                  "min-w-0 rounded-lg transition",
+                  isOver ? "ring-2 ring-[#1d6fb8] ring-offset-2" : "",
+                  isDragging ? "opacity-40" : "",
+                ].join(" ")}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.dataTransfer.dropEffect = "move";
+                  if (dragOverIndex !== index) setDragOverIndex(index);
+                }}
+                onDragLeave={() => {
+                  if (dragOverIndex === index) setDragOverIndex(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const from = Number(e.dataTransfer.getData("application/x-media-index"));
+                  reorderImages(from, index);
+                  setDraggingIndex(null);
+                  setDragOverIndex(null);
+                }}
+              >
+                <PreviewCard
+                  galleryLayout
+                  isDragging={isDragging}
+                  positionLabel={index + 1}
+                  storefrontWatermark={storefrontWatermark}
+                  url={item.url}
+                  imageName={item.imageName}
+                  altText={item.altText}
+                  originalSize={item.originalSize}
+                  finalSize={item.finalSize}
+                  showControls={showControls}
+                  onRemove={() => removeAt(index)}
+                  onSetMain={() => setMainAt(index)}
+                  showMain
+                  isMain={Boolean(item.isMain) || index === 0}
+                  onOpenCrop={() => setCropModal({ index, url: item.url, aspectPreset: "free" })}
+                  onOpenEdit={() => setEditPanelIndex(index)}
+                  onImageNameChange={(nextVal) => {
+                    const prev = [...(valueRef.current || items)];
+                    prev[index] = { ...prev[index], imageName: nextVal };
+                    onChange(prev);
+                    valueRef.current = prev;
+                  }}
+                  onAltTextChange={(nextVal) => {
+                    const prev = [...(valueRef.current || items)];
+                    prev[index] = { ...prev[index], altText: nextVal };
+                    onChange(prev);
+                    valueRef.current = prev;
+                  }}
+                  onMoveUp={index > 0 ? () => reorderImages(index, index - 1) : undefined}
+                  onMoveDown={
+                    index < items.length - 1 ? () => reorderImages(index, index + 1) : undefined
+                  }
+                  dragHandleProps={{
+                    draggable: true,
+                    onDragStart: (e) => {
+                      e.stopPropagation();
+                      e.dataTransfer.setData("application/x-media-index", String(index));
+                      e.dataTransfer.effectAllowed = "move";
+                      try {
+                        e.dataTransfer.setData("text/plain", String(index));
+                      } catch {
+                        /* ignore */
+                      }
+                      setDraggingIndex(index);
+                    },
+                    onDragEnd: () => {
+                      setDraggingIndex(null);
+                      setDragOverIndex(null);
+                    },
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {multiple && items.length > 0 && !galleryLayout ? (
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="media-images">
             {(provided) => (
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={
-                  galleryLayout
-                    ? "w-full max-w-full flex-1 content-start overflow-visible"
-                    : "grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4"
-                }
-                style={
-                  galleryLayout
-                    ? {
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-                        gap: 12,
-                      }
-                    : undefined
-                }
+                className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4"
               >
-                {items.map((item, index) => (
-                  <Draggable
-                    key={item._localId || item.publicId || item.url || String(index)}
-                    draggableId={String(item._localId || item.publicId || item.url)}
-                    index={index}
-                  >
-                    {(p) => (
-                      <div
-                        ref={p.innerRef}
-                        {...p.draggableProps}
-                        {...(!galleryLayout ? p.dragHandleProps : {})}
-                        className={galleryLayout ? "min-w-0 w-full" : "min-w-0"}
-                      >
-                        <PreviewCard
-                          galleryLayout={galleryLayout}
-                          dragHandleProps={galleryLayout ? p.dragHandleProps : undefined}
-                          storefrontWatermark={storefrontWatermark}
-                          url={item.url}
-                          imageName={item.imageName}
-                          altText={item.altText}
-                          originalSize={item.originalSize}
-                          finalSize={item.finalSize}
-                          showControls={showControls}
-                          onRemove={() => removeAt(index)}
-                          onSetMain={() => setMainAt(index)}
-                          showMain
-                          isMain={Boolean(item.isMain)}
-                          onOpenCrop={galleryLayout ? () => setCropModal({ index, url: item.url, aspectPreset: "free" }) : undefined}
-                          onImageNameChange={(nextVal) => {
-                            const prev = [...items];
-                            prev[index] = { ...prev[index], imageName: nextVal };
-                            onChange(prev);
-                            valueRef.current = prev;
-                          }}
-                          onAltTextChange={(nextVal) => {
-                            const prev = [...items];
-                            prev[index] = { ...prev[index], altText: nextVal };
-                            onChange(prev);
-                            valueRef.current = prev;
-                          }}
-                          onOpenEdit={galleryLayout ? () => setEditPanelIndex(index) : undefined}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
+                {items.map((item, index) => {
+                  const dragId = String(
+                    item._localId || item.publicId || item.url || `idx-${index}`
+                  );
+                  return (
+                    <Draggable key={dragId} draggableId={dragId} index={index}>
+                      {(p) => (
+                        <div
+                          ref={p.innerRef}
+                          {...p.draggableProps}
+                          {...p.dragHandleProps}
+                          className="min-w-0"
+                          style={p.draggableProps.style}
+                        >
+                          <PreviewCard
+                            galleryLayout={false}
+                            storefrontWatermark={storefrontWatermark}
+                            url={item.url}
+                            imageName={item.imageName}
+                            altText={item.altText}
+                            originalSize={item.originalSize}
+                            finalSize={item.finalSize}
+                            showControls={showControls}
+                            onRemove={() => removeAt(index)}
+                            onSetMain={() => setMainAt(index)}
+                            showMain
+                            isMain={Boolean(item.isMain) || index === 0}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  );
+                })}
                 {provided.placeholder}
               </div>
             )}
@@ -693,6 +784,8 @@ export function ImageUploader({
 function PreviewCard({
   galleryLayout = false,
   dragHandleProps,
+  isDragging = false,
+  positionLabel,
   storefrontWatermark,
   url,
   imageName,
@@ -708,6 +801,8 @@ function PreviewCard({
   onOpenEdit,
   onImageNameChange,
   onAltTextChange,
+  onMoveUp,
+  onMoveDown,
 }) {
   const saved = originalSize && finalSize ? pctSaved(originalSize, finalSize) : null;
   const name = (imageName && String(imageName).trim()) || filenameFromUrl(url);
@@ -715,18 +810,70 @@ function PreviewCard({
   if (galleryLayout) {
     return (
       <div
-        role="presentation"
-        className="group min-h-0 min-w-0 w-full cursor-pointer overflow-hidden rounded-lg border border-[#e5e7eb] bg-white shadow-sm"
-        onClick={() => onOpenEdit?.()}
+        className={[
+          "min-h-0 min-w-0 w-full overflow-hidden rounded-lg border bg-white shadow-sm",
+          isDragging ? "border-[#1d6fb8]" : "border-[#e5e7eb]",
+        ].join(" ")}
       >
         <div className="relative aspect-square w-full bg-[#f3f4f6]">
-          <Image src={url} alt="" fill className="object-cover" unoptimized sizes="(max-width: 640px) 45vw, 200px" />
+          <Image
+            src={url}
+            alt={altText || name || ""}
+            fill
+            className="object-cover"
+            unoptimized
+            sizes="160px"
+          />
           <WatermarkCssOverlay watermark={storefrontWatermark} />
-          <div className="pointer-events-none absolute inset-0 bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100">
+
+          <div className="absolute left-1 top-1 z-[2] flex max-w-[calc(100%-0.5rem)] flex-wrap items-center gap-1">
             <div
-              className="pointer-events-auto absolute left-0 right-0 top-0 flex items-center justify-center gap-1 p-1.5"
-              onClick={(e) => e.stopPropagation()}
+              role="button"
+              tabIndex={0}
+              title="Drag to reorder"
+              className="flex h-7 cursor-grab select-none items-center gap-1 rounded-md bg-black/75 px-1.5 text-[10px] font-bold text-white shadow active:cursor-grabbing"
+              {...(dragHandleProps || {})}
             >
+              <span aria-hidden>⋮⋮</span>
+              #{positionLabel ?? "?"}
+            </div>
+            {isMain ? (
+              <span className="rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-amber-950">
+                MAIN
+              </span>
+            ) : null}
+          </div>
+
+          <div className="absolute bottom-1 left-1 right-1 z-[2] flex items-center justify-between gap-1">
+            <div className="flex gap-0.5">
+              {onMoveUp ? (
+                <button
+                  type="button"
+                  title="Move earlier"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveUp();
+                  }}
+                  className="flex h-7 w-7 items-center justify-center rounded-md bg-white/95 text-xs font-bold text-[#374151] shadow"
+                >
+                  ↑
+                </button>
+              ) : null}
+              {onMoveDown ? (
+                <button
+                  type="button"
+                  title="Move later"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveDown();
+                  }}
+                  className="flex h-7 w-7 items-center justify-center rounded-md bg-white/95 text-xs font-bold text-[#374151] shadow"
+                >
+                  ↓
+                </button>
+              ) : null}
+            </div>
+            <div className="flex gap-0.5">
               {showMain ? (
                 <button
                   type="button"
@@ -736,8 +883,8 @@ function PreviewCard({
                     onSetMain?.();
                   }}
                   className={[
-                    "flex h-8 w-8 items-center justify-center rounded-md text-sm shadow",
-                    isMain ? "bg-amber-400 text-amber-950" : "bg-white/90 text-[#374151] hover:bg-white",
+                    "flex h-7 w-7 items-center justify-center rounded-md text-xs shadow",
+                    isMain ? "bg-amber-400 text-amber-950" : "bg-white/95 text-[#374151]",
                   ].join(" ")}
                 >
                   ★
@@ -750,21 +897,21 @@ function PreviewCard({
                   e.stopPropagation();
                   onOpenCrop?.();
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-sm text-[#374151] shadow hover:bg-white"
+                className="flex h-7 w-7 items-center justify-center rounded-md bg-white/95 text-xs text-[#374151] shadow"
               >
                 ✂
               </button>
-              {dragHandleProps ? (
-                <button
-                  type="button"
-                  title="Drag to reorder"
-                  className="flex h-8 w-8 cursor-grab items-center justify-center rounded-md bg-white/90 text-sm text-[#374151] shadow active:cursor-grabbing"
-                  {...dragHandleProps}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  ↕
-                </button>
-              ) : null}
+              <button
+                type="button"
+                title="Edit"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenEdit?.();
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-md bg-white/95 text-xs text-[#374151] shadow"
+              >
+                ✎
+              </button>
               <button
                 type="button"
                 title="Remove"
@@ -772,38 +919,33 @@ function PreviewCard({
                   e.stopPropagation();
                   onRemove?.();
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-sm text-red-600 shadow hover:bg-red-50"
+                className="flex h-7 w-7 items-center justify-center rounded-md bg-white/95 text-xs text-red-600 shadow"
               >
                 🗑
               </button>
             </div>
           </div>
         </div>
-        <div className="space-y-2 border-t border-[#e5e7eb] px-2 py-2">
-          <label className="block">
-            <span className="mb-0.5 block text-[10px] font-semibold text-[#6b7280]">Name</span>
-            <input
-              value={imageName || ""}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => onImageNameChange?.(e.target.value)}
-              placeholder="Image name"
-              className="h-7 w-full rounded border border-[#e5e7eb] px-2 text-[11px]"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-0.5 block text-[10px] font-semibold text-[#6b7280]">Alt</span>
-            <input
-              value={altText || ""}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => onAltTextChange?.(e.target.value)}
-              placeholder="Alt text for SEO"
-              className="h-7 w-full rounded border border-[#e5e7eb] px-2 text-[11px]"
-            />
-          </label>
+
+        <div className="space-y-1.5 border-t border-[#e5e7eb] px-2 py-2">
+          <input
+            value={imageName || ""}
+            onChange={(e) => onImageNameChange?.(e.target.value)}
+            onMouseDown={(e) => e.stopPropagation()}
+            placeholder="Name"
+            className="h-7 w-full rounded border border-[#e5e7eb] px-2 text-xs outline-none focus:border-[#1d6fb8]"
+          />
+          <input
+            value={altText || ""}
+            onChange={(e) => onAltTextChange?.(e.target.value)}
+            onMouseDown={(e) => e.stopPropagation()}
+            placeholder="Alt text"
+            className="h-7 w-full rounded border border-[#e5e7eb] px-2 text-xs outline-none focus:border-[#1d6fb8]"
+          />
           {showControls && originalSize != null && finalSize != null ? (
-            <p className="text-[11px] text-emerald-700">
+            <p className="text-[10px] text-emerald-700">
               {formatBytes(finalSize)} · WebP
-              {saved != null ? ` · saved ${saved}%` : ""}
+              {saved != null ? ` · ${saved}%` : ""}
             </p>
           ) : null}
         </div>
