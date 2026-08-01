@@ -59,6 +59,7 @@ export function HomePage({
   initialHotDeals = null,
   initialHeroSlides = null,
   initialCarCatalog = null,
+  activeProductCount = null,
 }) {
   const ctx = useStoreSettings();
 
@@ -79,7 +80,10 @@ export function HomePage({
       {sectionEnabled("hero") ? (
         <HomeHero settings={homepageSettings} initialSlides={initialHeroSlides} />
       ) : null}
-      <StatsBar settings={{ brandStory, stats: homepageSettings?.stats }} />
+      <StatsBar
+        settings={{ brandStory, stats: homepageSettings?.stats }}
+        activeProductCount={activeProductCount}
+      />
       {sectionEnabled("shopByCar") && homepageSettings.sections?.showShopByCar !== false ? (
         <ShopByCar
           title={homepageSettings.sectionTitles?.shopByCar}
@@ -105,7 +109,7 @@ export function HomePage({
       {sectionEnabled("whyChooseUs") && homepageSettings.sections?.showWhyChooseUs !== false ? (
         <WhyChooseUs settings={homepageSettings} />
       ) : null}
-      <BrandStory story={brandStory} />
+      <BrandStory story={brandStory} activeProductCount={activeProductCount} />
     </div>
   );
 }
