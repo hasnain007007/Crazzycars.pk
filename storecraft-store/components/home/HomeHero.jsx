@@ -129,12 +129,11 @@ function HeroRail({ items }) {
 }
 
 function HeroCopy({ slide, settings, animateKey }) {
-  const { headline, sub, primary, secondary } = resolveCopy(slide, settings);
+  const { sub, primary, secondary } = resolveCopy(slide, settings);
 
   return (
     <div className="home-hero__copy" key={animateKey}>
-      <p className="home-hero__brand">{BRAND}</p>
-      <h1 className="home-hero__title">{headline}</h1>
+      <h1 className="home-hero__brand">{BRAND}</h1>
       {sub ? <p className="home-hero__sub">{sub}</p> : null}
       <div className="home-hero__ctas">
         <CtaLink button={primary} className="home-hero__btn home-hero__btn--primary" />
