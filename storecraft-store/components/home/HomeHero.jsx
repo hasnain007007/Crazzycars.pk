@@ -3,9 +3,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
-import { heroImageUrl, heroImageUrlMobile } from "@/lib/cloudinaryImage";
 import { useStorePayment } from "@/context/StoreSettingsContext";
 import { formatFreeDeliveryThreshold } from "@/lib/freeDelivery";
+import {
+  heroHeightStyle,
+  mapBannerToSlide,
+  normalizeImageDisplay,
+} from "@/lib/heroBanners";
 
 const BRAND = "Crazzycars.pk";
 
@@ -40,8 +44,6 @@ function resolveCopy(slide, settings) {
     ? slide.buttons.filter((b) => String(b?.text || "").trim())
     : [];
 
-  // Designed banner images already include artwork/text — only overlay when
-  // the admin banner has real heading/subheading copy (not buttons alone).
   const hasOverlay = Boolean(rawTitle || rawSub);
   if (!hasOverlay) {
     return { headline: "", sub: "", primary: null, secondary: null, hasOverlay: false };
@@ -143,31 +145,21 @@ function HeroCopy({ slide, settings, animateKey }) {
 }
 
 function mapApiBanner(b) {
-  const raw = String(b?.background?.image?.url || "").trim();
-  return {
-    id: b?._id || b?.id || "hero",
-    title: String(b?.content?.heading?.text || "").trim(),
-    subtitle: String(b?.content?.subheading?.text || "").trim(),
-    imageUrl: raw ? heroImageUrl(raw) : null,
-    imageUrlMobile: raw ? heroImageUrlMobile(raw) : null,
-    targetUrl: String(b?.targetUrl || "").trim(),
-    buttons: (Array.isArray(b?.content?.buttons) ? b.content.buttons : []).map((btn) => ({
-      text: btn?.text || "",
-      url: btn?.url || btn?.link || b?.targetUrl || "/shop",
-      bgColor: btn?.bgColor || "",
-      textColor: btn?.textColor || btn?.color || "",
-      style: btn?.style || "primary",
-    })),
-    backgroundColor: b?.background?.color || "#0b0b0b",
-    textColor: b?.content?.heading?.color || "#FFFFFF",
-    subColor: b?.content?.subheading?.color || "#D1D5DB",
-  };
+  return mapBannerToSlide(b);
+}
+
+function overlayStyle(display) {
+  if (!display?.overlay?.enabled) return null;
+  const color = display.overlay.color || "rgba(0,0,0,0.4)";
+  const opacity = (Number(display.overlay.opacity) || 40) / 100;
+  // If color already includes alpha, still multiply via opacity for admin slider control.
+  return { background: color, opacity };
 }
 
 /**
- * Full-bleed homepage hero. Designed banner art is shown without HTML text overlays
- * unless the banner itself has heading / subheading / buttons in admin.
- * @param {{ settings?: object, initialSlides?: Array }} props
+ * Full-bleed homepage hero. Applies admin Image Display Settings
+ * (height, fit, dark overlay, hover zoom). Text overlays only when
+ * the banner has heading/subheading in admin.
  */
 export default function HomeHero({ settings, initialSlides = null }) {
   const trust = useTrustItems();
@@ -240,25 +232,45 @@ export default function HomeHero({ settings, initialSlides = null }) {
       imageUrl: null,
       imageUrlMobile: null,
       targetUrl: "",
+      imageDisplay: normalizeImageDisplay(null),
     });
 
+  const display = normalizeImageDisplay(slide.imageDisplay);
   const bgImage = slide.imageUrl;
   const bgImageMobile = slide.imageUrlMobile || bgImage;
   const multi = slides.length > 1;
-  const { hasOverlay } = resolveCopy(slide, settings);
+  const { hasOverlay: hasTextOverlay } = resolveCopy(slide, settings);
   const firstBtnUrl = Array.isArray(slide.buttons)
     ? slide.buttons.find((b) => String(b?.url || b?.link || "").trim())
     : null;
   const linkHref = normalizeButtonUrl(
     slide.targetUrl || firstBtnUrl?.url || firstBtnUrl?.link || "/shop"
   );
-  const imageOnly = Boolean(bgImage) && !hasOverlay;
+  const imageOnly = Boolean(bgImage) && !hasTextOverlay;
+  const darkOverlay = overlayStyle(display);
+  const heightCss = heroHeightStyle(display.height);
+
+  const sectionClass = [
+    "home-hero",
+    !bgImage ? "home-hero--fallback" : "",
+    imageOnly ? "home-hero--image-only" : "",
+    `home-hero--h-${display.height}`,
+    `home-hero--fit-${display.objectFit}`,
+    display.hoverZoom ? "home-hero--hover-zoom" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <>
       <section
-        className={`home-hero${!bgImage ? " home-hero--fallback" : ""}${imageOnly ? " home-hero--image-only" : ""}`}
-        style={{ background: slide.backgroundColor || "#0b0b0b" }}
+        className={sectionClass}
+        style={{
+          background: slide.backgroundColor || "#0b0b0b",
+          ...heightCss,
+          ["--hero-object-fit"]: display.objectFit,
+          ["--hero-object-position"]: display.objectPosition,
+        }}
         aria-roledescription={multi ? "carousel" : undefined}
         aria-label="Featured"
         onMouseEnter={() => setPaused(true)}
@@ -287,7 +299,11 @@ export default function HomeHero({ settings, initialSlides = null }) {
         ) : (
           <div className="home-hero__media home-hero__media--gradient" aria-hidden />
         )}
-        {!imageOnly ? <div className="home-hero__veil" aria-hidden /> : null}
+
+        {darkOverlay ? (
+          <div className="home-hero__veil home-hero__veil--admin" style={darkOverlay} aria-hidden />
+        ) : null}
+
         {imageOnly ? (
           <Link href={linkHref} className="home-hero__hit" aria-label={`Shop at ${BRAND}`}>
             <span className="sr-only">{BRAND}</span>

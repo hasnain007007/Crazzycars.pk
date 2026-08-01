@@ -7,6 +7,63 @@ function isActiveStatus(status) {
   return s === "active" || s === "published";
 }
 
+/** Map admin objectPosition to CSS object-position. */
+export function cssObjectPosition(pos) {
+  if (!pos) return "center center";
+  const s = String(pos).trim();
+  if (s.includes(" ")) return s;
+  const map = {
+    center: "center center",
+    top: "top center",
+    bottom: "bottom center",
+    left: "center left",
+    right: "center right",
+  };
+  return map[s] || s;
+}
+
+/** Normalize admin imageDisplay for the storefront hero. */
+export function normalizeImageDisplay(raw) {
+  const d = raw && typeof raw === "object" ? raw : {};
+  const height = ["small", "medium", "large", "full", "auto"].includes(d.height)
+    ? d.height
+    : "large";
+  const objectFit = ["cover", "contain", "fill", "none", "scale-down"].includes(d.objectFit)
+    ? d.objectFit
+    : "cover";
+  const overlay = d.overlay && typeof d.overlay === "object" ? d.overlay : {};
+  const opacityPct = Number(overlay.opacity);
+  return {
+    height,
+    objectFit,
+    objectPosition: cssObjectPosition(d.objectPosition || "center"),
+    hoverZoom: Boolean(d.hoverZoom),
+    overlay: {
+      enabled: Boolean(overlay.enabled),
+      color: String(overlay.color || "rgba(0,0,0,0.4)"),
+      opacity: Number.isFinite(opacityPct) ? Math.min(100, Math.max(0, opacityPct)) : 40,
+    },
+  };
+}
+
+/** Section height styles matching admin Banner Height cards. */
+export function heroHeightStyle(height) {
+  switch (height) {
+    case "small":
+      return { height: "300px", minHeight: "300px" };
+    case "medium":
+      return { height: "450px", minHeight: "450px" };
+    case "large":
+      return { height: "600px", minHeight: "600px" };
+    case "full":
+      return { height: "100vh", minHeight: "100vh" };
+    case "auto":
+      return { height: "auto", minHeight: 0 };
+    default:
+      return { height: "600px", minHeight: "600px" };
+  }
+}
+
 /** Map DB/API banner → homepage slide (optimized image URL). */
 export function mapBannerToSlide(banner) {
   const rawUrl = String(banner?.background?.image?.url || "").trim() || null;
@@ -38,6 +95,7 @@ export function mapBannerToSlide(banner) {
     backgroundColor: banner?.background?.color || "#0b0b0b",
     textColor: banner?.content?.heading?.color || "#FFFFFF",
     subColor: banner?.content?.subheading?.color || "#D1D5DB",
+    imageDisplay: normalizeImageDisplay(banner?.imageDisplay),
   };
 }
 
