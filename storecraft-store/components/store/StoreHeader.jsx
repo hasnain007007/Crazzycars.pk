@@ -517,7 +517,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
   };
 
   return (
-    <header className={`sticky top-0 z-[7000]${mobileSearchOpen && isMdUp !== true ? " store-header--mobile-search-open" : ""}`}>
+    <header className={`store-site-header${mobileSearchOpen && isMdUp !== true ? " store-header--mobile-search-open" : ""}`}>
       {cartToast ? (
         <div
           role="status"

@@ -1568,6 +1568,19 @@ textarea::placeholder {
   }
 }
 
+/*
+ * Sticky site header must stay above homepage sections while scrolling.
+ * Do not rely on Tailwind z-[7000] — that utility is not always emitted in the CSS bundle,
+ * which left z-index:auto and let Filter By Car / vehicle cards paint over the header.
+ */
+.store-site-header {
+  position: sticky;
+  top: 0;
+  z-index: 7000;
+  background: #ffffff;
+  isolation: isolate;
+}
+
 /* Hide sticky chrome under the fixed search sheet so icons don't peek through */
 .store-header--mobile-search-open {
   visibility: hidden;
