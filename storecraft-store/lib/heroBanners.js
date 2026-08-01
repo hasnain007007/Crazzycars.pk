@@ -33,6 +33,7 @@ export function mapBannerToSlide(banner) {
     imageUrl,
     imageUrlMobile,
     imageUrlRaw: rawUrl,
+    targetUrl: String(banner?.targetUrl || "").trim(),
     buttons,
     backgroundColor: banner?.background?.color || "#0b0b0b",
     textColor: banner?.content?.heading?.color || "#FFFFFF",

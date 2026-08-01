@@ -29,56 +29,43 @@ function normalizeButtonUrl(url) {
 }
 
 /**
- * Brand-first copy: brand stays the hero signal; slide title becomes the benefit line
- * when it is a welcome/brand phrase (common admin banner default).
+ * Only use admin banner text when the slide actually has copy.
+ * Designed banner images already include headings — do not overlay extras.
  */
 function resolveCopy(slide, settings) {
   const hp = settings || DEFAULT_HOMEPAGE_SETTINGS;
-  const rawTitle = String(slide?.title || hp.heroHeadline || "").trim();
+  const rawTitle = String(slide?.title || "").trim();
   const rawSub = String(slide?.subtitle || "").trim();
-  const titleLower = rawTitle.toLowerCase();
-  const isBrandish =
-    !rawTitle ||
-    /crazzy\s*cars/i.test(rawTitle) ||
-    /^welcome\b/i.test(rawTitle) ||
-    titleLower === "shop now";
-  const weakSub = !rawSub || rawSub.length < 18;
-
-  let headline;
-  let sub;
-  if (isBrandish) {
-    headline = weakSub
-      ? hp.heroHeadline || "Premium car accessories for every ride"
-      : rawSub;
-    sub =
-      hp.heroSubtext ||
-      "Exterior, interior, lighting — built for Pakistani cars.";
-  } else {
-    headline = rawTitle;
-    sub = weakSub
-      ? hp.heroSubtext || "Exterior, interior, lighting — built for Pakistani cars."
-      : rawSub;
-  }
-
   const buttons = Array.isArray(slide?.buttons)
     ? slide.buttons.filter((b) => String(b?.text || "").trim())
     : [];
-  const primary =
-    buttons[0] ||
-    {
+
+  // Designed banner images already include artwork/text — only overlay when
+  // the admin banner has real heading/subheading copy (not buttons alone).
+  const hasOverlay = Boolean(rawTitle || rawSub);
+  if (!hasOverlay) {
+    return { headline: "", sub: "", primary: null, secondary: null, hasOverlay: false };
+  }
+
+  return {
+    headline: rawTitle,
+    sub: rawSub,
+    primary: buttons[0] || {
       text: hp.heroCtaText || "Shop Now",
       url: hp.heroCtaUrl || "/shop",
       style: "primary",
       bgColor: "#C41E1E",
-    };
-  const secondary = buttons.find((b, i) => i > 0 && String(b.style || "").toLowerCase() !== "primary") || buttons[1] || null;
-
-  return { headline, sub, primary, secondary };
+    },
+    secondary:
+      buttons.find((b, i) => i > 0 && String(b.style || "").toLowerCase() !== "primary") ||
+      buttons[1] ||
+      null,
+    hasOverlay: true,
+  };
 }
 
 function primaryButtonColors(button) {
   const raw = String(button?.bgColor || "").trim().toLowerCase();
-  // Dark/black admin colors disappear on a dark hero — force brand red.
   const unusable =
     !raw ||
     raw === "#000" ||
@@ -129,22 +116,28 @@ function HeroRail({ items }) {
 }
 
 function HeroCopy({ slide, settings, animateKey }) {
-  const { sub, primary, secondary } = resolveCopy(slide, settings);
+  const { headline, sub, primary, secondary, hasOverlay } = resolveCopy(slide, settings);
+
+  if (!hasOverlay) {
+    return (
+      <h1 className="sr-only" key={animateKey}>
+        {BRAND}
+      </h1>
+    );
+  }
 
   return (
     <div className="home-hero__copy" key={animateKey}>
-      <h1 className="home-hero__brand">{BRAND}</h1>
+      {headline ? <h1 className="home-hero__title">{headline}</h1> : <h1 className="sr-only">{BRAND}</h1>}
       {sub ? <p className="home-hero__sub">{sub}</p> : null}
-      <div className="home-hero__ctas">
-        <CtaLink button={primary} className="home-hero__btn home-hero__btn--primary" />
-        {secondary ? (
-          <CtaLink button={secondary} className="home-hero__btn home-hero__btn--ghost" />
-        ) : (
-          <Link href="/categories" className="home-hero__btn home-hero__btn--ghost">
-            Shop by category
-          </Link>
-        )}
-      </div>
+      {primary ? (
+        <div className="home-hero__ctas">
+          <CtaLink button={primary} className="home-hero__btn home-hero__btn--primary" />
+          {secondary ? (
+            <CtaLink button={secondary} className="home-hero__btn home-hero__btn--ghost" />
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -157,6 +150,7 @@ function mapApiBanner(b) {
     subtitle: String(b?.content?.subheading?.text || "").trim(),
     imageUrl: raw ? heroImageUrl(raw) : null,
     imageUrlMobile: raw ? heroImageUrlMobile(raw) : null,
+    targetUrl: String(b?.targetUrl || "").trim(),
     buttons: (Array.isArray(b?.content?.buttons) ? b.content.buttons : []).map((btn) => ({
       text: btn?.text || "",
       url: btn?.url || btn?.link || b?.targetUrl || "/shop",
@@ -171,7 +165,8 @@ function mapApiBanner(b) {
 }
 
 /**
- * Full-bleed homepage hero — brand-first, one CTA composition (ecommerce standard).
+ * Full-bleed homepage hero. Designed banner art is shown without HTML text overlays
+ * unless the banner itself has heading / subheading / buttons in admin.
  * @param {{ settings?: object, initialSlides?: Array }} props
  */
 export default function HomeHero({ settings, initialSlides = null }) {
@@ -238,29 +233,31 @@ export default function HomeHero({ settings, initialSlides = null }) {
     slides[index] ||
     ({
       id: "fallback",
-      title: settings?.heroHeadline || DEFAULT_HOMEPAGE_SETTINGS.heroHeadline,
-      subtitle: settings?.heroSubtext || DEFAULT_HOMEPAGE_SETTINGS.heroSubtext,
-      buttons: [
-        {
-          text: settings?.heroCtaText || DEFAULT_HOMEPAGE_SETTINGS.heroCtaText,
-          url: settings?.heroCtaUrl || DEFAULT_HOMEPAGE_SETTINGS.heroCtaUrl,
-          style: "primary",
-          bgColor: "#C41E1E",
-        },
-      ],
+      title: "",
+      subtitle: "",
+      buttons: [],
       backgroundColor: "#0b0b0b",
       imageUrl: null,
       imageUrlMobile: null,
+      targetUrl: "",
     });
 
   const bgImage = slide.imageUrl;
   const bgImageMobile = slide.imageUrlMobile || bgImage;
   const multi = slides.length > 1;
+  const { hasOverlay } = resolveCopy(slide, settings);
+  const firstBtnUrl = Array.isArray(slide.buttons)
+    ? slide.buttons.find((b) => String(b?.url || b?.link || "").trim())
+    : null;
+  const linkHref = normalizeButtonUrl(
+    slide.targetUrl || firstBtnUrl?.url || firstBtnUrl?.link || "/shop"
+  );
+  const imageOnly = Boolean(bgImage) && !hasOverlay;
 
   return (
     <>
       <section
-        className={`home-hero${!bgImage ? " home-hero--fallback" : ""}`}
+        className={`home-hero${!bgImage ? " home-hero--fallback" : ""}${imageOnly ? " home-hero--image-only" : ""}`}
         style={{ background: slide.backgroundColor || "#0b0b0b" }}
         aria-roledescription={multi ? "carousel" : undefined}
         aria-label="Featured"
@@ -290,10 +287,16 @@ export default function HomeHero({ settings, initialSlides = null }) {
         ) : (
           <div className="home-hero__media home-hero__media--gradient" aria-hidden />
         )}
-        <div className="home-hero__veil" aria-hidden />
-        <div className="home-hero__inner">
-          <HeroCopy slide={slide} settings={settings} animateKey={slide.id || index} />
-        </div>
+        {!imageOnly ? <div className="home-hero__veil" aria-hidden /> : null}
+        {imageOnly ? (
+          <Link href={linkHref} className="home-hero__hit" aria-label={`Shop at ${BRAND}`}>
+            <span className="sr-only">{BRAND}</span>
+          </Link>
+        ) : (
+          <div className="home-hero__inner">
+            <HeroCopy slide={slide} settings={settings} animateKey={slide.id || index} />
+          </div>
+        )}
 
         {multi ? (
           <>

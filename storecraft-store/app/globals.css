@@ -1661,6 +1661,20 @@ textarea::placeholder {
     linear-gradient(0deg, rgba(0, 0, 0, 0.45) 0%, transparent 38%);
 }
 
+/* Designed banner art — no dark veil / HTML text on top of the image */
+.home-hero--image-only .home-hero__veil {
+  display: none;
+}
+
+.home-hero__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  text-indent: -9999px;
+  overflow: hidden;
+}
+
 .home-hero__inner {
   position: absolute;
   inset: 0;
