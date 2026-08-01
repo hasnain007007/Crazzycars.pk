@@ -1,8 +1,12 @@
+# syntax=docker/dockerfile:1.7
 # VPS / Coolify image for storecraft-admin (Next.js standalone)
+# BuildKit cache mounts keep npm + Next.js caches between deploys (much faster rebuilds).
+
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
@@ -25,7 +29,9 @@ ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME \
 # Some routes may touch DB during `next build` page collection
 ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache \
+    --mount=type=cache,target=/root/.npm \
+    npm run build
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
