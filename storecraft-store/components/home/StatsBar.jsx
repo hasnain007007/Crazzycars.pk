@@ -1,5 +1,5 @@
 /**
- * Stats strip — value + label on one horizontal line.
+ * Stats strip — value + label on one horizontal line (stays horizontal on mobile).
  */
 import { resolveHomepageStats } from "@/lib/homepageStats";
 
@@ -18,36 +18,20 @@ export default function StatsBar({ settings, activeProductCount = null }) {
 
   const gridClass =
     stats.length <= 3
-      ? "grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-0"
-      : "grid grid-cols-2 md:grid-cols-4";
+      ? "home-stats-grid home-stats-grid--3"
+      : "home-stats-grid home-stats-grid--4";
 
   return (
-    <section style={{ background: "#111111" }}>
-      <div className="store-container py-5">
+    <section className="home-stats" aria-label="Store stats">
+      <div className="store-container home-stats__inner">
         <div className={gridClass}>
           {stats.map((item, i) => (
             <div
               key={`${item.label}-${i}`}
-              className="flex min-h-[52px] items-center justify-center gap-2.5 px-3 sm:min-h-[60px]"
-              style={{
-                borderRight:
-                  i < stats.length - 1 ? "1px solid rgba(255,255,255,0.08)" : "none",
-                borderBottom:
-                  stats.length > 3 && i < 2 ? "1px solid rgba(255,255,255,0.08)" : "none",
-              }}
+              className={`home-stats__item${i < stats.length - 1 ? " home-stats__item--divider" : ""}`}
             >
-              <span
-                className="font-heading shrink-0 text-[22px] font-bold leading-none md:text-[28px]"
-                style={{ color: "#C41E1E" }}
-              >
-                {item.value}
-              </span>
-              <span
-                className="text-left text-[12px] leading-snug md:text-[13px]"
-                style={{ color: "#9CA3AF" }}
-              >
-                {item.label}
-              </span>
+              <span className="home-stats__value">{item.value}</span>
+              <span className="home-stats__label">{item.label}</span>
             </div>
           ))}
         </div>
