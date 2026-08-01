@@ -9,7 +9,7 @@ import {
   heroHeightStyle,
   mapBannerToSlide,
   normalizeImageDisplay,
-} from "@/lib/heroBanners";
+} from "@/lib/heroBannerDisplay";
 
 const BRAND = "Crazzycars.pk";
 
