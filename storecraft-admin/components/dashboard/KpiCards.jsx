@@ -1,10 +1,12 @@
 /**
- * Hero KPI row — Today's Sales, Monthly Revenue, Net Profit (reference layout).
+ * Hero KPI grid — sales, orders, visitors, period totals, profit.
  */
 import { formatAdminPrice } from "@/lib/currency";
 
 const GREEN = "#1A7A4C";
 const ORANGE = "#E8913A";
+const BLUE = "#1d6fb8";
+const PURPLE = "#6d28d9";
 
 function GrowthBadge({ value }) {
   const n = Number(value) || 0;
@@ -41,17 +43,39 @@ function HeroCard({ label, value, badge, hint, accent }) {
   );
 }
 
+function formatCount(n) {
+  const v = Number(n) || 0;
+  return v.toLocaleString("en-PK");
+}
+
 export function KpiCards({ data }) {
   const d = data || {};
   const margin = Number(d.profitMargin) || 0;
+  const rangeLabel = d.range?.label || "period";
+  const pending = Number(d.pendingOrders) || 0;
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       <HeroCard
         label="Today's Sales"
         value={formatAdminPrice(d.todaySales)}
         badge={d.todaySalesGrowth}
-        hint={`${d.todayOrders ?? 0} orders today`}
+        hint="Paid revenue today (PKT)"
         accent={GREEN}
+      />
+      <HeroCard
+        label="Today's Orders"
+        value={formatCount(d.todayOrders)}
+        badge={d.todayOrdersGrowth}
+        hint={`${formatAdminPrice(d.todayOrderValue)} order value · ${pending} pending`}
+        accent={BLUE}
+      />
+      <HeroCard
+        label="Today's Visitors"
+        value={formatCount(d.todayVisitors)}
+        badge={d.todayVisitorsGrowth}
+        hint={`Unique sessions today · vs ${formatCount(d.yesterdayVisitors)} yesterday`}
+        accent={PURPLE}
       />
       <HeroCard
         label="Monthly Revenue"
@@ -61,10 +85,16 @@ export function KpiCards({ data }) {
         accent={GREEN}
       />
       <HeroCard
+        label="Period Orders"
+        value={formatCount(d.periodOrders)}
+        hint={`${formatAdminPrice(d.periodSales)} paid sales · ${rangeLabel}`}
+        accent={BLUE}
+      />
+      <HeroCard
         label="Net Profit"
         value={formatAdminPrice(d.totalProfit)}
         badge={d.profitGrowth ?? d.monthlyGrowth}
-        hint={`${margin}% margin · period`}
+        hint={`${margin}% margin · ${rangeLabel}`}
         accent={ORANGE}
       />
     </div>

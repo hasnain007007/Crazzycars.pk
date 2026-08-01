@@ -14,6 +14,7 @@ import "./models/Category.model";
 import "./models/Coupon.model";
 import "./models/Customer.model";
 import "./models/FeaturedMedia.model";
+import "./models/DailyVisitor.model";
 import "./models/LivePresence.model";
 import "./models/LoginAttempt.model";
 import "./models/Order.model";

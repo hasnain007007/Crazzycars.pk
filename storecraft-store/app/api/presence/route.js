@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
+import DailyVisitor from "@/lib/models/DailyVisitor.model";
 import LivePresence from "@/lib/models/LivePresence.model";
+import { karachiDayKey } from "@/lib/karachiDay";
 import { geoFromRequest } from "@/lib/presenceGeo";
 
 const SESSION_RE = /^[a-zA-Z0-9_-]{8,80}$/;
@@ -19,6 +21,7 @@ export async function POST(request) {
     const ua = String(request.headers.get("user-agent") || "").slice(0, 300);
     const now = new Date();
     const geo = geoFromRequest(request);
+    const dayKey = karachiDayKey(now);
 
     const $set = {
       sessionId,
@@ -33,13 +36,18 @@ export async function POST(request) {
     if (geo.country) $set.country = geo.country.slice(0, 80);
 
     await dbConnect();
-    // returnDocument: 'after' is the non-deprecated equivalent of new: true
-    // (return value unused today — response is always { success, ok }).
-    await LivePresence.findOneAndUpdate(
-      { sessionId },
-      { $set },
-      { upsert: true, returnDocument: "after" }
-    );
+    await Promise.all([
+      LivePresence.findOneAndUpdate({ sessionId }, { $set }, { upsert: true, returnDocument: "after" }),
+      DailyVisitor.findOneAndUpdate(
+        { dayKey, sessionId },
+        {
+          $set: { lastSeen: now, path },
+          $setOnInsert: { dayKey, sessionId, firstSeen: now },
+          $inc: { hits: 1 },
+        },
+        { upsert: true }
+      ),
+    ]);
 
     return NextResponse.json({ success: true, ok: true });
   } catch (e) {
