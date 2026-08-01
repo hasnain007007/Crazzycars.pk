@@ -7,8 +7,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { ProductsTable } from "@/components/products/ProductsTable";
-import { ProductBulkAddOnsModal } from "@/components/products/ProductBulkAddOnsModal";
-import { ProductBulkSpreadsheet } from "@/components/products/ProductBulkSpreadsheet";
 import { CsvImportExportBar } from "@/components/ui/CsvImportExportBar";
 
 function EmptyIllustration() {
@@ -36,9 +34,6 @@ export default function ProductsPage() {
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [bulkDeleting, setBulkDeleting] = useState(false);
-  const [bulkAddOnsOpen, setBulkAddOnsOpen] = useState(false);
-  const [bulkSpreadsheetOpen, setBulkSpreadsheetOpen] = useState(false);
-  const [selectingAll, setSelectingAll] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 400);
@@ -64,7 +59,7 @@ export default function ProductsPage() {
   const fetchList = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), limit: "50" });
+      const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (status) params.set("status", status);
       if (category) params.set("category", category);
@@ -96,38 +91,6 @@ export default function ProductsPage() {
   }, [page, debouncedSearch, status, category]);
 
   const hasSelection = selectedIds.size > 0;
-  const pageAllSelected =
-    rows.length > 0 && rows.every((r) => selectedIds.has(String(r._id)));
-  const canSelectAllMatching = total > 0 && (!pageAllSelected || selectedIds.size < total);
-
-  const selectAllMatching = async () => {
-    setSelectingAll(true);
-    try {
-      const params = new URLSearchParams({ page: "1", limit: "200", lite: "1", stats: "0" });
-      if (debouncedSearch) params.set("search", debouncedSearch);
-      if (status) params.set("status", status);
-      if (category) params.set("category", category);
-      const res = await fetch(`/api/products?${params}`, { credentials: "include" });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || "Failed to select all");
-      const ids = (json.data || []).map((r) => String(r._id));
-      if (!ids.length) {
-        toast.error("No products to select");
-        return;
-      }
-      setSelectedIds(new Set(ids));
-      const capped = (json.total ?? ids.length) > ids.length;
-      toast.success(
-        capped
-          ? `Selected first ${ids.length} of ${json.total} matching (bulk max 200)`
-          : `Selected all ${ids.length} matching product(s)`
-      );
-    } catch (e) {
-      toast.error(e.message || "Select all failed");
-    } finally {
-      setSelectingAll(false);
-    }
-  };
 
   const confirmDeleteOne = async () => {
     if (!deleteTarget) return;
@@ -191,7 +154,6 @@ export default function ProductsPage() {
         </Link>
       </div>
 
-      {/* Permanent CSV toolbar — always visible, not tied to selection or filters */}
       <div className="rounded-xl border border-[#dbeafe] bg-[#f8fbff] px-4 py-3 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -249,63 +211,17 @@ export default function ProductsPage() {
         </p>
       </div>
 
-      {canSelectAllMatching && !hasSelection ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#dbeafe] bg-[#eff6ff] px-4 py-3">
-          <p className="text-sm text-[#1e3a8a]">
-            Tip: check products on this page, or select all matching results (up to 200).
-          </p>
+      {hasSelection ? (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm font-medium text-red-900">{selectedIds.size} selected</p>
           <button
             type="button"
-            disabled={selectingAll || loading}
-            onClick={selectAllMatching}
-            className="rounded-lg border border-[#1d6fb8] bg-white px-4 py-2 text-sm font-medium text-[#1d6fb8] hover:bg-white/80 disabled:opacity-60"
+            disabled={bulkDeleting}
+            onClick={bulkDelete}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
           >
-            {selectingAll ? "Selecting…" : `Select all ${Math.min(total, 200)} matching`}
+            {bulkDeleting ? "Deleting…" : "Delete Selected"}
           </button>
-        </div>
-      ) : null}
-
-      {hasSelection ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-sm font-medium text-red-900">{selectedIds.size} selected</p>
-            {total > selectedIds.size ? (
-              <button
-                type="button"
-                disabled={selectingAll || bulkDeleting}
-                onClick={selectAllMatching}
-                className="text-sm font-medium text-[#1d6fb8] hover:underline disabled:opacity-60"
-              >
-                {selectingAll ? "Selecting…" : `Select all ${Math.min(total, 200)} matching`}
-              </button>
-            ) : null}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={bulkDeleting}
-              onClick={() => setBulkSpreadsheetOpen(true)}
-              className="rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-medium text-white hover:bg-[#185f9e] disabled:opacity-60"
-            >
-              Bulk edit
-            </button>
-            <button
-              type="button"
-              disabled={bulkDeleting}
-              onClick={() => setBulkAddOnsOpen(true)}
-              className="rounded-lg border border-[#1d6fb8] bg-white px-4 py-2 text-sm font-medium text-[#1d6fb8] hover:bg-[#eff6ff] disabled:opacity-60"
-            >
-              Quick add-ons
-            </button>
-            <button
-              type="button"
-              disabled={bulkDeleting}
-              onClick={bulkDelete}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
-            >
-              {bulkDeleting ? "Deleting…" : "Delete Selected"}
-            </button>
-          </div>
         </div>
       ) : null}
 
@@ -333,15 +249,7 @@ export default function ProductsPage() {
       )}
 
       {totalPages > 1 ? (
-        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-[#e5e7eb] pt-4">
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => setPage(1)}
-            className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:opacity-40"
-          >
-            First
-          </button>
+        <div className="flex justify-center gap-2 border-t border-[#e5e7eb] pt-4">
           <button
             type="button"
             disabled={page <= 1}
@@ -350,66 +258,15 @@ export default function ProductsPage() {
           >
             Previous
           </button>
-
-          <div className="flex flex-wrap items-center justify-center gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setPage(n)}
-                aria-current={page === n ? "page" : undefined}
-                className={[
-                  "min-w-9 rounded-lg border px-3 py-2 text-sm font-medium",
-                  page === n
-                    ? "border-[#1d6fb8] bg-[#1d6fb8] text-white"
-                    : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]",
-                ].join(" ")}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-
           <button
             type="button"
             disabled={page >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => setPage((p) => p + 1)}
             className="rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:opacity-40"
           >
             Next
           </button>
-          <button
-            type="button"
-            disabled={page >= totalPages}
-            onClick={() => setPage(totalPages)}
-            className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:opacity-40"
-          >
-            Last
-          </button>
         </div>
-      ) : null}
-
-      {bulkAddOnsOpen ? (
-        <ProductBulkAddOnsModal
-          selectedCount={selectedIds.size}
-          selectedIds={[...selectedIds]}
-          onClose={() => setBulkAddOnsOpen(false)}
-          onSaved={() => {
-            setSelectedIds(new Set());
-            fetchList();
-          }}
-        />
-      ) : null}
-
-      {bulkSpreadsheetOpen ? (
-        <ProductBulkSpreadsheet
-          selectedIds={[...selectedIds]}
-          onClose={() => setBulkSpreadsheetOpen(false)}
-          onSaved={() => {
-            setSelectedIds(new Set());
-            fetchList();
-          }}
-        />
       ) : null}
 
       {deleteTarget ? (
