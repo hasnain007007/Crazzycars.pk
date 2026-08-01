@@ -776,6 +776,7 @@ function PaymentInformationSection({ order, orderId, onRefunded }) {
 export function OrderDetail({ orderId }) {
   const router = useRouter();
   const [order, setOrder] = useState(null);
+  const [neighbors, setNeighbors] = useState({ prev: null, next: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [trackingCarrier, setTrackingCarrier] = useState("Postex");
@@ -816,9 +817,14 @@ export function OrderDetail({ orderId }) {
       if (!res.ok || !json.success) {
         setError(json.error || "Could not load order.");
         setOrder(null);
+        setNeighbors({ prev: null, next: null });
         return;
       }
       setOrder(json.order);
+      setNeighbors({
+        prev: json.neighbors?.prev || null,
+        next: json.neighbors?.next || null,
+      });
       setTrackingCarrier(json.order?.courier || json.order?.tracking?.carrier || "Postex");
       setTrackingNumber(json.order?.trackingNumber || json.order?.tracking?.number || "");
       setTrackingUrl(json.order?.trackingUrl || json.order?.tracking?.url || "");
@@ -829,6 +835,7 @@ export function OrderDetail({ orderId }) {
     } catch {
       setError("Network error.");
       setOrder(null);
+      setNeighbors({ prev: null, next: null });
     } finally {
       setLoading(false);
     }
@@ -837,6 +844,26 @@ export function OrderDetail({ orderId }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Shopify-style ↑ / ↓ keyboard navigation between orders
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = String(e.target?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || e.target?.isContentEditable) {
+        return;
+      }
+      if ((e.key === "ArrowUp" || e.key === "k") && neighbors.prev?.id) {
+        e.preventDefault();
+        router.push(`/orders/${neighbors.prev.id}`);
+      } else if ((e.key === "ArrowDown" || e.key === "j") && neighbors.next?.id) {
+        e.preventDefault();
+        router.push(`/orders/${neighbors.next.id}`);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [neighbors, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1499,36 +1526,84 @@ export function OrderDetail({ orderId }) {
           }}
           className="dark:border-slate-700"
         >
-          <div>
-            <h1
-              style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: "#111827",
-                margin: "0 0 4px",
-              }}
-              className="dark:text-white"
-            >
-              Order #{order.orderNumber}
-            </h1>
-            {order.invoiceId || order.invoiceNumber ? (
-              <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 4px" }} className="dark:text-slate-400">
-                From invoice{" "}
-                {order.invoiceId ? (
-                  <Link
-                    href={`/invoices/${order.invoiceId}`}
-                    className="font-semibold text-[#1d6fb8] hover:underline"
-                  >
-                    {order.invoiceNumber || "View"}
-                  </Link>
-                ) : (
-                  <span className="font-semibold">{order.invoiceNumber}</span>
-                )}
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <div className="min-w-0">
+              <h1
+                style={{
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: "#111827",
+                  margin: "0 0 4px",
+                }}
+                className="dark:text-white"
+              >
+                Order #{order.orderNumber}
+              </h1>
+              {order.invoiceId || order.invoiceNumber ? (
+                <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 4px" }} className="dark:text-slate-400">
+                  From invoice{" "}
+                  {order.invoiceId ? (
+                    <Link
+                      href={`/invoices/${order.invoiceId}`}
+                      className="font-semibold text-[#1d6fb8] hover:underline"
+                    >
+                      {order.invoiceNumber || "View"}
+                    </Link>
+                  ) : (
+                    <span className="font-semibold">{order.invoiceNumber}</span>
+                  )}
+                </p>
+              ) : null}
+              <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }} className="dark:text-slate-400">
+                {placedAt}
               </p>
-            ) : null}
-            <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }} className="dark:text-slate-400">
-              {placedAt}
-            </p>
+            </div>
+            <div
+              className="mt-0.5 inline-flex shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-600 dark:bg-slate-800"
+              role="group"
+              aria-label="Go to previous or next order"
+            >
+              <button
+                type="button"
+                disabled={!neighbors.prev?.id}
+                title={
+                  neighbors.prev?.orderNumber
+                    ? `Previous order (${neighbors.prev.orderNumber})`
+                    : "No newer order"
+                }
+                aria-label="Previous order"
+                onClick={() => neighbors.prev?.id && router.push(`/orders/${neighbors.prev.id}`)}
+                className="flex h-9 w-9 items-center justify-center border-r border-slate-200 text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path
+                    fillRule="evenodd"
+                    d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+              <button
+                type="button"
+                disabled={!neighbors.next?.id}
+                title={
+                  neighbors.next?.orderNumber
+                    ? `Next order (${neighbors.next.orderNumber})`
+                    : "No older order"
+                }
+                aria-label="Next order"
+                onClick={() => neighbors.next?.id && router.push(`/orders/${neighbors.next.id}`)}
+                className="flex h-9 w-9 items-center justify-center text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button

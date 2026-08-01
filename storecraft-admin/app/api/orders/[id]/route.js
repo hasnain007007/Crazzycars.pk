@@ -27,6 +27,8 @@ function serializeOrder(doc) {
   return {
     id: o._id.toString(),
     orderNumber: o.orderNumber,
+    invoiceId: o.invoiceId ? String(o.invoiceId) : null,
+    invoiceNumber: o.invoiceNumber || "",
     createdAt: o.createdAt,
     updatedAt: o.updatedAt,
     customer: {
@@ -117,6 +119,40 @@ function serializeOrder(doc) {
   };
 }
 
+/** Newest-first list neighbors (Shopify-style ↑ newer / ↓ older). */
+async function findOrderNeighbors(doc) {
+  const createdAt = doc.createdAt || new Date(0);
+  const id = doc._id;
+  const [newer, older] = await Promise.all([
+    Order.findOne({
+      $or: [
+        { createdAt: { $gt: createdAt } },
+        { createdAt, _id: { $gt: id } },
+      ],
+    })
+      .sort({ createdAt: 1, _id: 1 })
+      .select("_id orderNumber")
+      .lean(),
+    Order.findOne({
+      $or: [
+        { createdAt: { $lt: createdAt } },
+        { createdAt, _id: { $lt: id } },
+      ],
+    })
+      .sort({ createdAt: -1, _id: -1 })
+      .select("_id orderNumber")
+      .lean(),
+  ]);
+  return {
+    prev: newer
+      ? { id: String(newer._id), orderNumber: newer.orderNumber || "" }
+      : null,
+    next: older
+      ? { id: String(older._id), orderNumber: older.orderNumber || "" }
+      : null,
+  };
+}
+
 export async function GET(request, context) {
   try {
     if (!getRequestUser(request)) {
@@ -131,7 +167,8 @@ export async function GET(request, context) {
     if (!doc) {
       return NextResponse.json({ success: false, error: "Not found." }, { status: 404 });
     }
-    return NextResponse.json({ success: true, order: serializeOrder(doc) });
+    const neighbors = await findOrderNeighbors(doc);
+    return NextResponse.json({ success: true, order: serializeOrder(doc), neighbors });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to load order." },
