@@ -58,7 +58,43 @@ export function normalizeVehicleCompatibility(raw) {
   };
 }
 
-/** Map stored product → editor form (supports legacy isUniversal / compatibleCars / Vehicle refs). */
+function vehiclesFromLinkedRefs(product) {
+  const linked = Array.isArray(product?.compatibleVehicles)
+    ? product.compatibleVehicles.filter((v) => v && typeof v === "object" && (v.make || v.model))
+    : [];
+  return linked.map((v) =>
+    normalizeVehicleRow({
+      make: v.make,
+      model: v.model,
+      yearFrom: v.yearFrom,
+      yearTo: v.yearTo ?? CURRENT_YEAR,
+      bodyStyle: v.bodyType || "All",
+      notes: v.displayName || v.generation || "",
+    })
+  );
+}
+
+function vehiclesFromLegacyCars(product) {
+  const legacy = Array.isArray(product?.compatibleCars) ? product.compatibleCars : [];
+  return legacy
+    .filter((c) => c && (c.make || c.model))
+    .map((c) =>
+      normalizeVehicleRow({
+        make: c.make,
+        model: c.model,
+        yearFrom: c.yearFrom,
+        yearTo: c.yearTo ?? CURRENT_YEAR,
+        bodyStyle: "All",
+        notes: c.generation || "",
+      })
+    );
+}
+
+/**
+ * Map stored product → editor form (supports legacy isUniversal / compatibleCars / Vehicle refs).
+ * Prefer embedded vehicleCompatibility.vehicles; fall back to populated compatibleVehicles /
+ * compatibleCars when the embedded list is empty (common for CSV/seed imports).
+ */
 export function vehicleCompatibilityFromProduct(product) {
   if (product?.isUniversal) {
     return {
@@ -69,54 +105,57 @@ export function vehicleCompatibilityFromProduct(product) {
 
   const vc = product?.vehicleCompatibility;
   const vcVehicles = Array.isArray(vc?.vehicles) ? vc.vehicles.filter((v) => v?.make || v?.model) : [];
-  if (vc?.fitmentType && (vc.fitmentType !== "specific" || vcVehicles.length > 0)) {
-    return normalizeVehicleCompatibility(vc);
+  if (vcVehicles.length > 0) {
+    return normalizeVehicleCompatibility({
+      ...vc,
+      fitmentType:
+        vc?.fitmentType && FITMENT_TYPES.includes(vc.fitmentType) && vc.fitmentType !== "universal"
+          ? vc.fitmentType
+          : "specific",
+      vehicles: vcVehicles,
+    });
   }
 
-  // Prefer populated compatibleVehicles ObjectId refs (seed / Vehicle collection).
-  const linked = Array.isArray(product?.compatibleVehicles)
-    ? product.compatibleVehicles.filter((v) => v && typeof v === "object" && (v.make || v.model))
-    : [];
-  if (linked.length) {
+  const linkedRows = vehiclesFromLinkedRefs(product);
+  if (linkedRows.length) {
     return {
       fitmentType: "specific",
-      universalNote: "Fits all car makes and models",
-      vehicles: linked.map((v) =>
-        normalizeVehicleRow({
-          make: v.make,
-          model: v.model,
-          yearFrom: v.yearFrom,
-          yearTo: v.yearTo ?? CURRENT_YEAR,
-          bodyStyle: v.bodyType || "All",
-          notes: v.displayName || v.generation || "",
-        })
-      ),
-      categories: [],
+      universalNote: String(vc?.universalNote || "").trim() || "Fits all car makes and models",
+      vehicles: linkedRows,
+      categories: Array.isArray(vc?.categories) ? vc.categories : [],
     };
   }
 
-  const legacy = Array.isArray(product?.compatibleCars) ? product.compatibleCars : [];
-  if (legacy.length) {
+  const legacyRows = vehiclesFromLegacyCars(product);
+  if (legacyRows.length) {
     return {
       fitmentType: "specific",
-      universalNote: "Fits all car makes and models",
-      vehicles: legacy.map((c) =>
-        normalizeVehicleRow({
-          make: c.make,
-          model: c.model,
-          yearFrom: c.yearFrom,
-          yearTo: c.yearTo ?? CURRENT_YEAR,
-          bodyStyle: "All",
-          notes: c.generation || "",
-        })
-      ),
-      categories: [],
+      universalNote: String(vc?.universalNote || "").trim() || "Fits all car makes and models",
+      vehicles: legacyRows,
+      categories: Array.isArray(vc?.categories) ? vc.categories : [],
     };
   }
 
-  if (vc?.fitmentType) {
+  // Keep semi-universal note/categories even with zero vehicle rows.
+  if (vc?.fitmentType === "semi-universal") {
     return normalizeVehicleCompatibility(vc);
   }
+
+  // ObjectId refs exist but were not populated — keep Specific (GET should populate).
+  if (Array.isArray(product?.compatibleVehicles) && product.compatibleVehicles.length > 0) {
+    return {
+      fitmentType: "specific",
+      universalNote: String(vc?.universalNote || "").trim() || "Fits all car makes and models",
+      vehicles: [],
+      categories: Array.isArray(vc?.categories) ? vc.categories : [],
+    };
+  }
+
+  if (vc?.fitmentType === "universal") {
+    return normalizeVehicleCompatibility(vc);
+  }
+
+  // Stale "specific" with no vehicles and no Vehicle refs → Universal
   return emptyVehicleCompatibility();
 }
 

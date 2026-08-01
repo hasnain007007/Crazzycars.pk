@@ -23,7 +23,8 @@ import {
 } from "@/lib/productPayload";
 import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMutations";
 import { withProductSaleComputed } from "@/lib/productSale";
-import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
+import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
+import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 
 async function uniqueProductSlugExcluding(base, excludeId) {
   const root = slugify(base || "product") || "product";
@@ -57,7 +58,30 @@ export async function GET(request, context) {
     if (!doc) {
       return NextResponse.json({ success: false, error: "Not found." }, { status: 404 });
     }
-    return NextResponse.json({ success: true, data: withProductSaleComputed(doc) });
+    // Hydrate embedded fitment rows from Vehicle refs so the editor table is never empty
+    // when compatibleVehicles are linked (CSV/seed imports often skip vehicleCompatibility.vehicles).
+    const fit = vehicleCompatibilityFromProduct(doc);
+    const data = withProductSaleComputed({
+      ...doc,
+      isUniversal: fit.fitmentType === "universal",
+      vehicleCompatibility: {
+        fitmentType: fit.fitmentType,
+        universalNote: fit.universalNote,
+        vehicles: fit.vehicles.map(({ _rowId, ...rest }) => rest),
+        categories: fit.categories || [],
+      },
+      compatibleCars:
+        fit.fitmentType === "universal"
+          ? []
+          : fit.vehicles.map((v) => ({
+              make: v.make,
+              model: v.model,
+              generation: v.notes || "",
+              yearFrom: v.yearFrom,
+              yearTo: v.yearTo,
+            })),
+    });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to load product." },
@@ -293,8 +317,12 @@ export async function PUT(request, context) {
       existing.vehicleCompatibility = fitPayload.vehicleCompatibility;
       existing.isUniversal = fitPayload.isUniversal;
       existing.compatibleCars = fitPayload.compatibleCars;
+      existing.compatibleVehicles = fitPayload.isUniversal
+        ? []
+        : await resolveCompatibleVehicleIds(fitPayload.vehicleCompatibility.vehicles || []);
       existing.markModified("vehicleCompatibility");
       existing.markModified("compatibleCars");
+      existing.markModified("compatibleVehicles");
     }
 
     existing.markModified("pricing");

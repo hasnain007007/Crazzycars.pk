@@ -21,6 +21,7 @@ import {
 import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMutations";
 import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
+import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -188,6 +189,9 @@ export async function POST(request) {
 
     const org = normalizeProductOrganisation(body);
     const fitPayload = buildVehicleCompatibilityPayload(body.vehicleCompatibility);
+    const compatibleVehicles = fitPayload.isUniversal
+      ? []
+      : await resolveCompatibleVehicleIds(fitPayload.vehicleCompatibility.vehicles || []);
 
     const doc = await Product.create({
       name,
@@ -269,6 +273,7 @@ export async function POST(request) {
       vehicleCompatibility: fitPayload.vehicleCompatibility,
       isUniversal: fitPayload.isUniversal,
       compatibleCars: fitPayload.compatibleCars,
+      compatibleVehicles,
     });
 
     await syncStockAlertForProduct(doc);
