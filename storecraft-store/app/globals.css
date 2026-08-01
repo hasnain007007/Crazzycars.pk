@@ -1788,6 +1788,23 @@ textarea::placeholder {
   animation: home-hero-rise 0.55s ease-out both;
 }
 
+/* Designed banner + admin CTAs: pin buttons without covering artwork headline */
+.home-hero--ctas-only .home-hero__inner {
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-bottom: clamp(28px, 5vw, 48px);
+}
+
+.home-hero__copy--ctas-only {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-hero--ctas-only .home-hero__ctas {
+  margin-top: 0;
+}
+
 @keyframes home-hero-rise {
   from {
     opacity: 0;

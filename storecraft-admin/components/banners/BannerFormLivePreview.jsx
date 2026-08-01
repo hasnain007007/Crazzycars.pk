@@ -27,12 +27,20 @@ export function BannerFormLivePreview({ form }) {
   const buttons = (form.content?.buttons || []).filter((b) => b?.text?.trim());
   const badge = form.content?.badge;
   const headingText = (form.content?.heading?.text || "").trim();
+  const subheadingText = (form.content?.subheading?.text || "").trim();
   const descriptionText = (form.content?.description?.text || "").trim();
-  const subheadingLines = (form.subheadings || []).filter((s) => String(s).trim());
+  const subheadingLines = [
+    ...(form.subheadings || []).filter((s) => String(s).trim()),
+    ...(subheadingText ? [subheadingText] : []),
+  ];
   const previewSrc =
     previewMode === "mobile" && mobileImageUrl ? mobileImageUrl : desktopImageUrl;
   const hasImage = Boolean(desktopImageUrl || mobileImageUrl);
   const isMobile = previewMode === "mobile";
+  // Designed banners leave heading empty — don't stack placeholder text over artwork.
+  const designedArtwork =
+    hasImage && !headingText && !subheadingText && !descriptionText && !badge?.text?.trim();
+  const showPlaceholders = !designedArtwork;
 
   return (
     <div style={{ marginBottom: 24 }}>
@@ -179,13 +187,21 @@ export function BannerFormLivePreview({ form }) {
               position: "absolute",
               inset: 0,
               display: "flex",
-              alignItems: "center",
+              alignItems: designedArtwork ? "flex-end" : "center",
               justifyContent: isMobile ? "center" : "flex-start",
-              padding: isMobile ? "0 16px" : "0 40px",
+              padding: isMobile ? "16px" : designedArtwork ? "24px 40px" : "0 40px",
               textAlign: isMobile ? "center" : "left",
+              pointerEvents: "none",
             }}
           >
-            <div style={{ maxWidth: isMobile ? "100%" : "50%", position: "relative", zIndex: 2 }}>
+            <div
+              style={{
+                maxWidth: isMobile ? "100%" : designedArtwork ? "100%" : "50%",
+                position: "relative",
+                zIndex: 2,
+                alignSelf: designedArtwork ? "flex-end" : undefined,
+              }}
+            >
               {badge?.text?.trim() ? (
                 <div
                   style={{
@@ -204,19 +220,21 @@ export function BannerFormLivePreview({ form }) {
                   {badge.text}
                 </div>
               ) : null}
-              <h3
-                style={{
-                  color: headingText ? form.content?.heading?.color || "#FFFFFF" : MUTED,
-                  fontSize: isMobile ? 14 : 20,
-                  fontWeight: headingText ? 700 : 500,
-                  margin: "0 0 6px",
-                  lineHeight: 1.2,
-                  textShadow: headingText ? "0 1px 4px rgba(0,0,0,0.5)" : "none",
-                  fontStyle: headingText ? "normal" : "italic",
-                }}
-              >
-                {headingText || "Your headline here"}
-              </h3>
+              {headingText || showPlaceholders ? (
+                <h3
+                  style={{
+                    color: headingText ? form.content?.heading?.color || "#FFFFFF" : MUTED,
+                    fontSize: isMobile ? 14 : 20,
+                    fontWeight: headingText ? 700 : 500,
+                    margin: "0 0 6px",
+                    lineHeight: 1.2,
+                    textShadow: headingText ? "0 1px 4px rgba(0,0,0,0.5)" : "none",
+                    fontStyle: headingText ? "normal" : "italic",
+                  }}
+                >
+                  {headingText || "Your headline here"}
+                </h3>
+              ) : null}
               {subheadingLines.length > 0
                 ? subheadingLines.map((s, i) => (
                     <p
@@ -232,7 +250,7 @@ export function BannerFormLivePreview({ form }) {
                       {s}
                     </p>
                   ))
-                : (
+                : showPlaceholders ? (
                     <p
                       style={{
                         color: MUTED,
@@ -243,7 +261,7 @@ export function BannerFormLivePreview({ form }) {
                     >
                       Your subheading here
                     </p>
-                  )}
+                  ) : null}
               {descriptionText ? (
                 <p
                   style={{
@@ -256,7 +274,7 @@ export function BannerFormLivePreview({ form }) {
                 >
                   {descriptionText}
                 </p>
-              ) : (
+              ) : showPlaceholders ? (
                 <p
                   style={{
                     color: MUTED,
@@ -267,37 +285,42 @@ export function BannerFormLivePreview({ form }) {
                 >
                   Your description here
                 </p>
-              )}
+              ) : null}
               {buttons.length > 0 ? (
                 <div
                   style={{
                     display: "flex",
                     flexWrap: "wrap",
                     gap: 6,
-                    marginTop: 8,
+                    marginTop: designedArtwork ? 0 : 8,
                     justifyContent: isMobile ? "center" : "flex-start",
                   }}
                 >
-                  {buttons.map((btn, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        display: "inline-block",
-                        padding: isMobile ? "4px 12px" : "6px 16px",
-                        background: btn.bgColor || BRAND_RED,
-                        color: btn.textColor || btn.color || "#FFFFFF",
-                        fontSize: isMobile ? 8 : 10,
-                        fontWeight: 700,
-                        borderRadius: 4,
-                        border:
-                          btn.style === "outline"
-                            ? `1px solid ${btn.bgColor || BRAND_RED}`
-                            : "none",
-                      }}
-                    >
-                      {btn.text}
-                    </div>
-                  ))}
+                  {buttons.map((btn, i) => {
+                    const styleName = String(btn.style || "primary").toLowerCase();
+                    const isOutline = styleName === "outline" || styleName === "secondary";
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          display: "inline-block",
+                          padding: isMobile ? "4px 12px" : "6px 16px",
+                          background: isOutline
+                            ? "transparent"
+                            : btn.bgColor || BRAND_RED,
+                          color: isOutline
+                            ? "#FFFFFF"
+                            : btn.textColor || btn.color || "#FFFFFF",
+                          fontSize: isMobile ? 8 : 10,
+                          fontWeight: 700,
+                          borderRadius: 4,
+                          border: isOutline ? `1px solid ${btn.bgColor || "#FFFFFF"}` : "none",
+                        }}
+                      >
+                        {btn.text}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : null}
             </div>

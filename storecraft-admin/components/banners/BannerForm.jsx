@@ -1420,28 +1420,58 @@ export function BannerForm({ bannerId }) {
                   <label style={labelStyle}>URL</label>
                   <input
                     style={inputStyle}
-                    placeholder="/products"
+                    placeholder="/categories or /#shop-by-car"
                     value={btn.url || ""}
                     onChange={(e) => {
                       const b = [...(form.content?.buttons || [])];
                       b[i] = { ...b[i], url: e.target.value };
                       setForm((f) => ({ ...f, content: { ...(f.content || {}), buttons: b } }));
                     }}
+                    onBlur={(e) => {
+                      let url = String(e.target.value || "").trim();
+                      if (!url) return;
+                      if (!/^https?:\/\//i.test(url) && !url.startsWith("/") && /^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(url)) {
+                        url = `https://${url}`;
+                      }
+                      try {
+                        if (/^https?:\/\//i.test(url)) {
+                          const parsed = new URL(url);
+                          if (/(^|\.)crazzycars\.pk$/i.test(parsed.hostname)) {
+                            url = `${parsed.pathname || "/"}${parsed.search || ""}${parsed.hash || ""}` || "/";
+                          }
+                        }
+                      } catch {
+                        /* keep */
+                      }
+                      const b = [...(form.content?.buttons || [])];
+                      b[i] = { ...b[i], url };
+                      setForm((f) => ({ ...f, content: { ...(f.content || {}), buttons: b } }));
+                    }}
                   />
                   <div style={{ marginTop: "6px" }}>
                     <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                      {["/", "/products", "/products?sort=newest", "/products?sale=true", "/about", "/contact", "/posts"].map((url, j) => (
+                      {[
+                        { url: "/", label: "Home" },
+                        { url: "/shop", label: "Shop" },
+                        { url: "/categories", label: "Categories" },
+                        { url: "/#shop-by-car", label: "Shop by Car" },
+                        { url: "/products?sort=newest", label: "New" },
+                        { url: "/products?sale=true", label: "Sale" },
+                        { url: "/about", label: "About" },
+                        { url: "/contact", label: "Contact" },
+                        { url: "/posts", label: "Blog" },
+                      ].map((item, j) => (
                         <button
                           key={`${i}-${j}`}
                           type="button"
                           onClick={() => {
                             const b = [...(form.content?.buttons || [])];
-                            b[i] = { ...b[i], url };
+                            b[i] = { ...b[i], url: item.url };
                             setForm((f) => ({ ...f, content: { ...(f.content || {}), buttons: b } }));
                           }}
                           style={{ padding: "2px 8px", fontSize: "10px", borderRadius: "99px", border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}
                         >
-                          {url === "/" ? "Home" : url.replace("/products?sort=newest", "New").replace("/products?sale=true", "Sale").replace("/products", "Shop").replace("/about", "About").replace("/contact", "Contact").replace("/posts", "Blog")}
+                          {item.label}
                         </button>
                       ))}
                     </div>

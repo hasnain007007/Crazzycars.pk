@@ -26,15 +26,35 @@ function useTrustItems() {
 }
 
 function normalizeButtonUrl(url) {
-  const u = String(url || "").trim();
-  if (!u) return "/shop";
-  if (u.startsWith("http://") || u.startsWith("https://") || u.startsWith("/")) return u;
-  return `/${u}`;
+  const raw = String(url || "").trim();
+  if (!raw) return "/shop";
+
+  let u = raw;
+  // "crazzycars.pk/cars" → treat as absolute host
+  if (!/^https?:\/\//i.test(u) && !u.startsWith("/") && /^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(u)) {
+    u = `https://${u}`;
+  }
+
+  if (u.startsWith("http://") || u.startsWith("https://")) {
+    try {
+      const parsed = new URL(u);
+      // Keep same-store links in-app (no new tab / full reload)
+      if (/(^|\.)crazzycars\.pk$/i.test(parsed.hostname)) {
+        return `${parsed.pathname || "/"}${parsed.search || ""}${parsed.hash || ""}` || "/";
+      }
+    } catch {
+      /* keep as-is */
+    }
+    return u;
+  }
+
+  if (u.startsWith("/")) return u;
+  return `/${u.replace(/^\/+/, "")}`;
 }
 
 /**
- * Only use admin banner text when the slide actually has copy.
- * Designed banner images already include headings — do not overlay extras.
+ * Admin text overlays only when heading/subheading exist.
+ * Banner buttons still render on designed (image-only) heroes.
  */
 function resolveCopy(slide, settings) {
   const hp = settings || DEFAULT_HOMEPAGE_SETTINGS;
@@ -44,29 +64,58 @@ function resolveCopy(slide, settings) {
     ? slide.buttons.filter((b) => String(b?.text || "").trim())
     : [];
 
-  const hasOverlay = Boolean(rawTitle || rawSub);
-  if (!hasOverlay) {
-    return { headline: "", sub: "", primary: null, secondary: null, hasOverlay: false };
+  const hasText = Boolean(rawTitle || rawSub);
+  const hasButtons = buttons.length > 0;
+
+  if (!hasText && !hasButtons) {
+    return {
+      headline: "",
+      sub: "",
+      buttons: [],
+      hasText: false,
+      hasButtons: false,
+      hasOverlay: false,
+    };
   }
+
+  // With text but no admin buttons, keep a default Shop CTA.
+  const resolvedButtons = hasButtons
+    ? buttons
+    : [
+        {
+          text: hp.heroCtaText || "Shop Now",
+          url: hp.heroCtaUrl || "/shop",
+          style: "primary",
+          bgColor: "#C41E1E",
+        },
+      ];
 
   return {
     headline: rawTitle,
     sub: rawSub,
-    primary: buttons[0] || {
-      text: hp.heroCtaText || "Shop Now",
-      url: hp.heroCtaUrl || "/shop",
-      style: "primary",
-      bgColor: "#C41E1E",
-    },
-    secondary:
-      buttons.find((b, i) => i > 0 && String(b.style || "").toLowerCase() !== "primary") ||
-      buttons[1] ||
-      null,
+    buttons: resolvedButtons,
+    hasText,
+    hasButtons,
     hasOverlay: true,
   };
 }
 
+function buttonClassName(button) {
+  const style = String(button?.style || "primary").toLowerCase();
+  if (style === "outline" || style === "secondary" || style === "ghost") {
+    return "home-hero__btn home-hero__btn--ghost";
+  }
+  return "home-hero__btn home-hero__btn--primary";
+}
+
 function primaryButtonColors(button) {
+  const style = String(button?.style || "primary").toLowerCase();
+  if (style === "white") {
+    return { background: "#FFFFFF", color: "#111111" };
+  }
+  if (style === "dark") {
+    return { background: "#111111", color: "#FFFFFF" };
+  }
   const raw = String(button?.bgColor || "").trim().toLowerCase();
   const unusable =
     !raw ||
@@ -79,7 +128,7 @@ function primaryButtonColors(button) {
     raw === "#0b0b0b";
   return {
     background: unusable ? "#C41E1E" : button.bgColor,
-    color: button?.textColor || "#FFFFFF",
+    color: button?.textColor || button?.color || "#FFFFFF",
   };
 }
 
@@ -118,7 +167,7 @@ function HeroRail({ items }) {
 }
 
 function HeroCopy({ slide, settings, animateKey }) {
-  const { headline, sub, primary, secondary, hasOverlay } = resolveCopy(slide, settings);
+  const { headline, sub, buttons, hasOverlay, hasText } = resolveCopy(slide, settings);
 
   if (!hasOverlay) {
     return (
@@ -129,15 +178,14 @@ function HeroCopy({ slide, settings, animateKey }) {
   }
 
   return (
-    <div className="home-hero__copy" key={animateKey}>
+    <div className={`home-hero__copy${!hasText ? " home-hero__copy--ctas-only" : ""}`} key={animateKey}>
       {headline ? <h1 className="home-hero__title">{headline}</h1> : <h1 className="sr-only">{BRAND}</h1>}
       {sub ? <p className="home-hero__sub">{sub}</p> : null}
-      {primary ? (
+      {buttons.length ? (
         <div className="home-hero__ctas">
-          <CtaLink button={primary} className="home-hero__btn home-hero__btn--primary" />
-          {secondary ? (
-            <CtaLink button={secondary} className="home-hero__btn home-hero__btn--ghost" />
-          ) : null}
+          {buttons.map((btn, i) => (
+            <CtaLink key={`${btn.text}-${i}`} button={btn} className={buttonClassName(btn)} />
+          ))}
         </div>
       ) : null}
     </div>
@@ -238,24 +286,26 @@ export default function HomeHero({ settings, initialSlides = null }) {
   const bgImage = slide.imageUrl;
   const bgImageMobile = slide.imageUrlMobile || bgImage;
   const multi = slides.length > 1;
-  const { hasOverlay: hasTextOverlay } = resolveCopy(slide, settings);
+  const copy = resolveCopy(slide, settings);
+  const hasTextOverlay = copy.hasText;
   const firstBtnUrl = Array.isArray(slide.buttons)
     ? slide.buttons.find((b) => String(b?.url || b?.link || "").trim())
     : null;
   const linkHref = normalizeButtonUrl(
     slide.targetUrl || firstBtnUrl?.url || firstBtnUrl?.link || "/shop"
   );
-  const imageOnly = Boolean(bgImage) && !hasTextOverlay;
-  // Re-normalize so image-only designed banners always use auto height + contain
-  // (avoids black side panels / clipped left-side artwork from fixed height + Original/cover).
-  const display = normalizeImageDisplay(slide.imageDisplay, { imageOnly });
+  // Designed artwork (no HTML headline) keeps auto-height layout even when CTAs exist.
+  const designedArtwork = Boolean(bgImage) && !hasTextOverlay;
+  const clickThroughOnly = designedArtwork && !copy.hasButtons;
+  const display = normalizeImageDisplay(slide.imageDisplay, { imageOnly: designedArtwork });
   const darkOverlay = overlayStyle(display);
   const heightCss = heroHeightStyle(display.height);
 
   const sectionClass = [
     "home-hero",
     !bgImage ? "home-hero--fallback" : "",
-    imageOnly ? "home-hero--image-only" : "",
+    designedArtwork ? "home-hero--image-only" : "",
+    copy.hasButtons && !hasTextOverlay ? "home-hero--ctas-only" : "",
     `home-hero--h-${display.height}`,
     `home-hero--fit-${display.objectFit}`,
     display.hoverZoom ? "home-hero--hover-zoom" : "",
@@ -306,7 +356,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
           <div className="home-hero__veil home-hero__veil--admin" style={darkOverlay} aria-hidden />
         ) : null}
 
-        {imageOnly ? (
+        {clickThroughOnly ? (
           <Link href={linkHref} className="home-hero__hit" aria-label={`Shop at ${BRAND}`}>
             <span className="sr-only">{BRAND}</span>
           </Link>
