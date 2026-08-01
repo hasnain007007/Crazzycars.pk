@@ -2,6 +2,16 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Prevent horizontal scroll lockouts on small phones */
+html {
+  max-width: 100%;
+  overflow-x: clip;
+}
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 /* ============================================
    CRAZZYCARS.PK — AUTOMOTIVE THEME
    ============================================ */
@@ -1895,12 +1905,14 @@ textarea::placeholder {
   }
 
   .home-hero__sub {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    display: block;
+    overflow: visible;
     font-size: 13px;
+    line-height: 1.45;
     margin-top: 10px;
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
   }
 
   /* One primary CTA on mobile — keep composition tight */

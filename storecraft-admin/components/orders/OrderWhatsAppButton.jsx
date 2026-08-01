@@ -78,7 +78,17 @@ function getLegacyWhatsAppMessage(order) {
         ? `✅ Payment received via Credit/Debit Card${stripeId ? ` (ID: ${stripeId})` : ""}`
         : `⏳ Card payment pending`;
   } else if (isCOD) {
-    paymentLine = `💵 Cash on Delivery - payment due on arrival`;
+    const paid = Number(order.payment?.paidAmount) || 0;
+    const remaining = Number(order.payment?.remainingCod);
+    const totalNum = Number(order.total ?? order.pricing?.total ?? 0) || 0;
+    if (paymentStatus === "paid") {
+      paymentLine = `✅ Payment received in full`;
+    } else if (paymentStatus === "partial" || (paid > 0 && remaining > 0)) {
+      const rem = Number.isFinite(remaining) ? remaining : Math.max(0, totalNum - paid);
+      paymentLine = `💵 Partial payment\n✅ Already received: ${currency} ${paid.toFixed(0)}\n🚪 Balance on delivery: ${currency} ${rem.toFixed(0)}`;
+    } else {
+      paymentLine = `💵 Cash on Delivery - payment due on arrival`;
+    }
   } else {
     paymentLine = `Payment Method: ${paymentMethod || "Not specified"}`;
   }
@@ -226,7 +236,7 @@ export function OrderWhatsAppButton({ order, onNotified, settings: settingsProp 
       </button>
       {done ? (
         <p className="text-xs text-[#6b7280]">
-          Message includes Confirm / Not confirm links for the customer.
+          Message asks: is your order confirmed? Customer can tap Yes or No.
         </p>
       ) : null}
     </div>

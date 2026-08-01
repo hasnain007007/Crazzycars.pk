@@ -210,6 +210,37 @@ export async function recordEmailSent(orderId, emailType, subject, to, resultSta
   }
 }
 
+function buildAdminOrderItemsRows(order) {
+  const items = Array.isArray(order?.items) ? order.items : [];
+  if (!items.length) {
+    return `<tr><td colspan="3" style="padding:12px 8px;font-size:13px;color:#888;">No line items</td></tr>`;
+  }
+  return items
+    .map((item) => {
+      const qty = Math.max(1, Number(item.quantity) || 1);
+      const unit = Number(item.unitPrice ?? item.price ?? 0) || 0;
+      const lineTotal = unit * qty;
+      const variation = item.variation || item.variant || item.option || "";
+      const sku = item.sku || item.articleNo || "";
+      return `
+    <tr>
+      <td style="padding:12px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top;">
+        ${item.image ? `<img src="${item.image}" alt="" width="52" height="52" style="border-radius:4px;display:block;object-fit:cover;" />` : ""}
+      </td>
+      <td style="padding:12px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top;">
+        <p style="margin:0;font-size:14px;color:#111;font-weight:600;">${item.name || "Product"}</p>
+        ${variation ? `<p style="margin:3px 0 0;font-size:12px;color:#888;">${variation}</p>` : ""}
+        ${sku ? `<p style="margin:3px 0 0;font-size:11px;color:#aaa;">SKU: ${sku}</p>` : ""}
+        <p style="margin:4px 0 0;font-size:12px;color:#555;">Qty: <strong>${qty}</strong> · ${formatPrice(unit)} each</p>
+      </td>
+      <td style="padding:12px 8px;border-bottom:1px solid #f0f0f0;text-align:right;vertical-align:top;white-space:nowrap;">
+        <p style="margin:0;font-size:14px;font-weight:700;color:#111;">${formatPrice(lineTotal)}</p>
+      </td>
+    </tr>`;
+    })
+    .join("");
+}
+
 export async function sendAdminOrderNotification(order) {
   const { enabled, email: adminEmail } = await resolveAdminOrderEmail();
   if (!enabled) {
@@ -229,11 +260,19 @@ export async function sendAdminOrderNotification(order) {
   );
   const orderId = order?._id ? String(order._id) : "";
   const orderUrl = orderId ? `${adminBase}/orders/${orderId}` : `${adminBase}/orders`;
+  const addr = order?.shippingAddress || {};
+  const pricing = order?.pricing || {};
+  const subtotal = Number(pricing.subtotal ?? order?.subtotal ?? 0) || 0;
+  const shipping = Number(pricing.shippingCost ?? pricing.shipping ?? 0) || 0;
+  const total = Number(pricing.total ?? order?.total ?? 0) || 0;
+  const addressLine = [addr.street, addr.line1, addr.address, addr.area]
+    .filter(Boolean)
+    .join(", ");
 
   const html = `
     <!DOCTYPE html>
     <html>
-    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
     <body style="margin:0;padding:0;background:#f8f8f8;font-family:'DM Sans',Arial,sans-serif;">
       <div style="max-width:600px;margin:0 auto;background:#ffffff;">
         <div style="background:#111111;padding:24px 40px;text-align:center;">
@@ -252,13 +291,13 @@ export async function sendAdminOrderNotification(order) {
             <tr>
               <td style="padding:6px 0;font-size:14px;color:#888;">Customer</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.customer?.name || ""}
+                ${order.customer?.name || addr.name || ""}
               </td>
             </tr>
             <tr>
               <td style="padding:6px 0;font-size:14px;color:#888;">Phone</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.customer?.phone || order.shippingAddress?.phone || ""}
+                ${order.customer?.phone || addr.phone || ""}
               </td>
             </tr>
             <tr>
@@ -268,24 +307,46 @@ export async function sendAdminOrderNotification(order) {
               </td>
             </tr>
             <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;">Total</td>
-              <td style="padding:6px 0;font-size:16px;font-weight:700;color:#111;text-align:right;">
-                ${formatPrice(order.pricing?.total || order.total || 0)}
-              </td>
-            </tr>
-            <tr>
               <td style="padding:6px 0;font-size:14px;color:#888;">Payment</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
                 ${order.paymentMethod || "N/A"} · ${order.paymentStatus || ""}
               </td>
             </tr>
             <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;">City</td>
+              <td style="padding:6px 0;font-size:14px;color:#888;vertical-align:top;">Ship to</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.shippingAddress?.city || ""}, ${order.shippingAddress?.country || ""}
+                ${addressLine || "—"}<br/>
+                ${[addr.city, addr.province || addr.state, addr.country].filter(Boolean).join(", ")}
               </td>
             </tr>
           </table>
+
+          <h2 style="margin:28px 0 12px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#888;">
+            Products
+          </h2>
+          <table style="width:100%;border-collapse:collapse;">
+            ${buildAdminOrderItemsRows(order)}
+          </table>
+
+          <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+            <tr>
+              <td style="padding:4px 0;font-size:13px;color:#888;">Subtotal</td>
+              <td style="padding:4px 0;font-size:13px;color:#111;text-align:right;">${formatPrice(subtotal)}</td>
+            </tr>
+            <tr>
+              <td style="padding:4px 0;font-size:13px;color:#888;">Shipping</td>
+              <td style="padding:4px 0;font-size:13px;color:#111;text-align:right;">
+                ${shipping === 0 ? "FREE" : formatPrice(shipping)}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0 0;font-size:15px;font-weight:700;color:#111;border-top:1px solid #eee;">Grand Total</td>
+              <td style="padding:10px 0 0;font-size:16px;font-weight:700;color:#111;text-align:right;border-top:1px solid #eee;">
+                ${formatPrice(total)}
+              </td>
+            </tr>
+          </table>
+
           <div style="text-align:center;margin-top:24px;">
             <a href="${orderUrl}"
               style="display:inline-block;padding:12px 28px;background:#C41E1E;color:#fff;text-decoration:none;font-weight:700;border-radius:6px;font-size:13px;">
@@ -303,7 +364,7 @@ export async function sendAdminOrderNotification(order) {
     </html>
   `;
 
-  const subject = `New Order: ${order.orderNumber || order._id} - ${formatPrice(order.pricing?.total || order.total || 0)}`;
+  const subject = `New Order: ${order.orderNumber || order._id} - ${formatPrice(total)}`;
   const sent = await sendEmail({
     to: adminEmail,
     subject,

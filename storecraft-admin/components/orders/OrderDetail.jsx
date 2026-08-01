@@ -19,66 +19,16 @@ import { OrderStatusCard, PaymentStatusCard } from "./StatusUpdater";
 import { OrderItemsEditor } from "./OrderItemsEditor";
 import {
   buildWaLink,
-  getAdminWhatsAppNumber,
   getCustomerOrderPhone,
   openWhatsApp,
-  openWhatsAppWithOptionalImage,
   OrderWhatsAppButton,
 } from "@/components/orders/OrderWhatsAppButton";
 import { formatAdminPrice } from "@/lib/currency";
 import { isPrepaidOrder, postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
 import {
-  buildWhatsAppMessage,
   getLegacyTrackingWhatsAppMessage,
   getOrderShippedWhatsAppMessage,
-  resolveTemplate,
 } from "@/lib/whatsappTemplates";
-
-function adminOrderDetailUrl(order) {
-  const orderId = order?.id || order?._id || "";
-  const base =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL || "";
-  if (!base || !orderId) return "";
-  return `${String(base).replace(/\/$/, "")}/orders/${orderId}`;
-}
-
-function buildAdminOrderNotifyVariables(order, extras = {}) {
-  const addr = order?.shippingAddress || {};
-  const items = Array.isArray(order?.items) ? order.items : [];
-  const total = Number(order?.pricing?.total ?? order?.total ?? 0);
-  const imageBlock = items
-    .filter((i) => i?.image)
-    .map((i) => `🖼️ ${String(i.name || "Item").slice(0, 60)}:\n${i.image}`)
-    .join("\n\n");
-  return {
-    customerName: String(addr.name ?? "").trim() || "—",
-    customerPhone: String(addr.phone ?? "").trim() || "—",
-    orderNumber: String(order?.orderNumber ?? ""),
-    city: String(addr.city ?? "").trim() || "—",
-    province: String(addr.state ?? addr.province ?? "").trim() || "—",
-    itemsList:
-      items.map((i) => `• ${i.quantity ?? 1}x ${i.name ?? "Item"}`).join("\n") || "—",
-    productImages: imageBlock ? `📸 *Product photos:*\n${imageBlock}` : "",
-    total: total.toLocaleString("en-PK"),
-    paymentMethod: String(order?.paymentMethod ?? order?.payment?.method ?? "—"),
-    address: String(addr.street ?? addr.line1 ?? addr.address ?? "").trim() || "—",
-    adminOrderUrl: adminOrderDetailUrl(order),
-    confirmOrderUrl: extras.confirmUrl || adminOrderDetailUrl(order),
-    cancelOrderUrl: extras.cancelUrl || adminOrderDetailUrl(order),
-  };
-}
-
-function getAdminNotifyMessage(order, settings, extras = {}) {
-  const { enabled, template } = resolveTemplate(settings, "adminNewOrder");
-  if (!enabled) return "";
-  return buildWhatsAppMessage(template, buildAdminOrderNotifyVariables(order, extras));
-}
-
-function adminNotifyStorageKey(orderId) {
-  return `admin-wa-notified-${orderId}`;
-}
 
 function orderItemCount(order) {
   const items = Array.isArray(order?.items) ? order.items : [];
@@ -842,7 +792,6 @@ export function OrderDetail({ orderId }) {
     logoUrl: "",
   });
   const [settings, setSettings] = useState(null);
-  const [adminNotifiedSession, setAdminNotifiedSession] = useState(false);
   const [hasLabel, setHasLabel] = useState(false);
   const [courierSettings, setCourierSettings] = useState({});
   const [postexRebook, setPostexRebook] = useState(false);
@@ -903,6 +852,8 @@ export function OrderDetail({ orderId }) {
         });
         setStoreUrl(loaded.general?.website || process.env.NEXT_PUBLIC_STORE_URL || "");
         setCourierSettings(loaded.courier || {});
+        const savedRemarks = String(loaded.courier?.shipperRemarks || "").trim();
+        if (savedRemarks) setPostexRemarks(savedRemarks);
       })
       .catch(() => {
         /* ignore */
@@ -923,73 +874,6 @@ export function OrderDetail({ orderId }) {
       setPostexWeight(Math.max(0.5, weightKg));
     }
   }, [order]);
-
-  const notifyAdminOnWhatsApp = useCallback(
-    async (isAuto = false) => {
-      if (!order) return false;
-      const adminPhone = getAdminWhatsAppNumber(settings);
-      if (!adminPhone) {
-        if (!isAuto) toast.error("Set WhatsApp number in Settings → WhatsApp.");
-        return false;
-      }
-
-      let extras = {};
-      try {
-        const res = await fetch(`/api/orders/${order.id}/wa-links`, { credentials: "include" });
-        const json = await res.json();
-        if (json.success) {
-          extras = {
-            confirmUrl: json.confirmUrl,
-            cancelUrl: json.cancelUrl,
-          };
-        }
-      } catch {
-        /* links optional */
-      }
-
-      const msg = getAdminNotifyMessage(order, settings || {}, extras);
-      if (!msg) {
-        if (!isAuto) toast.error("Admin new-order WhatsApp template is disabled.");
-        return false;
-      }
-
-      const imageUrls = (order.items || []).map((i) => i.image).filter(Boolean);
-      const result = await openWhatsAppWithOptionalImage(adminPhone, msg, imageUrls);
-      if (!result.ok) {
-        if (!isAuto) toast.error("Could not open WhatsApp.");
-        return false;
-      }
-      try {
-        sessionStorage.setItem(adminNotifyStorageKey(order.id), "1");
-      } catch {
-        /* ignore */
-      }
-      setAdminNotifiedSession(true);
-      if (!isAuto) {
-        toast.success("WhatsApp opened — tap Confirm/Cancel links in the message.");
-      }
-      return true;
-    },
-    [order, settings]
-  );
-
-  useEffect(() => {
-    if (!order?.id || !settings) return;
-    let already = false;
-    try {
-      already = Boolean(sessionStorage.getItem(adminNotifyStorageKey(order.id)));
-    } catch {
-      already = false;
-    }
-    if (already) {
-      setAdminNotifiedSession(true);
-      return;
-    }
-    const status = String(order.orderStatus || "").toLowerCase();
-    if (status === "pending") {
-      notifyAdminOnWhatsApp(true);
-    }
-  }, [order?.id, order?.orderStatus, settings, notifyAdminOnWhatsApp]);
 
   function printInvoice() {
     requestAnimationFrame(() => {
@@ -1194,6 +1078,21 @@ export function OrderDetail({ orderId }) {
         setTrackingUrl(data.trackingUrl || postexPublicTrackingUrl(data.trackingNumber));
         setHasLabel(Boolean(data.hasLabel));
         toast.success(`Shipment booked: ${data.trackingNumber}`);
+        // Auto-download shipping slip PDF (PostEx demo slip)
+        const labelUrl =
+          data.labelDownloadUrl ||
+          (data.trackingNumber
+            ? `/api/postex/label?trackingNumber=${encodeURIComponent(data.trackingNumber)}&orderId=${encodeURIComponent(orderId)}&download=1`
+            : "");
+        if (labelUrl) {
+          const a = document.createElement("a");
+          a.href = labelUrl;
+          a.rel = "noopener";
+          a.download = `postex-label-${data.trackingNumber || "shipment"}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
         await load();
         if (data.trackingNumber) await fetchLivePostexStatus(data.trackingNumber);
       } else {
@@ -1612,6 +1511,21 @@ export function OrderDetail({ orderId }) {
             >
               Order #{order.orderNumber}
             </h1>
+            {order.invoiceId || order.invoiceNumber ? (
+              <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 4px" }} className="dark:text-slate-400">
+                From invoice{" "}
+                {order.invoiceId ? (
+                  <Link
+                    href={`/invoices/${order.invoiceId}`}
+                    className="font-semibold text-[#1d6fb8] hover:underline"
+                  >
+                    {order.invoiceNumber || "View"}
+                  </Link>
+                ) : (
+                  <span className="font-semibold">{order.invoiceNumber}</span>
+                )}
+              </p>
+            ) : null}
             <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }} className="dark:text-slate-400">
               {placedAt}
             </p>
@@ -1640,22 +1554,6 @@ export function OrderDetail({ orderId }) {
               {sendingInvoice ? "Sending..." : "Send Invoice Email"}
             </button>
             <OrderWhatsAppButton order={order} settings={settings} />
-            <button
-              type="button"
-              onClick={() => notifyAdminOnWhatsApp(false)}
-              title={
-                adminNotifiedSession
-                  ? "Admin notification sent this session"
-                  : "Send new-order alert to admin WhatsApp"
-              }
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-              style={{
-                background: adminNotifiedSession ? "#f0fdf4" : undefined,
-                borderColor: adminNotifiedSession ? "#86efac" : undefined,
-              }}
-            >
-              📱 Notify Admin on WhatsApp
-            </button>
           </div>
         </div>
 

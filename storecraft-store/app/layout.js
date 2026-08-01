@@ -40,6 +40,13 @@ const rajdhani = Rajdhani({
 const FALLBACK_DESCRIPTION =
   "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide. CrazzyCars.pk";
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+};
+
 const getLayoutSettings = cache(getPublicStoreSettings);
 
 function robotsFromSeo(robotsTxt) {

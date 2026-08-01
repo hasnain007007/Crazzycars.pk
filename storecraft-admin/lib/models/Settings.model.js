@@ -374,8 +374,18 @@ const settingsSchema = new mongoose.Schema(
           type: String,
           default: `Assalam o Alaikum {customerName}! 🚗
 
-Your order from *Crazzycars.pk* is ready — please confirm:
+*Crazzycars.pk* — please confirm your order:
 
+❓ *Is your order confirmed?*
+Tap one option below:
+
+✅ *YES — Confirm my order:*
+{confirmOrderUrl}
+
+❌ *NO — Cancel / not confirm:*
+{cancelOrderUrl}
+
+————————————
 📦 *Order:* #{orderNumber}
 📅 *Date:* {orderDate}
 
@@ -399,16 +409,11 @@ Shipping: {shipping}
 {trackingSection}
 Need help? Call us: 📞 {storePhone}
 
-————————————
-📋 *Confirm your order (tap a link):*
-✅ *Confirm order:* {confirmOrderUrl}
-❌ *Not confirm / Cancel:* {cancelOrderUrl}
-
-Or reply:
+Or reply with:
 1️⃣ CONFIRM
 2️⃣ CANCEL
 
-Thank you for shopping with Crazzycars.pk! 🚗✨`,
+Shukriya — Crazzycars.pk 🚗✨`,
         },
       },
       adminNewOrder: {

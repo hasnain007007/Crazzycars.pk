@@ -10,7 +10,8 @@ const TEMPLATE_CONFIG = [
   {
     key: "customerOrderConfirmation",
     label: "Customer Order Confirmation",
-    description: "Sent to the customer when you open WhatsApp from an order",
+    description:
+      "Sent to the customer when you tap WhatsApp Customer. Must ask if the order is confirmed, with Yes/No links ({confirmOrderUrl} / {cancelOrderUrl}).",
     variables: [
       "customerName",
       "orderNumber",
@@ -21,6 +22,9 @@ const TEMPLATE_CONFIG = [
       "total",
       "paymentMethod",
       "paymentInstructions",
+      "paidAmount",
+      "remainingBalance",
+      "paymentStatus",
       "address",
       "city",
       "province",

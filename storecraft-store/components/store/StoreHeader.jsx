@@ -517,7 +517,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
   };
 
   return (
-    <header className={`sticky top-0 z-[7000]${mobileSearchOpen && isMdUp === false ? " store-header--mobile-search-open" : ""}`}>
+    <header className={`sticky top-0 z-[7000]${mobileSearchOpen && isMdUp !== true ? " store-header--mobile-search-open" : ""}`}>
       {cartToast ? (
         <div
           role="status"
@@ -659,7 +659,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
       </div>
 
       {/* Fixed mobile search sheet — keeps the field on-screen with keyboard / scroll */}
-      {mounted && mobileSearchOpen && isMdUp === false
+      {mounted && mobileSearchOpen && isMdUp !== true
         ? createPortal(
             <div className="store-mobile-search-sheet md:hidden" role="dialog" aria-modal="true" aria-label="Search">
               <button
@@ -757,7 +757,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
       </nav>
 
       {/* Mobile nav — portaled to body so sticky header doesn't clip fixed inset */}
-      {mounted && menuOpen && isMdUp === false
+      {mounted && menuOpen && isMdUp !== true
         ? createPortal(
             <div className="store-mobile-nav md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
               <button
