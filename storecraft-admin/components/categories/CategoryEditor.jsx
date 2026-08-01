@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { SeoField } from "@/components/ui/SeoField";
 import { SeoPreview } from "@/components/ui/SeoPreview";
+import { CategoryProductsTab } from "@/components/categories/CategoryProductsTab";
 
 const TinyEditor = dynamic(() => import("@/components/ui/TinyEditor"), {
   ssr: false,
@@ -267,6 +268,7 @@ export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
             { id: "basic", label: "Basic Info" },
             { id: "image", label: "Image" },
             { id: "seo", label: "SEO" },
+            ...(isEdit ? [{ id: "products", label: "Products" }] : []),
           ].map((tab) => (
             <button
               key={tab.id}
@@ -505,6 +507,10 @@ export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
               </div>
             ) : null}
           </div>
+        ) : null}
+
+        {activeTab === "products" && isEdit ? (
+          <CategoryProductsTab categoryId={categoryId} />
         ) : null}
 
         {activeTab === "seo" ? (
