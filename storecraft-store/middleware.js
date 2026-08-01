@@ -196,9 +196,9 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     /*
-     * Match all paths except static assets / Next internals.
+     * Match all paths except static assets / Next internals / liveness probe.
      * Includes public pages (for AI logging) and /account/* (for auth).
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)",
   ],
 };
