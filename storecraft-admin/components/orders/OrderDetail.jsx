@@ -51,11 +51,29 @@ function formatCurrencyAmount(order, amount) {
   return `${currency} ${Number(amount || 0).toFixed(2)}`;
 }
 
+/** Collapse accidental single-letter spacing: "S h a" → "Sha", keep normal names. */
+function normalizePersonName(raw) {
+  const cleaned = String(raw || "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return "";
+  return cleaned.replace(/\b(?:[A-Za-zÀ-ÿ]\s+){2,}[A-Za-zÀ-ÿ]\b/g, (chunk) =>
+    chunk.replace(/\s+/g, "")
+  );
+}
+
 function customerFullName(order) {
-  const fn = order?.customer?.firstName || "";
-  const ln = order?.customer?.lastName || "";
-  const combined = `${fn} ${ln}`.trim();
-  return combined || order?.customer?.name || "—";
+  const fromShipping = normalizePersonName(order?.shippingAddress?.name);
+  if (fromShipping) return fromShipping;
+
+  const fn = normalizePersonName(order?.customer?.firstName);
+  const ln = normalizePersonName(order?.customer?.lastName);
+  const combined = normalizePersonName(`${fn} ${ln}`);
+  if (combined) return combined;
+
+  const fromCustomer = normalizePersonName(order?.customer?.name);
+  return fromCustomer || "—";
 }
 
 const SHIPPING_PROVINCES = [
@@ -142,76 +160,26 @@ function buildShippingAddressPayload(form) {
 function InfoTableCard({ title, rows }) {
   const visibleRows = rows.filter(Boolean);
   return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
-        overflow: "hidden",
-        marginBottom: 20,
-      }}
-      className="dark:border-slate-700 dark:bg-slate-900"
-    >
-      <div
-        style={{
-          background: "#f9fafb",
-          padding: "14px 20px",
-          borderBottom: "1px solid #e5e7eb",
-        }}
-        className="dark:border-slate-700 dark:bg-slate-800/80"
-      >
-        <h3
-          style={{
-            fontSize: 14,
-            fontWeight: 700,
-            color: "#111827",
-            margin: 0,
-          }}
-          className="dark:text-white"
-        >
-          {title}
-        </h3>
+    <div className="mb-5 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/80 sm:px-5">
+        <h3 className="m-0 text-sm font-bold text-slate-900 dark:text-white">{title}</h3>
       </div>
-      <div style={{ padding: 20 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
-            {visibleRows.map((row, i) => (
-              <tr
-                key={row.label}
-                style={{
-                  borderBottom: i < visibleRows.length - 1 ? "1px solid #f3f4f6" : "none",
-                }}
-                className="dark:border-slate-800"
-              >
-                <td
-                  style={{
-                    padding: "10px 0",
-                    fontSize: 13,
-                    color: "#6b7280",
-                    fontWeight: 500,
-                    width: "40%",
-                    verticalAlign: "top",
-                  }}
-                  className="dark:text-slate-400"
-                >
-                  {row.label}
-                </td>
-                <td
-                  style={{
-                    padding: "10px 0",
-                    fontSize: 13,
-                    color: "#111827",
-                    fontWeight: 600,
-                    verticalAlign: "top",
-                  }}
-                  className="dark:text-slate-100"
-                >
-                  {String(row.value ?? "—")}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="px-4 py-3 sm:px-5 sm:py-4">
+        <dl className="m-0 divide-y divide-slate-100 dark:divide-slate-800">
+          {visibleRows.map((row) => (
+            <div
+              key={row.label}
+              className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+            >
+              <dt className="shrink-0 text-[13px] font-medium text-slate-500 dark:text-slate-400">
+                {row.label}
+              </dt>
+              <dd className="m-0 min-w-0 break-words text-[13px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">
+                {String(row.value ?? "—")}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </div>
   );
@@ -1509,114 +1477,91 @@ export function OrderDetail({ orderId }) {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="print:hidden">
-        <Link href="/orders" className="mb-3 inline-block text-sm font-medium text-[#1d6fb8] hover:underline">
-          ← Orders
-        </Link>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 24,
-            paddingBottom: 16,
-            borderBottom: "1px solid #e5e7eb",
-            flexWrap: "wrap",
-            gap: 16,
-          }}
-          className="dark:border-slate-700"
-        >
-          <div className="flex min-w-0 flex-1 items-start gap-3">
-            <div className="min-w-0">
-              <h1
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: "#111827",
-                  margin: "0 0 4px",
-                }}
-                className="dark:text-white"
-              >
-                Order #{order.orderNumber}
-              </h1>
-              {order.invoiceId || order.invoiceNumber ? (
-                <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 4px" }} className="dark:text-slate-400">
-                  From invoice{" "}
-                  {order.invoiceId ? (
-                    <Link
-                      href={`/invoices/${order.invoiceId}`}
-                      className="font-semibold text-[#1d6fb8] hover:underline"
-                    >
-                      {order.invoiceNumber || "View"}
-                    </Link>
-                  ) : (
-                    <span className="font-semibold">{order.invoiceNumber}</span>
-                  )}
-                </p>
-              ) : null}
-              <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }} className="dark:text-slate-400">
-                {placedAt}
-              </p>
-            </div>
-            <div
-              className="mt-0.5 inline-flex shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-600 dark:bg-slate-800"
-              role="group"
-              aria-label="Go to previous or next order"
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <Link href="/orders" className="text-sm font-medium text-[#1d6fb8] hover:underline">
+            ← Orders
+          </Link>
+          <div
+            className="inline-flex shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-600 dark:bg-slate-800"
+            role="group"
+            aria-label="Go to previous or next order"
+          >
+            <button
+              type="button"
+              disabled={!neighbors.prev?.id}
+              title={
+                neighbors.prev?.orderNumber
+                  ? `Previous order (${neighbors.prev.orderNumber})`
+                  : "No newer order"
+              }
+              aria-label="Previous order"
+              onClick={() => neighbors.prev?.id && router.push(`/orders/${neighbors.prev.id}`)}
+              className="flex h-10 w-11 items-center justify-center border-r border-slate-200 text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
             >
-              <button
-                type="button"
-                disabled={!neighbors.prev?.id}
-                title={
-                  neighbors.prev?.orderNumber
-                    ? `Previous order (${neighbors.prev.orderNumber})`
-                    : "No newer order"
-                }
-                aria-label="Previous order"
-                onClick={() => neighbors.prev?.id && router.push(`/orders/${neighbors.prev.id}`)}
-                className="flex h-9 w-9 items-center justify-center border-r border-slate-200 text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
-              >
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                  <path
-                    fillRule="evenodd"
-                    d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              <button
-                type="button"
-                disabled={!neighbors.next?.id}
-                title={
-                  neighbors.next?.orderNumber
-                    ? `Next order (${neighbors.next.orderNumber})`
-                    : "No older order"
-                }
-                aria-label="Next order"
-                onClick={() => neighbors.next?.id && router.push(`/orders/${neighbors.next.id}`)}
-                className="flex h-9 w-9 items-center justify-center text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-200 dark:hover:bg-slate-700"
-              >
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                  <path
-                    fillRule="evenodd"
-                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <path
+                  fillRule="evenodd"
+                  d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              disabled={!neighbors.next?.id}
+              title={
+                neighbors.next?.orderNumber
+                  ? `Next order (${neighbors.next.orderNumber})`
+                  : "No older order"
+              }
+              aria-label="Next order"
+              onClick={() => neighbors.next?.id && router.push(`/orders/${neighbors.next.id}`)}
+              className="flex h-10 w-11 items-center justify-center text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <path
+                  fillRule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        </div>
+
+        <div className="mb-5 border-b border-slate-200 pb-4 dark:border-slate-700">
+          <h1 className="m-0 text-xl font-bold leading-tight text-slate-900 dark:text-white">
+            Order #{order.orderNumber}
+          </h1>
+          {order.invoiceId || order.invoiceNumber ? (
+            <p className="mt-1 mb-0 text-[13px] text-slate-500 dark:text-slate-400">
+              From invoice{" "}
+              {order.invoiceId ? (
+                <Link
+                  href={`/invoices/${order.invoiceId}`}
+                  className="font-semibold text-[#1d6fb8] hover:underline"
+                >
+                  {order.invoiceNumber || "View"}
+                </Link>
+              ) : (
+                <span className="font-semibold">{order.invoiceNumber}</span>
+              )}
+            </p>
+          ) : null}
+          <p className="mt-1 mb-0 text-[13px] text-slate-500 dark:text-slate-400">{placedAt}</p>
+
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
               onClick={printInvoice}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               Print Invoice
             </button>
             <button
               type="button"
               onClick={printPackingSlip}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               Print Packing Slip
             </button>
@@ -1624,11 +1569,13 @@ export function OrderDetail({ orderId }) {
               type="button"
               disabled={sendingInvoice}
               onClick={sendInvoiceEmail}
-              className="rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#185f9e] disabled:opacity-60"
+              className="col-span-2 rounded-lg bg-[#1d6fb8] px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#185f9e] disabled:opacity-60 sm:col-span-1"
             >
               {sendingInvoice ? "Sending..." : "Send Invoice Email"}
             </button>
-            <OrderWhatsAppButton order={order} settings={settings} />
+            <div className="col-span-2 sm:col-span-1 sm:min-w-[160px]">
+              <OrderWhatsAppButton order={order} settings={settings} />
+            </div>
           </div>
         </div>
 
