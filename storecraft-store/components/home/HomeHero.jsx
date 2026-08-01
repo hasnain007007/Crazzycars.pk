@@ -299,7 +299,10 @@ export default function HomeHero({ settings, initialSlides = null }) {
   const clickThroughOnly = designedArtwork && !copy.hasButtons;
   const display = normalizeImageDisplay(slide.imageDisplay, { imageOnly: designedArtwork });
   const darkOverlay = overlayStyle(display);
-  const heightCss = heroHeightStyle(display.height);
+  // Designed auto-height banners: let CSS own sizing (desktop = full art,
+  // mobile = tall cover frame). Inline height:auto/minHeight:0 would block that.
+  const heightCss =
+    designedArtwork && display.height === "auto" ? {} : heroHeightStyle(display.height);
 
   const sectionClass = [
     "home-hero",
