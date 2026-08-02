@@ -7,6 +7,7 @@ export { default as AiAgentVisit } from "./AiAgentVisit.model";
 export { default as Banner } from "./Banner.model";
 
 export { default as BlogPost } from "./BlogPost.model";
+export { default as CartSession } from "./CartSession.model";
 export { default as CarCatalog } from "./CarCatalog.model";
 export { default as Category } from "./Category.model";
 export { default as Coupon } from "./Coupon.model";

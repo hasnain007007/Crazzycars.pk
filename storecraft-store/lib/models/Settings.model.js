@@ -103,7 +103,14 @@ const settingsSchema = new mongoose.Schema(
       emailOnNewOrder: { type: Boolean, default: true },
       emailOnLowStock: { type: Boolean, default: true },
       emailOnNewReview: { type: Boolean, default: false },
+      emailAbandonedCart: { type: Boolean, default: true },
       notificationEmail: { type: String, default: "" },
+    },
+    abandonedCart: {
+      enabled: { type: Boolean, default: true },
+      abandonAfterMinutes: { type: Number, default: 60 },
+      maxEmailReminders: { type: Number, default: 2 },
+      reminderIntervalHours: { type: Number, default: 24 },
     },
     payment: {
       stripe: {
@@ -191,6 +198,7 @@ const settingsSchema = new mongoose.Schema(
       orderConfirmation: { subject: { type: String, default: "" }, body: { type: String, default: "" } },
       orderShipped: { subject: { type: String, default: "" }, body: { type: String, default: "" } },
       passwordReset: { subject: { type: String, default: "" }, body: { type: String, default: "" } },
+      abandonedCart: { subject: { type: String, default: "" }, body: { type: String, default: "" } },
     },
     aboutPage: {
       hero: {
@@ -426,6 +434,27 @@ Your Crazzycars.pk order #{orderNumber} has been shipped via *{courier}*!
 Questions? Call: 📞 {storePhone}
 
 Thank you! 🚗✨`,
+        },
+      },
+      abandonedCart: {
+        enabled: { type: Boolean, default: true },
+        template: {
+          type: String,
+          default: `Assalam o Alaikum {customerName}! 🚗
+
+You left items in your *Crazzycars.pk* cart:
+
+🛍️ *Items:*
+{itemsList}
+
+💰 *Cart total:* Rs. {subtotal}
+
+Complete your order here:
+{recoverUrl}
+
+Need help? Call {storePhone}
+
+Shukriya — Crazzycars.pk ✨`,
         },
       },
     },

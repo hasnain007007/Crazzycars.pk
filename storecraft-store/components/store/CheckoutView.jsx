@@ -33,6 +33,12 @@ import { formatPrice } from "@/lib/currency";
 import { useCustomer } from "@/lib/customerAuth";
 import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
 import { resolveProductContentId, trackInitiateCheckout } from "@/lib/metaPixel";
+import {
+  fetchRecoverCart,
+  getCartSessionId,
+  getStoredRecoveryToken,
+  syncCartToServer,
+} from "@/lib/cartSyncClient";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -208,7 +214,7 @@ function CheckoutProgressSteps({ activeStep }) {
 }
 
 export function CheckoutView() {
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, replaceItems } = useCart();
   const { customer: authCustomer, loading: authLoading } = useCustomer();
   const [checkoutSettings, setCheckoutSettings] = useState({
     requireAccount: false,
@@ -262,6 +268,79 @@ export function CheckoutView() {
       setPaymentMethod(fallback);
     }
   }, [cartAllowsCod, paymentMethod, pakistaniMethods]);
+
+  // Restore cart from abandoned-cart recovery link (?recover=TOKEN)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const token = String(params.get("recover") || "").trim();
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchRecoverCart(token);
+        if (cancelled || !Array.isArray(data.items) || !data.items.length) return;
+        const restored = data.items.map((i) => ({
+          _id: i.productId,
+          id: i.productId,
+          itemId: i.productId,
+          productId: i.productId,
+          slug: i.slug || "",
+          name: i.name || "Product",
+          image: i.image || "",
+          price: Number(i.unitPrice ?? i.price) || 0,
+          unitPrice: Number(i.unitPrice ?? i.price) || 0,
+          variantId: i.variantId || "",
+          quantity: Math.max(1, Number(i.quantity) || 1),
+          variationLabel: i.variationLabel || "",
+          articleNo: i.articleNo || "",
+          sku: i.sku || "",
+        }));
+        replaceItems(restored);
+        if (data.customer?.email || data.customer?.phone || data.customer?.name) {
+          const parts = String(data.customer.name || "")
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+          setCustomer((f) => ({
+            ...f,
+            firstName: f.firstName || parts[0] || "",
+            lastName: f.lastName || parts.slice(1).join(" ") || "",
+            email: f.email || data.customer.email || "",
+            phone: f.phone || data.customer.phone || "",
+          }));
+        }
+        toast.success("Your cart was restored — complete checkout below.");
+        params.delete("recover");
+        const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
+        window.history.replaceState({}, "", next);
+      } catch (e) {
+        toast.error(e.message || "Could not restore cart.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [replaceItems]);
+
+  // Keep abandoned-cart contact fields in sync while filling checkout
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const name = `${String(customer.firstName || "").trim()} ${String(customer.lastName || "").trim()}`.trim();
+      if (!name && !customer.email && !customer.phone && !items.length) return;
+      syncCartToServer({
+        items,
+        customer: {
+          name,
+          email: customer.email,
+          phone: customer.phone,
+        },
+        path: "/checkout",
+      });
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [customer.firstName, customer.lastName, customer.email, customer.phone, items]);
+
   const freeThreshold = useMemo(
     () => getEffectiveFreeDeliveryThreshold(settings?.storePayment || storePayment),
     [settings?.storePayment, storePayment]
@@ -670,6 +749,8 @@ export function CheckoutView() {
           paymentMethod,
           paymentStatus: "pending",
           status: "pending",
+          cartSessionId: getCartSessionId(),
+          cartRecoveryToken: getStoredRecoveryToken(),
         }),
       });
       const json = await res.json();

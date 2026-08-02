@@ -27,6 +27,7 @@ import { toKg } from "@/lib/shippingEstimate";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { allowsBackorder } from "@/lib/inventoryPolicy";
 import { readAiAttributionFromRequest } from "@/lib/aiAttribution";
+import CartSession from "@/lib/models/CartSession.model";
 
 function isValidCustomerEmail(email) {
   const e = String(email || "").trim().toLowerCase();
@@ -866,6 +867,34 @@ export async function POST(request) {
     sendAdminOrderNotification(order).catch((e) =>
       console.error("Admin order notification failed:", e)
     );
+
+    // Mark matching cart session as recovered
+    try {
+      const sessionId = String(body.cartSessionId || "").trim();
+      const recoveryToken = String(body.cartRecoveryToken || "").trim();
+      const filter = sessionId
+        ? { sessionId }
+        : recoveryToken
+          ? { recoveryToken }
+          : phone
+            ? { "customer.phone": phone, status: { $in: ["active", "abandoned"] } }
+            : null;
+      if (filter) {
+        await CartSession.updateMany(filter, {
+          $set: {
+            status: "recovered",
+            recoveredAt: new Date(),
+            convertedOrderId: order._id,
+            convertedOrderNumber: order.orderNumber,
+            items: [],
+            itemCount: 0,
+            subtotal: 0,
+          },
+        });
+      }
+    } catch (cartErr) {
+      console.error("CartSession recover mark failed:", cartErr?.message || cartErr);
+    }
 
     return NextResponse.json({
       success: true,

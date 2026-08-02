@@ -27,6 +27,7 @@ const NAV = [
     label: "SALES",
     items: [
       { href: "/orders", label: "Orders", icon: "cart" },
+      { href: "/abandoned-carts", label: "Abandoned Carts", icon: "cart" },
       { href: "/invoices", label: "Invoices", icon: "invoice" },
       { href: "/accounts/receive", label: "Receiving", icon: "cash" },
       { href: "/accounts/ledger", label: "Account Ledger", icon: "ledger" },

@@ -9,6 +9,7 @@ import "./models/ActivityLog.model";
 import "./models/AiAgentVisit.model";
 import "./models/Banner.model";
 import "./models/BlogPost.model";
+import "./models/CartSession.model";
 import "./models/CarCatalog.model";
 import "./models/Category.model";
 import "./models/Coupon.model";

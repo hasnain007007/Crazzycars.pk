@@ -84,6 +84,24 @@ Questions? Call: 📞 {storePhone}
 
 Thank you! 🚗✨`,
   },
+  abandonedCart: {
+    enabled: true,
+    template: `Assalam o Alaikum {customerName}! 🚗
+
+You left items in your *Crazzycars.pk* cart:
+
+🛍️ *Items:*
+{itemsList}
+
+💰 *Cart total:* Rs. {subtotal}
+
+Complete your order here:
+{recoverUrl}
+
+Need help? Call {storePhone}
+
+Shukriya — Crazzycars.pk ✨`,
+  },
 };
 
 export function buildWhatsAppMessage(template, variables) {

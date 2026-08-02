@@ -73,6 +73,21 @@ const TEMPLATE_CONFIG = [
       "storePhone",
     ],
   },
+  {
+    key: "abandonedCart",
+    label: "Abandoned Cart Recovery",
+    description: "Opened from Abandoned Carts → WhatsApp. Includes a checkout recover link.",
+    variables: [
+      "customerName",
+      "customerPhone",
+      "itemsList",
+      "subtotal",
+      "itemCount",
+      "recoverUrl",
+      "storePhone",
+      "storeName",
+    ],
+  },
 ];
 
 function emptyTemplates() {
@@ -80,6 +95,7 @@ function emptyTemplates() {
     customerOrderConfirmation: { enabled: true, template: "" },
     adminNewOrder: { enabled: true, template: "" },
     orderShipped: { enabled: true, template: "" },
+    abandonedCart: { enabled: true, template: "" },
   };
 }
 
