@@ -157,35 +157,39 @@ function buildShippingAddressPayload(form) {
   };
 }
 
-function InfoTableCard({ title, rows }) {
+function InfoTableCard({ title, rows, bare = false }) {
   const visibleRows = rows.filter(Boolean);
+  const body = (
+    <dl className="m-0 divide-y divide-slate-100 dark:divide-slate-800">
+      {visibleRows.map((row) => (
+        <div
+          key={row.label}
+          className="flex flex-col gap-0.5 py-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+        >
+          <dt className="shrink-0 text-[13px] font-medium text-slate-500 dark:text-slate-400">
+            {row.label}
+          </dt>
+          <dd className="m-0 min-w-0 break-words text-[13px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">
+            {String(row.value ?? "—")}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+  if (bare) {
+    return <div className="px-3 py-2 sm:px-4">{body}</div>;
+  }
   return (
-    <div className="mb-5 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-      <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/80 sm:px-5">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800/80 sm:px-5">
         <h3 className="m-0 text-sm font-bold text-slate-900 dark:text-white">{title}</h3>
       </div>
-      <div className="px-4 py-3 sm:px-5 sm:py-4">
-        <dl className="m-0 divide-y divide-slate-100 dark:divide-slate-800">
-          {visibleRows.map((row) => (
-            <div
-              key={row.label}
-              className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
-            >
-              <dt className="shrink-0 text-[13px] font-medium text-slate-500 dark:text-slate-400">
-                {row.label}
-              </dt>
-              <dd className="m-0 min-w-0 break-words text-[13px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">
-                {String(row.value ?? "—")}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
+      <div className="px-4 py-2 sm:px-5 sm:py-3">{body}</div>
     </div>
   );
 }
 
-function OrderInformationCard({ order }) {
+function OrderInformationCard({ order, bare = false }) {
   const p = order.pricing || {};
   const subtotal = order.subtotal ?? p.subtotal ?? 0;
   const shippingCost = order.shippingCost ?? p.shippingCost ?? order.shipping ?? 0;
@@ -215,7 +219,7 @@ function OrderInformationCard({ order }) {
       : null,
   ];
 
-  return <InfoTableCard title="Order Information" rows={rows} />;
+  return <InfoTableCard title="Order Information" rows={rows} bare={bare} />;
 }
 
 function ShippingDetailsCard({ order, orderId, onUpdated }) {
@@ -230,31 +234,27 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
   }, [order, editing]);
 
   const addr = order.shippingAddress || {};
+  const instructions = shippingInstructionsFromOrder(order);
   const displayRows = [
     { label: "Full Name", value: addr.name || customerFullName(order) },
     { label: "Phone", value: addr.phone || order.customer?.phone || "—" },
     {
       label: "Address",
       value:
-        [addr.street || addr.line1, addr.street2 || addr.line2]
+        [addr.street || addr.line1, addr.street2 || addr.line2, addr.area]
           .filter(Boolean)
           .join(", ") ||
         addr.address ||
         "—",
     },
-    { label: "Area", value: addr.area || "—" },
     { label: "City", value: addr.city || "—" },
     { label: "Province", value: addr.province || addr.state || "—" },
     {
       label: "Postal Code",
       value: addr.postcode || addr.postalCode || addr.zip || "—",
     },
-    { label: "Country", value: addr.country || "Pakistan" },
-    {
-      label: "Notes / Instructions",
-      value: shippingInstructionsFromOrder(order) || "—",
-    },
-  ];
+    instructions ? { label: "Notes / Instructions", value: instructions } : null,
+  ].filter(Boolean);
 
   function patchField(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -307,14 +307,13 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
         border: "1px solid #e5e7eb",
         borderRadius: 12,
         overflow: "hidden",
-        marginBottom: 20,
       }}
       className="dark:border-slate-700 dark:bg-slate-900"
     >
       <div
         style={{
           background: "#f9fafb",
-          padding: "14px 20px",
+          padding: "10px 16px",
           borderBottom: "1px solid #e5e7eb",
           display: "flex",
           alignItems: "center",
@@ -341,9 +340,9 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
         ) : null}
       </div>
 
-      <div style={{ padding: 20 }}>
+      <div style={{ padding: 12 }}>
         {editing ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
               <label className={labelClass}>Full Name</label>
               <input
@@ -379,16 +378,6 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
                 type="text"
                 value={form.line2}
                 onChange={(e) => patchField("line2", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Area (optional)</label>
-              <input
-                type="text"
-                value={form.area || ""}
-                onChange={(e) => patchField("area", e.target.value)}
-                placeholder="Colony / sector / mohalla"
                 className={inputClass}
               />
             </div>
@@ -473,11 +462,11 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
                 >
                   <td
                     style={{
-                      padding: "10px 0",
-                      fontSize: 13,
+                      padding: "6px 0",
+                      fontSize: 12,
                       color: "#6b7280",
                       fontWeight: 500,
-                      width: "40%",
+                      width: "36%",
                       verticalAlign: "top",
                     }}
                     className="dark:text-slate-400"
@@ -486,8 +475,8 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
                   </td>
                   <td
                     style={{
-                      padding: "10px 0",
-                      fontSize: 13,
+                      padding: "6px 0",
+                      fontSize: 12,
                       color: "#111827",
                       fontWeight: 600,
                       verticalAlign: "top",
@@ -1142,7 +1131,7 @@ export function OrderDetail({ orderId }) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl space-y-4">
+      <div className="w-full space-y-4">
         <div className="h-10 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
         <div className="h-96 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
       </div>
@@ -1475,40 +1464,67 @@ export function OrderDetail({ orderId }) {
       : "—";
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="w-full max-w-none">
       <div className="print:hidden">
-        <div className="mb-3">
+        <div className="mb-2">
           <Link href="/orders" className="text-sm font-medium text-[#1d6fb8] hover:underline">
             ← Orders
           </Link>
         </div>
 
-        <div className="mb-5 border-b border-slate-200 pb-4 dark:border-slate-700">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="mb-3 border-b border-slate-200 pb-3 dark:border-slate-700">
+          <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <h1 className="m-0 text-xl font-bold leading-tight text-slate-900 dark:text-white">
-                Order #{order.orderNumber}
-              </h1>
-              {order.invoiceId || order.invoiceNumber ? (
-                <p className="mt-1 mb-0 text-[13px] text-slate-500 dark:text-slate-400">
-                  From invoice{" "}
-                  {order.invoiceId ? (
-                    <Link
-                      href={`/invoices/${order.invoiceId}`}
-                      className="font-semibold text-[#1d6fb8] hover:underline"
-                    >
-                      {order.invoiceNumber || "View"}
-                    </Link>
-                  ) : (
-                    <span className="font-semibold">{order.invoiceNumber}</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="m-0 text-lg font-bold leading-tight text-slate-900 dark:text-white">
+                  Order #{order.orderNumber}
+                </h1>
+                <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold capitalize text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                  {order.orderStatus || order.status || "pending"}
+                </span>
+                <span
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-semibold capitalize ${
+                    String(order.paymentStatus || "").toLowerCase() === "paid"
+                      ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+                      : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-200"
+                  }`}
+                >
+                  {order.paymentStatus || "unpaid"}
+                </span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">
+                  {formatCurrencyAmount(
+                    order,
+                    order.total ?? order.pricing?.total ?? order.grandTotal ?? 0
                   )}
-                </p>
-              ) : null}
-              <p className="mt-1 mb-0 text-[13px] text-slate-500 dark:text-slate-400">{placedAt}</p>
+                </span>
+              </div>
+              <p className="mt-0.5 mb-0 text-xs text-slate-500 dark:text-slate-400">
+                {customerFullName(order)}
+                {order.paymentMethod || order.payment?.method
+                  ? ` · ${order.paymentMethod || order.payment?.method}`
+                  : ""}
+                {" · "}
+                {placedAt}
+                {order.invoiceId || order.invoiceNumber ? (
+                  <>
+                    {" · Invoice "}
+                    {order.invoiceId ? (
+                      <Link
+                        href={`/invoices/${order.invoiceId}`}
+                        className="font-semibold text-[#1d6fb8] hover:underline"
+                      >
+                        {order.invoiceNumber || "View"}
+                      </Link>
+                    ) : (
+                      <span className="font-semibold">{order.invoiceNumber}</span>
+                    )}
+                  </>
+                ) : null}
+              </p>
             </div>
 
             <div
-              className="inline-flex shrink-0 overflow-hidden rounded-xl border-2 border-slate-300 bg-white shadow-sm dark:border-slate-500 dark:bg-slate-800"
+              className="inline-flex shrink-0 overflow-hidden rounded-lg border border-slate-300 bg-white dark:border-slate-500 dark:bg-slate-800"
               role="group"
               aria-label="Go to previous or next order"
             >
@@ -1522,9 +1538,9 @@ export function OrderDetail({ orderId }) {
                 }
                 aria-label="Previous order (newer)"
                 onClick={() => neighbors.prev?.id && router.push(`/orders/${neighbors.prev.id}`)}
-                className="flex h-11 min-w-[4.5rem] items-center justify-center gap-1.5 border-r border-slate-300 px-3 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-500 dark:text-slate-100 dark:hover:bg-slate-700"
+                className="flex h-9 min-w-[3.75rem] items-center justify-center gap-1 border-r border-slate-300 px-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-500 dark:text-slate-100 dark:hover:bg-slate-700"
               >
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
                   <path
                     fillRule="evenodd"
                     d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
@@ -1543,10 +1559,10 @@ export function OrderDetail({ orderId }) {
                 }
                 aria-label="Next order (older)"
                 onClick={() => neighbors.next?.id && router.push(`/orders/${neighbors.next.id}`)}
-                className="flex h-11 min-w-[4.5rem] items-center justify-center gap-1.5 px-3 text-sm font-bold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-100 dark:hover:bg-slate-700"
+                className="flex h-9 min-w-[3.75rem] items-center justify-center gap-1 px-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-100 dark:hover:bg-slate-700"
               >
                 Next
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
                   <path
                     fillRule="evenodd"
                     d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
@@ -1557,18 +1573,18 @@ export function OrderDetail({ orderId }) {
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             <button
               type="button"
               onClick={printInvoice}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               Print Invoice
             </button>
             <button
               type="button"
               onClick={printPackingSlip}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               Print Packing Slip
             </button>
@@ -1576,59 +1592,48 @@ export function OrderDetail({ orderId }) {
               type="button"
               disabled={sendingInvoice}
               onClick={sendInvoiceEmail}
-              className="col-span-2 rounded-lg bg-[#1d6fb8] px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#185f9e] disabled:opacity-60 sm:col-span-1"
+              className="rounded-md bg-[#1d6fb8] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#185f9e] disabled:opacity-60"
             >
               {sendingInvoice ? "Sending..." : "Send Invoice Email"}
             </button>
-            <div className="col-span-2 sm:col-span-1 sm:min-w-[160px]">
+            <div className="min-w-[140px] [&_button]:!py-1.5 [&_button]:!text-xs">
               <OrderWhatsAppButton order={order} settings={settings} />
             </div>
           </div>
         </div>
 
-        <div
-          className="grid grid-cols-1 gap-5 items-start lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"
-        >
-          <div className="min-w-0 space-y-5">
-            <OrderInformationCard order={order} />
-            <ShippingDetailsCard order={order} orderId={orderId} onUpdated={setOrder} />
-
+        <div className="grid grid-cols-1 items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
+          <div className="min-w-0 space-y-3">
+            {/* Products first — visible without scrolling past tall meta cards */}
             <OrderItemsEditor order={order} onUpdated={setOrder} />
 
-            <InternalNotes order={order} onUpdated={setOrder} />
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              <ShippingDetailsCard order={order} orderId={orderId} onUpdated={setOrder} />
+              <div className="space-y-3">
+                <details className="group rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                  <summary className="cursor-pointer list-none px-4 py-2.5 text-sm font-semibold text-slate-900 marker:content-none dark:text-white [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-center justify-between gap-2">
+                      Order information
+                      <span className="text-xs font-normal text-slate-400 group-open:hidden">Show</span>
+                      <span className="hidden text-xs font-normal text-slate-400 group-open:inline">Hide</span>
+                    </span>
+                  </summary>
+                  <div className="border-t border-slate-100 dark:border-slate-800">
+                    <OrderInformationCard order={order} bare />
+                  </div>
+                </details>
+                <InternalNotes order={order} onUpdated={setOrder} />
+              </div>
+            </div>
           </div>
 
-          <div className="min-w-0 space-y-6">
-            <OrderTimeline
-              order={order}
-              onStatusChange={async (newStatus) => {
-                try {
-                  const res = await fetch(`/api/orders/${order.id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ orderStatus: newStatus }),
-                  });
-                  const data = await res.json();
-                  if (data.success) {
-                    toast.success(`Order status updated to ${newStatus}`);
-                    setOrder(data.order);
-                    router.refresh();
-                  } else {
-                    toast.error(data.error || "Failed to update status");
-                  }
-                } catch {
-                  toast.error("Failed to update status");
-                }
-              }}
-            />
-
+          <div className="min-w-0 space-y-3">
             <OrderStatusCard order={order} onUpdated={setOrder} />
             <PaymentStatusCard order={order} onUpdated={setOrder} />
 
             <PaymentInformationSection order={order} orderId={orderId} onRefunded={load} />
 
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
                 <span aria-hidden>📦</span>
                 Shipping &amp; Tracking
@@ -1636,7 +1641,7 @@ export function OrderDetail({ orderId }) {
 
               {!hasTracking ? (
                 <div
-                  className="mt-3 rounded-lg border border-slate-200 p-4 dark:border-slate-600"
+                  className="mt-2 rounded-lg border border-slate-200 p-3 dark:border-slate-600"
                   style={{ background: "#FAFAFA" }}
                 >
                   <p className="text-sm font-bold text-slate-900 dark:text-white">📦 Book Postex Shipment</p>
@@ -1733,17 +1738,17 @@ export function OrderDetail({ orderId }) {
                 </div>
               )}
 
-              <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Manual tracking (other couriers)
                 </p>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Courier</label>
                     <select
                       value={trackingCarrier}
                       onChange={(e) => setTrackingCarrier(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
                     >
                       {["Postex", "TCS", "Leopards", "M&P", "Other"].map((c) => (
                         <option key={c} value={c}>
@@ -1759,7 +1764,7 @@ export function OrderDetail({ orderId }) {
                     <input
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
                       placeholder="Enter tracking number"
                     />
                   </div>
@@ -1767,7 +1772,7 @@ export function OrderDetail({ orderId }) {
                     type="button"
                     disabled={trackingSaving}
                     onClick={saveTracking}
-                    className="w-full rounded-lg bg-[#1d6fb8] px-3 py-2 text-sm font-semibold text-white hover:bg-[#185f9e] disabled:opacity-60"
+                    className="w-full rounded-lg bg-[#1d6fb8] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#185f9e] disabled:opacity-60"
                   >
                     {trackingSaving ? "Saving..." : "Save Tracking"}
                   </button>
@@ -1776,7 +1781,7 @@ export function OrderDetail({ orderId }) {
                       type="button"
                       disabled={sendingTracking}
                       onClick={sendTrackingEmail}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
                     >
                       {sendingTracking ? "Sending..." : "Send tracking email"}
                     </button>
@@ -1784,6 +1789,30 @@ export function OrderDetail({ orderId }) {
                 </div>
               </div>
             </div>
+
+            <OrderTimeline
+              order={order}
+              onStatusChange={async (newStatus) => {
+                try {
+                  const res = await fetch(`/api/orders/${order.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ orderStatus: newStatus }),
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    toast.success(`Order status updated to ${newStatus}`);
+                    setOrder(data.order);
+                    router.refresh();
+                  } else {
+                    toast.error(data.error || "Failed to update status");
+                  }
+                } catch {
+                  toast.error("Failed to update status");
+                }
+              }}
+            />
           </div>
         </div>
       </div>

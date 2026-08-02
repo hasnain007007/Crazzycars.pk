@@ -421,7 +421,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Order items</h2>
         <button
@@ -477,18 +477,18 @@ export function OrderItemsEditor({ order, onUpdated }) {
         </div>
       ) : null}
 
-      <div className="mt-3 overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-slate-200 text-xs font-semibold uppercase text-slate-500 dark:border-slate-700 dark:text-slate-400">
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full table-fixed text-left text-sm">
+          <thead className="border-b border-slate-200 text-[10px] font-semibold uppercase text-slate-500 dark:border-slate-700 dark:text-slate-400">
             <tr>
-              <th className="py-2 pr-2">Image</th>
-              <th className="py-2 pr-2">Product</th>
-              <th className="py-2 pr-2 min-w-[160px]">Variation</th>
-              <th className="py-2 pr-2 min-w-[160px]">Add-ons</th>
-              <th className="py-2 pr-2 text-right">Qty</th>
-              <th className="py-2 pr-2 text-right">Unit price</th>
-              <th className="py-2 pr-2 text-right">Line total</th>
-              <th className="py-2 text-right"> </th>
+              <th className="w-12 py-1.5 pr-1">Img</th>
+              <th className="py-1.5 pr-1">Product</th>
+              <th className="w-[22%] py-1.5 pr-1">Variation</th>
+              <th className="w-[22%] py-1.5 pr-1">Add-ons</th>
+              <th className="w-24 py-1.5 pr-1 text-right">Qty</th>
+              <th className="w-24 py-1.5 pr-1 text-right">Price</th>
+              <th className="w-20 py-1.5 pr-1 text-right">Total</th>
+              <th className="w-14 py-1.5 text-right"> </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -502,7 +502,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
               return (
                 <tr key={item.key} className="align-top">
                   <td className="py-2 pr-2">
-                    <div className="h-12 w-12 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
+                    <div className="h-10 w-10 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
                       {item.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={item.image} alt="" className="h-full w-full object-cover" />
@@ -511,7 +511,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
                       )}
                     </div>
                   </td>
-                  <td className="py-2 pr-2 font-medium text-slate-900 dark:text-white">
+                  <td className="min-w-0 py-1.5 pr-1 text-xs font-medium text-slate-900 dark:text-white">
                     {item.name}
                     {item.variation ? (
                       <p className="mt-0.5 text-[11px] font-normal text-slate-500">{item.variation}</p>
@@ -530,7 +530,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
                             <select
                               value={item.selectedOptions?.[v.name] || ""}
                               onChange={(e) => setOption(idx, v.name, e.target.value)}
-                              className="w-full max-w-[180px] rounded border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-600 dark:bg-slate-800"
+                              className="w-full rounded border border-slate-200 px-1.5 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
                             >
                               <option value="">Select…</option>
                               {v.tags.map((tag) => (
@@ -552,7 +552,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
                             <select
                               value={item.selectedOptions?.[v.name] || ""}
                               onChange={(e) => setOption(idx, v.name, e.target.value)}
-                              className="w-full max-w-[180px] rounded border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-600 dark:bg-slate-800"
+                              className="w-full rounded border border-slate-200 px-1.5 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
                             >
                               <option value="">Select…</option>
                               {(v.options.length ? v.options : [v.name]).map((opt) => (
@@ -665,7 +665,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
         </table>
       </div>
 
-      <div className="mt-4 border-t border-slate-100 pt-4 text-sm dark:border-slate-800">
+      <div className="mt-3 border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
         <div className="flex justify-between py-0.5">
           <span className="text-slate-600 dark:text-slate-400">Subtotal</span>
           <span className="tabular-nums">{formatMoney(subtotal)}</span>
@@ -677,54 +677,47 @@ export function OrderItemsEditor({ order, onUpdated }) {
           </div>
         ) : null}
 
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800/50">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Delivery</p>
-              <p className="text-sm font-medium text-slate-900 dark:text-white">
-                {deliveryOn ? "Delivery charge on" : "Delivery off (free / no shipping)"}
-              </p>
-            </div>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/50">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               role="switch"
               aria-checked={deliveryOn}
               onClick={() => setDeliveryOn((v) => !v)}
               className={[
-                "relative h-7 w-12 rounded-full transition",
+                "relative h-6 w-10 shrink-0 rounded-full transition",
                 deliveryOn ? "bg-[#1d6fb8]" : "bg-slate-300 dark:bg-slate-600",
               ].join(" ")}
             >
               <span
                 className={[
-                  "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition",
-                  deliveryOn ? "left-5" : "left-0.5",
+                  "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition",
+                  deliveryOn ? "left-4" : "left-0.5",
                 ].join(" ")}
               />
             </button>
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
+              {deliveryOn ? "Delivery on" : "Delivery off"}
+            </span>
           </div>
           {deliveryOn ? (
-            <div className="mt-3">
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                Shipping / delivery amount (Rs.)
-              </label>
-              <input
-                type="number"
-                min={0}
-                step="1"
-                value={shippingCost}
-                onChange={(e) => setShippingCost(e.target.value)}
-                className="mt-1 w-full max-w-[160px] rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-900"
-              />
-            </div>
+            <input
+              type="number"
+              min={0}
+              step="1"
+              aria-label="Shipping amount"
+              value={shippingCost}
+              onChange={(e) => setShippingCost(e.target.value)}
+              className="w-28 rounded-lg border border-slate-200 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900"
+            />
           ) : null}
         </div>
 
-        <div className="mt-2 flex justify-between py-0.5">
+        <div className="mt-1.5 flex justify-between py-0.5">
           <span className="text-slate-600 dark:text-slate-400">Shipping</span>
           <span className="tabular-nums">{formatMoney(shipNum)}</span>
         </div>
-        <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 text-lg font-bold dark:border-slate-700">
+        <div className="mt-1.5 flex justify-between border-t border-slate-200 pt-1.5 text-base font-bold dark:border-slate-700">
           <span>Total</span>
           <span className="tabular-nums">{formatMoney(total)}</span>
         </div>
@@ -733,7 +726,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
           type="button"
           onClick={save}
           disabled={saving}
-          className="mt-4 w-full rounded-lg bg-[#1d6fb8] py-2.5 text-sm font-semibold text-white hover:bg-[#185d9c] disabled:opacity-50"
+          className="mt-3 w-full rounded-lg bg-[#1d6fb8] py-2 text-sm font-semibold text-white hover:bg-[#185d9c] disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save order changes"}
         </button>
