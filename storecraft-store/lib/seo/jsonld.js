@@ -124,6 +124,79 @@ export function breadcrumbJsonLd(items) {
   };
 }
 
+/**
+ * CollectionPage — category / collection pages.
+ * `products` should be the products actually rendered on the page (SSR first page).
+ * `numberOfItems` uses the full membership count when provided.
+ */
+export function collectionPageJsonLd({
+  name,
+  description,
+  url,
+  products = [],
+  numberOfItems,
+  breadcrumb,
+  isPartOfName,
+} = {}) {
+  const SITE = site();
+  const pageUrl = url?.startsWith("http")
+    ? url
+    : `${SITE}${url?.startsWith("/") ? url : `/${url || ""}`}`;
+
+  const list = (Array.isArray(products) ? products : [])
+    .map((p, i) => {
+      const slug = String(p?.slug || "").trim();
+      if (!slug) return null;
+      const path = p.urlPath || `/${slug}`;
+      const itemUrl = absoluteProductUrl(path);
+      return {
+        "@type": "ListItem",
+        position: i + 1,
+        url: itemUrl,
+        name: p.name || slug,
+        item: {
+          "@type": "Product",
+          "@id": `${itemUrl}#product`,
+          name: p.name || slug,
+          url: itemUrl,
+        },
+      };
+    })
+    .filter(Boolean);
+
+  const total =
+    Number.isFinite(Number(numberOfItems)) && Number(numberOfItems) >= 0
+      ? Number(numberOfItems)
+      : list.length;
+
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${pageUrl}#collection`,
+    name: name || undefined,
+    description: description || undefined,
+    url: pageUrl,
+    isPartOf: {
+      "@type": "WebSite",
+      name: isPartOfName || "CrazzyCars.pk",
+      url: SITE,
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: total,
+      itemListElement: list,
+    },
+  };
+
+  if (breadcrumb) {
+    ld.breadcrumb = breadcrumb["@type"]
+      ? breadcrumb
+      : breadcrumbJsonLd(breadcrumb);
+  }
+
+  return ld;
+}
+
 /** AutoPartsStore — root layout once */
 export function organizationJsonLd(overrides = {}) {
   const SITE = site();

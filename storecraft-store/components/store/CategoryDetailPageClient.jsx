@@ -10,8 +10,6 @@ import {
   ProductListingToolbar,
 } from "./ProductListingToolbar";
 import { categoryHref } from "@/lib/categories";
-import { categoryBannerUrl, logoImageUrl } from "@/lib/cloudinaryImage";
-import { trimmedLogoUrl } from "@/lib/storeLogo";
 import {
   DEFAULT_LISTING_PAGE_SIZE,
   LISTING_VIEWS,
@@ -57,136 +55,18 @@ function toProductCard(product) {
   };
 }
 
-function plainText(htmlOrText) {
-  return String(htmlOrText || "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function productImageUrls(products) {
-  const urls = [];
-  for (const p of products || []) {
-    const u =
-      (typeof p.image === "string" ? p.image : p.image?.url) ||
-      p.media?.images?.find((i) => i?.isMain)?.url ||
-      p.media?.images?.[0]?.url ||
-      "";
-    if (u && !urls.includes(u)) urls.push(u);
-    if (urls.length >= 6) break;
-  }
-  return urls;
-}
-
 /**
- * Bold CrazzyCars.pk category hero — branded carbon/red panel,
- * logo chip, large yellow title, single banner visual.
+ * Category product listing island — reads sort/view/page from the URL.
+ * Page chrome (breadcrumb + H1 hero) is rendered by the server parent so crawlers
+ * always see one H1 even when this island bails out to CSR.
  */
-function CategoryHeroBanner({ category, subcategories, products, brand }) {
-  const title = String(category?.name || "").toUpperCase();
-  const imageAlt = category?.image?.altText || category?.name || "";
-  const imageTitle = category?.image?.title || category?.name || "";
-  const storeName = brand?.name || "CrazzyCars.pk";
-  const logoUrl = logoImageUrl(trimmedLogoUrl(brand?.logo || "")) || trimmedLogoUrl(brand?.logo || "");
-
-  const bannerSlots = (Array.isArray(category?.bannerImages) ? category.bannerImages : [])
-    .map((b) => b?.url)
-    .filter(Boolean);
-  const sideImages = (subcategories || [])
-    .map((s) => s?.image?.url)
-    .filter(Boolean);
-  const productImgs = productImageUrls(products);
-
-  const rawBanner =
-    category?.image?.url ||
-    bannerSlots[0] ||
-    sideImages[0] ||
-    productImgs[0] ||
-    "";
-
-  const bannerSrc = rawBanner ? categoryBannerUrl(rawBanner) : "";
-
-  return (
-    <div className="cat-hero cat-hero--brand" aria-label={`${category?.name} — ${storeName}`}>
-      <div className="cat-hero__panel" aria-hidden>
-        <span className="cat-hero__carbon" />
-        <span className="cat-hero__speed" />
-        <span className="cat-hero__flare" />
-        <span className="cat-hero__stripe cat-hero__stripe--1" />
-        <span className="cat-hero__stripe cat-hero__stripe--2" />
-        <svg className="cat-hero__car-mark" viewBox="0 0 120 36" fill="none" aria-hidden>
-          <path
-            d="M8 24c6-10 18-16 34-16 14 0 24 4 34 10 8 5 16 8 28 8h8"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          <circle cx="34" cy="26" r="5" stroke="currentColor" strokeWidth="2.5" />
-          <circle cx="86" cy="26" r="5" stroke="currentColor" strokeWidth="2.5" />
-        </svg>
-      </div>
-
-      <div className="cat-hero__stage">
-        <div className="cat-hero__copy">
-          <div className="cat-hero__brand">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="cat-hero__brand-logo" />
-            ) : (
-              <span className="cat-hero__brand-mark" aria-hidden>
-                CC
-              </span>
-            )}
-            <div className="cat-hero__brand-text">
-              <span className="cat-hero__brand-name">{storeName}</span>
-              <span className="cat-hero__brand-tag">Premium Car Accessories · Pakistan</span>
-            </div>
-          </div>
-
-          <p className="cat-hero__eyebrow">Shop Collection</p>
-          <h1 className="cat-hero__title">{title}</h1>
-          <p className="cat-hero__sub">
-            Built for real roads — fitment-ready parts from {storeName}
-          </p>
-        </div>
-
-        {bannerSrc ? (
-          <div className="cat-hero__visual">
-            <div className="cat-hero__visual-frame">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={bannerSrc}
-                alt={imageAlt}
-                title={imageTitle}
-                fetchPriority="high"
-                decoding="async"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="cat-hero__visual cat-hero__visual--empty" aria-hidden>
-            <span className="cat-hero__empty-logo">{storeName}</span>
-          </div>
-        )}
-      </div>
-
-      <svg className="cat-hero__wave" viewBox="0 0 1440 56" preserveAspectRatio="none" aria-hidden>
-        <path
-          d="M0,22 C180,52 360,4 540,24 C720,44 900,8 1080,26 C1260,44 1350,18 1440,28 L1440,56 L0,56 Z"
-          fill="#ffffff"
-        />
-      </svg>
-    </div>
-  );
-}
-
 export function CategoryDetailPageClient({
   initialCategory,
   initialSubcategories,
   initialProducts,
   initialProductCount = null,
   initialBreadcrumbs: _initialBreadcrumbs,
-  brand = null,
+  brand: _brand = null,
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -202,10 +82,6 @@ export function CategoryDetailPageClient({
     initialProductCount != null && Number.isFinite(Number(initialProductCount))
       ? Number(initialProductCount)
       : seededProducts.length;
-  const storeBrand = brand || {
-    name: process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk",
-    logo: "",
-  };
 
   const sort = normalizeListingSort(searchParams.get("sort"));
   const view = normalizeListingView(searchParams.get("view"));
@@ -251,14 +127,6 @@ export function CategoryDetailPageClient({
     },
     [pathname, router, searchParams]
   );
-
-  const description = useMemo(() => {
-    return (
-      plainText(category?.shortDescription) ||
-      plainText(category?.description) ||
-      ""
-    );
-  }, [category]);
 
   const canUseSeed =
     page === 1 &&
@@ -350,7 +218,7 @@ export function CategoryDetailPageClient({
   if (!category) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-14 text-center">
-        <h1 className="text-3xl font-bold">Category not found</h1>
+        <p className="text-3xl font-bold">Category not found</p>
         <Link href="/categories" className="mt-5 inline-block text-[#C41E1E] underline">
           Back to categories
         </Link>
@@ -360,30 +228,6 @@ export function CategoryDetailPageClient({
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
-      <div className="cat-page-wrap">
-        <nav className="cat-breadcrumb" aria-label="Breadcrumb">
-          <Link href="/">Home</Link>
-          <span className="cat-breadcrumb__sep">/</span>
-          <span className="cat-breadcrumb__current">
-            {String(category.slug || category.name || "").toLowerCase()}
-          </span>
-        </nav>
-
-        <CategoryHeroBanner
-          category={category}
-          subcategories={subcategories}
-          products={seededProducts}
-          brand={storeBrand}
-        />
-
-        {description ? (
-          <>
-            <hr className="cat-hero-divider" />
-            <p className="cat-desc">{description}</p>
-          </>
-        ) : null}
-      </div>
-
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         {subcategories.length > 0 ? (
           <section className="subcat-circle-section" style={{ marginBottom: 48 }}>

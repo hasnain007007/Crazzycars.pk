@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import SalePageView from "@/components/store/SalePageView";
+import { SalePageChrome } from "@/components/store/SalePageChrome";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const metadata = buildPageMetadata({
@@ -12,8 +13,11 @@ export const metadata = buildPageMetadata({
 
 export default function SalePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white" />}>
-      <SalePageView />
-    </Suspense>
+    <div className="min-h-screen bg-white">
+      <SalePageChrome />
+      <Suspense fallback={<div className="min-h-[40vh] bg-white" />}>
+        <SalePageView />
+      </Suspense>
+    </div>
   );
 }

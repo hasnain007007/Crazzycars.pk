@@ -1,14 +1,16 @@
 import { Suspense, cache } from "react";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ProductDetailMedico } from "@/components/store/ProductDetailMedico";
 import PageView from "@/components/store/PageView";
 import { CategoryDetailPageClient } from "@/components/store/CategoryDetailPageClient";
+import { CategoryPageChrome } from "@/components/store/CategoryPageChrome";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Page from "@/lib/models/Page.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { findActiveProductBySlugParam } from "@/lib/resolveProductSlug";
 import {
   productJsonLd as buildProductJsonLd,
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
@@ -112,17 +114,40 @@ const loadContent = cache(async (slug) => {
   await dbConnect();
   const slugStr = String(slug || "").trim();
 
-  const product = await Product.findOne({
+  // Exact slug first (fast path).
+  let product = await Product.findOne({
     slug: slugStr,
     status: "active",
   })
     .select(
-      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal compatibleVehicles"
+      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal compatibleVehicles compatibleCars vehicleCompatibility"
     )
     .populate("categories", "name slug")
     .lean();
 
+  // Meta / Shopify-era handles often omit the `-crazzycars-pk` suffix.
+  if (!product) {
+    const legacy = await findActiveProductBySlugParam(slugStr);
+    if (legacy?.slug && legacy.slug !== slugStr) {
+      return { type: "redirect", to: `/${legacy.slug}` };
+    }
+    if (legacy?.slug) {
+      product = await Product.findOne({
+        slug: legacy.slug,
+        status: "active",
+      })
+        .select(
+          "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal compatibleVehicles compatibleCars vehicleCompatibility"
+        )
+        .populate("categories", "name slug")
+        .lean();
+    }
+  }
+
   if (product) {
+    if (product.slug && product.slug !== slugStr) {
+      return { type: "redirect", to: `/${product.slug}` };
+    }
     const relatedProducts = await loadRelatedProducts(product);
     return {
       type: "product",
@@ -165,8 +190,16 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const content = await loadContent(slugStr);
-  if (!content) return { title: "Not Found" };
-  const canonical = `${BASE_URL}/${slugStr}`;
+  if (!content) {
+    return {
+      title: "Page not found",
+      robots: { index: false, follow: true },
+    };
+  }
+  if (content.type === "redirect") {
+    permanentRedirect(content.to);
+  }
+  const canonical = `${BASE_URL}/${content.type === "product" ? content.data.slug : slugStr}`;
 
   if (content.type === "product") {
     const p = content.data;
@@ -307,6 +340,9 @@ export default async function ProductPage({ params }) {
   if (!slugStr) notFound();
   const content = await loadContent(slugStr);
   if (!content) notFound();
+  if (content.type === "redirect") {
+    permanentRedirect(content.to);
+  }
 
   if (content.type === "product") {
     return (
@@ -332,6 +368,11 @@ export default async function ProductPage({ params }) {
     const d = content.data;
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
+        <CategoryPageChrome
+          category={d.category}
+          subcategories={d.subcategories}
+          products={d.products}
+        />
         <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-16 text-sm text-[#6B7280]">Loading products…</div>}>
           <CategoryDetailPageClient
             initialCategory={d.category}

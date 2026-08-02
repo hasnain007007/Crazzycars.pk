@@ -104,38 +104,29 @@ export default function OrderTrackingView() {
   const destOk = Boolean(data?.destinationReceived);
 
   return (
-    <div className="cc-track cc-track--compact">
-      <div className="cc-track__shell">
-        <header className="cc-track__top">
-          <div className="cc-track__top-copy">
-            <p className="cc-track__eyebrow">
-              <span className="cc-track__live" aria-hidden />
-              Live Postex
-            </p>
-            <h1 className="cc-track__title">Track order</h1>
-          </div>
-
-          <form
-            className="cc-track__form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              track(input);
-            }}
-          >
-            <input
-              className="cc-track__input"
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Postex tracking number"
-              aria-label="Postex tracking number"
-              autoComplete="off"
-            />
-            <button className="cc-track__submit" type="submit" disabled={loading}>
-              {loading ? "…" : "Track"}
-            </button>
-          </form>
-        </header>
+    <>
+      <header className="cc-track__top">
+        <form
+          className="cc-track__form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            track(input);
+          }}
+        >
+          <input
+            className="cc-track__input"
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Postex tracking number"
+            aria-label="Postex tracking number"
+            autoComplete="off"
+          />
+          <button className="cc-track__submit" type="submit" disabled={loading}>
+            {loading ? "…" : "Track"}
+          </button>
+        </form>
+      </header>
 
         {error ? <div className="cc-track__error" role="alert">{error}</div> : null}
 
@@ -213,7 +204,6 @@ export default function OrderTrackingView() {
             </div>
           </div>
         ) : null}
-      </div>
-    </div>
+    </>
   );
 }

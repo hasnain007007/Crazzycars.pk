@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import OrderTrackingView from "@/components/store/OrderTrackingView";
+import { OrderTrackingChrome } from "@/components/store/OrderTrackingChrome";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const metadata = buildPageMetadata({
@@ -11,12 +12,13 @@ export const metadata = buildPageMetadata({
 
 export default function TrackOrderPage() {
   return (
-    <Suspense
-      fallback={
-        <div style={{ padding: 48, textAlign: "center", color: "#6B7280" }}>Loading…</div>
-      }
-    >
-      <OrderTrackingView />
-    </Suspense>
+    <div className="cc-track cc-track--compact">
+      <div className="cc-track__shell">
+        <OrderTrackingChrome />
+        <Suspense fallback={<p className="cc-track__hint">Loading…</p>}>
+          <OrderTrackingView />
+        </Suspense>
+      </div>
+    </div>
   );
 }

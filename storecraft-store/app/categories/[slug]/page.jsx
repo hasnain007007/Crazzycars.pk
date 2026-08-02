@@ -4,8 +4,9 @@ import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
-import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 import { CategoryDetailPageClient } from "@/components/store/CategoryDetailPageClient";
+import { CategoryPageChrome } from "@/components/store/CategoryPageChrome";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
 import { getServerStoreSettings } from "@/lib/serverSettings";
@@ -183,13 +184,46 @@ export default async function CategoryPage({ params }) {
       return true;
     });
 
+    const breadcrumbLd = breadcrumbJsonLd(uniqueCrumbs);
+    const categoryDescription =
+      String(data.category?.seo?.metaDescription || "").trim() ||
+      String(data.category?.description || "").trim() ||
+      String(data.category?.shortDescription || "").trim() ||
+      undefined;
+    const collectionLd = collectionPageJsonLd({
+      name: data.category?.name,
+      description: categoryDescription,
+      url: `/categories/${data.category?.slug || slugStr}`,
+      products: data.products,
+      numberOfItems: data.productCount,
+      breadcrumb: breadcrumbLd,
+      isPartOfName: brand?.name || BRAND,
+    });
+
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(uniqueCrumbs)) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
         />
-        <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-16 text-sm text-[#6B7280]">Loading products…</div>}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
+        />
+        {/* H1 chrome SSRs here — outside the useSearchParams island */}
+        <CategoryPageChrome
+          category={data.category}
+          subcategories={data.subcategories}
+          products={data.products}
+          brand={brand}
+        />
+        <Suspense
+          fallback={
+            <div className="mx-auto max-w-7xl px-4 py-16 text-sm text-[#6B7280]">
+              Loading products…
+            </div>
+          }
+        >
           <CategoryDetailPageClient
             initialCategory={data.category}
             initialSubcategories={data.subcategories}
@@ -208,9 +242,9 @@ export default async function CategoryPage({ params }) {
     if (!collection) notFound();
     const brand = await getCachedBrand();
     return (
-      <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-16 text-sm text-[#6B7280]">Loading products…</div>}>
-        <CategoryDetailPageClient
-          initialCategory={{
+      <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
+        <CategoryPageChrome
+          category={{
             _id: collection.handle,
             slug: collection.handle,
             name: collection.title,
@@ -218,12 +252,27 @@ export default async function CategoryPage({ params }) {
             image: collection.image,
             source: "shopify",
           }}
-          initialSubcategories={[]}
-          initialProducts={collection.products}
-          initialBreadcrumbs={[]}
+          subcategories={[]}
+          products={collection.products}
           brand={brand}
         />
-      </Suspense>
+        <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-16 text-sm text-[#6B7280]">Loading products…</div>}>
+          <CategoryDetailPageClient
+            initialCategory={{
+              _id: collection.handle,
+              slug: collection.handle,
+              name: collection.title,
+              description: collection.descriptionHtml || collection.description,
+              image: collection.image,
+              source: "shopify",
+            }}
+            initialSubcategories={[]}
+            initialProducts={collection.products}
+            initialBreadcrumbs={[]}
+            brand={brand}
+          />
+        </Suspense>
+      </div>
     );
   }
 

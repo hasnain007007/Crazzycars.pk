@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { CategoriesPageClient } from "@/components/store/CategoriesPageClient";
+import { CategoriesIndexChrome } from "@/components/store/CategoriesIndexChrome";
 import { categoryHref } from "@/lib/categories";
 import { dbConnect } from "@/lib/db";
 import { buildPageMetadata } from "@/lib/pageMetadata";
@@ -42,8 +44,15 @@ export default async function CategoriesPage() {
   }
 
   return (
-    <div style={{ background: "#0A0A0A", minHeight: "100vh" }}>
-      <CategoriesPageClient initialCategories={serialized} />
+    <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
+      <CategoriesIndexChrome />
+      <Suspense
+        fallback={
+          <div className="mx-auto max-w-7xl px-4 py-12 text-zinc-500">Loading categories…</div>
+        }
+      >
+        <CategoriesPageClient initialCategories={serialized} />
+      </Suspense>
     </div>
   );
 }
