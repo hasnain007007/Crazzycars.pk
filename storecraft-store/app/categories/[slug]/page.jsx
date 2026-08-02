@@ -11,6 +11,7 @@ import { getSiteUrl } from "@/lib/siteUrl";
 import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
 import { getServerStoreSettings } from "@/lib/serverSettings";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
+import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 
 /** ISR: prerender active categories at build; refresh every 2 minutes. */
 export const revalidate = 120;
@@ -96,8 +97,11 @@ export async function generateMetadata({ params }) {
     const category = await getCategoryMeta(slugStr);
 
     if (category) {
-      const title =
-        (category.seo?.metaTitle || "").trim() || `${category.name} | ${BRAND}`;
+      const titleMeta = buildBrandedAbsoluteTitle(
+        (category.seo?.metaTitle || "").trim() || category.name,
+        { brand: BRAND }
+      );
+      const title = titleMeta.absolute;
       const description =
         (category.seo?.metaDescription || "").trim() ||
         `Shop ${category.name} at ${BRAND}. Premium car accessories with Cash on Delivery nationwide.`;
@@ -114,7 +118,7 @@ export async function generateMetadata({ params }) {
         : [];
 
       return {
-        title,
+        title: titleMeta,
         description,
         ...(keywords.length ? { keywords } : {}),
         openGraph: {
@@ -141,12 +145,13 @@ export async function generateMetadata({ params }) {
   if (isShopifyEnabled()) {
     const collection = await getCollectionByHandle(slugStr).catch(() => null);
     if (!collection) return { title: "Category Not Found", robots: { index: false, follow: false } };
+    const titleMeta = buildBrandedAbsoluteTitle(collection.title, { brand: BRAND });
     return {
-      title: collection.title,
+      title: titleMeta,
       description: collection.description || `Shop ${collection.title} at ${BRAND}.`,
       alternates: { canonical: `${BASE_URL}/categories/${slugStr}` },
       openGraph: {
-        title: collection.title,
+        title: titleMeta.absolute,
         description: collection.description || "",
         url: `${BASE_URL}/categories/${slugStr}`,
         images: collection.image?.url ? [{ url: collection.image.url }] : [],

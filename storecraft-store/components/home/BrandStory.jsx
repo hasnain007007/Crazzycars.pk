@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { storyImageUrlOptimized } from "@/lib/cloudinaryImage";
+import { resolveHomepageStats } from "@/lib/homepageStats";
 
 function storyImageUrl(field) {
   if (field == null) return "";
@@ -26,7 +27,7 @@ function hasBrandStoryContent(story) {
   return hasText || hasImages || hasStats || hasButton;
 }
 
-export default function BrandStory({ story: storyProp }) {
+export default function BrandStory({ story: storyProp, activeProductCount = null }) {
   const [story, setStory] = useState(storyProp || null);
   const [loading, setLoading] = useState(!storyProp);
 
@@ -50,9 +51,9 @@ export default function BrandStory({ story: storyProp }) {
 
   const image1Url = storyImageUrlOptimized(storyImageUrl(story.image1)) || storyImageUrl(story.image1);
   const image2Url = storyImageUrlOptimized(storyImageUrl(story.image2)) || storyImageUrl(story.image2);
-  const stats = (Array.isArray(story.stats) ? story.stats : []).filter(
-    (s) => String(s?.value || "").trim() || String(s?.label || "").trim()
-  );
+  const stats = resolveHomepageStats(Array.isArray(story.stats) ? story.stats : [], {
+    activeProductCount,
+  });
 
   return (
     <section className="homepage-section bg-white py-12 md:py-20" style={{ paddingTop: 80, paddingBottom: 80 }}>
@@ -77,7 +78,7 @@ export default function BrandStory({ story: storyProp }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={image2Url}
-                    alt=""
+                    alt={story.heading ? `${story.heading} — detail` : "Our story — detail"}
                     loading="lazy"
                     className="absolute bottom-4 left-4 z-10 w-[45%] rounded-lg border-4 border-white object-cover shadow-lg"
                     style={{ height: 140 }}

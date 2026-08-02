@@ -15,6 +15,7 @@ import {
   productJsonLd as buildProductJsonLd,
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
 } from "@/lib/seo/jsonld";
+import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 
 /**
  * ISR for product / CMS / category-via-slug pages.
@@ -243,7 +244,11 @@ export async function generateMetadata({ params }) {
 
   if (content.type === "category") {
     const cat = content.data.category;
-    const title = (cat.seo?.metaTitle || "").trim() || `${cat.name} | ${BRAND}`;
+    const titleMeta = buildBrandedAbsoluteTitle(
+      (cat.seo?.metaTitle || "").trim() || cat.name,
+      { brand: BRAND }
+    );
+    const title = titleMeta.absolute;
     const description =
       (cat.seo?.metaDescription || "").trim() ||
       `Shop ${cat.name} at ${BRAND}. Premium car accessories with Cash on Delivery nationwide.`;
@@ -251,7 +256,7 @@ export async function generateMetadata({ params }) {
       ? cat.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
       : [];
     return {
-      title,
+      title: titleMeta,
       description,
       ...(keywords.length ? { keywords } : {}),
       alternates: { canonical },
@@ -266,21 +271,26 @@ export async function generateMetadata({ params }) {
   }
 
   const page = content.data;
+  const pageTitleMeta = buildBrandedAbsoluteTitle(
+    (page.seo?.metaTitle || "").trim() || page.title,
+    { brand: BRAND }
+  );
+  const pageTitle = pageTitleMeta.absolute;
   return {
-    title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`,
+    title: pageTitleMeta,
     description: page.seo?.metaDescription || "",
     alternates: {
       canonical: page.seo?.canonical || `${BASE_URL}/${slugStr}`,
     },
     openGraph: {
-      title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`,
+      title: pageTitle,
       description: page.seo?.metaDescription || "",
       type: "website",
       url: `${BASE_URL}/${slugStr}`,
     },
     twitter: {
       card: "summary_large_image",
-      title: page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`,
+      title: pageTitle,
       description: page.seo?.metaDescription || "",
     },
   };

@@ -9,6 +9,7 @@ import {
 } from "@/lib/vehiclePageData";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { VehicleProductsListing } from "@/components/cars/VehicleProductsListing";
 
 export const revalidate = 300;
@@ -24,13 +25,17 @@ export async function generateMetadata({ params }) {
     const vehicle = await loadVehicleBySlug(slugStr);
     if (!vehicle) return { title: "Vehicle Not Found", robots: { index: false, follow: false } };
 
-    const title = (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories | ${BRAND}`;
+    const titleMeta = buildBrandedAbsoluteTitle(
+      (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
+      { brand: BRAND }
+    );
+    const title = titleMeta.absolute;
     const description =
       (vehicle.metaDescription || "").trim() ||
       `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`;
 
     return {
-      title,
+      title: titleMeta,
       description,
       alternates: { canonical: `${BASE_URL}/cars/${vehicle.slug}` },
       openGraph: {

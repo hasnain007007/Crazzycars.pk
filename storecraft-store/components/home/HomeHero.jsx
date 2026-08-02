@@ -284,7 +284,10 @@ function HeroSlidePanel({
           {/* eslint-disable-next-line @next/next/no-img-element -- LCP hero; Cloudinary-optimized src */}
           <img
             src={bgImage}
-            alt=""
+            alt={
+              String(slide.altText || slide.title || "").trim() ||
+              `${BRAND} — Car Accessories Pakistan`
+            }
             fetchPriority={isLcp ? "high" : "low"}
             loading={isLcp ? "eager" : "lazy"}
             decoding="async"

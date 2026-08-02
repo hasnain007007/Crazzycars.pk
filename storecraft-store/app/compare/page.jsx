@@ -254,7 +254,7 @@ export default function ComparePage() {
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                           src={p.image}
-                          alt=""
+                          alt={p.name || "Product"}
                           style={{ width: 120, height: 120, objectFit: "cover", borderRadius: 8, margin: "0 auto", display: "block" }}
                         />
                       ) : (

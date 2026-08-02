@@ -52,7 +52,7 @@ function FlashProductCard({ product }) {
       <div className="relative aspect-square" style={{ background: "#F9FAFB" }}>
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
+          <img src={imageUrl} alt={product.name || "Product"} loading="lazy" className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full items-center justify-center text-[#D1D5DB]">—</div>
         )}

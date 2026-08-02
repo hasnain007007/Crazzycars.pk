@@ -3,6 +3,9 @@ import { dbConnect } from "@/lib/db";
 import Page from "@/lib/models/Page.model";
 import PageView from "@/components/store/PageView";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
+
+const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
 
 async function loadPage(slug) {
   try {
@@ -23,12 +26,16 @@ export async function generateMetadata({ params }) {
   if (!page) return { title: "Page Not Found" };
 
   const BASE_URL = getSiteUrl();
-  const title = page.seo?.metaTitle || `${page.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`;
+  const titleMeta = buildBrandedAbsoluteTitle(
+    (page.seo?.metaTitle || "").trim() || page.title,
+    { brand: BRAND }
+  );
+  const title = titleMeta.absolute;
   const description = page.seo?.metaDescription || "";
   const canonical = `${BASE_URL}/pages/${slug}`;
 
   return {
-    title,
+    title: titleMeta,
     description,
     alternates: { canonical },
     openGraph: {

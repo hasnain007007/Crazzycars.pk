@@ -195,7 +195,11 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
             <div className="relative h-48 w-full shrink-0 bg-[#F3F4F6] sm:h-auto sm:w-64">
               {entry.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={entry.image} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={entry.image}
+                  alt={`${makeName} ${displayName}`.trim() || "Car accessories"}
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <div className="flex h-full min-h-[192px] items-center justify-center bg-gradient-to-br from-[#1A1A1A] to-[#C41E1E] text-5xl font-bold text-white">
                   {displayName.charAt(0)}
