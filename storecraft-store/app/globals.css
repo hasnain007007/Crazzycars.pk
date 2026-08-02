@@ -2185,25 +2185,24 @@ textarea::placeholder {
 
 @media (max-width: 768px) {
   .home-hero--loading {
-    min-height: min(58vh, 460px);
+    min-height: min(42vh, 280px);
   }
 
   /*
-   * Ultrawide designed banners (~2.5:1) collapse to ~150px with height:auto.
-   * Tall cover media + CTA bar BELOW the art (not overlaid) so baked-in
-   * headline/icons stay readable and buttons don't eat the banner.
+   * Mobile hero: compact cover crop + slim CTA bar under the art.
+   * Keep the designed headline readable without eating half the phone screen.
    */
   .home-hero--image-only.home-hero--h-auto {
-    display: flex;
-    flex-direction: column;
+    display: block;
     height: auto;
     min-height: 0;
     max-height: none;
   }
 
   .home-hero--carousel.home-hero--image-only.home-hero--h-auto .home-hero__viewport {
-    flex: 0 0 auto;
+    position: relative;
     width: 100%;
+    height: auto;
   }
 
   .home-hero--image-only.home-hero--h-auto .home-hero__media {
@@ -2211,11 +2210,9 @@ textarea::placeholder {
     inset: auto;
     flex: 0 0 auto;
     width: 100%;
-    /* Tall enough to feel premium, short enough that left-side designed
-       copy ("Upgrade Your Ride") still fits in the cover crop. */
-    height: min(48vh, 400px);
-    min-height: 340px;
-    max-height: 440px;
+    height: min(32vh, 220px);
+    min-height: 180px;
+    max-height: 240px;
     line-height: normal;
   }
 
@@ -2231,7 +2228,7 @@ textarea::placeholder {
 
   .home-hero__inner {
     align-items: flex-end;
-    padding: 16px 14px 14px;
+    padding: 12px 12px 12px;
   }
 
   /* CTA bar under artwork — compact, premium, full-width */
@@ -2250,13 +2247,13 @@ textarea::placeholder {
 
   .home-hero--ctas-only .home-hero__copy--ctas-only {
     width: 100%;
-    padding: 10px 12px 12px;
+    padding: 8px 10px 10px;
   }
 
   .home-hero--ctas-only .home-hero__ctas {
     display: flex;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 6px;
     margin-top: 0;
     width: 100%;
   }
@@ -2265,13 +2262,13 @@ textarea::placeholder {
     flex: 1 1 0;
     width: auto;
     max-width: none;
-    height: 38px;
-    min-height: 38px !important;
-    max-height: 38px;
-    padding: 0 10px;
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    border-radius: 8px;
+    height: 34px;
+    min-height: 34px !important;
+    max-height: 34px;
+    padding: 0 8px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    border-radius: 7px;
     box-shadow: none;
     line-height: 1;
   }
@@ -2324,13 +2321,27 @@ textarea::placeholder {
     font-size: 12px;
   }
 
+  /* Slim dots on the image — not a fat pill on the CTA buttons */
   .home-hero__dots {
     bottom: 8px;
+    gap: 5px;
+    padding: 3px 6px;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .home-hero__dots button {
+    width: 6px;
+    height: 6px;
+  }
+
+  .home-hero__dots button.is-active {
+    width: 16px;
   }
 
   .home-hero--ctas-only.home-hero--image-only .home-hero__dots {
-    bottom: auto;
-    top: calc(min(48vh, 400px) - 18px);
+    /* Sit on the art, just above the CTA strip (~50px) */
+    top: auto;
+    bottom: 50px;
   }
 
   .home-hero-rail__list {

@@ -564,41 +564,50 @@ export default function HomeHero({ settings, initialSlides = null }) {
               />
             ))}
           </div>
-        </div>
 
-        {multi ? (
-          <>
-            <button
-              type="button"
-              onClick={() => go(-1)}
-              aria-label="Previous slide"
-              className="home-hero__arrow home-hero__arrow--prev"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              onClick={() => go(1)}
-              aria-label="Next slide"
-              className="home-hero__arrow home-hero__arrow--next"
-            >
-              ›
-            </button>
-            <div className="home-hero__dots" role="tablist" aria-label="Hero slides">
-              {slides.map((s, i) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="tab"
-                  aria-label={`Slide ${i + 1}`}
-                  aria-selected={i === index}
-                  onClick={() => goTo(i)}
-                  className={i === index ? "is-active" : undefined}
-                />
-              ))}
-            </div>
-          </>
-        ) : null}
+          {multi ? (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  go(-1);
+                }}
+                aria-label="Previous slide"
+                className="home-hero__arrow home-hero__arrow--prev"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  go(1);
+                }}
+                aria-label="Next slide"
+                className="home-hero__arrow home-hero__arrow--next"
+              >
+                ›
+              </button>
+              <div className="home-hero__dots" role="tablist" aria-label="Hero slides">
+                {slides.map((s, i) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="tab"
+                    aria-label={`Slide ${i + 1}`}
+                    aria-selected={i === index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goTo(i);
+                    }}
+                    className={i === index ? "is-active" : undefined}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
+        </div>
       </section>
       <HeroRail items={trust} />
     </>
