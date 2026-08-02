@@ -593,7 +593,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
                   aria-label={`Slide ${i + 1}`}
                   aria-selected={i === index}
                   onClick={() => goTo(i)}
-                  className={i === index ? "is-active" : undefined}
+                  className={i === index ? "home-hero__dot is-active" : "home-hero__dot"}
                 />
               ))}
             </div>
