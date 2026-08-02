@@ -77,7 +77,11 @@ export async function POST(request) {
       },
       targetUrl: String(body.targetUrl || body.linkUrl || "").trim(),
       openInNewTab: Boolean(body.openInNewTab),
-      sortOrder: typeof body.sortOrder === "number" ? body.sortOrder : nextOrder,
+      // Form often sends sortOrder: 0 for new banners — use next slot so slides order correctly.
+      sortOrder:
+        typeof body.sortOrder === "number" && Number(body.sortOrder) > 0
+          ? Number(body.sortOrder)
+          : nextOrder,
       status: body.status === "inactive" ? "inactive" : "active",
       schedule: {
         enabled: Boolean(body.schedule?.enabled),

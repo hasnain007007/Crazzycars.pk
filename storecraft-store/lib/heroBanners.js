@@ -19,10 +19,10 @@ export async function getHeroSlides() {
   try {
     await dbConnect();
     const rows = await Banner.find({
-      status: { $regex: /^active$/i },
+      status: { $regex: /^(active|published)$/i },
       placement: "hero_slider",
     })
-      .sort({ sortOrder: 1 })
+      .sort({ sortOrder: 1, createdAt: 1 })
       .lean();
 
     return rows

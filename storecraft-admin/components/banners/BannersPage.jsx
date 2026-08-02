@@ -128,6 +128,36 @@ export function BannersPage() {
     [banners, tab]
   );
 
+  const activeHeroCount = useMemo(
+    () =>
+      banners.filter(
+        (b) => b.placement === "hero_slider" && String(b.status || "").toLowerCase() === "active"
+      ).length,
+    [banners]
+  );
+
+  async function toggleStatus(b) {
+    const id = bannerId(b);
+    const next = String(b.status || "").toLowerCase() === "active" ? "inactive" : "active";
+    try {
+      const res = await fetch(`/api/banners/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast.error(json.error || "Could not update status");
+        return;
+      }
+      setBanners((prev) => prev.map((x) => (bannerId(x) === id ? { ...x, status: next } : x)));
+      toast.success(next === "active" ? "Banner is now active in the slider" : "Banner deactivated");
+    } catch {
+      toast.error("Network error");
+    }
+  }
+
   const sortedBanners = useMemo(() => {
     return [...visible].sort((a, b) => {
       if (sortBy === "sortOrder") {
@@ -195,8 +225,20 @@ export function BannersPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Banners &amp; Sliders</h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Drag cards or use arrows to set display order (1, 2, 3…)
+            Drag cards or use arrows to set display order (1, 2, 3…). Homepage slider shows{" "}
+            <strong>active</strong> Hero Slider banners only (needs 2+ for arrows/dots).
           </p>
+          {tab === "hero_slider" ? (
+            <p
+              className={`mt-1 text-sm font-medium ${
+                activeHeroCount >= 2 ? "text-emerald-700" : "text-amber-700"
+              }`}
+            >
+              {activeHeroCount >= 2
+                ? `${activeHeroCount} active — storefront will rotate as a slider.`
+                : `${activeHeroCount} active — activate at least 2 hero banners to enable the slider.`}
+            </p>
+          ) : null}
         </div>
         <Link href="/banners/new" className="rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white">
           Add banner
@@ -403,11 +445,18 @@ export function BannersPage() {
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] text-blue-800">{b.placement}</span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] ${b.status === "active" ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}
+                    <button
+                      type="button"
+                      onClick={() => toggleStatus(b)}
+                      title="Click to toggle active/inactive"
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${
+                        b.status === "active"
+                          ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                          : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                      }`}
                     >
-                      {b.status}
-                    </span>
+                      {b.status || "inactive"}
+                    </button>
                   </div>
                   <p className="truncate text-xs text-slate-500" title={b.size}>
                     {b.size}
@@ -416,10 +465,13 @@ export function BannersPage() {
                     Order #{index + 1} · sortOrder {b.sortOrder ?? 0}
                     {b.schedule?.enabled ? " · Scheduled" : ""}
                   </p>
-                  <div className="flex gap-2 text-xs font-semibold">
+                  <div className="flex flex-wrap gap-2 text-xs font-semibold">
                     <Link href={`/banners/${b.id}`} className="text-[#1d6fb8]">
                       Edit
                     </Link>
+                    <button type="button" className="text-[#1d6fb8]" onClick={() => toggleStatus(b)}>
+                      {b.status === "active" ? "Deactivate" : "Activate"}
+                    </button>
                     <button type="button" className="text-[#1d6fb8]" onClick={() => duplicate(b)}>
                       Duplicate
                     </button>

@@ -84,8 +84,9 @@ const initForm = (data = {}) => ({
   name: data.name || "",
   placement: data.placement || "hero_slider",
   size: data.size || "full_width",
-  status: data.status || "inactive",
-  sortOrder: data.sortOrder || 0,
+  // New banners must be active to appear in the storefront hero slider.
+  status: data.status || "active",
+  sortOrder: Number.isFinite(Number(data.sortOrder)) ? Number(data.sortOrder) : 0,
   targetUrl: data.targetUrl || "",
   openInNewTab: Boolean(data.openInNewTab),
   schedule: {
@@ -154,7 +155,7 @@ export function BannerForm({ bannerId }) {
   const [openInNewTab, setOpenInNewTab] = useState(false);
   const [schedule, setSchedule] = useState({ enabled: false, startDate: "", endDate: "" });
   const [sortOrder, setSortOrder] = useState(0);
-  const [status, setStatus] = useState("inactive");
+  const [status, setStatus] = useState("active");
   const [saving, setSaving] = useState(false);
   const [mobileCustomHtml, setMobileCustomHtml] = useState("");
   const [showMobileCode, setShowMobileCode] = useState(false);
@@ -258,7 +259,7 @@ export function BannerForm({ bannerId }) {
     if (Object.prototype.hasOwnProperty.call(next, "openInNewTab")) setOpenInNewTab(Boolean(next.openInNewTab));
     if (Object.prototype.hasOwnProperty.call(next, "schedule")) setSchedule(next.schedule || { enabled: false, startDate: "", endDate: "" });
     if (Object.prototype.hasOwnProperty.call(next, "sortOrder")) setSortOrder(Number(next.sortOrder) || 0);
-    if (Object.prototype.hasOwnProperty.call(next, "status")) setStatus(next.status || "inactive");
+    if (Object.prototype.hasOwnProperty.call(next, "status")) setStatus(next.status || "active");
     if (Object.prototype.hasOwnProperty.call(next, "mobileCustomHtml")) setMobileCustomHtml(next.mobileCustomHtml || "");
     if (Object.prototype.hasOwnProperty.call(next, "subheadings")) {
       const nextSubs = Array.isArray(next.subheadings) ? next.subheadings : [];

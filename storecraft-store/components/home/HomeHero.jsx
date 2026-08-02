@@ -221,18 +221,20 @@ export default function HomeHero({ settings, initialSlides = null }) {
     if (hasInitial) {
       setSlides(initialSlides);
       setLoading(false);
-      return undefined;
     }
     let cancelled = false;
-    fetch("/api/banners")
+    // Always refresh active hero slides so enabling a 2nd banner becomes a slider
+    // without waiting for homepage ISR (revalidate=60).
+    fetch("/api/banners", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
         const heroList = Array.isArray(data?.hero_slider) ? data.hero_slider : [];
-        setSlides(heroList.map(mapApiBanner));
+        const mapped = heroList.map(mapApiBanner).filter((s) => s.imageUrl || s.title);
+        setSlides(mapped);
       })
       .catch(() => {
-        if (!cancelled) setSlides([]);
+        if (!cancelled && !hasInitial) setSlides([]);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -241,6 +243,13 @@ export default function HomeHero({ settings, initialSlides = null }) {
       cancelled = true;
     };
   }, [hasInitial, initialSlides]);
+
+  useEffect(() => {
+    setIndex((i) => {
+      if (!slides.length) return 0;
+      return Math.min(i, slides.length - 1);
+    });
+  }, [slides.length]);
 
   const go = useCallback(
     (dir) => {
