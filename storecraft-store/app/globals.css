@@ -1474,8 +1474,8 @@ textarea::placeholder {
   }
 
   /* Touch targets — skip absolute icon buttons (search submit, etc.),
-     hero CTAs (sized for dual compact row), and line-clamped text links. */
-  button:not(.absolute):not([class*="absolute"]):not(.home-hero__btn),
+     hero CTAs, hero slider dots, and line-clamped text links. */
+  button:not(.absolute):not([class*="absolute"]):not(.home-hero__btn):not(.home-hero__dot),
   a:not([class*="line-clamp"]):not(.absolute):not([class*="absolute"]):not(.home-hero__btn) {
     min-height: 44px;
   }
@@ -2114,9 +2114,12 @@ textarea::placeholder {
   backdrop-filter: blur(6px);
 }
 
-.home-hero__dots button {
+.home-hero__dots button,
+.home-hero__dot {
   width: 8px;
   height: 8px;
+  min-width: 8px;
+  min-height: 8px;
   padding: 0;
   border: 0;
   border-radius: 999px;
@@ -2125,8 +2128,10 @@ textarea::placeholder {
   transition: width 0.25s ease, background 0.25s ease;
 }
 
-.home-hero__dots button.is-active {
+.home-hero__dots button.is-active,
+.home-hero__dot.is-active {
   width: 24px;
+  min-width: 24px;
   background: #fff;
 }
 
@@ -2325,7 +2330,23 @@ textarea::placeholder {
   }
 
   .home-hero__dots {
-    bottom: 8px;
+    bottom: 10px;
+    gap: 5px;
+    padding: 4px 8px;
+  }
+
+  .home-hero__dots button,
+  .home-hero__dot {
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    min-height: 6px;
+  }
+
+  .home-hero__dots button.is-active,
+  .home-hero__dot.is-active {
+    width: 16px;
+    min-width: 16px;
   }
 
   .home-hero--ctas-only.home-hero--image-only .home-hero__dots {
