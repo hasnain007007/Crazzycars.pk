@@ -960,53 +960,87 @@ export function CheckoutView() {
             </div>
           ) : null}
 
-          <div style={{ marginBottom: 10 }}>
-            <label style={CHECKOUT_LABEL}>
-              Name <span style={{ color: "#dc2626" }}>*</span>
-            </label>
-            <input
-              type="text"
-              autoComplete="name"
-              value={fullNameValue}
-              onChange={(e) => {
-                const parts = e.target.value.trim().split(/\s+/).filter(Boolean);
-                setCustomer((f) => ({
-                  ...f,
-                  firstName: parts[0] || "",
-                  lastName: parts.slice(1).join(" "),
-                }));
-                if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
-              }}
-              placeholder="Your name"
-              style={checkoutInputStyle(Boolean(fieldErrors.name))}
-            />
-            {fieldErrors.name ? (
-              <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
-                ⚠ {fieldErrors.name}
-              </p>
-            ) : null}
+          <div className="mb-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <div>
+              <label style={CHECKOUT_LABEL}>
+                Name <span style={{ color: "#dc2626" }}>*</span>
+              </label>
+              <input
+                type="text"
+                autoComplete="name"
+                value={fullNameValue}
+                onChange={(e) => {
+                  const parts = e.target.value.trim().split(/\s+/).filter(Boolean);
+                  setCustomer((f) => ({
+                    ...f,
+                    firstName: parts[0] || "",
+                    lastName: parts.slice(1).join(" "),
+                  }));
+                  if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
+                }}
+                placeholder="Your name"
+                style={checkoutInputStyle(Boolean(fieldErrors.name))}
+              />
+              {fieldErrors.name ? (
+                <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
+                  ⚠ {fieldErrors.name}
+                </p>
+              ) : null}
+            </div>
+            <div>
+              <label style={CHECKOUT_LABEL}>Email (optional)</label>
+              <input
+                type="text"
+                inputMode="email"
+                autoComplete="email"
+                value={customer.email || ""}
+                onChange={(e) => {
+                  setCustomer((f) => ({ ...f, email: e.target.value }));
+                  if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: "" }));
+                }}
+                placeholder="your@email.com"
+                style={checkoutInputStyle(Boolean(fieldErrors.email))}
+              />
+              {fieldErrors.email ? (
+                <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
+                  ⚠ {fieldErrors.email}
+                </p>
+              ) : null}
+            </div>
           </div>
 
-          <div style={{ marginBottom: 10 }}>
-            <label style={CHECKOUT_LABEL}>
-              Phone <span style={{ color: "#dc2626" }}>*</span>
-            </label>
-            <input
-              type="tel"
-              autoComplete="tel"
-              value={customer.phone || ""}
-              onChange={(e) => {
-                setCustomer((f) => ({ ...f, phone: e.target.value }));
-                if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: "" }));
-              }}
-              placeholder={phonePlaceholder}
-              style={checkoutInputStyle(Boolean(fieldErrors.phone))}
-            />
-            {fieldErrors.phone ? (
-              <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
-                ⚠ {fieldErrors.phone}
-              </p>
-            ) : null}
+          <div className="mb-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <div>
+              <label style={CHECKOUT_LABEL}>
+                Phone <span style={{ color: "#dc2626" }}>*</span>
+              </label>
+              <input
+                type="tel"
+                autoComplete="tel"
+                value={customer.phone || ""}
+                onChange={(e) => {
+                  setCustomer((f) => ({ ...f, phone: e.target.value }));
+                  if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: "" }));
+                }}
+                placeholder={phonePlaceholder}
+                style={checkoutInputStyle(Boolean(fieldErrors.phone))}
+              />
+              {fieldErrors.phone ? (
+                <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
+                  ⚠ {fieldErrors.phone}
+                </p>
+              ) : null}
+            </div>
+            <div>
+              <label style={CHECKOUT_LABEL}>Postal Code (optional)</label>
+              <input
+                placeholder={zipPlaceholder}
+                value={addr.zip}
+                maxLength={5}
+                onChange={(e) => setAddr((s) => ({ ...s, zip: e.target.value.replace(/\D/g, "").slice(0, 5) }))}
+                style={checkoutInputStyle(false)}
+              />
+            </div>
           </div>
 
           <div className="mb-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -1073,7 +1107,7 @@ export function CheckoutView() {
                 setAddr((s) => ({ ...s, street: e.target.value }));
                 if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: "" }));
               }}
-              placeholder="House / street, area"
+              placeholder="House / street, area, landmark"
               style={checkoutInputStyle(Boolean(fieldErrors.address))}
             />
             {fieldErrors.address ? (
@@ -1083,23 +1117,12 @@ export function CheckoutView() {
             ) : null}
           </div>
 
-          <div style={{ marginBottom: 10 }}>
-            <label style={CHECKOUT_LABEL}>Area</label>
-            <input
-              type="text"
-              value={addr.area || ""}
-              onChange={(e) => setAddr((s) => ({ ...s, area: e.target.value }))}
-              placeholder="Colony / sector / mohalla"
-              style={checkoutInputStyle(false)}
-            />
-          </div>
-
           {!showStreet2 ? (
             <button
               type="button"
               onClick={() => setShowStreet2(true)}
               style={{
-                marginBottom: 10,
+                marginBottom: 14,
                 padding: 0,
                 border: "none",
                 background: "none",
@@ -1113,7 +1136,7 @@ export function CheckoutView() {
               + Add address line 2
             </button>
           ) : (
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 14 }}>
               <label style={CHECKOUT_LABEL}>Address line 2 (optional)</label>
               <input
                 type="text"
@@ -1124,41 +1147,6 @@ export function CheckoutView() {
               />
             </div>
           )}
-
-          <div style={{ marginBottom: 10 }}>
-            <label style={CHECKOUT_LABEL}>Postal Code (optional)</label>
-            <input
-              placeholder={zipPlaceholder}
-              value={addr.zip}
-              maxLength={5}
-              onChange={(e) => setAddr((s) => ({ ...s, zip: e.target.value.replace(/\D/g, "").slice(0, 5) }))}
-              style={checkoutInputStyle(false)}
-            />
-          </div>
-
-          <div style={{ marginBottom: 14 }}>
-            <label style={CHECKOUT_LABEL}>Email (for order confirmation)</label>
-            <input
-              type="text"
-              inputMode="email"
-              autoComplete="email"
-              value={customer.email || ""}
-              onChange={(e) => {
-                setCustomer((f) => ({ ...f, email: e.target.value }));
-                if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: "" }));
-              }}
-              placeholder="your@email.com"
-              style={checkoutInputStyle(Boolean(fieldErrors.email))}
-            />
-            <p style={{ fontSize: 11, color: "#6b7280", margin: "4px 0 0" }}>
-              Add your email to receive the order confirmation. Optional if you prefer WhatsApp/phone only.
-            </p>
-            {fieldErrors.email ? (
-              <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
-                ⚠ {fieldErrors.email}
-              </p>
-            ) : null}
-          </div>
 
           <h2 className="mb-2 text-base font-semibold text-zinc-900">Payment</h2>
           <p className="mb-2 text-xs text-zinc-600">{freeDeliveryNote}</p>

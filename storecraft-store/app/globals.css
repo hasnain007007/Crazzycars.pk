@@ -1954,14 +1954,16 @@ textarea::placeholder {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 40px 24px 52px;
+  /* Extra left inset so CTAs aren't flush against the edge */
+  padding: 40px 24px 52px clamp(36px, 9vw, 96px);
 }
 
 .home-hero__copy {
   max-width: 34rem;
   width: 100%;
-  margin: 0 auto;
-  padding: 0 max(0px, calc((100% - 1280px) / 2));
+  margin: 0;
+  margin-right: auto;
+  padding: 0;
   animation: home-hero-rise 0.55s ease-out both;
 }
 
@@ -1970,6 +1972,7 @@ textarea::placeholder {
   align-items: flex-end;
   justify-content: flex-start;
   padding-bottom: clamp(28px, 5vw, 48px);
+  padding-left: clamp(48px, 12vw, 140px);
 }
 
 .home-hero__copy--ctas-only {
@@ -2180,7 +2183,11 @@ textarea::placeholder {
 
   .home-hero__inner {
     align-items: center;
-    padding: 56px 8% 64px;
+    padding: 56px 8% 64px clamp(64px, 12vw, 160px);
+  }
+
+  .home-hero--ctas-only .home-hero__inner {
+    padding-left: clamp(72px, 14vw, 180px);
   }
 
   .home-hero__sub {
@@ -2236,7 +2243,7 @@ textarea::placeholder {
 
   .home-hero__inner {
     align-items: flex-end;
-    padding: 16px 14px 14px;
+    padding: 16px 14px 14px 28px;
   }
 
   /* CTA bar under artwork — compact, premium, full-width */
