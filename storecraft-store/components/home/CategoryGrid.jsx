@@ -10,10 +10,7 @@ function CategoryCard({ c }) {
   const imageAlt = c.imageAlt || c.name;
   const imageTitle = c.imageTitle || c.name;
   return (
-    <Link
-      href={c.href}
-      className="group relative block aspect-square overflow-hidden rounded-2xl bg-[#F3F4F6] shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
-    >
+    <Link href={c.href} className="home-category-card group">
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -22,39 +19,20 @@ function CategoryCard({ c }) {
           title={imageTitle}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          className="home-category-card__img"
         />
       ) : (
-        <span className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 text-4xl">
+        <span className="home-category-card__icon" aria-hidden>
           {c.homepageIcon || "🚗"}
         </span>
       )}
 
-      {/* Light bottom fade only — keep photos bright */}
-      <div
-        aria-hidden
-        className="absolute inset-x-0 bottom-0 h-16"
-        style={{
-          background: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.45) 100%)",
-        }}
-      />
+      <div className="home-category-card__fade" aria-hidden />
 
-      <div className="absolute inset-x-0 bottom-0 z-10 px-3 pb-3 pt-2 sm:px-4 sm:pb-3.5">
-        <h3
-          className="font-heading text-[14px] font-bold leading-snug sm:text-[16px]"
-          style={{
-            color: "#FFFFFF",
-            margin: 0,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            textShadow: "0 1px 2px rgba(0,0,0,0.5)",
-          }}
-          title={c.name}
-        >
+      <div className="home-category-card__label">
+        <span className="home-category-card__title" title={c.name}>
           {c.name}
-        </h3>
+        </span>
       </div>
     </Link>
   );

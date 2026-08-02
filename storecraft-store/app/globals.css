@@ -729,6 +729,101 @@ a {
   padding: var(--section-gap-sm) 0;
 }
 
+/* Homepage — Shop by Category tiles (override global h3 size) */
+.home-category-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #f3f4f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.home-category-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.home-category-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.home-category-card:hover .home-category-card__img {
+  transform: scale(1.05);
+}
+
+.home-category-card__icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.home-category-card__fade {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 42%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.22) 42%,
+    rgba(0, 0, 0, 0.62) 100%
+  );
+  pointer-events: none;
+}
+
+.home-category-card__label {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 10px 10px 9px;
+}
+
+.home-category-card__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0;
+  color: #ffffff !important;
+  font-family: var(--font-heading), "Rajdhani", sans-serif;
+  font-size: 11px !important;
+  font-weight: 650;
+  line-height: 1.25 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+@media (min-width: 640px) {
+  .home-category-card__label {
+    padding: 11px 12px 10px;
+  }
+
+  .home-category-card__title {
+    font-size: 12px !important;
+    letter-spacing: 0.045em;
+  }
+}
+
+@media (min-width: 1280px) {
+  .home-category-card__title {
+    font-size: 12.5px !important;
+  }
+}
+
 .homepage-section {
   padding-top: var(--section-gap);
   padding-bottom: var(--section-gap);
