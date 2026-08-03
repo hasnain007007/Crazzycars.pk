@@ -26,7 +26,7 @@ const vehicles = [
     yearTo: 2014,
     slug: "toyota-corolla-e140-2009-2014",
     image: `${CDN}/e140.webp?v=1773855360`,
-    metaTitle: "Toyota Corolla 2009–2014 Accessories & Body Kits in Pakistan | CrazzyCars.pk",
+    metaTitle: "Toyota Corolla 2009–2014 Accessories | CrazzyCars.pk",
     metaDescription:
       "Shop Toyota Corolla E140 2009-2014 accessories in Pakistan — body kits, splitters, LED lights, carbon fiber trims & more. Cash on Delivery nationwide.",
     shopifyHandle: "toyota-corolla-2009-2014-accessories",
@@ -42,7 +42,7 @@ const vehicles = [
     yearTo: null,
     slug: "toyota-corolla-e170-2014-2026",
     image: `${CDN}/1.8-white-scaled.jpg?v=1773852593`,
-    metaTitle: "Toyota Corolla 2014–2026 Accessories & Body Kits in Pakistan | CrazzyCars.pk",
+    metaTitle: "Toyota Corolla 2014–2026 Accessories | CrazzyCars.pk",
     metaDescription:
       "Premium Toyota Corolla E170/E210 2014-2026 accessories in Pakistan — Grande body kits, side mirror covers, window louvers, LED upgrades. COD available.",
     shopifyHandle: "toyota-corolla-e170-2014-2020-accessories",
@@ -58,7 +58,7 @@ const vehicles = [
     yearTo: null,
     slug: "toyota-yaris-2020-present",
     image: `${CDN}/Totota_corolla_yaris.jpg?v=1780170187`,
-    metaTitle: "Toyota Yaris Accessories in Pakistan | Body Kits & LED | CrazzyCars.pk",
+    metaTitle: "Toyota Yaris Accessories in Pakistan | CrazzyCars.pk",
     metaDescription:
       "Shop Toyota Yaris accessories in Pakistan — splitters, spoilers, chrome trims, LED lights & interior upgrades. Cash on Delivery all over Pakistan.",
     shopifyHandle: "toyota-yaris-accessories-shop-online-crazzycars-pk",
@@ -108,7 +108,7 @@ const vehicles = [
     yearTo: 2012,
     slug: "honda-civic-reborn-2006-2012",
     image: `${CDN}/reborn.jpg?v=1771878076`,
-    metaTitle: "Honda Civic Reborn 2006–2012 Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda Civic Reborn 2006–2012 Accessories | CrazzyCars.pk",
     metaDescription:
       "Shop Honda Civic Reborn 2006-2012 accessories in Pakistan — body kits, spoilers, LED lights, interior trims & more. Cash on Delivery nationwide.",
     shopifyHandle: "honda-civic-reborn-2006-2012-accessories",
@@ -124,7 +124,7 @@ const vehicles = [
     yearTo: 2016,
     slug: "honda-civic-rebirth-2012-2016",
     image: `${CDN}/rebirth.jpg?v=1771878231`,
-    metaTitle: "Honda Civic Rebirth 2012–2016 Accessories & Body Kits | CrazzyCars.pk",
+    metaTitle: "Honda Civic Rebirth 2012–2016 Accessories | CrazzyCars.pk",
     metaDescription:
       "Premium Honda Civic Rebirth 2012-2016 accessories in Pakistan — body kits, splitters, side skirts, LED upgrades. COD all over Pakistan.",
     shopifyHandle: "honda-civic-rebirth-2012-2016-accessories-body-kits",
@@ -140,7 +140,7 @@ const vehicles = [
     yearTo: 2021,
     slug: "honda-civic-x-2016-2021",
     image: `${CDN}/2020-honda-civic-sport-manual-angular-front-exterior-view_100751892_l_9ea4bb02-a752-48b4-8be7-1e7dbbce139a.jpg?v=1773854472`,
-    metaTitle: "Honda Civic X 2016–2021 Accessories & Body Kits in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda Civic X 2016–2021 Accessories | CrazzyCars.pk",
     metaDescription:
       "Shop Honda Civic X 2016-2021 accessories in Pakistan — body kits, splitters, spoilers, quarter window louvers & LED lights. Cash on Delivery.",
     shopifyHandle: "honda-civic-x-2016-2021-accessories-body-kits",
@@ -156,7 +156,7 @@ const vehicles = [
     yearTo: null,
     slug: "honda-civic-11th-gen-2022-present",
     image: `${CDN}/civic-11th-cover.jpg?v=1773685986`,
-    metaTitle: "Honda Civic 11th Gen 2022+ Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda Civic 11th Gen Accessories in Pakistan | CrazzyCars.pk",
     metaDescription:
       "Upgrade your Honda Civic 11th Gen 2022-Present — body kits, carbon fiber trims, LED upgrades & interior accessories. COD nationwide in Pakistan.",
     shopifyHandle: "honda-civic-11th-gen-2022-present-accessories",
@@ -172,7 +172,7 @@ const vehicles = [
     yearTo: 2020,
     slug: "honda-city-classic-2009-2020",
     image: `${CDN}/City-old_ccc718e9-54ae-4f1b-b239-7bbb03fd9bbb.jpg?v=1773853476`,
-    metaTitle: "Honda City 2009–2020 Accessories & Body Kits in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda City 2009–2020 Accessories | CrazzyCars.pk",
     metaDescription:
       "Shop Honda City Classic accessories in Pakistan — body kits, front splitters, side skirts, LED upgrades & chrome trims. Cash on Delivery.",
     shopifyHandle: "honda-city-2016-accessories-body-kits",
@@ -188,12 +188,29 @@ const vehicles = [
     yearTo: null,
     slug: "honda-city-2021-present",
     image: `${CDN}/honda_city.webp?v=1773853788`,
-    metaTitle: "Honda City 2021–Present Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda City 2021+ Accessories Pakistan | CrazzyCars.pk",
     metaDescription:
       "Premium Honda City 2021-Present accessories in Pakistan — interior, exterior & LED upgrades from CrazzyCars.pk. COD all over Pakistan.",
     shopifyHandle: "honda-city",
     shopifyId: "gid://shopify/Collection/305270816827",
     sortOrder: 15,
+  },
+
+  {
+    make: "Honda",
+    model: "Vezel",
+    generation: "1st Gen",
+    displayName: "Honda Vezel (2013–2018)",
+    yearFrom: 2013,
+    yearTo: 2018,
+    slug: "honda-vezel-2013-2018",
+    image: "",
+    metaTitle: "Honda Vezel 2013–2018 Accessories in Pakistan | CrazzyCars.pk",
+    metaDescription:
+      "Shop Honda Vezel 2013-2018 accessories in Pakistan — body kits & styling upgrades. Cash on Delivery nationwide.",
+    shopifyHandle: "",
+    shopifyId: "",
+    sortOrder: 16,
   },
 
   /* ================= HYUNDAI ================= */
@@ -206,7 +223,7 @@ const vehicles = [
     yearTo: 2024,
     slug: "hyundai-elantra-2020-2024",
     image: `${CDN}/Hyundai_Elantra_Limited.jpg?v=1775826465`,
-    metaTitle: "Hyundai Elantra 2020–2024 Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Hyundai Elantra 2020–2024 Accessories | CrazzyCars.pk",
     metaDescription:
       "Shop Hyundai Elantra 2020-2024 accessories in Pakistan — carbon fiber interior trims & styling upgrades. Cash on Delivery nationwide.",
     shopifyHandle: "hyundai-elantra-2020-2024-accessories",
@@ -222,7 +239,7 @@ const vehicles = [
     yearTo: null,
     slug: "hyundai-elantra-hybrid-2025-present",
     image: `${CDN}/Hyundai_Elantra_2026_50fcc4dd-9fe7-4a84-bb79-69acf6951825.jpg?v=1775849463`,
-    metaTitle: "Hyundai Elantra Hybrid 2025+ Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Hyundai Elantra Hybrid 2025+ Accessories | CrazzyCars.pk",
     metaDescription:
       "Premium Hyundai Elantra Hybrid 2025-Present accessories in Pakistan — interior trims, exterior styling & more. COD available.",
     shopifyHandle: "hyundai-elantra-hybrid-2025-present-accessories",
@@ -238,7 +255,7 @@ const vehicles = [
     yearTo: 2024,
     slug: "hyundai-sonata-2020-2024",
     image: `${CDN}/Hyuandi_Conata.webp?v=1775849207`,
-    metaTitle: "Hyundai Sonata 2020–2024 Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Hyundai Sonata 2020–2024 Accessories | CrazzyCars.pk",
     metaDescription:
       "Shop Hyundai Sonata DN8 2020-2024 accessories in Pakistan — carbon fiber trims, styling & interior upgrades. Cash on Delivery.",
     shopifyHandle: "hyundai-sonata-2020-2024-accessories",
