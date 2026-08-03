@@ -4,18 +4,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import PremiumProductCard from "@/components/home/PremiumProductCard";
-
-const TABS = [
-  { id: "50off", label: "50% Off", query: "minDiscount=50" },
-  { id: "30off", label: "30% Off", query: "minDiscount=30" },
-  { id: "under999", label: "Under Rs. 20", query: "maxPrice=20" },
-  { id: "under1999", label: "Under Rs. 35", query: "maxPrice=35" },
-];
-
-function buildUrl(tabId) {
-  const tab = TABS.find((t) => t.id === tabId) || TABS[0];
-  return `/api/products?status=active&limit=24&${tab.query}`;
-}
+import {
+  getSaleTab,
+  resolveSaleTabId,
+  saleApiQueryForTab,
+  SALE_DEFAULT_TAB,
+  SALE_SSR_LIMIT,
+  SALE_TABS,
+} from "@/lib/saleTabs";
 
 function SkeletonGrid() {
   return (
@@ -37,24 +33,36 @@ function SkeletonGrid() {
   );
 }
 
-export default function SalePageView() {
+export default function SalePageView({
+  initialTab = SALE_DEFAULT_TAB,
+  initialProducts = [],
+}) {
   const router = useRouter();
   const params = useSearchParams();
-  const filterParam = (params.get("filter") || "50off").toLowerCase();
-  const initialTab = TABS.find((t) => t.id === filterParam)?.id || "50off";
+  const filterParam = resolveSaleTabId(params.get("filter") || initialTab);
+  const urlTab = SALE_TABS.some((t) => t.id === filterParam)
+    ? filterParam
+    : resolveSaleTabId(initialTab);
 
-  const [active, setActive] = useState(initialTab);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const ssrTab = resolveSaleTabId(initialTab);
+  const hasSsrForTab = Array.isArray(initialProducts) && urlTab === ssrTab;
+
+  const [active, setActive] = useState(urlTab);
+  const [products, setProducts] = useState(() => (hasSsrForTab ? initialProducts : []));
+  const [loading, setLoading] = useState(!hasSsrForTab);
+  // Skip the first client fetch when HTML already includes SSR deals for this tab.
+  const [skipNextFetch, setSkipNextFetch] = useState(hasSsrForTab);
 
   useEffect(() => {
-    setActive(initialTab);
-  }, [initialTab]);
+    setActive(urlTab);
+  }, [urlTab]);
 
   const load = useCallback(async (tabId) => {
     setLoading(true);
     try {
-      const res = await fetch(buildUrl(tabId));
+      const res = await fetch(
+        `/api/products?${saleApiQueryForTab(tabId, { limit: SALE_SSR_LIMIT })}`
+      );
       const json = await res.json();
       setProducts(json.success ? json.products || [] : []);
     } catch {
@@ -65,25 +73,29 @@ export default function SalePageView() {
   }, []);
 
   useEffect(() => {
+    if (skipNextFetch && active === ssrTab) {
+      setSkipNextFetch(false);
+      setLoading(false);
+      return;
+    }
     void load(active);
-  }, [active, load]);
+  }, [active, load, skipNextFetch, ssrTab]);
 
   function handleTab(id) {
-    setActive(id);
-    const url = `/sale?filter=${id}`;
-    router.replace(url, { scroll: false });
+    const next = resolveSaleTabId(id);
+    setActive(next);
+    setSkipNextFetch(false);
+    router.replace(`/sale?filter=${next}`, { scroll: false });
   }
 
-  const activeTab = TABS.find((t) => t.id === active) || TABS[0];
+  const activeTab = getSaleTab(active);
 
   return (
     <main className="min-h-screen bg-white">
-      {/* Tabs + Products — hero/H1 is server-rendered via SalePageChrome */}
       <section className="py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
-          {/* Tabs */}
           <div className="mb-10 -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hidden md:mx-0 md:flex-wrap md:px-0">
-            {TABS.map((tab) => {
+            {SALE_TABS.map((tab) => {
               const isActive = active === tab.id;
               return (
                 <button
@@ -102,7 +114,6 @@ export default function SalePageView() {
             })}
           </div>
 
-          {/* Active tab title */}
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
               {activeTab.label}
@@ -114,7 +125,6 @@ export default function SalePageView() {
             </p>
           </div>
 
-          {/* Grid */}
           {loading ? (
             <SkeletonGrid />
           ) : products.length === 0 ? (

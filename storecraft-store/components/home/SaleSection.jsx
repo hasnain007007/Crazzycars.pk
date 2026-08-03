@@ -4,20 +4,16 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import PremiumProductCard from "@/components/home/PremiumProductCard";
 
-const FILTERS = [
-  { id: "off50", label: "50% OFF", saleHref: "/sale?filter=50off" },
-  { id: "off30", label: "30% OFF", saleHref: "/sale?filter=30off" },
-  { id: "under999", label: "Under Rs. 20", saleHref: "/sale?filter=under999" },
-  { id: "under1999", label: "Under Rs. 35", saleHref: "/sale?filter=under1999" },
-];
+import { SALE_TABS, saleApiQueryForTab } from "@/lib/saleTabs";
+
+const FILTERS = SALE_TABS.map((t) => ({
+  id: t.id,
+  label: t.label.toUpperCase(),
+  saleHref: `/sale?filter=${t.id}`,
+}));
 
 function buildUrl(tabId) {
-  const qs = new URLSearchParams({ status: "active", limit: "8" });
-  if (tabId === "under999") qs.set("maxPrice", "20");
-  if (tabId === "under1999") qs.set("maxPrice", "35");
-  if (tabId === "off50") qs.set("minDiscount", "50");
-  if (tabId === "off30") qs.set("minDiscount", "30");
-  return `/api/products?${qs.toString()}`;
+  return `/api/products?${saleApiQueryForTab(tabId, { limit: 8 })}`;
 }
 
 function pad(n) {
@@ -59,7 +55,7 @@ function SkeletonCard() {
 }
 
 export default function SaleSection() {
-  const [active, setActive] = useState("off50");
+  const [active, setActive] = useState("30off");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
