@@ -37,8 +37,8 @@ export default function PayPalCheckout({ amount, orderId, onError }) {
       const res = await fetch("/api/payment/paypal/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // Amount is ignored server-side — PayPal charges order.pricing.total only.
         body: JSON.stringify({
-          amount,
           currency: "PKR",
           orderId,
         }),

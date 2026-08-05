@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
+import Order from "@/lib/models/Order.model";
 import Settings from "@/lib/models/Settings.model";
 
 async function getPayPalToken(clientId, secret, mode) {
@@ -24,7 +26,36 @@ export async function POST(req) {
   try {
     await dbConnect();
     const body = await req.json();
-    const { amount, currency = "PKR", orderId } = body;
+    // Never trust client-supplied amount — charge order.pricing.total only (COD/Stripe hard-lock pattern).
+    const { currency = "PKR", orderId } = body;
+
+    const oid = String(orderId || "").trim();
+    if (!oid || !mongoose.Types.ObjectId.isValid(oid)) {
+      return NextResponse.json(
+        { success: false, error: "A valid orderId is required." },
+        { status: 400 }
+      );
+    }
+
+    const order = await Order.findById(oid).select("pricing.total paymentStatus orderNumber").lean();
+    if (!order) {
+      return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
+    }
+
+    if (String(order.paymentStatus || "").toLowerCase() === "paid") {
+      return NextResponse.json(
+        { success: false, error: "Order is already paid." },
+        { status: 409 }
+      );
+    }
+
+    const amount = Number(order.pricing?.total);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return NextResponse.json(
+        { success: false, error: "Invalid order amount" },
+        { status: 400 }
+      );
+    }
 
     const settings = await Settings.findOne({}).select("payment").lean();
 
@@ -53,10 +84,11 @@ export async function POST(req) {
         purchase_units: [
           {
             amount: {
-              currency_code: currency.toUpperCase(),
-              value: Number(amount).toFixed(2),
+              currency_code: String(currency || "PKR").toUpperCase(),
+              value: amount.toFixed(2),
             },
-            custom_id: orderId || "",
+            custom_id: oid,
+            invoice_id: String(order.orderNumber || oid).slice(0, 127),
           },
         ],
       }),
