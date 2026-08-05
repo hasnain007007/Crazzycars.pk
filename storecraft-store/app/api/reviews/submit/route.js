@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
+import {
+  actionRateLimitKey,
+  checkActionRateLimit,
+  rateLimitResponse,
+  recordActionAttempt,
+} from "@/lib/actionRateLimit";
 import { dbConnect } from "@/lib/db";
 import Review from "@/lib/models/Review.model";
 import Product from "@/lib/models/Product.model";
+import { requestIp } from "@/lib/requestIp";
+
+const REVIEW_RATE = { maxAttempts: 3, windowMs: 60 * 60 * 1000 };
 
 async function recalcProductRating(productId) {
   try {
@@ -88,6 +97,20 @@ export async function POST(req) {
         error: "Product not found",
       });
     }
+
+    const reviewLimitKey = actionRateLimitKey(
+      `review-submit:${String(product._id)}`,
+      String(email || "anon").trim().toLowerCase() || "anon",
+      requestIp(req)
+    );
+    const reviewLimit = await checkActionRateLimit(reviewLimitKey, REVIEW_RATE);
+    if (reviewLimit.limited) {
+      return rateLimitResponse(
+        reviewLimit.remainingMs,
+        "Too many review submissions. Please try again later."
+      );
+    }
+    await recordActionAttempt(reviewLimitKey, REVIEW_RATE);
 
     const created = await Review.create({
       product: product._id,

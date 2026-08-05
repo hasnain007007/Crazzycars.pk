@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server";
+import {
+  actionRateLimitKey,
+  checkActionRateLimit,
+  rateLimitResponse,
+  recordActionAttempt,
+} from "@/lib/actionRateLimit";
+import { dbConnect } from "@/lib/db";
 import { getAdminEmail, getFromEmail, sendEmail } from "@/lib/email";
+import { requestIp } from "@/lib/requestIp";
+
+const CONTACT_RATE = { maxAttempts: 3, windowMs: 60 * 60 * 1000 };
 
 function escapeHtml(s) {
   return String(s ?? "")
@@ -21,6 +31,17 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
+    await dbConnect();
+    const contactLimitKey = actionRateLimitKey("contact", "ip", requestIp(req));
+    const contactLimit = await checkActionRateLimit(contactLimitKey, CONTACT_RATE);
+    if (contactLimit.limited) {
+      return rateLimitResponse(
+        contactLimit.remainingMs,
+        "Too many messages sent. Please try again later."
+      );
+    }
+    await recordActionAttempt(contactLimitKey, CONTACT_RATE);
 
     const fromEmail = getFromEmail();
     if (!process.env.RESEND_API_KEY || !fromEmail) {

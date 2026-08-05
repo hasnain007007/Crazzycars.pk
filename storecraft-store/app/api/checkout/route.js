@@ -26,6 +26,15 @@ import { toKg } from "@/lib/shippingEstimate";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { allowsBackorder } from "@/lib/inventoryPolicy";
 import { readAiAttributionFromRequest } from "@/lib/aiAttribution";
+import {
+  actionRateLimitKey,
+  checkActionRateLimit,
+  rateLimitResponse,
+  recordActionAttempt,
+} from "@/lib/actionRateLimit";
+import { requestIp } from "@/lib/requestIp";
+
+const CHECKOUT_RATE = { maxAttempts: 5, windowMs: 10 * 60 * 1000 };
 
 function isValidCustomerEmail(email) {
   const e = String(email || "").trim().toLowerCase();
@@ -294,6 +303,20 @@ export async function POST(request) {
     if (!customerRecordEmail) {
       return NextResponse.json({ success: false, error: "Phone number is required." }, { status: 400 });
     }
+
+    const checkoutLimitKey = actionRateLimitKey(
+      "checkout",
+      customerRecordEmail,
+      requestIp(request)
+    );
+    const checkoutLimit = await checkActionRateLimit(checkoutLimitKey, CHECKOUT_RATE);
+    if (checkoutLimit.limited) {
+      return rateLimitResponse(
+        checkoutLimit.remainingMs,
+        "Too many checkout attempts. Please wait a few minutes and try again."
+      );
+    }
+    await recordActionAttempt(checkoutLimitKey, CHECKOUT_RATE);
 
     const stateVal = String(body.shippingAddress?.state || body.shippingAddress?.province || "").trim();
     const streetVal = String(body.shippingAddress?.street || body.shippingAddress?.line1 || "").trim();
