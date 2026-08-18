@@ -7,6 +7,7 @@ import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { formatPrice } from "@/lib/currency";
+import { productPath } from "@/lib/productPath";
 
 function getImages(product) {
   const list = [];
@@ -87,11 +88,7 @@ export function ProductListingRow({ product, mode = "list" }) {
   const images = getImages(product);
   const { regular, sale, onSale } = getPrices(product);
   const slug = product.slug || product.handle || "";
-  const href = slug
-    ? product.source === "shopify" || product.handle
-      ? `/products/${slug}`
-      : `/${slug}`
-    : "#";
+  const href = productPath(product);
   const cats = categoryLabel(product);
   const excerpt = plainExcerpt(product);
   const sku = product.articleNo || product.sku || product.inventory?.sku || "n/a";

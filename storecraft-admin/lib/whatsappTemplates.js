@@ -5,8 +5,18 @@ export const DEFAULT_WHATSAPP_TEMPLATES = {
     enabled: true,
     template: `Assalam o Alaikum {customerName}! 🚗
 
-Your order from *Crazzycars.pk* is ready — please confirm:
+*Crazzycars.pk* — please confirm your order:
 
+❓ *Is your order confirmed?*
+Tap one option below:
+
+✅ *YES — Confirm my order:*
+{confirmOrderUrl}
+
+❌ *NO — Cancel / not confirm:*
+{cancelOrderUrl}
+
+————————————
 📦 *Order:* #{orderNumber}
 📅 *Date:* {orderDate}
 
@@ -30,16 +40,11 @@ Shipping: {shipping}
 {trackingSection}
 Need help? Call us: 📞 {storePhone}
 
-————————————
-📋 *Confirm your order (tap a link):*
-✅ *Confirm order:* {confirmOrderUrl}
-❌ *Not confirm / Cancel:* {cancelOrderUrl}
-
-Or reply:
+Or reply with:
 1️⃣ CONFIRM
 2️⃣ CANCEL
 
-Thank you for shopping with Crazzycars.pk! 🚗✨`,
+Shukriya — Crazzycars.pk 🚗✨`,
   },
   adminNewOrder: {
     enabled: true,
@@ -59,16 +64,7 @@ Thank you for shopping with Crazzycars.pk! 🚗✨`,
 
 📍 Address: {address}, {city}
 
-🔗 Open in admin (login required): {adminOrderUrl}
-
-————————————
-📋 *Quick action (tap a link):*
-✅ Confirm order: {confirmOrderUrl}
-❌ Cancel order: {cancelOrderUrl}
-
-Or reply here:
-1️⃣ CONFIRM
-2️⃣ CANCEL`,
+🔗 Open in admin (login required): {adminOrderUrl}`,
   },
   orderShipped: {
     enabled: true,
@@ -87,6 +83,24 @@ Your Crazzycars.pk order #{orderNumber} has been shipped via *{courier}*!
 Questions? Call: 📞 {storePhone}
 
 Thank you! 🚗✨`,
+  },
+  abandonedCart: {
+    enabled: true,
+    template: `Assalam o Alaikum {customerName}! 🚗
+
+You left items in your *Crazzycars.pk* cart:
+
+🛍️ *Items:*
+{itemsList}
+
+💰 *Cart total:* Rs. {subtotal}
+
+Complete your order here:
+{recoverUrl}
+
+Need help? Call {storePhone}
+
+Shukriya — Crazzycars.pk ✨`,
   },
 };
 
@@ -142,21 +156,85 @@ function formatProductImages(order) {
 
 function paymentMethodLabel(order) {
   const pm = String(order?.paymentMethod || order?.payment?.method || "").toLowerCase();
-  if (pm.includes("cod") || pm.includes("cash")) return "Cash on Delivery";
-  if (pm.includes("jazz")) return "JazzCash";
-  if (pm.includes("easy")) return "Easypaisa";
-  if (pm.includes("bank") || pm.includes("transfer")) return "Bank Transfer";
-  if (pm.includes("stripe") || pm.includes("card")) return "Card";
-  if (pm.includes("paypal")) return "PayPal";
-  return order?.paymentMethod || order?.payment?.method || "—";
+  const status = String(order?.paymentStatus || "").toLowerCase();
+  let label = "—";
+  if (pm.includes("cod") || pm.includes("cash")) label = "Cash on Delivery";
+  else if (pm.includes("jazz")) label = "JazzCash";
+  else if (pm.includes("easy")) label = "Easypaisa";
+  else if (pm.includes("bank") || pm.includes("transfer")) label = "Bank Transfer";
+  else if (pm.includes("stripe") || pm.includes("card")) label = "Card";
+  else if (pm.includes("paypal")) label = "PayPal";
+  else label = order?.paymentMethod || order?.payment?.method || "—";
+
+  if (status === "partial") return `${label} (Partial)`;
+  if (status === "paid") return `${label} (Paid)`;
+  return label;
+}
+
+function moneyPk(n) {
+  return Number(n || 0).toLocaleString("en-PK");
+}
+
+/** Paid / remaining helpers — prefer payment.* then fall back to pricing.total */
+export function getOrderPaymentBreakdown(order) {
+  const total = Math.max(0, Number(order?.pricing?.total ?? order?.total ?? 0) || 0);
+  const status = String(order?.paymentStatus || "unpaid").toLowerCase();
+  let paid = Math.max(0, Number(order?.payment?.paidAmount) || 0);
+  let remaining = Number(order?.payment?.remainingCod);
+
+  if (status === "paid") {
+    paid = paid > 0 ? paid : total;
+    remaining = 0;
+  } else if (status === "partial") {
+    if (!Number.isFinite(remaining) || remaining < 0) {
+      remaining = Math.max(0, total - paid);
+    }
+    // If paidAmount missing but remainingCod set
+    if (paid <= 0 && remaining >= 0 && remaining < total) {
+      paid = Math.max(0, total - remaining);
+    }
+  } else if (status === "unpaid" || status === "failed") {
+    if (!Number.isFinite(remaining) || remaining < 0) remaining = total;
+    if (paid <= 0) paid = 0;
+  } else {
+    if (!Number.isFinite(remaining) || remaining < 0) remaining = Math.max(0, total - paid);
+  }
+
+  return {
+    status,
+    total,
+    paid,
+    remaining: Math.max(0, remaining),
+  };
 }
 
 export function buildPaymentInstructions(order, settings = {}) {
   const pm = String(order?.paymentMethod || order?.payment?.method || "").toLowerCase();
-  const total = Number(order?.pricing?.total ?? order?.total ?? 0);
-  const totalStr = total.toLocaleString("en-PK");
   const pk = settings.pakistaniPaymentMethods || {};
+  const { status, total, paid, remaining } = getOrderPaymentBreakdown(order);
+  const totalStr = moneyPk(total);
+  const paidStr = moneyPk(paid);
+  const remainingStr = moneyPk(remaining);
 
+  // Fully paid — never ask for more money
+  if (status === "paid" || (remaining <= 0 && paid >= total && total > 0)) {
+    return `✅ *Payment received in full* (Rs. ${paidStr || totalStr}) — thank you!`;
+  }
+
+  // Partial — always show received + balance due (works for COD and prepaid)
+  if (status === "partial" || (paid > 0 && remaining > 0)) {
+    const dueLine =
+      pm.includes("cod") || pm.includes("cash")
+        ? `🚪 *Balance due on delivery:* Rs. ${remainingStr}`
+        : `⏳ *Balance still due:* Rs. ${remainingStr}`;
+    return [
+      `✅ *Already received:* Rs. ${paidStr}`,
+      dueLine,
+      `🧾 Order total: Rs. ${totalStr}`,
+    ].join("\n");
+  }
+
+  // Unpaid / remaining = full total
   if (pm.includes("cod") || pm.includes("cash")) {
     return `You will pay Rs. ${totalStr} when order arrives 🚪`;
   }
@@ -168,12 +246,15 @@ export function buildPaymentInstructions(order, settings = {}) {
     const e = pk.easypaisa || {};
     return `Please send Rs. ${totalStr} to:\nEasypaisa: ${e.accountNumber || "—"}\nName: ${e.accountName || "—"}`;
   }
-  if (pm.includes("bank") || pm.includes("transfer") || pm.includes("hbl") || pm.includes("meezan") || pm.includes("ubl")) {
+  if (
+    pm.includes("bank") ||
+    pm.includes("transfer") ||
+    pm.includes("hbl") ||
+    pm.includes("meezan") ||
+    pm.includes("ubl")
+  ) {
     const b = pk.bankTransfer || pk.hbl || pk.meezan || pk.ubl || {};
     return `Please transfer Rs. ${totalStr} to:\nBank: ${b.bankName || b.label || "—"}\nAccount: ${b.accountNumber || "—"}\nTitle: ${b.accountTitle || "—"}\nIBAN: ${b.iban || "—"}`;
-  }
-  if (order?.paymentStatus === "paid") {
-    return "✅ Payment received — thank you!";
   }
   return "Please complete payment as discussed with our team.";
 }
@@ -202,6 +283,7 @@ export function buildCustomerOrderVariables(order, settings = {}, extras = {}) {
   const subtotal = Number(pricing.subtotal ?? order?.subtotal ?? 0);
   const shipping = Number(pricing.shippingCost ?? pricing.shipping ?? 0);
   const total = Number(pricing.total ?? order?.total ?? 0);
+  const pay = getOrderPaymentBreakdown(order);
   const storeName = settings?.general?.storeName || "Crazzycars.pk";
   const storePhone = settings?.general?.phone || "";
   const orderId = order?.id || order?._id || "";
@@ -221,6 +303,9 @@ export function buildCustomerOrderVariables(order, settings = {}, extras = {}) {
     total: total.toLocaleString("en-PK"),
     paymentMethod: paymentMethodLabel(order),
     paymentInstructions: buildPaymentInstructions(order, settings),
+    paidAmount: moneyPk(pay.paid),
+    remainingBalance: moneyPk(pay.remaining),
+    paymentStatus: pay.status || "unpaid",
     address: [addr.street, addr.line1, addr.address].filter(Boolean).join(" ").trim() || "—",
     city: String(addr.city || addr.state || "").trim() || "—",
     province: String(addr.province || addr.state || "").trim() || "—",
@@ -291,7 +376,26 @@ export function buildOrderShippedVariables(order, settings = {}, overrides = {})
 export function getCustomerOrderWhatsAppMessage(order, settings, extras = {}) {
   const { enabled, template } = resolveTemplate(settings, "customerOrderConfirmation");
   if (!enabled) return "";
-  return buildWhatsAppMessage(template, buildCustomerOrderVariables(order, settings, extras));
+  const vars = buildCustomerOrderVariables(order, settings, extras);
+  let message = buildWhatsAppMessage(template, vars);
+  const confirmUrl = String(vars.confirmOrderUrl || "").trim();
+  const cancelUrl = String(vars.cancelOrderUrl || "").trim();
+  // Always surface clear Yes/No confirmation options even if Settings template is outdated.
+  if (confirmUrl && cancelUrl && !message.includes(confirmUrl)) {
+    message = `${message.trim()}
+
+————————————
+❓ *Is your order confirmed?*
+
+✅ *YES — Confirm my order:*
+${confirmUrl}
+
+❌ *NO — Cancel / not confirm:*
+${cancelUrl}
+
+Please tap one option above, or reply CONFIRM / CANCEL.`;
+  }
+  return message;
 }
 
 export function getAdminNewOrderWhatsAppMessage(order, settings, extras = {}) {

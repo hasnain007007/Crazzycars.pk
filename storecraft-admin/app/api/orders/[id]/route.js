@@ -27,6 +27,8 @@ function serializeOrder(doc) {
   return {
     id: o._id.toString(),
     orderNumber: o.orderNumber,
+    invoiceId: o.invoiceId ? String(o.invoiceId) : null,
+    invoiceNumber: o.invoiceNumber || "",
     createdAt: o.createdAt,
     updatedAt: o.updatedAt,
     customer: {
@@ -49,6 +51,13 @@ function serializeOrder(doc) {
       name: i.name,
       image: i.image || "",
       variation: i.variation || "",
+      selectedVariation: i.selectedVariation || null,
+      selectedAddOns: Array.isArray(i.selectedAddOns)
+        ? i.selectedAddOns.map((a) => ({
+            name: String(a?.name || "").trim(),
+            price: Math.max(0, Number(a?.price) || 0),
+          })).filter((a) => a.name)
+        : [],
       quantity: i.quantity,
       unitPrice: i.unitPrice,
       total: i.total,
@@ -117,6 +126,40 @@ function serializeOrder(doc) {
   };
 }
 
+/** Newest-first list neighbors (Shopify-style ↑ newer / ↓ older). */
+async function findOrderNeighbors(doc) {
+  const createdAt = doc.createdAt || new Date(0);
+  const id = doc._id;
+  const [newer, older] = await Promise.all([
+    Order.findOne({
+      $or: [
+        { createdAt: { $gt: createdAt } },
+        { createdAt, _id: { $gt: id } },
+      ],
+    })
+      .sort({ createdAt: 1, _id: 1 })
+      .select("_id orderNumber")
+      .lean(),
+    Order.findOne({
+      $or: [
+        { createdAt: { $lt: createdAt } },
+        { createdAt, _id: { $lt: id } },
+      ],
+    })
+      .sort({ createdAt: -1, _id: -1 })
+      .select("_id orderNumber")
+      .lean(),
+  ]);
+  return {
+    prev: newer
+      ? { id: String(newer._id), orderNumber: newer.orderNumber || "" }
+      : null,
+    next: older
+      ? { id: String(older._id), orderNumber: older.orderNumber || "" }
+      : null,
+  };
+}
+
 export async function GET(request, context) {
   try {
     if (!getRequestUser(request)) {
@@ -131,7 +174,8 @@ export async function GET(request, context) {
     if (!doc) {
       return NextResponse.json({ success: false, error: "Not found." }, { status: 404 });
     }
-    return NextResponse.json({ success: true, order: serializeOrder(doc) });
+    const neighbors = await findOrderNeighbors(doc);
+    return NextResponse.json({ success: true, order: serializeOrder(doc), neighbors });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to load order." },
@@ -294,11 +338,26 @@ export async function PUT(request, context) {
         if (raw?.productId && mongoose.Types.ObjectId.isValid(String(raw.productId))) {
           productId = raw.productId;
         }
+        const selectedAddOns = Array.isArray(raw?.selectedAddOns)
+          ? raw.selectedAddOns
+              .map((a) => ({
+                name: String(a?.name || "").trim().slice(0, 120),
+                price: Math.max(0, Number(a?.price) || 0),
+              }))
+              .filter((a) => a.name)
+              .slice(0, 20)
+          : [];
+        const selectedVariation =
+          raw?.selectedVariation && typeof raw.selectedVariation === "object"
+            ? raw.selectedVariation
+            : null;
         normalizedItems.push({
           productId,
           name: name.slice(0, 300),
           image: String(raw?.image || "").trim().slice(0, 1000),
           variation: String(raw?.variation || "").trim().slice(0, 200),
+          selectedVariation,
+          selectedAddOns,
           quantity,
           unitPrice,
           total: lineTotal,

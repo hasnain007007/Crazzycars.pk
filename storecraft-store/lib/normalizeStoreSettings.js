@@ -40,6 +40,33 @@ export const DEFAULT_APPEARANCE = {
   borderRadius: "8px",
 };
 
+/** Reject CSS-breaking values before ThemeInjector injects them into :root. */
+export function sanitizeCssColor(value, fallback) {
+  const s = String(value || "").trim();
+  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s)) return s;
+  if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(s)) {
+    return s;
+  }
+  if (/^hsla?\(\s*\d{1,3}(?:deg)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(s)) {
+    return s;
+  }
+  return fallback;
+}
+
+export function sanitizeCssLength(value, fallback) {
+  const s = String(value || "").trim();
+  if (/^\d+(\.\d+)?(px|rem|em|%)$/.test(s)) return s;
+  return fallback;
+}
+
+export function sanitizeCssFontFamily(value, fallback) {
+  const s = String(value || "").trim();
+  // Allow CSS var() stacks and simple quoted/unquoted family lists — no braces/semicolons.
+  if (!s || /[{};<>]/.test(s)) return fallback;
+  if (s.length > 160) return fallback;
+  return s;
+}
+
 export const DEFAULT_CHECKOUT_MESSAGES = {
   orderSuccessMessage: "Order Placed! We will deliver to your doorstep.",
   orderSuccessSubtext: "Thank you for shopping with Crazzycars.pk",
@@ -128,14 +155,20 @@ export function normalizeBrandStory(raw) {
 
 export function normalizeAppearance(raw, seo = {}) {
   const a = raw && typeof raw === "object" ? raw : {};
+  const primaryColor = sanitizeCssColor(a.primaryColor, DEFAULT_APPEARANCE.primaryColor);
+  const secondaryColor = sanitizeCssColor(a.secondaryColor, DEFAULT_APPEARANCE.secondaryColor);
+  const accentColor = sanitizeCssColor(
+    a.accentColor || a.primaryColor,
+    DEFAULT_APPEARANCE.accentColor
+  );
   return {
     ...DEFAULT_APPEARANCE,
-    primaryColor: a.primaryColor || DEFAULT_APPEARANCE.primaryColor,
-    secondaryColor: a.secondaryColor || DEFAULT_APPEARANCE.secondaryColor,
-    accentColor: a.accentColor || a.primaryColor || DEFAULT_APPEARANCE.accentColor,
-    fontFamily: a.fontFamily || DEFAULT_APPEARANCE.fontFamily,
+    primaryColor,
+    secondaryColor,
+    accentColor,
+    fontFamily: sanitizeCssFontFamily(a.fontFamily, DEFAULT_APPEARANCE.fontFamily),
     buttonStyle: a.buttonStyle || DEFAULT_APPEARANCE.buttonStyle,
-    borderRadius: a.borderRadius || DEFAULT_APPEARANCE.borderRadius,
+    borderRadius: sanitizeCssLength(a.borderRadius, DEFAULT_APPEARANCE.borderRadius),
     themeDefault: seo.themeDefault || "light",
   };
 }

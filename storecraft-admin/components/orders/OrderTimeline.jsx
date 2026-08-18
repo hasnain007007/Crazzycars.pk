@@ -69,17 +69,16 @@ export default function OrderTimeline({ order, onStatusChange }) {
         background: "#fff",
         border: "1px solid #e5e7eb",
         borderRadius: 12,
-        padding: 24,
-        marginBottom: 20,
+        padding: 14,
       }}
       className="dark:border-slate-700 dark:bg-slate-900"
     >
       <h3
         style={{
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 700,
           color: "#111827",
-          margin: "0 0 24px",
+          margin: "0 0 12px",
           display: "flex",
           alignItems: "center",
           gap: 8,
@@ -93,17 +92,17 @@ export default function OrderTimeline({ order, onStatusChange }) {
         style={{
           display: "flex",
           alignItems: "flex-start",
-          marginBottom: 32,
+          marginBottom: 12,
           position: "relative",
         }}
       >
         <div
           style={{
             position: "absolute",
-            top: 20,
+            top: 13,
             left: "10%",
             right: "10%",
-            height: 3,
+            height: 2,
             background: "#E5E7EB",
             zIndex: 0,
           }}
@@ -160,23 +159,23 @@ export default function OrderTimeline({ order, onStatusChange }) {
             >
               <div
                 style={{
-                  width: 40,
-                  height: 40,
+                  width: 28,
+                  height: 28,
                   borderRadius: "50%",
                   background: stepUiStatus === "completed" || stepUiStatus === "current" ? "#009688" : "#F3F4F6",
-                  border: "3px solid",
+                  border: "2px solid",
                   borderColor: stepUiStatus === "upcoming" ? "#E5E7EB" : "#009688",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: stepUiStatus === "completed" ? 16 : 18,
-                  marginBottom: 8,
+                  fontSize: 12,
+                  marginBottom: 4,
                   transition: "all 0.3s",
-                  boxShadow: stepUiStatus === "current" ? "0 0 0 4px rgba(0,150,136,0.2)" : "none",
+                  boxShadow: stepUiStatus === "current" ? "0 0 0 3px rgba(0,150,136,0.2)" : "none",
                 }}
               >
                 {stepUiStatus === "completed" ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" aria-hidden>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" aria-hidden>
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 ) : (
@@ -188,10 +187,10 @@ export default function OrderTimeline({ order, onStatusChange }) {
 
               <p
                 style={{
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: stepUiStatus === "current" ? 700 : 500,
                   color: stepUiStatus === "upcoming" ? "#9CA3AF" : "#111827",
-                  margin: "0 0 4px",
+                  margin: "0 0 2px",
                   textAlign: "center",
                   whiteSpace: "nowrap",
                 }}
@@ -201,24 +200,7 @@ export default function OrderTimeline({ order, onStatusChange }) {
               </p>
 
               {timeStr ? (
-                <p style={{ fontSize: 10, color: "#6B7280", margin: 0, textAlign: "center" }}>{timeStr}</p>
-              ) : null}
-
-              {stepUiStatus === "current" ? (
-                <span
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 700,
-                    background: "#009688",
-                    color: "#fff",
-                    padding: "2px 6px",
-                    borderRadius: 99,
-                    marginTop: 4,
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  CURRENT
-                </span>
+                <p style={{ fontSize: 9, color: "#6B7280", margin: 0, textAlign: "center" }}>{timeStr}</p>
               ) : null}
             </div>
           );
@@ -230,21 +212,11 @@ export default function OrderTimeline({ order, onStatusChange }) {
       ) : null}
 
       {timeline.length > 0 ? (
-        <div style={{ marginBottom: 20 }}>
-          <h4
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#374151",
-              margin: "0 0 12px",
-              paddingBottom: 8,
-              borderBottom: "1px solid #F3F4F6",
-            }}
-            className="dark:border-slate-700 dark:text-slate-200"
-          >
-            📋 Order History
-          </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <details className="mt-1 border-t border-slate-100 pt-2 dark:border-slate-800">
+          <summary className="cursor-pointer text-xs font-semibold text-slate-600 dark:text-slate-300">
+            📋 Order History ({timeline.length})
+          </summary>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
             {[...timeline].reverse().map((entry, i) => (
               <div
                 key={i}
@@ -252,7 +224,7 @@ export default function OrderTimeline({ order, onStatusChange }) {
                   display: "flex",
                   gap: 12,
                   alignItems: "flex-start",
-                  padding: "8px 12px",
+                  padding: "6px 10px",
                   background: "#F9FAFB",
                   borderRadius: 8,
                   borderLeft: "3px solid #009688",
@@ -260,15 +232,15 @@ export default function OrderTimeline({ order, onStatusChange }) {
                 className="dark:bg-slate-800"
               >
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: "0 0 2px" }} className="dark:text-white">
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "#111827", margin: "0 0 2px" }} className="dark:text-white">
                     {entry.title}
                   </p>
                   {entry.description ? (
-                    <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 2px" }} className="dark:text-slate-400">
+                    <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 2px" }} className="dark:text-slate-400">
                       {entry.description}
                     </p>
                   ) : null}
-                  <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>
+                  <p style={{ fontSize: 10, color: "#9CA3AF", margin: 0 }}>
                     {entry.timestamp
                       ? new Date(entry.timestamp).toLocaleDateString("en-GB", {
                           day: "numeric",
@@ -284,25 +256,15 @@ export default function OrderTimeline({ order, onStatusChange }) {
               </div>
             ))}
           </div>
-        </div>
+        </details>
       ) : null}
 
       {emailHistory.length > 0 ? (
-        <div>
-          <h4
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#374151",
-              margin: "0 0 12px",
-              paddingBottom: 8,
-              borderBottom: "1px solid #F3F4F6",
-            }}
-            className="dark:border-slate-700 dark:text-slate-200"
-          >
-            📧 Email History
-          </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <details className="mt-1 border-t border-slate-100 pt-2 dark:border-slate-800">
+          <summary className="cursor-pointer text-xs font-semibold text-slate-600 dark:text-slate-300">
+            📧 Email History ({emailHistory.length})
+          </summary>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
             {[...emailHistory].reverse().map((email, i) => (
               <div
                 key={i}
@@ -310,7 +272,7 @@ export default function OrderTimeline({ order, onStatusChange }) {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  padding: "8px 12px",
+                  padding: "6px 10px",
                   background: "#F9FAFB",
                   borderRadius: 8,
                   borderLeft: "3px solid #C9A84C",
@@ -321,7 +283,7 @@ export default function OrderTimeline({ order, onStatusChange }) {
                   <p style={{ fontSize: 12, fontWeight: 600, color: "#111827", margin: "0 0 2px" }} className="dark:text-white">
                     {email.subject || email.type}
                   </p>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }} className="dark:text-slate-400">
+                  <p style={{ fontSize: 10, color: "#6B7280", margin: 0 }} className="dark:text-slate-400">
                     To: {email.to} ·{" "}
                     {email.sentAt
                       ? new Date(email.sentAt).toLocaleDateString("en-GB", {
@@ -348,7 +310,7 @@ export default function OrderTimeline({ order, onStatusChange }) {
               </div>
             ))}
           </div>
-        </div>
+        </details>
       ) : null}
     </div>
   );

@@ -6,14 +6,116 @@ import {
 } from "@/lib/constants";
 import { classifyAiTraffic, shouldSkipAiVisitPath } from "@/lib/aiAgentTraffic";
 import { applyAiAttributionCookies } from "@/lib/aiAttribution";
+import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
+
+function redirectPath(request, pathname, status = 308) {
+  // Prefer `new URL` over NextURL.clone() so Location never inherits stale search.
+  const dest = new URL(pathname, request.nextUrl.origin);
+  const kept = new URLSearchParams();
+  for (const [key, value] of request.nextUrl.searchParams.entries()) {
+    const lower = String(key).toLowerCase();
+    if (STRIP_QUERY_KEYS.has(lower) || lower.startsWith("utm_")) continue;
+    kept.append(key, value);
+  }
+  const qs = kept.toString();
+  if (qs) dest.search = qs;
+  return NextResponse.redirect(dest, status);
+}
+
+/** Query keys Google still crawls from the old Shopify store. */
+const STRIP_QUERY_KEYS = new Set([
+  "variant",
+  "country",
+  "currency",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "gclid",
+  "fbclid",
+  "mc_cid",
+  "mc_eid",
+  "_pos",
+  "_fid",
+  "_ss",
+  "_v",
+  "pb",
+]);
 
 /**
+ * - Fix Shopify-era / Google-indexed URLs (collections, case, cart, search).
  * - Log AI crawler / AI-referrer traffic (non-blocking).
  * - Tag first-touch AI-referrer attribution cookies (14-day window).
  * - Protect storefront account pages (login/register excluded via path checks).
  */
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
+  const lower = pathname.toLowerCase();
+
+  // Linux hosts are case-sensitive — Google indexes /Categories/Exterior etc.
+  if (pathname !== lower) {
+    const caseSensitivePrefixes = [
+      "/categories",
+      "/collections",
+      "/products",
+      "/pages",
+      "/blogs",
+      "/cars",
+      "/shop",
+      "/sale",
+      "/about",
+      "/contact",
+      "/faq",
+      "/cart",
+      "/search",
+      "/account",
+      "/checkout",
+      "/track-order",
+    ];
+    if (caseSensitivePrefixes.some((p) => lower === p || lower.startsWith(`${p}/`))) {
+      return redirectPath(request, lower, 308);
+    }
+  }
+
+  // Shopify singular /collection/:handle
+  if (lower.startsWith("/collection/") && !lower.startsWith("/collections/")) {
+    return redirectPath(request, `/collections/${lower.slice("/collection/".length)}`, 308);
+  }
+
+  // Shopify blog home
+  if (lower === "/blogs/news" || lower === "/blog/news") {
+    return redirectPath(request, "/blogs", 308);
+  }
+
+  // Shopify-era product URLs (+ variant/country/currency) → clean /[slug] in one hop.
+  // Use `new URL` — NextURL.clone() + search="" often keeps the old query string.
+  if (lower.startsWith("/products/")) {
+    const rest = lower.slice("/products/".length).replace(/\/+$/, "");
+    if (rest && !rest.includes("/")) {
+      return NextResponse.redirect(new URL(`/${rest}`, request.nextUrl.origin), 308);
+    }
+  }
+
+  // Self-canonicalizing: strip leftover Shopify/tracking params on any other URL.
+  {
+    const kept = new URLSearchParams();
+    let changed = false;
+    for (const [key, value] of request.nextUrl.searchParams.entries()) {
+      const k = String(key).toLowerCase();
+      if (STRIP_QUERY_KEYS.has(k) || k.startsWith("utm_")) {
+        changed = true;
+        continue;
+      }
+      kept.append(key, value);
+    }
+    if (changed) {
+      const dest = new URL(request.nextUrl.pathname, request.nextUrl.origin);
+      const qs = kept.toString();
+      if (qs) dest.search = qs;
+      return NextResponse.redirect(dest, 308);
+    }
+  }
 
   const isAccountProtected =
     pathname.startsWith("/account/") &&
@@ -30,11 +132,19 @@ export async function middleware(request) {
     const referrer = request.headers.get("referer") || "";
     aiHit = classifyAiTraffic({ userAgent, referrer });
     if (aiHit?.matched) {
-      const ingestUrl = new URL("/api/analytics/ai-visit", request.url);
-      const secret = process.env.AI_VISIT_INGEST_SECRET || "";
-      const headers = { "content-type": "application/json" };
+      // Loopback avoids Traefik; internal token works in Edge without runtime secrets.
+      const port = process.env.PORT || "3000";
+      const ingestUrl = `http://127.0.0.1:${port}/api/analytics/ai-visit`;
+      const secret =
+        process.env.AI_VISIT_INGEST_SECRET ||
+        process.env.REVALIDATE_SECRET ||
+        process.env.CRON_SECRET ||
+        "";
+      const headers = {
+        "content-type": "application/json",
+        "x-internal-ai-ingest": AI_INGEST_INTERNAL_TOKEN,
+      };
       if (secret) headers["x-ai-visit-secret"] = secret;
-      // Fire-and-forget — Edge runtime must not await Mongo work here.
       fetch(ingestUrl, {
         method: "POST",
         headers,
@@ -86,9 +196,9 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     /*
-     * Match all paths except static assets / Next internals.
+     * Match all paths except static assets / Next internals / liveness probe.
      * Includes public pages (for AI logging) and /account/* (for auth).
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)",
   ],
 };

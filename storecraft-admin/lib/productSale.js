@@ -20,25 +20,29 @@ export function computeProductSaleState(pricing, now = new Date()) {
   const sched = pricing?.saleSchedule || {};
   const enabled = Boolean(sched.enabled);
 
+  // No schedule / schedule off → sale runs unlimited until sale price is cleared
   if (!enabled) {
     return { isOnSale: true, saleBadge: null, effectiveSalePrice: saleNum };
   }
 
   const start = sched.startDate ? new Date(sched.startDate) : null;
   const end = sched.endDate ? new Date(sched.endDate) : null;
-  const ok = start && end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime());
+  const startOk = start && !Number.isNaN(start.getTime());
+  const endOk = end && !Number.isNaN(end.getTime());
 
-  if (!ok) {
+  // Schedule enabled but incomplete dates → treat as always-on sale
+  if (!startOk && !endOk) {
     return { isOnSale: true, saleBadge: null, effectiveSalePrice: saleNum };
   }
 
-  if (now < start) {
+  if (startOk && now < start) {
     return { isOnSale: false, saleBadge: "scheduled", effectiveSalePrice: null };
   }
-  if (now > end) {
+  // No end date → unlimited (never expires)
+  if (endOk && now > end) {
     return { isOnSale: false, saleBadge: "ended", effectiveSalePrice: null };
   }
-  return { isOnSale: true, saleBadge: "active", effectiveSalePrice: saleNum };
+  return { isOnSale: true, saleBadge: endOk ? "active" : null, effectiveSalePrice: saleNum };
 }
 
 /**

@@ -3,10 +3,21 @@ import mongoose from "mongoose";
 const orderItemSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", default: null },
+    /** Immutable catalogue/pixel ID snapshot captured when the order is placed. */
+    articleNo: { type: String, default: "", trim: true },
     name: { type: String, required: true, trim: true },
     image: { type: String, default: "" },
     variation: { type: String, default: "" },
     selectedVariation: { type: Object, default: null },
+    selectedAddOns: {
+      type: [
+        {
+          name: { type: String, default: "", trim: true },
+          price: { type: Number, default: 0, min: 0 },
+        },
+      ],
+      default: [],
+    },
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },
     /** Snapshot of product cost at checkout (admin margin / profit). */
@@ -61,6 +72,8 @@ const emailHistoryEntrySchema = new mongoose.Schema(
 const orderSchema = new mongoose.Schema(
   {
     orderNumber: { type: String, required: true, unique: true, index: true },
+    /** Opaque token required for guest success-page order lookup (not guessable from _id alone). */
+    publicAccessToken: { type: String, default: "", trim: true, index: true },
     customer: {
       name: { type: String, default: "", trim: true },
       email: { type: String, default: "", trim: true },
@@ -198,6 +211,14 @@ const orderSchema = new mongoose.Schema(
     },
     /** Timestamp of the first AI-referrer touch that attributed this order. */
     aiAttributedAt: { type: Date, default: null },
+    /** Source walk-in Invoice when created via admin “Add to orders”. */
+    invoiceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Invoice",
+      default: null,
+      index: true,
+    },
+    invoiceNumber: { type: String, default: "", trim: true, index: true },
   },
   { timestamps: true }
 );

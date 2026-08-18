@@ -19,66 +19,16 @@ import { OrderStatusCard, PaymentStatusCard } from "./StatusUpdater";
 import { OrderItemsEditor } from "./OrderItemsEditor";
 import {
   buildWaLink,
-  getAdminWhatsAppNumber,
   getCustomerOrderPhone,
   openWhatsApp,
-  openWhatsAppWithOptionalImage,
   OrderWhatsAppButton,
 } from "@/components/orders/OrderWhatsAppButton";
 import { formatAdminPrice } from "@/lib/currency";
 import { isPrepaidOrder, postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
 import {
-  buildWhatsAppMessage,
   getLegacyTrackingWhatsAppMessage,
   getOrderShippedWhatsAppMessage,
-  resolveTemplate,
 } from "@/lib/whatsappTemplates";
-
-function adminOrderDetailUrl(order) {
-  const orderId = order?.id || order?._id || "";
-  const base =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL || "";
-  if (!base || !orderId) return "";
-  return `${String(base).replace(/\/$/, "")}/orders/${orderId}`;
-}
-
-function buildAdminOrderNotifyVariables(order, extras = {}) {
-  const addr = order?.shippingAddress || {};
-  const items = Array.isArray(order?.items) ? order.items : [];
-  const total = Number(order?.pricing?.total ?? order?.total ?? 0);
-  const imageBlock = items
-    .filter((i) => i?.image)
-    .map((i) => `🖼️ ${String(i.name || "Item").slice(0, 60)}:\n${i.image}`)
-    .join("\n\n");
-  return {
-    customerName: String(addr.name ?? "").trim() || "—",
-    customerPhone: String(addr.phone ?? "").trim() || "—",
-    orderNumber: String(order?.orderNumber ?? ""),
-    city: String(addr.city ?? "").trim() || "—",
-    province: String(addr.state ?? addr.province ?? "").trim() || "—",
-    itemsList:
-      items.map((i) => `• ${i.quantity ?? 1}x ${i.name ?? "Item"}`).join("\n") || "—",
-    productImages: imageBlock ? `📸 *Product photos:*\n${imageBlock}` : "",
-    total: total.toLocaleString("en-PK"),
-    paymentMethod: String(order?.paymentMethod ?? order?.payment?.method ?? "—"),
-    address: String(addr.street ?? addr.line1 ?? addr.address ?? "").trim() || "—",
-    adminOrderUrl: adminOrderDetailUrl(order),
-    confirmOrderUrl: extras.confirmUrl || adminOrderDetailUrl(order),
-    cancelOrderUrl: extras.cancelUrl || adminOrderDetailUrl(order),
-  };
-}
-
-function getAdminNotifyMessage(order, settings, extras = {}) {
-  const { enabled, template } = resolveTemplate(settings, "adminNewOrder");
-  if (!enabled) return "";
-  return buildWhatsAppMessage(template, buildAdminOrderNotifyVariables(order, extras));
-}
-
-function adminNotifyStorageKey(orderId) {
-  return `admin-wa-notified-${orderId}`;
-}
 
 function orderItemCount(order) {
   const items = Array.isArray(order?.items) ? order.items : [];
@@ -101,11 +51,29 @@ function formatCurrencyAmount(order, amount) {
   return `${currency} ${Number(amount || 0).toFixed(2)}`;
 }
 
+/** Collapse accidental single-letter spacing: "S h a" → "Sha", keep normal names. */
+function normalizePersonName(raw) {
+  const cleaned = String(raw || "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return "";
+  return cleaned.replace(/\b(?:[A-Za-zÀ-ÿ]\s+){2,}[A-Za-zÀ-ÿ]\b/g, (chunk) =>
+    chunk.replace(/\s+/g, "")
+  );
+}
+
 function customerFullName(order) {
-  const fn = order?.customer?.firstName || "";
-  const ln = order?.customer?.lastName || "";
-  const combined = `${fn} ${ln}`.trim();
-  return combined || order?.customer?.name || "—";
+  const fromShipping = normalizePersonName(order?.shippingAddress?.name);
+  if (fromShipping) return fromShipping;
+
+  const fn = normalizePersonName(order?.customer?.firstName);
+  const ln = normalizePersonName(order?.customer?.lastName);
+  const combined = normalizePersonName(`${fn} ${ln}`);
+  if (combined) return combined;
+
+  const fromCustomer = normalizePersonName(order?.customer?.name);
+  return fromCustomer || "—";
 }
 
 const SHIPPING_PROVINCES = [
@@ -189,85 +157,39 @@ function buildShippingAddressPayload(form) {
   };
 }
 
-function InfoTableCard({ title, rows }) {
+function InfoTableCard({ title, rows, bare = false }) {
   const visibleRows = rows.filter(Boolean);
-  return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
-        overflow: "hidden",
-        marginBottom: 20,
-      }}
-      className="dark:border-slate-700 dark:bg-slate-900"
-    >
-      <div
-        style={{
-          background: "#f9fafb",
-          padding: "14px 20px",
-          borderBottom: "1px solid #e5e7eb",
-        }}
-        className="dark:border-slate-700 dark:bg-slate-800/80"
-      >
-        <h3
-          style={{
-            fontSize: 14,
-            fontWeight: 700,
-            color: "#111827",
-            margin: 0,
-          }}
-          className="dark:text-white"
+  const body = (
+    <dl className="m-0 divide-y divide-slate-100 dark:divide-slate-800">
+      {visibleRows.map((row) => (
+        <div
+          key={row.label}
+          className="flex flex-col gap-0.5 py-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
         >
-          {title}
-        </h3>
+          <dt className="shrink-0 text-[13px] font-medium text-slate-500 dark:text-slate-400">
+            {row.label}
+          </dt>
+          <dd className="m-0 min-w-0 break-words text-[13px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">
+            {String(row.value ?? "—")}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+  if (bare) {
+    return <div className="px-3 py-2 sm:px-4">{body}</div>;
+  }
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800/80 sm:px-5">
+        <h3 className="m-0 text-sm font-bold text-slate-900 dark:text-white">{title}</h3>
       </div>
-      <div style={{ padding: 20 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
-            {visibleRows.map((row, i) => (
-              <tr
-                key={row.label}
-                style={{
-                  borderBottom: i < visibleRows.length - 1 ? "1px solid #f3f4f6" : "none",
-                }}
-                className="dark:border-slate-800"
-              >
-                <td
-                  style={{
-                    padding: "10px 0",
-                    fontSize: 13,
-                    color: "#6b7280",
-                    fontWeight: 500,
-                    width: "40%",
-                    verticalAlign: "top",
-                  }}
-                  className="dark:text-slate-400"
-                >
-                  {row.label}
-                </td>
-                <td
-                  style={{
-                    padding: "10px 0",
-                    fontSize: 13,
-                    color: "#111827",
-                    fontWeight: 600,
-                    verticalAlign: "top",
-                  }}
-                  className="dark:text-slate-100"
-                >
-                  {String(row.value ?? "—")}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="px-4 py-2 sm:px-5 sm:py-3">{body}</div>
     </div>
   );
 }
 
-function OrderInformationCard({ order }) {
+function OrderInformationCard({ order, bare = false }) {
   const p = order.pricing || {};
   const subtotal = order.subtotal ?? p.subtotal ?? 0;
   const shippingCost = order.shippingCost ?? p.shippingCost ?? order.shipping ?? 0;
@@ -297,7 +219,7 @@ function OrderInformationCard({ order }) {
       : null,
   ];
 
-  return <InfoTableCard title="Order Information" rows={rows} />;
+  return <InfoTableCard title="Order Information" rows={rows} bare={bare} />;
 }
 
 function ShippingDetailsCard({ order, orderId, onUpdated }) {
@@ -312,31 +234,27 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
   }, [order, editing]);
 
   const addr = order.shippingAddress || {};
+  const instructions = shippingInstructionsFromOrder(order);
   const displayRows = [
     { label: "Full Name", value: addr.name || customerFullName(order) },
     { label: "Phone", value: addr.phone || order.customer?.phone || "—" },
     {
       label: "Address",
       value:
-        [addr.street || addr.line1, addr.street2 || addr.line2]
+        [addr.street || addr.line1, addr.street2 || addr.line2, addr.area]
           .filter(Boolean)
           .join(", ") ||
         addr.address ||
         "—",
     },
-    { label: "Area", value: addr.area || "—" },
     { label: "City", value: addr.city || "—" },
     { label: "Province", value: addr.province || addr.state || "—" },
     {
       label: "Postal Code",
       value: addr.postcode || addr.postalCode || addr.zip || "—",
     },
-    { label: "Country", value: addr.country || "Pakistan" },
-    {
-      label: "Notes / Instructions",
-      value: shippingInstructionsFromOrder(order) || "—",
-    },
-  ];
+    instructions ? { label: "Notes / Instructions", value: instructions } : null,
+  ].filter(Boolean);
 
   function patchField(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -389,14 +307,13 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
         border: "1px solid #e5e7eb",
         borderRadius: 12,
         overflow: "hidden",
-        marginBottom: 20,
       }}
       className="dark:border-slate-700 dark:bg-slate-900"
     >
       <div
         style={{
           background: "#f9fafb",
-          padding: "14px 20px",
+          padding: "10px 16px",
           borderBottom: "1px solid #e5e7eb",
           display: "flex",
           alignItems: "center",
@@ -423,9 +340,9 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
         ) : null}
       </div>
 
-      <div style={{ padding: 20 }}>
+      <div style={{ padding: 12 }}>
         {editing ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
               <label className={labelClass}>Full Name</label>
               <input
@@ -461,16 +378,6 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
                 type="text"
                 value={form.line2}
                 onChange={(e) => patchField("line2", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Area (optional)</label>
-              <input
-                type="text"
-                value={form.area || ""}
-                onChange={(e) => patchField("area", e.target.value)}
-                placeholder="Colony / sector / mohalla"
                 className={inputClass}
               />
             </div>
@@ -555,11 +462,11 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
                 >
                   <td
                     style={{
-                      padding: "10px 0",
-                      fontSize: 13,
+                      padding: "6px 0",
+                      fontSize: 12,
                       color: "#6b7280",
                       fontWeight: 500,
-                      width: "40%",
+                      width: "36%",
                       verticalAlign: "top",
                     }}
                     className="dark:text-slate-400"
@@ -568,8 +475,8 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
                   </td>
                   <td
                     style={{
-                      padding: "10px 0",
-                      fontSize: 13,
+                      padding: "6px 0",
+                      fontSize: 12,
                       color: "#111827",
                       fontWeight: 600,
                       verticalAlign: "top",
@@ -826,6 +733,7 @@ function PaymentInformationSection({ order, orderId, onRefunded }) {
 export function OrderDetail({ orderId }) {
   const router = useRouter();
   const [order, setOrder] = useState(null);
+  const [neighbors, setNeighbors] = useState({ prev: null, next: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [trackingCarrier, setTrackingCarrier] = useState("Postex");
@@ -842,7 +750,6 @@ export function OrderDetail({ orderId }) {
     logoUrl: "",
   });
   const [settings, setSettings] = useState(null);
-  const [adminNotifiedSession, setAdminNotifiedSession] = useState(false);
   const [hasLabel, setHasLabel] = useState(false);
   const [courierSettings, setCourierSettings] = useState({});
   const [postexRebook, setPostexRebook] = useState(false);
@@ -867,9 +774,14 @@ export function OrderDetail({ orderId }) {
       if (!res.ok || !json.success) {
         setError(json.error || "Could not load order.");
         setOrder(null);
+        setNeighbors({ prev: null, next: null });
         return;
       }
       setOrder(json.order);
+      setNeighbors({
+        prev: json.neighbors?.prev || null,
+        next: json.neighbors?.next || null,
+      });
       setTrackingCarrier(json.order?.courier || json.order?.tracking?.carrier || "Postex");
       setTrackingNumber(json.order?.trackingNumber || json.order?.tracking?.number || "");
       setTrackingUrl(json.order?.trackingUrl || json.order?.tracking?.url || "");
@@ -880,6 +792,7 @@ export function OrderDetail({ orderId }) {
     } catch {
       setError("Network error.");
       setOrder(null);
+      setNeighbors({ prev: null, next: null });
     } finally {
       setLoading(false);
     }
@@ -888,6 +801,26 @@ export function OrderDetail({ orderId }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Shopify-style ↑ / ↓ keyboard navigation between orders
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = String(e.target?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || e.target?.isContentEditable) {
+        return;
+      }
+      if ((e.key === "ArrowUp" || e.key === "k") && neighbors.prev?.id) {
+        e.preventDefault();
+        router.push(`/orders/${neighbors.prev.id}`);
+      } else if ((e.key === "ArrowDown" || e.key === "j") && neighbors.next?.id) {
+        e.preventDefault();
+        router.push(`/orders/${neighbors.next.id}`);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [neighbors, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -903,6 +836,8 @@ export function OrderDetail({ orderId }) {
         });
         setStoreUrl(loaded.general?.website || process.env.NEXT_PUBLIC_STORE_URL || "");
         setCourierSettings(loaded.courier || {});
+        const savedRemarks = String(loaded.courier?.shipperRemarks || "").trim();
+        if (savedRemarks) setPostexRemarks(savedRemarks);
       })
       .catch(() => {
         /* ignore */
@@ -923,73 +858,6 @@ export function OrderDetail({ orderId }) {
       setPostexWeight(Math.max(0.5, weightKg));
     }
   }, [order]);
-
-  const notifyAdminOnWhatsApp = useCallback(
-    async (isAuto = false) => {
-      if (!order) return false;
-      const adminPhone = getAdminWhatsAppNumber(settings);
-      if (!adminPhone) {
-        if (!isAuto) toast.error("Set WhatsApp number in Settings → WhatsApp.");
-        return false;
-      }
-
-      let extras = {};
-      try {
-        const res = await fetch(`/api/orders/${order.id}/wa-links`, { credentials: "include" });
-        const json = await res.json();
-        if (json.success) {
-          extras = {
-            confirmUrl: json.confirmUrl,
-            cancelUrl: json.cancelUrl,
-          };
-        }
-      } catch {
-        /* links optional */
-      }
-
-      const msg = getAdminNotifyMessage(order, settings || {}, extras);
-      if (!msg) {
-        if (!isAuto) toast.error("Admin new-order WhatsApp template is disabled.");
-        return false;
-      }
-
-      const imageUrls = (order.items || []).map((i) => i.image).filter(Boolean);
-      const result = await openWhatsAppWithOptionalImage(adminPhone, msg, imageUrls);
-      if (!result.ok) {
-        if (!isAuto) toast.error("Could not open WhatsApp.");
-        return false;
-      }
-      try {
-        sessionStorage.setItem(adminNotifyStorageKey(order.id), "1");
-      } catch {
-        /* ignore */
-      }
-      setAdminNotifiedSession(true);
-      if (!isAuto) {
-        toast.success("WhatsApp opened — tap Confirm/Cancel links in the message.");
-      }
-      return true;
-    },
-    [order, settings]
-  );
-
-  useEffect(() => {
-    if (!order?.id || !settings) return;
-    let already = false;
-    try {
-      already = Boolean(sessionStorage.getItem(adminNotifyStorageKey(order.id)));
-    } catch {
-      already = false;
-    }
-    if (already) {
-      setAdminNotifiedSession(true);
-      return;
-    }
-    const status = String(order.orderStatus || "").toLowerCase();
-    if (status === "pending") {
-      notifyAdminOnWhatsApp(true);
-    }
-  }, [order?.id, order?.orderStatus, settings, notifyAdminOnWhatsApp]);
 
   function printInvoice() {
     requestAnimationFrame(() => {
@@ -1194,6 +1062,21 @@ export function OrderDetail({ orderId }) {
         setTrackingUrl(data.trackingUrl || postexPublicTrackingUrl(data.trackingNumber));
         setHasLabel(Boolean(data.hasLabel));
         toast.success(`Shipment booked: ${data.trackingNumber}`);
+        // Auto-download shipping slip PDF (PostEx demo slip)
+        const labelUrl =
+          data.labelDownloadUrl ||
+          (data.trackingNumber
+            ? `/api/postex/label?trackingNumber=${encodeURIComponent(data.trackingNumber)}&orderId=${encodeURIComponent(orderId)}&download=1`
+            : "");
+        if (labelUrl) {
+          const a = document.createElement("a");
+          a.href = labelUrl;
+          a.rel = "noopener";
+          a.download = `postex-label-${data.trackingNumber || "shipment"}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
         await load();
         if (data.trackingNumber) await fetchLivePostexStatus(data.trackingNumber);
       } else {
@@ -1248,7 +1131,7 @@ export function OrderDetail({ orderId }) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl space-y-4">
+      <div className="w-full space-y-4">
         <div className="h-10 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
         <div className="h-96 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
       </div>
@@ -1581,53 +1464,127 @@ export function OrderDetail({ orderId }) {
       : "—";
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="w-full max-w-none">
       <div className="print:hidden">
-        <Link href="/orders" className="mb-3 inline-block text-sm font-medium text-[#1d6fb8] hover:underline">
-          ← Orders
-        </Link>
+        <div className="mb-2">
+          <Link href="/orders" className="text-sm font-medium text-[#1d6fb8] hover:underline">
+            ← Orders
+          </Link>
+        </div>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 24,
-            paddingBottom: 16,
-            borderBottom: "1px solid #e5e7eb",
-            flexWrap: "wrap",
-            gap: 16,
-          }}
-          className="dark:border-slate-700"
-        >
-          <div>
-            <h1
-              style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: "#111827",
-                margin: "0 0 4px",
-              }}
-              className="dark:text-white"
+        <div className="mb-3 border-b border-slate-200 pb-3 dark:border-slate-700">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="m-0 text-lg font-bold leading-tight text-slate-900 dark:text-white">
+                  Order #{order.orderNumber}
+                </h1>
+                <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold capitalize text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                  {order.orderStatus || order.status || "pending"}
+                </span>
+                <span
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-semibold capitalize ${
+                    String(order.paymentStatus || "").toLowerCase() === "paid"
+                      ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+                      : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-200"
+                  }`}
+                >
+                  {order.paymentStatus || "unpaid"}
+                </span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">
+                  {formatCurrencyAmount(
+                    order,
+                    order.total ?? order.pricing?.total ?? order.grandTotal ?? 0
+                  )}
+                </span>
+              </div>
+              <p className="mt-0.5 mb-0 text-xs text-slate-500 dark:text-slate-400">
+                {customerFullName(order)}
+                {order.paymentMethod || order.payment?.method
+                  ? ` · ${order.paymentMethod || order.payment?.method}`
+                  : ""}
+                {" · "}
+                {placedAt}
+                {order.invoiceId || order.invoiceNumber ? (
+                  <>
+                    {" · Invoice "}
+                    {order.invoiceId ? (
+                      <Link
+                        href={`/invoices/${order.invoiceId}`}
+                        className="font-semibold text-[#1d6fb8] hover:underline"
+                      >
+                        {order.invoiceNumber || "View"}
+                      </Link>
+                    ) : (
+                      <span className="font-semibold">{order.invoiceNumber}</span>
+                    )}
+                  </>
+                ) : null}
+              </p>
+            </div>
+
+            <div
+              className="inline-flex shrink-0 overflow-hidden rounded-lg border border-slate-300 bg-white dark:border-slate-500 dark:bg-slate-800"
+              role="group"
+              aria-label="Go to previous or next order"
             >
-              Order #{order.orderNumber}
-            </h1>
-            <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }} className="dark:text-slate-400">
-              {placedAt}
-            </p>
+              <button
+                type="button"
+                disabled={!neighbors.prev?.id}
+                title={
+                  neighbors.prev?.orderNumber
+                    ? `Newer order (${neighbors.prev.orderNumber})`
+                    : "No newer order"
+                }
+                aria-label="Previous order (newer)"
+                onClick={() => neighbors.prev?.id && router.push(`/orders/${neighbors.prev.id}`)}
+                className="flex h-9 min-w-[3.75rem] items-center justify-center gap-1 border-r border-slate-300 px-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-500 dark:text-slate-100 dark:hover:bg-slate-700"
+              >
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path
+                    fillRule="evenodd"
+                    d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Prev
+              </button>
+              <button
+                type="button"
+                disabled={!neighbors.next?.id}
+                title={
+                  neighbors.next?.orderNumber
+                    ? `Older order (${neighbors.next.orderNumber})`
+                    : "No older order"
+                }
+                aria-label="Next order (older)"
+                onClick={() => neighbors.next?.id && router.push(`/orders/${neighbors.next.id}`)}
+                className="flex h-9 min-w-[3.75rem] items-center justify-center gap-1 px-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-100 dark:hover:bg-slate-700"
+              >
+                Next
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             <button
               type="button"
               onClick={printInvoice}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               Print Invoice
             </button>
             <button
               type="button"
               onClick={printPackingSlip}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               Print Packing Slip
             </button>
@@ -1635,73 +1592,48 @@ export function OrderDetail({ orderId }) {
               type="button"
               disabled={sendingInvoice}
               onClick={sendInvoiceEmail}
-              className="rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#185f9e] disabled:opacity-60"
+              className="rounded-md bg-[#1d6fb8] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#185f9e] disabled:opacity-60"
             >
               {sendingInvoice ? "Sending..." : "Send Invoice Email"}
             </button>
-            <OrderWhatsAppButton order={order} settings={settings} />
-            <button
-              type="button"
-              onClick={() => notifyAdminOnWhatsApp(false)}
-              title={
-                adminNotifiedSession
-                  ? "Admin notification sent this session"
-                  : "Send new-order alert to admin WhatsApp"
-              }
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-              style={{
-                background: adminNotifiedSession ? "#f0fdf4" : undefined,
-                borderColor: adminNotifiedSession ? "#86efac" : undefined,
-              }}
-            >
-              📱 Notify Admin on WhatsApp
-            </button>
+            <div className="min-w-[140px] [&_button]:!py-1.5 [&_button]:!text-xs">
+              <OrderWhatsAppButton order={order} settings={settings} />
+            </div>
           </div>
         </div>
 
-        <div
-          className="grid grid-cols-1 gap-5 items-start lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"
-        >
-          <div className="min-w-0 space-y-5">
-            <OrderInformationCard order={order} />
-            <ShippingDetailsCard order={order} orderId={orderId} onUpdated={setOrder} />
-
+        <div className="grid grid-cols-1 items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
+          <div className="min-w-0 space-y-3">
+            {/* Products first — visible without scrolling past tall meta cards */}
             <OrderItemsEditor order={order} onUpdated={setOrder} />
 
-            <InternalNotes order={order} onUpdated={setOrder} />
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              <ShippingDetailsCard order={order} orderId={orderId} onUpdated={setOrder} />
+              <div className="space-y-3">
+                <details className="group rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                  <summary className="cursor-pointer list-none px-4 py-2.5 text-sm font-semibold text-slate-900 marker:content-none dark:text-white [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-center justify-between gap-2">
+                      Order information
+                      <span className="text-xs font-normal text-slate-400 group-open:hidden">Show</span>
+                      <span className="hidden text-xs font-normal text-slate-400 group-open:inline">Hide</span>
+                    </span>
+                  </summary>
+                  <div className="border-t border-slate-100 dark:border-slate-800">
+                    <OrderInformationCard order={order} bare />
+                  </div>
+                </details>
+                <InternalNotes order={order} onUpdated={setOrder} />
+              </div>
+            </div>
           </div>
 
-          <div className="min-w-0 space-y-6">
-            <OrderTimeline
-              order={order}
-              onStatusChange={async (newStatus) => {
-                try {
-                  const res = await fetch(`/api/orders/${order.id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ orderStatus: newStatus }),
-                  });
-                  const data = await res.json();
-                  if (data.success) {
-                    toast.success(`Order status updated to ${newStatus}`);
-                    setOrder(data.order);
-                    router.refresh();
-                  } else {
-                    toast.error(data.error || "Failed to update status");
-                  }
-                } catch {
-                  toast.error("Failed to update status");
-                }
-              }}
-            />
-
+          <div className="min-w-0 space-y-3">
             <OrderStatusCard order={order} onUpdated={setOrder} />
             <PaymentStatusCard order={order} onUpdated={setOrder} />
 
             <PaymentInformationSection order={order} orderId={orderId} onRefunded={load} />
 
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
                 <span aria-hidden>📦</span>
                 Shipping &amp; Tracking
@@ -1709,7 +1641,7 @@ export function OrderDetail({ orderId }) {
 
               {!hasTracking ? (
                 <div
-                  className="mt-3 rounded-lg border border-slate-200 p-4 dark:border-slate-600"
+                  className="mt-2 rounded-lg border border-slate-200 p-3 dark:border-slate-600"
                   style={{ background: "#FAFAFA" }}
                 >
                   <p className="text-sm font-bold text-slate-900 dark:text-white">📦 Book Postex Shipment</p>
@@ -1806,17 +1738,17 @@ export function OrderDetail({ orderId }) {
                 </div>
               )}
 
-              <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Manual tracking (other couriers)
                 </p>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Courier</label>
                     <select
                       value={trackingCarrier}
                       onChange={(e) => setTrackingCarrier(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
                     >
                       {["Postex", "TCS", "Leopards", "M&P", "Other"].map((c) => (
                         <option key={c} value={c}>
@@ -1832,7 +1764,7 @@ export function OrderDetail({ orderId }) {
                     <input
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
                       placeholder="Enter tracking number"
                     />
                   </div>
@@ -1840,7 +1772,7 @@ export function OrderDetail({ orderId }) {
                     type="button"
                     disabled={trackingSaving}
                     onClick={saveTracking}
-                    className="w-full rounded-lg bg-[#1d6fb8] px-3 py-2 text-sm font-semibold text-white hover:bg-[#185f9e] disabled:opacity-60"
+                    className="w-full rounded-lg bg-[#1d6fb8] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#185f9e] disabled:opacity-60"
                   >
                     {trackingSaving ? "Saving..." : "Save Tracking"}
                   </button>
@@ -1849,7 +1781,7 @@ export function OrderDetail({ orderId }) {
                       type="button"
                       disabled={sendingTracking}
                       onClick={sendTrackingEmail}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
                     >
                       {sendingTracking ? "Sending..." : "Send tracking email"}
                     </button>
@@ -1857,6 +1789,30 @@ export function OrderDetail({ orderId }) {
                 </div>
               </div>
             </div>
+
+            <OrderTimeline
+              order={order}
+              onStatusChange={async (newStatus) => {
+                try {
+                  const res = await fetch(`/api/orders/${order.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ orderStatus: newStatus }),
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    toast.success(`Order status updated to ${newStatus}`);
+                    setOrder(data.order);
+                    router.refresh();
+                  } else {
+                    toast.error(data.error || "Failed to update status");
+                  }
+                } catch {
+                  toast.error("Failed to update status");
+                }
+              }}
+            />
           </div>
         </div>
       </div>

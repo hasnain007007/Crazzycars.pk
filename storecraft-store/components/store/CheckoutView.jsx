@@ -33,6 +33,12 @@ import { formatPrice } from "@/lib/currency";
 import { useCustomer } from "@/lib/customerAuth";
 import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
 import { resolveProductContentId, trackInitiateCheckout } from "@/lib/metaPixel";
+import {
+  fetchRecoverCart,
+  getCartSessionId,
+  getStoredRecoveryToken,
+  syncCartToServer,
+} from "@/lib/cartSyncClient";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -208,7 +214,7 @@ function CheckoutProgressSteps({ activeStep }) {
 }
 
 export function CheckoutView() {
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, replaceItems } = useCart();
   const { customer: authCustomer, loading: authLoading } = useCustomer();
   const [checkoutSettings, setCheckoutSettings] = useState({
     requireAccount: false,
@@ -262,6 +268,79 @@ export function CheckoutView() {
       setPaymentMethod(fallback);
     }
   }, [cartAllowsCod, paymentMethod, pakistaniMethods]);
+
+  // Restore cart from abandoned-cart recovery link (?recover=TOKEN)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const token = String(params.get("recover") || "").trim();
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchRecoverCart(token);
+        if (cancelled || !Array.isArray(data.items) || !data.items.length) return;
+        const restored = data.items.map((i) => ({
+          _id: i.productId,
+          id: i.productId,
+          itemId: i.productId,
+          productId: i.productId,
+          slug: i.slug || "",
+          name: i.name || "Product",
+          image: i.image || "",
+          price: Number(i.unitPrice ?? i.price) || 0,
+          unitPrice: Number(i.unitPrice ?? i.price) || 0,
+          variantId: i.variantId || "",
+          quantity: Math.max(1, Number(i.quantity) || 1),
+          variationLabel: i.variationLabel || "",
+          articleNo: i.articleNo || "",
+          sku: i.sku || "",
+        }));
+        replaceItems(restored);
+        if (data.customer?.email || data.customer?.phone || data.customer?.name) {
+          const parts = String(data.customer.name || "")
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+          setCustomer((f) => ({
+            ...f,
+            firstName: f.firstName || parts[0] || "",
+            lastName: f.lastName || parts.slice(1).join(" ") || "",
+            email: f.email || data.customer.email || "",
+            phone: f.phone || data.customer.phone || "",
+          }));
+        }
+        toast.success("Your cart was restored — complete checkout below.");
+        params.delete("recover");
+        const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
+        window.history.replaceState({}, "", next);
+      } catch (e) {
+        toast.error(e.message || "Could not restore cart.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [replaceItems]);
+
+  // Keep abandoned-cart contact fields in sync while filling checkout
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const name = `${String(customer.firstName || "").trim()} ${String(customer.lastName || "").trim()}`.trim();
+      if (!name && !customer.email && !customer.phone && !items.length) return;
+      syncCartToServer({
+        items,
+        customer: {
+          name,
+          email: customer.email,
+          phone: customer.phone,
+        },
+        path: "/checkout",
+      });
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [customer.firstName, customer.lastName, customer.email, customer.phone, items]);
+
   const freeThreshold = useMemo(
     () => getEffectiveFreeDeliveryThreshold(settings?.storePayment || storePayment),
     [settings?.storePayment, storePayment]
@@ -670,6 +749,8 @@ export function CheckoutView() {
           paymentMethod,
           paymentStatus: "pending",
           status: "pending",
+          cartSessionId: getCartSessionId(),
+          cartRecoveryToken: getStoredRecoveryToken(),
         }),
       });
       const json = await res.json();
@@ -678,6 +759,7 @@ export function CheckoutView() {
         return;
       }
       const nextOrderId = json.orderId || json.order?._id || null;
+      const accessToken = String(json.accessToken || "").trim();
       if (!nextOrderId) {
         toast.error("Order created but missing order id.");
         return;
@@ -692,7 +774,9 @@ export function CheckoutView() {
           /* ignore */
         }
       }
-      window.location.href = `/checkout/success?order_id=${nextOrderId}`;
+      const qs = new URLSearchParams({ order_id: String(nextOrderId) });
+      if (accessToken) qs.set("t", accessToken);
+      window.location.href = `/checkout/success?${qs.toString()}`;
     } catch {
       toast.error("Network error");
     } finally {
@@ -957,53 +1041,87 @@ export function CheckoutView() {
             </div>
           ) : null}
 
-          <div style={{ marginBottom: 10 }}>
-            <label style={CHECKOUT_LABEL}>
-              Name <span style={{ color: "#dc2626" }}>*</span>
-            </label>
-            <input
-              type="text"
-              autoComplete="name"
-              value={fullNameValue}
-              onChange={(e) => {
-                const parts = e.target.value.trim().split(/\s+/).filter(Boolean);
-                setCustomer((f) => ({
-                  ...f,
-                  firstName: parts[0] || "",
-                  lastName: parts.slice(1).join(" "),
-                }));
-                if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
-              }}
-              placeholder="Your name"
-              style={checkoutInputStyle(Boolean(fieldErrors.name))}
-            />
-            {fieldErrors.name ? (
-              <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
-                ⚠ {fieldErrors.name}
-              </p>
-            ) : null}
+          <div className="mb-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <div>
+              <label style={CHECKOUT_LABEL}>
+                Name <span style={{ color: "#dc2626" }}>*</span>
+              </label>
+              <input
+                type="text"
+                autoComplete="name"
+                value={fullNameValue}
+                onChange={(e) => {
+                  const parts = e.target.value.trim().split(/\s+/).filter(Boolean);
+                  setCustomer((f) => ({
+                    ...f,
+                    firstName: parts[0] || "",
+                    lastName: parts.slice(1).join(" "),
+                  }));
+                  if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
+                }}
+                placeholder="Your name"
+                style={checkoutInputStyle(Boolean(fieldErrors.name))}
+              />
+              {fieldErrors.name ? (
+                <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
+                  ⚠ {fieldErrors.name}
+                </p>
+              ) : null}
+            </div>
+            <div>
+              <label style={CHECKOUT_LABEL}>Email (optional)</label>
+              <input
+                type="text"
+                inputMode="email"
+                autoComplete="email"
+                value={customer.email || ""}
+                onChange={(e) => {
+                  setCustomer((f) => ({ ...f, email: e.target.value }));
+                  if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: "" }));
+                }}
+                placeholder="your@email.com"
+                style={checkoutInputStyle(Boolean(fieldErrors.email))}
+              />
+              {fieldErrors.email ? (
+                <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
+                  ⚠ {fieldErrors.email}
+                </p>
+              ) : null}
+            </div>
           </div>
 
-          <div style={{ marginBottom: 10 }}>
-            <label style={CHECKOUT_LABEL}>
-              Phone <span style={{ color: "#dc2626" }}>*</span>
-            </label>
-            <input
-              type="tel"
-              autoComplete="tel"
-              value={customer.phone || ""}
-              onChange={(e) => {
-                setCustomer((f) => ({ ...f, phone: e.target.value }));
-                if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: "" }));
-              }}
-              placeholder={phonePlaceholder}
-              style={checkoutInputStyle(Boolean(fieldErrors.phone))}
-            />
-            {fieldErrors.phone ? (
-              <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
-                ⚠ {fieldErrors.phone}
-              </p>
-            ) : null}
+          <div className="mb-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <div>
+              <label style={CHECKOUT_LABEL}>
+                Phone <span style={{ color: "#dc2626" }}>*</span>
+              </label>
+              <input
+                type="tel"
+                autoComplete="tel"
+                value={customer.phone || ""}
+                onChange={(e) => {
+                  setCustomer((f) => ({ ...f, phone: e.target.value }));
+                  if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: "" }));
+                }}
+                placeholder={phonePlaceholder}
+                style={checkoutInputStyle(Boolean(fieldErrors.phone))}
+              />
+              {fieldErrors.phone ? (
+                <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
+                  ⚠ {fieldErrors.phone}
+                </p>
+              ) : null}
+            </div>
+            <div>
+              <label style={CHECKOUT_LABEL}>Postal Code (optional)</label>
+              <input
+                placeholder={zipPlaceholder}
+                value={addr.zip}
+                maxLength={5}
+                onChange={(e) => setAddr((s) => ({ ...s, zip: e.target.value.replace(/\D/g, "").slice(0, 5) }))}
+                style={checkoutInputStyle(false)}
+              />
+            </div>
           </div>
 
           <div className="mb-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -1070,7 +1188,7 @@ export function CheckoutView() {
                 setAddr((s) => ({ ...s, street: e.target.value }));
                 if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: "" }));
               }}
-              placeholder="House / street, area"
+              placeholder="House / street, area, landmark"
               style={checkoutInputStyle(Boolean(fieldErrors.address))}
             />
             {fieldErrors.address ? (
@@ -1080,23 +1198,12 @@ export function CheckoutView() {
             ) : null}
           </div>
 
-          <div style={{ marginBottom: 10 }}>
-            <label style={CHECKOUT_LABEL}>Area</label>
-            <input
-              type="text"
-              value={addr.area || ""}
-              onChange={(e) => setAddr((s) => ({ ...s, area: e.target.value }))}
-              placeholder="Colony / sector / mohalla"
-              style={checkoutInputStyle(false)}
-            />
-          </div>
-
           {!showStreet2 ? (
             <button
               type="button"
               onClick={() => setShowStreet2(true)}
               style={{
-                marginBottom: 10,
+                marginBottom: 14,
                 padding: 0,
                 border: "none",
                 background: "none",
@@ -1110,7 +1217,7 @@ export function CheckoutView() {
               + Add address line 2
             </button>
           ) : (
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 14 }}>
               <label style={CHECKOUT_LABEL}>Address line 2 (optional)</label>
               <input
                 type="text"
@@ -1121,38 +1228,6 @@ export function CheckoutView() {
               />
             </div>
           )}
-
-          <div style={{ marginBottom: 10 }}>
-            <label style={CHECKOUT_LABEL}>Postal Code (optional)</label>
-            <input
-              placeholder={zipPlaceholder}
-              value={addr.zip}
-              maxLength={5}
-              onChange={(e) => setAddr((s) => ({ ...s, zip: e.target.value.replace(/\D/g, "").slice(0, 5) }))}
-              style={checkoutInputStyle(false)}
-            />
-          </div>
-
-          <div style={{ marginBottom: 14 }}>
-            <label style={CHECKOUT_LABEL}>Email (optional)</label>
-            <input
-              type="text"
-              inputMode="email"
-              autoComplete="email"
-              value={customer.email || ""}
-              onChange={(e) => {
-                setCustomer((f) => ({ ...f, email: e.target.value }));
-                if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: "" }));
-              }}
-              placeholder="your@email.com"
-              style={checkoutInputStyle(Boolean(fieldErrors.email))}
-            />
-            {fieldErrors.email ? (
-              <p className="field-error" style={{ fontSize: 11, color: "#dc2626", margin: "4px 0 0" }}>
-                ⚠ {fieldErrors.email}
-              </p>
-            ) : null}
-          </div>
 
           <h2 className="mb-2 text-base font-semibold text-zinc-900">Payment</h2>
           <p className="mb-2 text-xs text-zinc-600">{freeDeliveryNote}</p>

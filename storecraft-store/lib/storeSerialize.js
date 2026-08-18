@@ -246,5 +246,34 @@ export function serializeStoreProductDetail(p) {
             .filter((f) => f.fieldName && f.label)
         : [],
     },
+    isUniversal: Boolean(p.isUniversal),
+    compatibleCars: Array.isArray(p.compatibleCars)
+      ? p.compatibleCars.map((c) => ({
+          make: c?.make || "",
+          model: c?.model || "",
+          generation: c?.generation || "",
+          yearFrom: c?.yearFrom ?? null,
+          yearTo: c?.yearTo ?? null,
+        }))
+      : [],
+    vehicleCompatibility: p.vehicleCompatibility
+      ? {
+          fitmentType: p.vehicleCompatibility.fitmentType || "universal",
+          universalNote: p.vehicleCompatibility.universalNote || "",
+          categories: Array.isArray(p.vehicleCompatibility.categories)
+            ? p.vehicleCompatibility.categories.map((c) => String(c || "")).filter(Boolean)
+            : [],
+          vehicles: Array.isArray(p.vehicleCompatibility.vehicles)
+            ? p.vehicleCompatibility.vehicles.map((v) => ({
+                make: v?.make || "",
+                model: v?.model || "",
+                yearFrom: v?.yearFrom ?? null,
+                yearTo: v?.yearTo ?? null,
+                bodyStyle: v?.bodyStyle || "All",
+                notes: v?.notes || "",
+              }))
+            : [],
+        }
+      : null,
   };
 }

@@ -7,16 +7,22 @@ import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { JWT_COOKIE_NAME } from "@/lib/constants";
 
+/** Prevent proxies from serving stale HTML that references deleted CSS chunks. */
+function noStore(response) {
+  response.headers.set("Cache-Control", "private, no-store, no-cache, must-revalidate");
+  return response;
+}
+
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/login" || pathname.startsWith("/login/")) {
-    return NextResponse.next();
+    return noStore(NextResponse.next());
   }
 
   // Public customer tracking page (WhatsApp / storefront links) — no login
   if (pathname === "/track-order" || pathname.startsWith("/track-order/")) {
-    return NextResponse.next();
+    return noStore(NextResponse.next());
   }
 
   const token = request.cookies.get(JWT_COOKIE_NAME)?.value;
@@ -24,7 +30,7 @@ export async function proxy(request) {
   if (!token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
+    return noStore(NextResponse.redirect(loginUrl));
   }
 
   try {
@@ -38,26 +44,28 @@ export async function proxy(request) {
     requestHeaders.set("x-user-role", String(payload.role || "viewer"));
     requestHeaders.set("x-user-id", String(payload.userId || ""));
 
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    return noStore(
+      NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      })
+    );
   } catch {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
     const response = NextResponse.redirect(loginUrl);
     response.cookies.delete(JWT_COOKIE_NAME);
-    return response;
+    return noStore(response);
   }
 }
 
 export const config = {
   matcher: [
     /*
-     * Protect all admin app pages except login + Next internals + public files.
-     * Does NOT match /api/* — those use getRequestUser per route.
+     * Protect admin pages + apply no-store HTML headers (incl. login / track-order).
+     * Does NOT match /api/* or hashed static assets.
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|login|track-order|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

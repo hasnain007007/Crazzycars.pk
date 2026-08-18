@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request, context) {
   try {
     const user = await getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessMinRole(user, "staff");
     if (denied) return denied;
 
     const { id } = await context.params;

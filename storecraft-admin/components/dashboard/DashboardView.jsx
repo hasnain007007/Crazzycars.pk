@@ -4,6 +4,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AiAgentTrafficCard } from "./AiAgentTrafficCard";
 import { BusinessInsightsCard } from "./BusinessInsightsCard";
 import { CategorySalesDonut } from "./CategorySalesDonut";
 import { DashboardDateRange } from "./DashboardDateRange";
@@ -20,7 +21,12 @@ import { StockAlertBanner } from "@/components/stock-alerts/StockAlertBanner";
 const emptyData = {
   todaySales: 0,
   todayOrders: 0,
+  todayOrderValue: 0,
   todaySalesGrowth: 0,
+  todayOrdersGrowth: 0,
+  todayVisitors: 0,
+  yesterdayVisitors: 0,
+  todayVisitorsGrowth: 0,
   monthlyRevenue: 0,
   lastMonthRevenue: 0,
   monthlyGrowth: 0,
@@ -176,6 +182,11 @@ export function DashboardView() {
           <LiveUsersCard variant="card" />
           <InventoryAlertsCard products={data.lowStockProducts} />
           <BusinessInsightsCard insights={data.insights} />
+        </div>
+
+        {/* AI discoverability / referrer proxy — not sales attribution */}
+        <div className="mt-5">
+          <AiAgentTrafficCard />
         </div>
 
         <p className="mt-8 text-center text-[11px] font-medium tracking-wide text-slate-400">

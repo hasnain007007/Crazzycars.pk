@@ -6,6 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { useCheckoutMessages, useStorePayment } from "@/context/StoreSettingsContext";
 import { FreeDeliveryProgress } from "@/components/store/FreeDeliveryProgress";
 import { formatPrice } from "@/lib/currency";
+import { productPath } from "@/lib/productPath";
 import { getProgressBarThreshold } from "@/lib/freeDelivery";
 
 function lineKey(x) {
@@ -98,7 +99,7 @@ export function CartDrawer() {
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <Link href={item.source === "shopify" ? `/products/${item.slug}` : `/${item.slug}`} className="line-clamp-2 font-medium text-zinc-900 hover:underline" onClick={() => setOpen(false)}>
+                    <Link href={productPath(item)} className="line-clamp-2 font-medium text-zinc-900 hover:underline" onClick={() => setOpen(false)}>
                       {item.name}
                     </Link>
                     {item.variationLabel ? <p className="text-xs text-zinc-500">{item.variationLabel}</p> : null}

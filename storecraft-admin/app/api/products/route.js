@@ -21,6 +21,7 @@ import {
 import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMutations";
 import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
+import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -89,7 +90,7 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
     const selectFields = lite
       ? "name status media.images pricing.regularPrice pricing.salePrice pricing.saleSchedule inventory.quantity inventory.sku articleNo"
-      : "name slug status media pricing inventory featured newArrival createdAt updatedAt categories articleNo vehicleCompatibility isUniversal compatibleCars shortDescription tags";
+      : "name slug status media pricing inventory featured isDeal newArrival createdAt updatedAt categories articleNo vehicleCompatibility isUniversal compatibleCars shortDescription tags";
 
     const listQuery = Product.find(filter)
       .select(selectFields)
@@ -188,6 +189,9 @@ export async function POST(request) {
 
     const org = normalizeProductOrganisation(body);
     const fitPayload = buildVehicleCompatibilityPayload(body.vehicleCompatibility);
+    const compatibleVehicles = fitPayload.isUniversal
+      ? []
+      : await resolveCompatibleVehicleIds(fitPayload.vehicleCompatibility.vehicles || []);
 
     const doc = await Product.create({
       name,
@@ -254,6 +258,8 @@ export async function POST(request) {
       },
       status: statusNext,
       featured: Boolean(body.featured),
+      isFeatured: Boolean(body.featured),
+      isDeal: Boolean(body.isDeal),
       newArrival: Boolean(body.newArrival),
       codEnabled: body.codEnabled !== false,
       advancePercentRequired: (() => {
@@ -267,6 +273,7 @@ export async function POST(request) {
       vehicleCompatibility: fitPayload.vehicleCompatibility,
       isUniversal: fitPayload.isUniversal,
       compatibleCars: fitPayload.compatibleCars,
+      compatibleVehicles,
     });
 
     await syncStockAlertForProduct(doc);

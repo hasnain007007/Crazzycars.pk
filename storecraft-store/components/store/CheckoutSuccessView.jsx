@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCheckoutMessages } from "@/context/StoreSettingsContext";
 import { formatPrice } from "@/lib/currency";
-import { oncePerSession, trackPurchase } from "@/lib/metaPixel";
+import { oncePerSession, resolveProductContentId, trackPurchase } from "@/lib/metaPixel";
 import {
   formatAdvancePaymentMessage,
   formatWhatsAppDisplay,
@@ -111,6 +111,7 @@ export default function CheckoutSuccessView() {
   const messages = useCheckoutMessages();
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id") || searchParams.get("orderId");
+  const accessToken = searchParams.get("t") || "";
   const paid = searchParams.get("paid") === "true";
   const paymentFailed = searchParams.get("paid") === "false";
   const [order, setOrder] = useState(null);
@@ -144,14 +145,15 @@ export default function CheckoutSuccessView() {
       return;
     }
 
-    fetch(`/api/orders/${orderId}/public`)
+    const qs = accessToken ? `?t=${encodeURIComponent(accessToken)}` : "";
+    fetch(`/api/orders/${orderId}/public${qs}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.success) setOrder(data.order);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [orderId]);
+  }, [orderId, accessToken]);
 
   /** Purchase — real order grand total (pricing.total), once per order per session. */
   useEffect(() => {
@@ -162,7 +164,13 @@ export default function CheckoutSuccessView() {
     if (!Number.isFinite(value) || value < 0) return;
 
     const contentIds = (Array.isArray(order.items) ? order.items : [])
-      .map((it) => String(it.productId || "").trim())
+      .map((it) =>
+        resolveProductContentId({
+          articleNo: it.articleNo,
+          // Existing orders predate the articleNo snapshot; their productId is the Mongo _id.
+          _id: it.productId,
+        })
+      )
       .filter(Boolean);
     const numItems = (Array.isArray(order.items) ? order.items : []).reduce(
       (sum, it) => sum + Math.max(1, Number(it.quantity) || 1),

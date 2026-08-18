@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { allocateOrderNumber } from "@/lib/orderNumber";
@@ -9,7 +10,7 @@ import Product from "@/lib/models/Product.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import ShippingZone from "@/lib/models/Shipping.model";
 import { computeCouponDiscount } from "@/lib/couponCompute";
-import { recordEmailSent, resolveOrderConfirmationEmail, sendEmail, sendAdminOrderNotification } from "@/lib/email";
+import { sendAdminOrderNotification, sendCustomerOrderConfirmation } from "@/lib/email";
 import {
   applyShippingRules,
   buildAdvancePaymentOrderNote,
@@ -26,6 +27,7 @@ import { toKg } from "@/lib/shippingEstimate";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { allowsBackorder } from "@/lib/inventoryPolicy";
 import { readAiAttributionFromRequest } from "@/lib/aiAttribution";
+import CartSession from "@/lib/models/CartSession.model";
 import {
   actionRateLimitKey,
   checkActionRateLimit,
@@ -518,6 +520,7 @@ export async function POST(request) {
       subtotal += lineTotal;
       lineItems.push({
         productId: p._id,
+        articleNo: String(p.articleNo || "").trim(),
         name: p.name,
         image: img,
         variation,
@@ -816,8 +819,11 @@ export async function POST(request) {
       }
     }
 
+    const publicAccessToken = randomBytes(24).toString("base64url");
+
     const order = await Order.create({
       orderNumber,
+      publicAccessToken,
       customer: {
         name,
         email,
@@ -875,15 +881,7 @@ export async function POST(request) {
       try {
         const storeName = settingsDoc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
         const logoUrl = settingsDoc?.general?.logo?.url || "";
-        const { subject, html: emailHtml } = await resolveOrderConfirmationEmail(order, storeName, logoUrl);
-        const sent = await sendEmail({
-          to: order.customer.email,
-          subject,
-          html: emailHtml,
-        });
-        if (sent?.success) {
-          await recordEmailSent(order._id, "order_confirmation", subject, order.customer.email);
-        }
+        await sendCustomerOrderConfirmation(order, { storeName, logoUrl });
       } catch (emailError) {
         console.error("Order confirmation email failed:", emailError);
       }
@@ -893,10 +891,39 @@ export async function POST(request) {
       console.error("Admin order notification failed:", e)
     );
 
+    // Mark matching cart session as recovered
+    try {
+      const sessionId = String(body.cartSessionId || "").trim();
+      const recoveryToken = String(body.cartRecoveryToken || "").trim();
+      const filter = sessionId
+        ? { sessionId }
+        : recoveryToken
+          ? { recoveryToken }
+          : phone
+            ? { "customer.phone": phone, status: { $in: ["active", "abandoned"] } }
+            : null;
+      if (filter) {
+        await CartSession.updateMany(filter, {
+          $set: {
+            status: "recovered",
+            recoveredAt: new Date(),
+            convertedOrderId: order._id,
+            convertedOrderNumber: order.orderNumber,
+            items: [],
+            itemCount: 0,
+            subtotal: 0,
+          },
+        });
+      }
+    } catch (cartErr) {
+      console.error("CartSession recover mark failed:", cartErr?.message || cartErr);
+    }
+
     return NextResponse.json({
       success: true,
       orderId: order._id.toString(),
       orderNumber: order.orderNumber,
+      accessToken: publicAccessToken,
       total,
       paymentStatus,
       order: {

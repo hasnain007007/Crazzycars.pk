@@ -1,27 +1,19 @@
-import { notFound } from "next/navigation";
-import { ShopifyProductView } from "@/components/store/ShopifyProductView";
-import { getProductByHandle, isShopifyEnabled } from "@/lib/shopify";
-import { getSiteUrl } from "@/lib/siteUrl";
+import { permanentRedirect } from "next/navigation";
+import { canonicalProductPathForSlug } from "@/lib/resolveProductSlug";
 
-export const revalidate = 300;
-
-export async function generateMetadata({ params }) {
-  if (!isShopifyEnabled()) return { title: "Product Not Found", robots: { index: false, follow: false } };
+/**
+ * Shopify-era PDP route used by Meta carousel ads (`/products/[handle]`).
+ * Resolve the handle to the canonical Mongo slug (incl. `-crazzycars-pk`
+ * suffix migration / shortened handles) and 308 there.
+ * Unknown handles go to /shop so Google stops seeing soft/hard 404s.
+ */
+export default async function LegacyShopifyProductRedirect({ params }) {
   const { handle } = await params;
-  const product = await getProductByHandle(handle).catch(() => null);
-  if (!product) return { title: "Product Not Found", robots: { index: false, follow: false } };
-  return {
-    title: product.name,
-    description: product.description,
-    alternates: { canonical: `${getSiteUrl()}/products/${product.handle}` },
-    openGraph: { title: product.name, description: product.description, images: product.image ? [{ url: product.image }] : [] },
-  };
-}
+  const raw = String(handle || "").trim();
+  if (!raw) permanentRedirect("/shop");
 
-export default async function ShopifyProductPage({ params }) {
-  if (!isShopifyEnabled()) notFound();
-  const { handle } = await params;
-  const product = await getProductByHandle(handle).catch(() => null);
-  if (!product) notFound();
-  return <ShopifyProductView product={product} />;
+  const canonical = await canonicalProductPathForSlug(raw);
+  if (canonical) permanentRedirect(canonical);
+
+  permanentRedirect("/shop");
 }

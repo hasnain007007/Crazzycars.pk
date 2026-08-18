@@ -1,8 +1,12 @@
+# syntax=docker/dockerfile:1.7
 # VPS / Coolify image for storecraft-admin (Next.js standalone)
+# BuildKit cache mounts keep npm + Next.js caches between deploys (much faster rebuilds).
+
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
@@ -25,7 +29,9 @@ ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME \
 # Some routes may touch DB during `next build` page collection
 ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache \
+    --mount=type=cache,target=/root/.npm \
+    npm run build
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
@@ -33,7 +39,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-# Coolify healthchecks need curl/wget inside the image
+# Coolify / Docker healthchecks — use wget against a DB-free probe
 RUN apt-get update \
   && apt-get install -y --no-install-recommends wget ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
@@ -44,7 +50,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
-# /login is public; root redirects unauthenticated users
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:3000/login >/dev/null || exit 1
+HEALTHCHECK --interval=30s --timeout=8s --start-period=60s --retries=5 \
+  CMD wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1
 CMD ["node", "server.js"]

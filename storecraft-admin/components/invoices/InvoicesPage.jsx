@@ -4,6 +4,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -13,6 +14,7 @@ import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
 import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
 
 export function InvoicesPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const customerIdFilter = searchParams.get("customerId") || "";
   const customerNameHint = searchParams.get("customerName") || "";
@@ -27,6 +29,8 @@ export function InvoicesPage() {
   const [storeMeta, setStoreMeta] = useState(null);
   const [previewInv, setPreviewInv] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [creatingOrderId, setCreatingOrderId] = useState(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
@@ -110,6 +114,91 @@ export function InvoicesPage() {
       toast.success("PDF downloaded.", { id: toastId });
     } catch {
       toast.error("Could not download PDF.", { id: toastId });
+    }
+  }
+
+  async function handleDelete(inv) {
+    if (
+      !confirm(
+        `Delete invoice ${inv.invoiceNumber}? This cannot be undone. Stock will be restored for catalog items.`
+      )
+    ) {
+      return;
+    }
+    setDeletingId(inv.id);
+    try {
+      const res = await fetch(`/api/invoices/${inv.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Delete failed");
+      toast.success(json.message || "Invoice deleted.");
+      if (previewInv?.id === inv.id) setPreviewInv(null);
+      await load();
+    } catch (err) {
+      toast.error(err.message || "Could not delete invoice.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleAddToOrders(inv) {
+    if (inv.linkedOrderId) {
+      router.push(`/orders/${inv.linkedOrderId}`);
+      return;
+    }
+    if (
+      !confirm(
+        `Add invoice ${inv.invoiceNumber} to Orders?\n\nCreates a linked order for packing / Postex. Stock was already deducted when the invoice was saved.`
+      )
+    ) {
+      return;
+    }
+    setCreatingOrderId(inv.id);
+    const toastId = toast.loading("Creating order…");
+    try {
+      const res = await fetch(`/api/invoices/${inv.id}/create-order`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Could not create order.");
+      const orderId = json.order?.id;
+      const orderNumber = json.order?.orderNumber || "";
+      toast.success(
+        json.alreadyLinked
+          ? `Already linked to ${orderNumber || "order"}.`
+          : `Order ${orderNumber} created.`,
+        { id: toastId }
+      );
+      setInvoices((prev) =>
+        prev.map((row) =>
+          row.id === inv.id
+            ? {
+                ...row,
+                linkedOrderId: orderId || row.linkedOrderId,
+                linkedOrderNumber: orderNumber || row.linkedOrderNumber,
+              }
+            : row
+        )
+      );
+      if (previewInv?.id === inv.id) {
+        setPreviewInv((p) =>
+          p
+            ? {
+                ...p,
+                linkedOrderId: orderId || p.linkedOrderId,
+                linkedOrderNumber: orderNumber || p.linkedOrderNumber,
+              }
+            : p
+        );
+      }
+      if (orderId) router.push(`/orders/${orderId}`);
+    } catch (err) {
+      toast.error(err.message || "Could not create order.", { id: toastId });
+    } finally {
+      setCreatingOrderId(null);
     }
   }
 
@@ -206,6 +295,17 @@ export function InvoicesPage() {
                     </td>
                     <td className="whitespace-nowrap px-5 py-3 font-semibold tabular-nums">
                       {formatAdminPrice(inv.pricing?.total)}
+                      {(inv.paymentStatus === "partial" || inv.paymentStatus === "unpaid") &&
+                      Number(inv.remainingBalance) > 0 ? (
+                        <div className="mt-0.5 text-[10px] font-medium text-amber-600">
+                          Due {formatAdminPrice(inv.remainingBalance)}
+                        </div>
+                      ) : null}
+                      {inv.paymentStatus === "partial" && Number(inv.amountPaid) > 0 ? (
+                        <div className="text-[10px] font-medium text-emerald-600">
+                          Paid {formatAdminPrice(inv.amountPaid)}
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-5 py-3">
                       <span
@@ -262,6 +362,31 @@ export function InvoicesPage() {
                           className="text-xs font-semibold text-[#1A7A4C] hover:underline"
                         >
                           Download PDF
+                        </button>
+                        {inv.linkedOrderId ? (
+                          <Link
+                            href={`/orders/${inv.linkedOrderId}`}
+                            className="text-xs font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
+                          >
+                            View order{inv.linkedOrderNumber ? ` (${inv.linkedOrderNumber})` : ""}
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={creatingOrderId === inv.id}
+                            onClick={() => void handleAddToOrders(inv)}
+                            className="text-xs font-semibold text-[#1d6fb8] hover:underline disabled:opacity-50"
+                          >
+                            {creatingOrderId === inv.id ? "Adding…" : "Add to orders"}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={deletingId === inv.id}
+                          onClick={() => void handleDelete(inv)}
+                          className="text-xs font-semibold text-red-600 hover:underline disabled:opacity-50"
+                        >
+                          {deletingId === inv.id ? "Deleting…" : "Delete"}
                         </button>
                       </div>
                     </td>
@@ -333,6 +458,31 @@ export function InvoicesPage() {
                   className="rounded-lg bg-[#1A7A4C] px-3 py-1.5 text-xs font-bold text-white"
                 >
                   Download PDF
+                </button>
+                {previewInv.linkedOrderId ? (
+                  <Link
+                    href={`/orders/${previewInv.linkedOrderId}`}
+                    className="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:text-emerald-400"
+                  >
+                    View order
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={creatingOrderId === previewInv.id}
+                    onClick={() => void handleAddToOrders(previewInv)}
+                    className="rounded-lg bg-[#1d6fb8] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                  >
+                    {creatingOrderId === previewInv.id ? "Adding…" : "Add to orders"}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={deletingId === previewInv.id}
+                  onClick={() => void handleDelete(previewInv)}
+                  className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 dark:border-red-900"
+                >
+                  {deletingId === previewInv.id ? "Deleting…" : "Delete"}
                 </button>
                 <button
                   type="button"

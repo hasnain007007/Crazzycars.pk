@@ -14,6 +14,16 @@ function guestEmailFromPhone(phone) {
   return `invoice+${digits}@guest.invoice`;
 }
 
+function applyAddress(doc, cleanStreet, cleanCity) {
+  if (!cleanCity && !cleanStreet) return;
+  doc.address = {
+    ...(doc.address?.toObject?.() || doc.address || {}),
+    street: cleanStreet || doc.address?.street || "",
+    city: cleanCity || doc.address?.city || "",
+    country: "Pakistan",
+  };
+}
+
 /**
  * @returns {Promise<{ customerId: import("mongoose").Types.ObjectId, customer: object, created: boolean }>}
  */
@@ -30,31 +40,34 @@ export async function upsertInvoiceCustomer({
   const cleanEmail = String(email || "").trim().toLowerCase();
   const cleanCity = String(city || "").trim();
   const cleanStreet = String(address || "").trim();
+  const phoneDigits = normalizePhone(cleanPhone);
+
+  async function emailAvailable(candidate, excludeId) {
+    if (!candidate) return false;
+    const q = { email: candidate };
+    if (excludeId) q._id = { $ne: excludeId };
+    const clash = await Customer.findOne(q).select("_id").lean();
+    return !clash;
+  }
 
   if (customerId && mongoose.Types.ObjectId.isValid(String(customerId))) {
     const existing = await Customer.findById(customerId);
     if (existing) {
       existing.name = cleanName || existing.name;
       if (cleanPhone) existing.phone = cleanPhone;
-      if (cleanEmail && !String(existing.email || "").includes("@guest.")) {
-        // keep real email; only set if provided and existing is guest
-      } else if (cleanEmail) {
+      if (
+        cleanEmail &&
+        String(existing.email || "").includes("@guest.") &&
+        (await emailAvailable(cleanEmail, existing._id))
+      ) {
         existing.email = cleanEmail;
       }
-      if (cleanCity || cleanStreet) {
-        existing.address = {
-          ...(existing.address?.toObject?.() || existing.address || {}),
-          street: cleanStreet || existing.address?.street || "",
-          city: cleanCity || existing.address?.city || "",
-          country: "Pakistan",
-        };
-      }
+      applyAddress(existing, cleanStreet, cleanCity);
       await existing.save();
       return { customerId: existing._id, customer: existing.toObject(), created: false };
     }
   }
 
-  const phoneDigits = normalizePhone(cleanPhone);
   let found = null;
 
   if (cleanEmail && !cleanEmail.includes("@guest.")) {
@@ -62,35 +75,36 @@ export async function upsertInvoiceCustomer({
   }
   if (!found && phoneDigits) {
     found = await Customer.findOne({
-      $or: [
-        { phone: cleanPhone },
-        { phone: phoneDigits },
-        { phone: { $regex: `${phoneDigits}$` } },
-      ],
+      $or: [{ phone: cleanPhone }, { phone: phoneDigits }],
     });
+  }
+  // Last-10 match for 03xx vs +92 formats only (avoid short suffix collisions).
+  if (!found && phoneDigits.length >= 10) {
+    const tail = phoneDigits.slice(-10).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    found = await Customer.findOne({ phone: { $regex: `${tail}$` } });
   }
 
   if (found) {
     found.name = cleanName || found.name;
     if (cleanPhone) found.phone = cleanPhone;
-    if (cleanEmail && !cleanEmail.includes("@guest.")) found.email = cleanEmail;
-    if (cleanCity || cleanStreet) {
-      found.address = {
-        ...(found.address?.toObject?.() || found.address || {}),
-        street: cleanStreet || found.address?.street || "",
-        city: cleanCity || found.address?.city || "",
-        country: "Pakistan",
-      };
+    if (
+      cleanEmail &&
+      !cleanEmail.includes("@guest.") &&
+      (await emailAvailable(cleanEmail, found._id))
+    ) {
+      found.email = cleanEmail;
     }
+    applyAddress(found, cleanStreet, cleanCity);
     await found.save();
     return { customerId: found._id, customer: found.toObject(), created: false };
   }
 
-  const emailToUse = cleanEmail && !cleanEmail.includes("@guest.") ? cleanEmail : guestEmailFromPhone(cleanPhone);
-  // Ensure unique email if collision
+  const emailToUse =
+    cleanEmail && !cleanEmail.includes("@guest.") && (await emailAvailable(cleanEmail))
+      ? cleanEmail
+      : guestEmailFromPhone(cleanPhone);
   let finalEmail = emailToUse;
-  const clash = await Customer.findOne({ email: finalEmail }).select("_id").lean();
-  if (clash) {
+  if (!(await emailAvailable(finalEmail))) {
     finalEmail = `invoice+${phoneDigits || Date.now()}.${Math.random().toString(36).slice(2, 6)}@guest.invoice`;
   }
 

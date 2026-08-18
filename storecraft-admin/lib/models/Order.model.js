@@ -3,15 +3,27 @@ import mongoose from "mongoose";
 const orderItemSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", default: null },
+    /** Immutable catalogue/pixel ID snapshot captured when the order is placed. */
+    articleNo: { type: String, default: "", trim: true },
     name: { type: String, required: true, trim: true },
     image: { type: String, default: "" },
     variation: { type: String, default: "" },
     selectedVariation: { type: Object, default: null },
+    selectedAddOns: {
+      type: [
+        {
+          name: { type: String, default: "", trim: true },
+          price: { type: Number, default: 0, min: 0 },
+        },
+      ],
+      default: [],
+    },
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },
     /** Snapshot of product cost at checkout (admin margin / profit). */
     unitCost: { type: Number, default: 0, min: 0 },
     total: { type: Number, required: true, min: 0 },
+    advancePercentRequired: { type: Number, default: 0, min: 0, max: 100 },
   },
   { _id: false }
 );
@@ -60,6 +72,8 @@ const emailHistoryEntrySchema = new mongoose.Schema(
 const orderSchema = new mongoose.Schema(
   {
     orderNumber: { type: String, required: true, unique: true, index: true },
+    /** Opaque token for guest success-page lookup (storefront). */
+    publicAccessToken: { type: String, default: "", trim: true, index: true },
     customer: {
       firstName: { type: String, default: "", trim: true },
       lastName: { type: String, default: "", trim: true },
@@ -130,6 +144,10 @@ const orderSchema = new mongoose.Schema(
       paidAmount: { type: Number, default: 0, min: 0 },
       /** Remaining COD to collect on delivery */
       remainingCod: { type: Number, default: 0, min: 0 },
+      /** Advance amount customer must pay before dispatch (e.g. 50% of goods). */
+      advanceRequired: { type: Number, default: 0, min: 0 },
+      advanceMode: { type: String, default: "", trim: true },
+      advanceMaxPercent: { type: Number, default: 0, min: 0, max: 100 },
     },
     shippingAddress: {
       firstName: { type: String, default: "" },
@@ -176,6 +194,44 @@ const orderSchema = new mongoose.Schema(
     emailHistory: { type: [emailHistoryEntrySchema], default: [] },
     whatsappNotified: { type: Boolean, default: false },
     codConfirmed: { type: Boolean, default: false },
+    /**
+     * Optional first-touch AI referrer attribution (14-day cookie window).
+     * Absent on most orders — expected.
+     */
+    aiAttributedSource: {
+      type: String,
+      default: "",
+      trim: true,
+      index: true,
+      enum: [
+        "",
+        "chatgpt",
+        "copilot",
+        "perplexity",
+        "claude",
+        "gemini",
+        "grok",
+        "meta",
+        "deepseek",
+        "you",
+        "google_extended",
+        "bing",
+        "apple",
+        "amazon",
+        "bytespider",
+        "other_ai",
+      ],
+    },
+    /** Timestamp of the first AI-referrer touch that attributed this order. */
+    aiAttributedAt: { type: Date, default: null },
+    /** Source walk-in Invoice when created via “Add to orders”. */
+    invoiceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Invoice",
+      default: null,
+      index: true,
+    },
+    invoiceNumber: { type: String, default: "", trim: true, index: true },
   },
   { timestamps: true }
 );
@@ -187,5 +243,6 @@ orderSchema.index({ "customer.email": 1 });
 orderSchema.index({ "customer.phone": 1 });
 orderSchema.index({ whatsappNotified: 1 });
 orderSchema.index({ codConfirmed: 1 });
+orderSchema.index({ aiAttributedSource: 1, createdAt: -1 });
 
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);

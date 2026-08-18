@@ -11,6 +11,8 @@ import { normalizeMetaKeywords } from "@/lib/seoKeywords";
 import { slugify } from "@/lib/slugify";
 import Product from "@/lib/models/Product.model";
 import StockAlert from "@/lib/models/StockAlert.model";
+// Ensure Vehicle is registered before populate("compatibleVehicles")
+import "@/lib/models/Vehicle.model";
 import {
   normalizeAddOns,
   normalizeCustomSizing,
@@ -21,7 +23,8 @@ import {
 } from "@/lib/productPayload";
 import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMutations";
 import { withProductSaleComputed } from "@/lib/productSale";
-import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
+import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
+import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 
 async function uniqueProductSlugExcluding(base, excludeId) {
   const root = slugify(base || "product") || "product";
@@ -55,7 +58,30 @@ export async function GET(request, context) {
     if (!doc) {
       return NextResponse.json({ success: false, error: "Not found." }, { status: 404 });
     }
-    return NextResponse.json({ success: true, data: withProductSaleComputed(doc) });
+    // Hydrate embedded fitment rows from Vehicle refs so the editor table is never empty
+    // when compatibleVehicles are linked (CSV/seed imports often skip vehicleCompatibility.vehicles).
+    const fit = vehicleCompatibilityFromProduct(doc);
+    const data = withProductSaleComputed({
+      ...doc,
+      isUniversal: fit.fitmentType === "universal",
+      vehicleCompatibility: {
+        fitmentType: fit.fitmentType,
+        universalNote: fit.universalNote,
+        vehicles: fit.vehicles.map(({ _rowId, ...rest }) => rest),
+        categories: fit.categories || [],
+      },
+      compatibleCars:
+        fit.fitmentType === "universal"
+          ? []
+          : fit.vehicles.map((v) => ({
+              make: v.make,
+              model: v.model,
+              generation: v.notes || "",
+              yearFrom: v.yearFrom,
+              yearTo: v.yearTo,
+            })),
+    });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to load product." },
@@ -81,18 +107,27 @@ export async function PUT(request, context) {
 
     const body = await request.json();
 
-    /** Featured-only toggle from list */
+    /** Single-flag toggles from products list (Featured / Hot Deal) */
     const keys = Object.keys(body || {});
-    if (keys.length === 1 && keys[0] === "featured") {
-      existing.featured = Boolean(body.featured);
+    if (keys.length === 1 && (keys[0] === "featured" || keys[0] === "isDeal")) {
+      if (keys[0] === "featured") {
+        existing.featured = Boolean(body.featured);
+        existing.isFeatured = existing.featured;
+      } else {
+        existing.isDeal = Boolean(body.isDeal);
+      }
       await existing.save();
       await logActivity({
         user: user.userId,
         userName: user.name,
-        action: "Product featured flag updated",
+        action:
+          keys[0] === "featured" ? "Product featured flag updated" : "Product hot deal flag updated",
         resource: "Product",
         resourceId: id,
-        details: { featured: existing.featured },
+        details:
+          keys[0] === "featured"
+            ? { featured: existing.featured }
+            : { isDeal: existing.isDeal },
         type: "update",
         ip: requestIp(request),
       });
@@ -239,7 +274,11 @@ export async function PUT(request, context) {
     if (body.status !== undefined && ["active", "inactive", "draft"].includes(body.status)) {
       existing.status = body.status;
     }
-    if (body.featured !== undefined) existing.featured = Boolean(body.featured);
+    if (body.featured !== undefined) {
+      existing.featured = Boolean(body.featured);
+      existing.isFeatured = existing.featured;
+    }
+    if (body.isDeal !== undefined) existing.isDeal = Boolean(body.isDeal);
     if (body.newArrival !== undefined) existing.newArrival = Boolean(body.newArrival);
     if (body.codEnabled !== undefined) existing.codEnabled = body.codEnabled !== false;
     if (body.advancePercentRequired !== undefined) {
@@ -278,8 +317,12 @@ export async function PUT(request, context) {
       existing.vehicleCompatibility = fitPayload.vehicleCompatibility;
       existing.isUniversal = fitPayload.isUniversal;
       existing.compatibleCars = fitPayload.compatibleCars;
+      existing.compatibleVehicles = fitPayload.isUniversal
+        ? []
+        : await resolveCompatibleVehicleIds(fitPayload.vehicleCompatibility.vehicles || []);
       existing.markModified("vehicleCompatibility");
       existing.markModified("compatibleCars");
+      existing.markModified("compatibleVehicles");
     }
 
     existing.markModified("pricing");

@@ -8,6 +8,7 @@ import { useProductBadgeConfig, useStoreSettings } from "@/context/StoreSettings
 import { WatermarkedImage } from "./WatermarkedImage";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { formatPrice } from "@/lib/currency";
+import { productPath } from "@/lib/productPath";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -72,7 +73,7 @@ export function ProductCard({ product, compact = false }) {
   const hoverImageUrl = images[1] || "";
   const { regular, sale, onSale, pct } = getPrices(product);
   const slug = product.slug || product.handle || "";
-  const href = slug ? (product.source === "shopify" || product.handle ? `/products/${slug}` : `/${slug}`) : "#";
+  const href = productPath(product);
   const reviewCount = Number(product.reviewCount || product.reviews_count || 0);
   const rating = Number(product.rating || 0);
   const showNew = !onSale && isNewProduct(product);

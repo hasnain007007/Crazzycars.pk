@@ -12,6 +12,12 @@ import Invoice from "@/lib/models/Invoice.model";
 import Product from "@/lib/models/Product.model";
 import { syncStockAlertForProduct } from "@/lib/productMutations";
 import { upsertInvoiceCustomer } from "@/lib/upsertInvoiceCustomer";
+import {
+  recomputeInvoicePaymentFields,
+  serializeInvoicePayments,
+} from "@/lib/invoicePayments";
+import { getCustomerArSummary } from "@/lib/customerAr";
+import Customer from "@/lib/models/Customer.model";
 
 const PAYMENT_METHODS = new Set([
   "cod",
@@ -23,6 +29,8 @@ const PAYMENT_METHODS = new Set([
   "ubl",
   "stripe",
   "paypal",
+  "cash",
+  "other",
 ]);
 
 function requestIp(request) {
@@ -48,7 +56,8 @@ function unitPriceFromProduct(p) {
 
 function serializeInvoice(doc) {
   if (!doc) return null;
-  const o = typeof doc.toObject === "function" ? doc.toObject() : doc;
+  const o = typeof doc.toObject === "function" ? doc.toObject() : { ...doc };
+  recomputeInvoicePaymentFields(o);
   return {
     id: o._id.toString(),
     invoiceNumber: o.invoiceNumber,
@@ -77,11 +86,21 @@ function serializeInvoice(doc) {
     pricing: o.pricing || { subtotal: 0, discount: 0, shippingCost: 0, total: 0 },
     paymentStatus: o.paymentStatus,
     paymentMethod: o.paymentMethod,
+    amountPaid: o.amountPaid || 0,
+    remainingBalance: o.remainingBalance ?? (Number(o.pricing?.total) || 0),
+    previousBalance: Number(o.previousBalance) || 0,
+    invoiceBalance: o.remainingBalance ?? (Number(o.pricing?.total) || 0),
+    totalReceivables: Math.round(
+      ((Number(o.remainingBalance) || 0) + (Number(o.previousBalance) || 0)) * 100
+    ) / 100,
+    payments: serializeInvoicePayments(o.payments),
     currency: o.currency || "PKR",
     note: o.note || "",
     createdBy: o.createdBy || "",
     /** Alias so shared print helpers work */
     orderNumber: o.invoiceNumber,
+    linkedOrderId: o.orderId ? String(o.orderId) : null,
+    linkedOrderNumber: o.orderNumber || "",
   };
 }
 
@@ -214,8 +233,10 @@ export async function POST(request) {
     if (paymentMethod === "card") paymentMethod = "bankTransfer";
     if (!PAYMENT_METHODS.has(paymentMethod)) paymentMethod = "cod";
 
-    let paymentStatus = String(body.paymentStatus || "paid").trim();
-    if (!["unpaid", "paid", "partial"].includes(paymentStatus)) paymentStatus = "paid";
+    let paymentStatus = String(body.paymentStatus || "unpaid").trim();
+    if (!["unpaid", "paid", "partial"].includes(paymentStatus)) paymentStatus = "unpaid";
+
+    const receivedAmount = Math.max(0, Math.round((Number(body.receivedAmount) || 0) * 100) / 100);
 
     const invoiceNumber = await allocateInvoiceNumber();
     const adminLabel = user.name || user.email || "Admin";
@@ -223,6 +244,7 @@ export async function POST(request) {
     const saveCustomer = body.saveCustomer !== false;
     let linkedCustomerId = null;
     let savedCustomerEmail = email;
+    let linkedCustomerDoc = null;
 
     if (saveCustomer) {
       try {
@@ -235,6 +257,7 @@ export async function POST(request) {
           customerId: customerIn.customerId,
         });
         linkedCustomerId = upserted.customerId;
+        linkedCustomerDoc = upserted.customer || null;
         if (upserted.customer?.email && !String(upserted.customer.email).includes("@guest.invoice")) {
           savedCustomerEmail = upserted.customer.email;
         } else if (email) {
@@ -243,14 +266,52 @@ export async function POST(request) {
           savedCustomerEmail = "";
         }
       } catch (err) {
-        return NextResponse.json(
-          { success: false, error: err.message || "Could not save customer." },
-          { status: 400 }
-        );
+        // Never block invoice creation on customer CRM sync failures.
+        console.error("upsertInvoiceCustomer:", err?.message || err);
+        linkedCustomerId = null;
+        linkedCustomerDoc = null;
+        savedCustomerEmail = email || "";
       }
     } else if (customerIn.customerId && mongoose.Types.ObjectId.isValid(String(customerIn.customerId))) {
       linkedCustomerId = customerIn.customerId;
     }
+
+    let previousBalance = 0;
+    if (linkedCustomerId) {
+      try {
+        if (!linkedCustomerDoc) {
+          linkedCustomerDoc = await Customer.findById(linkedCustomerId).lean();
+        }
+        const ar = await getCustomerArSummary(linkedCustomerId, linkedCustomerDoc);
+        previousBalance = ar.outstanding;
+      } catch {
+        previousBalance = 0;
+      }
+    }
+
+    const payments = [];
+    if (receivedAmount > 0) {
+      let payMethod = paymentMethod === "cod" ? "cash" : paymentMethod;
+      if (!["cod", "cash", "jazzcash", "easypaisa", "bankTransfer", "hbl", "meezan", "ubl", "other"].includes(payMethod)) {
+        payMethod = "cash";
+      }
+      payments.push({
+        amount: Math.min(receivedAmount, total),
+        paidAt: new Date(),
+        method: payMethod,
+        note: "Received on invoice create",
+        recordedBy: adminLabel,
+      });
+    }
+
+    const paymentSnapshot = {
+      pricing: { total },
+      paymentStatus,
+      payments,
+      amountPaid: 0,
+      remainingBalance: total,
+    };
+    recomputeInvoicePaymentFields(paymentSnapshot);
 
     const invoice = await Invoice.create({
       invoiceNumber,
@@ -263,8 +324,12 @@ export async function POST(request) {
       },
       items: normalizedItems,
       pricing: { subtotal, discount, shippingCost, total },
-      paymentStatus,
+      paymentStatus: paymentSnapshot.paymentStatus,
       paymentMethod,
+      amountPaid: paymentSnapshot.amountPaid,
+      remainingBalance: paymentSnapshot.remainingBalance,
+      previousBalance,
+      payments,
       note: String(body.note || "").trim().slice(0, 500),
       createdBy: adminLabel,
     });

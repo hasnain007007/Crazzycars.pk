@@ -43,10 +43,32 @@ const nextConfig = {
         destination: "/:slug",
         permanent: true,
       },
-      // Shopify-era product URLs (/products/[handle] → /[slug])
+      // /products/:slug is handled in middleware (next.config redirects preserve
+      // ?variant=&country=&currency=, which created GSC "alternate canonical" noise).
+      // Shopify blog / cart / search leftovers
       {
-        source: "/products/:slug",
-        destination: "/:slug",
+        source: "/blogs/news",
+        destination: "/blogs",
+        permanent: true,
+      },
+      {
+        source: "/blog/news",
+        destination: "/blogs",
+        permanent: true,
+      },
+      {
+        source: "/cart",
+        destination: "/shop",
+        permanent: true,
+      },
+      {
+        source: "/search",
+        destination: "/shop",
+        permanent: true,
+      },
+      {
+        source: "/collection/:slug",
+        destination: "/collections/:slug",
         permanent: true,
       },
       {
@@ -130,6 +152,14 @@ const nextConfig = {
           {
             key: "X-DNS-Prefetch-Control",
             value: "on",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests",
           },
         ],
       },

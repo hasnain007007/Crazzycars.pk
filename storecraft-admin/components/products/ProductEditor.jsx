@@ -164,6 +164,7 @@ function emptyForm() {
     seo: { metaTitle: "", metaDescription: "", metaKeywords: [] },
     status: "draft",
     featured: false,
+    isDeal: false,
     newArrival: false,
     codEnabled: true,
     advancePercentRequired: 0,
@@ -291,7 +292,8 @@ function productToForm(p) {
       metaKeywords: normalizeMetaKeywords(p.seo?.metaKeywords),
     },
     status: p.status || "draft",
-    featured: Boolean(p.featured),
+    featured: Boolean(p.featured || p.isFeatured),
+    isDeal: Boolean(p.isDeal),
     newArrival: Boolean(p.newArrival),
     codEnabled: p.codEnabled !== false,
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
@@ -395,6 +397,7 @@ function buildApiPayload(form) {
     seo: form.seo,
     status: form.status,
     featured: form.featured,
+    isDeal: Boolean(form.isDeal),
     newArrival: form.newArrival,
     codEnabled: form.codEnabled !== false,
     advancePercentRequired: Math.min(100, Math.max(0, Number(form.advancePercentRequired) || 0)),
@@ -410,6 +413,7 @@ export function ProductEditor({ mode, productId }) {
   const router = useRouter();
   const isEdit = mode === "edit";
   const [loading, setLoading] = useState(isEdit);
+  const [loadError, setLoadError] = useState("");
   const [form, setForm] = useState(() => emptyForm());
   const [slugManual, setSlugManual] = useState(false);
   const [slugWarning, setSlugWarning] = useState("");
@@ -469,9 +473,10 @@ export function ProductEditor({ mode, productId }) {
     let cancelled = false;
     (async () => {
       try {
+        setLoadError("");
         const res = await fetch(`/api/products/${productId}`, { credentials: "include" });
         const json = await res.json();
-        if (!res.ok || !json.success) throw new Error(json.error || "Load failed");
+        if (!res.ok || !json.success) throw new Error(json.error || "Product not found");
         if (!cancelled) {
           const loadedForm = productToForm(json.data);
           setForm(loadedForm);
@@ -489,7 +494,11 @@ export function ProductEditor({ mode, productId }) {
           });
         }
       } catch (e) {
-        if (!cancelled) toast.error(e.message || "Failed to load product");
+        if (!cancelled) {
+          const msg = e.message || "Failed to load product";
+          setLoadError(msg);
+          toast.error(msg);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -676,6 +685,21 @@ export function ProductEditor({ mode, productId }) {
       <div className="mx-auto max-w-7xl space-y-4">
         <div className="h-10 w-64 animate-pulse rounded bg-slate-100" />
         <div className="h-96 animate-pulse rounded-xl bg-slate-100" />
+      </div>
+    );
+  }
+
+  if (isEdit && loadError) {
+    return (
+      <div className="mx-auto max-w-lg rounded-xl border border-[#e5e7eb] bg-white p-8 text-center shadow-sm">
+        <h1 className="text-lg font-semibold text-[#111827]">Product not found</h1>
+        <p className="mt-2 text-sm text-[#6b7280]">{loadError}</p>
+        <Link
+          href="/catalog/products"
+          className="mt-6 inline-flex rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-medium text-white hover:bg-[#1e40af]"
+        >
+          Back to Products
+        </Link>
       </div>
     );
   }
@@ -962,6 +986,58 @@ export function ProductEditor({ mode, productId }) {
                       position: "absolute",
                       top: 2,
                       left: form.featured ? 22 : 2,
+                      width: 20,
+                      height: 20,
+                      background: "#fff",
+                      borderRadius: "50%",
+                      transition: "left 0.2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }}
+                  />
+                </label>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "16px 0",
+                  borderBottom: "1px solid #f3f4f6",
+                }}
+              >
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: "0 0 2px" }}>Hot Deal</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Show in Hot Deals section on homepage</p>
+                </div>
+                <label
+                  style={{
+                    position: "relative",
+                    display: "inline-block",
+                    width: 44,
+                    height: 24,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.isDeal || false}
+                    onChange={(e) => setForm((f) => ({ ...f, isDeal: e.target.checked }))}
+                    style={{ display: "none" }}
+                  />
+                  <span
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: form.isDeal ? "#C41E1E" : "#d1d5db",
+                      borderRadius: 99,
+                      transition: "background 0.2s",
+                    }}
+                  />
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      left: form.isDeal ? 22 : 2,
                       width: 20,
                       height: 20,
                       background: "#fff",

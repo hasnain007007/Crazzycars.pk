@@ -23,7 +23,7 @@ function stripTransforms(remainder) {
   return path;
 }
 
-export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto" } = {}) {
+export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto" } = {}) {
   const url = String(src || "").trim();
   if (!url) return url;
 
@@ -33,7 +33,9 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   const prefix = match[1];
   const remainder = stripTransforms(match[2]);
 
-  const parts = ["f_auto", `q_${quality}`];
+  const parts = [];
+  if (format) parts.push(`f_${format}`);
+  if (quality != null && quality !== "") parts.push(`q_${quality}`);
   if (width) parts.push(`w_${Math.round(width)}`);
   if (height) parts.push(`h_${Math.round(height)}`);
   if (width || height) parts.push(`c_${crop}`);
@@ -50,12 +52,16 @@ export function cloudinarySrcSet(src, widths = [320, 480, 640]) {
     .join(", ");
 }
 
+/**
+ * Homepage hero — designed banners include sharp text; avoid lossy auto-quality.
+ * c_limit never upscales, so upload a 1920px+ source for crisp desktop display.
+ */
 export function heroImageUrl(src) {
-  return cloudinaryUrl(src, { width: 1400, height: 700, crop: "fill" });
+  return cloudinaryUrl(src, { width: 2560, crop: "limit", quality: 100, format: "auto" });
 }
 
 export function heroImageUrlMobile(src) {
-  return cloudinaryUrl(src, { width: 828, height: 620, crop: "fill" });
+  return cloudinaryUrl(src, { width: 1280, crop: "limit", quality: 100, format: "auto" });
 }
 
 /** Product / card thumbnails — default 480px (2× for ~240px slots). */

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import Order from "@/lib/models/Order.model";
@@ -23,13 +22,6 @@ async function getPayPalToken(clientId, secret, mode) {
   return { token: data.access_token, base };
 }
 
-function amountsMatch(a, b, tolerance = 0.01) {
-  const x = Number(a);
-  const y = Number(b);
-  if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
-  return Math.abs(x - y) <= tolerance;
-}
-
 export async function POST(req) {
   try {
     await dbConnect();
@@ -37,37 +29,7 @@ export async function POST(req) {
     const { paypalOrderId, orderId } = body;
 
     if (!paypalOrderId) {
-      return NextResponse.json({ success: false, error: "Missing PayPal order ID" }, { status: 400 });
-    }
-
-    const oid = String(orderId || "").trim();
-    if (!oid || !mongoose.Types.ObjectId.isValid(oid)) {
-      return NextResponse.json(
-        { success: false, error: "A valid orderId is required." },
-        { status: 400 }
-      );
-    }
-
-    const order = await Order.findById(oid)
-      .select("pricing.total paymentStatus orderNumber customer")
-      .lean();
-    if (!order) {
-      return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
-    }
-
-    if (String(order.paymentStatus || "").toLowerCase() === "paid") {
-      return NextResponse.json(
-        { success: false, error: "Order is already paid." },
-        { status: 409 }
-      );
-    }
-
-    const expectedTotal = Number(order.pricing?.total);
-    if (!Number.isFinite(expectedTotal) || expectedTotal <= 0) {
-      return NextResponse.json(
-        { success: false, error: "Invalid order amount" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Missing PayPal order ID" });
     }
 
     const settings = await Settings.findOne({}).select("payment").lean();
@@ -75,10 +37,6 @@ export async function POST(req) {
     const clientId = settings?.payment?.paypal?.clientId || "";
     const secret = settings?.payment?.paypal?.clientSecret || "";
     const mode = settings?.payment?.paypal?.mode || "sandbox";
-
-    if (!clientId || !secret) {
-      return NextResponse.json({ success: false, error: "PayPal not configured" }, { status: 500 });
-    }
 
     const { token, base } = await getPayPalToken(clientId, secret, mode);
 
@@ -97,56 +55,33 @@ export async function POST(req) {
     const captureData = await captureRes.json();
 
     if (captureData.status === "COMPLETED") {
-      const capture = captureData.purchase_units?.[0]?.payments?.captures?.[0];
-      const capturedAmount = Number(capture?.amount?.value || 0);
-      const customId = String(captureData.purchase_units?.[0]?.custom_id || "").trim();
-
-      // Bind capture to this order and refuse amount mismatches (anti underpay).
-      if (customId && customId !== oid) {
-        return NextResponse.json(
-          { success: false, error: "PayPal order does not match this store order." },
-          { status: 409 }
+      if (orderId) {
+        const capturedAmount = Number(
+          captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || 0
         );
-      }
-
-      if (!amountsMatch(capturedAmount, expectedTotal)) {
-        console.error("PayPal capture amount mismatch", {
-          orderId: oid,
-          expectedTotal,
-          capturedAmount,
-          paypalOrderId,
+        await Order.findByIdAndUpdate(orderId, {
+          paymentStatus: "paid",
+          orderStatus: "processing",
+          status: "processing",
+          "payment.paypalOrderId": paypalOrderId,
+          "payment.paidAt": new Date(),
+          "payment.amount": capturedAmount,
         });
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Payment amount does not match order total. Order was not marked paid.",
-          },
-          { status: 409 }
-        );
       }
 
-      await Order.findByIdAndUpdate(oid, {
-        paymentStatus: "paid",
-        orderStatus: "processing",
-        status: "processing",
-        "payment.paypalOrderId": paypalOrderId,
-        "payment.paidAt": new Date(),
-        // Record the server order total, not a client-supplied figure.
-        "payment.amount": expectedTotal,
-      });
-
-      const fullOrder = await Order.findById(oid).lean();
-      if (fullOrder) {
-        const siteSettings = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean();
-        const storeName =
-          siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
-        const logoUrl = siteSettings?.general?.logo?.url || "";
-        sendCustomerOrderConfirmation(fullOrder, { storeName, logoUrl }).catch((e) =>
-          console.error("PayPal order email failed:", e)
-        );
-        sendAdminOrderNotification(fullOrder).catch((e) =>
-          console.error("PayPal admin notification failed:", e)
-        );
+      if (orderId) {
+        const fullOrder = await Order.findById(orderId).lean();
+        if (fullOrder) {
+          const siteSettings = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean();
+          const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+          const logoUrl = siteSettings?.general?.logo?.url || "";
+          sendCustomerOrderConfirmation(fullOrder, { storeName, logoUrl }).catch((e) =>
+            console.error("PayPal order email failed:", e)
+          );
+          sendAdminOrderNotification(fullOrder).catch((e) =>
+            console.error("PayPal admin notification failed:", e)
+          );
+        }
       }
 
       return NextResponse.json({

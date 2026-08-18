@@ -176,21 +176,30 @@ export default function ProductsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-[#111827]">Products</h2>
           <p className="text-sm text-[#6b7280]">
-            Manage catalog, pricing, inventory, and CSV import/export (includes SEO meta).
+            Manage catalog products, pricing, inventory, and CSV bulk import/export.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <Link
+          href="/catalog/products/new"
+          className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-medium text-white hover:bg-[#185f9e]"
+        >
+          Add Product
+        </Link>
+      </div>
+
+      <div className="rounded-xl border border-[#dbeafe] bg-[#f8fbff] px-4 py-3 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-[#1e3a8a]">CSV Import / Export</p>
+            <p className="text-xs text-[#64748b]">
+              Download a template, export all products, or import a CSV to create/update products (including SEO).
+            </p>
+          </div>
           <CsvImportExportBar endpoint="/api/products/csv" label="Products" onImported={fetchList} />
-          <Link
-            href="/catalog/products/new"
-            className="inline-flex items-center justify-center rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-medium text-white hover:bg-[#185f9e]"
-          >
-            Add Product
-          </Link>
         </div>
       </div>
 

@@ -13,6 +13,8 @@ const vehicleSchema = new mongoose.Schema(
     yearFrom: { type: Number, required: true },
     yearTo: { type: Number, default: null },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    /** Car Catalog nested model.slug — Shop by Car often navigates with this. */
+    catalogModelSlug: { type: String, default: "", trim: true, lowercase: true, index: true },
     image: { type: String, default: "" },
     metaTitle: { type: String, default: "" },
     metaDescription: { type: String, default: "" },

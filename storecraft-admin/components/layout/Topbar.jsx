@@ -14,6 +14,9 @@ const PATH_TITLES = [
   { prefix: "/catalog/categories", title: "Categories" },
   { prefix: "/catalog/products", title: "Products" },
   { prefix: "/orders", title: "Orders" },
+  { prefix: "/invoices", title: "Invoices" },
+  { prefix: "/accounts/receive", title: "Single Receiving" },
+  { prefix: "/accounts/ledger", title: "Account Ledger" },
   { prefix: "/customers", title: "Customers" },
   { prefix: "/reviews", title: "Reviews" },
   { prefix: "/coupons", title: "Coupons" },
@@ -22,6 +25,7 @@ const PATH_TITLES = [
   { prefix: "/pages-manager", title: "Pages" },
   { prefix: "/banners", title: "Banners" },
   { prefix: "/product-options", title: "Product Options" },
+  { prefix: "/postex", title: "PostEx Courier" },
   { prefix: "/shipping", title: "Shipping" },
   { prefix: "/redirects", title: "Redirects" },
   { prefix: "/reports/stock", title: "Stock Report" },
@@ -160,7 +164,14 @@ export function Topbar({ onMenuClick }) {
       <div className="min-w-0 flex flex-1 items-center gap-2">
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt={storeName} className="hidden h-8 w-auto object-contain md:block" />
+          <img
+            src={logoUrl}
+            alt={storeName}
+            width={32}
+            height={32}
+            className="hidden h-8 w-auto max-w-[120px] object-contain md:block"
+            style={{ maxHeight: 32, maxWidth: 120, width: "auto", height: "auto", objectFit: "contain" }}
+          />
         ) : settingsLoading && !storeSettings ? (
           <div className="hidden h-8 w-24 animate-pulse rounded bg-slate-200 md:block dark:bg-slate-700" />
         ) : null}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useCart } from "@/context/CartContext";
 import { useStorePayment, useStoreSettings } from "@/context/StoreSettingsContext";
 import { formatPrice } from "@/lib/currency";
@@ -291,6 +292,9 @@ export function StoreHeader({ initialCategoryTree = null }) {
   const [q, setQ] = useState(() => searchParams?.get("q") || "");
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  // null until matchMedia runs — never mount desktop+mobile SearchSuggest together.
+  const [isMdUp, setIsMdUp] = useState(null);
+  const [mobileSearchTop, setMobileSearchTop] = useState(0);
   const [megaOpen, setMegaOpen] = useState(false);
   const [drawerExpanded, setDrawerExpanded] = useState({});
   // Badges read cart/wishlist from localStorage after mount — keep them at 0
@@ -312,6 +316,18 @@ export function StoreHeader({ initialCategoryTree = null }) {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => {
+      setIsMdUp(mq.matches);
+      if (mq.matches) setMobileSearchOpen(false);
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
   }, []);
 
   useEffect(() => {
@@ -365,6 +381,53 @@ export function StoreHeader({ initialCategoryTree = null }) {
     window.addEventListener("open-mobile-search", open);
     return () => window.removeEventListener("open-mobile-search", open);
   }, []);
+
+  // Lock body scroll while the fixed mobile search sheet is open.
+  useEffect(() => {
+    if (!mobileSearchOpen || isMdUp) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileSearchOpen, isMdUp]);
+
+  // Lock body scroll while the full-screen mobile nav is open.
+  useEffect(() => {
+    if (!menuOpen || isMdUp) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen, isMdUp]);
+
+  // Keep the sheet pinned to the visible viewport (iOS keyboard / URL bar).
+  useEffect(() => {
+    if (!mobileSearchOpen || isMdUp) return undefined;
+    const sync = () => {
+      const vv = window.visualViewport;
+      setMobileSearchTop(vv ? vv.offsetTop : 0);
+    };
+    sync();
+    window.visualViewport?.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("scroll", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, [mobileSearchOpen, isMdUp]);
+
+  useEffect(() => {
+    if (!mobileSearchOpen || isMdUp) return undefined;
+    function onKey(e) {
+      if (e.key === "Escape") setMobileSearchOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileSearchOpen, isMdUp]);
 
   useEffect(() => {
     const onAdded = (e) => {
@@ -454,7 +517,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
   };
 
   return (
-    <header className="sticky top-0 z-[7000]">
+    <header className={`store-site-header${mobileSearchOpen && isMdUp !== true ? " store-header--mobile-search-open" : ""}`}>
       {cartToast ? (
         <div
           role="status"
@@ -495,52 +558,58 @@ export function StoreHeader({ initialCategoryTree = null }) {
       ) : null}
       {/* Row 1 — main (above nav so search dropdown is never covered) */}
       <div className="relative z-[80] border-b bg-white" style={{ borderColor: "#E5E7EB" }}>
-        <div className="store-container relative flex h-[72px] items-center gap-4">
+        <div className="store-container relative grid h-[72px] grid-cols-[88px_1fr_88px] items-center md:flex md:gap-4">
           <button
             type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center md:hidden"
+            className="relative z-[2] flex h-10 w-10 shrink-0 items-center justify-center justify-self-start md:hidden"
             aria-label="Open menu"
             onClick={() => setMenuOpen(true)}
           >
             <span className="text-xl text-[#111111]">☰</span>
           </button>
 
-          <Link href="/" className="flex shrink-0 items-center gap-2 leading-none">
+          <Link
+            href="/"
+            className="col-start-2 flex min-w-0 max-w-full items-center justify-center justify-self-center leading-none md:col-auto md:mr-0 md:max-w-none md:shrink md:justify-start"
+          >
             {brand.logo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={trimmedLogoUrl(brand.logo)}
                 alt={brand.storeName}
-                className="h-16 max-w-[220px] object-contain"
-                style={{ height: 64, width: "auto", maxWidth: 220, objectFit: "contain" }}
+                className="h-12 max-w-[min(180px,46vw)] object-contain md:h-16 md:max-w-[220px]"
+                style={{ width: "auto", objectFit: "contain" }}
               />
             ) : brand.showStoreName ? (
-              <span className="flex flex-col">
-                <span className="font-heading text-xl font-bold tracking-tight" style={{ color: "#111111" }}>
+              <span className="flex min-w-0 flex-col items-center md:items-start">
+                <span className="font-heading text-lg font-bold tracking-tight md:text-xl" style={{ color: "#111111" }}>
                   {line1}
                 </span>
                 {line2 ? (
-                  <span className="font-heading text-base font-normal" style={{ color: "#C41E1E" }}>
+                  <span className="font-heading text-sm font-normal md:text-base" style={{ color: "#C41E1E" }}>
                     {line2}
                   </span>
                 ) : null}
               </span>
             ) : (
-              <span className="font-heading text-xl font-bold" style={{ color: "#111111" }}>
+              <span className="font-heading truncate text-lg font-bold md:text-xl" style={{ color: "#111111" }}>
                 {brand.storeName}
               </span>
             )}
           </Link>
           <form onSubmit={search} className="mx-auto hidden max-w-[480px] flex-1 md:block">
             <div className="relative">
-              <SearchSuggest
-                value={q}
-                onChange={setQ}
-                onSubmit={submitSearchTerm}
-                placeholder="Search products..."
-                inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-sm outline-none transition"
-                inputStyle={{ borderColor: "#E5E7EB" }}
-              />
+              {isMdUp === true ? (
+                <SearchSuggest
+                  value={q}
+                  onChange={setQ}
+                  onSubmit={submitSearchTerm}
+                  placeholder="Search products..."
+                  variant="desktop"
+                  inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-base outline-none transition md:text-sm"
+                  inputStyle={{ borderColor: "#E5E7EB" }}
+                />
+              ) : null}
               <button
                 type="submit"
                 className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
@@ -558,7 +627,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
             <HeaderAction label="Cart" icon={<IconBag />} badge={badgeCart} onClick={() => setOpen(true)} />
           </div>
 
-          <div className="ml-auto flex items-center gap-3 md:hidden">
+          <div className="relative z-[2] col-start-3 flex items-center justify-end gap-0.5 justify-self-end md:hidden">
             <button
               type="button"
               onClick={() => setMobileSearchOpen((v) => !v)}
@@ -587,33 +656,53 @@ export function StoreHeader({ initialCategoryTree = null }) {
           </div>
         </div>
 
-        {mobileSearchOpen ? (
-          <div className="border-t px-4 py-3 md:hidden" style={{ borderColor: "#E5E7EB" }}>
-            <form onSubmit={search}>
-              <div className="relative">
-                <SearchSuggest
-                  value={q}
-                  onChange={setQ}
-                  onSubmit={submitSearchTerm}
-                  placeholder="Search products..."
-                  autoFocus
-                  variant="mobile"
-                  inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-sm outline-none"
-                  inputStyle={{ borderColor: "#C41E1E" }}
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
-                  style={{ background: "#C41E1E" }}
-                  aria-label="Search"
-                >
-                  <IconSearch />
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : null}
       </div>
+
+      {/* Fixed mobile search sheet — keeps the field on-screen with keyboard / scroll */}
+      {mounted && mobileSearchOpen && isMdUp !== true
+        ? createPortal(
+            <div className="store-mobile-search-sheet md:hidden" role="dialog" aria-modal="true" aria-label="Search">
+              <button
+                type="button"
+                className="store-mobile-search-sheet__backdrop"
+                aria-label="Close search"
+                onClick={() => setMobileSearchOpen(false)}
+              />
+              <div className="store-mobile-search-sheet__panel" style={{ top: mobileSearchTop }}>
+                <form onSubmit={search} className="flex items-center gap-2">
+                  <div className="relative min-w-0 flex-1">
+                    <SearchSuggest
+                      value={q}
+                      onChange={setQ}
+                      onSubmit={submitSearchTerm}
+                      placeholder="Search products..."
+                      autoFocus
+                      variant="mobile"
+                      inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-base outline-none"
+                      inputStyle={{ borderColor: "#C41E1E", fontSize: 16 }}
+                    />
+                    <button
+                      type="submit"
+                      className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
+                      style={{ background: "#C41E1E" }}
+                      aria-label="Search"
+                    >
+                      <IconSearch />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="shrink-0 px-2 text-sm font-semibold text-[#6B7280]"
+                    onClick={() => setMobileSearchOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                </form>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
 
       {/* Row 3 — nav */}
       <nav
@@ -667,122 +756,135 @@ export function StoreHeader({ initialCategoryTree = null }) {
         ) : null}
       </nav>
 
-      {/* Mobile overlay */}
-      {menuOpen ? (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-[7500] bg-black/40 md:hidden"
-            aria-label="Close menu"
-            onClick={() => setMenuOpen(false)}
-          />
-          <aside className="fixed inset-0 z-[7600] flex flex-col bg-white md:hidden">
-            <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: "#E5E7EB" }}>
-              <Link href="/" className="flex flex-col leading-none" onClick={() => setMenuOpen(false)}>
-                {brand.logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={trimmedLogoUrl(brand.logo)}
-                    alt={brand.storeName}
-                    className="h-10 max-w-[150px] object-contain"
-                    style={{ height: 40, width: "auto", maxWidth: 150, objectFit: "contain" }}
-                  />
-                ) : (
-                  <>
-                    <span className="font-heading text-lg font-bold" style={{ color: "#111111" }}>
-                      {line1}
-                    </span>
-                    {line2 ? (
-                      <span className="font-heading text-sm" style={{ color: "#C41E1E" }}>
-                        {line2}
+      {/* Mobile nav — portaled to body so sticky header doesn't clip fixed inset */}
+      {mounted && menuOpen && isMdUp !== true
+        ? createPortal(
+            <div className="store-mobile-nav md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+              <button
+                type="button"
+                className="store-mobile-nav__backdrop"
+                aria-label="Close menu"
+                onClick={() => setMenuOpen(false)}
+              />
+              <aside className="store-mobile-nav__panel">
+                <div className="store-mobile-nav__head">
+                  <span className="store-mobile-nav__head-spacer" aria-hidden />
+                  <Link
+                    href="/"
+                    className="store-mobile-nav__logo"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {brand.logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={trimmedLogoUrl(brand.logo)}
+                        alt={brand.storeName}
+                        className="h-10 max-w-[160px] object-contain"
+                        style={{ height: 40, width: "auto", maxWidth: 160, objectFit: "contain" }}
+                      />
+                    ) : (
+                      <span className="flex flex-col items-center leading-none">
+                        <span className="font-heading text-lg font-bold" style={{ color: "#111111" }}>
+                          {line1}
+                        </span>
+                        {line2 ? (
+                          <span className="font-heading text-sm" style={{ color: "#C41E1E" }}>
+                            {line2}
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
-                  </>
-                )}
-              </Link>
-              <button type="button" className="text-2xl text-[#111111]" onClick={() => setMenuOpen(false)} aria-label="Close">
-                ×
-              </button>
-            </div>
-            <nav className="flex-1 overflow-y-auto px-6 py-4">
-              {nav.map((item) => (
-                <div key={item.label} className="border-b" style={{ borderColor: "#F3F4F6" }}>
-                  {megaEnabled && item.mega ? (
-                    <>
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
-                        onClick={() => setDrawerExpanded((s) => ({ ...s, [item.label]: !s[item.label] }))}
-                      >
-                        {item.label}
-                        <span className="text-[#9CA3AF]">{drawerExpanded[item.label] ? "−" : "+"}</span>
-                      </button>
-                      {drawerExpanded[item.label] ? (
-                        <ul className="pb-3 pl-3">
-                          {treeCategories.length
-                            ? treeCategories.map((cat) => (
-                                <li key={String(cat._id)}>
-                                  <Link
-                                    href={`/categories/${cat.slug}`}
-                                    className="block py-2 text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
-                                    onClick={() => setMenuOpen(false)}
-                                  >
-                                    {cat.name}
-                                  </Link>
-                                  {(cat.children || []).map((sub) => (
-                                    <Link
-                                      key={String(sub._id)}
-                                      href={`/categories/${sub.slug}`}
-                                      className="block py-1.5 pl-3 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
-                                      onClick={() => setMenuOpen(false)}
-                                    >
-                                      {sub.name}
-                                    </Link>
-                                  ))}
-                                </li>
-                              ))
-                            : (item.columns?.length ? item.columns : megaCols)
-                                .flatMap((c) => c.links)
-                                .map((l) => (
-                                  <li key={l.label}>
-                                    <Link
-                                      href={l.href}
-                                      className="block py-2 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
-                                      onClick={() => setMenuOpen(false)}
-                                    >
-                                      {l.label}
-                                    </Link>
-                                  </li>
-                                ))}
-                        </ul>
-                      ) : null}
-                    </>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      className={`block py-4 text-sm font-semibold uppercase transition-colors ${
-                        isNavItemActive(item) ? "text-[#C41E1E]" : "text-[#111111] hover:text-[#C41E1E]"
-                      }`}
-                      aria-current={isNavItemActive(item) ? "page" : undefined}
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  )}
+                    )}
+                  </Link>
+                  <button
+                    type="button"
+                    className="store-mobile-nav__close"
+                    onClick={() => setMenuOpen(false)}
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
                 </div>
-              ))}
-            </nav>
-            <div className="border-t px-6 py-4" style={{ borderColor: "#E5E7EB" }}>
-              <Link href={accountHref} prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
-                Account
-              </Link>
-              <Link href="/wishlist" prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
-                Saved items
-              </Link>
-            </div>
-          </aside>
-        </>
-      ) : null}
+                <nav className="store-mobile-nav__links">
+                  {nav.map((item) => (
+                    <div key={item.label} className="border-b" style={{ borderColor: "#F3F4F6" }}>
+                      {megaEnabled && item.mega ? (
+                        <>
+                          <button
+                            type="button"
+                            className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
+                            onClick={() => setDrawerExpanded((s) => ({ ...s, [item.label]: !s[item.label] }))}
+                          >
+                            {item.label}
+                            <span className="text-[#9CA3AF]">{drawerExpanded[item.label] ? "−" : "+"}</span>
+                          </button>
+                          {drawerExpanded[item.label] ? (
+                            <ul className="pb-3 pl-3">
+                              {treeCategories.length
+                                ? treeCategories.map((cat) => (
+                                    <li key={String(cat._id)}>
+                                      <Link
+                                        href={`/categories/${cat.slug}`}
+                                        className="block py-2 text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
+                                        onClick={() => setMenuOpen(false)}
+                                      >
+                                        {cat.name}
+                                      </Link>
+                                      {(cat.children || []).map((sub) => (
+                                        <Link
+                                          key={String(sub._id)}
+                                          href={`/categories/${sub.slug}`}
+                                          className="block py-1.5 pl-3 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
+                                          onClick={() => setMenuOpen(false)}
+                                        >
+                                          {sub.name}
+                                        </Link>
+                                      ))}
+                                    </li>
+                                  ))
+                                : (item.columns?.length ? item.columns : megaCols)
+                                    .flatMap((c) => c.links)
+                                    .map((l) => (
+                                      <li key={l.label}>
+                                        <Link
+                                          href={l.href}
+                                          className="block py-2 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
+                                          onClick={() => setMenuOpen(false)}
+                                        >
+                                          {l.label}
+                                        </Link>
+                                      </li>
+                                    ))}
+                            </ul>
+                          ) : null}
+                        </>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className={`block py-4 text-sm font-semibold uppercase transition-colors ${
+                            isNavItemActive(item) ? "text-[#C41E1E]" : "text-[#111111] hover:text-[#C41E1E]"
+                          }`}
+                          aria-current={isNavItemActive(item) ? "page" : undefined}
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </nav>
+                <div className="store-mobile-nav__foot">
+                  <Link href={accountHref} prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
+                    Account
+                  </Link>
+                  <Link href="/wishlist" prefetch={false} className="block py-2 text-sm text-[#6B7280]" onClick={() => setMenuOpen(false)}>
+                    Saved items
+                  </Link>
+                </div>
+              </aside>
+            </div>,
+            document.body
+          )
+        : null}
     </header>
   );
 }

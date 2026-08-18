@@ -106,6 +106,10 @@ export function productToMerchantItem(product, opts = {}) {
     ? product.categories.map((c) => (typeof c === "object" ? c.name : "")).filter(Boolean)
     : [];
 
+  // Meta rejects many items when identifier_exists=yes without a real GTIN.
+  // Only claim identifiers when we have a GTIN; still send MPN when available.
+  const identifierExists = gtin.length >= 8 ? "yes" : "no";
+
   return {
     id,
     title,
@@ -121,7 +125,7 @@ export function productToMerchantItem(product, opts = {}) {
     mpn: mpn || "",
     product_type: cats.join(" > "),
     google_product_category: "5613", // Vehicle Parts & Accessories (Google taxonomy)
-    identifier_exists: gtin.length >= 8 || mpn ? "yes" : "no",
+    identifier_exists: identifierExists,
   };
 }
 

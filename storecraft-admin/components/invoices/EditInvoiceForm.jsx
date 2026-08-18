@@ -11,6 +11,7 @@ import { formatAdminPrice } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
 import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
+import { useInvoiceProductCatalog } from "@/components/invoices/useInvoiceProductCatalog";
 
 function lineTotal(qty, unitPrice) {
   return Math.round(Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0) * 100) / 100;
@@ -59,7 +60,15 @@ export function EditInvoiceForm() {
     customerId: null,
   });
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [paymentStatus, setPaymentStatus] = useState("paid");
+  const [paymentStatus, setPaymentStatus] = useState("unpaid");
+  const [amountPaid, setAmountPaid] = useState(0);
+  const [remainingBalance, setRemainingBalance] = useState(0);
+  const [payments, setPayments] = useState([]);
+  const [payAmount, setPayAmount] = useState("");
+  const [payMethod, setPayMethod] = useState("cash");
+  const [payNote, setPayNote] = useState("");
+  const [payDate, setPayDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [recordingPayment, setRecordingPayment] = useState(false);
   const [deliveryOn, setDeliveryOn] = useState(false);
   const [shippingCost, setShippingCost] = useState("0");
   const [discount, setDiscount] = useState("0");
@@ -69,10 +78,17 @@ export function EditInvoiceForm() {
   const [manualQty, setManualQty] = useState("1");
   const [manualPrice, setManualPrice] = useState("");
   const [saving, setSaving] = useState(false);
+  const [linkedOrderId, setLinkedOrderId] = useState(null);
+  const [linkedOrderNumber, setLinkedOrderNumber] = useState("");
+  const [creatingOrder, setCreatingOrder] = useState(false);
   const [storeMeta, setStoreMeta] = useState(null);
-  const [catalog, setCatalog] = useState([]);
-  const [catalogFilter, setCatalogFilter] = useState("");
-  const [catalogLoading, setCatalogLoading] = useState(true);
+  const {
+    catalog,
+    catalogLoading,
+    searching,
+    catalogFilter,
+    setCatalogFilter,
+  } = useInvoiceProductCatalog();
 
   useEffect(() => {
     getInvoiceStoreMeta().then(setStoreMeta).catch(() => {});
@@ -93,6 +109,8 @@ export function EditInvoiceForm() {
         if (cancelled) return;
         const inv = json.invoice;
         setInvoiceNumber(inv.invoiceNumber || "");
+        setLinkedOrderId(inv.linkedOrderId || null);
+        setLinkedOrderNumber(inv.linkedOrderNumber || "");
         setCustomer({
           name: inv.customer?.name || "",
           phone: inv.customer?.phone || "",
@@ -102,7 +120,15 @@ export function EditInvoiceForm() {
           customerId: inv.customerId || null,
         });
         setPaymentMethod(inv.paymentMethod === "bankTransfer" ? "bankTransfer" : inv.paymentMethod || "cod");
-        setPaymentStatus(inv.paymentStatus || "paid");
+        setPaymentStatus(inv.paymentStatus || "unpaid");
+        setAmountPaid(Number(inv.amountPaid) || 0);
+        setRemainingBalance(
+          inv.remainingBalance != null
+            ? Number(inv.remainingBalance)
+            : Math.max(0, (Number(inv.pricing?.total) || 0) - (Number(inv.amountPaid) || 0))
+        );
+        setPayments(Array.isArray(inv.payments) ? inv.payments : []);
+        setPayMethod(inv.paymentMethod === "cod" ? "cash" : inv.paymentMethod || "cash");
         const ship = Number(inv.pricing?.shippingCost) || 0;
         setDeliveryOn(ship > 0);
         setShippingCost(String(ship || 250));
@@ -130,33 +156,6 @@ export function EditInvoiceForm() {
       cancelled = true;
     };
   }, [id, router]);
-
-  useEffect(() => {
-    (async () => {
-      setCatalogLoading(true);
-      try {
-        const res = await fetch(`/api/products?status=active&limit=100&page=1`, {
-          credentials: "include",
-        });
-        const json = await res.json();
-        if (json.success) setCatalog(Array.isArray(json.data) ? json.data : []);
-      } catch {
-        /* ignore */
-      } finally {
-        setCatalogLoading(false);
-      }
-    })();
-  }, []);
-
-  const filteredCatalog = useMemo(() => {
-    const q = catalogFilter.trim().toLowerCase();
-    if (!q) return catalog;
-    return catalog.filter((p) => {
-      const name = String(p.name || "").toLowerCase();
-      const sku = String(p.inventory?.sku || "").toLowerCase();
-      return name.includes(q) || sku.includes(q);
-    });
-  }, [catalog, catalogFilter]);
 
   const subtotal = useMemo(
     () => lines.reduce((sum, line) => sum + lineTotal(line.quantity, line.unitPrice), 0),
@@ -304,7 +303,11 @@ export function EditInvoiceForm() {
             address: customer.address.trim(),
             customerId: customer.customerId,
           },
-          saveCustomer: true,
+          billingAddress: {
+            street: customer.address.trim(),
+            city: customer.city.trim(),
+            country: "Pakistan",
+          },
           items: lines.map((line) => ({
             productId: line.productId,
             name: line.name,
@@ -312,26 +315,91 @@ export function EditInvoiceForm() {
             variation: line.variation,
             quantity: line.quantity,
             unitPrice: line.unitPrice,
-            total: lineTotal(line.quantity, line.unitPrice),
+            unitCost: line.unitCost,
           })),
-          shippingCost: shipNum,
           discount: discountNum,
+          shippingCost: shipNum,
           paymentMethod: method,
           paymentStatus,
           note: note.trim(),
+          saveCustomer: true,
         }),
       });
       const json = await res.json();
-      if (!res.ok || !json.success) {
-        toast.error(json.error || "Could not save invoice.");
-        return;
-      }
-      toast.success("Invoice updated");
-      router.push("/invoices");
-    } catch {
-      toast.error("Network error.");
+      if (!res.ok || !json.success) throw new Error(json.error || "Save failed");
+      const inv = json.invoice;
+      setPaymentStatus(inv.paymentStatus || paymentStatus);
+      setAmountPaid(Number(inv.amountPaid) || 0);
+      setRemainingBalance(Number(inv.remainingBalance) || 0);
+      setPayments(Array.isArray(inv.payments) ? inv.payments : payments);
+      toast.success("Invoice updated.");
+    } catch (err) {
+      toast.error(err.message || "Could not save.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function recordInstallment(e) {
+    e.preventDefault();
+    const amount = Math.round((Number(payAmount) || 0) * 100) / 100;
+    if (!(amount > 0)) {
+      toast.error("Enter a payment amount.");
+      return;
+    }
+    if (amount > remainingBalance + 0.009) {
+      toast.error(`Amount cannot exceed remaining ${formatAdminPrice(remainingBalance)}.`);
+      return;
+    }
+    setRecordingPayment(true);
+    try {
+      const res = await fetch(`/api/invoices/${id}/payments`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          method: payMethod,
+          note: payNote.trim(),
+          paidAt: payDate ? new Date(`${payDate}T12:00:00`).toISOString() : undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Could not record payment.");
+      const inv = json.invoice;
+      setAmountPaid(Number(inv.amountPaid) || 0);
+      setRemainingBalance(Number(inv.remainingBalance) || 0);
+      setPaymentStatus(inv.paymentStatus || "partial");
+      setPayments(Array.isArray(inv.payments) ? inv.payments : []);
+      setPayAmount("");
+      setPayNote("");
+      toast.success(`Recorded ${formatAdminPrice(amount)}. Remaining ${formatAdminPrice(inv.remainingBalance)}.`);
+    } catch (err) {
+      toast.error(err.message || "Payment failed.");
+    } finally {
+      setRecordingPayment(false);
+    }
+  }
+
+  async function removeInstallment(paymentId) {
+    if (!paymentId || !confirm("Remove this payment entry?")) return;
+    try {
+      const res = await fetch(`/api/invoices/${id}/payments`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Could not remove payment.");
+      const inv = json.invoice;
+      setAmountPaid(Number(inv.amountPaid) || 0);
+      setRemainingBalance(Number(inv.remainingBalance) || 0);
+      setPaymentStatus(inv.paymentStatus || "unpaid");
+      setPayments(Array.isArray(inv.payments) ? inv.payments : []);
+      toast.success("Payment removed.");
+    } catch (err) {
+      toast.error(err.message || "Could not remove.");
     }
   }
 
@@ -376,6 +444,56 @@ export function EditInvoiceForm() {
           >
             Download PDF
           </button>
+          {linkedOrderId ? (
+            <Link
+              href={`/orders/${linkedOrderId}`}
+              className="rounded-lg border border-emerald-200 px-3 py-2 text-sm font-semibold text-emerald-700 dark:border-emerald-800 dark:text-emerald-400"
+            >
+              View order{linkedOrderNumber ? ` (${linkedOrderNumber})` : ""}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled={creatingOrder}
+              onClick={async () => {
+                if (
+                  !confirm(
+                    `Add invoice ${invoiceNumber} to Orders?\n\nCreates a linked order for packing / Postex. Stock was already deducted when the invoice was saved.`
+                  )
+                ) {
+                  return;
+                }
+                setCreatingOrder(true);
+                const toastId = toast.loading("Creating order…");
+                try {
+                  const res = await fetch(`/api/invoices/${id}/create-order`, {
+                    method: "POST",
+                    credentials: "include",
+                  });
+                  const json = await res.json();
+                  if (!res.ok || !json.success) throw new Error(json.error || "Could not create order.");
+                  const oid = json.order?.id;
+                  const onum = json.order?.orderNumber || "";
+                  setLinkedOrderId(oid || null);
+                  setLinkedOrderNumber(onum);
+                  toast.success(
+                    json.alreadyLinked
+                      ? `Already linked to ${onum || "order"}.`
+                      : `Order ${onum} created.`,
+                    { id: toastId }
+                  );
+                  if (oid) router.push(`/orders/${oid}`);
+                } catch (err) {
+                  toast.error(err.message || "Could not create order.", { id: toastId });
+                } finally {
+                  setCreatingOrder(false);
+                }
+              }}
+              className="rounded-lg bg-[#1d6fb8] px-3 py-2 text-sm font-bold text-white hover:bg-[#185fa0] disabled:opacity-50"
+            >
+              {creatingOrder ? "Adding…" : "Add to orders"}
+            </button>
+          )}
           <Link
             href="/invoices"
             className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-600"
@@ -386,26 +504,33 @@ export function EditInvoiceForm() {
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
-        <div className="lg:col-span-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="order-1 lg:col-span-5">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:sticky lg:top-4">
             <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Add products</h2>
             <input
               type="search"
               value={catalogFilter}
               onChange={(e) => setCatalogFilter(e.target.value)}
-              placeholder="Filter catalog…"
-              className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+              placeholder="Search all products (e.g. corolla)…"
+              autoComplete="off"
+              className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-950"
             />
-            <div className="mt-3 max-h-80 space-y-1 overflow-y-auto">
-              {catalogLoading ? (
+            <div className="mt-3 max-h-[min(20rem,45vh)] space-y-1 overflow-y-auto overscroll-contain sm:max-h-80">
+              {catalogLoading && !catalog.length ? (
                 <p className="py-8 text-center text-sm text-slate-400">Loading…</p>
+              ) : !catalog.length ? (
+                <p className="py-8 text-center text-sm text-slate-400">
+                  {catalogFilter.trim()
+                    ? `No products match “${catalogFilter.trim()}”.`
+                    : "No products found."}
+                </p>
               ) : (
-                filteredCatalog.map((p) => (
+                catalog.map((p) => (
                   <button
                     key={productIdOf(p)}
                     type="button"
                     onClick={() => addProduct(p)}
-                    className="flex w-full items-center justify-between gap-2 rounded-xl px-2 py-2 text-left text-sm hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                    className="flex w-full items-center justify-between gap-2 rounded-xl px-2 py-2 text-left text-sm hover:bg-emerald-50 active:bg-emerald-100 dark:hover:bg-emerald-950/30"
                   >
                     <span className="truncate font-medium">{p.name}</span>
                     <span className="shrink-0 text-xs text-slate-400">
@@ -415,6 +540,9 @@ export function EditInvoiceForm() {
                 ))
               )}
             </div>
+            {searching ? (
+              <p className="mt-2 text-center text-[11px] text-slate-400">Updating results…</p>
+            ) : null}
             <div className="mt-3 rounded-xl border border-dashed border-slate-200 p-3 dark:border-slate-600">
               <p className="text-xs font-semibold uppercase text-slate-500">Manual item</p>
               <div className="mt-2 flex flex-col gap-2">
@@ -451,7 +579,7 @@ export function EditInvoiceForm() {
           </div>
         </div>
 
-        <div className="space-y-4 lg:col-span-7">
+        <div className="order-2 space-y-4 lg:col-span-7">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <h2 className="text-sm font-semibold">Customer</h2>
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -604,9 +732,21 @@ export function EditInvoiceForm() {
                 />
               </label>
             </div>
-            <div className="mt-4 flex justify-between text-base font-bold">
-              <span>Total</span>
-              <span className="text-[#1A7A4C]">{formatAdminPrice(total)}</span>
+            <div className="mt-4 space-y-1 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Total</span>
+                <span className="font-semibold tabular-nums">{formatAdminPrice(total)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Paid</span>
+                <span className="font-semibold tabular-nums text-emerald-700">{formatAdminPrice(amountPaid)}</span>
+              </div>
+              <div className="flex justify-between text-base font-bold">
+                <span>Remaining</span>
+                <span className={remainingBalance > 0 ? "text-amber-600" : "text-[#1A7A4C]"}>
+                  {formatAdminPrice(remainingBalance)}
+                </span>
+              </div>
             </div>
             <button
               type="submit"
@@ -615,6 +755,121 @@ export function EditInvoiceForm() {
             >
               {saving ? "Saving…" : "Save changes"}
             </button>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Installment payments</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Record what the shopkeeper paid. Remaining updates automatically.
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="text-xs">
+                Amount received
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(e.target.value)}
+                  placeholder={remainingBalance > 0 ? String(remainingBalance) : "0"}
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                />
+              </label>
+              <label className="text-xs">
+                Date
+                <input
+                  type="date"
+                  value={payDate}
+                  onChange={(e) => setPayDate(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                />
+              </label>
+              <label className="text-xs">
+                Method
+                <select
+                  value={payMethod}
+                  onChange={(e) => setPayMethod(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                >
+                  <option value="cash">Cash</option>
+                  <option value="bankTransfer">Bank Transfer</option>
+                  <option value="jazzcash">JazzCash</option>
+                  <option value="easypaisa">Easypaisa</option>
+                  <option value="cod">COD</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <label className="text-xs">
+                Note
+                <input
+                  value={payNote}
+                  onChange={(e) => setPayNote(e.target.value)}
+                  placeholder="e.g. 1st installment"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                />
+              </label>
+              <button
+                type="button"
+                disabled={recordingPayment || remainingBalance <= 0}
+                onClick={(e) => void recordInstallment(e)}
+                className="sm:col-span-2 rounded-xl bg-[#1d6fb8] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              >
+                {recordingPayment
+                  ? "Saving…"
+                  : remainingBalance <= 0
+                    ? "Fully paid"
+                    : "Add payment"}
+              </button>
+            </div>
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[360px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 text-xs uppercase text-slate-400 dark:border-slate-800">
+                    <th className="py-2 pr-2 font-medium">Date</th>
+                    <th className="py-2 pr-2 font-medium">Amount</th>
+                    <th className="py-2 pr-2 font-medium">Method</th>
+                    <th className="py-2 pr-2 font-medium">Note</th>
+                    <th className="py-2 font-medium" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {!payments.length ? (
+                    <tr>
+                      <td colSpan={5} className="py-4 text-center text-xs text-slate-400">
+                        No payments recorded yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    [...payments]
+                      .slice()
+                      .reverse()
+                      .map((p) => (
+                        <tr key={p.id || `${p.paidAt}-${p.amount}`} className="border-b border-slate-50 dark:border-slate-800">
+                          <td className="py-2 pr-2 whitespace-nowrap text-slate-600">
+                            {p.paidAt ? new Date(p.paidAt).toLocaleDateString() : "—"}
+                          </td>
+                          <td className="py-2 pr-2 font-semibold tabular-nums text-emerald-700">
+                            {formatAdminPrice(p.amount)}
+                          </td>
+                          <td className="py-2 pr-2 capitalize text-slate-500">{p.method || "—"}</td>
+                          <td className="py-2 pr-2 text-slate-500">{p.note || "—"}</td>
+                          <td className="py-2 text-right">
+                            <button
+                              type="button"
+                              onClick={() => void removeInstallment(p.id)}
+                              className="text-xs font-semibold text-red-600 hover:underline"
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

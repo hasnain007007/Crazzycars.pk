@@ -83,7 +83,9 @@ function serializeBanner(doc) {
 }
 
 function sortByOrder(a, b) {
-  return (a.sortOrder || 0) - (b.sortOrder || 0);
+  const d = (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0);
+  if (d !== 0) return d;
+  return String(a.id || a._id || "").localeCompare(String(b.id || b._id || ""));
 }
 
 export async function GET() {

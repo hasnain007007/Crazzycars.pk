@@ -94,10 +94,6 @@ export function mapBannerToSlide(banner) {
     id: banner?._id?.toString?.() || banner?.id || title || "hero",
     title,
     subtitle,
-    altText:
-      String(banner?.background?.image?.altText || banner?.background?.image?.alt || "").trim() ||
-      title ||
-      "",
     imageUrl,
     imageUrlMobile,
     imageUrlRaw: rawUrl,

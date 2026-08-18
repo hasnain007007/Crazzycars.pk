@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/currency";
+import { productPath } from "@/lib/productPath";
 
 /** Session memory cache — instant results for repeated / backspaced queries. */
 const suggestCache = new Map();
@@ -22,10 +23,7 @@ function cacheSet(q, payload) {
 }
 
 function productHref(product) {
-  const slug = product?.slug || product?.handle || "";
-  if (!slug) return "/products";
-  if (product?.source === "shopify" || product?.handle) return `/products/${slug}`;
-  return `/${slug}`;
+  return productPath(product);
 }
 
 function productImage(product) {
@@ -35,6 +33,18 @@ function productImage(product) {
   if (typeof fromList === "string") return fromList;
   if (fromList?.url) return fromList.url;
   return product?.media?.images?.[0]?.url || "";
+}
+
+/**
+ * Header mounts a desktop and a mobile search that share one query string, so
+ * both can try to portal a panel at once. Ownership is global: the last input
+ * the user actually touched wins and every other instance closes.
+ */
+const OWNER_EVENT = "storecraft-search-owner";
+
+function claimSearchOwner(id) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(OWNER_EVENT, { detail: id }));
 }
 
 /**
@@ -64,22 +74,82 @@ export function SearchSuggest({
   const [searchedFor, setSearchedFor] = useState("");
   const [panelBox, setPanelBox] = useState(null);
   const [mounted, setMounted] = useState(false);
-  const term = String(value || "").trim();
+  const [isOwner, setIsOwner] = useState(false);
+  const safeValue = value == null ? "" : String(value);
+  const term = safeValue.trim();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    function onOwnerChange(e) {
+      const owner = e.detail;
+      setIsOwner(owner === listId);
+      if (owner !== listId) {
+        setOpen(false);
+        setPanelBox(null);
+      }
+    }
+    window.addEventListener(OWNER_EVENT, onOwnerChange);
+    return () => window.removeEventListener(OWNER_EVENT, onOwnerChange);
+  }, [listId]);
+
+  /** True only when this input is really painted (not a CSS-`hidden` twin). */
+  const isInputVisible = useCallback(() => {
+    const el = inputRef.current;
+    if (!el || typeof window === "undefined") return false;
+    const r = el.getBoundingClientRect();
+    if (r.width < 8 || r.height < 8) return false;
+    // Off-screen / zero-area parents (e.g. `hidden md:block` on mobile)
+    if (r.bottom < 0 || r.top > window.innerHeight + 40) return false;
+    const style = window.getComputedStyle(el);
+    if (
+      style.display === "none" ||
+      style.visibility === "hidden" ||
+      Number(style.opacity || 1) === 0
+    ) {
+      return false;
+    }
+    // Walk ancestors for display:none / visibility — getBoundingClientRect can
+    // still report size for some hidden trees in WebKit.
+    let node = el.parentElement;
+    while (node && node !== document.body) {
+      const ps = window.getComputedStyle(node);
+      if (ps.display === "none" || ps.visibility === "hidden") return false;
+      node = node.parentElement;
+    }
+    return true;
+  }, []);
+
   const updatePanelBox = useCallback(() => {
     const el = inputRef.current;
-    if (!el) return;
+    if (!el || !isInputVisible()) {
+      setPanelBox(null);
+      return;
+    }
     const r = el.getBoundingClientRect();
-    setPanelBox({
-      top: r.bottom + 6,
-      left: r.left,
-      width: Math.max(r.width, variant === "mobile" ? r.width : 320),
-    });
-  }, [variant]);
+    const vv = window.visualViewport;
+    // Prefer visualViewport so iOS keyboard doesn't leave the panel off-screen.
+    const viewportLeft = vv ? vv.offsetLeft : 0;
+    const viewportTop = vv ? vv.offsetTop : 0;
+    const viewportWidth = vv ? vv.width : window.innerWidth;
+    const viewportBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    const top = Math.max(viewportTop + 4, r.bottom + 6);
+    const maxHeight = Math.max(
+      120,
+      Math.min(viewportBottom - top - 12, variant === "mobile" ? 280 : 360)
+    );
+    const maxWidth = Math.min(
+      Math.max(r.width, variant === "mobile" ? r.width : 320),
+      Math.max(160, viewportWidth - 16)
+    );
+    const left = Math.min(
+      Math.max(viewportLeft + 8, r.left),
+      Math.max(viewportLeft + 8, viewportLeft + viewportWidth - maxWidth - 8)
+    );
+    setPanelBox({ top, left, width: maxWidth, maxHeight });
+  }, [variant, isInputVisible]);
 
   useLayoutEffect(() => {
     if (!open || term.length < 2) {
@@ -90,9 +160,17 @@ export function SearchSuggest({
     const onReposition = () => updatePanelBox();
     window.addEventListener("resize", onReposition);
     window.addEventListener("scroll", onReposition, true);
+    if (typeof window !== "undefined" && window.visualViewport) {
+      window.visualViewport.addEventListener("resize", onReposition);
+      window.visualViewport.addEventListener("scroll", onReposition);
+    }
     return () => {
       window.removeEventListener("resize", onReposition);
       window.removeEventListener("scroll", onReposition, true);
+      if (typeof window !== "undefined" && window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", onReposition);
+        window.visualViewport.removeEventListener("scroll", onReposition);
+      }
     };
   }, [open, term, updatePanelBox]);
 
@@ -158,8 +236,20 @@ export function SearchSuggest({
       setHasMore(false);
       setSearchedFor("");
       setLoading(false);
+      setOpen(false);
       return undefined;
     }
+
+    // Don't open / fetch for an invisible twin (desktop search while mobile is active).
+    if (!isInputVisible()) {
+      setOpen(false);
+      setPanelBox(null);
+      return undefined;
+    }
+
+    // Covers a search opened with a term already in the box (e.g. ?q= in the URL),
+    // where no focus event ever fires to claim ownership.
+    claimSearchOwner(listId);
     setOpen(true);
 
     const cached = cacheGet(term);
@@ -173,7 +263,7 @@ export function SearchSuggest({
       void fetchSuggestions(term);
     }, 120);
     return () => clearTimeout(t);
-  }, [term, fetchSuggestions, applyPayload]);
+  }, [term, fetchSuggestions, applyPayload, isInputVisible, listId]);
 
   useEffect(() => {
     function onDoc(e) {
@@ -193,7 +283,7 @@ export function SearchSuggest({
     };
   }, []);
 
-  const showPanel = open && term.length >= 2 && panelBox;
+  const showPanel = open && isOwner && term.length >= 2 && panelBox;
   const displayHits = hits;
   const awaitingFresh = term.length >= 2 && searchedFor !== term;
   const displayLoading = term.length >= 2 && loading && hits.length === 0;
@@ -243,67 +333,72 @@ export function SearchSuggest({
               top: panelBox.top,
               left: panelBox.left,
               width: panelBox.width,
+              maxHeight: panelBox.maxHeight,
               zIndex: 90050,
+              display: "flex",
+              flexDirection: "column",
             }}
             className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-[0_12px_40px_rgba(0,0,0,0.18)]"
           >
-            {displayLoading ? (
-              <p className="px-4 py-3 text-sm text-[#6B7280]">Searching…</p>
-            ) : null}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {displayLoading ? (
+                <p className="px-4 py-3 text-sm text-[#6B7280]">Searching…</p>
+              ) : null}
 
-            {awaitingFresh && hits.length > 0 ? (
-              <p className="border-b border-[#F3F4F6] px-4 py-1.5 text-[11px] text-[#9CA3AF]">
-                Updating…
-              </p>
-            ) : null}
+              {awaitingFresh && hits.length > 0 ? (
+                <p className="border-b border-[#F3F4F6] px-4 py-1.5 text-[11px] text-[#9CA3AF]">
+                  Updating…
+                </p>
+              ) : null}
 
-            {showEmpty ? (
-              <p className="px-4 py-3 text-sm text-[#6B7280]">
-                No products match “{term}”
-              </p>
-            ) : null}
+              {showEmpty ? (
+                <p className="px-4 py-3 text-sm text-[#6B7280]">
+                  No products match “{term}”
+                </p>
+              ) : null}
 
-            {displayHits.length > 0 ? (
-              <ul className="max-h-[min(70vh,22rem)] overflow-y-auto overscroll-contain py-1">
-                {displayHits.map((p, idx) => {
-                  const img = productImage(p);
-                  const active = idx === activeIndex;
-                  return (
-                    <li key={p.id || p._id || p.slug || idx} role="option" aria-selected={active}>
-                      <button
-                        type="button"
-                        className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition ${
-                          active ? "bg-[#FEF2F2]" : "hover:bg-[#F9FAFB]"
-                        }`}
-                        onMouseEnter={() => setActiveIndex(idx)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => goToProduct(p)}
-                      >
-                        <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F3F4F6]">
-                          {img ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={img} alt="" className="h-full w-full object-cover" loading="lazy" />
-                          ) : (
-                            <span className="text-xs text-[#9CA3AF]">—</span>
-                          )}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="line-clamp-2 text-sm font-medium text-[#111111]">
-                            {p.name}
+              {displayHits.length > 0 ? (
+                <ul className="py-1">
+                  {displayHits.map((p, idx) => {
+                    const img = productImage(p);
+                    const active = idx === activeIndex;
+                    return (
+                      <li key={p.id || p._id || p.slug || idx} role="option" aria-selected={active}>
+                        <button
+                          type="button"
+                          className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition ${
+                            active ? "bg-[#FEF2F2]" : "hover:bg-[#F9FAFB]"
+                          }`}
+                          onMouseEnter={() => setActiveIndex(idx)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => goToProduct(p)}
+                        >
+                          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F3F4F6]">
+                            {img ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={img} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            ) : (
+                              <span className="text-xs text-[#9CA3AF]">—</span>
+                            )}
                           </span>
-                          <span className="mt-0.5 block text-sm font-semibold text-[#C41E1E]">
-                            {formatPrice(p.price ?? p.salePrice ?? p.regularPrice ?? 0)}
+                          <span className="min-w-0 flex-1">
+                            <span className="line-clamp-2 text-sm font-medium text-[#111111]">
+                              {p.name}
+                            </span>
+                            <span className="mt-0.5 block text-sm font-semibold text-[#C41E1E]">
+                              {formatPrice(p.price ?? p.salePrice ?? p.regularPrice ?? 0)}
+                            </span>
                           </span>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+            </div>
 
             {term.length >= 2 ? (
-              <div className="border-t border-[#F3F4F6] bg-[#FAFAFA]">
+              <div className="shrink-0 border-t border-[#F3F4F6] bg-[#FAFAFA]">
                 <button
                   type="button"
                   role="option"
@@ -317,12 +412,14 @@ export function SearchSuggest({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={goToAll}
                 >
-                  <span>
+                  <span className="min-w-0 truncate">
                     {hasMore || displayHits.length >= 8
                       ? `View all results for “${term}”`
                       : `Search “${term}”`}
                   </span>
-                  <span aria-hidden>→</span>
+                  <span aria-hidden className="ml-2 shrink-0">
+                    →
+                  </span>
                 </button>
               </div>
             ) : null}
@@ -336,7 +433,8 @@ export function SearchSuggest({
       <input
         ref={inputRef}
         type="search"
-        value={value}
+        enterKeyHint="search"
+        value={safeValue}
         autoFocus={autoFocus}
         autoComplete="off"
         role="combobox"
@@ -348,11 +446,17 @@ export function SearchSuggest({
         style={inputStyle}
         onChange={(e) => {
           onChange?.(e.target.value);
-          setOpen(true);
+          if (isInputVisible()) {
+            claimSearchOwner(listId);
+            setOpen(true);
+          }
         }}
         onFocus={(e) => {
-          setOpen(true);
-          updatePanelBox();
+          if (isInputVisible()) {
+            claimSearchOwner(listId);
+            setOpen(true);
+            updatePanelBox();
+          }
           if (inputStyle) e.target.style.borderColor = "#C41E1E";
         }}
         onBlur={(e) => {

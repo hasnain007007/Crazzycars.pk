@@ -15,10 +15,12 @@ const inter = Inter({
 });
 
 /**
- * Prerendered shells would otherwise bake the favicon at build time, so a
- * branding change in Settings would need a redeploy to show up.
+ * Admin HTML must never be edge-cached across deploys. Hashed CSS/JS chunks
+ * change every build; stale HTML + missing CSS produces an unstyled layout
+ * (giant images, crushed sidebar). Branding still refreshes via getBranding().
  */
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const BRANDING_TTL_MS = 60 * 1000;
 let brandingCache = { value: null, at: 0 };

@@ -11,7 +11,7 @@ export function AdminShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f9fafb] text-[#111827] dark:bg-slate-950 dark:text-slate-100">
+    <div className="min-h-screen overflow-x-hidden bg-[#f9fafb] text-[#111827] dark:bg-slate-950 dark:text-slate-100">
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       {mobileOpen ? (
         <button
@@ -21,9 +21,9 @@ export function AdminShell({ children }) {
           onClick={() => setMobileOpen(false)}
         />
       ) : null}
-      <div className="min-h-screen md:pl-[220px] print:pl-0">
+      <div className="min-h-screen min-w-0 md:pl-[220px] print:pl-0">
         <Topbar onMenuClick={() => setMobileOpen(true)} />
-        <main className="px-4 py-5 md:px-6 md:py-6 print:px-4 print:py-4">{children}</main>
+        <main className="min-w-0 px-4 py-5 md:px-6 md:py-6 print:px-4 print:py-4">{children}</main>
       </div>
     </div>
   );

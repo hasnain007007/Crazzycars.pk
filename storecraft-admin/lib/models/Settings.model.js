@@ -121,7 +121,14 @@ const settingsSchema = new mongoose.Schema(
       emailOnNewOrder: { type: Boolean, default: true },
       emailOnLowStock: { type: Boolean, default: true },
       emailOnNewReview: { type: Boolean, default: false },
+      emailAbandonedCart: { type: Boolean, default: true },
       notificationEmail: { type: String, default: "" },
+    },
+    abandonedCart: {
+      enabled: { type: Boolean, default: true },
+      abandonAfterMinutes: { type: Number, default: 60 },
+      maxEmailReminders: { type: Number, default: 2 },
+      reminderIntervalHours: { type: Number, default: 24 },
     },
     /** Professional invoice PDF / print branding extras */
     invoice: {
@@ -227,6 +234,7 @@ const settingsSchema = new mongoose.Schema(
       orderConfirmation: { subject: { type: String, default: "" }, body: { type: String, default: "" } },
       orderShipped: { subject: { type: String, default: "" }, body: { type: String, default: "" } },
       passwordReset: { subject: { type: String, default: "" }, body: { type: String, default: "" } },
+      abandonedCart: { subject: { type: String, default: "" }, body: { type: String, default: "" } },
     },
     aboutPage: {
       hero: {
@@ -374,8 +382,18 @@ const settingsSchema = new mongoose.Schema(
           type: String,
           default: `Assalam o Alaikum {customerName}! 🚗
 
-Your order from *Crazzycars.pk* is ready — please confirm:
+*Crazzycars.pk* — please confirm your order:
 
+❓ *Is your order confirmed?*
+Tap one option below:
+
+✅ *YES — Confirm my order:*
+{confirmOrderUrl}
+
+❌ *NO — Cancel / not confirm:*
+{cancelOrderUrl}
+
+————————————
 📦 *Order:* #{orderNumber}
 📅 *Date:* {orderDate}
 
@@ -399,16 +417,11 @@ Shipping: {shipping}
 {trackingSection}
 Need help? Call us: 📞 {storePhone}
 
-————————————
-📋 *Confirm your order (tap a link):*
-✅ *Confirm order:* {confirmOrderUrl}
-❌ *Not confirm / Cancel:* {cancelOrderUrl}
-
-Or reply:
+Or reply with:
 1️⃣ CONFIRM
 2️⃣ CANCEL
 
-Thank you for shopping with Crazzycars.pk! 🚗✨`,
+Shukriya — Crazzycars.pk 🚗✨`,
         },
       },
       adminNewOrder: {
@@ -462,6 +475,27 @@ Your Crazzycars.pk order #{orderNumber} has been shipped via *{courier}*!
 Questions? Call: 📞 {storePhone}
 
 Thank you! 🚗✨`,
+        },
+      },
+      abandonedCart: {
+        enabled: { type: Boolean, default: true },
+        template: {
+          type: String,
+          default: `Assalam o Alaikum {customerName}! 🚗
+
+You left items in your *Crazzycars.pk* cart:
+
+🛍️ *Items:*
+{itemsList}
+
+💰 *Cart total:* Rs. {subtotal}
+
+Complete your order here:
+{recoverUrl}
+
+Need help? Call {storePhone}
+
+Shukriya — Crazzycars.pk ✨`,
         },
       },
     },
@@ -640,6 +674,7 @@ Thank you! 🚗✨`,
           {
             label: { type: String, default: "" },
             filter: { type: String, default: "all" },
+            maxPrice: { type: Number, default: null },
             enabled: { type: Boolean, default: true },
             order: { type: Number, default: 0 },
           },
@@ -648,6 +683,7 @@ Thank you! 🚗✨`,
       bestSellers: {
         enabled: { type: Boolean, default: true },
         title: { type: String, default: "Best Sellers" },
+        productIds: [{ type: String }],
         tabs: [
           {
             label: { type: String, default: "" },

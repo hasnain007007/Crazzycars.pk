@@ -729,6 +729,101 @@ a {
   padding: var(--section-gap-sm) 0;
 }
 
+/* Homepage — Shop by Category tiles (override global h3 size) */
+.home-category-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #f3f4f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.home-category-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.home-category-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.home-category-card:hover .home-category-card__img {
+  transform: scale(1.05);
+}
+
+.home-category-card__icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.home-category-card__fade {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 42%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.22) 42%,
+    rgba(0, 0, 0, 0.62) 100%
+  );
+  pointer-events: none;
+}
+
+.home-category-card__label {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 10px 10px 9px;
+}
+
+.home-category-card__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0;
+  color: #ffffff !important;
+  font-family: var(--font-heading), "Rajdhani", sans-serif;
+  font-size: 11px !important;
+  font-weight: 650;
+  line-height: 1.25 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+@media (min-width: 640px) {
+  .home-category-card__label {
+    padding: 11px 12px 10px;
+  }
+
+  .home-category-card__title {
+    font-size: 12px !important;
+    letter-spacing: 0.045em;
+  }
+}
+
+@media (min-width: 1280px) {
+  .home-category-card__title {
+    font-size: 12.5px !important;
+  }
+}
+
 .homepage-section {
   padding-top: var(--section-gap);
   padding-bottom: var(--section-gap);
@@ -1378,10 +1473,10 @@ textarea::placeholder {
     width: 100% !important;
   }
 
-  /* Touch targets — skip absolute icon buttons (search submit, etc.) and
-     line-clamped text links where min-height exposes a clipped sliver. */
-  button:not(.absolute):not([class*="absolute"]),
-  a:not([class*="line-clamp"]):not(.absolute):not([class*="absolute"]) {
+  /* Touch targets — skip absolute icon buttons (search submit, etc.),
+     hero CTAs, hero slider dots, and line-clamped text links. */
+  button:not(.absolute):not([class*="absolute"]):not(.home-hero__btn):not(.home-hero__dot),
+  a:not([class*="line-clamp"]):not(.absolute):not([class*="absolute"]):not(.home-hero__btn) {
     min-height: 44px;
   }
 }
@@ -1645,6 +1740,59 @@ textarea::placeholder {
     linear-gradient(145deg, #080808 0%, #141414 48%, #1a0c0c 100%);
 }
 
+/* Sliding carousel track */
+.home-hero__viewport {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.home-hero--dragging .home-hero__viewport {
+  cursor: grabbing;
+  touch-action: none;
+}
+
+.home-hero:not(.home-hero--carousel) .home-hero__viewport {
+  cursor: default;
+}
+
+.home-hero__track {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.home-hero__slide {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0b0b0b;
+}
+
+.home-hero--h-auto .home-hero__viewport {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+}
+
+.home-hero--h-auto .home-hero__track {
+  align-items: stretch;
+  height: auto;
+}
+
+.home-hero--h-auto .home-hero__slide {
+  height: auto;
+  min-height: 0;
+}
+
 .home-hero__media {
   position: absolute;
   inset: 0;
@@ -1666,6 +1814,10 @@ textarea::placeholder {
 /* Designed (image-only) banners: full-bleed artwork, no empty side panels */
 .home-hero--image-only.home-hero--h-auto {
   background: #0b0b0b;
+}
+
+.home-hero__slide--image-only .home-hero__veil:not(.home-hero__veil--admin) {
+  display: none;
 }
 
 .home-hero__media--gradient {
@@ -1725,10 +1877,31 @@ textarea::placeholder {
   transform: scale(1.04);
 }
 
+.home-hero__copy {
+  animation: home-hero-copy-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes home-hero-copy-in {
+  from {
+    opacity: 0;
+    transform: translate3d(18px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.home-hero__slide:not(.is-active) .home-hero__copy {
+  animation: none;
+  opacity: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-hero--loading,
   .home-hero__img,
-  .home-hero__copy {
+  .home-hero__copy,
+  .home-hero__track {
     animation: none !important;
     transition: none !important;
   }
@@ -1736,6 +1909,10 @@ textarea::placeholder {
     transform: none;
   }
   .home-hero--hover-zoom:hover .home-hero__img {
+    transform: none;
+  }
+  .home-hero__copy {
+    opacity: 1;
     transform: none;
   }
 }
@@ -1777,14 +1954,16 @@ textarea::placeholder {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 40px 24px 52px;
+  /* Extra left inset so CTAs aren't flush against the edge */
+  padding: 40px 24px 52px clamp(36px, 9vw, 96px);
 }
 
 .home-hero__copy {
   max-width: 34rem;
   width: 100%;
-  margin: 0 auto;
-  padding: 0 max(0px, calc((100% - 1280px) / 2));
+  margin: 0;
+  margin-right: auto;
+  padding: 0;
   animation: home-hero-rise 0.55s ease-out both;
 }
 
@@ -1793,6 +1972,7 @@ textarea::placeholder {
   align-items: flex-end;
   justify-content: flex-start;
   padding-bottom: clamp(28px, 5vw, 48px);
+  padding-left: clamp(48px, 12vw, 140px);
 }
 
 .home-hero__copy--ctas-only {
@@ -1896,7 +2076,7 @@ textarea::placeholder {
 .home-hero__arrow {
   position: absolute;
   top: 50%;
-  z-index: 3;
+  z-index: 4;
   transform: translateY(-50%);
   width: 44px;
   height: 44px;
@@ -1927,26 +2107,35 @@ textarea::placeholder {
   position: absolute;
   left: 50%;
   bottom: 16px;
-  z-index: 3;
+  z-index: 4;
   display: flex;
   gap: 8px;
   transform: translateX(-50%);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
 }
 
-.home-hero__dots button {
+.home-hero__dots button,
+.home-hero__dot {
   width: 8px;
   height: 8px;
+  min-width: 8px;
+  min-height: 8px !important;
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.55);
   cursor: pointer;
   transition: width 0.25s ease, background 0.25s ease;
 }
 
-.home-hero__dots button.is-active {
+.home-hero__dots button.is-active,
+.home-hero__dot.is-active {
   width: 24px;
-  background: var(--hero-accent);
+  min-width: 24px;
+  background: #fff;
 }
 
 /* Trust utility rail under hero (not overlay chips on media) */
@@ -1994,7 +2183,11 @@ textarea::placeholder {
 
   .home-hero__inner {
     align-items: center;
-    padding: 56px 8% 64px;
+    padding: 56px 8% 64px clamp(64px, 12vw, 160px);
+  }
+
+  .home-hero--ctas-only .home-hero__inner {
+    padding-left: clamp(72px, 14vw, 180px);
   }
 
   .home-hero__sub {
@@ -2004,26 +2197,67 @@ textarea::placeholder {
 
 @media (max-width: 768px) {
   .home-hero--loading {
-    min-height: min(52vh, 420px);
+    min-height: min(58vh, 460px);
+  }
+
+  /*
+   * Ultrawide designed banners (~2.5:1) collapse to ~150px with height:auto.
+   * Tall cover media + CTA bar BELOW the art (not overlaid) so baked-in
+   * headline/icons stay readable and buttons don't eat the banner.
+   */
+  .home-hero--image-only.home-hero--h-auto {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .home-hero--carousel.home-hero--image-only.home-hero--h-auto .home-hero__viewport {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .home-hero--image-only.home-hero--h-auto .home-hero__media {
+    position: relative;
+    inset: auto;
+    flex: 0 0 auto;
+    width: 100%;
+    /* Tall enough to feel premium, short enough that left-side designed
+       copy ("Upgrade Your Ride") still fits in the cover crop. */
+    height: min(48vh, 400px);
+    min-height: 340px;
+    max-height: 440px;
+    line-height: normal;
+  }
+
+  .home-hero--image-only.home-hero--h-auto .home-hero__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Flush left so baked-in "CRAZZYCARS.PK" / headline aren't clipped */
+    object-position: left center;
   }
 
   .home-hero__inner {
     align-items: flex-end;
-    padding: 16px 14px 14px;
+    padding: 16px 14px 14px 28px;
   }
 
-  /* Designed banner + CTAs: keep artwork visible; pin compact bar to bottom */
+  /* CTA bar under artwork — compact, premium, full-width */
   .home-hero--ctas-only .home-hero__inner {
-    align-items: flex-end;
+    position: relative;
+    inset: auto;
+    z-index: 2;
+    display: flex;
+    align-items: stretch;
     justify-content: stretch;
+    width: 100%;
     padding: 0;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      transparent 42%,
-      rgba(0, 0, 0, 0.35) 72%,
-      rgba(0, 0, 0, 0.72) 100%
-    );
+    background: #0f0f0f;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .home-hero--ctas-only .home-hero__copy--ctas-only {
@@ -2043,11 +2277,15 @@ textarea::placeholder {
     flex: 1 1 0;
     width: auto;
     max-width: none;
-    min-height: 40px;
+    height: 38px;
+    min-height: 38px !important;
+    max-height: 38px;
     padding: 0 10px;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    border-radius: 8px;
+    box-shadow: none;
+    line-height: 1;
   }
 
   .home-hero__veil {
@@ -2099,7 +2337,28 @@ textarea::placeholder {
   }
 
   .home-hero__dots {
-    bottom: 8px;
+    bottom: 10px;
+    gap: 5px;
+    padding: 4px 8px;
+  }
+
+  .home-hero__dots button,
+  .home-hero__dot {
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    min-height: 6px !important;
+  }
+
+  .home-hero__dots button.is-active,
+  .home-hero__dot.is-active {
+    width: 16px;
+    min-width: 16px;
+  }
+
+  .home-hero--ctas-only.home-hero--image-only .home-hero__dots {
+    bottom: auto;
+    top: calc(min(48vh, 400px) - 18px);
   }
 
   .home-hero-rail__list {

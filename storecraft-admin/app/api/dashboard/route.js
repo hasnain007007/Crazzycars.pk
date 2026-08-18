@@ -10,7 +10,9 @@ import {
   formatYmdUtc,
   resolveDashboardRange,
 } from "@/lib/dashboardRanges";
+import { karachiDayBounds, karachiDayKey, shiftDayKey } from "@/lib/karachiDay";
 import Customer from "@/lib/models/Customer.model";
+import DailyVisitor from "@/lib/models/DailyVisitor.model";
 import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
@@ -23,14 +25,6 @@ function dateMatch(from, to) {
   if (from) createdAt.$gte = from;
   if (to) createdAt.$lte = to;
   return { createdAt };
-}
-
-function utcStartOfDay(d) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
-}
-
-function utcEndOfDay(d) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
 }
 
 function pctChange(current, previous) {
@@ -99,14 +93,18 @@ export async function GET(request) {
     const period = dateMatch(range.from, range.to);
 
     const now = new Date();
-    const todayStart = utcStartOfDay(now);
-    const todayEnd = utcEndOfDay(now);
-    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
-    const lastMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1, 0, 0, 0, 0));
-    const lastMonthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0, 23, 59, 59, 999));
-    const yesterdayStart = new Date(todayStart);
-    yesterdayStart.setUTCDate(yesterdayStart.getUTCDate() - 1);
-    const yesterdayEnd = utcEndOfDay(yesterdayStart);
+    const todayKey = karachiDayKey(now);
+    const yesterdayKey = shiftDayKey(todayKey, -1);
+    const { start: todayStart, end: todayEnd } = karachiDayBounds(todayKey);
+    const { start: yesterdayStart, end: yesterdayEnd } = karachiDayBounds(yesterdayKey);
+    // Month bounds in Pakistan time (YYYY-MM from todayKey)
+    const [ty, tm] = todayKey.split("-").map(Number);
+    const monthStart = new Date(`${ty}-${String(tm).padStart(2, "0")}-01T00:00:00+05:00`);
+    const prevMonth = tm === 1 ? { y: ty - 1, m: 12 } : { y: ty, m: tm - 1 };
+    const lastMonthStart = new Date(
+      `${prevMonth.y}-${String(prevMonth.m).padStart(2, "0")}-01T00:00:00+05:00`
+    );
+    const lastMonthEnd = new Date(monthStart.getTime() - 1);
 
     const sellMatch = {
       ...period,
@@ -145,12 +143,16 @@ export async function GET(request) {
       profitOrders,
       todayPaidAgg,
       todayOrderCount,
+      todayOrderValueAgg,
       yesterdayPaidAgg,
+      yesterdayOrderCount,
       monthPaidAgg,
       lastMonthPaidAgg,
       paymentAgg,
       weekdayAgg,
       categoryOrders,
+      todayVisitorCount,
+      yesterdayVisitorCount,
     ] = await Promise.all([
       Order.aggregate([{ $match: paidMatch }, { $group: { _id: null, total: sumTotal } }]),
       Order.countDocuments(period),
@@ -219,6 +221,12 @@ export async function GET(request) {
       Order.countDocuments({ createdAt: { $gte: todayStart, $lte: todayEnd } }),
       Order.aggregate([
         {
+          $match: { createdAt: { $gte: todayStart, $lte: todayEnd } },
+        },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
+      Order.aggregate([
+        {
           $match: {
             paymentStatus: "paid",
             createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
@@ -226,6 +234,7 @@ export async function GET(request) {
         },
         { $group: { _id: null, total: sumTotal } },
       ]),
+      Order.countDocuments({ createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } }),
       Order.aggregate([
         {
           $match: {
@@ -259,11 +268,7 @@ export async function GET(request) {
           $match: {
             paymentStatus: "paid",
             createdAt: {
-              $gte: (() => {
-                const d = new Date(todayStart);
-                d.setUTCDate(d.getUTCDate() - 6);
-                return d;
-              })(),
+              $gte: new Date(todayStart.getTime() - 6 * 24 * 60 * 60 * 1000),
               $lte: todayEnd,
             },
           },
@@ -297,12 +302,15 @@ export async function GET(request) {
       Order.find(sellMatch)
         .select("items.productId items.quantity items.unitPrice items.name")
         .lean(),
+      DailyVisitor.countDocuments({ dayKey: todayKey }),
+      DailyVisitor.countDocuments({ dayKey: yesterdayKey }),
     ]);
 
     const periodSales = periodSalesAgg[0]?.total ?? 0;
     const totalRevenue = paidRevenueAgg[0]?.total ?? 0;
     const totalSell = totalSellAgg[0]?.total ?? 0;
     const calendarTodaySales = todayPaidAgg[0]?.total ?? 0;
+    const todayOrderValue = todayOrderValueAgg[0]?.total ?? 0;
     const yesterdaySales = yesterdayPaidAgg[0]?.total ?? 0;
     const thisMonthRevenue = monthPaidAgg[0]?.total ?? 0;
     const lastMonthRevenue = lastMonthPaidAgg[0]?.total ?? 0;
@@ -530,10 +538,17 @@ export async function GET(request) {
         periodOrders: periodOrdersCount,
         todaySales: calendarTodaySales,
         todayOrders: todayOrderCount,
+        todayOrderValue,
         todaySalesGrowth: pctChange(calendarTodaySales, yesterdaySales),
+        todayOrdersGrowth: pctChange(todayOrderCount, yesterdayOrderCount),
+        todayVisitors: todayVisitorCount,
+        yesterdayVisitors: yesterdayVisitorCount,
+        todayVisitorsGrowth: pctChange(todayVisitorCount, yesterdayVisitorCount),
         monthlyRevenue: thisMonthRevenue,
         lastMonthRevenue,
         monthlyGrowth: pctChange(thisMonthRevenue, lastMonthRevenue),
+        timezone: "Asia/Karachi",
+        todayKey,
         totalRevenue,
         totalSell,
         totalProfit,

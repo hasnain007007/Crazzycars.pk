@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request) {
   try {
     const user = await getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessMinRole(user, "staff");
     if (denied) return denied;
 
     await dbConnect();
@@ -83,7 +83,7 @@ export async function GET(request) {
 export async function PATCH(request) {
   try {
     const user = await getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessMinRole(user, "staff");
     if (denied) return denied;
 
     const body = await request.json().catch(() => ({}));

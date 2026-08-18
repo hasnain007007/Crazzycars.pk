@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { cartLinesAdd, cartLinesRemove, cartLinesUpdate, getCart } from "@/lib/shopifyCartClient";
 import { resolveProductContentId, trackAddToCart } from "@/lib/metaPixel";
+import { syncCartToServer } from "@/lib/cartSyncClient";
 
 const STORAGE_KEY = "cart_items";
 const LEGACY_STORAGE_KEY = "sialkot_store_cart_v1";
@@ -72,11 +73,13 @@ export function CartProvider({ children, shopifyEnabled = false }) {
   const [open, setOpen] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState("");
   const [shopifyActive, setShopifyActive] = useState(false);
+  const [cartReady, setCartReady] = useState(false);
 
   useEffect(() => {
     // Hydrate cart from localStorage after mount (avoid SSR/client cart mismatch).
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time browser read
     setItems(loadCart());
+    setCartReady(true);
   }, []);
 
   useEffect(() => {
@@ -100,6 +103,23 @@ export function CartProvider({ children, shopifyEnabled = false }) {
   useEffect(() => {
     saveCart(items);
   }, [items]);
+
+  // Debounced server sync for abandoned-cart recovery
+  const syncTimer = useRef(null);
+  useEffect(() => {
+    if (!cartReady) return;
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => {
+      syncCartToServer({ items });
+    }, 1200);
+    return () => {
+      if (syncTimer.current) clearTimeout(syncTimer.current);
+    };
+  }, [items, cartReady]);
+
+  const replaceItems = useCallback((nextItems) => {
+    setItems(Array.isArray(nextItems) ? nextItems : []);
+  }, []);
 
   const addItem = useCallback(async (productOrRow, quantityArg = 1) => {
     const row = productOrRow || {};
@@ -299,6 +319,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
       updateQty,
       removeLine,
       clearCart,
+      replaceItems,
     }),
     [
       items,
@@ -315,6 +336,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
       updateQty,
       removeLine,
       clearCart,
+      replaceItems,
     ]
   );
 

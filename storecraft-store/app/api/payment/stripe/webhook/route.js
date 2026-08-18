@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
-import { recordEmailSent, resolveOrderConfirmationEmail, sendEmail, sendAdminOrderNotification } from "@/lib/email";
+import { sendAdminOrderNotification, sendCustomerOrderConfirmation } from "@/lib/email";
 
 async function getStripeConfig() {
   try {
@@ -51,12 +51,14 @@ export async function POST(req) {
   let event;
 
   try {
-    if (webhookSecret && signature) {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } else {
-      console.warn("No webhook secret or stripe-signature — skipping signature verification");
-      event = JSON.parse(body);
+    if (!webhookSecret) {
+      console.error("Stripe webhook secret not configured");
+      return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
     }
+    if (!signature) {
+      return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
+    }
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (e) {
     console.error("Webhook signature error:", e.message);
     return NextResponse.json({ error: `Webhook error: ${e.message}` }, { status: 400 });
@@ -90,24 +92,14 @@ export async function POST(req) {
           console.log("Order updated to paid:", orderId);
 
           const paidOrder = await Order.findById(orderId).lean();
-          if (paidOrder?.customer?.email) {
+          if (paidOrder) {
             const siteSettings =
               (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).select("general").lean()) || {};
-            const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk';
+            const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
             const logoUrl = siteSettings?.general?.logo?.url || "";
-            resolveOrderConfirmationEmail(paidOrder, storeName, logoUrl)
-              .then(({ subject, html: emailHtml }) =>
-                sendEmail({
-                  to: paidOrder.customer.email,
-                  subject,
-                  html: emailHtml,
-                }).then(async (sent) => {
-                  if (sent?.success) {
-                    await recordEmailSent(orderId, "order_confirmation", subject, paidOrder.customer.email);
-                  }
-                })
-              )
-              .catch((e) => console.error("Stripe order email failed:", e));
+            sendCustomerOrderConfirmation(paidOrder, { storeName, logoUrl }).catch((e) =>
+              console.error("Stripe order email failed:", e)
+            );
             sendAdminOrderNotification(paidOrder).catch((e) =>
               console.error("Stripe admin notification failed:", e)
             );

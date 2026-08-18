@@ -8,18 +8,59 @@ import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods"
 /** Resend sandbox sender — works before a custom domain is verified. */
 export const RESEND_SANDBOX_FROM = "Crazzycars.pk <onboarding@resend.dev>";
 
+/** Default staff inbox when Settings / env are empty. */
+export const DEFAULT_ORDER_ADMIN_EMAIL = "ordersatall@gmail.com";
+
 /** Resend-verified sender (use FROM_EMAIL env once domain is verified). */
 export function getFromEmail() {
   const raw = String(process.env.FROM_EMAIL || "").trim();
   return raw || null;
 }
 
-/** Admin inbox for order alerts and test emails. */
+/**
+ * Sync helper — env only (tests / debug). Prefer resolveAdminOrderEmail() at runtime.
+ */
 export function getAdminEmail() {
+  // Prefer ADMIN_EMAIL for order/staff alerts; CONTACT_EMAIL is used by the contact form.
   return (
-    String(process.env.CONTACT_EMAIL || "").trim() ||
     String(process.env.ADMIN_EMAIL || "").trim() ||
-    "delivered@resend.dev"
+    String(process.env.CONTACT_EMAIL || "").trim() ||
+    DEFAULT_ORDER_ADMIN_EMAIL
+  );
+}
+
+/**
+ * Resolve new-order admin inbox from Settings → env → default.
+ * Respects notifications.emailOnNewOrder.
+ */
+export async function resolveAdminOrderEmail() {
+  try {
+    await dbConnect();
+    const doc =
+      (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY })
+        .select("notifications")
+        .lean()) || (await Settings.findOne({}).select("notifications").lean());
+    const n = doc?.notifications || {};
+    if (n.emailOnNewOrder === false) {
+      return { enabled: false, email: "" };
+    }
+    const fromSettings = String(n.notificationEmail || "").trim().toLowerCase();
+    if (fromSettings && fromSettings.includes("@")) {
+      return { enabled: true, email: fromSettings };
+    }
+  } catch (e) {
+    console.error("[email] resolveAdminOrderEmail settings:", e?.message || e);
+  }
+  return { enabled: true, email: getAdminEmail() };
+}
+
+/** True if this order already logged a successful email of the given type. */
+export function orderHasEmailType(order, emailType) {
+  const history = Array.isArray(order?.emailHistory) ? order.emailHistory : [];
+  return history.some(
+    (e) =>
+      String(e?.type || "") === String(emailType) &&
+      String(e?.status || "sent") !== "failed"
   );
 }
 
@@ -169,14 +210,69 @@ export async function recordEmailSent(orderId, emailType, subject, to, resultSta
   }
 }
 
+function buildAdminOrderItemsRows(order) {
+  const items = Array.isArray(order?.items) ? order.items : [];
+  if (!items.length) {
+    return `<tr><td colspan="3" style="padding:12px 8px;font-size:13px;color:#888;">No line items</td></tr>`;
+  }
+  return items
+    .map((item) => {
+      const qty = Math.max(1, Number(item.quantity) || 1);
+      const unit = Number(item.unitPrice ?? item.price ?? 0) || 0;
+      const lineTotal = unit * qty;
+      const variation = item.variation || item.variant || item.option || "";
+      const sku = item.sku || item.articleNo || "";
+      return `
+    <tr>
+      <td style="padding:12px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top;">
+        ${item.image ? `<img src="${item.image}" alt="" width="52" height="52" style="border-radius:4px;display:block;object-fit:cover;" />` : ""}
+      </td>
+      <td style="padding:12px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top;">
+        <p style="margin:0;font-size:14px;color:#111;font-weight:600;">${item.name || "Product"}</p>
+        ${variation ? `<p style="margin:3px 0 0;font-size:12px;color:#888;">${variation}</p>` : ""}
+        ${sku ? `<p style="margin:3px 0 0;font-size:11px;color:#aaa;">SKU: ${sku}</p>` : ""}
+        <p style="margin:4px 0 0;font-size:12px;color:#555;">Qty: <strong>${qty}</strong> · ${formatPrice(unit)} each</p>
+      </td>
+      <td style="padding:12px 8px;border-bottom:1px solid #f0f0f0;text-align:right;vertical-align:top;white-space:nowrap;">
+        <p style="margin:0;font-size:14px;font-weight:700;color:#111;">${formatPrice(lineTotal)}</p>
+      </td>
+    </tr>`;
+    })
+    .join("");
+}
+
 export async function sendAdminOrderNotification(order) {
-  const adminEmail = getAdminEmail();
-  const storeName = process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+  const { enabled, email: adminEmail } = await resolveAdminOrderEmail();
+  if (!enabled) {
+    return { success: false, skipped: true, error: "Admin new-order email disabled in Settings" };
+  }
+  if (!adminEmail) {
+    return { success: false, error: "No admin notification email configured" };
+  }
+  if (orderHasEmailType(order, "admin_new_order")) {
+    return { success: true, skipped: true, error: "Admin already notified for this order" };
+  }
+
+  const storeName = process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`;
+  const adminBase = String(process.env.NEXT_PUBLIC_ADMIN_URL || "https://admin.crazzycars.pk").replace(
+    /\/$/,
+    ""
+  );
+  const orderId = order?._id ? String(order._id) : "";
+  const orderUrl = orderId ? `${adminBase}/orders/${orderId}` : `${adminBase}/orders`;
+  const addr = order?.shippingAddress || {};
+  const pricing = order?.pricing || {};
+  const subtotal = Number(pricing.subtotal ?? order?.subtotal ?? 0) || 0;
+  const shipping = Number(pricing.shippingCost ?? pricing.shipping ?? 0) || 0;
+  const total = Number(pricing.total ?? order?.total ?? 0) || 0;
+  const addressLine = [addr.street, addr.line1, addr.address, addr.area]
+    .filter(Boolean)
+    .join(", ");
 
   const html = `
     <!DOCTYPE html>
     <html>
-    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
     <body style="margin:0;padding:0;background:#f8f8f8;font-family:'DM Sans',Arial,sans-serif;">
       <div style="max-width:600px;margin:0 auto;background:#ffffff;">
         <div style="background:#111111;padding:24px 40px;text-align:center;">
@@ -195,37 +291,65 @@ export async function sendAdminOrderNotification(order) {
             <tr>
               <td style="padding:6px 0;font-size:14px;color:#888;">Customer</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.customer?.name || ""}
+                ${order.customer?.name || addr.name || ""}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;font-size:14px;color:#888;">Phone</td>
+              <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
+                ${order.customer?.phone || addr.phone || ""}
               </td>
             </tr>
             <tr>
               <td style="padding:6px 0;font-size:14px;color:#888;">Email</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.customer?.email || ""}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;">Total</td>
-              <td style="padding:6px 0;font-size:16px;font-weight:700;color:#111;text-align:right;">
-                ${formatPrice(order.pricing?.total || order.total || 0)}
+                ${order.customer?.email || "—"}
               </td>
             </tr>
             <tr>
               <td style="padding:6px 0;font-size:14px;color:#888;">Payment</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.paymentMethod || "N/A"}
+                ${order.paymentMethod || "N/A"} · ${order.paymentStatus || ""}
               </td>
             </tr>
             <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;">City</td>
+              <td style="padding:6px 0;font-size:14px;color:#888;vertical-align:top;">Ship to</td>
               <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.shippingAddress?.city || ""}, ${order.shippingAddress?.country || ""}
+                ${addressLine || "—"}<br/>
+                ${[addr.city, addr.province || addr.state, addr.country].filter(Boolean).join(", ")}
               </td>
             </tr>
           </table>
+
+          <h2 style="margin:28px 0 12px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#888;">
+            Products
+          </h2>
+          <table style="width:100%;border-collapse:collapse;">
+            ${buildAdminOrderItemsRows(order)}
+          </table>
+
+          <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+            <tr>
+              <td style="padding:4px 0;font-size:13px;color:#888;">Subtotal</td>
+              <td style="padding:4px 0;font-size:13px;color:#111;text-align:right;">${formatPrice(subtotal)}</td>
+            </tr>
+            <tr>
+              <td style="padding:4px 0;font-size:13px;color:#888;">Shipping</td>
+              <td style="padding:4px 0;font-size:13px;color:#111;text-align:right;">
+                ${shipping === 0 ? "FREE" : formatPrice(shipping)}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0 0;font-size:15px;font-weight:700;color:#111;border-top:1px solid #eee;">Grand Total</td>
+              <td style="padding:10px 0 0;font-size:16px;font-weight:700;color:#111;text-align:right;border-top:1px solid #eee;">
+                ${formatPrice(total)}
+              </td>
+            </tr>
+          </table>
+
           <div style="text-align:center;margin-top:24px;">
-            <a href="${process.env.NEXT_PUBLIC_ADMIN_URL || process.env.NEXT_PUBLIC_ADMIN_URL}/orders"
-              style="display:inline-block;padding:12px 28px;background:#009688;color:#fff;text-decoration:none;font-weight:700;border-radius:6px;font-size:13px;">
+            <a href="${orderUrl}"
+              style="display:inline-block;padding:12px 28px;background:#C41E1E;color:#fff;text-decoration:none;font-weight:700;border-radius:6px;font-size:13px;">
               View Order in Admin
             </a>
           </div>
@@ -240,11 +364,37 @@ export async function sendAdminOrderNotification(order) {
     </html>
   `;
 
-  return sendEmail({
+  const subject = `New Order: ${order.orderNumber || order._id} - ${formatPrice(total)}`;
+  const sent = await sendEmail({
     to: adminEmail,
-    subject: `New Order: ${order.orderNumber || order._id} - ${formatPrice(order.pricing?.total || order.total || 0)}`,
+    subject,
     html,
   });
+  if (sent?.success && order?._id) {
+    await recordEmailSent(order._id, "admin_new_order", subject, adminEmail);
+  }
+  return sent;
+}
+
+/**
+ * Send customer order confirmation once per order (skips if already in emailHistory).
+ */
+export async function sendCustomerOrderConfirmation(order, { storeName, logoUrl } = {}) {
+  const to = String(order?.customer?.email || "").trim().toLowerCase();
+  if (!to || !to.includes("@") || to.includes("@guest.")) {
+    return { success: false, skipped: true, error: "No customer email" };
+  }
+  if (orderHasEmailType(order, "order_confirmation")) {
+    return { success: true, skipped: true, error: "Confirmation already sent" };
+  }
+  const name =
+    storeName || process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const { subject, html } = await resolveOrderConfirmationEmail(order, name, logoUrl || "");
+  const sent = await sendEmail({ to, subject, html });
+  if (sent?.success && order?._id) {
+    await recordEmailSent(order._id, "order_confirmation", subject, to);
+  }
+  return sent;
 }
 
 function applyTemplateVars(str, vars = {}) {

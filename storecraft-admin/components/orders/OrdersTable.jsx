@@ -6,63 +6,38 @@
 import Link from "next/link";
 import { useCallback, useMemo, useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
 import { orderStatusBadgeClass, paymentStatusBadgeClass } from "@/lib/orderUi";
 import { BulkActionBar } from "./BulkActionBar";
 import { formatAdminPrice } from "@/lib/currency";
-import { getAdminWhatsAppNumber, openWhatsAppWithOptionalImage } from "@/components/orders/OrderWhatsAppButton";
-import { buildWhatsAppMessage, resolveTemplate } from "@/lib/whatsappTemplates";
-
-function adminOrderDetailUrl(order) {
-  const orderId = order?.id || order?._id || "";
-  const base =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL || "";
-  if (!base || !orderId) return "";
-  return `${String(base).replace(/\/$/, "")}/orders/${orderId}`;
-}
-
-function buildAdminOrderNotifyVariables(order, extras = {}) {
-  const addr = order?.shippingAddress || {};
-  const items = Array.isArray(order?.items) ? order.items : [];
-  const total = Number(order?.pricing?.total ?? order?.total ?? 0);
-  const imageBlock = items
-    .filter((i) => i?.image)
-    .map((i) => `🖼️ ${String(i.name || "Item").slice(0, 60)}:\n${i.image}`)
-    .join("\n\n");
-  return {
-    customerName: String(addr.name ?? "").trim() || "—",
-    customerPhone: String(addr.phone ?? "").trim() || "—",
-    orderNumber: String(order?.orderNumber ?? ""),
-    city: String(addr.city ?? "").trim() || "—",
-    province: String(addr.state ?? addr.province ?? "").trim() || "—",
-    itemsList:
-      items.map((i) => `• ${i.quantity ?? 1}x ${i.name ?? "Item"}`).join("\n") || "—",
-    productImages: imageBlock ? `📸 *Product photos:*\n${imageBlock}` : "",
-    total: total.toLocaleString("en-PK"),
-    paymentMethod: String(order?.paymentMethod ?? order?.payment?.method ?? "—"),
-    address: String(addr.street ?? addr.line1 ?? addr.address ?? "").trim() || "—",
-    adminOrderUrl: adminOrderDetailUrl(order),
-    confirmOrderUrl: extras.confirmUrl || adminOrderDetailUrl(order),
-    cancelOrderUrl: extras.cancelUrl || adminOrderDetailUrl(order),
-  };
-}
-
-function getAdminNotifyMessage(order, settings, extras = {}) {
-  const { enabled, template } = resolveTemplate(settings, "adminNewOrder");
-  if (!enabled) return "";
-  return buildWhatsAppMessage(template, buildAdminOrderNotifyVariables(order, extras));
-}
 
 function formatMoney(n) {
   return formatAdminPrice(n);
 }
 
+function startOfLocalDay(value) {
+  const d = new Date(value);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Relative day labels for the last/next few days; no time. */
 function formatDate(d) {
   if (!d) return "—";
   try {
-    return new Date(d).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    const date = new Date(d);
+    if (Number.isNaN(date.getTime())) return "—";
+
+    const diffDays = Math.round(
+      (startOfLocalDay(date).getTime() - startOfLocalDay(new Date()).getTime()) / 86_400_000
+    );
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === -1) return "Yesterday";
+    if (Math.abs(diffDays) <= 4) {
+      return date.toLocaleDateString(undefined, { weekday: "long" });
+    }
+    return date.toLocaleDateString(undefined, { dateStyle: "medium" });
   } catch {
     return "—";
   }
@@ -71,25 +46,6 @@ function formatDate(d) {
 export function OrdersTable({ orders, page, totalPages, onPageChange, loading, onOrdersChanged }) {
   const router = useRouter();
   const [selected, setSelected] = useState({});
-  const [settings, setSettings] = useState(null);
-  const [waLoadingId, setWaLoadingId] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/settings", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled && data?.success) {
-          setSettings(data.settings || data.data || {});
-        }
-      })
-      .catch(() => {
-        /* ignore */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const pageIds = useMemo(() => (orders || []).map((o) => o.id), [orders]);
   const allOnPageSelected =
@@ -127,54 +83,6 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
   );
 
   const clearSelection = useCallback(() => setSelected({}), []);
-
-  const notifyAdminForOrder = useCallback(
-    async (orderId, e) => {
-      e?.stopPropagation?.();
-      e?.preventDefault?.();
-      const adminPhone = getAdminWhatsAppNumber(settings);
-      if (!adminPhone) {
-        toast.error("Set WhatsApp number in Settings → WhatsApp.");
-        return;
-      }
-      setWaLoadingId(orderId);
-      try {
-        const res = await fetch(`/api/orders/${orderId}`, { credentials: "include" });
-        const json = await res.json();
-        if (!res.ok || !json.success || !json.order) {
-          toast.error(json.error || "Could not load order.");
-          return;
-        }
-        let extras = {};
-        try {
-          const linkRes = await fetch(`/api/orders/${orderId}/wa-links`, { credentials: "include" });
-          const linkJson = await linkRes.json();
-          if (linkJson.success) {
-            extras = { confirmUrl: linkJson.confirmUrl, cancelUrl: linkJson.cancelUrl };
-          }
-        } catch {
-          /* optional */
-        }
-        const msg = getAdminNotifyMessage(json.order, settings || {}, extras);
-        if (!msg) {
-          toast.error("Admin new-order WhatsApp template is disabled.");
-          return;
-        }
-        const imageUrls = (json.order.items || []).map((i) => i.image).filter(Boolean);
-        const result = await openWhatsAppWithOptionalImage(adminPhone, msg, imageUrls);
-        if (!result.ok) {
-          toast.error("Could not open WhatsApp.");
-          return;
-        }
-        toast.success("WhatsApp opened — use Confirm/Cancel links in the message.");
-      } catch {
-        toast.error("Network error.");
-      } finally {
-        setWaLoadingId(null);
-      }
-    },
-    [settings]
-  );
 
   const getStoreSettings = useCallback(async () => {
     try {
@@ -235,7 +143,7 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <div className="overflow-x-auto">
-            <table className="min-w-[1040px] w-full text-left text-sm">
+            <table className="min-w-[1140px] w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-400">
               <tr>
                 <th className="w-10 px-3 py-3">
@@ -257,6 +165,7 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                 <th className="px-4 py-3">Total</th>
                 <th className="px-4 py-3">Order status</th>
                 <th className="px-4 py-3">Payment</th>
+                <th className="px-4 py-3">Live status</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -264,7 +173,7 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={10} className="px-4 py-3">
+                      <td colSpan={11} className="px-4 py-3">
                         <div className="h-4 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
                       </td>
                     </tr>
@@ -347,27 +256,31 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                             {o.paymentStatus}
                           </span>
                         </td>
+                        <td className="px-4 py-3">
+                          {o.liveStatus ? (
+                            <div>
+                              <div className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                                {o.liveStatus}
+                              </div>
+                              {o.liveLocation ? (
+                                <div className="mt-0.5 max-w-[160px] truncate text-[11px] text-slate-500" title={o.liveLocation}>
+                                  {o.liveLocation}
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : o.trackingNumber ? (
+                            <span className="text-[11px] text-slate-400">Not refreshed</span>
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="inline-flex items-center justify-end gap-1.5">
-                            <button
-                              type="button"
-                              title="Notify admin on WhatsApp"
-                              disabled={waLoadingId === o.id}
-                              onClick={(e) => notifyAdminForOrder(o.id, e)}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-[#25D366] text-white hover:bg-[#1da851] disabled:opacity-50 dark:border-slate-600"
-                              aria-label={`Notify admin for order ${o.orderNumber}`}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                              </svg>
-                            </button>
-                            <Link
-                              href={`/orders/${o.id}`}
-                              className="inline-flex rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-[#1d6fb8] hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:hover:bg-slate-800"
-                            >
-                              View
-                            </Link>
-                          </div>
+                          <Link
+                            href={`/orders/${o.id}`}
+                            className="inline-flex rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-[#1d6fb8] hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:hover:bg-slate-800"
+                          >
+                            View
+                          </Link>
                         </td>
                       </tr>
                     );

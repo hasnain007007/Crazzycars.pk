@@ -2,10 +2,30 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import AiAgentVisit from "@/lib/models/AiAgentVisit.model";
 import { AI_SOURCES, classifyAiTraffic } from "@/lib/aiAgentTraffic";
+import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
 
 export const dynamic = "force-dynamic";
 
 const ALLOWED_SOURCES = new Set(AI_SOURCES);
+
+/** Prefer dedicated secret; fall back to other server secrets so public ingest is never open. */
+export function resolveAiVisitIngestSecret() {
+  return String(
+    process.env.AI_VISIT_INGEST_SECRET ||
+      process.env.REVALIDATE_SECRET ||
+      process.env.CRON_SECRET ||
+      ""
+  ).trim();
+}
+
+function isAuthorizedIngest(request) {
+  const secret = resolveAiVisitIngestSecret();
+  const gotSecret = String(request.headers.get("x-ai-visit-secret") || "").trim();
+  if (secret && gotSecret && gotSecret === secret) return true;
+
+  const internal = String(request.headers.get("x-internal-ai-ingest") || "").trim();
+  return internal === AI_INGEST_INTERNAL_TOKEN;
+}
 
 /**
  * Internal ingest for AI-agent / AI-referrer visits.
@@ -13,12 +33,12 @@ const ALLOWED_SOURCES = new Set(AI_SOURCES);
  */
 export async function POST(request) {
   try {
-    const secret = String(process.env.AI_VISIT_INGEST_SECRET || "").trim();
-    if (secret) {
-      const got = String(request.headers.get("x-ai-visit-secret") || "").trim();
-      if (got !== secret) {
-        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    if (!isAuthorizedIngest(request)) {
+      const secret = resolveAiVisitIngestSecret();
+      if (!secret) {
+        return NextResponse.json({ success: false, error: "Ingest not configured" }, { status: 503 });
       }
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json().catch(() => ({}));

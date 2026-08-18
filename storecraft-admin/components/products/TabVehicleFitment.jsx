@@ -21,13 +21,49 @@ const YEAR_MAX = 2026;
 const QUICK_ADD_PRESETS = [
   { label: "All Honda Civic", make: "Honda", model: "Civic" },
   { label: "All Toyota Corolla", make: "Toyota", model: "Corolla" },
+  { label: "Toyota Corolla Cross", make: "Toyota", model: "Corolla Cross" },
   { label: "All Suzuki Alto", make: "Suzuki", model: "Alto" },
   { label: "All KIA Sportage", make: "KIA", model: "Sportage" },
   { label: "All Toyota Prado", make: "Toyota", model: "Prado" },
 ];
 
 const fieldClass =
-  "h-9 w-full rounded-lg border border-[#e5e7eb] bg-white px-2 text-sm text-[#111827] outline-none ring-[#1d6fb8]/25 focus:ring-2";
+  "h-11 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827] outline-none ring-[#1d6fb8]/25 focus:ring-2";
+
+/** Match all catalog generations for a family name (e.g. Corolla → E140, E170, E120…). */
+function findFamilyModels(carData, make, family) {
+  const list = carData?.[make] || [];
+  const needle = String(family || "")
+    .trim()
+    .toLowerCase();
+  if (!needle) return [];
+  return list.filter((m) => {
+    const model = String(m.model || "").trim().toLowerCase();
+    const nick = String(m.nickname || "").trim().toLowerCase();
+    const gen = String(m.generation || "").trim().toLowerCase();
+    if (model === needle) return true;
+    // "Corolla Axio", "Alto (Old)" — same family prefix, skip unrelated Cross SUVs
+    if (model.startsWith(`${needle} `) || model.startsWith(`${needle}(`) || model.startsWith(`${needle}-`)) {
+      if (needle === "corolla" && model.includes("cross")) return false;
+      return true;
+    }
+    if (nick === needle || gen === needle) return true;
+    return false;
+  });
+}
+
+function catalogModelLabel(entry, fallback = "") {
+  return String(entry?.nickname || entry?.generation || entry?.model || fallback || "").trim();
+}
+
+function vehicleKey(make, model, yearFrom, yearTo) {
+  return [
+    String(make || "").trim().toLowerCase(),
+    String(model || "").trim().toLowerCase(),
+    yearFrom ?? "",
+    yearTo ?? "",
+  ].join("|");
+}
 
 function FitmentTypeCard({ active, icon, title, description, onClick }) {
   return (
@@ -115,6 +151,7 @@ export default function TabVehicleFitment({ value, onChange }) {
   const [catalog, setCatalog] = useState({ makes: [], carData: {} });
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [catalogSearch, setCatalogSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [selected, setSelected] = useState(() => new Set());
   const [previewRowId, setPreviewRowId] = useState(null);
@@ -192,22 +229,118 @@ export default function TabVehicleFitment({ value, onChange }) {
     );
   }, [previewRowId, vc.vehicles, catalog.carData]);
 
-  const addVehicle = (preset) => {
-    const entry = preset
-      ? catalog.carData[preset.make]?.find(
-          (m) => m.model === preset.model || m.nickname === preset.model
-        )
-      : null;
+  /** Flat searchable list of every catalog model. */
+  const catalogFlat = useMemo(() => {
+    const rows = [];
+    for (const make of catalog.makes || []) {
+      for (const entry of catalog.carData[make] || []) {
+        const label = formatModelOptionLabel({ name: entry.model, ...entry });
+        const hay = [make, entry.model, entry.nickname, entry.generation, entry.slug, label]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        rows.push({ make, entry, label, hay });
+      }
+    }
+    return rows;
+  }, [catalog.makes, catalog.carData]);
+
+  const catalogSearchHits = useMemo(() => {
+    const q = catalogSearch.trim().toLowerCase();
+    if (q.length < 1) return [];
+    return catalogFlat.filter((r) => r.hay.includes(q)).slice(0, 12);
+  }, [catalogFlat, catalogSearch]);
+
+  const addCatalogEntry = (make, entry) => {
+    const modelVal = catalogModelLabel(entry, entry?.model || "");
+    const key = vehicleKey(make, modelVal, entry?.yearFrom, entry?.yearTo);
+    const exists = vc.vehicles.some(
+      (v) => vehicleKey(v.make, v.model, v.yearFrom, v.yearTo) === key
+    );
+    if (exists) {
+      toast.success(`${make} ${modelVal} already added`);
+      return;
+    }
     const row = {
-      _rowId: `row-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      make: preset?.make || "",
-      model: preset?.model || "",
+      _rowId: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      make,
+      model: modelVal,
       yearFrom: entry?.yearFrom ?? 1994,
       yearTo: entry?.yearTo ?? CURRENT_YEAR,
       bodyStyle: entry?.bodyStyle && BODY_STYLES.includes(entry.bodyStyle) ? entry.bodyStyle : "All",
-      notes: entry?.description || "",
+      notes: entry?.description || entry?.generation || entry?.model || "",
     };
     patch({ vehicles: [...vc.vehicles, row] });
+    setPreviewRowId(row._rowId);
+    setCatalogSearch("");
+    toast.success(`Added ${make} ${modelVal}`);
+  };
+
+  const addVehicle = (preset) => {
+    if (preset?.make && preset?.model) {
+      const matches = findFamilyModels(catalog.carData, preset.make, preset.model);
+      const sources =
+        matches.length > 0
+          ? matches
+          : [
+              {
+                model: preset.model,
+                nickname: "",
+                yearFrom: 1994,
+                yearTo: CURRENT_YEAR,
+                bodyStyle: "All",
+                description: "",
+                generation: "",
+              },
+            ];
+
+      const existing = new Set(
+        vc.vehicles.map((v) => vehicleKey(v.make, v.model, v.yearFrom, v.yearTo))
+      );
+      const newRows = [];
+      for (const entry of sources) {
+        const modelVal = catalogModelLabel(entry, preset.model);
+        const key = vehicleKey(preset.make, modelVal, entry.yearFrom, entry.yearTo);
+        if (existing.has(key)) continue;
+        existing.add(key);
+        newRows.push({
+          _rowId: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          make: preset.make,
+          model: modelVal,
+          yearFrom: entry.yearFrom ?? 1994,
+          yearTo: entry.yearTo ?? CURRENT_YEAR,
+          bodyStyle:
+            entry.bodyStyle && BODY_STYLES.includes(entry.bodyStyle) ? entry.bodyStyle : "All",
+          notes: entry.description || entry.generation || entry.model || "",
+        });
+      }
+
+      if (!newRows.length) {
+        toast.success(`All ${preset.model} generations already added`);
+        return;
+      }
+      patch({ vehicles: [...vc.vehicles, ...newRows] });
+      setPreviewRowId(newRows[0]._rowId);
+      toast.success(
+        newRows.length === 1
+          ? `Added ${preset.make} ${newRows[0].model}`
+          : `Added ${newRows.length} ${preset.make} ${preset.model} generations`
+      );
+      return;
+    }
+
+    // Blank draft row — kept in editor until make/model filled (save filters empties)
+    const row = {
+      _rowId: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      make: "",
+      model: "",
+      yearFrom: 1994,
+      yearTo: CURRENT_YEAR,
+      bodyStyle: "All",
+      notes: "",
+    };
+    patch({ vehicles: [...vc.vehicles, row] });
+    setPreviewRowId(row._rowId);
   };
 
   const removeRows = (ids) => {
@@ -220,12 +353,12 @@ export default function TabVehicleFitment({ value, onChange }) {
     let rows = vc.vehicles;
     const q = search.trim().toLowerCase();
     if (q) {
-      rows = rows.filter(
-        (r) =>
-          r.make.toLowerCase().includes(q) ||
-          r.model.toLowerCase().includes(q) ||
-          r.notes.toLowerCase().includes(q)
-      );
+      rows = rows.filter((r) => {
+        const make = String(r.make || "").toLowerCase();
+        const model = String(r.model || "").toLowerCase();
+        const notes = String(r.notes || "").toLowerCase();
+        return make.includes(q) || model.includes(q) || notes.includes(q);
+      });
     }
     const yf = yearFilter.trim();
     if (yf) {
@@ -352,9 +485,8 @@ export default function TabVehicleFitment({ value, onChange }) {
                 <button
                   key={preset.label}
                   type="button"
-                  disabled={catalogLoading}
                   onClick={() => addVehicle(preset)}
-                  className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1 text-xs font-medium text-[#374151] hover:border-[#1d6fb8] hover:text-[#1d6fb8] disabled:opacity-50"
+                  className="rounded-full border border-[#e5e7eb] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#374151] hover:border-[#1d6fb8] hover:text-[#1d6fb8]"
                 >
                   + {preset.label}
                 </button>
@@ -362,21 +494,82 @@ export default function TabVehicleFitment({ value, onChange }) {
             </div>
           </div>
 
+          <div className="relative rounded-lg border border-[#e5e7eb] bg-white p-3">
+            <label className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+              Search car catalog
+            </label>
+            <input
+              type="search"
+              value={catalogSearch}
+              onChange={(e) => setCatalogSearch(e.target.value)}
+              disabled={catalogLoading}
+              placeholder="Type to search — e.g. Corolla Cross, Civic X, Alto…"
+              className={`mt-2 ${fieldClass}`}
+              autoComplete="off"
+            />
+            {catalogSearch.trim() ? (
+              <div className="mt-2 max-h-64 overflow-y-auto rounded-lg border border-[#e5e7eb] bg-white shadow-sm">
+                {catalogLoading ? (
+                  <p className="px-3 py-3 text-sm text-[#9ca3af]">Loading catalog…</p>
+                ) : catalogSearchHits.length === 0 ? (
+                  <p className="px-3 py-3 text-sm text-[#9ca3af]">
+                    No cars match &quot;{catalogSearch.trim()}&quot;
+                  </p>
+                ) : (
+                  <ul>
+                    {catalogSearchHits.map((hit) => {
+                      const years =
+                        hit.entry.yearFrom != null
+                          ? `${hit.entry.yearFrom}–${hit.entry.yearTo ?? "Present"}`
+                          : "";
+                      return (
+                        <li
+                          key={`${hit.make}-${hit.entry.slug || hit.label}-${hit.entry.yearFrom}`}
+                          className="flex items-center justify-between gap-3 border-b border-[#f3f4f6] px-3 py-2 last:border-0"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-[#111827]">
+                              {hit.make} {hit.label}
+                            </p>
+                            <p className="text-xs text-[#6b7280]">
+                              {[hit.entry.bodyStyle, years].filter(Boolean).join(" · ")}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => addCatalogEntry(hit.make, hit.entry)}
+                            className="shrink-0 rounded-lg bg-[#1d6fb8] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#185a96]"
+                          >
+                            + Add
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <p className="mt-1.5 text-xs text-[#9ca3af]">
+                Search any make/model from your car catalog (Corolla Cross, Prado, Civic, etc.).
+              </p>
+            )}
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => addVehicle()}
-              className="rounded-lg bg-[#1d6fb8] px-3 py-1.5 text-sm font-semibold text-white"
+              className="rounded-lg bg-[#1d6fb8] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#185a96]"
             >
               + Add Vehicle
             </button>
-            <button type="button" onClick={exportCsv} className="rounded-lg border px-3 py-1.5 text-sm">
+            <button type="button" onClick={exportCsv} className="rounded-lg border px-4 py-2.5 text-sm font-medium">
               Export Fitment CSV
             </button>
             <button
               type="button"
               onClick={() => csvRef.current?.click()}
-              className="rounded-lg border px-3 py-1.5 text-sm"
+              className="rounded-lg border px-4 py-2.5 text-sm font-medium"
             >
               Import Fitment CSV
             </button>
@@ -415,25 +608,36 @@ export default function TabVehicleFitment({ value, onChange }) {
           ) : null}
 
           {catalogPreview ? (
-            <div className="mb-3 flex gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] p-3">
-              <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-[#e5e7eb]">
+            <div className="mb-3 flex flex-col gap-4 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-4 sm:flex-row sm:items-center">
+              <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-xl bg-[#e5e7eb] shadow-sm sm:h-56 sm:w-56">
                 {catalogPreview.image ? (
                   <Image src={catalogPreview.image} alt="" fill className="object-cover" unoptimized />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-lg font-bold text-[#9ca3af]">
+                  <div className="flex h-full items-center justify-center text-4xl font-bold text-[#9ca3af]">
                     {catalogPreview.model?.charAt(0) || "?"}
                   </div>
                 )}
               </div>
               <div className="min-w-0 text-sm">
-                <p className="font-semibold text-[#111827]">
-                  Catalog: {catalogPreview.model} ({catalogPreview.bodyStyle || "Sedan"})
+                <p className="text-base font-semibold text-[#111827]">
+                  {catalogPreview.model}
+                  {catalogPreview.nickname ? (
+                    <span className="ml-2 text-sm font-medium text-[#6b7280]">
+                      ({catalogPreview.nickname})
+                    </span>
+                  ) : null}
+                </p>
+                <p className="mt-1 text-sm text-[#374151]">
+                  {catalogPreview.bodyStyle || "Sedan"}
+                  {catalogPreview.yearFrom != null
+                    ? ` · ${catalogPreview.yearFrom}–${catalogPreview.yearTo ?? "Present"}`
+                    : null}
                 </p>
                 {catalogPreview.description ? (
-                  <p className="mt-1 text-xs text-[#6b7280]">{catalogPreview.description}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-[#6b7280]">{catalogPreview.description}</p>
                 ) : null}
                 {catalogPreview.popularAccessories?.length ? (
-                  <p className="mt-1 text-xs text-[#6b7280]">
+                  <p className="mt-2 text-xs text-[#6b7280]">
                     Popular: {catalogPreview.popularAccessories.join(" · ")}
                   </p>
                 ) : null}
@@ -526,7 +730,7 @@ export default function TabVehicleFitment({ value, onChange }) {
                             }}
                           />
                         </td>
-                        <td className="px-2 py-2 min-w-[120px]">
+                        <td className="px-2 py-2 min-w-[140px]">
                           <SearchableSelect
                             value={row.make}
                             onChange={(v) => {
@@ -536,12 +740,13 @@ export default function TabVehicleFitment({ value, onChange }) {
                                   : r
                               );
                               patch({ vehicles });
+                              setPreviewRowId(row._rowId);
                             }}
                             options={makeOptions}
                             placeholder="Make"
                           />
                         </td>
-                        <td className="px-2 py-2 min-w-[120px]">
+                        <td className="px-2 py-2 min-w-[180px]">
                           <SearchableSelect
                             value={modelSelectValue}
                             onChange={(v) => {

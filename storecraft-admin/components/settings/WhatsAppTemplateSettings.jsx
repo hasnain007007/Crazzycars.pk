@@ -10,7 +10,8 @@ const TEMPLATE_CONFIG = [
   {
     key: "customerOrderConfirmation",
     label: "Customer Order Confirmation",
-    description: "Sent to the customer when you open WhatsApp from an order",
+    description:
+      "Sent to the customer when you tap WhatsApp Customer. Must ask if the order is confirmed, with Yes/No links ({confirmOrderUrl} / {cancelOrderUrl}).",
     variables: [
       "customerName",
       "orderNumber",
@@ -21,6 +22,9 @@ const TEMPLATE_CONFIG = [
       "total",
       "paymentMethod",
       "paymentInstructions",
+      "paidAmount",
+      "remainingBalance",
+      "paymentStatus",
       "address",
       "city",
       "province",
@@ -69,6 +73,21 @@ const TEMPLATE_CONFIG = [
       "storePhone",
     ],
   },
+  {
+    key: "abandonedCart",
+    label: "Abandoned Cart Recovery",
+    description: "Opened from Abandoned Carts → WhatsApp. Includes a checkout recover link.",
+    variables: [
+      "customerName",
+      "customerPhone",
+      "itemsList",
+      "subtotal",
+      "itemCount",
+      "recoverUrl",
+      "storePhone",
+      "storeName",
+    ],
+  },
 ];
 
 function emptyTemplates() {
@@ -76,6 +95,7 @@ function emptyTemplates() {
     customerOrderConfirmation: { enabled: true, template: "" },
     adminNewOrder: { enabled: true, template: "" },
     orderShipped: { enabled: true, template: "" },
+    abandonedCart: { enabled: true, template: "" },
   };
 }
 

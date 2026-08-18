@@ -84,8 +84,9 @@ const initForm = (data = {}) => ({
   name: data.name || "",
   placement: data.placement || "hero_slider",
   size: data.size || "full_width",
-  status: data.status || "inactive",
-  sortOrder: data.sortOrder || 0,
+  // New banners must be active to appear in the storefront hero slider.
+  status: data.status || "active",
+  sortOrder: Number.isFinite(Number(data.sortOrder)) ? Number(data.sortOrder) : 0,
   targetUrl: data.targetUrl || "",
   openInNewTab: Boolean(data.openInNewTab),
   schedule: {
@@ -154,7 +155,7 @@ export function BannerForm({ bannerId }) {
   const [openInNewTab, setOpenInNewTab] = useState(false);
   const [schedule, setSchedule] = useState({ enabled: false, startDate: "", endDate: "" });
   const [sortOrder, setSortOrder] = useState(0);
-  const [status, setStatus] = useState("inactive");
+  const [status, setStatus] = useState("active");
   const [saving, setSaving] = useState(false);
   const [mobileCustomHtml, setMobileCustomHtml] = useState("");
   const [showMobileCode, setShowMobileCode] = useState(false);
@@ -258,7 +259,7 @@ export function BannerForm({ bannerId }) {
     if (Object.prototype.hasOwnProperty.call(next, "openInNewTab")) setOpenInNewTab(Boolean(next.openInNewTab));
     if (Object.prototype.hasOwnProperty.call(next, "schedule")) setSchedule(next.schedule || { enabled: false, startDate: "", endDate: "" });
     if (Object.prototype.hasOwnProperty.call(next, "sortOrder")) setSortOrder(Number(next.sortOrder) || 0);
-    if (Object.prototype.hasOwnProperty.call(next, "status")) setStatus(next.status || "inactive");
+    if (Object.prototype.hasOwnProperty.call(next, "status")) setStatus(next.status || "active");
     if (Object.prototype.hasOwnProperty.call(next, "mobileCustomHtml")) setMobileCustomHtml(next.mobileCustomHtml || "");
     if (Object.prototype.hasOwnProperty.call(next, "subheadings")) {
       const nextSubs = Array.isArray(next.subheadings) ? next.subheadings : [];
@@ -421,7 +422,7 @@ export function BannerForm({ bannerId }) {
                   { value: "cover", label: "Cover", desc: "Fills area, may crop edges" },
                   { value: "contain", label: "Contain", desc: "Shows full image, no crop" },
                   { value: "fill", label: "Fill", desc: "Stretches to fill (may distort)" },
-                  { value: "none", label: "Original", desc: "Natural size, no scaling" },
+                  { value: "none", label: "Original", desc: "Natural size — use with Auto height" },
                 ].map((fit) => (
                   <button
                     key={fit.value}
@@ -590,9 +591,16 @@ export function BannerForm({ bannerId }) {
                 value={form.background?.image || { url: "", publicId: "" }}
                 onChange={(img) => setForm((f) => ({ ...f, background: { ...(f.background || {}), type: "image", image: img || {} } }))}
                 multiple={false}
-                maxSizeMB={2}
+                maxSizeMB={8}
+                maxImageWidth={2560}
+                webpQuality={0.95}
+                preserveOriginal
                 uploadFolder="banners"
               />
+              <p style={{ fontSize: 11, color: "#9ca3af", margin: "8px 0 0" }}>
+                Upload PNG/JPEG at <strong>1920×768 or wider</strong> (up to 2560px). Original file is kept — no
+                compression. ChatGPT/AI exports at ~1024px will look soft on desktop.
+              </p>
               {form.background?.image?.url ? (
                 <div
                   style={{
@@ -829,7 +837,10 @@ export function BannerForm({ bannerId }) {
                       }))
                     }
                     multiple={false}
-                    maxSizeMB={2}
+                    maxSizeMB={6}
+                    maxImageWidth={1600}
+                    webpQuality={0.95}
+                    preserveOriginal
                     uploadFolder="banners"
                   />
                   <p
@@ -839,7 +850,7 @@ export function BannerForm({ bannerId }) {
                       margin: "8px 0 0",
                     }}
                   >
-                    Recommended: Portrait or square image (9:16 ratio) for best mobile display.
+                    Recommended: 1080×1350+ portrait. Original file is kept without recompression.
                   </p>
                 </div>
               </div>
@@ -1410,28 +1421,58 @@ export function BannerForm({ bannerId }) {
                   <label style={labelStyle}>URL</label>
                   <input
                     style={inputStyle}
-                    placeholder="/products"
+                    placeholder="/categories or /#shop-by-car"
                     value={btn.url || ""}
                     onChange={(e) => {
                       const b = [...(form.content?.buttons || [])];
                       b[i] = { ...b[i], url: e.target.value };
                       setForm((f) => ({ ...f, content: { ...(f.content || {}), buttons: b } }));
                     }}
+                    onBlur={(e) => {
+                      let url = String(e.target.value || "").trim();
+                      if (!url) return;
+                      if (!/^https?:\/\//i.test(url) && !url.startsWith("/") && /^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(url)) {
+                        url = `https://${url}`;
+                      }
+                      try {
+                        if (/^https?:\/\//i.test(url)) {
+                          const parsed = new URL(url);
+                          if (/(^|\.)crazzycars\.pk$/i.test(parsed.hostname)) {
+                            url = `${parsed.pathname || "/"}${parsed.search || ""}${parsed.hash || ""}` || "/";
+                          }
+                        }
+                      } catch {
+                        /* keep */
+                      }
+                      const b = [...(form.content?.buttons || [])];
+                      b[i] = { ...b[i], url };
+                      setForm((f) => ({ ...f, content: { ...(f.content || {}), buttons: b } }));
+                    }}
                   />
                   <div style={{ marginTop: "6px" }}>
                     <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                      {["/", "/products", "/products?sort=newest", "/products?sale=true", "/about", "/contact", "/posts"].map((url, j) => (
+                      {[
+                        { url: "/", label: "Home" },
+                        { url: "/shop", label: "Shop" },
+                        { url: "/categories", label: "Categories" },
+                        { url: "/#shop-by-car", label: "Shop by Car" },
+                        { url: "/products?sort=newest", label: "New" },
+                        { url: "/products?sale=true", label: "Sale" },
+                        { url: "/about", label: "About" },
+                        { url: "/contact", label: "Contact" },
+                        { url: "/posts", label: "Blog" },
+                      ].map((item, j) => (
                         <button
                           key={`${i}-${j}`}
                           type="button"
                           onClick={() => {
                             const b = [...(form.content?.buttons || [])];
-                            b[i] = { ...b[i], url };
+                            b[i] = { ...b[i], url: item.url };
                             setForm((f) => ({ ...f, content: { ...(f.content || {}), buttons: b } }));
                           }}
                           style={{ padding: "2px 8px", fontSize: "10px", borderRadius: "99px", border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}
                         >
-                          {url === "/" ? "Home" : url.replace("/products?sort=newest", "New").replace("/products?sale=true", "Sale").replace("/products", "Shop").replace("/about", "About").replace("/contact", "Contact").replace("/posts", "Blog")}
+                          {item.label}
                         </button>
                       ))}
                     </div>

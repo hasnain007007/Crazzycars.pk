@@ -10,10 +10,7 @@ function CategoryCard({ c }) {
   const imageAlt = c.imageAlt || c.name;
   const imageTitle = c.imageTitle || c.name;
   return (
-    <Link
-      href={c.href}
-      className="group relative block aspect-square overflow-hidden rounded-2xl bg-[#111111] shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
-    >
+    <Link href={c.href} className="home-category-card group">
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -22,56 +19,19 @@ function CategoryCard({ c }) {
           title={imageTitle}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          className="home-category-card__img"
         />
       ) : (
-        <span className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 text-4xl">
+        <span className="home-category-card__icon" aria-hidden>
           {c.homepageIcon || "🚗"}
         </span>
       )}
 
-      {/* Soft top + strong bottom scrim — edge to edge, no floating box */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.78) 100%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100"
-        style={{ background: "rgba(196, 30, 30, 0.28)" }}
-      />
+      <div className="home-category-card__fade" aria-hidden />
 
-      {/* Fixed-height label strip so every card matches */}
-      <div
-        className="absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end px-3 pb-3 pt-10 sm:px-4 sm:pb-4"
-        style={{ minHeight: 88 }}
-      >
-        <h3
-          className="font-heading text-[15px] font-bold leading-snug sm:text-[17px]"
-          style={{
-            color: "#FFFFFF",
-            margin: 0,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            textShadow: "0 1px 3px rgba(0,0,0,0.65)",
-            minHeight: "2.4em",
-          }}
-          title={c.name}
-        >
+      <div className="home-category-card__label">
+        <span className="home-category-card__title" title={c.name}>
           {c.name}
-        </h3>
-        <span
-          className="mt-1.5 inline-flex w-fit items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.06em] transition group-hover:gap-2"
-          style={{ color: "#FFFFFF" }}
-        >
-          Shop
-          <span aria-hidden>→</span>
         </span>
       </div>
     </Link>
