@@ -1,5 +1,9 @@
 import { headers } from "next/headers";
 import { getSiteUrl, isIndexableEnvironment } from "@/lib/siteUrl";
+import { buildRobotsDisallowList } from "@/lib/seo/robotsTxt";
+
+/** Always evaluate at request time so Coolify runtime INDEXABLE env is honored. */
+export const dynamic = "force-dynamic";
 
 /** AI shopping / citation crawlers — explicitly allowed (same as * today; listed for clarity). */
 const AI_CRAWLERS = [
@@ -17,11 +21,12 @@ const AI_CRAWLERS = [
   "Applebot-Extended",
 ];
 
-const PRIVATE_PATHS = ["/api/", "/account/", "/checkout/", "/cart/", "/admin/"];
-
 export default async function robots() {
   const h = await headers();
   const siteUrl = getSiteUrl({ headers: h });
+  const host = siteUrl.replace(/^https?:\/\//, "");
+  const disallow = buildRobotsDisallowList();
+
   if (!isIndexableEnvironment({ headers: h })) {
     return {
       rules: [{ userAgent: "*", disallow: "/" }],
@@ -34,15 +39,15 @@ export default async function robots() {
       {
         userAgent: "*",
         allow: "/",
-        disallow: PRIVATE_PATHS,
+        disallow,
       },
       ...AI_CRAWLERS.map((userAgent) => ({
         userAgent,
         allow: "/",
-        disallow: PRIVATE_PATHS,
+        disallow,
       })),
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
-    host: siteUrl.replace(/^https?:\/\//, ""),
+    host,
   };
 }

@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:seo-indexing": "node --experimental-strip-types --test ../tests/seo-indexing.test.ts",
+    "seo:healthcheck": "node --experimental-strip-types ../scripts/seo-healthcheck.ts",
     "seed:categories": "node --env-file=.env.local scripts/categories/seedCategories.mjs",
     "seed:vehicles": "node --env-file=.env.local scripts/vehicles/seedVehicles.mjs",
     "seed:car-catalog": "node --env-file=.env.local scripts/vehicles/seedCarCatalog.mjs",

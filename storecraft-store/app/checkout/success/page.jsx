@@ -1,7 +1,14 @@
 import { Suspense } from "react";
 import CheckoutSuccessView from "@/components/store/CheckoutSuccessView";
 
+import { ROBOTS_NOINDEX_NOFOLLOW } from "@/lib/seo/robotsMeta";
+
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Order success",
+  robots: ROBOTS_NOINDEX_NOFOLLOW,
+};
 
 function LoadingFallback() {
   return (

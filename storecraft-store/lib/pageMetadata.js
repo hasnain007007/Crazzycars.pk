@@ -1,10 +1,16 @@
 import { absoluteUrl } from "@/lib/siteUrl";
+import {
+  ROBOTS_INDEX_FOLLOW,
+  ROBOTS_NOINDEX_FOLLOW,
+  ROBOTS_NOINDEX_NOFOLLOW,
+} from "@/lib/seo/robotsMeta";
 
 export function buildPageMetadata({
   title,
   description,
   path,
   noIndex = false,
+  noFollow = false,
   absoluteTitle = false,
 }) {
   const url = absoluteUrl(path);
@@ -16,7 +22,11 @@ export function buildPageMetadata({
     title: absoluteTitle ? { absolute: title } : title,
     description,
     alternates: { canonical: url },
-    robots: noIndex ? { index: false, follow: false } : undefined,
+    robots: noIndex
+      ? noFollow
+        ? ROBOTS_NOINDEX_NOFOLLOW
+        : ROBOTS_NOINDEX_FOLLOW
+      : ROBOTS_INDEX_FOLLOW,
     openGraph: {
       title,
       description,

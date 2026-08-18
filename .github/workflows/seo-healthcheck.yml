@@ -1,0 +1,40 @@
+name: SEO Healthcheck
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "storecraft-store/app/robots.js"
+      - "storecraft-store/app/sitemap.xml/**"
+      - "storecraft-store/app/sitemap-*.xml/**"
+      - "storecraft-store/lib/sitemap/**"
+      - "storecraft-store/lib/seo/robots*.js"
+      - "storecraft-store/lib/pageMetadata.js"
+      - "scripts/seo-healthcheck.ts"
+      - "tests/seo-indexing.test.ts"
+      - ".github/workflows/seo-healthcheck.yml"
+
+jobs:
+  seo-indexing-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Sitemap / robots unit tests
+        run: node --experimental-strip-types --test tests/seo-indexing.test.ts
+
+  seo-healthcheck:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Crawl live storefront (warnings only)
+        env:
+          SEO_HEALTHCHECK_URL: "https://crazzycars.pk"
+          SEO_HEALTHCHECK_MAX_PAGES: "80"
+        run: node --experimental-strip-types scripts/seo-healthcheck.ts

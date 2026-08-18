@@ -8,6 +8,7 @@ export const metadata = buildPageMetadata({
   description: "Track your Postex shipment with your tracking number.",
   path: "/track-order",
   absoluteTitle: true,
+  noIndex: true,
 });
 
 export default function TrackOrderPage() {

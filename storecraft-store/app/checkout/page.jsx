@@ -1,6 +1,10 @@
 import { CheckoutView } from "@/components/store/CheckoutView";
+import { ROBOTS_NOINDEX_NOFOLLOW } from "@/lib/seo/robotsMeta";
 
-export const metadata = { title: "Checkout" };
+export const metadata = {
+  title: "Checkout",
+  robots: ROBOTS_NOINDEX_NOFOLLOW,
+};
 
 export default function Page() {
   return (
