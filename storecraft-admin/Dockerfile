@@ -39,17 +39,15 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-# Coolify / Docker healthchecks — use wget against a DB-free probe
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends wget ca-certificates \
-  && rm -rf /var/lib/apt/lists/* \
-  && groupadd --system --gid 1001 nodejs \
+# Coolify HTTP checks call curl (not in bookworm-slim). Probe with Node fetch instead.
+RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 nextjs
+COPY --chown=nextjs:nodejs healthcheck.js ./healthcheck.js
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=8s --start-period=60s --retries=5 \
-  CMD wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1
+  CMD node /app/healthcheck.js
 CMD ["node", "server.js"]
