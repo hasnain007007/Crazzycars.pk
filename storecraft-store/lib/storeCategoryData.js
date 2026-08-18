@@ -4,6 +4,7 @@
  */
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
+import { listingMongoSortSpec } from "@/lib/productListing";
 
 /** Canonical storefront status — prefer equality over case-insensitive regex (index-friendly). */
 export const ACTIVE_STATUS = "active";
@@ -276,13 +277,15 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
     $or: [{ categories: { $in: allCategoryIds } }, { category: { $in: allCategoryIds } }],
   };
 
+  const sortSpec = listingMongoSortSpec(opts.sort);
+
   const [products, productCount] = await Promise.all([
     Product.find(productQuery)
       .select(
         "name slug media.images pricing.regularPrice pricing.salePrice inventory featured newArrival status createdAt shortDescription articleNo categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
       .populate("categories", "name slug")
-      .sort({ createdAt: -1 })
+      .sort(sortSpec)
       .skip(skip)
       .limit(limit)
       .lean(),

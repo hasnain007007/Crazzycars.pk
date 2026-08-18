@@ -41,6 +41,22 @@ export function listingSortToApi(sortValue) {
   return opt?.api || "newest";
 }
 
+/** Mongo sort for listing pages — matches /api/products field sorts. */
+export function listingMongoSortSpec(sortValue) {
+  switch (normalizeListingSort(sortValue)) {
+    case "price-asc":
+      return { "pricing.regularPrice": 1 };
+    case "price-desc":
+      return { "pricing.regularPrice": -1 };
+    case "popular":
+      return { reviewCount: -1, createdAt: -1 };
+    case "rating":
+      return { averageRating: -1, reviewCount: -1, createdAt: -1 };
+    default:
+      return { createdAt: -1 };
+  }
+}
+
 export function sortProductsClient(products, sortValue) {
   const rows = [...(products || [])];
   const priceOf = (p) => {

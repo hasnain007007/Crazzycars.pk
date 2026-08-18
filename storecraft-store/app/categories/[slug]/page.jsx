@@ -1,17 +1,19 @@
 import { notFound } from "next/navigation";
-import { Suspense, cache } from "react";
+import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
-import { CategoryDetailPageClient } from "@/components/store/CategoryDetailPageClient";
 import { CategoryPageChrome } from "@/components/store/CategoryPageChrome";
+import { ProductListingSection } from "@/components/store/ProductListingSection";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
 import { getServerStoreSettings } from "@/lib/serverSettings";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
+import { listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
+import { sortProductsClient } from "@/lib/productListing";
 
 /** ISR: prerender active categories at build; refresh every 2 minutes. */
 export const revalidate = 120;
@@ -33,19 +35,25 @@ export async function generateStaticParams() {
   }
 }
 
-const loadCachedCategoryDetail = (slugStr) =>
+const loadCachedCategoryDetail = (slugStr, page, pageSize, sort) =>
   unstable_cache(
     async () => {
       await dbConnect();
-      const detail = await loadStoreCategoryDetail(slugStr);
+      const detail = await loadStoreCategoryDetail(slugStr, {
+        page,
+        limit: pageSize,
+        sort,
+      });
       if (!detail) return null;
       return JSON.parse(JSON.stringify(detail));
     },
-    ["category-detail-v2", slugStr],
+    ["category-detail-v3", slugStr, String(page), String(pageSize), String(sort)],
     { revalidate: 120 }
   )();
 
-const getCategoryDetail = cache(async (slugStr) => loadCachedCategoryDetail(slugStr));
+const getCategoryDetail = cache(async (slugStr, page, pageSize, sort) =>
+  loadCachedCategoryDetail(slugStr, page, pageSize, sort)
+);
 
 const getCategoryMeta = cache(async (slugStr) =>
   unstable_cache(
@@ -89,12 +97,31 @@ const getCachedBrand = cache(async () =>
   )()
 );
 
-export async function generateMetadata({ params }) {
+function paginateRows(rows, listing) {
+  const sorted = sortProductsClient(rows, listing.sort);
+  const total = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(total / listing.pageSize) || 1);
+  const page = Math.min(listing.page, totalPages);
+  const start = (page - 1) * listing.pageSize;
+  return {
+    products: sorted.slice(start, start + listing.pageSize),
+    total,
+    totalPages,
+    page,
+  };
+}
+
+export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
+  const listing = parseListingSearchParams(await searchParams);
+  const listingPath = `/categories/${slugStr}`;
 
   try {
-    const category = await getCategoryMeta(slugStr);
+    const [category, detail] = await Promise.all([
+      getCategoryMeta(slugStr),
+      getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort),
+    ]);
 
     if (category) {
       const titleMeta = buildBrandedAbsoluteTitle(
@@ -116,15 +143,19 @@ export async function generateMetadata({ params }) {
             },
           ]
         : [];
+      const listingSeo = listingMetadata(listingPath, listing, {
+        thin: Boolean(detail && Number(detail.productCount) === 0),
+      });
 
       return {
         title: titleMeta,
         description,
         ...(keywords.length ? { keywords } : {}),
+        robots: listingSeo.robots,
         openGraph: {
           title,
           description,
-          url: `${BASE_URL}/categories/${slugStr}`,
+          url: listingSeo.alternates.canonical,
           images: ogImage,
         },
         twitter: {
@@ -133,9 +164,7 @@ export async function generateMetadata({ params }) {
           description,
           images: category.image?.url ? [category.image.url] : [],
         },
-        alternates: {
-          canonical: `${BASE_URL}/categories/${slugStr}`,
-        },
+        alternates: listingSeo.alternates,
       };
     }
   } catch {
@@ -146,14 +175,18 @@ export async function generateMetadata({ params }) {
     const collection = await getCollectionByHandle(slugStr).catch(() => null);
     if (!collection) return { title: "Category Not Found", robots: { index: false, follow: false } };
     const titleMeta = buildBrandedAbsoluteTitle(collection.title, { brand: BRAND });
+    const listingSeo = listingMetadata(listingPath, listing, {
+      thin: !(collection.products || []).length,
+    });
     return {
       title: titleMeta,
       description: collection.description || `Shop ${collection.title} at ${BRAND}.`,
-      alternates: { canonical: `${BASE_URL}/categories/${slugStr}` },
+      robots: listingSeo.robots,
+      alternates: listingSeo.alternates,
       openGraph: {
         title: titleMeta.absolute,
         description: collection.description || "",
-        url: `${BASE_URL}/categories/${slugStr}`,
+        url: listingSeo.alternates.canonical,
         images: collection.image?.url ? [{ url: collection.image.url }] : [],
       },
     };
@@ -162,17 +195,18 @@ export async function generateMetadata({ params }) {
   return { title: "Category Not Found", robots: { index: false, follow: false } };
 }
 
-export default async function CategoryPage({ params }) {
+export default async function CategoryPage({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   if (!slugStr) notFound();
+  const listing = parseListingSearchParams(await searchParams);
+  const listingPath = `/categories/${slugStr}`;
 
   // Prefer Mongo catalog (seeded categories) so /categories/[slug] never 404s
   // when Shopify is enabled but collections use different handles.
-  const detail = await getCategoryDetail(slugStr);
+  const detail = await getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort);
   if (detail) {
     const brand = await getCachedBrand();
-
     const data = detail;
 
     const crumbItems = [
@@ -215,29 +249,22 @@ export default async function CategoryPage({ params }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
         />
-        {/* H1 chrome SSRs here — outside the useSearchParams island */}
         <CategoryPageChrome
           category={data.category}
           subcategories={data.subcategories}
           products={data.products}
           brand={brand}
         />
-        <Suspense
-          fallback={
-            <div className="mx-auto max-w-7xl px-4 py-16 text-sm text-[#6B7280]">
-              Loading products…
-            </div>
-          }
-        >
-          <CategoryDetailPageClient
-            initialCategory={data.category}
-            initialSubcategories={data.subcategories}
-            initialProducts={data.products}
-            initialProductCount={data.productCount}
-            initialBreadcrumbs={data.breadcrumbs}
-            brand={brand}
-          />
-        </Suspense>
+        <ProductListingSection
+          pathname={listingPath}
+          listing={listing}
+          products={data.products}
+          total={data.productCount}
+          totalPages={data.totalPages}
+          title={data.category?.name}
+          categoryName={data.category?.name}
+          emptyMessage="No products found in this category."
+        />
       </div>
     );
   }
@@ -246,37 +273,33 @@ export default async function CategoryPage({ params }) {
     const collection = await getCollectionByHandle(slugStr).catch(() => null);
     if (!collection) notFound();
     const brand = await getCachedBrand();
+    const paged = paginateRows(collection.products || [], listing);
+    const category = {
+      _id: collection.handle,
+      slug: collection.handle,
+      name: collection.title,
+      description: collection.descriptionHtml || collection.description,
+      image: collection.image,
+      source: "shopify",
+    };
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
         <CategoryPageChrome
-          category={{
-            _id: collection.handle,
-            slug: collection.handle,
-            name: collection.title,
-            description: collection.descriptionHtml || collection.description,
-            image: collection.image,
-            source: "shopify",
-          }}
+          category={category}
           subcategories={[]}
-          products={collection.products}
+          products={paged.products}
           brand={brand}
         />
-        <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-16 text-sm text-[#6B7280]">Loading products…</div>}>
-          <CategoryDetailPageClient
-            initialCategory={{
-              _id: collection.handle,
-              slug: collection.handle,
-              name: collection.title,
-              description: collection.descriptionHtml || collection.description,
-              image: collection.image,
-              source: "shopify",
-            }}
-            initialSubcategories={[]}
-            initialProducts={collection.products}
-            initialBreadcrumbs={[]}
-            brand={brand}
-          />
-        </Suspense>
+        <ProductListingSection
+          pathname={listingPath}
+          listing={{ ...listing, page: paged.page }}
+          products={paged.products}
+          total={paged.total}
+          totalPages={paged.totalPages}
+          title={collection.title}
+          categoryName={collection.title}
+          emptyMessage="No products found in this category."
+        />
       </div>
     );
   }

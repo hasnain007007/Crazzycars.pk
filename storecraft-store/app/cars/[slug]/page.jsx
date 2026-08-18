@@ -7,19 +7,20 @@ import {
   loadVehicleBySlug,
   serializeVehicleProduct,
 } from "@/lib/vehiclePageData";
-import { getSiteUrl } from "@/lib/siteUrl";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
-import { VehicleProductsListing } from "@/components/cars/VehicleProductsListing";
+import { ProductListingSection } from "@/components/store/ProductListingSection";
+import { listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
+import { sortProductsClient } from "@/lib/productListing";
 
 export const revalidate = 300;
 
-const BASE_URL = getSiteUrl();
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "CrazzyCars.pk";
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
+  const listing = parseListingSearchParams(await searchParams);
   try {
     await dbConnect();
     const vehicle = await loadVehicleBySlug(slugStr);
@@ -33,15 +34,17 @@ export async function generateMetadata({ params }) {
     const description =
       (vehicle.metaDescription || "").trim() ||
       `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`;
+    const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
 
     return {
       title: titleMeta,
       description,
-      alternates: { canonical: `${BASE_URL}/cars/${vehicle.slug}` },
+      robots: listingSeo.robots,
+      alternates: listingSeo.alternates,
       openGraph: {
         title,
         description,
-        url: `${BASE_URL}/cars/${vehicle.slug}`,
+        url: listingSeo.alternates.canonical,
         images: vehicle.image ? [{ url: vehicle.image, alt: vehicle.displayName }] : [],
       },
       twitter: {
@@ -56,17 +59,24 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default async function VehicleSlugPage({ params }) {
+export default async function VehicleSlugPage({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   if (!slugStr) notFound();
+  const listing = parseListingSearchParams(await searchParams);
 
   await dbConnect();
   const vehicle = await loadVehicleBySlug(slugStr);
   if (!vehicle) notFound();
 
   const rawProducts = await loadProductsForVehicle(vehicle);
-  const products = rawProducts.map(serializeVehicleProduct);
+  const allProducts = rawProducts.map(serializeVehicleProduct);
+  const sorted = sortProductsClient(allProducts, listing.sort);
+  const total = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(total / listing.pageSize) || 1);
+  const page = Math.min(listing.page, totalPages);
+  const products = sorted.slice((page - 1) * listing.pageSize, page * listing.pageSize);
+  const listingForUi = { ...listing, page };
 
   const yearLabel =
     vehicle.yearTo == null || Number(vehicle.yearTo) >= new Date().getFullYear()
@@ -243,14 +253,16 @@ export default async function VehicleSlugPage({ params }) {
       </section>
 
       <section id="compatible-products" className="store-container py-8 md:py-10">
-        <VehicleProductsListing
-          title="Compatible products"
-          subtitle={
-            products.length
-              ? undefined
-              : "Products for this car will show once you assign them in admin (compatible vehicles / car catalog). Universal products are not listed here unless you add them to this car."
-          }
+        <ProductListingSection
+          layout="embedded"
+          pathname={`/cars/${vehicle.slug}`}
+          listing={listingForUi}
           products={products}
+          total={total}
+          totalPages={totalPages}
+          title="Compatible products"
+          categoryName={`${vehicle.displayName} accessories`}
+          emptyMessage="Products for this car will show once you assign them in admin (compatible vehicles / car catalog). Universal products are not listed here unless you add them to this car."
         />
       </section>
     </div>

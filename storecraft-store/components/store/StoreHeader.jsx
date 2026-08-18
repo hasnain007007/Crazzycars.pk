@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useCart } from "@/context/CartContext";
@@ -16,6 +16,19 @@ import MegaMenu from "@/components/store/MegaMenu";
 import { SearchSuggest } from "@/components/store/SearchSuggest";
 
 const WISHLIST_KEY = "sialkot_wishlist";
+
+/** Read query string after mount — avoids useSearchParams() CSR bailout on every page. */
+function useDocumentSearchParams() {
+  const pathname = usePathname();
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    const sync = () => setQuery(String(window.location.search || "").replace(/^\?/, ""));
+    sync();
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, [pathname]);
+  return useMemo(() => new URLSearchParams(query), [query]);
+}
 
 const DEFAULT_NAV = [
   { label: "Home", href: "/" },
@@ -282,7 +295,7 @@ function HeaderAction({ href, onClick, label, icon, badge }) {
 export function StoreHeader({ initialCategoryTree = null }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const searchParams = useDocumentSearchParams();
   const { items, setOpen } = useCart();
   const { customer } = useCustomer();
   const ctxSettings = useStoreSettings();

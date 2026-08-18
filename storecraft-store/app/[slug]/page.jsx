@@ -1,9 +1,9 @@
-import { Suspense, cache } from "react";
+import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ProductDetailMedico } from "@/components/store/ProductDetailMedico";
 import PageView from "@/components/store/PageView";
-import { CategoryDetailPageClient } from "@/components/store/CategoryDetailPageClient";
 import { CategoryPageChrome } from "@/components/store/CategoryPageChrome";
+import { ProductListingSection } from "@/components/store/ProductListingSection";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Page from "@/lib/models/Page.model";
@@ -16,6 +16,8 @@ import {
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
 } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
+import { parseListingSearchParams, listingMetadata } from "@/lib/listingQuery";
+import { DEFAULT_LISTING_PAGE_SIZE } from "@/lib/productListing";
 
 /**
  * ISR for product / CMS / category-via-slug pages.
@@ -187,7 +189,7 @@ const loadContent = cache(async (slug) => {
   return null;
 });
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const content = await loadContent(slugStr);
@@ -244,6 +246,10 @@ export async function generateMetadata({ params }) {
 
   if (content.type === "category") {
     const cat = content.data.category;
+    const listing = parseListingSearchParams(await searchParams);
+    const listingSeo = listingMetadata(`/${slugStr}`, listing, {
+      thin: Number(content.data.productCount) === 0,
+    });
     const titleMeta = buildBrandedAbsoluteTitle(
       (cat.seo?.metaTitle || "").trim() || cat.name,
       { brand: BRAND }
@@ -259,11 +265,12 @@ export async function generateMetadata({ params }) {
       title: titleMeta,
       description,
       ...(keywords.length ? { keywords } : {}),
-      alternates: { canonical },
+      robots: listingSeo.robots,
+      alternates: listingSeo.alternates,
       openGraph: {
         title,
         description,
-        url: canonical,
+        url: listingSeo.alternates.canonical,
         images: cat.image?.url ? [{ url: cat.image.url }] : [],
       },
       twitter: { card: "summary_large_image", title, description },
@@ -344,7 +351,7 @@ function toBreadcrumbLd(product) {
   return buildBreadcrumbJsonLd(items);
 }
 
-export default async function ProductPage({ params }) {
+export default async function ProductPage({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   if (!slugStr) notFound();
@@ -375,7 +382,16 @@ export default async function ProductPage({ params }) {
   }
 
   if (content.type === "category") {
-    const d = content.data;
+    const listing = parseListingSearchParams(await searchParams);
+    let d = content.data;
+    if (listing.page !== 1 || listing.pageSize !== DEFAULT_LISTING_PAGE_SIZE || listing.sort !== "default") {
+      const fresh = await loadStoreCategoryDetail(slugStr, {
+        page: listing.page,
+        limit: listing.pageSize,
+        sort: listing.sort,
+      });
+      if (fresh) d = JSON.parse(JSON.stringify(fresh));
+    }
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
         <CategoryPageChrome
@@ -383,15 +399,16 @@ export default async function ProductPage({ params }) {
           subcategories={d.subcategories}
           products={d.products}
         />
-        <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-16 text-sm text-[#6B7280]">Loading products…</div>}>
-          <CategoryDetailPageClient
-            initialCategory={d.category}
-            initialSubcategories={d.subcategories}
-            initialProducts={d.products}
-            initialProductCount={d.productCount}
-            initialBreadcrumbs={d.breadcrumbs}
-          />
-        </Suspense>
+        <ProductListingSection
+          pathname={`/${slugStr}`}
+          listing={listing}
+          products={d.products}
+          total={d.productCount}
+          totalPages={d.totalPages}
+          title={d.category?.name}
+          categoryName={d.category?.name}
+          emptyMessage="No products found in this category."
+        />
       </div>
     );
   }

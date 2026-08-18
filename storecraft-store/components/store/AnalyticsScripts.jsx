@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import Script from "next/script";
-import { Suspense } from "react";
 import { trackPageView } from "@/lib/metaPixel";
 
 /**
@@ -12,9 +11,12 @@ import { trackPageView } from "@/lib/metaPixel";
  */
 function MetaPixelPageViews() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const search = searchParams?.toString() || "";
+  const [search, setSearch] = useState("");
   const readyRef = useRef(false);
+
+  useEffect(() => {
+    setSearch(String(window.location.search || "").replace(/^\?/, ""));
+  }, [pathname]);
 
   useEffect(() => {
     let attempts = 0;
@@ -82,9 +84,7 @@ export default function AnalyticsScripts({ settings }) {
               fbq('init', '${fbPixelId.replace(/'/g, "\\'")}');
             `}
           </Script>
-          <Suspense fallback={null}>
-            <MetaPixelPageViews />
-          </Suspense>
+          <MetaPixelPageViews />
         </>
       ) : null}
     </>

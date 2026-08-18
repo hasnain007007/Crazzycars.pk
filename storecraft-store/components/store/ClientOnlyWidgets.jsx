@@ -1,27 +1,36 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import { CartDrawer } from "@/components/store/CartDrawer";
+import WhatsAppButton from "@/components/store/WhatsAppButton";
+import { LivePresenceBeacon } from "@/components/store/LivePresenceBeacon";
 
-const CartDrawer = dynamic(
-  () => import("@/components/store/CartDrawer").then((m) => m.CartDrawer),
-  { ssr: false }
-);
-const WhatsAppButton = dynamic(() => import("@/components/store/WhatsAppButton"), { ssr: false });
-const LivePresenceBeacon = dynamic(
-  () => import("@/components/store/LivePresenceBeacon").then((m) => m.LivePresenceBeacon),
-  { ssr: false }
-);
+/**
+ * SSR null, then mount. Avoid next/dynamic `{ ssr: false }`, which emits
+ * BAILOUT_TO_CLIENT_SIDE_RENDERING into the HTML document.
+ */
+function AfterMount({ children }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  if (!mounted) return null;
+  return children;
+}
 
-/** Client-only — `dynamic(..., { ssr: false })` is not allowed in Server Components. */
 export function LivePresenceClient() {
-  return <LivePresenceBeacon />;
+  return (
+    <AfterMount>
+      <LivePresenceBeacon />
+    </AfterMount>
+  );
 }
 
 export function ClientOnlyWidgets() {
   return (
-    <>
+    <AfterMount>
       <CartDrawer />
       <WhatsAppButton />
-    </>
+    </AfterMount>
   );
 }
