@@ -16,7 +16,7 @@ export function PaymentMethodsCard({ methods }) {
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Payment methods</h3>
-      <p className="text-xs text-slate-400">Share of orders in period</p>
+      <p className="text-xs text-slate-400">Share of paid orders in period</p>
       {!rows.length ? (
         <p className="mt-8 text-center text-sm text-slate-400">No payment data yet</p>
       ) : (

@@ -1,15 +1,15 @@
 /**
  * Dashboard metrics with optional date range filter.
  * Extended for the modern ops dashboard (KPIs, category, payments, weekday, insights).
+ *
+ * Rules (PKT / Asia/Karachi):
+ * - Paid revenue KPIs and Net Profit use the same paid, non-cancelled cohort.
+ * - Range presets use Karachi day bounds (same as Today / Monthly cards).
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import {
-  buildChartBuckets,
-  formatYmdUtc,
-  resolveDashboardRange,
-} from "@/lib/dashboardRanges";
+import { buildChartBuckets, resolveDashboardRange } from "@/lib/dashboardRanges";
 import { karachiDayBounds, karachiDayKey, shiftDayKey } from "@/lib/karachiDay";
 import Customer from "@/lib/models/Customer.model";
 import DailyVisitor from "@/lib/models/DailyVisitor.model";
@@ -17,7 +17,9 @@ import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
 
+const TZ = "Asia/Karachi";
 const sumTotal = { $sum: { $ifNull: ["$pricing.total", { $ifNull: ["$total", 0] }] } };
+const NOT_VOID = { $nin: ["cancelled", "returned", "refunded"] };
 
 function dateMatch(from, to) {
   if (!from && !to) return {};
@@ -58,22 +60,71 @@ const PAYMENT_LABELS = {
   other: "Other",
 };
 
+/**
+ * Profit on collected money: order total − COGS.
+ * Snapshot unitCost of 0 is treated as missing so product costPerItem can fill in.
+ */
 function computeOrderProfit(order, costByProduct) {
-  let profit = 0;
   let cost = 0;
-  let sell = 0;
+  let lineSell = 0;
   for (const it of order.items || []) {
     const qty = Math.max(0, Number(it.quantity) || 0);
     const unitPrice = Math.max(0, Number(it.unitPrice) || 0);
     let unitCost = Number(it.unitCost);
-    if (!Number.isFinite(unitCost) || unitCost < 0) {
+    if (!Number.isFinite(unitCost) || unitCost <= 0) {
       unitCost = it.productId ? costByProduct.get(String(it.productId)) || 0 : 0;
     }
-    sell += unitPrice * qty;
+    lineSell += unitPrice * qty;
     cost += unitCost * qty;
-    profit += (unitPrice - unitCost) * qty;
   }
-  return { profit, cost, sell };
+  const revenue = Math.max(0, Number(order.pricing?.total ?? order.total ?? lineSell) || 0);
+  return { profit: revenue - cost, cost, sell: revenue };
+}
+
+function sumProfits(orders, costByProduct) {
+  let totalProfit = 0;
+  let totalCost = 0;
+  let totalSell = 0;
+  for (const o of orders) {
+    const { profit, cost, sell } = computeOrderProfit(o, costByProduct);
+    totalProfit += profit;
+    totalCost += cost;
+    totalSell += sell;
+  }
+  return {
+    totalProfit: Math.round(totalProfit * 100) / 100,
+    totalCost: Math.round(totalCost * 100) / 100,
+    totalSell: Math.round(totalSell * 100) / 100,
+  };
+}
+
+async function loadCostAndCategoryMaps(productIds) {
+  const costByProduct = new Map();
+  const categoryByProduct = new Map();
+  if (!productIds.size) return { costByProduct, categoryByProduct };
+  const products = await Product.find({ _id: { $in: [...productIds] } })
+    .select("pricing.costPerItem categories")
+    .populate("categories", "name")
+    .lean();
+  for (const p of products) {
+    costByProduct.set(String(p._id), Math.max(0, Number(p.pricing?.costPerItem) || 0));
+    const catName =
+      Array.isArray(p.categories) && p.categories[0]?.name ? p.categories[0].name : "Uncategorized";
+    categoryByProduct.set(String(p._id), catName);
+  }
+  return { costByProduct, categoryByProduct };
+}
+
+function collectProductIds(...orderLists) {
+  const productIds = new Set();
+  for (const orders of orderLists) {
+    for (const o of orders || []) {
+      for (const it of o.items || []) {
+        if (it.productId) productIds.add(String(it.productId));
+      }
+    }
+  }
+  return productIds;
 }
 
 export async function GET(request) {
@@ -97,7 +148,6 @@ export async function GET(request) {
     const yesterdayKey = shiftDayKey(todayKey, -1);
     const { start: todayStart, end: todayEnd } = karachiDayBounds(todayKey);
     const { start: yesterdayStart, end: yesterdayEnd } = karachiDayBounds(yesterdayKey);
-    // Month bounds in Pakistan time (YYYY-MM from todayKey)
     const [ty, tm] = todayKey.split("-").map(Number);
     const monthStart = new Date(`${ty}-${String(tm).padStart(2, "0")}-01T00:00:00+05:00`);
     const prevMonth = tm === 1 ? { y: ty - 1, m: 12 } : { y: ty, m: tm - 1 };
@@ -105,33 +155,47 @@ export async function GET(request) {
       `${prevMonth.y}-${String(prevMonth.m).padStart(2, "0")}-01T00:00:00+05:00`
     );
     const lastMonthEnd = new Date(monthStart.getTime() - 1);
+    const weekFrom = karachiDayBounds(shiftDayKey(todayKey, -6)).start;
 
     const sellMatch = {
       ...period,
-      orderStatus: { $nin: ["cancelled", "returned", "refunded"] },
+      orderStatus: NOT_VOID,
     };
-    const paidMatch = { ...period, paymentStatus: "paid" };
+    const paidMatch = {
+      ...period,
+      paymentStatus: "paid",
+      orderStatus: NOT_VOID,
+    };
+    const priorPaidMatch = {
+      createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
+      paymentStatus: "paid",
+      orderStatus: NOT_VOID,
+    };
 
-    const chartFrom =
-      range.from ||
-      (() => {
-        const d = new Date();
-        d.setUTCDate(d.getUTCDate() - 29);
-        return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-      })();
-    const chartTo = range.to || new Date();
+    const chartFrom = range.from || karachiDayBounds(shiftDayKey(todayKey, -29)).start;
+    const chartTo = range.to || todayEnd;
     const { mode: chartMode, buckets } = buildChartBuckets(
       range.id === "all" ? chartFrom : range.from || chartFrom,
       range.id === "all" ? chartTo : range.to || chartTo
     );
 
+    const trendCreatedAt =
+      range.from || range.to
+        ? {
+            ...(range.from ? { $gte: range.from } : {}),
+            ...(range.to ? { $lte: range.to } : {}),
+          }
+        : { $gte: chartFrom, $lte: chartTo };
+
     const [
       periodSalesAgg,
       periodOrdersCount,
-      paidRevenueAgg,
+      periodPaidOrdersCount,
       totalSellAgg,
       totalCustomers,
-      pendingOrders,
+      pendingOrdersAllTime,
+      pendingOrdersPeriod,
+      pendingOrdersToday,
       ordersReceived,
       ordersDispatched,
       ordersDelivered,
@@ -141,6 +205,7 @@ export async function GET(request) {
       salesByDayAgg,
       lowStockProducts,
       profitOrders,
+      priorProfitOrders,
       todayPaidAgg,
       todayOrderCount,
       todayOrderValueAgg,
@@ -149,17 +214,22 @@ export async function GET(request) {
       monthPaidAgg,
       lastMonthPaidAgg,
       paymentAgg,
-      weekdayAgg,
       categoryOrders,
+      weekdayOrders,
       todayVisitorCount,
       yesterdayVisitorCount,
     ] = await Promise.all([
       Order.aggregate([{ $match: paidMatch }, { $group: { _id: null, total: sumTotal } }]),
       Order.countDocuments(period),
-      Order.aggregate([{ $match: paidMatch }, { $group: { _id: null, total: sumTotal } }]),
+      Order.countDocuments(paidMatch),
       Order.aggregate([{ $match: sellMatch }, { $group: { _id: null, total: sumTotal } }]),
       Customer.countDocuments(),
       Order.countDocuments({ orderStatus: "pending" }),
+      Order.countDocuments({ ...period, orderStatus: "pending" }),
+      Order.countDocuments({
+        orderStatus: "pending",
+        createdAt: { $gte: todayStart, $lte: todayEnd },
+      }),
       Order.countDocuments(period),
       Order.countDocuments({ ...period, orderStatus: "shipped" }),
       Order.countDocuments({ ...period, orderStatus: "delivered" }),
@@ -177,20 +247,14 @@ export async function GET(request) {
         {
           $match: {
             paymentStatus: "paid",
-            ...(range.from || range.to
-              ? {
-                  createdAt: {
-                    ...(range.from ? { $gte: range.from } : {}),
-                    ...(range.to ? { $lte: range.to } : {}),
-                  },
-                }
-              : { createdAt: { $gte: chartFrom, $lte: chartTo } }),
+            orderStatus: NOT_VOID,
+            createdAt: trendCreatedAt,
           },
         },
         {
           $group: {
             _id: {
-              $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "UTC" },
+              $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: TZ },
             },
             revenue: sumTotal,
           },
@@ -206,13 +270,17 @@ export async function GET(request) {
       })
         .select("name inventory.quantity inventory.lowStockThreshold")
         .lean(),
-      Order.find(sellMatch)
-        .select("items.productId items.quantity items.unitPrice items.unitCost items.name")
+      Order.find(paidMatch)
+        .select("items.productId items.quantity items.unitPrice items.unitCost items.name pricing.total total")
+        .lean(),
+      Order.find(priorPaidMatch)
+        .select("items.productId items.quantity items.unitPrice items.unitCost items.name pricing.total total")
         .lean(),
       Order.aggregate([
         {
           $match: {
             paymentStatus: "paid",
+            orderStatus: NOT_VOID,
             createdAt: { $gte: todayStart, $lte: todayEnd },
           },
         },
@@ -220,15 +288,14 @@ export async function GET(request) {
       ]),
       Order.countDocuments({ createdAt: { $gte: todayStart, $lte: todayEnd } }),
       Order.aggregate([
-        {
-          $match: { createdAt: { $gte: todayStart, $lte: todayEnd } },
-        },
+        { $match: { createdAt: { $gte: todayStart, $lte: todayEnd } } },
         { $group: { _id: null, total: sumTotal } },
       ]),
       Order.aggregate([
         {
           $match: {
             paymentStatus: "paid",
+            orderStatus: NOT_VOID,
             createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
           },
         },
@@ -239,6 +306,7 @@ export async function GET(request) {
         {
           $match: {
             paymentStatus: "paid",
+            orderStatus: NOT_VOID,
             createdAt: { $gte: monthStart, $lte: todayEnd },
           },
         },
@@ -248,13 +316,14 @@ export async function GET(request) {
         {
           $match: {
             paymentStatus: "paid",
+            orderStatus: NOT_VOID,
             createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
           },
         },
         { $group: { _id: null, total: sumTotal } },
       ]),
       Order.aggregate([
-        { $match: period },
+        { $match: paidMatch },
         {
           $group: {
             _id: { $ifNull: ["$paymentMethod", "$payment.method"] },
@@ -263,96 +332,37 @@ export async function GET(request) {
           },
         },
       ]),
-      Order.aggregate([
-        {
-          $match: {
-            paymentStatus: "paid",
-            createdAt: {
-              $gte: new Date(todayStart.getTime() - 6 * 24 * 60 * 60 * 1000),
-              $lte: todayEnd,
-            },
-          },
-        },
-        {
-          $group: {
-            _id: { $dayOfWeek: "$createdAt" },
-            revenue: sumTotal,
-            cost: {
-              $sum: {
-                $reduce: {
-                  input: { $ifNull: ["$items", []] },
-                  initialValue: 0,
-                  in: {
-                    $add: [
-                      "$$value",
-                      {
-                        $multiply: [
-                          { $ifNull: ["$$this.quantity", 0] },
-                          { $ifNull: ["$$this.unitCost", 0] },
-                        ],
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        },
-      ]),
-      Order.find(sellMatch)
+      Order.find(paidMatch)
         .select("items.productId items.quantity items.unitPrice items.name")
+        .lean(),
+      Order.find({
+        paymentStatus: "paid",
+        orderStatus: NOT_VOID,
+        createdAt: { $gte: weekFrom, $lte: todayEnd },
+      })
+        .select(
+          "createdAt items.productId items.quantity items.unitPrice items.unitCost pricing.total total"
+        )
         .lean(),
       DailyVisitor.countDocuments({ dayKey: todayKey }),
       DailyVisitor.countDocuments({ dayKey: yesterdayKey }),
     ]);
 
     const periodSales = periodSalesAgg[0]?.total ?? 0;
-    const totalRevenue = paidRevenueAgg[0]?.total ?? 0;
-    const totalSell = totalSellAgg[0]?.total ?? 0;
+    const totalRevenue = periodSales;
+    const totalSellOpen = totalSellAgg[0]?.total ?? 0;
     const calendarTodaySales = todayPaidAgg[0]?.total ?? 0;
     const todayOrderValue = todayOrderValueAgg[0]?.total ?? 0;
     const yesterdaySales = yesterdayPaidAgg[0]?.total ?? 0;
     const thisMonthRevenue = monthPaidAgg[0]?.total ?? 0;
     const lastMonthRevenue = lastMonthPaidAgg[0]?.total ?? 0;
 
-    const productIds = new Set();
-    for (const o of profitOrders) {
-      for (const it of o.items || []) {
-        if (it.productId) productIds.add(String(it.productId));
-      }
-    }
-    for (const o of categoryOrders) {
-      for (const it of o.items || []) {
-        if (it.productId) productIds.add(String(it.productId));
-      }
-    }
-    const costByProduct = new Map();
-    const categoryByProduct = new Map();
-    if (productIds.size) {
-      const products = await Product.find({ _id: { $in: [...productIds] } })
-        .select("pricing.costPerItem categories")
-        .populate("categories", "name")
-        .lean();
-      for (const p of products) {
-        costByProduct.set(String(p._id), Math.max(0, Number(p.pricing?.costPerItem) || 0));
-        const catName = Array.isArray(p.categories) && p.categories[0]?.name
-          ? p.categories[0].name
-          : "Uncategorized";
-        categoryByProduct.set(String(p._id), catName);
-      }
-    }
+    const productIds = collectProductIds(profitOrders, priorProfitOrders, categoryOrders, weekdayOrders);
+    const { costByProduct, categoryByProduct } = await loadCostAndCategoryMaps(productIds);
 
-    let totalProfit = 0;
-    let totalCost = 0;
-    for (const o of profitOrders) {
-      const { profit, cost } = computeOrderProfit(o, costByProduct);
-      totalProfit += profit;
-      totalCost += cost;
-    }
-    totalProfit = Math.round(totalProfit * 100) / 100;
-    totalCost = Math.round(totalCost * 100) / 100;
-    const profitMargin =
-      totalSell > 0 ? Math.round((totalProfit / totalSell) * 1000) / 10 : 0;
+    const { totalProfit, totalCost, totalSell } = sumProfits(profitOrders, costByProduct);
+    const { totalProfit: priorProfit } = sumProfits(priorProfitOrders, costByProduct);
+    const profitMargin = totalSell > 0 ? Math.round((totalProfit / totalSell) * 1000) / 10 : 0;
 
     const orderStatusCounts = {
       pending: 0,
@@ -387,45 +397,47 @@ export async function GET(request) {
     } else if (buckets.length) {
       salesTrend = buckets.map((b) => {
         let rev = 0;
-        const cursor = new Date(b.from);
-        while (cursor <= b.to) {
-          rev += revenueByDay[formatYmdUtc(cursor)] ?? 0;
-          cursor.setUTCDate(cursor.getUTCDate() + 1);
+        for (let key = karachiDayKey(b.from); key <= karachiDayKey(b.to); key = shiftDayKey(key, 1)) {
+          rev += revenueByDay[key] ?? 0;
         }
         return { date: b.key, label: b.label, revenue: rev };
       });
     } else {
-      const end = new Date();
-      const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate()));
-      start.setUTCDate(start.getUTCDate() - 29);
-      for (let i = 0; i < 30; i += 1) {
-        const d = new Date(start);
-        d.setUTCDate(d.getUTCDate() + i);
-        const key = formatYmdUtc(d);
+      for (let i = 29; i >= 0; i -= 1) {
+        const key = shiftDayKey(todayKey, -i);
+        const { start } = karachiDayBounds(key);
         salesTrend.push({
           date: key,
-          label: d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }),
+          label: start.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: TZ }),
           revenue: revenueByDay[key] ?? 0,
         });
       }
     }
 
-    // Mongo dayOfWeek: 1=Sun … 7=Sat → map to Mon–Sun chart
-    const weekdayMap = { 2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5, 1: 6 };
     const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const labelToIdx = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
     const weekdayRevenueVsCost = weekdayLabels.map((label) => ({
       label,
       revenue: 0,
       cost: 0,
     }));
-    for (const row of weekdayAgg) {
-      const idx = weekdayMap[row._id];
+    for (const o of weekdayOrders) {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: TZ,
+        weekday: "short",
+      }).formatToParts(new Date(o.createdAt));
+      const wd = parts.find((p) => p.type === "weekday")?.value;
+      const idx = labelToIdx[wd];
       if (idx == null) continue;
-      weekdayRevenueVsCost[idx].revenue = Math.round((Number(row.revenue) || 0) * 100) / 100;
-      weekdayRevenueVsCost[idx].cost = Math.round((Number(row.cost) || 0) * 100) / 100;
+      const { cost, sell } = computeOrderProfit(o, costByProduct);
+      weekdayRevenueVsCost[idx].revenue += sell;
+      weekdayRevenueVsCost[idx].cost += cost;
+    }
+    for (const row of weekdayRevenueVsCost) {
+      row.revenue = Math.round(row.revenue * 100) / 100;
+      row.cost = Math.round(row.cost * 100) / 100;
     }
 
-    // Payment methods
     const paymentTotals = {};
     let paymentSum = 0;
     for (const row of paymentAgg) {
@@ -442,7 +454,6 @@ export async function GET(request) {
       }))
       .sort((a, b) => b.count - a.count);
 
-    // Sales by category
     const catSell = {};
     for (const o of categoryOrders) {
       for (const it of o.items || []) {
@@ -489,26 +500,25 @@ export async function GET(request) {
       threshold: p.inventory?.lowStockThreshold ?? 5,
     }));
 
-    // Business insights (simple heuristics)
     const insights = [];
     const bestWeekday = [...weekdayRevenueVsCost].sort((a, b) => b.revenue - a.revenue)[0];
     if (bestWeekday?.revenue > 0) {
       insights.push({
         icon: "bolt",
-        text: `${bestWeekday.label} is your strongest day this week (avg Rs ${Math.round(bestWeekday.revenue).toLocaleString("en-PK")}). Consider promos on quieter days.`,
+        text: `${bestWeekday.label} is your strongest day this week (Rs ${Math.round(bestWeekday.revenue).toLocaleString("en-PK")} paid). Consider promos on quieter days.`,
       });
     }
     if (profitMargin > 0) {
       insights.push({
         icon: "bolt",
-        text: `Net margin is ${profitMargin}% on sell in this period. Keep cost-per-item updated for accurate profit.`,
+        text: `Net margin is ${profitMargin}% on paid sales in this period. Keep cost-per-item updated for accurate profit.`,
       });
     }
     const codShare = paymentMethods.find((p) => p.key === "cod")?.percent || 0;
     if (codShare >= 40) {
       insights.push({
         icon: "bolt",
-        text: `COD is ${codShare}% of orders. Nudge customers to JazzCash/Easypaisa to lower returns and collection delays.`,
+        text: `COD is ${codShare}% of paid orders. Nudge customers to JazzCash/Easypaisa to lower returns and collection delays.`,
       });
     }
     if (ordersReturned > 0 && ordersReceived > 0) {
@@ -525,6 +535,8 @@ export async function GET(request) {
       });
     }
 
+    const trendPaidTotal = salesTrend.reduce((s, b) => s + (Number(b.revenue) || 0), 0);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -536,6 +548,7 @@ export async function GET(request) {
         },
         periodSales,
         periodOrders: periodOrdersCount,
+        periodPaidOrders: periodPaidOrdersCount,
         todaySales: calendarTodaySales,
         todayOrders: todayOrderCount,
         todayOrderValue,
@@ -547,16 +560,19 @@ export async function GET(request) {
         monthlyRevenue: thisMonthRevenue,
         lastMonthRevenue,
         monthlyGrowth: pctChange(thisMonthRevenue, lastMonthRevenue),
-        timezone: "Asia/Karachi",
+        timezone: TZ,
         todayKey,
         totalRevenue,
         totalSell,
+        totalSellOpen,
         totalProfit,
         totalCost,
         profitMargin,
-        profitGrowth: pctChange(totalProfit, lastMonthRevenue > 0 ? lastMonthRevenue * 0.25 : 0),
+        profitGrowth: pctChange(totalProfit, priorProfit),
         totalCustomers,
-        pendingOrders,
+        pendingOrders: pendingOrdersToday,
+        pendingOrdersPeriod,
+        pendingOrdersAllTime,
         ordersReceived,
         ordersDispatched,
         ordersDelivered,
@@ -565,6 +581,7 @@ export async function GET(request) {
         orderStatusCounts,
         salesLast7Days: salesTrend,
         salesTrend,
+        salesTrendTotal: Math.round(trendPaidTotal * 100) / 100,
         chartMode,
         lowStockProducts: lowStock,
         salesByCategory,

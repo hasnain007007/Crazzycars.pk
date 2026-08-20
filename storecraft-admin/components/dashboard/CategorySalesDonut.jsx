@@ -39,7 +39,7 @@ export function CategorySalesDonut({ data }) {
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Sales by category</h3>
-      <p className="text-xs text-slate-400">Period sell mix</p>
+      <p className="text-xs text-slate-400">Paid sales mix</p>
       <div className="mt-2 flex h-56 flex-col items-center sm:flex-row">
         {!rows.length ? (
           <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">

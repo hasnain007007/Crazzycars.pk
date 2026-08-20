@@ -52,7 +52,9 @@ export function KpiCards({ data }) {
   const d = data || {};
   const margin = Number(d.profitMargin) || 0;
   const rangeLabel = d.range?.label || "period";
-  const pending = Number(d.pendingOrders) || 0;
+  const pendingToday = Number(d.pendingOrders) || 0;
+  const pendingPeriod = Number(d.pendingOrdersPeriod) || 0;
+  const paidOrders = Number(d.periodPaidOrders) || 0;
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -67,7 +69,7 @@ export function KpiCards({ data }) {
         label="Today's Orders"
         value={formatCount(d.todayOrders)}
         badge={d.todayOrdersGrowth}
-        hint={`${formatAdminPrice(d.todayOrderValue)} order value · ${pending} pending`}
+        hint={`${formatAdminPrice(d.todayOrderValue)} order value · ${pendingToday} pending today`}
         accent={BLUE}
       />
       <HeroCard
@@ -81,20 +83,20 @@ export function KpiCards({ data }) {
         label="Monthly Revenue"
         value={formatAdminPrice(d.monthlyRevenue)}
         badge={d.monthlyGrowth}
-        hint={`vs ${formatAdminPrice(d.lastMonthRevenue)} last month`}
+        hint={`This month (PKT) · vs ${formatAdminPrice(d.lastMonthRevenue)} last month`}
         accent={GREEN}
       />
       <HeroCard
         label="Period Orders"
         value={formatCount(d.periodOrders)}
-        hint={`${formatAdminPrice(d.periodSales)} paid sales · ${rangeLabel}`}
+        hint={`${formatAdminPrice(d.periodSales)} paid · ${paidOrders} paid orders · ${pendingPeriod} pending · ${rangeLabel}`}
         accent={BLUE}
       />
       <HeroCard
         label="Net Profit"
         value={formatAdminPrice(d.totalProfit)}
         badge={d.profitGrowth ?? d.monthlyGrowth}
-        hint={`${margin}% margin · ${rangeLabel}`}
+        hint={`${margin}% margin on paid sales · ${rangeLabel}`}
         accent={ORANGE}
       />
     </div>
