@@ -176,7 +176,10 @@ export function collectionPageJsonLd({
         name: p.name || slug,
         url: itemUrl,
       };
-      // Google requires offers | review | aggregateRating on Product rich results.
+      const ratingValue = Number(p.ratingValue || p.averageRating || p.rating) || 0;
+      const reviewCount = Number(p.reviewCount || p.numReviews || p.totalReviews) || 0;
+      // Google Product rich results require offers | review | aggregateRating.
+      // Never emit a bare Product node — that is the "1 critical issue" in GSC.
       if (priceNum != null) {
         productNode.offers = {
           "@type": "Offer",
@@ -190,8 +193,6 @@ export function collectionPageJsonLd({
           }),
         };
       }
-      const ratingValue = Number(p.ratingValue || p.averageRating || p.rating) || 0;
-      const reviewCount = Number(p.reviewCount || p.numReviews || p.totalReviews) || 0;
       if (ratingValue > 0 && reviewCount > 0) {
         productNode.aggregateRating = {
           "@type": "AggregateRating",
@@ -201,13 +202,23 @@ export function collectionPageJsonLd({
           worstRating: "1",
         };
       }
-      return {
+      const listItem = {
         "@type": "ListItem",
         position: i + 1,
         url: itemUrl,
         name: p.name || slug,
-        item: productNode,
       };
+      if (productNode.offers || productNode.aggregateRating) {
+        const img =
+          (typeof p.image === "string" && p.image) ||
+          p.images?.[0] ||
+          p.media?.images?.find((i) => i?.isMain)?.url ||
+          p.media?.images?.[0]?.url ||
+          null;
+        if (img) productNode.image = img;
+        listItem.item = productNode;
+      }
+      return listItem;
     })
     .filter(Boolean);
 

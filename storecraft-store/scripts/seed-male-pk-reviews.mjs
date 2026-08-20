@@ -3,7 +3,8 @@
  *
  * Usage (from storecraft-store):
  *   node --env-file=.env.local scripts/seed-male-pk-reviews.mjs
- *   node --env-file=.env.local scripts/seed-male-pk-reviews.mjs --category led-lighting --limit 40
+ *   node --env-file=.env.local scripts/seed-male-pk-reviews.mjs --category carbon-fiber --limit 80
+ *   node --env-file=.env.local scripts/seed-male-pk-reviews.mjs --zero-rating --limit 250
  *
  * Idempotent: skips if the same product already has a review from the same reviewer name + title.
  */
@@ -21,8 +22,9 @@ function arg(name, fallback = "") {
   if (i >= 0 && args[i + 1]) return args[i + 1];
   return fallback;
 }
-const categorySlug = arg("category", "led-lighting");
-const limit = Math.max(1, Math.min(80, parseInt(arg("limit", "40"), 10) || 40));
+const zeroRating = args.includes("--zero-rating");
+const categorySlug = arg("category", zeroRating ? "" : "led-lighting");
+const limit = Math.max(1, Math.min(400, parseInt(arg("limit", zeroRating ? "250" : "40"), 10) || 40));
 
 const MALE_REVIEWERS = [
   { name: "Ahmed Khan", location: "Lahore" },
@@ -43,7 +45,7 @@ const TEMPLATES = [
   {
     rating: 5,
     title: "Bohot zabardast product",
-    body: "Pakistan mein COD se order kiya — packing theek thi aur light quality solid hai. Recommend karta hoon.",
+    body: "Pakistan mein COD se order kiya — packing theek thi aur quality solid hai. Recommend karta hoon.",
   },
   {
     rating: 5,
@@ -53,12 +55,12 @@ const TEMPLATES = [
   {
     rating: 4,
     title: "Good quality, worth the price",
-    body: "Brightness aur finish dono achi hain. Thora time laga install karne mein lekin result acha hai.",
+    body: "Finish aur fitment dono achi hain. Thora time laga install karne mein lekin result acha hai.",
   },
   {
     rating: 5,
     title: "Recommended for Pakistani cars",
-    body: "Apni Corolla pe lagaya — night mein clear visibility. Support ne WhatsApp pe help ki.",
+    body: "Apni gaari pe lagaya — look clear improve hua. Support ne WhatsApp pe help ki.",
   },
   {
     rating: 4,
@@ -68,7 +70,7 @@ const TEMPLATES = [
   {
     rating: 5,
     title: "Fast dispatch aur original look",
-    body: "Order jaldi dispatch hua. Product photo jaisa hi mila. Male customers ke liye practical choice.",
+    body: "Order jaldi dispatch hua. Product photo jaisa hi mila. Practical choice for daily use.",
   },
 ];
 
@@ -136,32 +138,55 @@ async function recalc(productId) {
   });
 }
 
-async function main() {
-  await mongoose.connect(uri);
-  console.log("connected");
+async function loadProducts() {
+  if (zeroRating) {
+    const products = await Product.find({
+      status: "active",
+      $or: [
+        { reviewCount: { $exists: false } },
+        { reviewCount: null },
+        { reviewCount: 0 },
+        { averageRating: { $exists: false } },
+        { averageRating: null },
+        { averageRating: 0 },
+      ],
+    })
+      .select("name slug reviewCount averageRating")
+      .limit(limit)
+      .lean();
+    return products.filter((p) => !(Number(p.averageRating) > 0 && Number(p.reviewCount) > 0));
+  }
 
   const cat = await Category.findOne({ slug: categorySlug, status: "active" }).lean();
   if (!cat) {
     console.error("Category not found:", categorySlug);
     process.exit(1);
   }
-
-  const products = await Product.find({
+  return Product.find({
     status: "active",
     categories: cat._id,
   })
     .select("name slug")
     .limit(limit)
     .lean();
+}
 
-  console.log(`Seeding reviews for ${products.length} products in ${categorySlug}`);
+async function main() {
+  await mongoose.connect(uri);
+  console.log("connected");
+
+  const products = await loadProducts();
+  console.log(
+    zeroRating
+      ? `Seeding reviews for ${products.length} zero-rating products`
+      : `Seeding reviews for ${products.length} products in ${categorySlug}`
+  );
 
   let created = 0;
   let skipped = 0;
 
   for (let i = 0; i < products.length; i++) {
     const p = products[i];
-    // 2 reviews per product, different male reviewers
     for (let j = 0; j < 2; j++) {
       const reviewer = MALE_REVIEWERS[(i * 2 + j) % MALE_REVIEWERS.length];
       const tpl = TEMPLATES[(i + j) % TEMPLATES.length];
@@ -200,7 +225,7 @@ async function main() {
     await recalc(p._id);
   }
 
-  console.log(JSON.stringify({ created, skipped, products: products.length }, null, 2));
+  console.log(JSON.stringify({ created, skipped, products: products.length, mode: zeroRating ? "zero-rating" : categorySlug }, null, 2));
   await mongoose.disconnect();
 }
 

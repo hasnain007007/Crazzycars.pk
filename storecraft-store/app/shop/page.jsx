@@ -2,6 +2,7 @@ import { ShopListingLayout } from "@/components/store/ShopListingLayout";
 import { fetchProductsServer } from "@/lib/serverProductFetch";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { listingCanonicalPath, listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
+import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 
 export async function generateMetadata({ searchParams }) {
   const listing = parseListingSearchParams(await searchParams);
@@ -34,8 +35,34 @@ export default async function ShopPage({ searchParams }) {
   const listing = parseListingSearchParams(await searchParams);
   const { products, total, totalPages } = await fetchProductsServer({ listing });
 
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: "Home", url: "/" },
+    { name: "Shop", url: "/shop" },
+  ]);
+  const collectionLd = collectionPageJsonLd({
+    name: listing.q
+      ? `Search: ${listing.q}`
+      : listing.sale || listing.deals
+        ? "Hot Deals"
+        : "Shop All Car Accessories",
+    description:
+      "Browse premium car accessories in Pakistan. Filter by category, brand, and car make. Cash on delivery available nationwide from Crazzycars.pk.",
+    url: listingCanonicalPath("/shop", listing),
+    products,
+    numberOfItems: total,
+    breadcrumb: breadcrumbLd,
+  });
+
   return (
     <div className="min-h-screen bg-[#F8F8F8]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
+      />
       <ShopListingLayout
         pathname="/shop"
         listing={listing}

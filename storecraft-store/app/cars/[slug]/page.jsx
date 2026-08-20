@@ -7,7 +7,7 @@ import {
   loadVehicleBySlug,
   serializeVehicleProduct,
 } from "@/lib/vehiclePageData";
-import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
 import { listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
@@ -89,6 +89,16 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     { name: vehicle.displayName, url: `/cars/${vehicle.slug}` },
   ];
   const breadcrumbLd = breadcrumbJsonLd(crumbs);
+  const collectionLd = collectionPageJsonLd({
+    name: `${vehicle.displayName} Accessories`,
+    description:
+      (vehicle.metaDescription || "").trim() ||
+      `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`,
+    url: `/cars/${vehicle.slug}`,
+    products,
+    numberOfItems: total,
+    breadcrumb: breadcrumbLd,
+  });
 
   const heroDesc =
     (vehicle.metaDescription || "").trim() ||
@@ -99,6 +109,10 @@ export default async function VehicleSlugPage({ params, searchParams }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
       />
 
       <section
