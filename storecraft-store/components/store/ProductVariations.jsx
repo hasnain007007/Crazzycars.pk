@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export default function ProductVariations({
   simpleVariations = [],
@@ -10,8 +10,15 @@ export default function ProductVariations({
 }) {
   const [selected, setSelected] = useState({});
   const [currentPrice, setCurrentPrice] = useState(basePrice);
+  const onChangeRef = useRef(onVariationChange);
+  useEffect(() => {
+    onChangeRef.current = onVariationChange;
+  }, [onVariationChange]);
 
-  const enabledVariations = simpleVariations.filter((v) => v.enabled && v.tags?.length > 0);
+  const enabledVariations = useMemo(
+    () => (simpleVariations || []).filter((v) => v.enabled && v.tags?.length > 0),
+    [simpleVariations]
+  );
 
   const checkIfOutOfStock = useCallback(
     (variationName, tag) => {
@@ -43,19 +50,20 @@ export default function ProductVariations({
   };
 
   useEffect(() => {
-    const allSelected = enabledVariations.every((v) => selected[v.name]);
+    const allSelected =
+      enabledVariations.length > 0 && enabledVariations.every((v) => selected[v.name]);
     if (allSelected && variationCombinations.length > 0) {
       const match = variationCombinations.find((combo) =>
         (combo.options || []).every((opt) => selected[opt.name] === opt.value)
       );
       const finalPrice = Number(match?.price);
       setCurrentPrice(Number.isFinite(finalPrice) ? finalPrice : basePrice);
-      onVariationChange?.(selected, match || null);
+      onChangeRef.current?.(selected, match || null);
     } else {
       setCurrentPrice(basePrice);
-      onVariationChange?.(selected, null);
+      onChangeRef.current?.(selected, null);
     }
-  }, [selected, enabledVariations, variationCombinations, basePrice, onVariationChange]);
+  }, [selected, enabledVariations, variationCombinations, basePrice]);
 
   if (enabledVariations.length === 0) return null;
 
@@ -71,59 +79,59 @@ export default function ProductVariations({
       >
         {enabledVariations.map((variation) => (
           <div key={variation.name}>
-          <label
-            style={{
-              display: "block",
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#111111",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              marginBottom: 8,
-            }}
-          >
-            {variation.name}
-          </label>
+            <label
+              style={{
+                display: "block",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#111111",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginBottom: 8,
+              }}
+            >
+              {variation.name}
+            </label>
 
-          <select
-            value={selected[variation.name] || ""}
-            onChange={(e) => handleVariationChange(variation.name, e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 14px",
-              border: "1.5px solid #E5E5E5",
-              borderRadius: 6,
-              fontSize: 14,
-              color: "#111111",
-              background: "#FFFFFF",
-              cursor: "pointer",
-              outline: "none",
-              appearance: "none",
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 12px center",
-              paddingRight: 36,
-              fontFamily: "inherit",
-              transition: "border-color 0.15s",
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "#111111";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "#E5E5E5";
-            }}
-          >
-            <option value="">Select {variation.name}</option>
-            {variation.tags.map((tag) => {
-              const isOutOfStock = checkIfOutOfStock(variation.name, tag);
-              return (
-                <option key={tag} value={tag} disabled={isOutOfStock}>
-                  {tag}
-                  {isOutOfStock ? " - Out of Stock" : ""}
-                </option>
-              );
-            })}
-          </select>
+            <select
+              value={selected[variation.name] || ""}
+              onChange={(e) => handleVariationChange(variation.name, e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                border: "1.5px solid #E5E5E5",
+                borderRadius: 6,
+                fontSize: 14,
+                color: "#111111",
+                background: "#FFFFFF",
+                cursor: "pointer",
+                outline: "none",
+                appearance: "none",
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 12px center",
+                paddingRight: 36,
+                fontFamily: "inherit",
+                transition: "border-color 0.15s",
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#111111";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#E5E5E5";
+              }}
+            >
+              <option value="">Select {variation.name}</option>
+              {variation.tags.map((tag) => {
+                const isOutOfStock = checkIfOutOfStock(variation.name, tag);
+                return (
+                  <option key={tag} value={tag} disabled={isOutOfStock}>
+                    {tag}
+                    {isOutOfStock ? " - Out of Stock" : ""}
+                  </option>
+                );
+              })}
+            </select>
           </div>
         ))}
       </div>

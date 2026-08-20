@@ -726,6 +726,7 @@ export function CheckoutView() {
             variantId: x.variantId || "",
             variationLabel: x.variationLabel,
             selectedVariation: x.selectedVariation || null,
+            selectedOptions: x.selectedOptions || null,
             matchedCombination: x.matchedCombination || null,
             calculatedWeight: x.calculatedWeight || 0,
             unitPrice: x.unitPrice ?? x.price,

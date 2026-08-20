@@ -195,7 +195,30 @@ export function serializeStoreProductDetail(p) {
     })),
     variants: serializedVariants,
     simpleVariations: Array.isArray(p.simpleVariations) ? p.simpleVariations : [],
-    variationCombinations: Array.isArray(p.variationCombinations) ? p.variationCombinations : [],
+    variationCombinations: Array.isArray(p.variationCombinations)
+      ? p.variationCombinations.map((c) => ({
+          _id: c._id != null ? String(c._id) : undefined,
+          options: Array.isArray(c.options)
+            ? c.options.map((o) => ({
+                name: String(o?.name || "").trim(),
+                value: String(o?.value || "").trim(),
+              }))
+            : [],
+          price: Math.max(0, Number(c.price) || 0),
+          compareAtPrice: Math.max(0, Number(c.compareAtPrice) || 0),
+          priceDelta: Number(c.priceDelta) || 0,
+          weight: Math.max(0, Number(c.weight) || 0),
+          weightDelta: Number(c.weightDelta) || 0,
+          stock: Math.max(0, Number(c.stock) || 0),
+          sku: c.sku || "",
+          image:
+            typeof c.image === "string"
+              ? c.image
+              : c.image?.url
+                ? String(c.image.url)
+                : "",
+        }))
+      : [],
     variations: (p.variations || []).map((v, idx) => ({
       id: v._id != null ? String(v._id) : `var-${idx}`,
       type: v.type,

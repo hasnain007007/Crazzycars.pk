@@ -192,19 +192,50 @@ function combinationsOptionsMatch(comboOpts, mcOpts) {
 
 /** Resolve variationCombinations row from cart payload (matchedCombination). */
 function resolveCombinationFromCart(p, raw) {
-  const mc = raw.matchedCombination;
-  if (!mc || typeof mc !== "object") return null;
   const combos = p.variationCombinations || [];
   if (!Array.isArray(combos) || combos.length === 0) return null;
-  const id = mc._id != null ? String(mc._id) : "";
-  if (id && mongoose.Types.ObjectId.isValid(id)) {
-    const found = combos.find((c) => String(c._id) === id);
+
+  const mc = raw.matchedCombination;
+  if (mc && typeof mc === "object") {
+    const id = mc._id != null ? String(mc._id) : "";
+    if (id && mongoose.Types.ObjectId.isValid(id)) {
+      const found = combos.find((c) => String(c._id) === id);
+      if (found) return found;
+    }
+    const mcOpts = mc.options;
+    if (Array.isArray(mcOpts) && mcOpts.length > 0) {
+      const found = combos.find((c) => combinationsOptionsMatch(c.options || [], mcOpts));
+      if (found) return found;
+    }
+  }
+
+  // Fallback: selectedOptions [{name,value}] from product page
+  const selectedOpts = Array.isArray(raw.selectedOptions) ? raw.selectedOptions : null;
+  if (selectedOpts?.length) {
+    const found = combos.find((c) => combinationsOptionsMatch(c.options || [], selectedOpts));
     if (found) return found;
   }
-  const mcOpts = mc.options;
-  if (Array.isArray(mcOpts) && mcOpts.length > 0) {
-    return combos.find((c) => combinationsOptionsMatch(c.options || [], mcOpts)) || null;
+
+  // Fallback: parse "Style: Neon LED, Color: Red" variationLabel
+  const label = String(raw.variationLabel || "").trim();
+  if (label) {
+    const parsed = label
+      .split(",")
+      .map((part) => {
+        const idx = part.indexOf(":");
+        if (idx < 0) return null;
+        const name = part.slice(0, idx).trim();
+        const value = part.slice(idx + 1).trim();
+        if (!name || !value) return null;
+        return { name, value };
+      })
+      .filter(Boolean);
+    if (parsed.length) {
+      const found = combos.find((c) => combinationsOptionsMatch(c.options || [], parsed));
+      if (found) return found;
+    }
   }
+
   return null;
 }
 
@@ -219,9 +250,18 @@ function cartHasModernSelection(raw) {
     if (Number.isFinite(Number(mc.stock))) return true;
   }
   if (String(raw.variationLabel || "").trim()) return true;
+  if (Array.isArray(raw.selectedOptions) && raw.selectedOptions.length > 0) return true;
   const sv = normalizeSelectedVariation(raw.selectedVariation);
   if (sv?.choices?.length) return true;
   return false;
+}
+
+function variationLabelFromCombo(combo) {
+  const opts = Array.isArray(combo?.options) ? combo.options : [];
+  return opts
+    .map((o) => `${String(o?.name || "").trim()}: ${String(o?.value || "").trim()}`)
+    .filter((s) => s !== ":")
+    .join(", ");
 }
 
 function lineUnitPriceAndShipping(p, raw, selectedVariation) {
@@ -237,9 +277,32 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
         perUnitWeightKg: Math.max(0, baseWeightKg + addKg),
         surcharge: Math.max(0, Number(v.shippingPriceSurcharge) || 0),
         variant: v,
+        combo: null,
       };
     }
   }
+
+  // Style / Size matrix (simpleVariations + variationCombinations) — price from DB combo only.
+  const resolvedCombo = resolveCombinationFromCart(p, raw);
+  if (resolvedCombo) {
+    const base = effectiveUnitPrice(p);
+    const comboPrice = Number(resolvedCombo.price);
+    const unitPrice = Number.isFinite(comboPrice) && comboPrice >= 0 ? comboPrice : base;
+    const baseWeightKg = toKg(p.inventory?.weight, p.inventory?.weightUnit || "kg");
+    const comboWeightRaw = Number(resolvedCombo.weight);
+    const perUnitWeightKg =
+      Number.isFinite(comboWeightRaw) && comboWeightRaw > 0
+        ? toKg(comboWeightRaw, p.inventory?.weightUnit || "g")
+        : baseWeightKg;
+    return {
+      unitPrice: Math.round(unitPrice * 100) / 100,
+      perUnitWeightKg: Math.max(0, perUnitWeightKg),
+      surcharge: 0,
+      variant: null,
+      combo: resolvedCombo,
+    };
+  }
+
   const base = effectiveUnitPrice(p);
   const baseWeightKg = toKg(p.inventory?.weight, p.inventory?.weightUnit || "kg");
   // Never trust client unitPrice / shipping surcharge / weight — price from DB only.
@@ -249,6 +312,7 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
       perUnitWeightKg: baseWeightKg,
       surcharge: 0,
       variant: null,
+      combo: null,
     };
   }
   if (selectedVariation?.choices?.length) {
@@ -268,6 +332,7 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
       perUnitWeightKg: Math.max(0, baseWeightKg + addShipKg),
       surcharge,
       variant: null,
+      combo: null,
     };
   }
   const addShipKg = toKg(selectedVariation?.additionalShippingWeight ?? 0, "kg");
@@ -277,6 +342,7 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
     perUnitWeightKg: Math.max(0, baseWeightKg + addShipKg),
     surcharge,
     variant: null,
+    combo: null,
   };
 }
 
@@ -444,6 +510,10 @@ export async function POST(request) {
       const qty = Math.max(1, Math.min(99, parseInt(raw.quantity, 10) || 1));
       (p.categories || []).forEach((c) => categoryIdSet.add(String(c)));
       const hasLegacyVariants = legacyVariantsLength(p) > 0;
+      const hasComboMatrix =
+        Array.isArray(p.variationCombinations) &&
+        p.variationCombinations.length > 0 &&
+        (p.simpleVariations || []).some((v) => v?.enabled && Array.isArray(v.tags) && v.tags.length > 0);
       const variantIdStr = String(raw.variantId || "").trim();
       const variantDoc =
         variantIdStr && mongoose.Types.ObjectId.isValid(variantIdStr)
@@ -451,6 +521,29 @@ export async function POST(request) {
           : null;
       const modernPick = cartHasModernSelection(raw);
       const resolvedCombo = resolveCombinationFromCart(p, raw);
+
+      // Style/Size matrix products must resolve a combination — never fall back to base salePrice.
+      if (hasComboMatrix && !resolvedCombo) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Please select options for "${p.name}" before checkout.`,
+          },
+          { status: 400 }
+        );
+      }
+      if (hasComboMatrix && resolvedCombo && p.inventory?.trackInventory !== false && !allowsBackorder(p)) {
+        const cs = resolvedCombo.stock;
+        if (cs !== undefined && cs !== null && Number.isFinite(Number(cs)) && Number(cs) < qty) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Insufficient stock for "${p.name}" for the selected options.`,
+            },
+            { status: 400 }
+          );
+        }
+      }
 
       if (hasLegacyVariants && !variantDoc) {
         if (resolvedCombo) {
@@ -476,7 +569,7 @@ export async function POST(request) {
           );
         }
       }
-      const variation = String(raw.variationLabel || "").trim().slice(0, 200);
+      const variationFromCart = String(raw.variationLabel || "").trim().slice(0, 200);
       const selectedVariation = normalizeSelectedVariation(raw.selectedVariation);
       if (selectedVariation?.choices?.length) {
         for (const c of selectedVariation.choices) {
@@ -489,24 +582,38 @@ export async function POST(request) {
           }
         }
       }
-      const { unitPrice, perUnitWeightKg, surcharge, variant: lineVariant } = lineUnitPriceAndShipping(
-        p,
-        raw,
-        selectedVariation
-      );
+      const {
+        unitPrice,
+        perUnitWeightKg,
+        surcharge,
+        variant: lineVariant,
+        combo: pricedCombo,
+      } = lineUnitPriceAndShipping(p, raw, selectedVariation);
+      const lineCombo = pricedCombo || resolvedCombo;
+      const variation =
+        variationFromCart ||
+        variationLabelFromCombo(lineCombo) ||
+        String(selectedVariation?.label || "").trim().slice(0, 200);
       const matchedWeightTotal = getOrderWeight([
         {
           shipping: { weight: p?.shipping?.weight ?? p?.inventory?.weight ?? 0 },
           weight: raw?.weight ?? perUnitWeightKg,
-          matchedCombination: raw?.matchedCombination || null,
+          matchedCombination: lineCombo || raw?.matchedCombination || null,
           quantity: qty,
         },
       ]);
       const lineWeightKg = matchedWeightTotal > 0 ? matchedWeightTotal : perUnitWeightKg * qty;
       totalOrderWeightKg += lineWeightKg;
       totalSurcharge += surcharge * qty;
+      const comboImage =
+        typeof lineCombo?.image === "string"
+          ? lineCombo.image
+          : lineCombo?.image?.url
+            ? String(lineCombo.image.url)
+            : "";
       const img =
         String(raw.image || "").trim() ||
+        comboImage ||
         (lineVariant?.image?.url ? String(lineVariant.image.url) : "") ||
         p.media?.images?.find((i) => i.isMain)?.url ||
         p.media?.images?.[0]?.url ||
@@ -524,7 +631,15 @@ export async function POST(request) {
         name: p.name,
         image: img,
         variation,
-        selectedVariation,
+        selectedVariation: selectedVariation || (variation
+          ? {
+              label: variation,
+              choices: (lineCombo?.options || []).map((o) => ({
+                variationName: o.name,
+                optionValue: o.value,
+              })),
+            }
+          : null),
         calculatedWeight: Math.round(perUnitWeightKg * 1000) / 1000,
         estimatedShipping: Math.max(0, Number(raw.estimatedShipping) || 0),
         customMeasurements: normalizeMeasurements(raw.customMeasurements),

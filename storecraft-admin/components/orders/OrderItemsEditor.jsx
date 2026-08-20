@@ -100,7 +100,7 @@ function buildVariationLabel(selectedOptions, selectedAddOns) {
 function parseSelectedOptionsFromVariation(variation) {
   const out = {};
   String(variation || "")
-    .split("·")
+    .split(/[·,]/)
     .map((s) => s.trim())
     .forEach((part) => {
       if (/^add-ons:/i.test(part)) return;
@@ -200,7 +200,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
     }
   }, []);
 
-  // Hydrate catalog options for existing lines
+  // Hydrate catalog options for existing lines and reprice from combo when Style is known
   useEffect(() => {
     let cancelled = false;
     const ids = [...new Set(lines.map((l) => l.productId).filter(Boolean))];
@@ -216,7 +216,11 @@ export function OrderItemsEditor({ order, onUpdated }) {
           prev.map((line) => {
             if (line.productId !== id || line.catalog) return line;
             const base = catalog.basePrice || line.basePrice || line.unitPrice;
-            return { ...line, catalog, basePrice: base };
+            const next = { ...line, catalog, basePrice: base };
+            if (Object.keys(line.selectedOptions || {}).length > 0) {
+              return repriceLine(next);
+            }
+            return next;
           })
         );
       }
@@ -225,7 +229,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once per order item set
-  }, [order.id, loadProductMeta]);
+  }, [order.id, loadProductMeta, repriceLine]);
 
   const subtotal = useMemo(
     () => lines.reduce((sum, line) => sum + lineTotal(line.quantity, line.unitPrice), 0),

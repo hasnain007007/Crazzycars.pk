@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
@@ -472,32 +472,6 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
   /** Storefront uses combination rows for stock when options + combo matrix exist; otherwise catalog/base quantity. */
   const usesCombinationStock = enabledVariationAxes.length > 0 && hasVariationCombinations;
   const baseStock = Number(product?.inventory?.quantity) || Number(product?.stock) || 0;
-  const displayPrice = Number.isFinite(Number(matchedCombo?.price))
-    ? Number(matchedCombo?.price)
-    : Number(product?.price || basePrice || 0);
-  const availableStock = usesCombinationStock
-    ? matchedCombo != null && Number.isFinite(Number(matchedCombo.stock))
-      ? Number(matchedCombo.stock)
-      : null
-    : baseStock;
-  const quantityForDisplay = usesCombinationStock ? availableStock : baseStock;
-
-  /** Meta Pixel ViewContent — product identity + current display price. */
-  useEffect(() => {
-    if (!product) return;
-    const contentId = resolveProductContentId(product);
-    if (!contentId) return;
-    trackViewContent({
-      contentIds: [contentId],
-      value: displayPrice,
-    });
-  }, [
-    product?._id,
-    product?.id,
-    product?.articleNo,
-    product?.sku,
-    displayPrice,
-  ]);
 
   const variationState = useMemo(() => {
     const tracksStock =
@@ -597,49 +571,112 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     inStock,
   } = variationState;
 
+  const displayPrice = Number.isFinite(Number(matchedCombo?.price))
+    ? Number(matchedCombo?.price)
+    : Number.isFinite(Number(matchedVariation?.price))
+      ? Number(matchedVariation?.price)
+      : Number(product?.price || basePrice || 0);
+  const availableStock = usesCombinationStock
+    ? (matchedCombo || matchedVariation) != null &&
+      Number.isFinite(Number((matchedCombo || matchedVariation)?.stock))
+      ? Number((matchedCombo || matchedVariation).stock)
+      : null
+    : baseStock;
+  const quantityForDisplay = usesCombinationStock ? availableStock : baseStock;
+
+  /** Meta Pixel ViewContent — product identity + current display price. */
+  useEffect(() => {
+    if (!product) return;
+    const contentId = resolveProductContentId(product);
+    if (!contentId) return;
+    trackViewContent({
+      contentIds: [contentId],
+      value: displayPrice,
+    });
+  }, [
+    product?._id,
+    product?.id,
+    product?.articleNo,
+    product?.sku,
+    displayPrice,
+  ]);
+
   const addOnTotal = selectedAddOns.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
   const finalUnitPrice = displayPrice + addOnTotal;
 
+  const handleVariationChange = useCallback((selected, combo) => {
+    setSelectedOptions(selected || {});
+    setMatchedCombo(combo || null);
+  }, []);
+
   function addToCart() {
-    if (!product) return;
+    if (!product) return false;
     if (!canAddToCart) {
       if (hasProductVariations && !allVariationsSelected) {
         toast.error("Please select all options first.");
       } else {
         toast.error("This product is currently out of stock.");
       }
-      return;
+      return false;
     }
     const enabledVars = (product.simpleVariations || []).filter((v) => v.enabled && v.tags?.length > 0);
     if (hasProductVariations && !allVariationsSelected) {
       const missing = enabledVars.filter((v) => !selectedOptions[v.name]).map((v) => v.name);
       toast.error(`Please select: ${missing.join(", ")}`);
-      return;
+      return false;
     }
     if (hasProductVariations && variationCombinations.length > 0 && !matchedVariation) {
       toast.error("Please select all options first.");
-      return;
+      return false;
     }
 
+    const combo = matchedCombo || matchedVariation || null;
+    const optionEntries = hasProductVariations
+      ? Object.entries(selectedOptions).map(([name, value]) => ({ name, value: String(value) }))
+      : [];
+    const variationLabel = optionEntries.map(({ name, value }) => `${name}: ${value}`).join(", ");
+    const comboImage =
+      typeof combo?.image === "string"
+        ? combo.image
+        : combo?.image?.url
+          ? String(combo.image.url)
+          : "";
+
     addItem({
-      productId: product.id,
+      productId: product.id || product._id,
       slug: product.slug,
       name: product.name,
-      image: selectedItem?.type === "image" ? selectedItem.url : images[0]?.url || "",
+      image:
+        comboImage ||
+        (selectedItem?.type === "image" ? selectedItem.url : images[0]?.url || ""),
       unitPrice: finalUnitPrice,
       price: finalUnitPrice,
       quantity: qty,
       articleNo: product.articleNo || "",
-      sku: product.sku || "",
-      variationLabel: hasProductVariations
-        ? Object.entries(selectedOptions)
-            .map(([k, v]) => `${k}: ${v}`)
-            .join(", ")
-        : "",
-      selectedOptions: hasProductVariations
-        ? Object.entries(selectedOptions).map(([name, value]) => ({ name, value }))
+      sku: combo?.sku || product.sku || "",
+      variationLabel,
+      selectedOptions: optionEntries.length ? optionEntries : null,
+      // Keep both shapes so checkout can resolve price/stock even if combo state lagged.
+      matchedCombination: combo
+        ? {
+            ...combo,
+            options:
+              Array.isArray(combo.options) && combo.options.length
+                ? combo.options
+                : optionEntries,
+          }
+        : optionEntries.length
+          ? { options: optionEntries }
+          : null,
+      selectedVariation: optionEntries.length
+        ? {
+            label: variationLabel,
+            choices: optionEntries.map(({ name, value }) => ({
+              variationName: name,
+              optionValue: value,
+            })),
+          }
         : null,
-      matchedCombination: matchedCombo || null,
       simpleVariations: product.simpleVariations || [],
       variationCombinations: product.variationCombinations || [],
       codEnabled: product.codEnabled !== false,
@@ -648,6 +685,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
         Math.max(0, Number(product.advancePercentRequired) || 0)
       ),
     });
+    return true;
   }
   function handleAddToCart() {
     addToCart();
@@ -655,7 +693,8 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
 
   function handleBuyNow() {
     if (!canAddToCart) return;
-    addToCart();
+    const added = addToCart();
+    if (!added) return;
     router.push("/checkout");
   }
 
@@ -1044,10 +1083,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
               simpleVariations={simpleVariations}
               variationCombinations={variationCombinations}
               basePrice={basePrice}
-              onVariationChange={(selected, combo) => {
-                setSelectedOptions(selected);
-                setMatchedCombo(combo);
-              }}
+              onVariationChange={handleVariationChange}
             />
 
             {(product?.addOns || []).length ? (
