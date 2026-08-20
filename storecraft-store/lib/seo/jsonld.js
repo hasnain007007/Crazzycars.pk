@@ -29,10 +29,26 @@ function availabilityUrl({ stock, trackInventory, allowBackorder }) {
   return "https://schema.org/OutOfStock";
 }
 
+/** First positive price from serialized or raw product shapes (skip salePrice: 0). */
+function resolveOfferPrice(p) {
+  const candidates = [
+    p?.price,
+    p?.salePrice,
+    p?.regularPrice,
+    p?.pricing?.salePrice,
+    p?.pricing?.regularPrice,
+  ];
+  for (const c of candidates) {
+    const n = Number(c);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
+
 /** Product schema — every product page */
 export function productJsonLd(p) {
   const SITE = site();
-  const price = p.salePrice ?? p.price ?? p.pricing?.salePrice ?? p.pricing?.regularPrice ?? 0;
+  const price = resolveOfferPrice(p) ?? 0;
   const stock = Number(p.stock ?? p.inventory?.quantity ?? 0);
   const images = Array.isArray(p.images)
     ? p.images
@@ -128,6 +144,9 @@ export function breadcrumbJsonLd(items) {
  * CollectionPage — category / collection pages.
  * `products` should be the products actually rendered on the page (SSR first page).
  * `numberOfItems` uses the full membership count when provided.
+ *
+ * Nested Product nodes MUST include offers (or review / aggregateRating) or Google
+ * Rich Results marks them invalid: "Either offers, review, or aggregateRating…".
  */
 export function collectionPageJsonLd({
   name,
@@ -149,17 +168,45 @@ export function collectionPageJsonLd({
       if (!slug) return null;
       const path = p.urlPath || `/${slug}`;
       const itemUrl = absoluteProductUrl(path);
+      const priceNum = resolveOfferPrice(p);
+      const stock = Number(p.stock ?? p.inventory?.quantity ?? 0);
+      const productNode = {
+        "@type": "Product",
+        "@id": `${itemUrl}#product`,
+        name: p.name || slug,
+        url: itemUrl,
+      };
+      // Google requires offers | review | aggregateRating on Product rich results.
+      if (priceNum != null) {
+        productNode.offers = {
+          "@type": "Offer",
+          url: itemUrl,
+          priceCurrency: "PKR",
+          price: priceNum.toFixed(2),
+          availability: availabilityUrl({
+            stock,
+            trackInventory: p.trackInventory ?? p.inventory?.trackInventory,
+            allowBackorder: p.allowBackorder ?? p.inventory?.allowBackorder,
+          }),
+        };
+      }
+      const ratingValue = Number(p.ratingValue || p.averageRating || p.rating) || 0;
+      const reviewCount = Number(p.reviewCount || p.numReviews || p.totalReviews) || 0;
+      if (ratingValue > 0 && reviewCount > 0) {
+        productNode.aggregateRating = {
+          "@type": "AggregateRating",
+          ratingValue: String(ratingValue),
+          reviewCount: String(reviewCount),
+          bestRating: "5",
+          worstRating: "1",
+        };
+      }
       return {
         "@type": "ListItem",
         position: i + 1,
         url: itemUrl,
         name: p.name || slug,
-        item: {
-          "@type": "Product",
-          "@id": `${itemUrl}#product`,
-          name: p.name || slug,
-          url: itemUrl,
-        },
+        item: productNode,
       };
     })
     .filter(Boolean);

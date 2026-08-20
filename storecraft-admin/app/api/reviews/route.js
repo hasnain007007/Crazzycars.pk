@@ -110,6 +110,22 @@ export async function POST(request) {
       orderId: String(body.orderId || "").trim(),
     });
 
+    if (review.status === "approved") {
+      const approved = await Review.find({ product: pid, status: "approved" }).select("rating").lean();
+      const count = approved.length;
+      const avg = count ? approved.reduce((s, r) => s + (Number(r.rating) || 0), 0) / count : 0;
+      const rounded = Math.round(avg * 10) / 10;
+      await Product.findByIdAndUpdate(pid, {
+        $set: {
+          rating: rounded,
+          averageRating: rounded,
+          reviewCount: count,
+          numReviews: count,
+          totalReviews: count,
+        },
+      });
+    }
+
     const populated = await Review.findById(review._id).populate("product", "name slug media").lean();
 
     await logActivity({

@@ -146,7 +146,9 @@ function paginateEntries(entries, chunkIndex = 0) {
 }
 
 export async function fetchSitemapContext(headers) {
-  const siteUrl = absoluteUrl("/", { headers });
+  // absoluteUrl("/") returns origin with a trailing slash; strip it so
+  // `${siteUrl}/sitemap-*.xml` does not become `https://host//sitemap-*.xml`.
+  const siteUrl = absoluteUrl("/", { headers }).replace(/\/+$/, "");
 
   await dbConnect();
 

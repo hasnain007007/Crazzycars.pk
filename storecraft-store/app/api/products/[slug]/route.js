@@ -12,7 +12,7 @@ export async function GET(_request, context) {
     await dbConnect();
     const p = await Product.findOne({ slug: String(slug), status: { $regex: /^active$/i } })
       .select(
-        "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications isUniversal compatibleCars vehicleCompatibility"
+        "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications isUniversal compatibleCars vehicleCompatibility rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
       .populate("categories", "name slug")
       .lean();
