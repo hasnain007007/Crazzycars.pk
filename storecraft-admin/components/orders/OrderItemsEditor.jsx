@@ -200,6 +200,36 @@ export function OrderItemsEditor({ order, onUpdated }) {
     }
   }, []);
 
+  const repriceLine = useCallback((line, patch = {}) => {
+    const next = { ...line, ...patch };
+    const catalog = next.catalog;
+    const selectedOptions = next.selectedOptions || {};
+    const selectedAddOns = next.selectedAddOns || [];
+    const combo = catalog ? findMatchedCombo(catalog, selectedOptions) : null;
+
+    let legacyExtra = 0;
+    if (catalog?.legacyVariations?.length && !catalog.simpleVariations?.length) {
+      for (const lv of catalog.legacyVariations) {
+        const chosen = selectedOptions[lv.name];
+        if (chosen) legacyExtra += Number(lv.additionalPrice) || 0;
+      }
+    }
+
+    const base = Number(next.basePrice);
+    const priceBase = Number.isFinite(base) && base >= 0 ? base : catalog?.basePrice || next.unitPrice;
+    next.unitPrice = computeUnitPrice(priceBase, combo, selectedAddOns, legacyExtra);
+    next.variation = buildVariationLabel(selectedOptions, selectedAddOns);
+    next.selectedVariation = {
+      selectedOptions,
+      combinationId: combo?._id ? String(combo._id) : null,
+    };
+    if (combo?.image) {
+      next.image =
+        typeof combo.image === "string" ? combo.image : combo.image?.url || next.image;
+    }
+    return next;
+  }, []);
+
   // Hydrate catalog options for existing lines and reprice from combo when Style is known
   useEffect(() => {
     let cancelled = false;
@@ -237,33 +267,6 @@ export function OrderItemsEditor({ order, onUpdated }) {
   );
   const shipNum = deliveryOn ? Math.max(0, Number(shippingCost) || 0) : 0;
   const total = Math.max(0, Math.round((subtotal - discount + shipNum) * 100) / 100);
-
-  const repriceLine = useCallback((line, patch = {}) => {
-    const next = { ...line, ...patch };
-    const catalog = next.catalog;
-    const selectedOptions = next.selectedOptions || {};
-    const selectedAddOns = next.selectedAddOns || [];
-    const combo = catalog ? findMatchedCombo(catalog, selectedOptions) : null;
-
-    let legacyExtra = 0;
-    if (catalog?.legacyVariations?.length && !catalog.simpleVariations?.length) {
-      for (const lv of catalog.legacyVariations) {
-        const chosen = selectedOptions[lv.name];
-        if (chosen) legacyExtra += Number(lv.additionalPrice) || 0;
-      }
-    }
-
-    const base = Number(next.basePrice);
-    const priceBase = Number.isFinite(base) && base >= 0 ? base : catalog?.basePrice || next.unitPrice;
-    next.unitPrice = computeUnitPrice(priceBase, combo, selectedAddOns, legacyExtra);
-    next.variation = buildVariationLabel(selectedOptions, selectedAddOns);
-    next.selectedVariation = {
-      selectedOptions,
-      combinationId: combo?._id ? String(combo._id) : null,
-    };
-    if (combo?.image) next.image = combo.image;
-    return next;
-  }, []);
 
   const updateLine = useCallback(
     (index, patch) => {
