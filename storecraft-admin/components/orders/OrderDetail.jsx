@@ -614,6 +614,25 @@ function PaymentInformationSection({ order, orderId, onRefunded }) {
           </div>
         ) : null}
 
+        {order.paymentConfirmation?.reference || order.payment?.transactionId ? (
+          <div style={{ gridColumn: "1 / -1" }}>
+            <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>
+              Payment reference
+            </p>
+            <p style={{ fontSize: 14, color: "#374151", margin: 0 }} className="dark:text-slate-300 font-mono">
+              {order.paymentConfirmation?.reference || order.payment?.transactionId}
+            </p>
+            {order.paymentConfirmation?.confirmedBy ? (
+              <p style={{ fontSize: 12, color: "#6b7280", margin: "4px 0 0" }} className="dark:text-slate-400">
+                Confirmed by {order.paymentConfirmation.confirmedBy}
+                {order.paymentConfirmation.confirmedAt
+                  ? ` · ${new Date(order.paymentConfirmation.confirmedAt).toLocaleString("en-GB")}`
+                  : ""}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         {(order.paymentStatus === "partial"
           ? Number(order.payment?.paidAmount ?? order.payment?.amount) > 0
           : order.payment?.amount != null && order.payment.amount > 0) ? (

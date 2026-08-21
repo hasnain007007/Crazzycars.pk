@@ -107,28 +107,37 @@ export async function GET(request) {
     const dayStart = utcStartOfDay(now);
     const dayEnd = utcEndOfDay(now);
 
-    const [items, total, totalOrders, pendingCount, processingCount, todayPaidOrders] = await Promise.all([
-      Order.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate("customer.customerId", "name email")
-        .lean(),
-      Order.countDocuments(filter),
-      Order.countDocuments({}),
-      Order.countDocuments({ orderStatus: "pending" }),
-      Order.countDocuments({ orderStatus: "processing" }),
-      Order.find({
-        paymentStatus: "paid",
-        createdAt: { $gte: dayStart, $lte: dayEnd },
-      })
-        .select("pricing total")
-        .lean(),
-    ]);
+    const [items, total, totalOrders, pendingCount, processingCount, todayPaidOrders, pendingUnpaidOrders] =
+      await Promise.all([
+        Order.find(filter)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .populate("customer.customerId", "name email")
+          .lean(),
+        Order.countDocuments(filter),
+        Order.countDocuments({}),
+        Order.countDocuments({ orderStatus: "pending" }),
+        Order.countDocuments({ orderStatus: "processing" }),
+        Order.find({
+          paymentStatus: "paid",
+          createdAt: { $gte: dayStart, $lte: dayEnd },
+        })
+          .select("pricing total")
+          .lean(),
+        Order.find({ orderStatus: "pending", paymentStatus: "unpaid" })
+          .select("pricing total")
+          .lean(),
+      ]);
 
     let todayRevenue = 0;
     for (const o of todayPaidOrders) {
       todayRevenue += orderGrandTotal(o);
+    }
+
+    let pendingValueAtRisk = 0;
+    for (const o of pendingUnpaidOrders) {
+      pendingValueAtRisk += orderGrandTotal(o);
     }
 
     const orders = items.map((o) => ({
@@ -144,6 +153,9 @@ export async function GET(request) {
       total: orderGrandTotal(o),
       orderStatus: o.orderStatus,
       paymentStatus: o.paymentStatus,
+      trackingNumber: o.trackingNumber || o.tracking?.number || "",
+      liveStatus: o.tracking?.lastStatus || "",
+      liveLocation: o.tracking?.currentLocation || "",
     }));
 
     return NextResponse.json({
@@ -157,6 +169,7 @@ export async function GET(request) {
         pending: pendingCount,
         processing: processingCount,
         todayRevenue,
+        pendingValueAtRisk,
       },
     });
   } catch (error) {

@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { useCallback, useMemo, useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { orderStatusBadgeClass, paymentStatusBadgeClass } from "@/lib/orderUi";
+import { orderStatusBadgeClass, paymentStatusBadgeClass, pendingAgeBadge } from "@/lib/orderUi";
 import { BulkActionBar } from "./BulkActionBar";
 import { formatAdminPrice } from "@/lib/currency";
 
@@ -143,7 +143,7 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <div className="overflow-x-auto">
-            <table className="min-w-[1140px] w-full text-left text-sm">
+            <table className="min-w-[1220px] w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-400">
               <tr>
                 <th className="w-10 px-3 py-3">
@@ -159,6 +159,7 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                 </th>
                 <th className="px-4 py-3">Order #</th>
                 <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Days pending</th>
                 <th className="px-4 py-3">Customer</th>
                 <th className="px-4 py-3">Location</th>
                 <th className="px-4 py-3">Items</th>
@@ -173,13 +174,14 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={11} className="px-4 py-3">
+                      <td colSpan={12} className="px-4 py-3">
                         <div className="h-4 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
                       </td>
                     </tr>
                   ))
                 : orders.map((o) => {
                     const isRowSel = !!selected[o.id];
+                    const age = pendingAgeBadge(o.createdAt, o.orderStatus);
                     return (
                       <tr
                         key={o.id}
@@ -211,6 +213,21 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                           {o.orderNumber}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-slate-600 dark:text-slate-300">{formatDate(o.createdAt)}</td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          {age ? (
+                            <span
+                              title={`Age bracket ${age.bracket} days`}
+                              className={[
+                                "inline-flex rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
+                                age.className,
+                              ].join(" ")}
+                            >
+                              {age.label}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <div className="font-medium text-slate-900 dark:text-white">{o.customerName}</div>
                           {o.customerEmail ? (

@@ -149,6 +149,15 @@ const orderSchema = new mongoose.Schema(
       advanceMode: { type: String, default: "", trim: true },
       advanceMaxPercent: { type: Number, default: 0, min: 0, max: 100 },
     },
+    /**
+     * Manual bank-transfer / WhatsApp screenshot confirmation audit trail.
+     * Set when staff mark payment paid or partial — not freeform notes.
+     */
+    paymentConfirmation: {
+      reference: { type: String, default: "", trim: true },
+      confirmedBy: { type: String, default: "", trim: true },
+      confirmedAt: { type: Date, default: null },
+    },
     shippingAddress: {
       firstName: { type: String, default: "" },
       lastName: { type: String, default: "" },

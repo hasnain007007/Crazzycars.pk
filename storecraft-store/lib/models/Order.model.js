@@ -131,6 +131,7 @@ const orderSchema = new mongoose.Schema(
     payment: {
       stripePaymentIntentId: { type: String, default: "", trim: true },
       paypalOrderId: { type: String, default: "", trim: true },
+      transactionId: { type: String, default: "", trim: true },
       paidAt: { type: Date, default: null },
       amount: { type: Number, default: 0, min: 0 },
       paidAmount: { type: Number, default: 0, min: 0 },
@@ -138,6 +139,11 @@ const orderSchema = new mongoose.Schema(
       advanceRequired: { type: Number, default: 0, min: 0 },
       advanceMode: { type: String, default: "", trim: true },
       advanceMaxPercent: { type: Number, default: 0, min: 0, max: 100 },
+    },
+    paymentConfirmation: {
+      reference: { type: String, default: "", trim: true },
+      confirmedBy: { type: String, default: "", trim: true },
+      confirmedAt: { type: Date, default: null },
     },
     currency: { type: String, default: "PKR" },
     shippingAddress: {

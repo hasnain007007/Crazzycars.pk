@@ -125,15 +125,20 @@ export function PaymentStatusCard({ order, onUpdated }) {
   const [next, setNext] = useState(() => String(order.paymentStatus || "unpaid").toLowerCase());
   const [paidAmount, setPaidAmount] = useState("");
   const [remainingCod, setRemainingCod] = useState("");
+  const [paymentReference, setPaymentReference] = useState("");
   const [saving, setSaving] = useState(false);
 
   const isPartial = String(next).toLowerCase() === "partial";
+  const needsReference = String(next).toLowerCase() === "paid" || isPartial;
 
   useEffect(() => {
     const status = String(order.paymentStatus || "unpaid").toLowerCase();
     setNext(status);
     const paid = Number(order.payment?.paidAmount ?? order.payment?.amount ?? 0) || 0;
     const rem = Number(order.payment?.remainingCod ?? 0) || 0;
+    setPaymentReference(
+      order.paymentConfirmation?.reference || order.payment?.transactionId || ""
+    );
     if (status === "partial") {
       setPaidAmount(paid > 0 ? String(paid) : "");
       setRemainingCod(rem > 0 ? String(rem) : total > 0 ? String(total) : "");
@@ -141,7 +146,16 @@ export function PaymentStatusCard({ order, onUpdated }) {
       setPaidAmount("");
       setRemainingCod(total > 0 ? String(total) : "");
     }
-  }, [order.paymentStatus, order.payment?.paidAmount, order.payment?.amount, order.payment?.remainingCod, order.id, total]);
+  }, [
+    order.paymentStatus,
+    order.payment?.paidAmount,
+    order.payment?.amount,
+    order.payment?.remainingCod,
+    order.payment?.transactionId,
+    order.paymentConfirmation?.reference,
+    order.id,
+    total,
+  ]);
 
   function selectStatus(value) {
     const v = String(value).toLowerCase();
@@ -195,12 +209,21 @@ export function PaymentStatusCard({ order, onUpdated }) {
       }
     }
 
+    const ref = String(paymentReference || "").trim();
+    if (status === "paid" && !ref) {
+      toast.error("Enter a transaction ID / payment reference.");
+      return;
+    }
+
     setSaving(true);
     try {
       const body = { paymentStatus: status };
       if (status === "partial") {
         body.paidAmount = paid;
         body.remainingCod = remaining;
+      }
+      if (status === "paid" || (status === "partial" && ref)) {
+        body.paymentReference = ref;
       }
       const res = await fetch(`/api/orders/${order.id}`, {
         method: "PUT",
@@ -247,6 +270,22 @@ export function PaymentStatusCard({ order, onUpdated }) {
             Remaining COD:{" "}
             <strong>Rs. {(Number(order.payment?.remainingCod) || 0).toLocaleString()}</strong>
           </p>
+        </div>
+      ) : null}
+
+      {order.paymentConfirmation?.reference ? (
+        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
+          <p>
+            Ref: <strong className="font-mono">{order.paymentConfirmation.reference}</strong>
+          </p>
+          {order.paymentConfirmation.confirmedBy ? (
+            <p className="mt-0.5">
+              Confirmed by {order.paymentConfirmation.confirmedBy}
+              {order.paymentConfirmation.confirmedAt
+                ? ` · ${new Date(order.paymentConfirmation.confirmedAt).toLocaleString("en-GB")}`
+                : ""}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -304,6 +343,26 @@ export function PaymentStatusCard({ order, onUpdated }) {
                 </p>
               ) : null}
             </div>
+          </div>
+        ) : null}
+
+        {needsReference ? (
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              Transaction ID / payment reference
+              {String(next).toLowerCase() === "paid" ? " *" : " (optional)"}
+            </label>
+            <input
+              type="text"
+              value={paymentReference}
+              onChange={(e) => setPaymentReference(e.target.value)}
+              placeholder="Bank TID, JazzCash/Easypaisa ID, or screenshot note"
+              required={String(next).toLowerCase() === "paid"}
+              className="mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-2 font-mono text-sm dark:border-slate-600 dark:bg-slate-800"
+            />
+            <p className="mt-1 text-[11px] text-slate-500">
+              Required when marking paid so money can be matched to this order.
+            </p>
           </div>
         ) : null}
 

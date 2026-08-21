@@ -28,6 +28,7 @@ export function OrdersPage() {
     pending: 0,
     processing: 0,
     todayRevenue: 0,
+    pendingValueAtRisk: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -105,11 +106,17 @@ export function OrdersPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
           { label: "Total orders", value: stats.totalOrders, tone: "bg-white dark:bg-slate-900" },
           { label: "Pending", value: stats.pending, tone: "bg-amber-50 dark:bg-amber-950/20" },
           { label: "Processing", value: stats.processing, tone: "bg-blue-50 dark:bg-blue-950/20" },
+          {
+            label: "Pending value at risk",
+            value: formatMoney(stats.pendingValueAtRisk || 0),
+            tone: "bg-orange-50 dark:bg-orange-950/20",
+            hint: "Pending + unpaid order totals",
+          },
           { label: "Today's revenue", value: formatMoney(stats.todayRevenue), tone: "bg-emerald-50 dark:bg-emerald-950/20" },
         ].map((c) => (
           <div
@@ -118,6 +125,9 @@ export function OrdersPage() {
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{c.label}</p>
             <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{c.value}</p>
+            {c.hint ? (
+              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{c.hint}</p>
+            ) : null}
           </div>
         ))}
       </div>

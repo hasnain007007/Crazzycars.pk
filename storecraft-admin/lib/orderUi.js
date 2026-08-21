@@ -26,3 +26,37 @@ export function paymentStatusBadgeClass(status) {
   };
   return map[status] || "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200";
 }
+
+/** Whole days since createdAt (floor). */
+export function pendingAgeDays(createdAt, now = new Date()) {
+  const t = createdAt ? new Date(createdAt).getTime() : NaN;
+  if (!Number.isFinite(t)) return null;
+  return Math.max(0, Math.floor((now.getTime() - t) / 86_400_000));
+}
+
+/**
+ * Age brackets matching the O1 backlog report: 0–3 / 3–7 / 7–14 / 14+.
+ * @returns {{ label: string, className: string, bracket: string } | null}
+ */
+export function pendingAgeBadge(createdAt, orderStatus, now = new Date()) {
+  if (String(orderStatus || "").toLowerCase() !== "pending") return null;
+  const days = pendingAgeDays(createdAt, now);
+  if (days == null) return null;
+  let bracket;
+  let className;
+  if (days <= 3) {
+    bracket = "0-3";
+    className = "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100";
+  } else if (days <= 7) {
+    bracket = "3-7";
+    className = "bg-amber-100 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100";
+  } else if (days <= 14) {
+    bracket = "7-14";
+    className = "bg-orange-100 text-orange-950 dark:bg-orange-950/40 dark:text-orange-100";
+  } else {
+    bracket = "14+";
+    className = "bg-red-100 text-red-900 dark:bg-red-950/40 dark:text-red-100";
+  }
+  const label = days === 0 ? "Today" : days === 1 ? "1 day" : `${days} days`;
+  return { label, className, bracket, days };
+}

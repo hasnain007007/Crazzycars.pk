@@ -81,6 +81,18 @@ function serializeOrder(doc) {
         remainingCod: Number(plain.remainingCod) || 0,
       };
     })(),
+    paymentConfirmation: (() => {
+      const pc = o.paymentConfirmation;
+      if (!pc || typeof pc !== "object") {
+        return { reference: "", confirmedBy: "", confirmedAt: null };
+      }
+      const plain = typeof pc.toObject === "function" ? pc.toObject() : { ...pc };
+      return {
+        reference: plain.reference || "",
+        confirmedBy: plain.confirmedBy || "",
+        confirmedAt: plain.confirmedAt || null,
+      };
+    })(),
     shippingAddress: o.shippingAddress || {},
     couponCode: o.couponCode || "",
     trackingNumber: o.trackingNumber || o.tracking?.number || "",
@@ -260,6 +272,8 @@ export async function PUT(request, context) {
         updates.push(`paymentStatus → ${nextPay}`);
       }
 
+      const paymentRef = String(body.paymentReference ?? body.transactionId ?? "").trim();
+
       if (nextPay === "partial") {
         const paidAmount = Number(body.paidAmount);
         const remainingCod = Number(body.remainingCod);
@@ -285,16 +299,43 @@ export async function PUT(request, context) {
         order.payment.paidAmount = paidAmount;
         order.payment.remainingCod = remainingCod;
         order.payment.amount = paidAmount;
+        if (paymentRef) {
+          order.payment.transactionId = paymentRef;
+          order.paymentConfirmation = {
+            reference: paymentRef,
+            confirmedBy: adminName,
+            confirmedAt: new Date(),
+          };
+          order.markModified("paymentConfirmation");
+          updates.push(`paymentConfirmation → ${paymentRef}`);
+        }
         order.markModified("payment");
         updates.push(`partial: paid ${paidAmount}, remaining COD ${remainingCod}`);
       } else if (statusChanging && ["unpaid", "paid", "refunded", "failed"].includes(nextPay)) {
         if (!order.payment || typeof order.payment !== "object") order.payment = {};
         if (nextPay === "paid") {
+          if (!paymentRef) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: "Enter a transaction ID / payment reference when marking paid.",
+              },
+              { status: 400 }
+            );
+          }
           const total = orderGrandTotal(order);
           order.payment.paidAmount = total;
           order.payment.remainingCod = 0;
           order.payment.amount = total;
           order.payment.paidAt = order.payment.paidAt || new Date();
+          order.payment.transactionId = paymentRef;
+          order.paymentConfirmation = {
+            reference: paymentRef,
+            confirmedBy: adminName,
+            confirmedAt: new Date(),
+          };
+          order.markModified("paymentConfirmation");
+          updates.push(`paymentConfirmation → ${paymentRef}`);
         } else if (nextPay === "unpaid") {
           order.payment.paidAmount = 0;
           order.payment.remainingCod = 0;
