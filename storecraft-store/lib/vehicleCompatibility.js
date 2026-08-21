@@ -81,9 +81,8 @@ function modelsCompatible(rowModel, filterModel) {
   const md = String(filterModel || "").trim();
   if (!rm || rm === "All Models") return true;
   if (!md) return true;
-  const a = rm.toLowerCase();
-  const b = md.toLowerCase();
-  return a === b || a.includes(b) || b.includes(a);
+  // Exact only — substring would let "Corolla" match "Corolla Cross", "Civic" match "Civic X".
+  return rm.toLowerCase() === md.toLowerCase();
 }
 
 function variantCompatible(notes, variant) {

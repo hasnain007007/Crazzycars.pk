@@ -4,7 +4,7 @@
 import CarCatalog from "@/lib/models/CarCatalog.model";
 import Product from "@/lib/models/Product.model";
 import Vehicle from "@/lib/models/Vehicle.model";
-import { activeProductStatusFilter } from "@/lib/productVehicleQuery";
+import { buildVehiclePageProductFilter } from "@/lib/productVehicleQuery";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 
 function escapeRegex(s) {
@@ -151,21 +151,10 @@ export async function loadVehicleBySlug(slugStr) {
   return resolveFromCarCatalogSlug(slug);
 }
 
-function modelNameAliases(vehicle) {
-  const make = String(vehicle?.make || "").trim();
-  const model = String(vehicle?.model || "").trim();
-  const generation = String(vehicle?.generation || "").trim();
-  const cleaned = cleanVehicleModelName(make, model);
-  const aliases = [model, cleaned, generation];
-  // "toyota mark X" / Mark X variants
-  if (/mark\s*x/i.test(`${model} ${cleaned} ${generation}`)) {
-    aliases.push("Mark X", "mark x", "toyota mark x", "1 Gen(X120)", "1 Gen (X120)");
-  }
-  return [...new Set(aliases.map((a) => String(a || "").trim()).filter(Boolean))];
-}
-
 /**
- * Products for a vehicle page: ObjectId links + legacy make/model fitment rows.
+ * Products for a vehicle generation page.
+ * Primary: compatibleVehicles ObjectId. Legacy make+model+year only when no ObjectIds.
+ * See buildVehiclePageProductFilter — exact model match, year overlap required.
  */
 export async function loadProductsForVehicle(vehicleOrId, { limit = 200 } = {}) {
   if (!vehicleOrId) return [];
@@ -176,30 +165,7 @@ export async function loadProductsForVehicle(vehicleOrId, { limit = 200 } = {}) 
   }
   if (!vehicle?._id) return [];
 
-  const aliases = modelNameAliases(vehicle);
-  const makeRx = new RegExp(`^${escapeRegex(vehicle.make)}$`, "i");
-  const or = [{ compatibleVehicles: vehicle._id }];
-
-  for (const alias of aliases) {
-    const modelRx = new RegExp(escapeRegex(alias), "i");
-    or.push({
-      compatibleCars: { $elemMatch: { make: makeRx, model: modelRx } },
-    });
-    or.push({
-      "vehicleCompatibility.fitmentType": { $in: ["specific", "semi-universal"] },
-      "vehicleCompatibility.vehicles": { $elemMatch: { make: makeRx, model: modelRx } },
-    });
-  }
-
-  // Last-resort for Mark X products that only mention the car in the title.
-  if (/mark\s*x/i.test(`${vehicle.model} ${vehicle.displayName || ""}`)) {
-    or.push({ name: /mark\s*x/i });
-  }
-
-  const products = await Product.find({
-    ...activeProductStatusFilter(),
-    $or: or,
-  })
+  const products = await Product.find(buildVehiclePageProductFilter(vehicle))
     .select(
       "name slug media pricing inventory status featured newArrival categories isUniversal rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo createdAt"
     )
