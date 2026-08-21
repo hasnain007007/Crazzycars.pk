@@ -16,6 +16,7 @@ import {
   buildAdvancePaymentOrderNote,
   computeAdvancePaymentDiscount,
   normalizeShippingRules,
+  storePolicyWhatsApp,
 } from "@/lib/freeDelivery";
 import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import {
@@ -736,7 +737,7 @@ export async function POST(request) {
     }
     const advanceNote = buildAdvancePaymentOrderNote(
       storePayment,
-      whatsappNumber || "03284010007",
+      whatsappNumber || storePolicyWhatsApp(),
       settingsDoc?.pakistaniPaymentMethods
     );
     const statusNotes = [];

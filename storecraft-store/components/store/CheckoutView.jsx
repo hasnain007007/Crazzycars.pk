@@ -20,6 +20,7 @@ import {
   getEffectiveFreeDeliveryThreshold,
   normalizeShippingRules,
   shouldShowAdvancePaymentMessage,
+  storePolicyWhatsApp,
 } from "@/lib/freeDelivery";
 import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import {
@@ -33,6 +34,7 @@ import { formatPrice } from "@/lib/currency";
 import { useCustomer } from "@/lib/customerAuth";
 import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
 import { resolveProductContentId, trackInitiateCheckout } from "@/lib/metaPixel";
+import { standardDeliveryFeeStatement } from "@/lib/storePolicyCopy";
 import {
   fetchRecoverCart,
   getCartSessionId,
@@ -346,10 +348,7 @@ export function CheckoutView() {
     [settings?.storePayment, storePayment]
   );
 
-  const freeDeliveryNote = useMemo(
-    () => `Free delivery on orders over Rs. ${freeThreshold.toLocaleString("en-GB")}`,
-    [freeThreshold]
-  );
+  const freeDeliveryNote = useMemo(() => standardDeliveryFeeStatement(), []);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -553,9 +552,9 @@ export function CheckoutView() {
   const showShippingAsFree = displayShippingFree;
 
   const whatsappNumber = String(
-    settings?.whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || "03284010007"
+    settings?.whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || storePolicyWhatsApp()
   ).trim();
-  const whatsappDisplay = formatWhatsAppDisplay(whatsappNumber || "03284010007");
+  const whatsappDisplay = formatWhatsAppDisplay(whatsappNumber || storePolicyWhatsApp());
   const showAdvanceMessage = shouldShowAdvancePaymentMessage({
     paymentMethod,
     shippingCost: displayShippingCost,

@@ -239,7 +239,7 @@ const settingsSchema = new mongoose.Schema(
     aboutPage: {
       hero: {
         badge: { type: String, default: "Our Story" },
-        title: { type: String, default: "Pakistan's Premier Car Accessories Store" },
+        title: { type: String, default: "Fitment-first car accessories from Gujranwala" },
         subtitle: {
           type: String,
           default:
@@ -348,12 +348,12 @@ const settingsSchema = new mongoose.Schema(
         paymentConfirmedMessage: {
           type: String,
           default:
-            "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at 0328-4010007 for confirmation, and our team will begin processing your order.",
+            "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at {whatsapp} for confirmation, and our team will begin processing your order.",
         },
         codAdvanceNote: {
           type: String,
           default:
-            "Thank you for your order! Since this is a Cash on Delivery order, please send a screenshot of your advance payment to our WhatsApp at 0328-4010007 to confirm your booking. The remaining balance will be collected on delivery.",
+            "Thank you for your order! Since this is a Cash on Delivery order, please send a screenshot of your advance payment to our WhatsApp at {whatsapp} to confirm your booking. The remaining balance will be collected on delivery.",
         },
         footerMessage: { type: String, default: "" },
       },
@@ -577,7 +577,7 @@ Shukriya — Crazzycars.pk ✨`,
       enabled: { type: Boolean, default: true },
       badge: { type: String, default: "Our Story" },
       heading: { type: String, default: "Built for Pakistani Car Enthusiasts" },
-      subheading: { type: String, default: "Pakistan's Premier Car Accessories Store" },
+      subheading: { type: String, default: "Fitment-first car accessories from Gujranwala" },
       description: {
         type: String,
         default:
@@ -716,7 +716,7 @@ Shukriya — Crazzycars.pk ✨`,
       },
     },
     footer: {
-      tagline: { type: String, default: "Pakistan's Premier Car Accessories Store" },
+      tagline: { type: String, default: "Fitment-first car accessories from Gujranwala" },
       social: {
         facebook: { type: String, default: "" },
         instagram: { type: String, default: "" },

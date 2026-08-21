@@ -1,12 +1,19 @@
 import { normalizeHomepageSettings } from "@/lib/defaultHomepageSettings";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
+import { STORE_POLICY } from "@/config/store-policy";
+import {
+  sanitizeAnnouncementItems,
+  sanitizeCustomerShippingNote,
+  standardDeliveryFeeShort,
+  standardDeliveryFeeStatement,
+} from "@/lib/storePolicyCopy";
 
 export const DEFAULT_ANNOUNCEMENT_BAR = {
   enabled: true,
   items: [
-    { text: "Free Delivery on Orders Over Rs. 9,999", link: "/shipping-policy", enabled: true },
-    { text: "Cash on Delivery Available", link: "", enabled: true },
+    { text: "Cash on Delivery Available", link: "/shipping-policy", enabled: true },
+    { text: standardDeliveryFeeShort(), link: "/shipping-policy", enabled: true },
   ],
   backgroundColor: "#111111",
   textColor: "#FFFFFF",
@@ -21,14 +28,17 @@ export const DEFAULT_BRAND_STORY = {
   enabled: true,
   badge: "Our Story",
   heading: "Built for Pakistani Car Enthusiasts",
-  subheading: "Pakistan's Car Accessories Store",
+  subheading: "Fitment-first car accessories from Gujranwala",
   description:
-    "Crazzycars.pk is based in Gujranwala and ships premium car accessories nationwide — splitters, LED lighting, body kits, carbon fiber parts, and more.",
+    "Crazzycars.pk is based in Gujranwala and ships car accessories nationwide — splitters, LED lighting, body kits, carbon fiber parts, and more. We focus on clear year compatibility, practical installs, and Cash on Delivery.",
   buttonText: "About Us",
   buttonLink: "/about",
   image1: "",
   image2: "",
-  stats: [],
+  stats: [
+    { value: "393+", label: "Active products" },
+    { value: "COD", label: "Nationwide" },
+  ],
 };
 
 export const DEFAULT_APPEARANCE = {
@@ -71,12 +81,12 @@ export const DEFAULT_CHECKOUT_MESSAGES = {
   orderSuccessMessage: "Order Placed! We will deliver to your doorstep.",
   orderSuccessSubtext: "Thank you for shopping with Crazzycars.pk",
   codInstructions: "Pay cash when your order arrives.",
-  shippingNote: "Free delivery on orders over Rs. 2,999",
+  shippingNote: standardDeliveryFeeStatement(),
   cartEmptyMessage: "Your cart is empty",
   paymentConfirmedMessage:
-    "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at 0328-4010007 for confirmation, and our team will begin processing your order.",
+    "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at {whatsapp} for confirmation, and our team will begin processing your order.",
   codAdvanceNote:
-    "Thank you for your order! Since this is a Cash on Delivery order, please send a screenshot of your advance payment to our WhatsApp at 0328-4010007 to confirm your booking. The remaining balance will be collected on delivery.",
+    "Thank you for your order! Since this is a Cash on Delivery order, please send a screenshot of your advance payment to our WhatsApp at {whatsapp} to confirm your booking. The remaining balance will be collected on delivery.",
 };
 
 export const DEFAULT_STORE_PAYMENT = {
@@ -85,18 +95,18 @@ export const DEFAULT_STORE_PAYMENT = {
   codDescription: "Pay when your order arrives at your doorstep.",
   codFee: 0,
   minimumOrderAmount: 0,
-  freeShippingThreshold: 9999,
+  freeShippingThreshold: 0,
   freeShippingOnAdvancePayment: false,
-  freeShippingOnOrderAbove: 10000,
+  freeShippingOnOrderAbove: 0,
   freeShippingOnOrderAboveEnabled: false,
   advancePaymentMessage:
     "To confirm your order, please pay delivery charges of {amount} in advance.\n\nSend payment screenshot on WhatsApp: {whatsapp}",
-  advancePaymentAmount: 250,
+  advancePaymentAmount: STORE_POLICY.shipping.standardFeePKR,
   advancePaymentMessageEnabled: true,
   advancePaymentMessageTitle: "Confirm Your Order",
   advancePaymentDiscountEnabled: true,
   advancePaymentDiscountPercent: 3,
-  flatDeliveryCharge: 250,
+  flatDeliveryCharge: STORE_POLICY.shipping.standardFeePKR,
 };
 
 export const DEFAULT_PRODUCT_BADGE_UI = {
@@ -188,7 +198,9 @@ export function normalizeCheckoutMessages(raw, storefront = {}) {
       cx.thankYouMessage?.trim() ||
       DEFAULT_CHECKOUT_MESSAGES.orderSuccessSubtext,
     codInstructions: m.codInstructions?.trim() || DEFAULT_CHECKOUT_MESSAGES.codInstructions,
-    shippingNote: m.shippingNote?.trim() || DEFAULT_CHECKOUT_MESSAGES.shippingNote,
+    shippingNote: sanitizeCustomerShippingNote(
+      m.shippingNote?.trim() || DEFAULT_CHECKOUT_MESSAGES.shippingNote
+    ),
     cartEmptyMessage: m.cartEmptyMessage?.trim() || DEFAULT_CHECKOUT_MESSAGES.cartEmptyMessage,
     failedTitle: cx.failedTitle?.trim() || "Payment Failed",
     failedMessage: cx.failedMessage?.trim() || "Your payment could not be processed.",
@@ -209,12 +221,12 @@ export function normalizeStorePayment(raw) {
     codDescription: p.codDescription?.trim() || DEFAULT_STORE_PAYMENT.codDescription,
     codFee: Number(p.codFee) || 0,
     minimumOrderAmount: Number(p.minimumOrderAmount) || 0,
-    freeShippingThreshold: Number(p.freeShippingThreshold) || DEFAULT_STORE_PAYMENT.freeShippingThreshold,
-    freeShippingOnAdvancePayment: p.freeShippingOnAdvancePayment === true,
-    freeShippingOnOrderAbove:
-      Number(p.freeShippingOnOrderAbove) || DEFAULT_STORE_PAYMENT.freeShippingOnOrderAbove,
-    freeShippingOnOrderAboveEnabled: p.freeShippingOnOrderAboveEnabled === true,
-    advancePaymentAmount: Number(p.advancePaymentAmount) || DEFAULT_STORE_PAYMENT.advancePaymentAmount,
+    freeShippingThreshold: 0,
+    freeShippingOnAdvancePayment: false,
+    freeShippingOnOrderAbove: 0,
+    freeShippingOnOrderAboveEnabled: false,
+    advancePaymentAmount:
+      Number(p.advancePaymentAmount) || STORE_POLICY.shipping.standardFeePKR,
     advancePaymentMessageEnabled:
       p.advancePaymentMessageEnabled !== undefined
         ? Boolean(p.advancePaymentMessageEnabled)
@@ -231,10 +243,7 @@ export function normalizeStorePayment(raw) {
       100,
       Math.max(0, Number(p.advancePaymentDiscountPercent) || DEFAULT_STORE_PAYMENT.advancePaymentDiscountPercent)
     ),
-    flatDeliveryCharge: Math.max(
-      0,
-      Number(p.flatDeliveryCharge) || DEFAULT_STORE_PAYMENT.flatDeliveryCharge
-    ),
+    flatDeliveryCharge: STORE_POLICY.shipping.standardFeePKR,
   };
 }
 
@@ -333,7 +342,11 @@ export function buildStoreSettingsPayload(settings = {}) {
   const f = settings.footer || {};
   const wa = settings.whatsapp || {};
   const checkoutSuccess = settings.storefront?.checkoutSuccess || settings.checkoutSuccess || {};
-  const announcementBar = settings?.announcementBar || DEFAULT_ANNOUNCEMENT_BAR;
+  const announcementBarRaw = settings?.announcementBar || DEFAULT_ANNOUNCEMENT_BAR;
+  const announcementBar = {
+    ...announcementBarRaw,
+    items: sanitizeAnnouncementItems(announcementBarRaw.items || DEFAULT_ANNOUNCEMENT_BAR.items),
+  };
   const trustBadges = normalizeTrustBadges(settings?.trustBadges);
   const brandStory = normalizeBrandStory(settings?.brandStory);
   const homepageSettings = normalizeHomepageSettings(settings?.homepageSettings);

@@ -7,11 +7,14 @@ import { useCheckoutMessages } from "@/context/StoreSettingsContext";
 import { formatPrice } from "@/lib/currency";
 import { oncePerSession, resolveProductContentId, trackPurchase } from "@/lib/metaPixel";
 import {
+  applyWhatsAppPlaceholder,
   formatAdvancePaymentMessage,
   formatWhatsAppDisplay,
   getAdvancePaymentAccountLines,
   normalizeShippingRules,
   shouldShowAdvancePaymentMessage,
+  storePolicyWhatsApp,
+  whatsappWaMeDigits,
 } from "@/lib/freeDelivery";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 
@@ -33,8 +36,8 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
     return null;
   }
 
-  const waNum = String(whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || "03284010007").trim();
-  const waDisplay = formatWhatsAppDisplay(waNum || "03284010007");
+  const waNum = String(whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || storePolicyWhatsApp()).trim();
+  const waDisplay = formatWhatsAppDisplay(waNum || storePolicyWhatsApp());
   const messageBody = formatAdvancePaymentMessage(
     showPercent
       ? `To confirm your order, please pay at least {amount} in advance (${advanceMaxPercent}% of eligible items).\n\nRemaining on delivery: ${formatPrice(remainingCod)}.\n\nSend payment screenshot on WhatsApp: {whatsapp}`
@@ -45,7 +48,7 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   const accountLines = getAdvancePaymentAccountLines(
     normalizePakistaniPaymentMethods(pakistaniPaymentMethods)
   );
-  const waLink = `https://wa.me/${String(waNum || "03284010007").replace(/\D/g, "").replace(/^0/, "92")}`;
+  const waLink = `https://wa.me/${whatsappWaMeDigits(waNum || storePolicyWhatsApp())}`;
 
   return (
     <div
@@ -467,9 +470,13 @@ export default function CheckoutSuccessView() {
         {(() => {
           const method = String(order?.paymentMethod || "").toLowerCase();
           const isCod = method === "cod" || (!method && !paid);
-          const note = isCod
+          const noteRaw = isCod
             ? messages.codAdvanceNote || ""
             : messages.paymentConfirmedMessage || "";
+          const note = applyWhatsAppPlaceholder(
+            noteRaw,
+            contact.whatsapp?.number || storePolicyWhatsApp()
+          );
           if (!note.trim()) return null;
           return (
             <p

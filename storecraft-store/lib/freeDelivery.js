@@ -1,24 +1,29 @@
+/**
+ * Shipping fee helpers (legacy filename).
+ * Flat STORE_POLICY fee only — no order-value waiver.
+ */
 import { formatPrice } from "@/lib/currency";
 import { isAdvancePaymentMethod } from "@/lib/pakistaniPaymentMethods";
-
-/** Default COD free-delivery threshold (Rs.) when settings omit a value. */
-export const DEFAULT_FREE_SHIPPING_THRESHOLD = 9999;
+import { STORE_POLICY } from "@/config/store-policy";
+import { standardDeliveryFeeShort } from "@/lib/storePolicyCopy";
 
 const DEFAULT_ADVANCE_MESSAGE =
-  "To confirm your order, please pay delivery charges of {amount} in advance.\n\nSend payment screenshot on WhatsApp: {whatsapp}";
+  "Important: You must pay the delivery charges of {amount} in advance to confirm your Cash on Delivery order.\n\nAfter paying, send the payment screenshot on WhatsApp: {whatsapp}\n\nProduct payment will be collected on delivery. Without the delivery-charge payment + screenshot, we cannot process your order.";
+
+export const DEFAULT_FREE_SHIPPING_THRESHOLD = 0;
 
 export const DEFAULT_SHIPPING_RULES = {
-  freeShippingThreshold: DEFAULT_FREE_SHIPPING_THRESHOLD,
+  freeShippingThreshold: 0,
   freeShippingOnAdvancePayment: false,
-  freeShippingOnOrderAbove: 10000,
+  freeShippingOnOrderAbove: 0,
   freeShippingOnOrderAboveEnabled: false,
   advancePaymentMessage: DEFAULT_ADVANCE_MESSAGE,
-  advancePaymentAmount: 250,
+  advancePaymentAmount: STORE_POLICY.shipping.standardFeePKR,
   advancePaymentMessageEnabled: true,
   advancePaymentMessageTitle: "Confirm Your Order",
   advancePaymentDiscountEnabled: true,
   advancePaymentDiscountPercent: 3,
-  flatDeliveryCharge: 250,
+  flatDeliveryCharge: STORE_POLICY.shipping.standardFeePKR,
 };
 
 /** Normalize storePayment shipping rule fields with fallbacks. */
@@ -26,16 +31,10 @@ export function normalizeShippingRules(storePayment) {
   const p = storePayment && typeof storePayment === "object" ? storePayment : {};
   return {
     ...p,
-    freeShippingThreshold: Math.max(
-      0,
-      Number(p.freeShippingThreshold) || DEFAULT_SHIPPING_RULES.freeShippingThreshold
-    ),
-    freeShippingOnAdvancePayment: p.freeShippingOnAdvancePayment === true,
-    freeShippingOnOrderAbove: Math.max(
-      0,
-      Number(p.freeShippingOnOrderAbove) || DEFAULT_SHIPPING_RULES.freeShippingOnOrderAbove
-    ),
-    freeShippingOnOrderAboveEnabled: p.freeShippingOnOrderAboveEnabled === true,
+    freeShippingThreshold: 0,
+    freeShippingOnAdvancePayment: false,
+    freeShippingOnOrderAbove: 0,
+    freeShippingOnOrderAboveEnabled: false,
     advancePaymentAmount: Math.max(
       0,
       Number(p.advancePaymentAmount) || DEFAULT_SHIPPING_RULES.advancePaymentAmount
@@ -55,17 +54,10 @@ export function normalizeShippingRules(storePayment) {
       100,
       Math.max(0, Number(p.advancePaymentDiscountPercent) || 3)
     ),
-    flatDeliveryCharge: Math.max(
-      0,
-      Number(p.flatDeliveryCharge) || DEFAULT_SHIPPING_RULES.flatDeliveryCharge
-    ),
+    flatDeliveryCharge: STORE_POLICY.shipping.standardFeePKR,
   };
 }
 
-/**
- * 3% (configurable) off when paying in advance (JazzCash, bank, Meezan, etc.).
- * Applied on cart total after coupon discount.
- */
 export function computeAdvancePaymentDiscount({
   amountAfterCoupon,
   paymentMethod,
@@ -84,118 +76,107 @@ export function computeAdvancePaymentDiscount({
   return { discount, percent, applied: discount > 0 };
 }
 
-/** COD free-delivery minimum order (Rs.) from admin storePayment settings. */
-export function getFreeShippingThreshold(storePayment) {
-  if (!storePayment || typeof storePayment !== "object") {
-    return DEFAULT_FREE_SHIPPING_THRESHOLD;
-  }
-  const t = Number(storePayment.freeShippingThreshold);
-  return Number.isFinite(t) && t > 0 ? t : DEFAULT_FREE_SHIPPING_THRESHOLD;
+/** @deprecated Always 0 — no free-delivery threshold. */
+export function getFreeShippingThreshold() {
+  return 0;
+}
+
+/** @deprecated Always 0. */
+export function getProgressBarThreshold() {
+  return 0;
+}
+
+/** @deprecated Always 0. */
+export function getEffectiveFreeDeliveryThreshold() {
+  return 0;
+}
+
+/** @deprecated Use {@link standardDeliveryFeeShort}. */
+export function formatFreeDeliveryThreshold() {
+  return standardDeliveryFeeShort();
+}
+
+/** No free-delivery progress — stub for any leftover callers. */
+export function getCodFreeDeliveryProgress() {
+  return { unlocked: true, remaining: 0, percent: 100, threshold: 0 };
+}
+
+/** Strip free-delivery marketing fields from shipping API responses. */
+export function toPublicShippingQuote(raw) {
+  if (!raw || typeof raw !== "object") return raw;
+  const {
+    isFree: _isFree,
+    freeReason: _freeReason,
+    freeShippingThreshold: _freeThreshold,
+    freeShippingEnabled: _freeEnabled,
+    freeShippingNote: _freeNote,
+    showFreeShippingProgress: _freeProgress,
+    freeApplied: _freeApplied,
+    freeDeliveryThreshold: _freeDeliveryThreshold,
+    ...rest
+  } = raw;
+  return rest;
 }
 
 /**
- * Single customer-facing free-delivery threshold (Rs.).
- * Prefer the enabled "order above" rule; otherwise the COD freeShippingThreshold.
- * All UI (hero, cart, checkout, announcement copy helpers) must use this — not hardcodes.
+ * Apply store policy on top of zone/courier quotes.
+ * Flat STORE_POLICY fee unless an explicit courier base (spoiler / Daewoo) is passed.
+ * Never waives delivery for order value or advance payment.
  */
-export function getProgressBarThreshold(storePayment) {
-  const sp = normalizeShippingRules(storePayment);
-  if (sp.freeShippingOnOrderAboveEnabled && sp.freeShippingOnOrderAbove > 0) {
-    return sp.freeShippingOnOrderAbove;
-  }
-  return getFreeShippingThreshold(sp);
-}
-
-/** Alias — the one source of truth for free-delivery messaging + eligibility. */
-export function getEffectiveFreeDeliveryThreshold(storePayment) {
-  return getProgressBarThreshold(storePayment);
-}
-
-/** e.g. "Rs. 9,999" */
-export function formatFreeDeliveryThreshold(storePayment) {
-  const n = getEffectiveFreeDeliveryThreshold(storePayment);
-  return `Rs. ${Number(n).toLocaleString("en-PK")}`;
-}
-
-/** Progress toward free delivery (cart subtotal vs threshold). */
-export function getCodFreeDeliveryProgress(cartTotal, threshold) {
-  const total = Math.max(0, Number(cartTotal) || 0);
-  const th = Math.max(0, Number(threshold) || DEFAULT_FREE_SHIPPING_THRESHOLD);
-  if (th <= 0) {
-    return { unlocked: true, remaining: 0, percent: 100, threshold: th };
-  }
-  if (total >= th) {
-    return { unlocked: true, remaining: 0, percent: 100, threshold: th };
-  }
-  const remaining = Math.round((th - total) * 100) / 100;
-  const percent = Math.min(100, Math.max(0, (total / th) * 100));
-  return { unlocked: false, remaining, percent, threshold: th };
-}
-
-/**
- * Apply admin shipping rules on top of zone-calculated shipping.
- * Flat delivery charge (default Rs. 250) is used when set — delivery is not free
- * unless an explicit free-shipping rule is enabled.
- */
-export function applyShippingRules({
-  zoneShippingCost,
-  cartTotal,
-  paymentMethod,
-  zoneIsFree = false,
-  storePayment,
-}) {
-  const sp = normalizeShippingRules(storePayment);
-  const total = Math.max(0, Number(cartTotal) || 0);
-  const flat = Math.max(0, Number(sp.flatDeliveryCharge) || 0);
-
-  let cost =
-    flat > 0
-      ? flat
-      : zoneIsFree
-        ? 0
-        : Math.max(0, Number(zoneShippingCost) || 0);
-  let freeReason = flat > 0 ? null : zoneIsFree ? "zone" : null;
-
-  // Same threshold the UI shows (progress bar / hero / checkout note).
-  const freeAt = getProgressBarThreshold(sp);
-  if (freeAt > 0 && total >= freeAt) {
-    cost = 0;
-    freeReason = sp.freeShippingOnOrderAboveEnabled ? "order_above" : "threshold";
-  }
-
-  // Only free for advance payment when admin explicitly enables it
-  if (sp.freeShippingOnAdvancePayment === true && isAdvancePaymentMethod(paymentMethod)) {
-    cost = 0;
-    freeReason = "advance_payment";
-  }
+export function applyShippingRules({ storePayment, baseDeliveryCharge }) {
+  normalizeShippingRules(storePayment);
+  const flat = STORE_POLICY.shipping.standardFeePKR;
+  const hasExplicitBase =
+    baseDeliveryCharge !== undefined &&
+    baseDeliveryCharge !== null &&
+    Number.isFinite(Number(baseDeliveryCharge));
+  const explicitBase = hasExplicitBase ? Math.max(0, Number(baseDeliveryCharge) || 0) : null;
+  const cost = hasExplicitBase ? explicitBase : flat;
 
   return {
     shippingCost: cost,
-    isFree: cost === 0,
-    freeReason,
-    orderAboveThreshold: sp.freeShippingOnOrderAbove,
-    orderAboveEnabled: sp.freeShippingOnOrderAboveEnabled,
-    freeDeliveryThreshold: freeAt,
+    isFree: false,
+    freeReason: null,
+    orderAboveThreshold: 0,
+    orderAboveEnabled: false,
+    freeDeliveryThreshold: 0,
+    baseDeliveryCharge: hasExplicitBase ? explicitBase : flat,
   };
 }
 
+/** Canonical local WhatsApp / phone from STORE_POLICY (e.g. 03284010007). */
+export function storePolicyWhatsApp() {
+  return String(STORE_POLICY.contact?.whatsapp || STORE_POLICY.contact?.phone || "").trim();
+}
+
 export function formatWhatsAppDisplay(whatsapp) {
-  const raw = String(whatsapp || "").replace(/\D/g, "");
-  if (!raw) return "03284010007";
-  // 923284010007 → 03284010007
+  const raw = String(whatsapp || storePolicyWhatsApp()).replace(/\D/g, "");
+  if (!raw) return storePolicyWhatsApp();
   if (raw.startsWith("92") && raw.length >= 12) return `0${raw.slice(2)}`;
   if (raw.startsWith("0")) return raw;
   if (raw.length === 10) return `0${raw}`;
   return raw;
 }
 
+/** Digits for wa.me / tel links (923…). */
+export function whatsappWaMeDigits(whatsapp) {
+  const display = formatWhatsAppDisplay(whatsapp || storePolicyWhatsApp());
+  return String(display).replace(/\D/g, "").replace(/^0/, "92");
+}
+
+/** Substitute {whatsapp} in CMS / default copy. */
+export function applyWhatsAppPlaceholder(text, whatsapp) {
+  const wa = formatWhatsAppDisplay(whatsapp || storePolicyWhatsApp());
+  return String(text || "").replace(/\{whatsapp\}/gi, wa);
+}
+
 export function formatAdvancePaymentMessage(message, amount, whatsapp) {
   const amt = Math.max(0, Number(amount) || 0);
-  const wa = formatWhatsAppDisplay(whatsapp);
   const amountStr = formatPrice(amt);
-  return String(message || DEFAULT_ADVANCE_MESSAGE)
-    .replace(/\{amount\}/gi, amountStr)
-    .replace(/\{whatsapp\}/gi, wa);
+  return applyWhatsAppPlaceholder(
+    String(message || DEFAULT_ADVANCE_MESSAGE).replace(/\{amount\}/gi, amountStr),
+    whatsapp
+  );
 }
 
 /** Account lines for COD delivery-charge advance payment box. */

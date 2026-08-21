@@ -55,7 +55,7 @@ const settingsSchema = new mongoose.Schema(
       orderSuccessMessage: { type: String, default: "Order Placed! We will deliver to your doorstep." },
       orderSuccessSubtext: { type: String, default: "Thank you for shopping with Crazzycars.pk" },
       codInstructions: { type: String, default: "Pay cash when your order arrives." },
-      shippingNote: { type: String, default: "Free delivery on orders over Rs. 2,999" },
+      shippingNote: { type: String, default: "Standard delivery is a flat Rs. 250 on every order. There is no order-value waiver for delivery." },
       cartEmptyMessage: { type: String, default: "Your cart is empty" },
     },
     storePayment: {
@@ -64,15 +64,16 @@ const settingsSchema = new mongoose.Schema(
       codDescription: { type: String, default: "Pay when your order arrives at your doorstep." },
       codFee: { type: Number, default: 0 },
       minimumOrderAmount: { type: Number, default: 0 },
-      freeShippingThreshold: { type: Number, default: 2999 },
+      freeShippingThreshold: { type: Number, default: 0 },
       majorCitiesDays: { type: String, default: "2-3" },
       otherAreasDays: { type: String, default: "4-7" },
       deliveryNote: {
         type: String,
-        default: "Free delivery on orders over Rs. 2,999",
+        default:
+          "Standard delivery is a flat Rs. 250 on every order. There is no order-value waiver for delivery.",
       },
       freeShippingOnAdvancePayment: { type: Boolean, default: false },
-      freeShippingOnOrderAbove: { type: Number, default: 10000 },
+      freeShippingOnOrderAbove: { type: Number, default: 0 },
       freeShippingOnOrderAboveEnabled: { type: Boolean, default: false },
       advancePaymentMessage: {
         type: String,
@@ -203,7 +204,7 @@ const settingsSchema = new mongoose.Schema(
     aboutPage: {
       hero: {
         badge: { type: String, default: "Our Story" },
-        title: { type: String, default: "Pakistan's Premier Car Accessories Store" },
+        title: { type: String, default: "Fitment-first car accessories from Gujranwala" },
         subtitle: {
           type: String,
           default:
@@ -312,12 +313,12 @@ const settingsSchema = new mongoose.Schema(
         paymentConfirmedMessage: {
           type: String,
           default:
-            "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at 0328-4010007 for confirmation, and our team will begin processing your order.",
+            "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at {whatsapp} for confirmation, and our team will begin processing your order.",
         },
         codAdvanceNote: {
           type: String,
           default:
-            "Thank you for your order! Since this is a Cash on Delivery order, please send a screenshot of your advance payment to our WhatsApp at 0328-4010007 to confirm your booking. The remaining balance will be collected on delivery.",
+            "Thank you for your order! Since this is a Cash on Delivery order, please send a screenshot of your advance payment to our WhatsApp at {whatsapp} to confirm your booking. The remaining balance will be collected on delivery.",
         },
         footerMessage: { type: String, default: "" },
       },
@@ -536,7 +537,7 @@ Shukriya — Crazzycars.pk ✨`,
       enabled: { type: Boolean, default: true },
       badge: { type: String, default: "Our Story" },
       heading: { type: String, default: "Built for Pakistani Car Enthusiasts" },
-      subheading: { type: String, default: "Pakistan's Premier Car Accessories Store" },
+      subheading: { type: String, default: "Fitment-first car accessories from Gujranwala" },
       description: {
         type: String,
         default:
@@ -675,7 +676,7 @@ Shukriya — Crazzycars.pk ✨`,
       },
     },
     footer: {
-      tagline: { type: String, default: "Pakistan's Premier Car Accessories Store" },
+      tagline: { type: String, default: "Fitment-first car accessories from Gujranwala" },
       social: {
         facebook: { type: String, default: "" },
         instagram: { type: String, default: "" },
