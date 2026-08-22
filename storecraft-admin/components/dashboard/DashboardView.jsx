@@ -126,7 +126,7 @@ export function DashboardView() {
   const trendData = data.salesTrend?.length ? data.salesTrend : data.salesLast7Days;
 
   return (
-    <div className="dashboard-instrument -mx-4 -my-5 min-h-[calc(100vh-3.5rem)] px-4 py-5 md:-mx-6 md:-my-6 md:px-6 md:py-6" style={{ background: "#16181C", color: "#EDEEF0" }}>
+    <div className="dashboard-instrument -mx-4 -my-5 min-h-[calc(100vh-3.5rem)] bg-bg-base px-4 py-5 text-text-primary md:-mx-6 md:-my-6 md:px-6 md:py-6">
     <div className="mx-auto max-w-7xl space-y-5">
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">

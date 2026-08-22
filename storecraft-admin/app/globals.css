@@ -12,15 +12,20 @@
   --primary: #1d6fb8;
   --primary-dark: #1e40af;
 
-  /* Ops dashboard — instrument panel (D1) */
-  --bg-base: #16181c;
-  --bg-panel: #1e2126;
-  --text-primary: #edeef0;
-  --text-muted: #8b909a;
-  --accent-money: #c9a24b;
-  --accent-attention: #c0503a;
-  --accent-line: #3a6b5c;
-  --border-hairline: #2c3038;
+  /*
+   * Ops dashboard — instrument panel (D1)
+   * Default = LIGHT (matches sialkot-theme default + Topbar toggle).
+   * Money amber darkened vs brief #A9781F → #9A6A18 for WCAG AA on white
+   * (4.72:1 normal text; proposed #A9781F was 3.89:1).
+   */
+  --bg-base: #f7f5f1;
+  --bg-panel: #ffffff;
+  --text-primary: #1c1e22;
+  --text-muted: #6b7078;
+  --accent-money: #9a6a18;
+  --accent-attention: #a5402c;
+  --accent-line: #2e5747;
+  --border-hairline: #e2e0da;
 }
 
 @theme inline {
@@ -63,6 +68,16 @@
   --border: #1e293b;
   --primary: #3b82f6;
   --primary-dark: #1d4ed8;
+
+  /* Ops dashboard — graphite instrument (dark) */
+  --bg-base: #16181c;
+  --bg-panel: #1e2126;
+  --text-primary: #edeef0;
+  --text-muted: #8b909a;
+  --accent-money: #c9a24b;
+  --accent-attention: #c0503a;
+  --accent-line: #3a6b5c;
+  --border-hairline: #2c3038;
 }
 
 body {

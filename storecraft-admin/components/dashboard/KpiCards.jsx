@@ -4,18 +4,26 @@
  *
  * Hierarchy rule: the BIG number is the glance-first figure (usually money).
  * Counts / pending sit on the secondary line.
+ *
+ * Colors come from theme tokens (--bg-panel, --accent-money, …) so the
+ * existing html.dark / sialkot-theme toggle switches light ↔ graphite.
  */
 import { formatAdminPrice } from "@/lib/currency";
 
 /** @typedef {"money" | "attention" | "line"} TrendTone */
+
+const TONE_VAR = {
+  money: "var(--accent-money)",
+  attention: "var(--accent-attention)",
+  line: "var(--accent-line)",
+};
 
 function TrendTick({ value, tone = "money" }) {
   if (value == null || value === "") return null;
   const n = Number(value);
   if (!Number.isFinite(n)) return null;
   const up = n >= 0;
-  const color =
-    tone === "attention" ? "#C0503A" : tone === "line" ? "#3A6B5C" : "#C9A24B";
+  const color = TONE_VAR[tone] || TONE_VAR.money;
 
   return (
     <div className="mt-2.5 flex items-center gap-2" title={`${up ? "+" : ""}${n}% vs prior`}>
@@ -25,12 +33,8 @@ function TrendTick({ value, tone = "money" }) {
         aria-hidden
       />
       <span
-        className="text-[11px] font-medium tracking-tight"
-        style={{
-          color,
-          fontFamily: "var(--font-jetbrains-mono), ui-monospace, monospace",
-          fontVariantNumeric: "tabular-nums",
-        }}
+        className="font-gauge text-[11px] font-medium tracking-tight"
+        style={{ color }}
       >
         <span aria-hidden>{up ? "↑" : "↓"}</span>
         {Math.abs(n).toLocaleString("en-PK", { maximumFractionDigits: 1 })}%
@@ -39,15 +43,13 @@ function TrendTick({ value, tone = "money" }) {
   );
 }
 
-function GaugeValue({ children, money = false, color = "#EDEEF0" }) {
-  const mono = {
-    fontFamily: "var(--font-jetbrains-mono), ui-monospace, monospace",
-    fontVariantNumeric: "tabular-nums",
-  };
-
+function GaugeValue({ children, money = false, color = "var(--text-primary)" }) {
   if (!money || typeof children !== "string") {
     return (
-      <span className="text-[1.65rem] font-semibold leading-none tracking-tight sm:text-[1.85rem]" style={{ ...mono, color }}>
+      <span
+        className="font-gauge text-[1.65rem] font-semibold leading-none tracking-tight sm:text-[1.85rem]"
+        style={{ color }}
+      >
         {children}
       </span>
     );
@@ -56,7 +58,10 @@ function GaugeValue({ children, money = false, color = "#EDEEF0" }) {
   const m = children.match(/^(Rs\.\s*)([\d,.\-]+.*)$/);
   if (!m) {
     return (
-      <span className="text-[1.65rem] font-semibold leading-none tracking-tight sm:text-[1.85rem]" style={{ ...mono, color }}>
+      <span
+        className="font-gauge text-[1.65rem] font-semibold leading-none tracking-tight sm:text-[1.85rem]"
+        style={{ color }}
+      >
         {children}
       </span>
     );
@@ -64,10 +69,13 @@ function GaugeValue({ children, money = false, color = "#EDEEF0" }) {
 
   return (
     <span className="inline-flex items-baseline gap-1.5 leading-none">
-      <span className="text-sm font-medium" style={{ color: "#8B909A" }}>
+      <span className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
         {m[1].trim()}
       </span>
-      <span className="text-[1.65rem] font-semibold tracking-tight sm:text-[1.85rem]" style={{ ...mono, color }}>
+      <span
+        className="font-gauge text-[1.65rem] font-semibold tracking-tight sm:text-[1.85rem]"
+        style={{ color }}
+      >
         {m[2]}
       </span>
     </span>
@@ -76,20 +84,19 @@ function GaugeValue({ children, money = false, color = "#EDEEF0" }) {
 
 function HeroCard({ label, value, trend, tone = "money", hint, money = false }) {
   const valueColor =
-    tone === "attention" ? "#C0503A" : tone === "money" && money ? "#C9A24B" : "#EDEEF0";
+    tone === "attention"
+      ? "var(--accent-attention)"
+      : tone === "money" && money
+        ? "var(--accent-money)"
+        : "var(--text-primary)";
 
   return (
     <div
-      className="rounded-xl p-5"
-      style={{
-        background: "#1E2126",
-        border: "1px solid #2C3038",
-        boxShadow: "none",
-      }}
+      className="rounded-xl border border-border-hairline bg-bg-panel p-5 shadow-none"
     >
       <p
         className="text-[10px] font-semibold uppercase tracking-[0.14em]"
-        style={{ color: "#8B909A" }}
+        style={{ color: "var(--text-muted)" }}
       >
         {label}
       </p>
@@ -100,7 +107,7 @@ function HeroCard({ label, value, trend, tone = "money", hint, money = false }) 
       </div>
       <TrendTick value={trend} tone={tone} />
       {hint ? (
-        <p className="mt-2 text-[11px] leading-snug" style={{ color: "#8B909A" }}>
+        <p className="mt-2 text-[11px] leading-snug" style={{ color: "var(--text-muted)" }}>
           {hint}
         </p>
       ) : null}
