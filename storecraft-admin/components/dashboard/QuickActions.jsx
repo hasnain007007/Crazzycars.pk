@@ -2,23 +2,27 @@
 
 import Link from "next/link";
 
+/**
+ * Walk-in sales are Invoices first — they do not create an Order until staff
+ * converts on the invoice (create-order). Keep that explicit in operator copy.
+ */
 const actions = [
   {
     href: "/invoices/new",
     label: "+ New Sale",
-    sub: "Create invoice",
+    sub: "Walk-in invoice for counter / WhatsApp sales",
     className: "bg-[#1A7A4C] text-white hover:bg-[#15663f]",
   },
   {
     href: "/catalog/products/new",
     label: "+ Add Product",
-    sub: "Catalog",
+    sub: "Add to catalog",
     className: "bg-[#E8913A] text-white hover:bg-[#d47f2a]",
   },
   {
-    href: "/invoices/new",
-    label: "+ Create Invoice",
-    sub: "Not added to Orders",
+    href: "/invoices",
+    label: "Invoices",
+    sub: "PDFs, payments — convert to Order when shipping",
     className: "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900",
   },
 ];

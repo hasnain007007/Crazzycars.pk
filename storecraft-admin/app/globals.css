@@ -11,6 +11,16 @@
   --border: #e5e7eb;
   --primary: #1d6fb8;
   --primary-dark: #1e40af;
+
+  /* Ops dashboard — instrument panel (D1) */
+  --bg-base: #16181c;
+  --bg-panel: #1e2126;
+  --text-primary: #edeef0;
+  --text-muted: #8b909a;
+  --accent-money: #c9a24b;
+  --accent-attention: #c0503a;
+  --accent-line: #3a6b5c;
+  --border-hairline: #2c3038;
 }
 
 @theme inline {
@@ -20,7 +30,30 @@
   --color-border: var(--border);
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
+  --color-bg-base: var(--bg-base);
+  --color-bg-panel: var(--bg-panel);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-accent-money: var(--accent-money);
+  --color-accent-attention: var(--accent-attention);
+  --color-accent-line: var(--accent-line);
+  --color-border-hairline: var(--border-hairline);
   --font-sans: var(--font-inter);
+  --font-gauge: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+/* Dashboard instrument shell — scoped so the rest of admin stays light until later phases */
+.dashboard-instrument {
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+
+.dashboard-instrument .font-gauge,
+.font-gauge {
+  font-family: var(--font-gauge);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 .dark {

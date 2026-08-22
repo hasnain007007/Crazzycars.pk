@@ -126,6 +126,7 @@ export function DashboardView() {
   const trendData = data.salesTrend?.length ? data.salesTrend : data.salesLast7Days;
 
   return (
+    <div className="dashboard-instrument -mx-4 -my-5 min-h-[calc(100vh-3.5rem)] px-4 py-5 md:-mx-6 md:-my-6 md:px-6 md:py-6" style={{ background: "#16181C", color: "#EDEEF0" }}>
     <div className="mx-auto max-w-7xl space-y-5">
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -138,11 +139,10 @@ export function DashboardView() {
       {/* Header toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard</h1>
-          <p className="text-xs text-slate-500">CrazzyCars ops overview · {rangeLabel}</p>
+          <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">Dashboard</h1>
+          <p className="text-xs text-[var(--text-muted)]">CrazzyCars ops overview · {rangeLabel}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <LiveUsersCard variant="badge" />
           <DashboardDateRange
             rangeId={rangeId}
             from={customFrom}
@@ -159,7 +159,7 @@ export function DashboardView() {
 
         {/* Charts row */}
         <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <SalesTrendChart data={trendData} rangeLabel={rangeLabel} chartMode={data.chartMode} />
+          <SalesTrendChart data={trendData} rangeLabel={rangeLabel} chartMode={data.chartMode} loading={loading} />
           <RevenueCostBarChart data={data.weekdayRevenueVsCost} />
           <CategorySalesDonut data={data.salesByCategory} />
         </div>
@@ -177,7 +177,7 @@ export function DashboardView() {
           </div>
         </div>
 
-        {/* Live + inventory + insights */}
+        {/* Live + inventory + insights — single live-visitor card (header pill removed) */}
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
           <LiveUsersCard variant="card" />
           <InventoryAlertsCard products={data.lowStockProducts} />
@@ -193,6 +193,7 @@ export function DashboardView() {
           CrazzyCars Admin · Live · Fast · Reliable
         </p>
       </div>
+    </div>
     </div>
   );
 }

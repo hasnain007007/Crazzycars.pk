@@ -36,7 +36,7 @@ function formatAxis(n) {
   return String(Math.round(v));
 }
 
-export function SalesTrendChart({ data, rangeLabel, chartMode }) {
+export function SalesTrendChart({ data, rangeLabel, chartMode, loading = false }) {
   const gradId = useId().replace(/:/g, "");
   const rows = useMemo(
     () =>
@@ -49,6 +49,9 @@ export function SalesTrendChart({ data, rangeLabel, chartMode }) {
 
   const total = useMemo(() => rows.reduce((s, r) => s + r.revenue, 0), [rows]);
   const hasRevenue = total > 0;
+  /** Don't flash the "no revenue" empty state while the first fetch is in flight. */
+  const showEmpty = !loading && (!rows.length || !hasRevenue);
+  const showChart = hasRevenue && rows.length > 0;
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -68,11 +71,21 @@ export function SalesTrendChart({ data, rangeLabel, chartMode }) {
       </div>
 
       <div className="mt-4 h-56 w-full">
-        {!rows.length || !hasRevenue ? (
+        {loading && !showChart ? (
+          <div className="flex h-full flex-col justify-end gap-2 rounded-xl bg-slate-50 px-3 pb-3 dark:bg-slate-950/50">
+            <div className="h-24 animate-pulse rounded-md bg-slate-200/80 dark:bg-slate-800" />
+            <div className="flex justify-between gap-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-2 flex-1 animate-pulse rounded bg-slate-200/70 dark:bg-slate-800" />
+              ))}
+            </div>
+            <p className="text-center text-[11px] text-slate-400">Loading paid revenue…</p>
+          </div>
+        ) : showEmpty ? (
           <div className="flex h-full flex-col items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-950/50">
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-300">No paid revenue yet</p>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300">No paid revenue in this period</p>
             <p className="mt-1 max-w-xs text-center text-xs text-slate-400">
-              Chart appears once orders are marked paid.
+              This chart only counts orders marked paid. Unpaid or pending orders won’t appear here — switch period or mark payments received.
             </p>
           </div>
         ) : (
