@@ -120,6 +120,7 @@ function serializeOrder(doc) {
       addedBy: n.addedBy,
       addedAt: n.addedAt,
     })),
+    tags: Array.isArray(o.tags) ? o.tags.map((t) => String(t)) : [],
     timeline: (o.timeline || []).map((t) => ({
       status: t.status,
       title: t.title,
@@ -539,6 +540,29 @@ export async function PUT(request, context) {
         });
         updates.push("internal note added");
       }
+    }
+
+    if (body.tags !== undefined) {
+      const nextTags = Array.isArray(body.tags)
+        ? [
+            ...new Set(
+              body.tags
+                .map((t) => String(t || "").trim().toLowerCase().slice(0, 40))
+                .filter(Boolean)
+            ),
+          ].slice(0, 20)
+        : [];
+      order.tags = nextTags;
+      order.markModified("tags");
+      updates.push(`tags → [${nextTags.join(", ")}]`);
+      if (!Array.isArray(order.timeline)) order.timeline = [];
+      order.timeline.push({
+        status: order.orderStatus,
+        title: "Tags updated",
+        description: nextTags.length ? nextTags.join(", ") : "(cleared)",
+        timestamp: new Date(),
+        by: adminName,
+      });
     }
 
     const trackingNumberIn =

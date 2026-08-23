@@ -45,9 +45,14 @@ export function getAdminWhatsAppNumber(settings) {
   return String(settings?.whatsapp?.number ?? "").trim();
 }
 
-/** Customer order phone — shipping address first. */
+/** Customer order phone — shipping address first; guest emails fall back to embedded digits. */
 export function getCustomerOrderPhone(order) {
-  return String(order?.shippingAddress?.phone ?? order?.customer?.phone ?? "").trim();
+  const direct = String(order?.shippingAddress?.phone ?? order?.customer?.phone ?? "").trim();
+  if (direct.replace(/\D/g, "").length >= 10) return direct;
+  const email = String(order?.customer?.email || order?.shippingAddress?.email || "");
+  const m = email.match(/^(?:guest|invoice)\+(\d+)@/i);
+  if (m?.[1]) return m[1];
+  return direct;
 }
 
 function getLegacyWhatsAppMessage(order) {

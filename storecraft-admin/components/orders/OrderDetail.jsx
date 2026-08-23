@@ -13,7 +13,11 @@ import {
   printDocumentShell,
   printHtmlWithIframe,
 } from "./printOrderDocuments";
+import { formatCustomerListMeta } from "@/lib/guestCustomerDisplay";
+import { DualStatusBadges } from "./DualStatusBadges";
 import { InternalNotes } from "./InternalNotes";
+import { OrderActivityFeed } from "./OrderActivityFeed";
+import { OrderTagsEditor } from "./OrderTagsEditor";
 import { PrintInvoice } from "./PrintInvoice";
 import { OrderStatusCard, PaymentStatusCard } from "./StatusUpdater";
 import { OrderItemsEditor } from "./OrderItemsEditor";
@@ -1498,18 +1502,10 @@ export function OrderDetail({ orderId }) {
                 <h1 className="m-0 text-lg font-bold leading-tight text-slate-900 dark:text-white">
                   Order #{order.orderNumber}
                 </h1>
-                <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold capitalize text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
-                  {order.orderStatus || order.status || "pending"}
-                </span>
-                <span
-                  className={`rounded-md px-2 py-0.5 text-[11px] font-semibold capitalize ${
-                    String(order.paymentStatus || "").toLowerCase() === "paid"
-                      ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
-                      : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-200"
-                  }`}
-                >
-                  {order.paymentStatus || "unpaid"}
-                </span>
+                <DualStatusBadges
+                  orderStatus={order.orderStatus || order.status}
+                  paymentStatus={order.paymentStatus}
+                />
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
                   {formatCurrencyAmount(
                     order,
@@ -1518,7 +1514,16 @@ export function OrderDetail({ orderId }) {
                 </span>
               </div>
               <p className="mt-0.5 mb-0 text-xs text-slate-500 dark:text-slate-400">
-                {customerFullName(order)}
+                {(() => {
+                  const meta = formatCustomerListMeta({
+                    name: customerFullName(order),
+                    email: order.customer?.email,
+                    phone: order.customer?.phone || order.shippingAddress?.phone,
+                  });
+                  return meta.isGuest
+                    ? `${meta.primary} · ${meta.secondary}`
+                    : meta.primary;
+                })()}
                 {order.paymentMethod || order.payment?.method
                   ? ` · ${order.paymentMethod || order.payment?.method}`
                   : ""}
@@ -1641,7 +1646,9 @@ export function OrderDetail({ orderId }) {
                     <OrderInformationCard order={order} bare />
                   </div>
                 </details>
+                <OrderTagsEditor order={order} onUpdated={setOrder} />
                 <InternalNotes order={order} onUpdated={setOrder} />
+                <OrderActivityFeed order={order} />
               </div>
             </div>
           </div>

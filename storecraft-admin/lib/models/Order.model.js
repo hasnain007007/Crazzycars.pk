@@ -201,6 +201,8 @@ const orderSchema = new mongoose.Schema(
     internalNotes: { type: [internalNoteSchema], default: [] },
     timeline: { type: [timelineEntrySchema], default: [] },
     emailHistory: { type: [emailHistoryEntrySchema], default: [] },
+    /** Freeform ops labels (e.g. needs-callback, wrong-address) — not a fixed enum. */
+    tags: { type: [String], default: [], index: true },
     whatsappNotified: { type: Boolean, default: false },
     codConfirmed: { type: Boolean, default: false },
     /**

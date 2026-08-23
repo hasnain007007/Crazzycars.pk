@@ -1,16 +1,26 @@
 /**
- * Orders list page client: stats, filters, table, export.
+ * Orders list page client: stats, saved views, filters, table, export.
  */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { OrderFilters } from "./OrderFilters";
 import { OrdersTable } from "./OrdersTable";
+import { InstrumentStatCard } from "@/components/ui/InstrumentStatCard";
 import { formatAdminPrice } from "@/lib/currency";
 
 function formatMoney(n) {
   return formatAdminPrice(n);
 }
+
+// Needs Attention is the stale bucket (OR8): pending + unpaid + age >= 10d — not a broader 3d triage.
+const SAVED_VIEWS = [
+  { key: "all", label: "All" },
+  { key: "unfulfilled", label: "Unfulfilled" },
+  { key: "unpaid", label: "Unpaid" },
+  { key: "needsAttention", label: "Needs Attention" },
+  { key: "today", label: "Today" },
+];
 
 export function OrdersPage() {
   const [search, setSearch] = useState("");
@@ -19,6 +29,9 @@ export function OrdersPage() {
   const [paymentStatus, setPaymentStatus] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [tag, setTag] = useState("");
+  const [debouncedTag, setDebouncedTag] = useState("");
+  const [view, setView] = useState("all");
   const [page, setPage] = useState(1);
   const [orders, setOrders] = useState([]);
   const [total, setTotal] = useState(0);
@@ -30,6 +43,13 @@ export function OrdersPage() {
     todayRevenue: 0,
     pendingValueAtRisk: 0,
   });
+  const [views, setViews] = useState({
+    all: 0,
+    unfulfilled: 0,
+    unpaid: 0,
+    needsAttention: 0,
+    today: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,8 +58,13 @@ export function OrdersPage() {
   }, [search]);
 
   useEffect(() => {
+    const t = setTimeout(() => setDebouncedTag(tag.trim().toLowerCase()), 350);
+    return () => clearTimeout(t);
+  }, [tag]);
+
+  useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, status, paymentStatus, dateFrom, dateTo]);
+  }, [debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, view]);
 
   const queryString = useMemo(() => {
     const p = new URLSearchParams();
@@ -50,8 +75,10 @@ export function OrdersPage() {
     if (paymentStatus !== "all") p.set("paymentStatus", paymentStatus);
     if (dateFrom) p.set("from", dateFrom);
     if (dateTo) p.set("to", dateTo);
+    if (debouncedTag) p.set("tag", debouncedTag);
+    if (view && view !== "all") p.set("view", view);
     return p.toString();
-  }, [page, debouncedSearch, status, paymentStatus, dateFrom, dateTo]);
+  }, [page, debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, view]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,6 +93,7 @@ export function OrdersPage() {
       setTotal(json.total ?? 0);
       setTotalPages(json.totalPages ?? 1);
       if (json.stats) setStats(json.stats);
+      if (json.views) setViews(json.views);
     } catch {
       setOrders([]);
     } finally {
@@ -77,6 +105,28 @@ export function OrdersPage() {
     load();
   }, [load]);
 
+  function selectView(key) {
+    setView(key);
+    if (key !== "all") {
+      setStatus("all");
+      setPaymentStatus("all");
+    }
+    if (key === "today" || key === "needsAttention") {
+      setDateFrom("");
+      setDateTo("");
+    }
+  }
+
+  function onStatusChange(next) {
+    setStatus(next);
+    if (next !== "all") setView("all");
+  }
+
+  function onPaymentStatusChange(next) {
+    setPaymentStatus(next);
+    if (next !== "all") setView("all");
+  }
+
   function exportCsv() {
     const p = new URLSearchParams();
     if (debouncedSearch) p.set("search", debouncedSearch);
@@ -84,22 +134,36 @@ export function OrdersPage() {
     if (paymentStatus !== "all") p.set("paymentStatus", paymentStatus);
     if (dateFrom) p.set("from", dateFrom);
     if (dateTo) p.set("to", dateTo);
+    if (debouncedTag) p.set("tag", debouncedTag);
+    if (view && view !== "all") p.set("view", view);
     const qs = p.toString();
     window.open(`/api/orders/export${qs ? `?${qs}` : ""}`, "_blank", "noopener,noreferrer");
   }
 
   return (
-    <div className="space-y-6">
+    <div
+      className="orders-instrument -mx-4 -my-5 min-h-[calc(100vh-3.5rem)] space-y-6 px-4 py-5 md:-mx-6 md:-my-6 md:px-6 md:py-6"
+      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Orders</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{total} orders match filters</p>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+            Orders
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
+            {total} orders match filters
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={exportCsv}
-            className="shrink-0 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+            className="shrink-0 rounded-lg border px-4 py-2 text-sm font-semibold shadow-none hover:opacity-90"
+            style={{
+              background: "var(--bg-panel)",
+              borderColor: "var(--border-hairline)",
+              color: "var(--text-primary)",
+            }}
           >
             Export CSV
           </button>
@@ -107,42 +171,70 @@ export function OrdersPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {[
-          { label: "Total orders", value: stats.totalOrders, tone: "bg-white dark:bg-slate-900" },
-          { label: "Pending", value: stats.pending, tone: "bg-amber-50 dark:bg-amber-950/20" },
-          { label: "Processing", value: stats.processing, tone: "bg-blue-50 dark:bg-blue-950/20" },
-          {
-            label: "Pending value at risk",
-            value: formatMoney(stats.pendingValueAtRisk || 0),
-            tone: "bg-orange-50 dark:bg-orange-950/20",
-            hint: "Pending + unpaid order totals",
-          },
-          { label: "Today's revenue", value: formatMoney(stats.todayRevenue), tone: "bg-emerald-50 dark:bg-emerald-950/20" },
-        ].map((c) => (
-          <div
-            key={c.label}
-            className={`rounded-xl border border-slate-200 p-4 shadow-sm dark:border-slate-700 ${c.tone}`}
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{c.label}</p>
-            <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{c.value}</p>
-            {c.hint ? (
-              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{c.hint}</p>
-            ) : null}
-          </div>
-        ))}
+        <InstrumentStatCard label="Total orders" value={stats.totalOrders} />
+        <InstrumentStatCard label="Pending" value={stats.pending} />
+        <InstrumentStatCard label="Processing" value={stats.processing} />
+        <InstrumentStatCard
+          label="Pending value at risk"
+          value={formatMoney(stats.pendingValueAtRisk || 0)}
+          tone="attention"
+          money
+          hint="Pending + unpaid order totals"
+        />
+        <InstrumentStatCard
+          label="Today's revenue"
+          value={formatMoney(stats.todayRevenue)}
+          tone="money"
+          money
+        />
+      </div>
+
+      <div
+        className="flex flex-wrap gap-1 rounded-xl border p-1.5"
+        style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
+        role="tablist"
+        aria-label="Saved views"
+      >
+        {SAVED_VIEWS.map((v) => {
+          const active = view === v.key;
+          const count = views[v.key] ?? 0;
+          return (
+            <button
+              key={v.key}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => selectView(v.key)}
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+              style={
+                active
+                  ? {
+                      background: "color-mix(in srgb, var(--accent-line) 14%, transparent)",
+                      color: "var(--accent-line)",
+                    }
+                  : { color: "var(--text-muted)" }
+              }
+            >
+              {v.label}
+              <span className="ml-1.5 tabular-nums opacity-80">({count})</span>
+            </button>
+          );
+        })}
       </div>
 
       <OrderFilters
         search={search}
         onSearchChange={setSearch}
         status={status}
-        onStatusChange={setStatus}
+        onStatusChange={onStatusChange}
         paymentStatus={paymentStatus}
-        onPaymentStatusChange={setPaymentStatus}
+        onPaymentStatusChange={onPaymentStatusChange}
         dateFrom={dateFrom}
         dateTo={dateTo}
         onDateFromChange={setDateFrom}
         onDateToChange={setDateTo}
+        tag={tag}
+        onTagChange={setTag}
       />
 
       <OrdersTable

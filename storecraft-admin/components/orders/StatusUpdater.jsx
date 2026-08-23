@@ -6,7 +6,6 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { orderStatusBadgeClass, paymentStatusBadgeClass } from "@/lib/orderUi";
-import { OrderStatusHistory } from "./OrderStatusHistory";
 
 const ORDER_STATUSES = [
   "pending",
@@ -108,9 +107,6 @@ export function OrderStatusCard({ order, onUpdated }) {
           {saving ? "Updating…" : "Update status"}
         </button>
       </form>
-      <div className="mt-6 border-t border-slate-100 pt-4 dark:border-slate-800">
-        <OrderStatusHistory entries={order.statusHistory} />
-      </div>
     </div>
   );
 }

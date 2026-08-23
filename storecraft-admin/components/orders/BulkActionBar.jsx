@@ -117,6 +117,51 @@ export function BulkActionBar({
     await bulkPut("updateStatus", "cancelled", "Bulk cancelled by admin");
   }, [ids.length, bulkPut]);
 
+  const markProcessing = useCallback(() => {
+    if (!ids.length) return;
+    bulkPut("updateStatus", "processing", "Bulk marked processing by admin");
+  }, [ids.length, bulkPut]);
+
+  const addTagsSelected = useCallback(async () => {
+    if (!ids.length) return;
+    const raw = window.prompt("Add tag (comma-separated ok):");
+    if (raw == null) return;
+    const tags = String(raw)
+      .split(",")
+      .map((t) => t.trim().toLowerCase().slice(0, 40))
+      .filter(Boolean);
+    if (!tags.length) {
+      toast.error("Enter at least one tag.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/orders/bulk", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderIds: ids,
+          action: "addTags",
+          tags,
+          note: "Bulk tagged by admin",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast.error(json.error || "Could not add tags");
+        return;
+      }
+      toast.success(`Tagged ${json.updated ?? 0} order(s).`);
+      onClear();
+      onUpdated?.();
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setBusy(false);
+    }
+  }, [ids, onClear, onUpdated]);
+
   const fetchOrders = useCallback(async () => {
     const list = await Promise.all(
       ids.map(async (id) => {
@@ -276,13 +321,23 @@ export function BulkActionBar({
     }
   }, [fetchOrders, ids.length]);
 
+
   if (selectedCount < 1) return null;
 
+  const panelBtn = {
+    background: "var(--bg-panel)",
+    borderColor: "var(--border-hairline)",
+    color: "var(--text-primary)",
+  };
+
   return (
-    <div className="sticky top-0 z-10 mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-md dark:border-slate-700 dark:bg-slate-900">
+    <div
+      className="sticky top-0 z-10 mb-3 rounded-lg border p-3 shadow-sm"
+      style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
+    >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+          <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
             {selectedCount} order{selectedCount !== 1 ? "s" : ""} selected
           </span>
         </div>
@@ -290,9 +345,51 @@ export function BulkActionBar({
           <button
             type="button"
             disabled={busy}
+            onClick={markProcessing}
+            className="rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-none disabled:opacity-50"
+            style={{ background: "var(--accent-line)" }}
+            title="Mark selected as Processing"
+          >
+            Mark as Processing
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={exportCsv}
+            className="rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-none disabled:opacity-50"
+            style={panelBtn}
+          >
+            Export selected CSV
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={printPacking}
+            className="rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-none disabled:opacity-50"
+            style={panelBtn}
+          >
+            Print packing slips
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={addTagsSelected}
+            className="rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-none disabled:opacity-50"
+            style={{
+              background: "color-mix(in srgb, var(--accent-money) 12%, var(--bg-panel))",
+              borderColor: "var(--border-hairline)",
+              color: "var(--accent-money)",
+            }}
+            title="Add a tag to selected orders"
+          >
+            Add tag
+          </button>
+          <button
+            type="button"
+            disabled={busy}
             onClick={bookPostexBulk}
-            className="rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-sm disabled:opacity-50"
-            style={{ background: busy ? "#9CA3AF" : "#C41E1E" }}
+            className="rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-none disabled:opacity-50"
+            style={{ background: busy ? "var(--text-muted)" : "var(--accent-attention)" }}
           >
             {bulkBookProgress || "Book selected with Postex"}
           </button>
@@ -300,7 +397,12 @@ export function BulkActionBar({
             type="button"
             disabled={busy}
             onClick={refreshLiveStatusBulk}
-            className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900 shadow-sm hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100"
+            className="rounded-lg border px-3 py-1.5 text-xs font-bold shadow-none disabled:opacity-50"
+            style={{
+              background: "color-mix(in srgb, var(--accent-line) 12%, transparent)",
+              borderColor: "var(--border-hairline)",
+              color: "var(--accent-line)",
+            }}
             title="Fetch latest Postex live status for selected orders"
           >
             {liveProgress || "↻ Live status"}
@@ -313,12 +415,16 @@ export function BulkActionBar({
                 setPayOpen(false);
                 setStatusOpen((v) => !v);
               }}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-none disabled:opacity-50"
+              style={panelBtn}
             >
               Update status ▾
             </button>
             {statusOpen ? (
-              <div className="absolute left-0 z-20 mt-1 min-w-[200px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900">
+              <div
+                className="absolute left-0 z-20 mt-1 min-w-[200px] rounded-lg border py-1 shadow-lg"
+                style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
+              >
                 {[
                   ["processing", "Mark as processing"],
                   ["shipped", "Mark as dispatched"],
@@ -329,7 +435,8 @@ export function BulkActionBar({
                   <button
                     key={val}
                     type="button"
-                    className="block w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800"
+                    className="block w-full px-3 py-2 text-left text-sm"
+                    style={{ color: "var(--text-primary)" }}
                     onClick={() => bulkPut("updateStatus", val)}
                   >
                     {label}
@@ -347,12 +454,16 @@ export function BulkActionBar({
                 setStatusOpen(false);
                 setPayOpen((v) => !v);
               }}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-none disabled:opacity-50"
+              style={panelBtn}
             >
               Update payment ▾
             </button>
             {payOpen ? (
-              <div className="absolute left-0 z-20 mt-1 min-w-[180px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900">
+              <div
+                className="absolute left-0 z-20 mt-1 min-w-[180px] rounded-lg border py-1 shadow-lg"
+                style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
+              >
                 {[
                   ["paid", "Mark as paid"],
                   ["unpaid", "Mark as unpaid"],
@@ -361,7 +472,8 @@ export function BulkActionBar({
                   <button
                     key={val}
                     type="button"
-                    className="block w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800"
+                    className="block w-full px-3 py-2 text-left text-sm"
+                    style={{ color: "var(--text-primary)" }}
                     onClick={() => bulkPut("updatePayment", val)}
                   >
                     {label}
@@ -375,7 +487,12 @@ export function BulkActionBar({
             type="button"
             disabled={busy}
             onClick={cancelSelected}
-            className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 shadow-sm hover:bg-red-100 disabled:opacity-50 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200 dark:hover:bg-red-950/70"
+            className="rounded-lg border px-3 py-1.5 text-xs font-bold shadow-none disabled:opacity-50"
+            style={{
+              background: "color-mix(in srgb, var(--accent-attention) 12%, transparent)",
+              borderColor: "var(--border-hairline)",
+              color: "var(--accent-attention)",
+            }}
             title="Set selected orders to Cancelled"
           >
             Cancel selected
@@ -384,32 +501,18 @@ export function BulkActionBar({
           <button
             type="button"
             disabled={busy}
-            onClick={printPacking}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-          >
-            Print packing slips
-          </button>
-          <button
-            type="button"
-            disabled={busy}
             onClick={printInvoices}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+            className="rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-none disabled:opacity-50"
+            style={panelBtn}
           >
             Print invoices
           </button>
           <button
             type="button"
             disabled={busy}
-            onClick={exportCsv}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-          >
-            Export selected CSV
-          </button>
-          <button
-            type="button"
-            disabled={busy}
             onClick={onClear}
-            className="inline-flex items-center gap-1 rounded-lg border border-transparent px-2 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-1 rounded-lg border border-transparent px-2 py-1.5 text-xs font-semibold"
+            style={{ color: "var(--text-muted)" }}
             title="Clear selection"
           >
             Clear <span aria-hidden>✕</span>
@@ -418,45 +521,64 @@ export function BulkActionBar({
       </div>
 
       {liveResults ? (
-        <div className="mt-3 max-h-64 overflow-auto rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+        <div
+          className="mt-3 max-h-64 overflow-auto rounded-lg border p-3"
+          style={{
+            background: "color-mix(in srgb, var(--accent-line) 8%, var(--bg-panel))",
+            borderColor: "var(--border-hairline)",
+          }}
+        >
           <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-emerald-900 dark:text-emerald-100">
+            <p
+              className="text-xs font-bold uppercase tracking-wide"
+              style={{ color: "var(--accent-line)" }}
+            >
               Live status results
             </p>
             <button
               type="button"
-              className="text-xs font-semibold text-emerald-800 hover:underline dark:text-emerald-200"
+              className="text-xs font-semibold hover:underline"
+              style={{ color: "var(--accent-line)" }}
               onClick={() => setLiveResults(null)}
             >
               Dismiss
             </button>
           </div>
-          <ul className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200">
+          <ul className="space-y-1.5 text-xs" style={{ color: "var(--text-primary)" }}>
             {(liveResults.results || []).map((r) => (
               <li
                 key={r.orderId}
-                className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md bg-white/80 px-2 py-1.5 dark:bg-slate-900/50"
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md px-2 py-1.5"
+                style={{ background: "var(--bg-panel)" }}
               >
                 <span className="font-bold">{r.orderNumber || r.orderId}</span>
                 {r.success ? (
                   <>
-                    <span className="text-emerald-700 dark:text-emerald-300">
-                      {r.status || "OK"}
-                    </span>
+                    <span style={{ color: "var(--accent-line)" }}>{r.status || "OK"}</span>
                     {r.currentLocation ? (
-                      <span className="text-slate-500">· {r.currentLocation}</span>
+                      <span style={{ color: "var(--text-muted)" }}>· {r.currentLocation}</span>
                     ) : null}
                     {r.destination ? (
-                      <span className="text-slate-500">→ {r.destination}</span>
+                      <span style={{ color: "var(--text-muted)" }}>→ {r.destination}</span>
                     ) : null}
                     {r.orderStatusSynced ? (
-                      <span className="rounded bg-emerald-100 px-1.5 py-0.5 font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
+                      <span
+                        className="rounded px-1.5 py-0.5 font-semibold"
+                        style={{
+                          background: "color-mix(in srgb, var(--accent-line) 14%, transparent)",
+                          color: "var(--accent-line)",
+                        }}
+                      >
                         order → {r.orderStatusSynced.to}
                       </span>
                     ) : null}
                   </>
                 ) : (
-                  <span className={r.skipped ? "text-amber-700" : "text-red-600"}>
+                  <span
+                    style={{
+                      color: r.skipped ? "var(--accent-money)" : "var(--accent-attention)",
+                    }}
+                  >
                     {r.error || "Failed"}
                   </span>
                 )}

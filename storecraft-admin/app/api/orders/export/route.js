@@ -62,7 +62,21 @@ export async function GET(request) {
     }
     if (search) {
       const rx = new RegExp(escapeRegex(search), "i");
-      filter.$or = [{ orderNumber: rx }, { "customer.name": rx }, { "customer.email": rx }];
+      const digits = search.replace(/\D/g, "");
+      const or = [
+        { orderNumber: rx },
+        { "customer.name": rx },
+        { "customer.email": rx },
+        { "customer.phone": rx },
+        { "shippingAddress.phone": rx },
+      ];
+      if (digits.length >= 7) {
+        const digitRx = new RegExp(escapeRegex(digits));
+        or.push({ "customer.phone": digitRx });
+        or.push({ "shippingAddress.phone": digitRx });
+        or.push({ "customer.email": new RegExp(`guest\\+${escapeRegex(digits)}`, "i") });
+      }
+      filter.$or = or;
     }
 
     const rows = await Order.find(filter).sort({ createdAt: -1 }).limit(5000).lean();

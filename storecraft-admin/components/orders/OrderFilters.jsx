@@ -3,6 +3,12 @@
  */
 "use client";
 
+const inputStyle = {
+  background: "var(--bg-base)",
+  borderColor: "var(--border-hairline)",
+  color: "var(--text-primary)",
+};
+
 export function OrderFilters({
   search,
   onSearchChange,
@@ -14,36 +20,50 @@ export function OrderFilters({
   dateTo,
   onDateFromChange,
   onDateToChange,
+  tag = "",
+  onTagChange,
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-4">
+    <div
+      className="flex flex-col gap-3 rounded-xl border p-4 shadow-none"
+      style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
+    >
+      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-5">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">From</label>
+            <label className="block text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+              From
+            </label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => onDateFromChange(e.target.value)}
-              className="mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+              className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none"
+              style={inputStyle}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">To</label>
+            <label className="block text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+              To
+            </label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => onDateToChange(e.target.value)}
-              className="mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+              className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none"
+              style={inputStyle}
             />
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Order status</label>
+          <label className="block text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+            Order status
+          </label>
           <select
             value={status}
             onChange={(e) => onStatusChange(e.target.value)}
-            className="mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+            className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none"
+            style={inputStyle}
           >
             <option value="all">All</option>
             <option value="pending">Pending</option>
@@ -59,11 +79,14 @@ export function OrderFilters({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Payment status</label>
+          <label className="block text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+            Payment status
+          </label>
           <select
             value={paymentStatus}
             onChange={(e) => onPaymentStatusChange(e.target.value)}
-            className="mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+            className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none"
+            style={inputStyle}
           >
             <option value="all">All</option>
             <option value="unpaid">Unpaid</option>
@@ -73,13 +96,29 @@ export function OrderFilters({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Search</label>
+          <label className="block text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+            Tag
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. priority"
+            value={tag}
+            onChange={(e) => onTagChange?.(e.target.value)}
+            className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none"
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+            Search
+          </label>
           <input
             type="search"
-            placeholder="Order #, customer name or email"
+            placeholder="Order #, name, phone, or email"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+            className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none"
+            style={inputStyle}
           />
         </div>
       </div>

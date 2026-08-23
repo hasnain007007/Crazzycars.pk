@@ -95,11 +95,48 @@ export async function GET(request) {
 
     if (search) {
       const rx = new RegExp(escapeRegex(search), "i");
-      filter.$or = [
+      const digits = search.replace(/\D/g, "");
+      const or = [
         { orderNumber: rx },
         { "customer.name": rx },
         { "customer.email": rx },
+        { "customer.phone": rx },
+        { "shippingAddress.phone": rx },
+        { tags: rx },
       ];
+      // Phone-heavy guest checkouts: match digit runs in phone / guest+…@ email
+      if (digits.length >= 7) {
+        const digitRx = new RegExp(escapeRegex(digits));
+        or.push({ "customer.phone": digitRx });
+        or.push({ "shippingAddress.phone": digitRx });
+        or.push({ "customer.email": new RegExp(`guest\\+${escapeRegex(digits)}`, "i") });
+      }
+      filter.$or = or;
+    }
+
+    const tag = (searchParams.get("tag") || "").trim();
+    if (tag) {
+      filter.tags = tag;
+    }
+
+    const view = (searchParams.get("view") || "").trim();
+    const nowForView = new Date();
+    const dayStartView = utcStartOfDay(nowForView);
+    const dayEndView = utcEndOfDay(nowForView);
+    // Needs Attention === stale rule (OR8): pending + unpaid + age >= 10 days
+    const attentionCutoff = new Date(nowForView.getTime() - 10 * 86_400_000);
+
+    if (view === "unfulfilled") {
+      filter.orderStatus = { $in: ["pending", "confirmed", "processing", "packed"] };
+    } else if (view === "unpaid") {
+      filter.paymentStatus = "unpaid";
+      filter.orderStatus = { $nin: ["cancelled", "refunded"] };
+    } else if (view === "needsAttention") {
+      filter.orderStatus = "pending";
+      filter.paymentStatus = "unpaid";
+      filter.createdAt = { ...(filter.createdAt || {}), $lte: attentionCutoff };
+    } else if (view === "today") {
+      filter.createdAt = { $gte: dayStartView, $lte: dayEndView };
     }
 
     const skip = (page - 1) * limit;
@@ -107,28 +144,52 @@ export async function GET(request) {
     const dayStart = utcStartOfDay(now);
     const dayEnd = utcEndOfDay(now);
 
-    const [items, total, totalOrders, pendingCount, processingCount, todayPaidOrders, pendingUnpaidOrders] =
-      await Promise.all([
-        Order.find(filter)
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(limit)
-          .populate("customer.customerId", "name email")
-          .lean(),
-        Order.countDocuments(filter),
-        Order.countDocuments({}),
-        Order.countDocuments({ orderStatus: "pending" }),
-        Order.countDocuments({ orderStatus: "processing" }),
-        Order.find({
-          paymentStatus: "paid",
-          createdAt: { $gte: dayStart, $lte: dayEnd },
-        })
-          .select("pricing total")
-          .lean(),
-        Order.find({ orderStatus: "pending", paymentStatus: "unpaid" })
-          .select("pricing total")
-          .lean(),
-      ]);
+    const [
+      items,
+      total,
+      totalOrders,
+      pendingCount,
+      processingCount,
+      todayPaidOrders,
+      pendingUnpaidOrders,
+      viewUnfulfilled,
+      viewUnpaid,
+      viewNeedsAttention,
+      viewToday,
+    ] = await Promise.all([
+      Order.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("customer.customerId", "name email phone")
+        .lean(),
+      Order.countDocuments(filter),
+      Order.countDocuments({}),
+      Order.countDocuments({ orderStatus: "pending" }),
+      Order.countDocuments({ orderStatus: "processing" }),
+      Order.find({
+        paymentStatus: "paid",
+        createdAt: { $gte: dayStart, $lte: dayEnd },
+      })
+        .select("pricing total")
+        .lean(),
+      Order.find({ orderStatus: "pending", paymentStatus: "unpaid" })
+        .select("pricing total")
+        .lean(),
+      Order.countDocuments({
+        orderStatus: { $in: ["pending", "confirmed", "processing", "packed"] },
+      }),
+      Order.countDocuments({
+        paymentStatus: "unpaid",
+        orderStatus: { $nin: ["cancelled", "refunded"] },
+      }),
+      Order.countDocuments({
+        orderStatus: "pending",
+        paymentStatus: "unpaid",
+        createdAt: { $lte: attentionCutoff },
+      }),
+      Order.countDocuments({ createdAt: { $gte: dayStart, $lte: dayEnd } }),
+    ]);
 
     let todayRevenue = 0;
     for (const o of todayPaidOrders) {
@@ -140,23 +201,74 @@ export async function GET(request) {
       pendingValueAtRisk += orderGrandTotal(o);
     }
 
-    const orders = items.map((o) => ({
-      id: o._id.toString(),
-      orderNumber: o.orderNumber,
-      createdAt: o.createdAt,
-      customerName: o.customer?.name || o.customer?.customerId?.name || "Guest",
-      customerEmail: o.customer?.email || o.customer?.customerId?.email || "",
-      shippingCity: o.shippingAddress?.city || "",
-      shippingCountry: o.shippingAddress?.country || "",
-      itemCount: Array.isArray(o.items) ? o.items.reduce((s, i) => s + (i.quantity || 0), 0) : 0,
-      lineCount: Array.isArray(o.items) ? o.items.length : 0,
-      total: orderGrandTotal(o),
-      orderStatus: o.orderStatus,
-      paymentStatus: o.paymentStatus,
-      trackingNumber: o.trackingNumber || o.tracking?.number || "",
-      liveStatus: o.tracking?.lastStatus || "",
-      liveLocation: o.tracking?.currentLocation || "",
-    }));
+    // Repeat-customer signal: same phone, >1 order in last 24h
+    const since24h = new Date(Date.now() - 86_400_000);
+    const phonesOnPage = [
+      ...new Set(
+        items
+          .map((o) => String(o.customer?.phone || o.shippingAddress?.phone || "").replace(/\D/g, ""))
+          .filter((p) => p.length >= 10)
+      ),
+    ];
+    const phoneRepeatMap = new Map();
+    if (phonesOnPage.length) {
+      const phoneOr = phonesOnPage.flatMap((d) => [
+        { "customer.phone": new RegExp(d) },
+        { "shippingAddress.phone": new RegExp(d) },
+        { "customer.email": new RegExp(`guest\\+${d}`, "i") },
+      ]);
+      const recentSamePhone = await Order.find({
+        createdAt: { $gte: since24h },
+        $or: phoneOr,
+      })
+        .select("customer.phone customer.email shippingAddress.phone createdAt")
+        .lean();
+      for (const row of recentSamePhone) {
+        const d = String(
+          row.customer?.phone || row.shippingAddress?.phone || ""
+        ).replace(/\D/g, "");
+        const fromEmail = String(row.customer?.email || "").match(/guest\+(\d+)/i)?.[1] || "";
+        const key = d.length >= 10 ? d : fromEmail;
+        if (!key) continue;
+        phoneRepeatMap.set(key, (phoneRepeatMap.get(key) || 0) + 1);
+      }
+    }
+
+    const orders = items.map((o) => {
+      const phone = o.customer?.phone || o.shippingAddress?.phone || o.customer?.customerId?.phone || "";
+      const digits = String(phone).replace(/\D/g, "");
+      const emailDigits = String(o.customer?.email || "").match(/guest\+(\d+)/i)?.[1] || "";
+      const phoneKey = digits.length >= 10 ? digits : emailDigits;
+      const ordersLast24h = phoneKey ? phoneRepeatMap.get(phoneKey) || 1 : 1;
+      return {
+        id: o._id.toString(),
+        orderNumber: o.orderNumber,
+        createdAt: o.createdAt,
+        customerName: o.customer?.name || o.customer?.customerId?.name || "Guest",
+        customerEmail: o.customer?.email || o.customer?.customerId?.email || "",
+        customerPhone: phone || emailDigits,
+        shippingCity: o.shippingAddress?.city || "",
+        shippingCountry: o.shippingAddress?.country || "",
+        itemCount: Array.isArray(o.items) ? o.items.reduce((s, i) => s + (i.quantity || 0), 0) : 0,
+        lineCount: Array.isArray(o.items) ? o.items.length : 0,
+        total: orderGrandTotal(o),
+        orderStatus: o.orderStatus,
+        paymentStatus: o.paymentStatus,
+        trackingNumber: o.trackingNumber || o.tracking?.number || "",
+        liveStatus: o.tracking?.lastStatus || "",
+        liveLocation: o.tracking?.currentLocation || "",
+        liveStatusAt: o.tracking?.lastStatusAt || null,
+        tags: Array.isArray(o.tags) ? o.tags : [],
+        ordersLast24h,
+        isRepeatToday: ordersLast24h > 1,
+        // Computed at query time (OR8) — never stored on the order document
+        isStale:
+          String(o.orderStatus || "").toLowerCase() === "pending" &&
+          String(o.paymentStatus || "").toLowerCase() === "unpaid" &&
+          o.createdAt != null &&
+          now.getTime() - new Date(o.createdAt).getTime() >= 10 * 86_400_000,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -170,6 +282,13 @@ export async function GET(request) {
         processing: processingCount,
         todayRevenue,
         pendingValueAtRisk,
+      },
+      views: {
+        all: totalOrders,
+        unfulfilled: viewUnfulfilled,
+        unpaid: viewUnpaid,
+        needsAttention: viewNeedsAttention,
+        today: viewToday,
       },
     });
   } catch (error) {

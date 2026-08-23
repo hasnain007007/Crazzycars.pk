@@ -31,7 +31,7 @@ export async function PUT(request) {
     const rawIds = Array.isArray(body.orderIds) ? body.orderIds : [];
     const note = typeof body.note === "string" ? body.note.trim().slice(0, 2000) : "";
 
-    if (action !== "updateStatus" && action !== "updatePayment") {
+    if (action !== "updateStatus" && action !== "updatePayment" && action !== "addTags") {
       return NextResponse.json({ success: false, error: "Invalid action." }, { status: 400 });
     }
 
@@ -87,6 +87,32 @@ export async function PUT(request) {
         await order.save();
         updated += 1;
       }
+    } else if (action === "addTags") {
+      const incoming = Array.isArray(body.tags)
+        ? body.tags.map((t) => String(t || "").trim().toLowerCase().slice(0, 40)).filter(Boolean)
+        : typeof value === "string"
+          ? [value.trim().toLowerCase().slice(0, 40)].filter(Boolean)
+          : [];
+      if (!incoming.length) {
+        return NextResponse.json({ success: false, error: "Provide at least one tag." }, { status: 400 });
+      }
+      for (const id of orderIds) {
+        const order = await Order.findById(id);
+        if (!order) continue;
+        const set = new Set([...(order.tags || []).map((t) => String(t).toLowerCase()), ...incoming]);
+        order.tags = [...set].slice(0, 20);
+        order.markModified("tags");
+        if (!Array.isArray(order.timeline)) order.timeline = [];
+        order.timeline.push({
+          status: order.orderStatus,
+          title: "Tags added",
+          description: incoming.join(", "),
+          timestamp: new Date(),
+          by: adminName,
+        });
+        await order.save();
+        updated += 1;
+      }
     } else {
       const allowedPay = ["unpaid", "paid", "refunded", "partial"];
       if (!allowedPay.includes(value)) {
@@ -109,10 +135,12 @@ export async function PUT(request) {
       action:
         action === "updateStatus"
           ? `Bulk updated ${updated} orders to ${label}`
-          : `Bulk updated payment on ${updated} orders to ${label}`,
+          : action === "addTags"
+            ? `Bulk tagged ${updated} orders`
+            : `Bulk updated payment on ${updated} orders to ${label}`,
       resource: "Order",
       resourceId: "bulk",
-      details: { count: updated, action, value, orderIds },
+      details: { count: updated, action, value, tags: body.tags, orderIds },
       type: "update",
       ip: requestIp(request),
     });

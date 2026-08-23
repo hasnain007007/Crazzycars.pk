@@ -54,7 +54,14 @@
   color: var(--text-primary);
 }
 
+/* Orders list instrument shell (OR0) */
+.orders-instrument {
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+
 .dashboard-instrument .font-gauge,
+.orders-instrument .font-gauge,
 .font-gauge {
   font-family: var(--font-gauge);
   font-variant-numeric: tabular-nums;

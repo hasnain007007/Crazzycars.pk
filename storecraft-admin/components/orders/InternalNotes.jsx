@@ -1,31 +1,15 @@
 /**
- * Internal-only notes timeline + add form.
+ * Internal-only note composer. Notes appear in the unified Activity feed (OR4).
  */
 "use client";
 
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-function initials(name) {
-  const parts = String(name || "A").trim().split(/\s+/);
-  const a = parts[0]?.[0] || "A";
-  const b = parts[1]?.[0] || "";
-  return (a + b).toUpperCase();
-}
-
-function formatWhen(d) {
-  if (!d) return "—";
-  try {
-    return new Date(d).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-  } catch {
-    return "—";
-  }
-}
-
 export function InternalNotes({ order, onUpdated }) {
   const [text, setText] = useState("");
   const [saving, setSaving] = useState(false);
-  const notes = [...(order.internalNotes || [])].sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+  const noteCount = Array.isArray(order?.internalNotes) ? order.internalNotes.length : 0;
 
   async function add(e) {
     e.preventDefault();
@@ -58,42 +42,35 @@ export function InternalNotes({ order, onUpdated }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Internal notes</h2>
-      <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-300/90">Not visible to the customer.</p>
-      <ul className="mt-4 max-h-72 space-y-4 overflow-y-auto">
-        {notes.length === 0 ? (
-          <li className="text-sm text-slate-500 dark:text-slate-400">No notes yet.</li>
-        ) : (
-          notes.map((n) => (
-            <li key={n.id} className="flex gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
-                {initials(n.addedBy)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  <span className="font-medium text-slate-800 dark:text-slate-200">{n.addedBy}</span>
-                  {" · "}
-                  {formatWhen(n.addedAt)}
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-200">{n.note}</p>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
-      <form onSubmit={add} className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Add note</label>
+    <div
+      className="rounded-xl border p-4 shadow-none"
+      style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
+    >
+      <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+        Add internal note
+      </h2>
+      <p className="mt-0.5 text-xs" style={{ color: "var(--accent-attention)" }}>
+        Not visible to the customer
+        {noteCount > 0 ? ` · ${noteCount} in Activity below` : ""}.
+      </p>
+      <form onSubmit={add} className="mt-3">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={3}
-          className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+          placeholder="Ops note…"
+          className="w-full rounded-lg border px-2 py-2 text-sm"
+          style={{
+            background: "var(--bg-base)",
+            borderColor: "var(--border-hairline)",
+            color: "var(--text-primary)",
+          }}
         />
         <button
           type="submit"
           disabled={saving}
-          className="mt-2 rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-900 disabled:opacity-50 dark:bg-slate-600 dark:hover:bg-slate-500"
+          className="mt-2 rounded-lg px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          style={{ background: "var(--accent-line)" }}
         >
           {saving ? "Saving…" : "Add note"}
         </button>
