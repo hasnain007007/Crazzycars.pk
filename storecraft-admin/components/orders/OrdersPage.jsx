@@ -33,6 +33,9 @@ export function OrdersPage() {
   const [debouncedTag, setDebouncedTag] = useState("");
   const [view, setView] = useState("all");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const [sortKey, setSortKey] = useState("date");
+  const [sortDir, setSortDir] = useState("desc");
   const [orders, setOrders] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -64,12 +67,14 @@ export function OrdersPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, view]);
+  }, [debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, view, limit]);
 
   const queryString = useMemo(() => {
     const p = new URLSearchParams();
     p.set("page", String(page));
-    p.set("limit", "20");
+    p.set("limit", String(limit));
+    p.set("sort", sortKey);
+    p.set("dir", sortDir);
     if (debouncedSearch) p.set("search", debouncedSearch);
     if (status !== "all") p.set("status", status);
     if (paymentStatus !== "all") p.set("paymentStatus", paymentStatus);
@@ -78,7 +83,21 @@ export function OrdersPage() {
     if (debouncedTag) p.set("tag", debouncedTag);
     if (view && view !== "all") p.set("view", view);
     return p.toString();
-  }, [page, debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, view]);
+  }, [page, limit, sortKey, sortDir, debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, view]);
+
+  function onSortChange(key) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  }
+
+  function onLimitChange(next) {
+    setLimit(next);
+    setPage(1);
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -241,7 +260,13 @@ export function OrdersPage() {
         orders={orders}
         page={page}
         totalPages={totalPages}
+        total={total}
+        limit={limit}
         onPageChange={setPage}
+        onLimitChange={onLimitChange}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={onSortChange}
         loading={loading}
         onOrdersChanged={load}
       />

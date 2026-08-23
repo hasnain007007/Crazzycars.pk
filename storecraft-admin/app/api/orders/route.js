@@ -144,6 +144,16 @@ export async function GET(request) {
     const dayStart = utcStartOfDay(now);
     const dayEnd = utcEndOfDay(now);
 
+    // Server-side sort so Date/Total sort applies across all pages, not just the loaded page
+    const sortKey = (searchParams.get("sort") || "date").trim();
+    const sortDir = (searchParams.get("dir") || "desc").trim() === "asc" ? 1 : -1;
+    let sortSpec = { createdAt: -1 };
+    if (sortKey === "date") {
+      sortSpec = { createdAt: sortDir };
+    } else if (sortKey === "total") {
+      sortSpec = { "pricing.total": sortDir, createdAt: -1 };
+    }
+
     const [
       items,
       total,
@@ -158,7 +168,7 @@ export async function GET(request) {
       viewToday,
     ] = await Promise.all([
       Order.find(filter)
-        .sort({ createdAt: -1 })
+        .sort(sortSpec)
         .skip(skip)
         .limit(limit)
         .populate("customer.customerId", "name email phone")

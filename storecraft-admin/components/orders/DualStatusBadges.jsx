@@ -1,5 +1,5 @@
 /**
- * Two adjacent badges: fulfillment · payment (OR1 display clarity).
+ * Single-line fulfillment · payment indicator (compact orders table).
  */
 "use client";
 
@@ -10,24 +10,25 @@ import {
   paymentLabel,
 } from "@/lib/orderUi";
 
+/**
+ * One nowrap pill — unpaid/attention wins the tint so money risk stays visible.
+ */
 export function DualStatusBadges({ orderStatus, paymentStatus }) {
+  const pay = String(paymentStatus || "").toLowerCase();
+  const style =
+    pay === "unpaid" || pay === "failed"
+      ? paymentBadgeStyle(paymentStatus)
+      : fulfillmentBadgeStyle(orderStatus);
+
+  const label = `${fulfillmentLabel(orderStatus)} · ${paymentLabel(paymentStatus)}`;
+
   return (
-    <div className="flex flex-wrap items-center gap-1" title="Fulfillment · Payment">
-      <span
-        className="inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold"
-        style={fulfillmentBadgeStyle(orderStatus)}
-      >
-        {fulfillmentLabel(orderStatus)}
-      </span>
-      <span className="text-[10px]" style={{ color: "var(--text-muted)" }} aria-hidden>
-        ·
-      </span>
-      <span
-        className="inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold"
-        style={paymentBadgeStyle(paymentStatus)}
-      >
-        {paymentLabel(paymentStatus)}
-      </span>
-    </div>
+    <span
+      className="inline-flex max-w-[11rem] truncate whitespace-nowrap rounded-md px-2 py-0.5 text-[11px] font-semibold"
+      style={style}
+      title={`Fulfillment · Payment: ${label}`}
+    >
+      {label}
+    </span>
   );
 }

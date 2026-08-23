@@ -1,5 +1,5 @@
 /**
- * Orders list table: dual status, guest display, courier column, sort, bulk select.
+ * Orders list table: compact single-line rows, sticky header, pagination.
  */
 "use client";
 
@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isStaleOrder, pendingAgeBadge } from "@/lib/orderUi";
-import { formatCustomerListMeta } from "@/lib/guestCustomerDisplay";
+import { formatCustomerListMeta, formatPhoneDisplay } from "@/lib/guestCustomerDisplay";
 import { DualStatusBadges } from "./DualStatusBadges";
 import { BulkActionBar } from "./BulkActionBar";
 import { formatAdminPrice } from "@/lib/currency";
@@ -59,11 +59,24 @@ function SortHeader({ label, active, dir, onClick }) {
   );
 }
 
-export function OrdersTable({ orders, page, totalPages, onPageChange, loading, onOrdersChanged }) {
+const CELL = "px-3 py-2"; // ~44–48px row with single-line content
+
+export function OrdersTable({
+  orders,
+  page,
+  totalPages,
+  total,
+  limit,
+  onPageChange,
+  onLimitChange,
+  sortKey,
+  sortDir,
+  onSortChange,
+  loading,
+  onOrdersChanged,
+}) {
   const router = useRouter();
   const [selected, setSelected] = useState({});
-  const [sortKey, setSortKey] = useState(null);
-  const [sortDir, setSortDir] = useState("desc");
 
   const pageIds = useMemo(() => (orders || []).map((o) => o.id), [orders]);
   const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selected[id]);
@@ -77,32 +90,8 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
     if (headerRef.current) headerRef.current.indeterminate = headerIndeterminate;
   }, [headerIndeterminate, allOnPageSelected, loading]);
 
-  const toggleSort = useCallback((key) => {
-    setSortKey((prev) => {
-      if (prev === key) {
-        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-        return key;
-      }
-      setSortDir("desc");
-      return key;
-    });
-  }, []);
-
-  const displayOrders = useMemo(() => {
-    const list = [...(orders || [])];
-    if (!sortKey) return list;
-    const mul = sortDir === "asc" ? 1 : -1;
-    list.sort((a, b) => {
-      if (sortKey === "date") {
-        return ((new Date(a.createdAt).getTime() || 0) - (new Date(b.createdAt).getTime() || 0)) * mul;
-      }
-      if (sortKey === "total") {
-        return (Number(a.total) - Number(b.total)) * mul;
-      }
-      return 0;
-    });
-    return list;
-  }, [orders, sortKey, sortDir]);
+  const rangeFrom = total === 0 ? 0 : (page - 1) * limit + 1;
+  const rangeTo = Math.min(page * limit, total);
 
   const toggleRow = useCallback((id, e) => {
     e?.stopPropagation?.();
@@ -197,18 +186,19 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
         className="overflow-hidden rounded-xl border shadow-none"
         style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
       >
-        <div className="overflow-x-auto">
+        <div className="max-h-[min(70vh,720px)] overflow-auto">
           <table className="min-w-[1140px] w-full text-left text-sm">
             <thead
-              className="border-b text-xs font-semibold uppercase tracking-wide"
+              className="sticky top-0 z-20 border-b text-xs font-semibold uppercase tracking-wide"
               style={{
                 borderColor: "var(--border-hairline)",
                 background: "color-mix(in srgb, var(--bg-base) 65%, var(--bg-panel))",
                 color: "var(--text-muted)",
+                boxShadow: "0 1px 0 var(--border-hairline)",
               }}
             >
               <tr>
-                <th className="w-10 px-3 py-3">
+                <th className={`w-10 ${CELL}`}>
                   <input
                     ref={headerRef}
                     type="checkbox"
@@ -220,45 +210,45 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                     aria-label="Select all on this page"
                   />
                 </th>
-                <th className="px-4 py-3">Order #</th>
-                <th className="px-4 py-3">
+                <th className={CELL}>Order #</th>
+                <th className={CELL}>
                   <SortHeader
                     label="Date"
                     active={sortKey === "date"}
                     dir={sortDir}
-                    onClick={() => toggleSort("date")}
+                    onClick={() => onSortChange?.("date")}
                   />
                 </th>
-                <th className="px-4 py-3">Days pending</th>
-                <th className="px-4 py-3">Customer</th>
-                <th className="px-4 py-3">Location</th>
-                <th className="px-4 py-3">Items</th>
-                <th className="px-4 py-3">
+                <th className={CELL}>Days pending</th>
+                <th className={CELL}>Customer</th>
+                <th className={CELL}>Location</th>
+                <th className={CELL}>Items</th>
+                <th className={CELL}>
                   <SortHeader
                     label="Total"
                     active={sortKey === "total"}
                     dir={sortDir}
-                    onClick={() => toggleSort("total")}
+                    onClick={() => onSortChange?.("total")}
                   />
                 </th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Courier</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <th className={CELL}>Status</th>
+                <th className={CELL}>Courier</th>
+                <th className={`${CELL} text-right`}>Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y" style={{ borderColor: "var(--border-hairline)" }}>
               {loading
-                ? Array.from({ length: 5 }).map((_, i) => (
+                ? Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={11} className="px-4 py-3">
+                      <td colSpan={11} className={CELL}>
                         <div
-                          className="h-4 animate-pulse rounded"
+                          className="h-3.5 animate-pulse rounded"
                           style={{ background: "var(--border-hairline)" }}
                         />
                       </td>
                     </tr>
                   ))
-                : displayOrders.map((o) => {
+                : (orders || []).map((o) => {
                     const isRowSel = !!selected[o.id];
                     const age = pendingAgeBadge(o.createdAt, o.orderStatus, o.paymentStatus);
                     const customer = formatCustomerListMeta({
@@ -266,7 +256,15 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                       email: o.customerEmail,
                       phone: o.customerPhone,
                     });
+                    const phoneInline = formatPhoneDisplay(customer.phone || o.customerPhone);
                     const tags = Array.isArray(o.tags) ? o.tags : [];
+                    const stale =
+                      o.isStale || isStaleOrder(o.orderStatus, o.paymentStatus, o.createdAt);
+                    const courierLabel = o.liveStatus
+                      ? o.liveStatus
+                      : o.trackingNumber
+                        ? "Not refreshed"
+                        : "—";
                     return (
                       <tr
                         key={o.id}
@@ -281,6 +279,7 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                         }}
                         className="cursor-pointer"
                         style={{
+                          height: 46,
                           background: isRowSel
                             ? "color-mix(in srgb, var(--accent-line) 8%, var(--bg-panel))"
                             : undefined,
@@ -297,7 +296,7 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                             : "";
                         }}
                       >
-                        <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                        <td className={CELL} onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={isRowSel}
@@ -309,37 +308,40 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                           />
                         </td>
                         <td
-                          className="px-4 py-3 font-mono text-xs font-medium"
+                          className={`${CELL} max-w-[9rem] font-mono text-xs font-medium`}
                           style={{ color: "var(--text-primary)" }}
                         >
-                          <div className="whitespace-nowrap">{o.orderNumber}</div>
-                          {tags.length > 0 ? (
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {tags.map((t) => (
-                                <span
-                                  key={t}
-                                  className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold"
-                                  style={{
-                                    background:
-                                      "color-mix(in srgb, var(--accent-money) 12%, transparent)",
-                                    color: "var(--accent-money)",
-                                  }}
-                                >
-                                  {t}
-                                </span>
-                              ))}
-                            </div>
-                          ) : null}
+                          <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+                            <span className="truncate">{o.orderNumber}</span>
+                            {tags.slice(0, 1).map((t) => (
+                              <span
+                                key={t}
+                                className="inline-flex shrink-0 rounded px-1 py-0 text-[9px] font-semibold"
+                                style={{
+                                  background:
+                                    "color-mix(in srgb, var(--accent-money) 12%, transparent)",
+                                  color: "var(--accent-money)",
+                                }}
+                                title={tags.join(", ")}
+                              >
+                                {t}
+                                {tags.length > 1 ? ` +${tags.length - 1}` : ""}
+                              </span>
+                            ))}
+                          </div>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3" style={{ color: "var(--text-muted)" }}>
+                        <td
+                          className={`${CELL} whitespace-nowrap text-xs`}
+                          style={{ color: "var(--text-muted)" }}
+                        >
                           {formatDate(o.createdAt)}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3">
-                          <div className="flex flex-wrap items-center gap-1.5">
+                        <td className={`${CELL} whitespace-nowrap`}>
+                          <div className="inline-flex items-center gap-1">
                             {age ? (
                               <span
                                 title={`Age bracket ${age.bracket} days`}
-                                className="inline-flex rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums"
+                                className="inline-flex rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
                                 style={age.style}
                               >
                                 {age.label}
@@ -349,10 +351,9 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                                 —
                               </span>
                             )}
-                            {o.isStale ||
-                            isStaleOrder(o.orderStatus, o.paymentStatus, o.createdAt) ? (
+                            {stale ? (
                               <span
-                                className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold tabular-nums"
+                                className="inline-flex rounded-md px-1.5 py-0.5 text-[10px] font-bold tabular-nums"
                                 style={{
                                   background:
                                     "color-mix(in srgb, var(--accent-attention) 16%, transparent)",
@@ -360,19 +361,35 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                                 }}
                                 title="Pending + unpaid for 10+ days — needs human triage"
                               >
-                                Stale · 10d+
+                                Stale
                               </span>
                             ) : null}
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-medium" style={{ color: "var(--text-primary)" }}>
+                        <td className={`${CELL} max-w-[14rem]`}>
+                          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
+                            <span
+                              className="truncate font-medium"
+                              style={{ color: "var(--text-primary)" }}
+                              title={
+                                customer.isGuest
+                                  ? `Guest checkout${phoneInline ? ` · ${phoneInline}` : ""}`
+                                  : customer.primary
+                              }
+                            >
                               {customer.primary}
                             </span>
+                            {phoneInline ? (
+                              <span
+                                className="shrink-0 text-[11px] tabular-nums"
+                                style={{ color: "var(--text-muted)" }}
+                              >
+                                · {phoneInline}
+                              </span>
+                            ) : null}
                             {o.isRepeatToday ? (
                               <span
-                                className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums"
+                                className="inline-flex shrink-0 rounded px-1 py-0 text-[10px] font-bold tabular-nums"
                                 style={{
                                   background:
                                     "color-mix(in srgb, var(--accent-attention) 14%, transparent)",
@@ -384,74 +401,60 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
                               </span>
                             ) : null}
                           </div>
-                          {customer.secondary ? (
-                            <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                              {customer.secondary}
-                            </div>
-                          ) : null}
                         </td>
-                        <td className="px-4 py-3">
-                          {o.shippingCity ? (
-                            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                              {o.shippingCity}
-                              {o.shippingCountry ? `, ${o.shippingCountry}` : ""}
-                            </span>
-                          ) : (
-                            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                              —
-                            </span>
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3" style={{ color: "var(--text-primary)" }}>
-                          {o.lineCount} line{o.lineCount !== 1 ? "s" : ""} · {o.itemCount} pc
+                        <td className={`${CELL} max-w-[8rem]`}>
+                          <span
+                            className="block truncate text-xs whitespace-nowrap"
+                            style={{ color: "var(--text-muted)" }}
+                            title={
+                              o.shippingCity
+                                ? `${o.shippingCity}${o.shippingCountry ? `, ${o.shippingCountry}` : ""}`
+                                : undefined
+                            }
+                          >
+                            {o.shippingCity || "—"}
+                          </span>
                         </td>
                         <td
-                          className="whitespace-nowrap px-4 py-3 font-medium tabular-nums"
+                          className={`${CELL} whitespace-nowrap text-xs`}
+                          style={{ color: "var(--text-primary)" }}
+                        >
+                          {o.lineCount}·{o.itemCount}
+                        </td>
+                        <td
+                          className={`${CELL} whitespace-nowrap font-medium tabular-nums`}
                           style={{ color: "var(--text-primary)" }}
                         >
                           {formatMoney(o.total)}
                         </td>
-                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                          <DualStatusBadges orderStatus={o.orderStatus} paymentStatus={o.paymentStatus} />
+                        <td className={CELL} onClick={(e) => e.stopPropagation()}>
+                          <DualStatusBadges
+                            orderStatus={o.orderStatus}
+                            paymentStatus={o.paymentStatus}
+                          />
                         </td>
-                        <td className="px-4 py-3">
-                          {o.liveStatus ? (
-                            <div>
-                              <div className="text-xs font-semibold" style={{ color: "var(--accent-line)" }}>
-                                {o.liveStatus}
-                              </div>
-                              {o.liveLocation ? (
-                                <div
-                                  className="mt-0.5 max-w-[160px] truncate text-[11px]"
-                                  style={{ color: "var(--text-muted)" }}
-                                  title={o.liveLocation}
-                                >
-                                  {o.liveLocation}
-                                </div>
-                              ) : null}
-                            </div>
-                          ) : o.trackingNumber ? (
-                            <span
-                              className="text-[11px]"
-                              style={{ color: "var(--text-muted)" }}
-                              title="Click bulk ↻ Live status after booking Postex"
-                            >
-                              Courier not refreshed
-                            </span>
-                          ) : (
-                            <span
-                              className="text-xs"
-                              style={{ color: "var(--text-muted)" }}
-                              title="No tracking booked yet"
-                            >
-                              —
-                            </span>
-                          )}
+                        <td className={`${CELL} max-w-[7rem]`}>
+                          <span
+                            className="block truncate text-[11px] whitespace-nowrap"
+                            style={{
+                              color: o.liveStatus ? "var(--accent-line)" : "var(--text-muted)",
+                              fontWeight: o.liveStatus ? 600 : 400,
+                            }}
+                            title={
+                              o.liveStatus
+                                ? [o.liveStatus, o.liveLocation].filter(Boolean).join(" · ")
+                                : o.trackingNumber
+                                  ? "Courier not refreshed"
+                                  : "No tracking booked yet"
+                            }
+                          >
+                            {courierLabel}
+                          </span>
                         </td>
-                        <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                        <td className={`${CELL} text-right`} onClick={(e) => e.stopPropagation()}>
                           <Link
                             href={`/orders/${o.id}`}
-                            className="inline-flex rounded-md border px-2.5 py-1 text-xs font-semibold"
+                            className="inline-flex min-h-[28px] min-w-[44px] items-center justify-center rounded-md border px-2.5 py-1 text-xs font-semibold"
                             style={{
                               borderColor: "var(--border-hairline)",
                               background: "var(--bg-panel)",
@@ -467,36 +470,67 @@ export function OrdersTable({ orders, page, totalPages, onPageChange, loading, o
             </tbody>
           </table>
         </div>
-        {totalPages > 1 ? (
-          <div
-            className="flex items-center justify-between border-t px-4 py-3 text-sm"
-            style={{ borderColor: "var(--border-hairline)" }}
-          >
+
+        <div
+          className="flex flex-col gap-3 border-t px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+          style={{ borderColor: "var(--border-hairline)" }}
+        >
+          <div className="flex flex-wrap items-center gap-3">
             <span style={{ color: "var(--text-muted)" }}>
-              Page {page} of {totalPages}
+              Showing{" "}
+              <span className="tabular-nums font-medium" style={{ color: "var(--text-primary)" }}>
+                {rangeFrom}–{rangeTo}
+              </span>{" "}
+              of{" "}
+              <span className="tabular-nums font-medium" style={{ color: "var(--text-primary)" }}>
+                {total}
+              </span>
             </span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => onPageChange(page - 1)}
-                className="rounded-md border px-3 py-1 font-medium disabled:opacity-40"
-                style={{ borderColor: "var(--border-hairline)", color: "var(--text-primary)" }}
+            <label className="inline-flex items-center gap-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+              Rows
+              <select
+                value={limit}
+                onChange={(e) => onLimitChange?.(Number(e.target.value))}
+                className="rounded-md border px-2 py-1 text-xs font-semibold"
+                style={{
+                  borderColor: "var(--border-hairline)",
+                  background: "var(--bg-base)",
+                  color: "var(--text-primary)",
+                }}
+                aria-label="Rows per page"
               >
-                Previous
-              </button>
-              <button
-                type="button"
-                disabled={page >= totalPages}
-                onClick={() => onPageChange(page + 1)}
-                className="rounded-md border px-3 py-1 font-medium disabled:opacity-40"
-                style={{ borderColor: "var(--border-hairline)", color: "var(--text-primary)" }}
-              >
-                Next
-              </button>
-            </div>
+                {[25, 50, 100].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-        ) : null}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={page <= 1 || loading}
+              onClick={() => onPageChange(page - 1)}
+              className="rounded-md border px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
+              style={{ borderColor: "var(--border-hairline)", color: "var(--text-primary)" }}
+            >
+              Previous
+            </button>
+            <span className="tabular-nums text-xs" style={{ color: "var(--text-muted)" }}>
+              Page {page} of {Math.max(1, totalPages)}
+            </span>
+            <button
+              type="button"
+              disabled={page >= totalPages || loading || totalPages <= 1}
+              onClick={() => onPageChange(page + 1)}
+              className="rounded-md border px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
+              style={{ borderColor: "var(--border-hairline)", color: "var(--text-primary)" }}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
