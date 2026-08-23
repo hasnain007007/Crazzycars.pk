@@ -200,7 +200,7 @@ export function CartDrawer() {
               })}
             </ul>
           )}
-          {items.length > 0 ? (
+          {items.length > 0 && freeShippingThreshold > 0 ? (
             <FreeDeliveryProgress cartTotal={subtotal} threshold={freeShippingThreshold} className="mt-4" />
           ) : null}
         </div>

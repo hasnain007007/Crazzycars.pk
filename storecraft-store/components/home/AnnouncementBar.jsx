@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { sanitizeAnnouncementItems, standardDeliveryFeeShort } from "@/lib/storePolicyCopy";
 
 const DEFAULT_ITEMS = [
   {
-    text: "🚗 COD Available Nationwide | Free Delivery Over Rs. 2,999",
-    link: "",
+    text: `🚗 COD Available Nationwide | ${standardDeliveryFeeShort()}`,
+    link: "/shipping-policy",
     enabled: true,
   },
 ];
@@ -32,9 +33,12 @@ export default function AnnouncementBar() {
           return;
         }
         if (announcementBar?.items?.length > 0) {
+          const items = sanitizeAnnouncementItems(announcementBar.items).filter(
+            (item) => item.enabled !== false && String(item.text || "").trim()
+          );
           setBar({
             enabled: announcementBar.enabled !== false,
-            items: announcementBar.items,
+            items: items.length ? items : DEFAULT_ITEMS,
             backgroundColor: announcementBar.backgroundColor || "#F5A623",
             textColor: announcementBar.textColor || "#1A1A1A",
           });

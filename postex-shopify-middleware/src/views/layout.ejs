@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= typeof title !== 'undefined' ? title + ' · ' : '' %>PostEx × Shopify</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+    <% if (user) { %>
+    <aside class="sidebar">
+      <div class="brand">
+        <strong>CrazzyCars</strong>
+        <span>PostEx bridge</span>
+      </div>
+      <nav>
+        <a href="/dashboard" class="<%= typeof title !== 'undefined' && title === 'Dashboard' ? 'active' : '' %>">Dashboard</a>
+        <a href="/orders" class="<%= typeof title !== 'undefined' && String(title).startsWith('Order') ? 'active' : '' %>">Orders</a>
+        <a href="/settings" class="<%= title === 'Settings' ? 'active' : '' %>">Settings</a>
+        <a href="/logs" class="<%= title === 'API Logs' ? 'active' : '' %>">API Logs</a>
+      </nav>
+      <form method="post" action="/logout" class="logout">
+        <button type="submit">Sign out</button>
+      </form>
+    </aside>
+    <% } %>
+    <main class="main">
+      <% if (flash) { %>
+        <div class="flash flash-<%= flash.type %>"><%= flash.message %></div>
+      <% } %>
+      <%- body %>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

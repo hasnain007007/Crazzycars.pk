@@ -58,7 +58,7 @@ const FOOTER_SECTION_TITLE = {
 
 const FOOTER_CONTENT_DEFAULTS = {
   companyName: "Crazzycars.pk",
-  tagline: "Pakistan's Premier Car Accessories Store",
+  tagline: "Fitment-first car accessories from Gujranwala",
   copyrightText: `© ${new Date().getFullYear()} Crazzycars.pk. All Rights Reserved.`,
   contactEmail: "info@crazzycars.pk",
   phone: "+92 324 422 0007",
@@ -585,7 +585,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
           <textarea
             value={f.tagline || FOOTER_CONTENT_DEFAULTS.tagline}
             onChange={(e) => setFooter({ tagline: e.target.value })}
-            placeholder="Pakistan's Premier Car Accessories Store"
+            placeholder="Fitment-first car accessories from Gujranwala"
             rows={3}
             style={{ ...FOOTER_INPUT_STYLE, resize: "vertical" }}
           />

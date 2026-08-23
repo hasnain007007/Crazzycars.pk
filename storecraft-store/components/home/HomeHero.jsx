@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
-import { useStorePayment } from "@/context/StoreSettingsContext";
-import { formatFreeDeliveryThreshold } from "@/lib/freeDelivery";
+import { standardDeliveryFeeShort, returnsHeroTrustChip } from "@/lib/storePolicyCopy";
 import {
   heroHeightStyle,
   mapBannerToSlide,
@@ -16,14 +15,9 @@ const SWIPE_PX = 48;
 const SLIDE_MS = 560;
 
 function useTrustItems() {
-  const storePayment = useStorePayment();
   return useMemo(
-    () => [
-      "Cash on delivery",
-      `Free delivery ${formatFreeDeliveryThreshold(storePayment)}+`,
-      "Easy returns",
-    ],
-    [storePayment]
+    () => ["Cash on delivery", standardDeliveryFeeShort(), returnsHeroTrustChip()],
+    []
   );
 }
 

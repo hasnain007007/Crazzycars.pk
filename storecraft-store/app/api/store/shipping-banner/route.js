@@ -4,9 +4,12 @@ import ShippingZone from "@/lib/models/Shipping.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { getZoneEstimatedDays } from "@/lib/shippingZoneWeight";
 import {
-  DEFAULT_FREE_SHIPPING_THRESHOLD,
-  getEffectiveFreeDeliveryThreshold,
-} from "@/lib/freeDelivery";
+  deliveryEtaSummary,
+  lahoreEtaRange,
+  nonLahoreEtaStatement,
+  sanitizeCustomerShippingNote,
+  standardDeliveryFeeStatement,
+} from "@/lib/storePolicyCopy";
 
 export const dynamic = "force-dynamic";
 
@@ -17,23 +20,22 @@ function normalizeDays(raw, fallback) {
   return s || fallback;
 }
 
-function buildResponse({ freeShippingThreshold, majorDays, otherDays, freeShippingText, zones }) {
-  const threshold =
-    Math.max(0, Number(freeShippingThreshold) || DEFAULT_FREE_SHIPPING_THRESHOLD) ||
-    DEFAULT_FREE_SHIPPING_THRESHOLD;
-  const text =
-    String(freeShippingText || "").trim() ||
-    `Free delivery on orders over Rs. ${Math.round(threshold).toLocaleString("en-PK")}`;
-
+function buildResponse({ deliveryFeeText, majorDays, otherCopy, zones }) {
   return {
     success: true,
-    freeShippingThreshold: threshold,
-    freeShippingText: text,
-    majorCities: { days: majorDays, label: "Major cities" },
-    otherAreas: { days: otherDays, label: "Other areas" },
+    deliveryFeeText,
+    majorCities: { days: majorDays, label: "Lahore (confirmed)" },
+    otherAreas: {
+      days: null,
+      copy: otherCopy,
+      label: "Other cities (no confirmed ETA)",
+    },
     zones,
-    deliverySummary: `Major cities: ${majorDays} days | Other areas: ${otherDays} days`,
-    freeShippingMessage: text,
+    deliverySummary: deliveryEtaSummary(),
+    // Legacy keys kept so older PDP clients don't crash; values are fee copy, not free-ship.
+    freeShippingThreshold: 0,
+    freeShippingText: deliveryFeeText,
+    freeShippingMessage: deliveryFeeText,
   };
 }
 
@@ -47,13 +49,9 @@ export async function GET() {
       (await Settings.findOne({}).lean());
 
     const sp = settings?.storePayment || {};
-    const freeShippingThreshold = getEffectiveFreeDeliveryThreshold(sp);
-
-    const majorDays = String(sp.majorCitiesDays || "").trim() || "2-3";
-    const otherDays = String(sp.otherAreasDays || "").trim() || "4-7";
-    const freeShippingText =
-      String(sp.deliveryNote || "").trim() ||
-      `Free delivery on orders over Rs. ${Math.round(freeShippingThreshold).toLocaleString("en-PK")}`;
+    const deliveryFeeText = sanitizeCustomerShippingNote(sp.deliveryNote);
+    const majorDays = lahoreEtaRange();
+    const otherCopy = nonLahoreEtaStatement();
 
     const zonesPayload = zones.map((z) => ({
       id: z._id?.toString?.() || String(z._id || ""),
@@ -66,20 +64,18 @@ export async function GET() {
 
     return NextResponse.json(
       buildResponse({
-        freeShippingThreshold,
+        deliveryFeeText,
         majorDays,
-        otherDays,
-        freeShippingText,
+        otherCopy,
         zones: zonesPayload,
       })
     );
   } catch {
     return NextResponse.json(
       buildResponse({
-        freeShippingThreshold: DEFAULT_FREE_SHIPPING_THRESHOLD,
-        majorDays: "2-3",
-        otherDays: "4-7",
-        freeShippingText: `Free delivery on orders over Rs. ${DEFAULT_FREE_SHIPPING_THRESHOLD.toLocaleString("en-PK")}`,
+        deliveryFeeText: standardDeliveryFeeStatement(),
+        majorDays: lahoreEtaRange(),
+        otherCopy: nonLahoreEtaStatement(),
         zones: [],
       })
     );

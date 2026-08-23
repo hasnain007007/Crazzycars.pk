@@ -80,7 +80,7 @@ const DEFAULT_FAQ = [
 
 const HERO_DEFAULT = {
   badge: "Our Story",
-  title: "Pakistan's Premier Car Accessories Store",
+  title: "Fitment-first car accessories from Gujranwala",
   subtitle:
     `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
 };
@@ -300,7 +300,7 @@ export default function AboutPageSettings() {
             <label style={labelStyle}>Main Headline *</label>
             <input
               style={inputStyle}
-              placeholder="e.g. Pakistan's Premier Car Accessories Store"
+              placeholder="e.g. Fitment-first car accessories from Gujranwala"
               value={hero.title || ""}
               onChange={(e) => setHero((h) => ({ ...h, title: e.target.value }))}
             />
@@ -424,7 +424,7 @@ export default function AboutPageSettings() {
                 <label style={labelStyle}>Number</label>
                 <input
                   style={inputStyle}
-                  placeholder="e.g. 500+"
+                  placeholder="e.g. 393+"
                   value={stat.number || ""}
                   onChange={(e) => {
                     const next = [...stats];
@@ -437,7 +437,7 @@ export default function AboutPageSettings() {
                 <label style={labelStyle}>Label</label>
                 <input
                   style={inputStyle}
-                  placeholder="e.g. Happy Customers"
+                  placeholder="e.g. Active products"
                   value={stat.label || ""}
                   onChange={(e) => {
                     const next = [...stats];

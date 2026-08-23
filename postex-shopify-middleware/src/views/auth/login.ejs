@@ -1,0 +1,18 @@
+<%- include('../partials/header') %>
+<main class="main login-wrap">
+  <form class="login-card" method="post" action="/login">
+    <h1>Admin login</h1>
+    <p class="muted">PostEx × Shopify middleware</p>
+    <% if (error) { %><div class="flash flash-err"><%= error %></div><% } %>
+    <label>Username
+      <input name="username" required autocomplete="username" />
+    </label>
+    <label>Password
+      <input name="password" type="password" required autocomplete="current-password" />
+    </label>
+    <button type="submit" class="btn btn-primary">Sign in</button>
+  </form>
+</main>
+</div>
+</body>
+</html>

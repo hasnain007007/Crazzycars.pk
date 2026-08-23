@@ -1,0 +1,13 @@
+<%
+  // Simple layout helper — Express doesn't include ejs-mate by default,
+  // so each page includes the shell fragments.
+%>
+<%
+  // Layout shell: header → sidebar (opens <main>) → content
+%>
+<%- include('header') %>
+<%- include('sidebar') %>
+<div class="content">
+  <% if (typeof flash !== 'undefined' && flash) { %>
+    <div class="flash flash-<%= flash.type %>"><%= flash.message %></div>
+  <% } %>

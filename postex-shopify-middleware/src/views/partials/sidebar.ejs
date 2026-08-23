@@ -1,0 +1,18 @@
+<% if (typeof user !== 'undefined' && user) { %>
+<aside class="sidebar">
+  <div class="brand">
+    <strong>CrazzyCars</strong>
+    <span>PostEx bridge</span>
+  </div>
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/orders">Orders</a>
+    <a href="/settings">Settings</a>
+    <a href="/logs">API Logs</a>
+  </nav>
+  <form method="post" action="/logout" class="logout">
+    <button type="submit">Sign out</button>
+  </form>
+</aside>
+<% } %>
+<main class="main">

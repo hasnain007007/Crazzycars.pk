@@ -1,0 +1,87 @@
+<%- include('../partials/top') %>
+<header class="page-head row">
+  <div>
+    <h1>Orders</h1>
+    <p class="muted">Filter, book, print labels</p>
+  </div>
+</header>
+
+<form class="filters" method="get" action="/orders">
+  <input type="search" name="q" placeholder="Order # / CN / phone" value="<%= filters.q %>" />
+  <select name="status">
+    <% ['all','PENDING_BOOKING','BOOKED','BOOKING_FAILED','DELIVERED','RETURNED','CANCELLED'].forEach(function(s){ %>
+      <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+    <% }) %>
+  </select>
+  <input type="date" name="from" value="<%= filters.from %>" />
+  <input type="date" name="to" value="<%= filters.to %>" />
+  <button class="btn" type="submit">Filter</button>
+</form>
+
+<form id="bulk-form" method="post">
+  <div class="bulk-bar">
+    <button class="btn" formaction="/orders/bulk/book">Book selected</button>
+    <button class="btn" formaction="/orders/bulk/labels">Print labels</button>
+  </div>
+
+  <div class="panel">
+    <table>
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="check-all" /></th>
+          <th>Shopify #</th>
+          <th>Customer</th>
+          <th>City</th>
+          <th>Amount</th>
+          <th>Booking</th>
+          <th>PostEx</th>
+          <th>CN</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!orders.length) { %>
+          <tr><td colspan="9" class="muted">No matching orders</td></tr>
+        <% } %>
+        <% orders.forEach(function(o) { %>
+          <tr>
+            <td><input type="checkbox" name="ids" value="<%= o.id %>" /></td>
+            <td><a href="/orders/<%= o.id %>">#<%= o.shopifyOrderNumber %></a></td>
+            <td>
+              <div><%= o.customerName %></div>
+              <div class="muted mono"><%= o.phone %></div>
+            </td>
+            <td>
+              <div><strong>Shopify:</strong> <%= o.city || '—' %></div>
+              <div class="muted"><strong>PostEx:</strong> <%= o.mappedCity || o.recommendedCity || '—' %></div>
+              <% if (!o.mappedCity && o.recommendedCity) { %>
+                <div class="muted mono">Recommendation (<%= o.recommendationReason || 'AUTO' %>)</div>
+              <% } %>
+            </td>
+            <td>
+              Rs. <%= Number(o.codAmount).toLocaleString() %>
+              <span class="pill <%= o.codAmount > 0 ? 'cod' : 'prepaid' %>"><%= o.codAmount > 0 ? 'COD' : 'PREPAID' %></span>
+            </td>
+            <td><span class="badge badge-<%= o.bookingStatus %>"><%= o.bookingStatus %></span></td>
+            <td><%= o.postexStatus || '—' %></td>
+            <td>
+              <% if (o.postexTrackingNumber) { %>
+                <button type="button" class="linkish copy-cn" data-cn="<%= o.postexTrackingNumber %>"><%= o.postexTrackingNumber %></button>
+              <% } else { %>—<% } %>
+            </td>
+            <td class="actions">
+              <% if (o.bookingStatus === 'PENDING_BOOKING' || o.bookingStatus === 'BOOKING_FAILED') { %>
+                <button class="btn btn-sm" formaction="/orders/<%= o.id %>/book" formmethod="post">Book</button>
+              <% } %>
+              <% if (o.postexTrackingNumber) { %>
+                <a class="btn btn-sm" href="/orders/<%= o.id %>/label" target="_blank">Label</a>
+              <% } %>
+              <a class="btn btn-sm btn-ghost" href="/orders/<%= o.id %>">View</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</form>
+<%- include('../partials/bottom') %>

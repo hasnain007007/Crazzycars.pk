@@ -1,16 +1,5 @@
 import mongoose from "mongoose";
 
-const ViewsAutoIncreaseSchema = new mongoose.Schema(
-  {
-    enabled: { type: Boolean, default: false },
-    everyMinutes: { type: Number, default: 60, min: 1 },
-    minPerInterval: { type: Number, default: 1, min: 0 },
-    maxPerInterval: { type: Number, default: 3, min: 0 },
-    lastAppliedAt: { type: Date },
-  },
-  { _id: false }
-);
-
 const BlogPostSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -39,7 +28,6 @@ const BlogPostSchema = new mongoose.Schema(
     views: { type: Number, default: 0 },
     readTime: { type: Number, default: 0 },
     readTimeManual: { type: Boolean, default: false },
-    viewsAutoIncrease: { type: ViewsAutoIncreaseSchema, default: () => ({}) },
     seo: {
       metaTitle: { type: String, default: "" },
       metaDescription: { type: String, default: "" },

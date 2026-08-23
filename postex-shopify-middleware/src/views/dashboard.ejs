@@ -1,0 +1,45 @@
+<%- include('partials/top') %>
+<header class="page-head">
+  <h1>Dashboard</h1>
+  <p class="muted">Courier booking overview</p>
+</header>
+
+<section class="stats">
+  <div class="stat"><span>Today</span><strong><%= stats.todayCount %></strong></div>
+  <div class="stat warn"><span>Pending</span><strong><%= stats.pending %></strong></div>
+  <div class="stat info"><span>Booked</span><strong><%= stats.booked %></strong></div>
+  <div class="stat info"><span>In transit</span><strong><%= stats.inTransit %></strong></div>
+  <div class="stat ok"><span>Delivered</span><strong><%= stats.delivered %></strong></div>
+  <div class="stat bad"><span>Returned</span><strong><%= stats.returned %></strong></div>
+  <div class="stat bad"><span>Failed</span><strong><%= stats.failed %></strong></div>
+</section>
+
+<section class="panel">
+  <h2>Recent activity</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Shopify #</th>
+        <th>Customer</th>
+        <th>Status</th>
+        <th>CN</th>
+        <th>Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (!recent.length) { %>
+        <tr><td colspan="5" class="muted">No orders yet — place a Shopify test order or wait for webhooks.</td></tr>
+      <% } %>
+      <% recent.forEach(function(o) { %>
+        <tr>
+          <td><a href="/orders/<%= o.id %>">#<%= o.shopifyOrderNumber %></a></td>
+          <td><%= o.customerName %></td>
+          <td><span class="badge badge-<%= o.bookingStatus %>"><%= o.bookingStatus %></span></td>
+          <td class="mono"><%= o.postexTrackingNumber || '—' %></td>
+          <td><%= o.updatedAt.toISOString().slice(0,16).replace('T',' ') %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</section>
+<%- include('partials/bottom') %>

@@ -1,0 +1,84 @@
+<%- include('../partials/top') %>
+<header class="page-head row">
+  <div>
+    <h1>Order #<%= order.shopifyOrderNumber %></h1>
+    <p class="muted">Shopify ID <%= order.shopifyOrderId %></p>
+  </div>
+  <div class="actions">
+    <% if (order.bookingStatus === 'PENDING_BOOKING' || order.bookingStatus === 'BOOKING_FAILED') { %>
+      <form method="post" action="/orders/<%= order.id %>/book"><button class="btn btn-primary">Book now</button></form>
+      <form method="post" action="/orders/<%= order.id %>/retry"><button class="btn">Retry</button></form>
+    <% } %>
+    <% if (order.postexTrackingNumber) { %>
+      <a class="btn" href="/orders/<%= order.id %>/label" target="_blank">Print label</a>
+    <% } %>
+    <form method="post" action="/orders/<%= order.id %>/cancel" onsubmit="return confirm('Cancel this parcel?')">
+      <button class="btn btn-danger">Cancel</button>
+    </form>
+  </div>
+</header>
+
+<section class="grid-2">
+  <div class="panel">
+    <h2>Details</h2>
+    <dl class="kv">
+      <dt>Customer</dt><dd><%= order.customerName %></dd>
+      <dt>Phone</dt><dd class="mono"><%= order.phone %></dd>
+      <dt>Address</dt><dd><%= order.address %></dd>
+      <dt>City (Shopify)</dt><dd><%= order.city || '—' %></dd>
+      <dt>City (PostEx)</dt><dd><%= order.mappedCity || '—' %></dd>
+      <dt>Items</dt><dd><%= order.itemsSummary %></dd>
+      <dt>Amount</dt>
+      <dd>
+        Rs. <%= Number(order.codAmount).toLocaleString() %>
+        <span class="pill <%= order.codAmount > 0 ? 'cod' : 'prepaid' %>"><%= order.codAmount > 0 ? 'COD' : 'PREPAID' %></span>
+      </dd>
+      <dt>Booking</dt><dd><span class="badge badge-<%= order.bookingStatus %>"><%= order.bookingStatus %></span></dd>
+      <dt>PostEx status</dt><dd><%= order.postexStatus || '—' %></dd>
+      <dt>CN</dt><dd class="mono"><%= order.postexTrackingNumber || '—' %></dd>
+      <dt>Last error</dt><dd class="err-text"><%= order.lastError || '—' %></dd>
+    </dl>
+
+    <% if (order.bookingStatus === 'BOOKING_FAILED' && String(order.lastError).includes('CITY')) { %>
+      <form method="post" action="/orders/<%= order.id %>/fix-city" class="fix-city">
+        <h3>Fix city</h3>
+        <select name="postexCityName" required>
+          <option value="">Select PostEx city…</option>
+          <% cities.forEach(function(c){ %>
+            <option value="<%= c.name %>"><%= c.name %></option>
+          <% }) %>
+        </select>
+        <button class="btn btn-primary" type="submit">Save mapping & book</button>
+      </form>
+    <% } %>
+  </div>
+
+  <div class="panel">
+    <h2>Status timeline</h2>
+    <ul class="timeline">
+      <% if (!history.length) { %>
+        <li class="muted">No status history yet</li>
+      <% } %>
+      <% history.slice().reverse().forEach(function(h){ %>
+        <li>
+          <strong><%= h.status %></strong>
+          <span class="muted"><%= h.at %></span>
+          <% if (h.note) { %><div><%= h.note %></div><% } %>
+        </li>
+      <% }) %>
+    </ul>
+
+    <h2 style="margin-top:1.5rem">Related API logs</h2>
+    <ul class="log-mini">
+      <% if (!logs.length) { %><li class="muted">No logs</li><% } %>
+      <% logs.forEach(function(l){ %>
+        <li>
+          <span class="mono"><%= l.statusCode %></span>
+          <%= l.endpoint %>
+          <span class="muted"><%= l.createdAt.toISOString().slice(0,19) %></span>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+</section>
+<%- include('../partials/bottom') %>

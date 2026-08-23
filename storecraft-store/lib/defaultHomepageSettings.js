@@ -1,6 +1,8 @@
+import { looksLikeFreeDeliveryCopy, standardDeliveryFeeShort } from "./storePolicyCopy.js";
+
 export const DEFAULT_HOMEPAGE_SETTINGS = {
   announcementMessages: [
-    { text: "Free delivery on orders over Rs. 2,999 — Pakistan wide", isActive: true },
+    { text: standardDeliveryFeeShort(), isActive: true },
     { text: "Cash on delivery available at checkout", isActive: true },
   ],
   announcementBgColor: "#111111",
@@ -85,10 +87,13 @@ export function normalizeHomepageSettings(raw) {
   return {
     announcementMessages:
       Array.isArray(raw.announcementMessages) && raw.announcementMessages.length
-        ? raw.announcementMessages.map((m) => ({
-            text: String(m?.text ?? ""),
-            isActive: m?.isActive !== false,
-          }))
+        ? raw.announcementMessages.map((m) => {
+            const text = String(m?.text ?? "").trim();
+            return {
+              text: !text || looksLikeFreeDeliveryCopy(text) ? standardDeliveryFeeShort() : text,
+              isActive: m?.isActive !== false,
+            };
+          })
         : d.announcementMessages,
     announcementBgColor: raw.announcementBgColor || d.announcementBgColor,
     heroHeadline: raw.heroHeadline || d.heroHeadline,

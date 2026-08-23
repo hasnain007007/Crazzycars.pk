@@ -1,0 +1,75 @@
+{
+  "appliedAt": "2026-08-21T17:50:13.789Z",
+  "backup": [
+    {
+      "_id": "6a5ea46f086726a54a151370",
+      "name": "Honda Civic Rebirth Chrome Front Grille 2012-2015",
+      "slug": "honda-civic-rebirth-chrome-front-grille-2012-2015",
+      "isUniversal": false,
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdd"
+      ],
+      "vehicleCompatibility": {
+        "fitmentType": "specific",
+        "universalNote": "Fits all car makes and models",
+        "vehicles": [
+          {
+            "make": "Suzuki",
+            "model": "Alto",
+            "yearFrom": 2020,
+            "yearTo": 2026,
+            "bodyStyle": "Hatchback",
+            "notes": "Alto",
+            "_id": "6a613e97171f7d7b6d626005"
+          }
+        ],
+        "categories": []
+      },
+      "compatibleCars": [
+        {
+          "make": "Suzuki",
+          "model": "Alto",
+          "generation": "Alto",
+          "yearFrom": 2020,
+          "yearTo": 2026,
+          "_id": "6a613e97171f7d7b6d626006"
+        }
+      ]
+    },
+    {
+      "_id": "6a5ea46f086726a54a151371",
+      "name": "Honda Civic Rebirth Front Mesh Grille 2014-2016 Black Fiberglass",
+      "slug": "honda-civic-rebirth-front-mesh-grille-2014-2016-black-fiberglass",
+      "isUniversal": false,
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdd"
+      ],
+      "vehicleCompatibility": {
+        "fitmentType": "specific",
+        "universalNote": "Fits all car makes and models",
+        "vehicles": [
+          {
+            "make": "Toyota",
+            "model": "E140",
+            "yearFrom": 2009,
+            "yearTo": 2014,
+            "bodyStyle": "Sedan",
+            "notes": "E140",
+            "_id": "6a613e578c0faeafcbd5042b"
+          }
+        ],
+        "categories": []
+      },
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "E140",
+          "generation": "E140",
+          "yearFrom": 2009,
+          "yearTo": 2014,
+          "_id": "6a613e578c0faeafcbd5042c"
+        }
+      ]
+    }
+  ]
+}

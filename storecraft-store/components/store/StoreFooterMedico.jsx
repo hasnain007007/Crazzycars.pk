@@ -312,7 +312,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   const showLogoInFooter = footer.showLogoInFooter !== false
 
   const tagline = footer.tagline
-    || "Pakistan's Premier Car Accessories Store"
+    || "Fitment-first car accessories from Gujranwala"
 
   const shopLinks = (settings?.footer?.shopLinks || []).filter(
     (l) => l.enabled !== false

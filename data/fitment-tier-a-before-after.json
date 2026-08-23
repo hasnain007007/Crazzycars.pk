@@ -1,0 +1,649 @@
+{
+  "before": {
+    "totalWrong": 575,
+    "uniqueWrong": 216,
+    "pages": {
+      "toyota-corolla-e140-2009-2014": {
+        "total": 79,
+        "wrong": 40,
+        "pct": 50.6
+      },
+      "toyota-corolla-e170-2014-2026": {
+        "total": 80,
+        "wrong": 32,
+        "pct": 40
+      },
+      "toyota-yaris-2020-present": {
+        "total": 11,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-aqua-2012-present": {
+        "total": 10,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-vitz-2012-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-civic-reborn-2006-2012": {
+        "total": 100,
+        "wrong": 79,
+        "pct": 79
+      },
+      "honda-civic-rebirth-2012-2016": {
+        "total": 100,
+        "wrong": 84,
+        "pct": 84
+      },
+      "honda-civic-x-2016-2021": {
+        "total": 99,
+        "wrong": 49,
+        "pct": 49.5
+      },
+      "honda-civic-11th-gen-2022-present": {
+        "total": 101,
+        "wrong": 74,
+        "pct": 73.3
+      },
+      "honda-city-classic-2009-2020": {
+        "total": 26,
+        "wrong": 8,
+        "pct": 30.8
+      },
+      "honda-city-2021-present": {
+        "total": 26,
+        "wrong": 12,
+        "pct": 46.2
+      },
+      "hyundai-elantra-2020-2024": {
+        "total": 9,
+        "wrong": 3,
+        "pct": 33.3
+      },
+      "hyundai-elantra-hybrid-2025-present": {
+        "total": 4,
+        "wrong": 1,
+        "pct": 25
+      },
+      "hyundai-sonata-2020-2024": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "haval-h6-2021-present": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-alto-2020-present": {
+        "total": 12,
+        "wrong": 1,
+        "pct": 8.3
+      },
+      "suzuki-swift-2025-present": {
+        "total": 7,
+        "wrong": 2,
+        "pct": 28.6
+      },
+      "honda-vezel-2013-2018": {
+        "total": 7,
+        "wrong": 7,
+        "pct": 100
+      },
+      "toyota-corolla-e120-2002-2008": {
+        "total": 72,
+        "wrong": 69,
+        "pct": 95.8
+      },
+      "toyota-prius-2004-2009": {
+        "total": 4,
+        "wrong": 3,
+        "pct": 75
+      },
+      "toyota-prius-2009-2015": {
+        "total": 4,
+        "wrong": 1,
+        "pct": 25
+      },
+      "toyota-axio-2014-2022": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-passo-2016-2022": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-raize-2019-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-corolla-cross-2020-present": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-hilux-revo-2016-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-fortuner-2020-present": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-prado-2009-2023": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-brv-2017-present": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-hrv-2022-present": {
+        "total": 0,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-cultus-2017-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-wagonr-2014-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-liana-2006-2014": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-mehran-1989-2019": {
+        "total": 0,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-alto-old-2000-2012": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "hyundai-tucson-2020-2024": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "kia-picanto-2019-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "kia-sportage-2019-2024": {
+        "total": 5,
+        "wrong": 0,
+        "pct": 0
+      },
+      "kia-sorento-2021-2024": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "changan-alsvin-2021-present": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "changan-oshanx7-2022-present": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "mg-hs-2020-2025": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "byd-atto3-2025-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "byd-shark6-2025-present": {
+        "total": 0,
+        "wrong": 0,
+        "pct": 0
+      },
+      "chery-tiggo8pro-2022-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-mark-x-2004-1-genx120": {
+        "total": 9,
+        "wrong": 1,
+        "pct": 11.1
+      },
+      "honda-vezel-2020-2026": {
+        "total": 7,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-swift-2018-2024": {
+        "total": 7,
+        "wrong": 3,
+        "pct": 42.9
+      },
+      "kia-stonic-2021-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "audi-a4-2008-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "audi-a5-2008-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "mercedes-benz-e-class-2009-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "dfsk-glory-580-2018-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "nissan-note-2012-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "baic-bj40-2020-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "chery-tiggo4pro-2022-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "proton-x70-2020-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-mark-x-2009-2022": {
+        "total": 9,
+        "wrong": 8,
+        "pct": 88.9
+      },
+      "toyota-yaris-cross-2020-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-prius-2016-2022": {
+        "total": 3,
+        "wrong": 2,
+        "pct": 66.7
+      },
+      "honda-civic-es-2001-2005": {
+        "total": 98,
+        "wrong": 95,
+        "pct": 96.9
+      },
+      "audi-a5-2014": {
+        "total": 1,
+        "wrong": 1,
+        "pct": 100
+      },
+      "deepal-s05-2024-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      }
+    }
+  },
+  "after": {
+    "totalWrong": 0,
+    "uniqueWrong": 0,
+    "pages": {
+      "toyota-corolla-e140-2009-2014": {
+        "total": 38,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-corolla-e170-2014-2026": {
+        "total": 47,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-yaris-2020-present": {
+        "total": 10,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-aqua-2012-present": {
+        "total": 8,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-vitz-2012-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-civic-reborn-2006-2012": {
+        "total": 21,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-civic-rebirth-2012-2016": {
+        "total": 16,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-civic-x-2016-2021": {
+        "total": 50,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-civic-11th-gen-2022-present": {
+        "total": 27,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-city-classic-2009-2020": {
+        "total": 17,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-city-2021-present": {
+        "total": 14,
+        "wrong": 0,
+        "pct": 0
+      },
+      "hyundai-elantra-2020-2024": {
+        "total": 5,
+        "wrong": 0,
+        "pct": 0
+      },
+      "hyundai-elantra-hybrid-2025-present": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "hyundai-sonata-2020-2024": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "haval-h6-2021-present": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-alto-2020-present": {
+        "total": 11,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-swift-2025-present": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-vezel-2013-2018": {
+        "total": 0,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-corolla-e120-2002-2008": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-prius-2004-2009": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-prius-2009-2015": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-axio-2014-2022": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-passo-2016-2022": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-raize-2019-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-corolla-cross-2020-present": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-hilux-revo-2016-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-fortuner-2020-present": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-prado-2009-2023": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-brv-2017-present": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-hrv-2022-present": {
+        "total": 0,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-cultus-2017-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-wagonr-2014-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-liana-2006-2014": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-mehran-1989-2019": {
+        "total": 0,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-alto-old-2000-2012": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "hyundai-tucson-2020-2024": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "kia-picanto-2019-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "kia-sportage-2019-2024": {
+        "total": 5,
+        "wrong": 0,
+        "pct": 0
+      },
+      "kia-sorento-2021-2024": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "changan-alsvin-2021-present": {
+        "total": 3,
+        "wrong": 0,
+        "pct": 0
+      },
+      "changan-oshanx7-2022-present": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "mg-hs-2020-2025": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "byd-atto3-2025-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "byd-shark6-2025-present": {
+        "total": 0,
+        "wrong": 0,
+        "pct": 0
+      },
+      "chery-tiggo8pro-2022-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-mark-x-2004-1-genx120": {
+        "total": 8,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-vezel-2020-2026": {
+        "total": 7,
+        "wrong": 0,
+        "pct": 0
+      },
+      "suzuki-swift-2018-2024": {
+        "total": 4,
+        "wrong": 0,
+        "pct": 0
+      },
+      "kia-stonic-2021-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "audi-a4-2008-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "audi-a5-2008-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "mercedes-benz-e-class-2009-present": {
+        "total": 2,
+        "wrong": 0,
+        "pct": 0
+      },
+      "dfsk-glory-580-2018-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "nissan-note-2012-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "baic-bj40-2020-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "chery-tiggo4pro-2022-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "proton-x70-2020-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-mark-x-2009-2022": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-yaris-cross-2020-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "toyota-prius-2016-2022": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "honda-civic-es-2001-2005": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      },
+      "audi-a5-2014": {
+        "total": 0,
+        "wrong": 0,
+        "pct": 0
+      },
+      "deepal-s05-2024-present": {
+        "total": 1,
+        "wrong": 0,
+        "pct": 0
+      }
+    }
+  },
+  "focus": [
+    "toyota-corolla-e170-2014-2026",
+    "honda-civic-11th-gen-2022-present",
+    "suzuki-alto-2020-present"
+  ]
+}

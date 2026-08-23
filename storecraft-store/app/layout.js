@@ -181,7 +181,7 @@ export default async function RootLayout({ children }) {
       footer: {
         ...footerRaw,
         copyrightText: footerRaw.copyrightText || settings?.footerMeta?.copyrightText || "",
-        tagline: footerRaw.tagline || settings?.footerMeta?.tagline || "Pakistan's Premier Car Accessories Store",
+        tagline: footerRaw.tagline || settings?.footerMeta?.tagline || "Fitment-first car accessories from Gujranwala",
         paymentMethods: footerRaw.paymentMethods || settings?.footerMeta?.paymentMethods || [],
         shopLinks: footerRaw.shopLinks || [],
         customerCareLinks: footerRaw.customerCareLinks || [],

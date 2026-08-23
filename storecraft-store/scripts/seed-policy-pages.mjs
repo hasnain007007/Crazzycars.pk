@@ -26,7 +26,8 @@ function loadEnvLocal() {
 
 loadEnvLocal();
 
-const FREE_DELIVERY_RS = 9999; // must match live storePayment free-delivery threshold
+const FREE_DELIVERY_RS = 0; // no free-delivery waiver — flat fee only
+const STANDARD_DELIVERY_RS = 250;
 
 const PAGES = [
   {
@@ -138,10 +139,7 @@ const PAGES = [
 </ul>
 
 <h3>Delivery charges</h3>
-<p>Standard delivery is charged at checkout (commonly Rs. 250 flat unless a free-delivery rule applies). Exact charges are always shown before you place the order.</p>
-
-<h3>Free delivery</h3>
-<p><strong>Free delivery on orders of Rs. ${FREE_DELIVERY_RS.toLocaleString("en-PK")} or more</strong> (order subtotal before shipping), when this promotion is enabled in our store settings. The checkout page and cart will show how much more you need to unlock free delivery.</p>
+<p>Standard delivery is a flat Rs. ${STANDARD_DELIVERY_RS} on every order. There is no order-value waiver for delivery. Exact charges are always shown before you place the order.</p>
 
 <h3>Cash on Delivery</h3>
 <p>For COD orders, we may ask you to pay the delivery charge in advance (via JazzCash / bank transfer) to confirm the order. Product payment remains cash on delivery unless you choose an advance payment method.</p>
@@ -253,10 +251,10 @@ async function main() {
       return item;
     });
 
-    // Ensure at least one free-delivery announcement with working link
+    // Ensure a delivery-fee announcement with working shipping-policy link
     if (!nextItems.some((i) => String(i.link || "").includes("shipping-policy"))) {
       nextItems.push({
-        text: `Free Delivery on Orders Over Rs. ${FREE_DELIVERY_RS.toLocaleString("en-PK")} - Pakistan Wide`,
+        text: `Delivery Rs. ${STANDARD_DELIVERY_RS}`,
         link: "/shipping-policy",
         enabled: true,
       });
@@ -269,7 +267,7 @@ async function main() {
           "footer.customerCareLinks": customerCareLinks,
           "announcementBar.items": nextItems,
           "announcementBar.enabled": bar.enabled !== false,
-          "checkoutMessages.shippingNote": `Free delivery on orders over Rs. ${FREE_DELIVERY_RS.toLocaleString("en-PK")}`,
+          "checkoutMessages.shippingNote": `Standard delivery is a flat Rs. ${STANDARD_DELIVERY_RS} on every order. There is no order-value waiver for delivery.`,
           updatedAt: new Date(),
         },
       }

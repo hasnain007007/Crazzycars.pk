@@ -15,6 +15,13 @@ import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
+import {
+  lahoreEtaStatement,
+  nonLahoreEtaStatement,
+  returnsExchangePathStatement,
+  returnsRefundPathStatement,
+  standardDeliveryFeeStatement,
+} from "@/lib/storePolicyCopy";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 const COMPARE_KEY = "sialkot_compare";
@@ -777,12 +784,13 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     truncatePlain(toPlain(product?.shortDescription), 180) ||
     "Quality product with refined finish and modern design.";
 
-  const freeThreshold = deliveryInfo?.freeShippingThreshold || 9999;
-  const majorCityDays = deliveryInfo?.majorCities?.days || "2-3";
-  const otherAreaDays = deliveryInfo?.otherAreas?.days || "4-7";
-  const freeShippingText =
+  const deliveryFeeText =
+    deliveryInfo?.deliveryFeeText ||
     deliveryInfo?.freeShippingText ||
-    `Free delivery on orders over Rs. ${Number(freeThreshold).toLocaleString("en-PK")}`;
+    standardDeliveryFeeStatement();
+  const lahoreEtaLine = lahoreEtaStatement();
+  const otherCitiesEtaLine =
+    deliveryInfo?.otherAreas?.copy || nonLahoreEtaStatement();
 
   return (
     <>
@@ -1317,10 +1325,13 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   🚚 Estimated Delivery
                 </p>
                 <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
-                  Major cities: {majorCityDays} days | Other areas: {otherAreaDays} days
+                  {lahoreEtaLine}
+                </p>
+                <p style={{ fontSize: 13, color: "#6B7280", margin: "4px 0 0" }}>
+                  {otherCitiesEtaLine}
                 </p>
                 <p style={{ fontSize: 13, color: "#16A34A", fontWeight: 600, margin: "4px 0 0" }}>
-                  ✓ {freeShippingText}
+                  ✓ {deliveryFeeText}
                 </p>
               </div>
             </div>
@@ -1578,17 +1589,16 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                         lineHeight: 1.7,
                       }}
                     >
-                      <li>Major cities (Karachi, Lahore, Islamabad, Rawalpindi): 2-3 business days</li>
-                      <li>Other cities: 3-5 business days</li>
-                      <li>Remote areas: 5-7 business days</li>
-                      <li>Free delivery on orders over {freeShippingText.replace(/^Free delivery on orders over\s+/i, "")}</li>
+                      <li>{lahoreEtaLine}</li>
+                      <li>{otherCitiesEtaLine}</li>
+                      <li>{standardDeliveryFeeStatement()}</li>
                       <li>Cash on Delivery available nationwide</li>
                     </ul>
                   </div>
 
                   <div>
                     <h4 style={{ fontSize: 14, fontWeight: 700, color: "#111111", margin: "0 0 10px" }}>
-                      🔄 Easy Returns Policy
+                      🔄 Returns &amp; exchanges
                     </h4>
                     <ul
                       style={{
@@ -1599,11 +1609,9 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                         lineHeight: 1.7,
                       }}
                     >
-                      <li>7-day return policy from delivery date</li>
-                      <li>Item must be unused and in original packaging</li>
-                      <li>Contact us on WhatsApp to initiate return</li>
-                      <li>Return shipping arranged by us for defective items</li>
-                      <li>Refund processed within 3-5 business days</li>
+                      <li>{returnsRefundPathStatement()}</li>
+                      <li>{returnsExchangePathStatement()}</li>
+                      <li>Contact us on WhatsApp or email to start a claim</li>
                     </ul>
                   </div>
                 </div>

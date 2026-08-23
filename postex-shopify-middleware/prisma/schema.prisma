@@ -1,0 +1,85 @@
+// SQLite for local/dev. For production Postgres, change provider to "postgresql"
+// and set DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DBNAME?schema=public"
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id                   String    @id @default(cuid())
+  shopifyOrderId       String    @unique
+  shopifyOrderNumber   String
+  customerName         String    @default("")
+  phone                String    @default("")
+  address              String    @default("")
+  city                 String    @default("")
+  mappedCity           String    @default("")
+  codAmount            Float     @default(0)
+  itemsSummary         String    @default("")
+  itemCount            Int       @default(1)
+  financialStatus      String    @default("pending")
+  /// PENDING_BOOKING | BOOKED | BOOKING_FAILED | CANCELLED | DELIVERED | RETURNED
+  bookingStatus        String    @default("PENDING_BOOKING")
+  postexTrackingNumber String?   @unique
+  postexStatus         String    @default("")
+  postexStatusHistory  String    @default("[]") // JSON string (SQLite-friendly)
+  shopifyFulfillmentId String    @default("")
+  lastPolledAt         DateTime?
+  retryCount           Int       @default(0)
+  nextRetryAt          DateTime?
+  lastError            String    @default("")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([bookingStatus])
+  @@index([createdAt])
+  @@index([shopifyOrderNumber])
+}
+
+model CityMapping {
+  id             String   @id @default(cuid())
+  shopifyCityRaw String   @unique
+  postexCityName String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PostexCity {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  isPickup   Boolean  @default(false)
+  isDelivery Boolean  @default(true)
+  updatedAt  DateTime @updatedAt
+}
+
+model WebhookLog {
+  id             String   @id @default(cuid())
+  topic          String
+  shopifyOrderId String   @default("")
+  rawPayload     String   @default("")
+  hmacValid      Boolean  @default(false)
+  processedAt    DateTime @default(now())
+}
+
+model ApiLog {
+  id           String   @id @default(cuid())
+  direction    String   // outbound | inbound
+  endpoint     String
+  requestBody  String   @default("")
+  responseBody String   @default("")
+  statusCode   Int      @default(0)
+  durationMs   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model AppSetting {
+  id    String @id @default("singleton")
+  /// JSON blob for runtime toggles (AUTO_BOOK override, pickup code override, etc.)
+  value String @default("{}")
+}

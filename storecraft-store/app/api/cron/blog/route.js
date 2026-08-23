@@ -1,15 +1,12 @@
 /**
- * GET /api/cron/blog — publish due scheduled posts + apply auto view increases.
+ * GET /api/cron/blog — publish due scheduled posts.
  * Auth: Authorization: Bearer $CRON_SECRET (falls back to REVALIDATE_SECRET).
  * Query-string secrets are rejected — they leak in logs/Referer.
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
-import {
-  applyAutoViewsToAll,
-  publishDueScheduledPosts,
-} from "@/lib/blogEngagement";
+import { publishDueScheduledPosts } from "@/lib/blogEngagement";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -32,11 +29,9 @@ export async function GET(request) {
     }
     await dbConnect();
     const published = await publishDueScheduledPosts(BlogPost);
-    const views = await applyAutoViewsToAll(BlogPost);
     return NextResponse.json({
       success: true,
       scheduledPublished: published,
-      autoViews: views,
     });
   } catch (error) {
     return NextResponse.json(

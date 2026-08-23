@@ -619,7 +619,11 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
                     </td>
                     <td className="px-2 py-2">
                       <div className="text-xs">{o.city || "—"}</div>
-                      {o.cityNeedsMap && o.suggestedCity ? (
+                      {o.suggestedCity &&
+                      String(o.suggestedCity).trim() &&
+                      (o.city
+                        ? String(o.city).trim().toLowerCase() !== String(o.suggestedCity).trim().toLowerCase()
+                        : true) ? (
                         <div className="mt-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
                           → {o.suggestedCity}
                         </div>
