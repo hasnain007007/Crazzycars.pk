@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import Redirect from "@/lib/models/Redirect.model";
 import { normalizeFromPath, normalizeToPath } from "@/lib/redirectPaths";
 import { requestIp } from "@/lib/requestIp";
@@ -33,7 +33,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageContent");
     if (denied) return denied;
     await dbConnect();
     const body = await request.json();

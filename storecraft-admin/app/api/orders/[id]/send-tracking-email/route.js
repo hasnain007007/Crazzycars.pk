@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import { buildShippingEmail, recordEmailSent, sendEmail } from "@/lib/email";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
@@ -12,7 +12,7 @@ import { requestIp } from "@/lib/requestIp";
 export async function POST(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageOrders");
     if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {

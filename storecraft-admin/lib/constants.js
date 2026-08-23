@@ -1,6 +1,8 @@
 export const JWT_COOKIE_NAME = "admin_token";
 export const STORE_JWT_COOKIE_NAME = "store_token";
-export const USER_ROLES = ["superadmin", "admin", "editor", "viewer"];
+/** Canonical roles for new user writes. Legacy aliases still normalize via permissions.js. */
+export const USER_ROLES = ["owner", "manager", "staff", "viewer"];
+export const USER_ROLE_ALIASES = ["superadmin", "admin", "editor"];
 export const USER_STATUSES = ["active", "inactive"];
 export const STORE_CURRENCY = "PKR";
 export const STORE_COUNTRY = "Pakistan";

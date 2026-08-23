@@ -6,7 +6,8 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
+import { hasCapability } from "@/lib/permissions";
 import Product from "@/lib/models/Product.model";
 import Category from "@/lib/models/Category.model";
 import { slugify } from "@/lib/slugify";
@@ -34,7 +35,7 @@ async function uniqueProductSlug(base, excludeId) {
   throw new Error("Could not allocate unique slug.");
 }
 
-function productToRow(p, slugByCatId) {
+function productToRow(p, slugByCatId, { includeCost }) {
   const catSlugs = (p.categories || [])
     .map((c) => {
       if (c?.slug) return c.slug;
@@ -62,7 +63,7 @@ function productToRow(p, slugByCatId) {
     longDescription: p.longDescription || "",
     regularPrice: String(p.pricing?.regularPrice ?? ""),
     salePrice: p.pricing?.salePrice != null ? String(p.pricing.salePrice) : "",
-    costPerItem: String(p.pricing?.costPerItem ?? ""),
+    costPerItem: includeCost ? String(p.pricing?.costPerItem ?? "") : "",
     sku: p.inventory?.sku || "",
     quantity: String(p.inventory?.quantity ?? 0),
     trackInventory: String(p.inventory?.trackInventory !== false),
@@ -86,9 +87,8 @@ function productToRow(p, slugByCatId) {
 export async function GET(request) {
   try {
     const user = getRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessCapability(user, "canManageCatalog");
+    if (denied) return denied;
 
     const { searchParams } = new URL(request.url);
     if (searchParams.get("template") === "1") {
@@ -105,7 +105,8 @@ export async function GET(request) {
       Category.find({}).select("_id slug").lean(),
     ]);
     const slugByCatId = new Map(categories.map((c) => [String(c._id), c.slug]));
-    const rows = products.map((p) => productToRow(p, slugByCatId));
+    const includeCost = hasCapability(user, "canViewProductCosts");
+    const rows = products.map((p) => productToRow(p, slugByCatId, { includeCost }));
     const csv = rowsToCsv(PRODUCT_CSV_HEADERS, rows);
     return csvResponse(`products-export-${new Date().toISOString().slice(0, 10)}.csv`, csv);
   } catch (error) {
@@ -119,7 +120,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     await dbConnect();
 

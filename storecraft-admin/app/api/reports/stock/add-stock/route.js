@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import Product from "@/lib/models/Product.model";
 import { productToStockRow } from "@/lib/stockReport";
 import { syncStockAlertForProduct } from "@/lib/productMutations";
@@ -18,7 +18,7 @@ function requestIp(request) {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageInventory");
     if (denied) return denied;
 
     const body = await request.json();

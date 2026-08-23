@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import Product from "@/lib/models/Product.model";
 import Review from "@/lib/models/Review.model";
 import { requestIp } from "@/lib/requestIp";
@@ -100,7 +100,7 @@ function sanitizeUpdate(body) {
 export async function PUT(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageContent");
     if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -149,7 +149,7 @@ export async function PUT(request, context) {
 export async function DELETE(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageContent");
     if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {

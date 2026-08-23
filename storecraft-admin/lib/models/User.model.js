@@ -23,8 +23,10 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["superadmin", "admin", "editor", "viewer"],
-      default: "editor",
+      // Canonical: owner | manager | staff | viewer
+      // Legacy aliases kept in enum for one deploy cycle (JWT/DB read); new writes use canonical only.
+      enum: ["owner", "manager", "staff", "viewer", "superadmin", "admin", "editor"],
+      default: "staff",
       index: true,
     },
     status: {

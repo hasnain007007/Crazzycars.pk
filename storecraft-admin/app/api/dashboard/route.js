@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { hasCapability, stripFinancialDashboardData } from "@/lib/permissions";
 import { buildChartBuckets, resolveDashboardRange } from "@/lib/dashboardRanges";
 import { karachiDayBounds, karachiDayKey, shiftDayKey } from "@/lib/karachiDay";
 import Customer from "@/lib/models/Customer.model";
@@ -537,58 +538,65 @@ export async function GET(request) {
 
     const trendPaidTotal = salesTrend.reduce((s, b) => s + (Number(b.revenue) || 0), 0);
 
+    const user = getRequestUser(request);
+    const data = {
+      range: {
+        id: range.id,
+        label: range.label,
+        from: range.from ? range.from.toISOString() : null,
+        to: range.to ? range.to.toISOString() : null,
+      },
+      periodSales,
+      periodOrders: periodOrdersCount,
+      periodPaidOrders: periodPaidOrdersCount,
+      todaySales: calendarTodaySales,
+      todayOrders: todayOrderCount,
+      todayOrderValue,
+      todaySalesGrowth: pctChange(calendarTodaySales, yesterdaySales),
+      todayOrdersGrowth: pctChange(todayOrderCount, yesterdayOrderCount),
+      todayVisitors: todayVisitorCount,
+      yesterdayVisitors: yesterdayVisitorCount,
+      todayVisitorsGrowth: pctChange(todayVisitorCount, yesterdayVisitorCount),
+      monthlyRevenue: thisMonthRevenue,
+      lastMonthRevenue,
+      monthlyGrowth: pctChange(thisMonthRevenue, lastMonthRevenue),
+      timezone: TZ,
+      todayKey,
+      totalRevenue,
+      totalSell,
+      totalSellOpen,
+      totalProfit,
+      totalCost,
+      profitMargin,
+      profitGrowth: pctChange(totalProfit, priorProfit),
+      totalCustomers,
+      pendingOrders: pendingOrdersToday,
+      pendingOrdersPeriod,
+      pendingOrdersAllTime,
+      ordersReceived,
+      ordersDispatched,
+      ordersDelivered,
+      ordersReturned,
+      recentOrders,
+      orderStatusCounts,
+      salesLast7Days: salesTrend,
+      salesTrend,
+      salesTrendTotal: Math.round(trendPaidTotal * 100) / 100,
+      chartMode,
+      lowStockProducts: lowStock,
+      salesByCategory,
+      paymentMethods,
+      weekdayRevenueVsCost,
+      insights,
+    };
+
+    if (!hasCapability(user, "canViewFinancials")) {
+      stripFinancialDashboardData(data);
+    }
+
     return NextResponse.json({
       success: true,
-      data: {
-        range: {
-          id: range.id,
-          label: range.label,
-          from: range.from ? range.from.toISOString() : null,
-          to: range.to ? range.to.toISOString() : null,
-        },
-        periodSales,
-        periodOrders: periodOrdersCount,
-        periodPaidOrders: periodPaidOrdersCount,
-        todaySales: calendarTodaySales,
-        todayOrders: todayOrderCount,
-        todayOrderValue,
-        todaySalesGrowth: pctChange(calendarTodaySales, yesterdaySales),
-        todayOrdersGrowth: pctChange(todayOrderCount, yesterdayOrderCount),
-        todayVisitors: todayVisitorCount,
-        yesterdayVisitors: yesterdayVisitorCount,
-        todayVisitorsGrowth: pctChange(todayVisitorCount, yesterdayVisitorCount),
-        monthlyRevenue: thisMonthRevenue,
-        lastMonthRevenue,
-        monthlyGrowth: pctChange(thisMonthRevenue, lastMonthRevenue),
-        timezone: TZ,
-        todayKey,
-        totalRevenue,
-        totalSell,
-        totalSellOpen,
-        totalProfit,
-        totalCost,
-        profitMargin,
-        profitGrowth: pctChange(totalProfit, priorProfit),
-        totalCustomers,
-        pendingOrders: pendingOrdersToday,
-        pendingOrdersPeriod,
-        pendingOrdersAllTime,
-        ordersReceived,
-        ordersDispatched,
-        ordersDelivered,
-        ordersReturned,
-        recentOrders,
-        orderStatusCounts,
-        salesLast7Days: salesTrend,
-        salesTrend,
-        salesTrendTotal: Math.round(trendPaidTotal * 100) / 100,
-        chartMode,
-        lowStockProducts: lowStock,
-        salesByCategory,
-        paymentMethods,
-        weekdayRevenueVsCost,
-        insights,
-      },
+      data,
     });
   } catch (error) {
     return NextResponse.json(

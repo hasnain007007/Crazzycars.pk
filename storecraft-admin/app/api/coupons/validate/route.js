@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import Coupon from "@/lib/models/Coupon.model";
 import { computeCouponDiscount } from "@/lib/couponCompute";
 
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCoupons");
     if (denied) return denied;
     await dbConnect();
     const { code, orderAmount, categoryIds } = await request.json();

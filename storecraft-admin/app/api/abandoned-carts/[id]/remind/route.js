@@ -4,7 +4,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import CartSession from "@/lib/models/CartSession.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { sendEmail } from "@/lib/email";
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request, context) {
   try {
     const user = await getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "staff");
+    const denied = denyUnlessCapability(user, "canManageOrders");
     if (denied) return denied;
 
     const { id } = await context.params;

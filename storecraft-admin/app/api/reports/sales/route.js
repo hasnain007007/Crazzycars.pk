@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
 
 function parseRange(fromStr, toStr) {
@@ -36,9 +37,9 @@ function parseRange(fromStr, toStr) {
 
 export async function GET(request) {
   try {
-    if (!getRequestUser(request)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(request);
+    const denied = denyUnlessCapability(user, "canViewFinancials");
+    if (denied) return denied;
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const status = (searchParams.get("status") || "all").trim();

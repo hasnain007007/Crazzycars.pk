@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
 
@@ -34,9 +35,9 @@ function formatAddress(a) {
 
 export async function GET(request) {
   try {
-    if (!getRequestUser(request)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(request);
+    const denied = denyUnlessCapability(user, "canExportOrders");
+    if (denied) return denied;
     await dbConnect();
 
     const { searchParams } = new URL(request.url);

@@ -22,6 +22,7 @@ import {
   recordAttempt,
 } from "@/lib/loginRateLimit";
 import User from "@/lib/models/User.model";
+import { listCapabilities, normalizeRole } from "@/lib/permissions";
 import { requestIp } from "@/lib/requestIp";
 
 export async function POST(request) {
@@ -77,7 +78,7 @@ export async function POST(request) {
 
     if (user.status !== "active") {
       return NextResponse.json(
-        { success: false, error: "This account is inactive. Contact a superadmin." },
+        { success: false, error: "This account is inactive. Contact an owner." },
         { status: 403 }
       );
     }
@@ -86,17 +87,23 @@ export async function POST(request) {
     const tokenExpiry = persistSession ? JWT_REMEMBER_EXPIRY : JWT_SESSION_EXPIRY;
     const cookieMaxAge = persistSession ? JWT_REMEMBER_MAX_AGE_SEC : JWT_SESSION_MAX_AGE_SEC;
 
+    const role = normalizeRole(user.role);
+
     const token = jwt.sign(
       {
         userId: user._id.toString(),
         name: user.name,
         email: user.email,
-        role: user.role,
+        role,
       },
       JWT_SECRET,
       { expiresIn: tokenExpiry }
     );
 
+    // Persist canonical role when DB still holds a legacy alias
+    if (user.role !== role) {
+      user.role = role;
+    }
     user.lastLogin = new Date();
     await user.save();
 
@@ -115,7 +122,8 @@ export async function POST(request) {
       user: {
         name: user.name,
         email: user.email,
-        role: user.role,
+        role,
+        capabilities: listCapabilities(role),
       },
     });
 

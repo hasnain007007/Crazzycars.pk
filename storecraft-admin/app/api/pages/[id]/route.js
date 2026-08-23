@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import Page from "@/lib/models/Page.model";
 
 export async function GET(req, { params }) {
@@ -24,7 +24,7 @@ export async function GET(req, { params }) {
 export async function PUT(req, { params }) {
   try {
     const user = getRequestUser(req);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageContent");
     if (denied) return denied;
     await dbConnect();
     const { id } = await params;
@@ -43,7 +43,7 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     const user = getRequestUser(req);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageContent");
     if (denied) return denied;
     await dbConnect();
     const { id } = await params;

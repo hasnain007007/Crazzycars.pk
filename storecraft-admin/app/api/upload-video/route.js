@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { getCloudinaryCloudName } from "@/lib/cloudinaryConfig";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessAnyCapability } from "@/lib/denyCapability";
 
 cloudinary.config({
   cloud_name: getCloudinaryCloudName(),
@@ -45,7 +45,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const user = getRequestUser(req);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessAnyCapability(user, ["canManageCatalog", "canManageContent", "canManageOrders"]);
     if (denied) return denied;
     const body = await req.json();
     const { publicId } = body;
@@ -69,7 +69,7 @@ export async function POST(req) {
 export async function DELETE(req) {
   try {
     const user = getRequestUser(req);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessAnyCapability(user, ["canManageCatalog", "canManageContent", "canManageOrders"]);
     if (denied) return denied;
     const body = await req.json();
     const { publicId, resourceType } = body;

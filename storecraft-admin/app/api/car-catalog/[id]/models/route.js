@@ -3,13 +3,13 @@ import mongoose from "mongoose";
 import { slugify, yearsFromRange } from "@/lib/carCatalogUtils";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import CarCatalog from "@/lib/models/CarCatalog.model";
 
 export async function POST(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -56,7 +56,7 @@ export async function POST(request, context) {
 export async function PUT(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {

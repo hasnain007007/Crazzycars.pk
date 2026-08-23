@@ -5,7 +5,7 @@ import { slugify } from "@/lib/carCatalogUtils";
 import { normalizeCatalogModels, serializeCatalogModelForDb } from "@/lib/carCatalogNormalize";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import CarCatalog from "@/lib/models/CarCatalog.model";
 import { requestIp } from "@/lib/requestIp";
 
@@ -33,7 +33,7 @@ export async function GET(request, context) {
 export async function PUT(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -106,7 +106,7 @@ export async function PUT(request, context) {
 export async function DELETE(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {

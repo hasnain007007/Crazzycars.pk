@@ -6,7 +6,8 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
+import { hasCapability, stripProductCostFields } from "@/lib/permissions";
 import { normalizeMetaKeywords } from "@/lib/seoKeywords";
 import { slugify } from "@/lib/slugify";
 import Product from "@/lib/models/Product.model";
@@ -26,6 +27,11 @@ import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 
+function maybeStripProductCosts(user, product) {
+  if (hasCapability(user, "canViewProductCosts")) return product;
+  return stripProductCostFields(product);
+}
+
 async function uniqueProductSlugExcluding(base, excludeId) {
   const root = slugify(base || "product") || "product";
   let slug = root;
@@ -43,7 +49,8 @@ function requestIp(request) {
 
 export async function GET(request, context) {
   try {
-    if (!getRequestUser(request)) {
+    const user = getRequestUser(request);
+    if (!user) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     const { id } = await context.params;
@@ -61,26 +68,29 @@ export async function GET(request, context) {
     // Hydrate embedded fitment rows from Vehicle refs so the editor table is never empty
     // when compatibleVehicles are linked (CSV/seed imports often skip vehicleCompatibility.vehicles).
     const fit = vehicleCompatibilityFromProduct(doc);
-    const data = withProductSaleComputed({
-      ...doc,
-      isUniversal: fit.fitmentType === "universal",
-      vehicleCompatibility: {
-        fitmentType: fit.fitmentType,
-        universalNote: fit.universalNote,
-        vehicles: fit.vehicles.map(({ _rowId, ...rest }) => rest),
-        categories: fit.categories || [],
-      },
-      compatibleCars:
-        fit.fitmentType === "universal"
-          ? []
-          : fit.vehicles.map((v) => ({
-              make: v.make,
-              model: v.model,
-              generation: v.notes || "",
-              yearFrom: v.yearFrom,
-              yearTo: v.yearTo,
-            })),
-    });
+    const data = maybeStripProductCosts(
+      user,
+      withProductSaleComputed({
+        ...doc,
+        isUniversal: fit.fitmentType === "universal",
+        vehicleCompatibility: {
+          fitmentType: fit.fitmentType,
+          universalNote: fit.universalNote,
+          vehicles: fit.vehicles.map(({ _rowId, ...rest }) => rest),
+          categories: fit.categories || [],
+        },
+        compatibleCars:
+          fit.fitmentType === "universal"
+            ? []
+            : fit.vehicles.map((v) => ({
+                make: v.make,
+                model: v.model,
+                generation: v.notes || "",
+                yearFrom: v.yearFrom,
+                yearTo: v.yearTo,
+              })),
+      })
+    );
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return NextResponse.json(
@@ -93,7 +103,7 @@ export async function GET(request, context) {
 export async function PUT(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -178,8 +188,11 @@ export async function PUT(request, context) {
     }
     let costNext = Number(existing.pricing?.costPerItem) || 0;
     if (body.pricing !== undefined && body.pricing.costPerItem !== undefined) {
-      const c = body.pricing.costPerItem;
-      costNext = c === null || c === "" ? 0 : Math.max(0, Number(c) || 0);
+      if (hasCapability(user, "canViewProductCosts")) {
+        const c = body.pricing.costPerItem;
+        costNext = c === null || c === "" ? 0 : Math.max(0, Number(c) || 0);
+      }
+      // else: ignore cost writes from non-owners
     }
     const saleScheduleIn = body.pricing?.saleSchedule;
     let saleScheduleNext = existing.pricing?.saleSchedule
@@ -373,7 +386,7 @@ export async function PUT(request, context) {
 export async function DELETE(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     const { id } = await context.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {

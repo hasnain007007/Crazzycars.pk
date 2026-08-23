@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import Customer from "@/lib/models/Customer.model";
 
 function escapeHtml(value) {
@@ -17,7 +17,7 @@ function escapeHtml(value) {
 export async function POST(req, context) {
   try {
     const user = getRequestUser(req);
-    const denied = denyUnlessMinRole(user, "admin");
+    const denied = denyUnlessCapability(user, "canResetCustomerPasswords");
     if (denied) return denied;
 
     await dbConnect();

@@ -6,7 +6,8 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
+import { hasCapability, stripProductCostFields } from "@/lib/permissions";
 import { normalizeMetaKeywords } from "@/lib/seoKeywords";
 import { slugify } from "@/lib/slugify";
 import Product from "@/lib/models/Product.model";
@@ -22,6 +23,11 @@ import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMuta
 import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
+
+function maybeStripProductCosts(user, product) {
+  if (hasCapability(user, "canViewProductCosts")) return product;
+  return stripProductCostFields(product);
+}
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -131,7 +137,7 @@ export async function GET(request) {
 
     const payload = {
       success: true,
-      data: items.map(withProductSaleComputed),
+      data: items.map((row) => maybeStripProductCosts(user, withProductSaleComputed(row))),
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1,
@@ -162,7 +168,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     await dbConnect();
     const body = await request.json();

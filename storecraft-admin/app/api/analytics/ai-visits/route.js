@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { hasCapability } from "@/lib/permissions";
 import AiAgentVisit from "@/lib/models/AiAgentVisit.model";
 import Order from "@/lib/models/Order.model";
 
@@ -108,9 +109,11 @@ function resolveRange(searchParams) {
 
 export async function GET(request) {
   try {
-    if (!getRequestUser(request)) {
+    const user = getRequestUser(request);
+    if (!user) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+    const showFinancials = hasCapability(user, "canViewFinancials");
 
     const { searchParams } = new URL(request.url);
     const range = resolveRange(searchParams);
@@ -185,42 +188,47 @@ export async function GET(request) {
         const visitRow = bySourceRows.find((r) => r._id === source);
         const visits = visitRow?.count || 0;
         const attr = ordersBySource.get(source) || { orders: 0, revenue: 0 };
-        return {
+        const row = {
           source,
           label: SOURCE_LABELS[source] || source,
           count: visits,
           visits,
           percent: total > 0 ? Math.round((visits / total) * 1000) / 10 : 0,
           orders: attr.orders,
-          revenue: attr.revenue,
         };
+        if (showFinancials) row.revenue = attr.revenue;
+        return row;
       })
-      .sort((a, b) => b.visits - a.visits || b.revenue - a.revenue);
+      .sort((a, b) => b.visits - a.visits || (showFinancials ? b.revenue - a.revenue : b.orders - a.orders));
+
+    const payload = {
+      days,
+      mode,
+      label,
+      from: from.toISOString(),
+      to: to.toISOString(),
+      fromYmd: ymdUtc(from),
+      toYmd: ymdUtc(to),
+      total,
+      attributedOrders,
+      attributionWindowDays: 14,
+      bySource,
+      recentQueries: recentQueries.map((row) => ({
+        query: row.referrerQuery,
+        source: row.source,
+        sourceLabel: SOURCE_LABELS[row.source] || row.source,
+        path: row.path || "/",
+        detection: row.detection,
+        createdAt: row.createdAt,
+      })),
+    };
+    if (showFinancials) {
+      payload.attributedRevenue = attributedRevenue;
+    }
 
     return NextResponse.json({
       success: true,
-      data: {
-        days,
-        mode,
-        label,
-        from: from.toISOString(),
-        to: to.toISOString(),
-        fromYmd: ymdUtc(from),
-        toYmd: ymdUtc(to),
-        total,
-        attributedOrders,
-        attributedRevenue,
-        attributionWindowDays: 14,
-        bySource,
-        recentQueries: recentQueries.map((row) => ({
-          query: row.referrerQuery,
-          source: row.source,
-          sourceLabel: SOURCE_LABELS[row.source] || row.source,
-          path: row.path || "/",
-          detection: row.detection,
-          createdAt: row.createdAt,
-        })),
-      },
+      data: payload,
     });
   } catch (e) {
     return NextResponse.json(

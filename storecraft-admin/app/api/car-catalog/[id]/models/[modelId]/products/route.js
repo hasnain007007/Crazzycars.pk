@@ -14,7 +14,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import CarCatalog from "@/lib/models/CarCatalog.model";
 import Product from "@/lib/models/Product.model";
 import Vehicle from "@/lib/models/Vehicle.model";
@@ -252,7 +252,7 @@ export async function GET(request, context) {
 export async function POST(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     const { id, modelId } = await context.params;
     const body = await request.json();
@@ -348,7 +348,7 @@ export async function POST(request, context) {
 export async function DELETE(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageCatalog");
     if (denied) return denied;
     const { id, modelId } = await context.params;
 

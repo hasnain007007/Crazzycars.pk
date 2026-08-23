@@ -2,23 +2,24 @@ import { NextResponse } from "next/server";
 import { hashPassword, logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole, requireAuth } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
+import { ASSIGNABLE_ROLES, normalizeRole } from "@/lib/permissions";
 import User from "@/lib/models/User.model";
 import { requestIp } from "@/lib/requestIp";
 
 export async function GET(request) {
   try {
     const user = getRequestUser(request);
-    if (!requireAuth(user)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessCapability(user, "canManageUsers");
+    if (denied) return denied;
     await dbConnect();
     const rows = await User.find({}).select("-password").sort({ createdAt: -1 }).lean();
     const users = rows.map((u) => ({
       id: u._id.toString(),
       name: u.name,
       email: u.email,
-      role: u.role,
+      role: normalizeRole(u.role),
+      roleRaw: u.role,
       status: u.status,
       lastLogin: u.lastLogin,
       createdAt: u.createdAt,
@@ -35,14 +36,19 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "superadmin");
+    const denied = denyUnlessCapability(user, "canManageUsers");
     if (denied) return denied;
     await dbConnect();
     const body = await request.json();
     const name = String(body.name || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
-    const role = ["superadmin", "admin", "editor", "viewer"].includes(body.role) ? body.role : "editor";
+    const role = ASSIGNABLE_ROLES.includes(body.role)
+      ? body.role
+      : body.role
+        ? normalizeRole(body.role)
+        : "staff";
+    const roleFinal = ASSIGNABLE_ROLES.includes(role) ? role : "staff";
     if (!name || !email || !password) {
       return NextResponse.json(
         { success: false, error: "Name, email, and password are required." },
@@ -54,7 +60,7 @@ export async function POST(request) {
       name,
       email,
       password: hash,
-      role,
+      role: roleFinal,
       status: body.status === "inactive" ? "inactive" : "active",
     });
     await logActivity({

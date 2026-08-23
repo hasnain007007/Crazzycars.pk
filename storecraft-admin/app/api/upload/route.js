@@ -9,7 +9,7 @@ import path from "path";
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessAnyCapability } from "@/lib/denyCapability";
 import { getCloudinaryCloudName } from "@/lib/cloudinaryConfig";
 
 function sanitizeFolder(raw) {
@@ -40,7 +40,7 @@ function configureCloudinary() {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessAnyCapability(user, ["canManageCatalog", "canManageContent", "canManageOrders"]);
     if (denied) return denied;
 
     const formData = await request.formData();

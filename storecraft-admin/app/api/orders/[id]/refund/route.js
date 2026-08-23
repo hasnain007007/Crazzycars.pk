@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
 
 function requestIp(request) {
@@ -14,7 +14,7 @@ function requestIp(request) {
 export async function POST(request, context) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "admin");
+    const denied = denyUnlessCapability(user, "canRefundOrders");
     if (denied) return denied;
 
     const { id } = await context.params;

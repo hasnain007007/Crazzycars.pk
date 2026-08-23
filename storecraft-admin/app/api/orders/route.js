@@ -7,7 +7,8 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
-import { denyUnlessMinRole } from "@/lib/requireRole";
+import { denyUnlessCapability } from "@/lib/denyCapability";
+import { hasCapability } from "@/lib/permissions";
 import { allocateOrderNumber } from "@/lib/orderNumber";
 import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
@@ -63,7 +64,8 @@ function escapeRegex(s) {
 
 export async function GET(request) {
   try {
-    if (!getRequestUser(request)) {
+    const listUser = getRequestUser(request);
+    if (!listUser) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     await dbConnect();
@@ -290,8 +292,10 @@ export async function GET(request) {
         totalOrders,
         pending: pendingCount,
         processing: processingCount,
-        todayRevenue,
-        pendingValueAtRisk,
+        // Aggregate money — Owner-only (per-order totals on rows stay visible)
+        ...(hasCapability(listUser, "canViewFinancials")
+          ? { todayRevenue, pendingValueAtRisk }
+          : {}),
       },
       views: {
         all: totalOrders,
@@ -316,7 +320,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
-    const denied = denyUnlessMinRole(user, "editor");
+    const denied = denyUnlessCapability(user, "canManageOrders");
     if (denied) return denied;
 
     await dbConnect();
