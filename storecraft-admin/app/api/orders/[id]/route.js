@@ -409,7 +409,10 @@ export async function PUT(request, context) {
       const subtotal = Math.round(
         normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0) * 100
       ) / 100;
-      const discount = Math.max(0, Number(order.pricing?.discount) || 0);
+      const discount =
+        body.discount !== undefined
+          ? Math.min(subtotal, Math.max(0, Number(body.discount) || 0))
+          : Math.max(0, Number(order.pricing?.discount) || 0);
 
       let shippingCost = Number(order.pricing?.shippingCost ?? order.shippingCost ?? 0) || 0;
       if (body.deliveryEnabled === false) {
@@ -447,12 +450,19 @@ export async function PUT(request, context) {
       });
       order.markModified("timeline");
       updates.push("items & pricing updated");
-    } else if (body.shippingCost !== undefined || body.deliveryEnabled !== undefined) {
-      const discount = Math.max(0, Number(order.pricing?.discount) || 0);
+    } else if (
+      body.shippingCost !== undefined ||
+      body.deliveryEnabled !== undefined ||
+      body.discount !== undefined
+    ) {
       const subtotal = Math.max(
         0,
         Number(order.pricing?.subtotal ?? order.subtotal) || 0
       );
+      const discount =
+        body.discount !== undefined
+          ? Math.min(subtotal, Math.max(0, Number(body.discount) || 0))
+          : Math.max(0, Number(order.pricing?.discount) || 0);
       let shippingCost = Number(order.pricing?.shippingCost ?? order.shippingCost ?? 0) || 0;
       if (body.deliveryEnabled === false) shippingCost = 0;
       else if (body.shippingCost !== undefined) shippingCost = Math.max(0, Number(body.shippingCost) || 0);
@@ -468,7 +478,9 @@ export async function PUT(request, context) {
         total,
       };
       order.markModified("pricing");
-      updates.push(`shipping → ${shippingCost}`);
+      updates.push(
+        body.discount !== undefined ? `discount → ${discount}` : `shipping → ${shippingCost}`
+      );
     }
 
     if (body.shippingAddress && typeof body.shippingAddress === "object") {

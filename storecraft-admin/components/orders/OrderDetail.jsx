@@ -18,9 +18,9 @@ import { DualStatusBadges } from "./DualStatusBadges";
 import { InternalNotes } from "./InternalNotes";
 import { OrderActivityFeed } from "./OrderActivityFeed";
 import { OrderTagsEditor } from "./OrderTagsEditor";
-import { PrintInvoice } from "./PrintInvoice";
 import { OrderStatusCard, PaymentStatusCard } from "./StatusUpdater";
 import { OrderItemsEditor } from "./OrderItemsEditor";
+import { SendInvoicePanel } from "./SendInvoicePanel";
 import {
   buildWaLink,
   getCustomerOrderPhone,
@@ -28,6 +28,8 @@ import {
   OrderWhatsAppButton,
 } from "@/components/orders/OrderWhatsAppButton";
 import { formatAdminPrice } from "@/lib/currency";
+import { printInvoice as printProfessionalInvoice } from "@/lib/downloadInvoicePdf";
+import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { isPrepaidOrder, postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
 import {
   getLegacyTrackingWhatsAppMessage,
@@ -767,7 +769,8 @@ export function OrderDetail({ orderId }) {
   const [liveTracking, setLiveTracking] = useState(null);
   const [liveTrackingLoading, setLiveTrackingLoading] = useState(false);
   const [storeUrl, setStoreUrl] = useState(process.env.NEXT_PUBLIC_STORE_URL || "");
-  const [sendingInvoice, setSendingInvoice] = useState(false);
+  const [showInvoicePanel, setShowInvoicePanel] = useState(false);
+  const [invoiceStoreMeta, setInvoiceStoreMeta] = useState(null);
   const [storeMeta, setStoreMeta] = useState({
     storeName: process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
     logoUrl: "",
@@ -882,10 +885,18 @@ export function OrderDetail({ orderId }) {
     }
   }, [order]);
 
-  function printInvoice() {
-    requestAnimationFrame(() => {
-      window.print();
-    });
+  useEffect(() => {
+    getInvoiceStoreMeta().then(setInvoiceStoreMeta).catch(() => {});
+  }, []);
+
+  function printInvoiceDoc() {
+    if (!order) return;
+    try {
+      printProfessionalInvoice(order, invoiceStoreMeta || storeMeta || {});
+      toast.success("Print dialog opened.");
+    } catch {
+      toast.error("Could not print invoice.");
+    }
   }
 
   async function printPackingSlip() {
@@ -900,26 +911,6 @@ export function OrderDetail({ orderId }) {
       printHtmlWithIframe(printDocumentShell(`Packing Slip ${order.orderNumber}`, body));
     } catch {
       toast.error("Could not print packing slip.");
-    }
-  }
-
-  async function sendInvoiceEmail() {
-    setSendingInvoice(true);
-    try {
-      const res = await fetch(`/api/orders/${orderId}/send-invoice`, {
-        method: "POST",
-        credentials: "include",
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        toast.error(json.error || "Failed to send invoice email.");
-        return;
-      }
-      toast.success(`Invoice sent to ${order?.customer?.email || "customer"} (logged).`);
-    } catch {
-      toast.error("Network error.");
-    } finally {
-      setSendingInvoice(false);
     }
   }
 
@@ -1600,7 +1591,7 @@ export function OrderDetail({ orderId }) {
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             <button
               type="button"
-              onClick={printInvoice}
+              onClick={printInvoiceDoc}
               className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               Print Invoice
@@ -1614,11 +1605,10 @@ export function OrderDetail({ orderId }) {
             </button>
             <button
               type="button"
-              disabled={sendingInvoice}
-              onClick={sendInvoiceEmail}
-              className="rounded-md bg-[#1d6fb8] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#185f9e] disabled:opacity-60"
+              onClick={() => setShowInvoicePanel(true)}
+              className="rounded-md bg-[#1d6fb8] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#185f9e]"
             >
-              {sendingInvoice ? "Sending..." : "Send Invoice Email"}
+              Send Invoice
             </button>
             <div className="min-w-[140px] [&_button]:!py-1.5 [&_button]:!text-xs">
               <OrderWhatsAppButton order={order} settings={settings} />
@@ -1843,7 +1833,16 @@ export function OrderDetail({ orderId }) {
         </div>
       </div>
 
-      <PrintInvoice order={order} storeName={storeMeta.storeName} logoUrl={storeMeta.logoUrl} />
+      <SendInvoicePanel
+        order={order}
+        orderId={orderId}
+        open={showInvoicePanel}
+        onClose={() => setShowInvoicePanel(false)}
+        onSent={(updated) => {
+          if (updated) setOrder((prev) => ({ ...prev, ...updated }));
+          load();
+        }}
+      />
     </div>
   );
 }

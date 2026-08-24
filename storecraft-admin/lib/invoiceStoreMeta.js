@@ -69,3 +69,35 @@ function defaultMeta() {
     footerNote: "",
   };
 }
+
+/** Build invoice chrome from Settings document (server-side). */
+export function storeMetaFromSettings(settingsDoc) {
+  if (!settingsDoc) return defaultMeta();
+  const g = settingsDoc.general || {};
+  const appearance = settingsDoc.appearance || {};
+  const invoice = settingsDoc.invoice || {};
+  const logoUrl =
+    (typeof g.logoUrl === "string" && g.logoUrl) ||
+    (typeof g.logo === "string" && g.logo) ||
+    g.logo?.url ||
+    "";
+  return {
+    storeName: String(g.storeName || "").trim() || "Crazzycars.pk",
+    logoUrl: String(logoUrl || "").trim(),
+    phone: String(g.phone || "").trim(),
+    email: String(g.email || "").trim(),
+    website: String(g.website || "").trim(),
+    address: String(g.address || "").trim(),
+    footerText: String(g.footerText || "").trim(),
+    currency: String(g.currency || g.defaultCurrency || "PKR").trim() || "PKR",
+    primaryColor: String(appearance.primaryColor || "#1A7A4C").trim() || "#1A7A4C",
+    ntn: String(invoice.ntn || "").trim(),
+    strn: String(invoice.strn || "").trim(),
+    bankName: String(invoice.bankName || "").trim(),
+    bankAccountTitle: String(invoice.bankAccountTitle || "").trim(),
+    bankAccountNumber: String(invoice.bankAccountNumber || "").trim(),
+    bankIban: String(invoice.bankIban || "").trim(),
+    terms: String(invoice.terms || "").trim(),
+    footerNote: String(invoice.footerNote || "").trim(),
+  };
+}

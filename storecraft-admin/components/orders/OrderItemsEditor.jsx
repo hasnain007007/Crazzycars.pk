@@ -164,8 +164,11 @@ function extractCatalog(product) {
 }
 
 export function OrderItemsEditor({ order, onUpdated }) {
-  const discount = Number(order?.pricing?.discount) || 0;
   const [lines, setLines] = useState(() => normalizeLines(order.items));
+  const [discountAmount, setDiscountAmount] = useState(() => {
+    const d = Number(order?.pricing?.discount) || 0;
+    return d > 0 ? String(d) : "";
+  });
   const [deliveryOn, setDeliveryOn] = useState(() => Number(order?.pricing?.shippingCost) > 0);
   const [shippingCost, setShippingCost] = useState(() => {
     const s = Number(order?.pricing?.shippingCost) || 0;
@@ -183,7 +186,9 @@ export function OrderItemsEditor({ order, onUpdated }) {
     const ship = Number(order?.pricing?.shippingCost) || 0;
     setDeliveryOn(ship > 0);
     if (ship > 0) setShippingCost(String(ship));
-  }, [order.id, order.items, order?.pricing?.shippingCost]);
+    const disc = Number(order?.pricing?.discount) || 0;
+    setDiscountAmount(disc > 0 ? String(disc) : "");
+  }, [order.id, order.items, order?.pricing?.shippingCost, order?.pricing?.discount]);
 
   const loadProductMeta = useCallback(async (productId) => {
     if (!productId) return null;
@@ -265,8 +270,10 @@ export function OrderItemsEditor({ order, onUpdated }) {
     () => lines.reduce((sum, line) => sum + lineTotal(line.quantity, line.unitPrice), 0),
     [lines]
   );
+  const discountNum = Math.min(subtotal, Math.max(0, Number(discountAmount) || 0));
   const shipNum = deliveryOn ? Math.max(0, Number(shippingCost) || 0) : 0;
-  const total = Math.max(0, Math.round((subtotal - discount + shipNum) * 100) / 100);
+  const total = Math.max(0, Math.round((subtotal - discountNum + shipNum) * 100) / 100);
+  const couponCode = String(order?.couponCode || "").trim();
 
   const updateLine = useCallback(
     (index, patch) => {
@@ -411,6 +418,7 @@ export function OrderItemsEditor({ order, onUpdated }) {
           items,
           shippingCost: shipNum,
           deliveryEnabled: deliveryOn,
+          discount: discountNum,
         }),
       });
       const json = await res.json();
@@ -677,10 +685,38 @@ export function OrderItemsEditor({ order, onUpdated }) {
           <span className="text-slate-600 dark:text-slate-400">Subtotal</span>
           <span className="tabular-nums">{formatMoney(subtotal)}</span>
         </div>
-        {discount > 0 ? (
+
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/50">
+          <div className="min-w-0">
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-200">Discount</span>
+            {couponCode ? (
+              <p className="mt-0.5 truncate text-[11px] text-emerald-700 dark:text-emerald-400">
+                Website coupon: {couponCode}
+              </p>
+            ) : (
+              <p className="mt-0.5 text-[11px] text-slate-500">Manual or storefront discount</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Rs.</span>
+            <input
+              type="number"
+              min={0}
+              max={subtotal}
+              step="1"
+              aria-label="Discount amount"
+              value={discountAmount}
+              onChange={(e) => setDiscountAmount(e.target.value)}
+              placeholder="0"
+              className="w-28 rounded-lg border border-slate-200 px-2 py-1 text-sm tabular-nums dark:border-slate-600 dark:bg-slate-900"
+            />
+          </div>
+        </div>
+
+        {discountNum > 0 ? (
           <div className="flex justify-between py-0.5 text-emerald-700 dark:text-emerald-400">
-            <span>Discount</span>
-            <span className="tabular-nums">−{formatMoney(discount)}</span>
+            <span>Discount applied</span>
+            <span className="tabular-nums">−{formatMoney(discountNum)}</span>
           </div>
         ) : null}
 
