@@ -117,6 +117,7 @@ export async function POST(request) {
     const adminName = user.name || "Admin";
     const bookingOptions = {
       handling: body.handling,
+      type: body.type,
       pieces: body.pieces,
       invoiceDivision: body.invoiceDivision,
       remarks: body.remarks,
@@ -125,7 +126,7 @@ export async function POST(request) {
       paymentMethod: body.paymentMethod,
       cityName: body.cityName || body.city || "",
       deliveryAddress: body.deliveryAddress || "",
-      // COD is hard-locked to order.pricing.total in buildPostexCreatePayload
+      codAmount: body.codAmount,
     };
 
     // Optional pre-book edits from PostEx recheck modal.

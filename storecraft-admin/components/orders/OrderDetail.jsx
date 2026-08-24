@@ -5,7 +5,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import OrderTimeline from "@/components/orders/OrderTimeline";
 import {
@@ -30,7 +30,12 @@ import {
 import { formatAdminPrice } from "@/lib/currency";
 import { printInvoice as printProfessionalInvoice } from "@/lib/downloadInvoicePdf";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
-import { isPrepaidOrder, postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
+import {
+  isPrepaidOrder,
+  POSTEX_SHIP_TYPES,
+  postexPublicTrackingUrl,
+  storefrontTrackingUrl,
+} from "@/lib/postex";
 import {
   getLegacyTrackingWhatsAppMessage,
   getOrderShippedWhatsAppMessage,
@@ -55,6 +60,16 @@ function paymentMethodLabel(method) {
 function formatCurrencyAmount(order, amount) {
   const currency = order?.currency || "PKR";
   return `${currency} ${Number(amount || 0).toFixed(2)}`;
+}
+
+function defaultPostexCodAmount(order, orderTotal, prepaid) {
+  if (prepaid) return 0;
+  const status = String(order?.paymentStatus || "").toLowerCase();
+  if (status === "partial") {
+    const remaining = Number(order?.payment?.remainingCod);
+    if (Number.isFinite(remaining) && remaining >= 0) return Math.round(remaining);
+  }
+  return Math.max(0, Math.round(Number(orderTotal) || 0));
 }
 
 /** Collapse accidental single-letter spacing: "S h a" → "Sha", keep normal names. */
@@ -812,7 +827,9 @@ export function OrderDetail({ orderId }) {
   const [postexRebook, setPostexRebook] = useState(false);
   const [showPostexForm, setShowPostexForm] = useState(false);
   const [postexHandling, setPostexHandling] = useState("Normal");
+  const [postexShipType, setPostexShipType] = useState("Normal");
   const [postexCodAmount, setPostexCodAmount] = useState(0);
+  const postexCodManual = useRef(false);
   const [postexWeight, setPostexWeight] = useState(0.5);
   const [postexPieces, setPostexPieces] = useState(1);
   const [postexRemarks, setPostexRemarks] = useState(
@@ -913,7 +930,9 @@ export function OrderDetail({ orderId }) {
         Number(draftPricing?.total ?? order.pricing?.total ?? order.total ?? 0) || 0
       );
       const prepaid = isPrepaidOrder(order);
-      setPostexCodAmount(prepaid ? 0 : Math.round(total));
+      if (!postexCodManual.current) {
+        setPostexCodAmount(defaultPostexCodAmount(order, total, prepaid));
+      }
       setPostexPieces(order.items?.length || orderItemCount(order) || 1);
       const grams = Number(order.pricing?.totalWeightGrams) || 0;
       const weightKg = grams > 0 ? Math.round((grams / 1000) * 100) / 100 : 0.5;
@@ -1095,6 +1114,8 @@ export function OrderDetail({ orderId }) {
           orderId: order.id || order._id,
           rebook: postexRebook,
           handling: postexHandling,
+          type: postexShipType,
+          codAmount: isPrepaidOrder(order) ? 0 : Math.max(0, Math.round(Number(postexCodAmount) || 0)),
           weight: postexWeight,
           pieces: postexPieces,
           remarks: postexRemarks,
@@ -1227,7 +1248,10 @@ export function OrderDetail({ orderId }) {
         <button
           type="button"
           onClick={() => {
+            postexCodManual.current = false;
             setPostexRebook(false);
+            setPostexShipType(courierSettings.defaultShipperType || "Normal");
+            setPostexHandling(courierSettings.defaultHandling || "Normal");
             setShowPostexForm(true);
           }}
           style={{
@@ -1338,27 +1362,69 @@ export function OrderDetail({ orderId }) {
                   marginBottom: 4,
                 }}
               >
-                COD Amount (Rs.)
+                Shipment type
               </label>
-              <input
-                type="number"
-                value={postexCodAmount}
-                disabled
-                readOnly
-                title="COD is locked to the order total. Edit the order total first if you need a different amount."
+              <select
+                value={postexShipType}
+                onChange={(e) => setPostexShipType(e.target.value)}
                 style={{
                   width: "100%",
                   padding: "8px 10px",
                   border: "1px solid #E5E7EB",
                   borderRadius: 6,
                   fontSize: 13,
-                  background: "#F9FAFB",
-                  color: "#6B7280",
-                  cursor: "not-allowed",
+                }}
+              >
+                {POSTEX_SHIP_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#374151",
+                  display: "block",
+                  marginBottom: 4,
+                }}
+              >
+                COD Amount (Rs.)
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={orderPrepaid ? 0 : postexCodAmount}
+                disabled={orderPrepaid}
+                readOnly={orderPrepaid}
+                onChange={(e) => {
+                  postexCodManual.current = true;
+                  setPostexCodAmount(Math.max(0, Math.round(Number(e.target.value) || 0)));
+                }}
+                title={
+                  orderPrepaid
+                    ? "Prepaid order — COD is 0"
+                    : "Editable COD collected by PostEx. Defaults to order total or remaining COD."
+                }
+                style={{
+                  width: "100%",
+                  padding: "8px 10px",
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 6,
+                  fontSize: 13,
+                  background: orderPrepaid ? "#F9FAFB" : "#fff",
+                  color: orderPrepaid ? "#6B7280" : "#111827",
                 }}
               />
               <p style={{ margin: "6px 0 0", fontSize: 11, color: "#6B7280" }}>
-                Locked to order total. Update the order pricing first if COD must change.
+                {orderPrepaid
+                  ? "Prepaid — PostEx will not collect COD."
+                  : "Defaults to order total (or remaining COD for partial). Edit before booking if needed."}
               </p>
             </div>
 
@@ -1788,7 +1854,9 @@ export function OrderDetail({ orderId }) {
                             "Re-book will create a NEW Postex shipment and replace the tracking number. Continue?"
                           )
                         ) {
+                          postexCodManual.current = false;
                           setPostexRebook(true);
+                          setPostexShipType(courierSettings.defaultShipperType || "Normal");
                           setShowPostexForm(true);
                           setPostexError("");
                         }

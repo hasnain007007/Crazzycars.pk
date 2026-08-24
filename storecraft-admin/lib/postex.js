@@ -354,6 +354,14 @@ function isValidPostexMobile(mobile) {
 export const DEFAULT_POSTEX_REMARKS =
   "Call customer before delivery. Do not leave parcel unattended.";
 
+/** PostEx create-order `orderType` values (shipment type, not handling). */
+export const POSTEX_SHIP_TYPES = ["Normal", "Reversed", "Replacement", "Overland"];
+
+export function normalizePostexShipType(raw, fallback = "Normal") {
+  const v = String(raw || fallback || "Normal").trim();
+  return POSTEX_SHIP_TYPES.includes(v) ? v : fallback || "Normal";
+}
+
 export function isPrepaidOrder(order) {
   const pm = String(order?.paymentMethod || "").toLowerCase();
   if (pm === "stripe" || pm === "paypal") return true;
@@ -370,6 +378,40 @@ export function isCodOrder(order, bookingOptions = {}, settingsCourier = {}) {
     return false;
   }
   return !isPrepaidOrder(order);
+}
+
+/**
+ * COD amount sent to PostEx as invoicePayment.
+ * Uses explicit override when provided; otherwise partial remaining COD or order total.
+ */
+export function resolvePostexCodAmount(order, bookingOptions = {}, settingsCourier = {}) {
+  const opts = normalizeBookingOptions(bookingOptions);
+  const cod = isCodOrder(order, opts, settingsCourier);
+  const forcePaidZero = Boolean(settingsCourier.paidOrdersCodZero) && isPrepaidOrder(order);
+  if (forcePaidZero || !cod) return 0;
+
+  const overrideRaw =
+    opts.codAmount != null && opts.codAmount !== ""
+      ? opts.codAmount
+      : opts.invoicePayment != null && opts.invoicePayment !== ""
+        ? opts.invoicePayment
+        : null;
+  if (overrideRaw != null) {
+    const n = Math.max(0, Math.round(Number(overrideRaw)));
+    if (Number.isFinite(n)) return n;
+  }
+
+  const paymentStatus = String(order?.paymentStatus || "").toLowerCase();
+  if (paymentStatus === "partial") {
+    const remaining = Number(order?.payment?.remainingCod);
+    if (Number.isFinite(remaining) && remaining >= 0) {
+      return Math.round(remaining);
+    }
+  }
+
+  const pricing = order.pricing || {};
+  const total = Math.max(0, Number(pricing.total ?? order.total) || 0);
+  return Math.round(total);
 }
 
 function normalizeBookingOptions(bookingOptions) {
@@ -459,11 +501,7 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
   const addr = order.shippingAddress || {};
   const customer = order.customer || {};
   const pricing = order.pricing || {};
-  const total = Math.max(0, Number(pricing.total ?? order.total) || 0);
-  const cod = isCodOrder(order, opts, courier);
-  // Explicit setting: force paid orders to zero COD collection.
-  const forcePaidZero = Boolean(courier.paidOrdersCodZero) && isPrepaidOrder(order);
-  const invoicePayment = forcePaidZero || !cod ? 0 : Math.round(total);
+  const invoicePayment = resolvePostexCodAmount(order, opts, courier);
   const items = Array.isArray(order.items) ? order.items : [];
   const itemCount = items.reduce((s, i) => s + Math.max(1, Number(i.quantity) || 1), 0) || 1;
   const pieces = Math.max(1, Math.round(Number(opts.pieces) || itemCount));
@@ -533,7 +571,7 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
     cityName: city,
     quantity,
     weight,
-    orderType: String(opts.type || courier.defaultShipperType || "Normal").trim() || "Normal",
+    orderType: normalizePostexShipType(opts.type || courier.defaultShipperType, "Normal"),
     airwayBillCopies: 1,
     pickupAddressCode: pickupAddressCode || "",
     handling,

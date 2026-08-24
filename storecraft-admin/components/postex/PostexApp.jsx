@@ -357,6 +357,7 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
           city: o.suggestedCity || o.city,
           weight: courier.defaultWeight || o.weight || 0.5,
           type: courier.defaultShipperType || "Normal",
+          cod: o.cod ?? 0,
           pieces: o.pieces || 1,
         };
       }
@@ -394,6 +395,19 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
       body: JSON.stringify({
         orderId: order.id,
         handling: extra.handling || courier.defaultHandling || "Normal",
+        type: extra.type || row.type || courier.defaultShipperType || "Normal",
+        codAmount: Math.max(
+          0,
+          Math.round(
+            Number(
+              extra.codAmount != null && extra.codAmount !== ""
+                ? extra.codAmount
+                : row.cod != null && row.cod !== ""
+                  ? row.cod
+                  : order.cod
+            ) || 0
+          )
+        ),
         weight: Number(extra.weight || row.weight) || 0.5,
         pieces: Number(extra.pieces || row.pieces) || 1,
         invoiceDivision: Number(extra.invoiceDivision) || 1,
@@ -469,7 +483,7 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
     if (!detail) return;
     setBooking(true);
     try {
-      patchRow(detail.id, { city: form.city, weight: form.weight, pieces: form.pieces });
+      patchRow(detail.id, { city: form.city, weight: form.weight, pieces: form.pieces, cod: form.cod, type: form.type });
       const json = await bookOne(detail, form);
       onToast(`Booked ${detail.orderNumber} — ${json.trackingNumber}. Slip downloading…`);
       setDetail(null);
@@ -637,7 +651,18 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
                         className="min-w-[160px]"
                       />
                     </td>
-                    <td className="px-2 py-2 font-medium">{o.cod}</td>
+                    <td className="px-2 py-2">
+                      <input
+                        type="number"
+                        min={0}
+                        step={1}
+                        className="h-8 w-20 rounded border border-slate-300 px-1 text-xs dark:border-slate-600 dark:bg-slate-900"
+                        value={row.cod ?? o.cod ?? 0}
+                        onChange={(e) =>
+                          patchRow(o.id, { cod: Math.max(0, Math.round(Number(e.target.value) || 0)) })
+                        }
+                      />
+                    </td>
                     <td className="px-2 py-2">
                       <input
                         type="number"
@@ -671,6 +696,8 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
                             suggestedCity: row.city || o.suggestedCity || o.city,
                             weight: row.weight || 0.5,
                             pieces: row.pieces || 1,
+                            cod: row.cod ?? o.cod ?? 0,
+                            type: row.type || courier.defaultShipperType || "Normal",
                           })
                         }
                       >
@@ -724,6 +751,8 @@ function DetailsModal({ order, cities, courier, busy, onClose, onSave }) {
     invoiceDivision: 1,
     paymentMethod: order.paymentMethod || "manual",
     handling: courier.defaultHandling || "Normal",
+    type: order.type || courier.defaultShipperType || "Normal",
+    cod: order.cod ?? 0,
     weight: order.weight || courier.defaultWeight || 0.5,
     productsNote: "-",
     remarks: courier.shipperRemarks || "Call customer before delivery. Do not leave parcel unattended.",
@@ -853,6 +882,36 @@ function DetailsModal({ order, cities, courier, busy, onClose, onSave }) {
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="block text-xs font-semibold uppercase text-slate-500">
+              Shipment type
+              <select
+                className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                value={form.type}
+                onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+              >
+                {SHIP_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-semibold uppercase text-slate-500">
+              COD amount (Rs.)
+              <input
+                type="number"
+                min={0}
+                step={1}
+                className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                value={form.cod}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    cod: Math.max(0, Math.round(Number(e.target.value) || 0)),
+                  }))
+                }
+              />
             </label>
             <div className="grid grid-cols-3 gap-2">
               <label className="block text-xs font-semibold uppercase text-slate-500">

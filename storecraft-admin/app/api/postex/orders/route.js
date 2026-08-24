@@ -9,6 +9,7 @@ import {
   buildPostexDeliveryAddress,
   fetchPostexOperationalCities,
   isPrepaidOrder,
+  resolvePostexCodAmount,
   resolvePostexApiKey,
   resolvePostexCityName,
 } from "@/lib/postex";
@@ -161,7 +162,7 @@ export async function GET(request) {
         zip: String(addr.zip || addr.postcode || "").trim(),
         country: String(addr.country || "Pakistan").trim(),
         deliveryAddressPreview: deliveryPreview,
-        cod: prepaid ? 0 : Math.round(grand),
+        cod: resolvePostexCodAmount(o, {}, settings?.courier || {}),
         total: Math.round(grand),
         weight: 0.5,
         pieces: Math.max(
