@@ -9,7 +9,11 @@ import {
   openWhatsApp,
 } from "@/components/orders/OrderWhatsAppButton";
 import { buildOrderInvoiceWhatsAppMessage, resolveOrderInvoiceEmail } from "@/lib/orderInvoice";
-import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
+import {
+  downloadInvoicePdf,
+  openInvoiceDocumentWindow,
+  printInvoice,
+} from "@/lib/downloadInvoicePdf";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 
 export function SendInvoicePanel({ order, orderId, open, onClose, onSent }) {
@@ -93,10 +97,27 @@ export function SendInvoicePanel({ order, orderId, open, onClose, onSent }) {
     try {
       await downloadInvoicePdf(order, storeMeta || {});
       toast.success("PDF downloaded.", { id: toastId });
-    } catch {
-      toast.error("Could not download PDF.", { id: toastId });
+    } catch (err) {
+      toast(
+        (t) => (
+          <span>
+            PDF auto-download failed — invoice opened in a new tab. Use{" "}
+            <strong>Print → Save as PDF</strong> there.
+          </span>
+        ),
+        { id: toastId, duration: 6000, icon: "ℹ️" }
+      );
     } finally {
       setDownloading(false);
+    }
+  }
+
+  function handleViewInTab() {
+    try {
+      openInvoiceDocumentWindow(order, storeMeta || {});
+      toast.success("Invoice opened in new tab.");
+    } catch (err) {
+      toast.error(err?.message || "Could not open invoice. Allow popups and retry.");
     }
   }
 
@@ -197,6 +218,13 @@ export function SendInvoicePanel({ order, orderId, open, onClose, onSent }) {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
+                onClick={handleViewInTab}
+                className="col-span-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-100"
+              >
+                Open invoice in new tab
+              </button>
+              <button
+                type="button"
                 onClick={handlePrint}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-100"
               >
@@ -211,6 +239,9 @@ export function SendInvoicePanel({ order, orderId, open, onClose, onSent }) {
                 {downloading ? "…" : "Download PDF"}
               </button>
             </div>
+            <p className="text-[10px] leading-snug text-slate-500">
+              If Download PDF fails, use <strong>Open invoice in new tab</strong> then Print → Save as PDF.
+            </p>
           </div>
         </div>
       </div>
