@@ -143,55 +143,55 @@ export function OrderActivityFeed({ order }) {
   const events = buildOrderActivityEvents(order);
 
   return (
-    <div
-      className="rounded-xl border p-4 shadow-none"
-      style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
-    >
-      <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-        Activity
-      </h2>
-      <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>
-        Status changes, payment confirmations, notes, and system events — newest first.
-      </p>
-
-      {events.length === 0 ? (
-        <p className="mt-4 text-sm" style={{ color: "var(--text-muted)" }}>
-          No activity recorded yet.
+    <details className="group rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <summary className="cursor-pointer list-none px-4 py-2.5 text-sm font-semibold text-slate-900 marker:content-none dark:text-white [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center justify-between gap-2">
+          <span>
+            Activity
+            {events.length > 0 ? (
+              <span className="ml-2 text-xs font-normal text-slate-400">({events.length})</span>
+            ) : null}
+          </span>
+          <span className="text-xs font-normal text-slate-400 group-open:hidden">Show</span>
+          <span className="hidden text-xs font-normal text-slate-400 group-open:inline">Hide</span>
+        </span>
+      </summary>
+      <div className="border-t border-slate-100 px-4 pb-4 pt-3 dark:border-slate-800">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Status changes, payment confirmations, notes, and system events — newest first.
         </p>
-      ) : (
-        <ul className="relative mt-4 space-y-0 pl-1">
-          <span
-            className="absolute bottom-2 left-[7px] top-2 w-px"
-            style={{ background: "var(--border-hairline)" }}
-            aria-hidden
-          />
-          {events.map((e) => (
-            <li key={e.id} className="relative flex gap-3 pb-5 last:pb-0">
-              <span
-                className="relative z-10 mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ring-4"
-                style={{
-                  background: KIND_COLOR[e.kind] || "var(--text-muted)",
-                  ringColor: "var(--bg-panel)",
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                  {e.title}
-                </p>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  {e.by ? `${e.by} · ` : ""}
-                  {formatWhen(e.at)}
-                </p>
-                {e.body ? (
-                  <p className="mt-1 whitespace-pre-wrap text-sm" style={{ color: "var(--text-primary)" }}>
-                    {e.body}
+
+        {events.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">No activity recorded yet.</p>
+        ) : (
+          <ul className="relative mt-4 space-y-0 pl-1">
+            <span
+              className="absolute bottom-2 left-[7px] top-2 w-px bg-slate-200 dark:bg-slate-700"
+              aria-hidden
+            />
+            {events.map((e) => (
+              <li key={e.id} className="relative flex gap-3 pb-5 last:pb-0">
+                <span
+                  className="relative z-10 mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ring-4 ring-white dark:ring-slate-900"
+                  style={{ background: KIND_COLOR[e.kind] || "var(--text-muted)" }}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{e.title}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {e.by ? `${e.by} · ` : ""}
+                    {formatWhen(e.at)}
                   </p>
-                ) : null}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+                  {e.body ? (
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200">
+                      {e.body}
+                    </p>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </details>
   );
 }
