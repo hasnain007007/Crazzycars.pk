@@ -116,8 +116,11 @@ function orderTotal(order) {
   return Number.isFinite(t) ? t : 0;
 }
 
-export function PaymentStatusCard({ order, onUpdated }) {
-  const total = orderTotal(order);
+export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
+  const total =
+    orderTotalOverride != null && Number.isFinite(Number(orderTotalOverride))
+      ? Number(orderTotalOverride)
+      : orderTotal(order);
   const [next, setNext] = useState(() => String(order.paymentStatus || "unpaid").toLowerCase());
   const [paidAmount, setPaidAmount] = useState("");
   const [remainingCod, setRemainingCod] = useState("");
@@ -260,11 +263,21 @@ export function PaymentStatusCard({ order, onUpdated }) {
         <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
           <p>
             Paid:{" "}
-            <strong>Rs. {(Number(order.payment?.paidAmount ?? order.payment?.amount) || 0).toLocaleString()}</strong>
+            <strong>
+              Rs. {(Number(order.payment?.paidAmount ?? order.payment?.amount) || 0).toLocaleString()}
+            </strong>
           </p>
           <p className="mt-0.5">
             Remaining COD:{" "}
-            <strong>Rs. {(Number(order.payment?.remainingCod) || 0).toLocaleString()}</strong>
+            <strong>
+              Rs.{" "}
+              {Math.max(
+                0,
+                Math.round(
+                  (total - (Number(order.payment?.paidAmount ?? order.payment?.amount) || 0)) * 100
+                ) / 100
+              ).toLocaleString()}
+            </strong>
           </p>
         </div>
       ) : null}

@@ -163,7 +163,7 @@ function extractCatalog(product) {
   };
 }
 
-export function OrderItemsEditor({ order, onUpdated }) {
+export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
   const [lines, setLines] = useState(() => normalizeLines(order.items));
   const [discountAmount, setDiscountAmount] = useState(() => {
     const d = Number(order?.pricing?.discount) || 0;
@@ -274,6 +274,15 @@ export function OrderItemsEditor({ order, onUpdated }) {
   const shipNum = deliveryOn ? Math.max(0, Number(shippingCost) || 0) : 0;
   const total = Math.max(0, Math.round((subtotal - discountNum + shipNum) * 100) / 100);
   const couponCode = String(order?.couponCode || "").trim();
+
+  useEffect(() => {
+    onDraftPricingChange?.({
+      subtotal,
+      discount: discountNum,
+      shippingCost: shipNum,
+      total,
+    });
+  }, [subtotal, discountNum, shipNum, total, onDraftPricingChange]);
 
   const updateLine = useCallback(
     (index, patch) => {

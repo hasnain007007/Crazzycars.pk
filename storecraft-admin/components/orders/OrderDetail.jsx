@@ -501,8 +501,19 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
   );
 }
 
-function PaymentInformationSection({ order, orderId, onRefunded }) {
+function PaymentInformationSection({ order, orderId, onRefunded, orderTotal }) {
   const pm = order.payment?.method || order.paymentMethod || "";
+  const total = Math.max(
+    0,
+    Number(orderTotal ?? order.pricing?.total ?? order.total ?? 0) || 0
+  );
+  const paidAmount = Number(order.payment?.paidAmount ?? order.payment?.amount ?? 0) || 0;
+  const paymentStatus = String(order.paymentStatus || "unpaid").toLowerCase();
+  const showOrderTotal = paymentStatus === "unpaid" || paymentStatus === "partial";
+  const liveRemainingCod =
+    paymentStatus === "partial"
+      ? Math.max(0, Math.round((total - paidAmount) * 100) / 100)
+      : 0;
 
   async function issueRefund() {
     if (!window.confirm("Issue a full refund for this order?")) return;
@@ -639,26 +650,46 @@ function PaymentInformationSection({ order, orderId, onRefunded }) {
           </div>
         ) : null}
 
-        {(order.paymentStatus === "partial"
-          ? Number(order.payment?.paidAmount ?? order.payment?.amount) > 0
-          : order.payment?.amount != null && order.payment.amount > 0) ? (
+        {showOrderTotal ? (
           <div>
             <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>
-              {order.paymentStatus === "partial" ? "Paid amount" : "Amount paid"}
+              Order total
             </p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: "#16a34a", margin: 0 }}>
-              {formatMoney(order.payment?.paidAmount ?? order.payment.amount)}
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }} className="dark:text-white">
+              {formatMoney(total)}
             </p>
           </div>
         ) : null}
 
-        {order.paymentStatus === "partial" && Number(order.payment?.remainingCod) > 0 ? (
+        {(paymentStatus === "partial"
+          ? paidAmount > 0
+          : paymentStatus === "paid" && paidAmount > 0) ? (
+          <div>
+            <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>
+              {paymentStatus === "partial" ? "Paid amount" : "Amount paid"}
+            </p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#16a34a", margin: 0 }}>
+              {formatMoney(paidAmount)}
+            </p>
+          </div>
+        ) : paymentStatus === "unpaid" ? (
+          <div>
+            <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>
+              Amount paid
+            </p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#16a34a", margin: 0 }}>
+              {formatMoney(0)}
+            </p>
+          </div>
+        ) : null}
+
+        {paymentStatus === "partial" && liveRemainingCod > 0 ? (
           <div>
             <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>
               Remaining COD
             </p>
             <p style={{ fontSize: 15, fontWeight: 700, color: "#c2410c", margin: 0 }}>
-              {formatMoney(order.payment.remainingCod)}
+              {formatMoney(liveRemainingCod)}
             </p>
           </div>
         ) : null}
@@ -790,6 +821,7 @@ export function OrderDetail({ orderId }) {
   const [bookingPostex, setBookingPostex] = useState(false);
   const [postexError, setPostexError] = useState("");
   const [postexSuccess, setPostexSuccess] = useState("");
+  const [draftPricing, setDraftPricing] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -804,6 +836,7 @@ export function OrderDetail({ orderId }) {
         return;
       }
       setOrder(json.order);
+      setDraftPricing(null);
       setNeighbors({
         prev: json.neighbors?.prev || null,
         next: json.neighbors?.next || null,
@@ -875,7 +908,10 @@ export function OrderDetail({ orderId }) {
 
   useEffect(() => {
     if (order) {
-      const total = Math.max(0, Number(order.pricing?.total ?? order.total ?? 0));
+      const total = Math.max(
+        0,
+        Number(draftPricing?.total ?? order.pricing?.total ?? order.total ?? 0) || 0
+      );
       const prepaid = isPrepaidOrder(order);
       setPostexCodAmount(prepaid ? 0 : Math.round(total));
       setPostexPieces(order.items?.length || orderItemCount(order) || 1);
@@ -883,7 +919,7 @@ export function OrderDetail({ orderId }) {
       const weightKg = grams > 0 ? Math.round((grams / 1000) * 100) / 100 : 0.5;
       setPostexWeight(Math.max(0.5, weightKg));
     }
-  }, [order]);
+  }, [order, draftPricing]);
 
   useEffect(() => {
     getInvoiceStoreMeta().then(setInvoiceStoreMeta).catch(() => {});
@@ -1161,6 +1197,10 @@ export function OrderDetail({ orderId }) {
   }
 
   const p = order.pricing || { subtotal: 0, discount: 0, shippingCost: 0, total: 0 };
+  const effectiveTotal = Math.max(
+    0,
+    Number(draftPricing?.total ?? p.total ?? order.total ?? 0) || 0
+  );
   const hasTracking = Boolean(order.trackingNumber || order.tracking?.number || trackingNumber);
   const orderPrepaid = isPrepaidOrder(order);
   const pmLower = String(order.paymentMethod || order.payment?.method || "").toLowerCase();
@@ -1498,10 +1538,7 @@ export function OrderDetail({ orderId }) {
                   paymentStatus={order.paymentStatus}
                 />
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
-                  {formatCurrencyAmount(
-                    order,
-                    order.total ?? order.pricing?.total ?? order.grandTotal ?? 0
-                  )}
+                  {formatCurrencyAmount(order, effectiveTotal)}
                 </span>
               </div>
               <p className="mt-0.5 mb-0 text-xs text-slate-500 dark:text-slate-400">
@@ -1619,7 +1656,14 @@ export function OrderDetail({ orderId }) {
         <div className="grid grid-cols-1 items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
           <div className="min-w-0 space-y-3">
             {/* Products first — visible without scrolling past tall meta cards */}
-            <OrderItemsEditor order={order} onUpdated={setOrder} />
+            <OrderItemsEditor
+              order={order}
+              onUpdated={(updated) => {
+                setOrder(updated);
+                setDraftPricing(null);
+              }}
+              onDraftPricingChange={setDraftPricing}
+            />
 
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               <ShippingDetailsCard order={order} orderId={orderId} onUpdated={setOrder} />
@@ -1645,9 +1689,14 @@ export function OrderDetail({ orderId }) {
 
           <div className="min-w-0 space-y-3">
             <OrderStatusCard order={order} onUpdated={setOrder} />
-            <PaymentStatusCard order={order} onUpdated={setOrder} />
+            <PaymentStatusCard order={order} onUpdated={setOrder} orderTotalOverride={effectiveTotal} />
 
-            <PaymentInformationSection order={order} orderId={orderId} onRefunded={load} />
+            <PaymentInformationSection
+              order={order}
+              orderId={orderId}
+              onRefunded={load}
+              orderTotal={effectiveTotal}
+            />
 
             <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
