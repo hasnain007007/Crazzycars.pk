@@ -222,3 +222,36 @@ export function serializeVehicleProduct(p) {
     isUniversal: Boolean(p.isUniversal),
   };
 }
+
+/** Vehicles that have at least one assigned product — same set as sitemap-cars.xml. */
+export async function loadShopByCarIndex() {
+  const rows = await Product.aggregate([
+    {
+      $match: {
+        status: "active",
+        compatibleVehicles: { $exists: true, $type: "array", $ne: [] },
+      },
+    },
+    { $unwind: "$compatibleVehicles" },
+    { $group: { _id: "$compatibleVehicles" } },
+  ]);
+  const withProducts = new Set(rows.map((r) => String(r._id)));
+  const vehicles = await Vehicle.find({ isActive: true })
+    .select("slug make model displayName yearFrom yearTo generation nickname image")
+    .sort({ make: 1, model: 1, yearFrom: 1 })
+    .lean();
+
+  return vehicles
+    .filter((v) => v.slug && withProducts.has(String(v._id)))
+    .map((v) => ({
+      slug: v.slug,
+      make: v.make || "",
+      model: v.model || "",
+      displayName: v.displayName || `${v.make || ""} ${v.model || ""}`.trim(),
+      yearFrom: v.yearFrom ?? null,
+      yearTo: v.yearTo ?? null,
+      generation: v.generation || "",
+      nickname: v.nickname || "",
+      image: v.image || "",
+    }));
+}

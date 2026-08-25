@@ -88,6 +88,11 @@ export async function middleware(request) {
     return redirectPath(request, "/blogs", 308);
   }
 
+  // Duplicate catalog index — /shop is canonical. /products/:handle still 308s below.
+  if (lower.replace(/\/+$/, "") === "/products") {
+    return redirectPath(request, "/shop", 308);
+  }
+
   // Shopify-era product URLs (+ variant/country/currency) → clean /[slug] in one hop.
   // Use `new URL` — NextURL.clone() + search="" often keeps the old query string.
   if (lower.startsWith("/products/")) {

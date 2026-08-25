@@ -8,6 +8,7 @@ import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
 const DEFAULT_SHOP_LINKS = [
   { label: "Home", href: "/" },
   { label: "Shop All", href: "/shop" },
+  { label: "Shop by Car", href: "/cars" },
   { label: "Categories", href: "/categories" },
   { label: "Blog", href: "/blogs" },
 ]

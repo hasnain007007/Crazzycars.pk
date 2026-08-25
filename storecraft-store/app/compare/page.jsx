@@ -178,7 +178,7 @@ export default function ComparePage() {
           <p style={{ fontSize: 40, marginBottom: 12 }}>⇄</p>
           <p style={{ fontSize: 15, color: "#6b7280", marginBottom: 20 }}>Nothing to compare yet.</p>
           <Link
-            href="/products"
+            href="/shop"
             style={{
               display: "inline-block",
               padding: "12px 28px",

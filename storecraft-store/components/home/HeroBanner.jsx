@@ -303,7 +303,7 @@ function HeroCtas({ primaryButton }) {
 
   return (
     <Link
-      href={primaryButton.url || primaryButton.link || '/products'}
+      href={primaryButton.url || primaryButton.link || '/shop'}
       style={{
         ...defaultCtaStyle,
         background: primaryButton.bgColor || '#111111',
@@ -408,7 +408,7 @@ export default function HeroBanner() {
           <>
             <h1 className="hero-split-heading">{NO_BANNER_HEADING}</h1>
             <p className="hero-split-sub">{NO_BANNER_SUB}</p>
-            <Link href="/products" style={{ ...defaultCtaStyle, background: DEFAULT_BTN_BG }}>
+            <Link href="/shop" style={{ ...defaultCtaStyle, background: DEFAULT_BTN_BG }}>
               Shop Collection
             </Link>
           </>
@@ -506,7 +506,7 @@ export default function HeroBanner() {
                 href={
                   primaryButton.url ||
                   primaryButton.link ||
-                  '/products'
+                  '/shop'
                 }
                 style={{
                   background: primaryButton.bgColor || '#111111',

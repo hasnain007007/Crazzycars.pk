@@ -35,7 +35,7 @@ export default function NewArrivals() {
             </h2>
           </div>
           <Link
-            href="/products?sort=newest"
+            href="/shop?sort=newest"
             className="text-sm font-semibold uppercase tracking-wide text-[var(--color-primary)] hover:underline"
           >
             View All →

@@ -143,7 +143,7 @@ export default function OrdersPage() {
             Start shopping to see your orders here
           </p>
           <Link
-            href="/products"
+            href="/shop"
             style={{
               display: "inline-block",
               padding: "12px 32px",

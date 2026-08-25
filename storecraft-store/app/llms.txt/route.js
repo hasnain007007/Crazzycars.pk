@@ -45,7 +45,7 @@ CrazzyCars.pk (also written Crazzycars.pk) sells aftermarket car parts and acces
 
 - [Home](${site}/): Featured products, shop by car, categories
 - [Shop](${site}/shop): Browse all products
-- [Products](${site}/products): Product listing
+- [Shop by Car](${site}/cars): Accessories by make and model
 - [Categories](${site}/categories): Category index
 - [Sale](${site}/sale): Sale / deals
 - [About](${site}/about): Brand story
@@ -70,7 +70,7 @@ Active products are listed in the sitemap and the product feed.
 
 ## Optional
 
-- Vehicle fitment pages: ${site}/cars/{slug}
+- Vehicle fitment pages: ${site}/cars (index) and ${site}/cars/{slug}
 `;
 
   return new Response(body, {

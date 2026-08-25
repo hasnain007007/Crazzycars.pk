@@ -5,7 +5,7 @@ import { ProductListingSection } from "@/components/store/ProductListingSection"
 import { ShopFiltersClient } from "@/components/store/ShopFiltersClient";
 
 /**
- * Shared /shop and /products chrome: SSR H1 + breadcrumb, client filters, server grid.
+ * Shared /shop listing chrome: SSR H1 + breadcrumb, client filters, server grid.
  */
 export function ShopListingLayout({
   pathname = "/shop",

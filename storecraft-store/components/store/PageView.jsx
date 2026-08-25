@@ -135,7 +135,7 @@ export default function PageView({ page, slug }) {
               &larr; Back to Home
             </a>
             <a
-              href="/products"
+              href="/shop"
               style={{
                 padding: "10px 24px",
                 background: "#111111",

@@ -276,7 +276,7 @@ export default function CheckoutSuccessView() {
               Try Again
             </button>
             <Link
-              href="/products"
+              href="/shop"
               style={{
                 padding: "12px 28px",
                 background: "transparent",
@@ -516,7 +516,7 @@ export default function CheckoutSuccessView() {
           }}
         >
           <Link
-            href="/products"
+            href="/shop"
             style={{
               padding: "13px 32px",
               background: "#111111",

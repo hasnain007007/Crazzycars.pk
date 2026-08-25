@@ -298,7 +298,7 @@ export function SearchSuggest({
   function goToAll() {
     setOpen(false);
     if (onSubmit) onSubmit(term);
-    else router.push(`/products?q=${encodeURIComponent(term)}`);
+    else router.push(`/shop?q=${encodeURIComponent(term)}`);
   }
 
   function handleKeyDown(e) {

@@ -26,7 +26,7 @@ export function OrderConfirmationView() {
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-[#E8E8E8]">
         <h1 className="text-2xl font-bold text-[#E8E8E8]">No order to show</h1>
         <p className="mt-2 text-sm text-[#B0B0B0]">If you just completed checkout, open this page from the checkout flow again.</p>
-        <Link href="/products" className="mt-6 inline-block font-semibold text-[#D4AF37] hover:underline">
+        <Link href="/shop" className="mt-6 inline-block font-semibold text-[#D4AF37] hover:underline">
           Continue shopping
         </Link>
       </div>
@@ -72,7 +72,7 @@ export function OrderConfirmationView() {
         </ul>
       ) : null}
       <div className="mt-10 flex flex-wrap justify-center gap-3">
-        <Link href="/products" className="rounded-xl border border-[rgba(212,175,55,0.4)] bg-transparent px-5 py-2.5 text-sm font-semibold text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0A0A0A]">
+        <Link href="/shop" className="rounded-xl border border-[rgba(212,175,55,0.4)] bg-transparent px-5 py-2.5 text-sm font-semibold text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0A0A0A]">
           Keep shopping
         </Link>
         <Link href="/account/orders" className="rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#111111] px-5 py-2.5 text-sm font-semibold text-[#E8E8E8] hover:bg-[#1A1A1A]">

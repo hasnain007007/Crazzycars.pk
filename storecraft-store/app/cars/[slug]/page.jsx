@@ -85,7 +85,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
 
   const crumbs = [
     { name: "Home", url: "/" },
-    { name: "Shop by Car", url: "/#shop-by-car" },
+    { name: "Shop by Car", url: "/cars" },
     { name: vehicle.displayName, url: `/cars/${vehicle.slug}` },
   ];
   const breadcrumbLd = breadcrumbJsonLd(crumbs);

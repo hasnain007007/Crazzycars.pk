@@ -648,7 +648,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
 
           <!-- CTA -->
           <div style="text-align:center;margin-top:32px;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL}/products"
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crazzycars.pk"}/shop"
               style="display:inline-block;padding:14px 36px;background:#111111;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border-radius:2px;">
               Continue Shopping
             </a>

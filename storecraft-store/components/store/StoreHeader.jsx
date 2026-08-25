@@ -466,15 +466,15 @@ export function StoreHeader({ initialCategoryTree = null }) {
     e.preventDefault();
     const term = q.trim();
     setMobileSearchOpen(false);
-    if (term) router.push(`/products?q=${encodeURIComponent(term)}`);
-    else router.push("/products");
+    if (term) router.push(`/shop?q=${encodeURIComponent(term)}`);
+    else router.push("/shop");
   }
 
   function submitSearchTerm(term) {
     const t = String(term || q).trim();
     setMobileSearchOpen(false);
-    if (t) router.push(`/products?q=${encodeURIComponent(t)}`);
-    else router.push("/products");
+    if (t) router.push(`/shop?q=${encodeURIComponent(t)}`);
+    else router.push("/shop");
   }
 
   function isNavItemActive(item) {

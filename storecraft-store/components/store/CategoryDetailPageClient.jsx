@@ -316,7 +316,7 @@ export function CategoryDetailPageClient({
           <div style={{ textAlign: "center", padding: "60px 24px", color: "#888888" }}>
             <p style={{ fontSize: 16, margin: "0 0 16px" }}>No products found in this category.</p>
             <Link
-              href="/products"
+              href="/shop"
               style={{
                 display: "inline-block",
                 padding: "12px 28px",

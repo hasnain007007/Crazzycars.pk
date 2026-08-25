@@ -23,7 +23,7 @@ export async function resolveCollectionHandleToPath(rawHandle) {
   if (!handle) return "/categories";
 
   // Shopify system collections
-  if (handle === "all" || handle === "frontpage") return "/products";
+  if (handle === "all" || handle === "frontpage") return "/shop";
   if (handle === "vendors" || handle === "types") return "/categories";
 
   try {

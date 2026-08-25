@@ -63,7 +63,7 @@ export default function WishlistPage() {
           <p style={{ fontSize: 48, marginBottom: 16 }}>♡</p>
           <p style={{ fontSize: 16, color: "#888888", marginBottom: 24 }}>Your wishlist is empty</p>
           <Link
-            href="/products"
+            href="/shop"
             style={{
               display: "inline-block",
               padding: "12px 32px",

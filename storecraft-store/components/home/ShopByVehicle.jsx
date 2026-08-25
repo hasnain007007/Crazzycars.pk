@@ -190,6 +190,9 @@ export default function ShopByVehicle({ initialCatalog = null }) {
             <h2 className="font-heading mt-0.5 text-[18px] font-bold text-[#111111] sm:text-[22px]">
               Shop By Your Vehicle
             </h2>
+            <Link href="/cars" className="mt-1 inline-block text-xs font-semibold text-[#C41E1E] hover:underline">
+              View all cars →
+            </Link>
           </div>
 
           {!loading && byMake.length > 0 ? (
