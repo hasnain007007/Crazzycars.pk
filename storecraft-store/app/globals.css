@@ -3009,6 +3009,10 @@ textarea::placeholder {
   color: #9ca3af;
   text-decoration: none;
   transition: color 0.2s ease;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .cat-breadcrumb a:hover {
