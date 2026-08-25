@@ -1,0 +1,16 @@
+---
+description: Ship storefront/admin work via git + Coolify without asking
+alwaysApply: true
+---
+
+# Ship without asking
+
+Do not ask whether to commit, push, or deploy to Coolify. After storefront or admin work that should go live, ship it.
+
+1. Commit on `vps-test` (no secrets, no `--no-verify`, no force-push).
+2. If behind origin, rebase then push `vps-test` to GitHub (`origin`).
+3. Coolify auto-deploys that branch for `crazzycars.pk` / `admin.crazzycars.pk`. Confirm the deploy finished; trigger only if the webhook did not start.
+
+Do not pause at the end of a task waiting for permission to git or Coolify. Report the commit and live result after shipping.
+
+Still never: force-push to main/master, skip hooks, commit `.env` / credentials, or rotate production passwords.
