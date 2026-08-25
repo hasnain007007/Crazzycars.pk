@@ -715,6 +715,7 @@ export async function POST(request) {
 
     const zoneShippingCost = Math.round(Math.max(0, Number(quote.shippingCost) || 0) * 100) / 100;
     const rulesResult = applyShippingRules({
+      baseDeliveryCharge: zoneShippingCost,
       zoneShippingCost,
       cartTotal: orderSubtotalAfterDiscount,
       paymentMethod,
@@ -864,134 +865,177 @@ export async function POST(request) {
     }
 
     const orderNumber = await allocateOrderNumber();
-
-    for (const [key, qty] of byVariant.entries()) {
-      const [pid, vid] = key.split("::");
-      const p = byId.get(pid);
-      const v = findVariantOnProduct(p, vid);
-      if (!v || v.trackStock === false) continue;
-      const oid = new mongoose.Types.ObjectId(vid);
-      const r = await Product.updateOne(
-        { _id: pid },
-        { $inc: { "variants.$[el].stock": -qty } },
-        { arrayFilters: [{ "el._id": oid, "el.stock": { $gte: qty } }] }
-      );
-      if (r.matchedCount === 0 || r.modifiedCount === 0) {
-        return NextResponse.json({ success: false, error: "Stock changed while checking out. Try again." }, { status: 409 });
-      }
-    }
-
-    for (const raw of itemsIn) {
-      const pid = String(raw.productId || "").trim();
-      if (!mongoose.Types.ObjectId.isValid(pid)) continue;
-      const p = byId.get(pid);
-      if (!p) continue;
-      const qty = Math.max(1, Math.min(99, parseInt(raw.quantity, 10) || 1));
-      const variantIdStr = String(raw.variantId || "").trim();
-      const variantDoc =
-        variantIdStr && mongoose.Types.ObjectId.isValid(variantIdStr)
-          ? findVariantOnProduct(p, variantIdStr)
-          : null;
-      if (variantDoc) continue;
-      const combo = resolveCombinationFromCart(p, raw);
-      if (!combo?._id) continue;
-      if (p.inventory?.trackInventory === false) continue;
-      const cs = combo.stock;
-      if (cs === undefined || cs === null || !Number.isFinite(Number(cs))) continue;
-      const oid = combo._id;
-      if (allowsBackorder(p)) {
-        await Product.updateOne(
-          { _id: p._id },
-          { $inc: { "variationCombinations.$[el].stock": -qty } },
-          { arrayFilters: [{ "el._id": oid }] }
-        );
-        continue;
-      }
-      const r = await Product.updateOne(
-        { _id: p._id },
-        { $inc: { "variationCombinations.$[el].stock": -qty } },
-        { arrayFilters: [{ "el._id": oid, "el.stock": { $gte: qty } }] }
-      );
-      if (r.matchedCount === 0 || r.modifiedCount === 0) {
-        return NextResponse.json({ success: false, error: "Stock changed while checking out. Try again." }, { status: 409 });
-      }
-    }
-
-    for (const [pid, qty] of byProduct.entries()) {
-      const p = byId.get(pid);
-      if (!p?.inventory?.trackInventory) continue;
-      if ((p.variants || []).length) continue;
-      if (allowsBackorder(p)) {
-        await Product.updateOne({ _id: pid }, { $inc: { "inventory.quantity": -qty } });
-        continue;
-      }
-      const updated = await Product.findOneAndUpdate(
-        { _id: pid, "inventory.quantity": { $gte: qty } },
-        { $inc: { "inventory.quantity": -qty } },
-        { new: true }
-      ).lean();
-      if (!updated) {
-        return NextResponse.json({ success: false, error: "Stock changed while checking out. Try again." }, { status: 409 });
-      }
-    }
-
     const publicAccessToken = randomBytes(24).toString("base64url");
 
-    const order = await Order.create({
-      orderNumber,
-      publicAccessToken,
-      customer: {
-        name,
-        email,
-        phone,
-        customerId,
-      },
-      items: lineItems,
-      pricing: {
-        subtotal,
-        discount,
-        shippingCost,
-        shippingMethod,
-        shippingZone: shippingZoneLabel,
-        totalWeightGrams,
-        total,
-      },
-      orderStatus: initialStatus,
-      paymentStatus,
-      paymentMethod,
-      payment: {
-        amount: total,
-        paidAmount: 0,
-        remainingCod,
-        advanceRequired,
-        advanceMode: advanceDue.mode || "",
-        advanceMaxPercent: advanceDue.maxPercent || 0,
-      },
-      shippingAddress,
-      couponCode,
-      statusHistory: [
-        {
-          status: initialStatus,
-          changedBy: "Store",
-          note: placedNote,
+    let order;
+    try {
+      order = await Order.create({
+        orderNumber,
+        publicAccessToken,
+        customer: {
+          name,
+          email,
+          phone,
+          customerId,
         },
-      ],
-      timeline: [
-        {
-          status: "placed",
-          title: "Order Placed",
-          description: `Order #${orderNumber} received successfully`,
-          timestamp: new Date(),
-          by: "customer",
+        items: lineItems,
+        pricing: {
+          subtotal,
+          discount,
+          shippingCost,
+          shippingMethod,
+          shippingZone: shippingZoneLabel,
+          totalWeightGrams,
+          total,
         },
-      ],
-      ...(aiAttribution
-        ? {
-            aiAttributedSource: aiAttribution.source,
-            aiAttributedAt: aiAttribution.firstTouchAt,
-          }
-        : {}),
-    });
+        orderStatus: initialStatus,
+        paymentStatus,
+        paymentMethod,
+        payment: {
+          amount: total,
+          paidAmount: 0,
+          remainingCod,
+          advanceRequired,
+          advanceMode: advanceDue.mode || "",
+          advanceMaxPercent: advanceDue.maxPercent || 0,
+        },
+        shippingAddress,
+        couponCode,
+        statusHistory: [
+          {
+            status: initialStatus,
+            changedBy: "Store",
+            note: placedNote,
+          },
+        ],
+        timeline: [
+          {
+            status: "placed",
+            title: "Order Placed",
+            description: `Order #${orderNumber} received successfully`,
+            timestamp: new Date(),
+            by: "customer",
+          },
+        ],
+        ...(aiAttribution
+          ? {
+              aiAttributedSource: aiAttribution.source,
+              aiAttributedAt: aiAttribution.firstTouchAt,
+            }
+          : {}),
+      });
+    } catch (createErr) {
+      console.error("Order.create failed:", createErr?.message || createErr);
+      return NextResponse.json(
+        { success: false, error: "Could not create order. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    // Decrement stock only after the order exists. On failure, cancel the order
+    // so we never lose inventory without a matching order (or vice versa).
+    try {
+      for (const [key, qty] of byVariant.entries()) {
+        const [pid, vid] = key.split("::");
+        const p = byId.get(pid);
+        const v = findVariantOnProduct(p, vid);
+        if (!v || v.trackStock === false) continue;
+        const oid = new mongoose.Types.ObjectId(vid);
+        const r = await Product.updateOne(
+          { _id: pid },
+          { $inc: { "variants.$[el].stock": -qty } },
+          { arrayFilters: [{ "el._id": oid, "el.stock": { $gte: qty } }] }
+        );
+        if (r.matchedCount === 0 || r.modifiedCount === 0) {
+          throw new Error("VARIANT_STOCK");
+        }
+      }
+
+      for (const raw of itemsIn) {
+        const pid = String(raw.productId || "").trim();
+        if (!mongoose.Types.ObjectId.isValid(pid)) continue;
+        const p = byId.get(pid);
+        if (!p) continue;
+        const qty = Math.max(1, Math.min(99, parseInt(raw.quantity, 10) || 1));
+        const variantIdStr = String(raw.variantId || "").trim();
+        const variantDoc =
+          variantIdStr && mongoose.Types.ObjectId.isValid(variantIdStr)
+            ? findVariantOnProduct(p, variantIdStr)
+            : null;
+        if (variantDoc) continue;
+        const combo = resolveCombinationFromCart(p, raw);
+        if (!combo?._id) continue;
+        if (p.inventory?.trackInventory === false) continue;
+        const cs = combo.stock;
+        if (cs === undefined || cs === null || !Number.isFinite(Number(cs))) continue;
+        const oid = combo._id;
+        if (allowsBackorder(p)) {
+          await Product.updateOne(
+            { _id: p._id },
+            { $inc: { "variationCombinations.$[el].stock": -qty } },
+            { arrayFilters: [{ "el._id": oid }] }
+          );
+          continue;
+        }
+        const r = await Product.updateOne(
+          { _id: p._id },
+          { $inc: { "variationCombinations.$[el].stock": -qty } },
+          { arrayFilters: [{ "el._id": oid, "el.stock": { $gte: qty } }] }
+        );
+        if (r.matchedCount === 0 || r.modifiedCount === 0) {
+          throw new Error("COMBO_STOCK");
+        }
+      }
+
+      for (const [pid, qty] of byProduct.entries()) {
+        const p = byId.get(pid);
+        if (!p?.inventory?.trackInventory) continue;
+        if ((p.variants || []).length) continue;
+        if (allowsBackorder(p)) {
+          await Product.updateOne({ _id: pid }, { $inc: { "inventory.quantity": -qty } });
+          continue;
+        }
+        const updated = await Product.findOneAndUpdate(
+          { _id: pid, "inventory.quantity": { $gte: qty } },
+          { $inc: { "inventory.quantity": -qty } },
+          { new: true }
+        ).lean();
+        if (!updated) {
+          throw new Error("BASE_STOCK");
+        }
+      }
+    } catch (stockErr) {
+      try {
+        await Order.findByIdAndUpdate(order._id, {
+          $set: {
+            orderStatus: "cancelled",
+            paymentStatus: "failed",
+          },
+          $push: {
+            statusHistory: {
+              status: "cancelled",
+              changedBy: "System",
+              note: "Auto-cancelled — stock changed during checkout.",
+              changedAt: new Date(),
+            },
+            timeline: {
+              status: "cancelled",
+              title: "Order cancelled",
+              description: "Stock changed while checking out. Please try again.",
+              timestamp: new Date(),
+              by: "system",
+            },
+          },
+        });
+      } catch (cancelErr) {
+        console.error("Failed to cancel order after stock error:", cancelErr?.message || cancelErr);
+      }
+      console.error("Stock decrement after order create failed:", stockErr?.message || stockErr);
+      return NextResponse.json(
+        { success: false, error: "Stock changed while checking out. Try again." },
+        { status: 409 }
+      );
+    }
 
     if (isValidCustomerEmail(order.customer?.email)) {
       try {

@@ -8,7 +8,7 @@ import { STORE_POLICY } from "@/config/store-policy";
 import { standardDeliveryFeeShort } from "@/lib/storePolicyCopy";
 
 const DEFAULT_ADVANCE_MESSAGE =
-  "Important: You must pay the delivery charges of {amount} in advance to confirm your Cash on Delivery order.\n\nAfter paying, send the payment screenshot on WhatsApp: {whatsapp}\n\nProduct payment will be collected on delivery. Without the delivery-charge payment + screenshot, we cannot process your order.";
+  "Your order is placed. To confirm dispatch, please pay the delivery charges of {amount} in advance and send the payment screenshot on WhatsApp: {whatsapp}\n\nProduct payment will be collected on delivery.";
 
 export const DEFAULT_FREE_SHIPPING_THRESHOLD = 0;
 
@@ -120,17 +120,24 @@ export function toPublicShippingQuote(raw) {
 
 /**
  * Apply store policy on top of zone/courier quotes.
- * Flat STORE_POLICY fee unless an explicit courier base (spoiler / Daewoo) is passed.
+ * Flat STORE_POLICY fee unless an explicit courier/zone base is passed
+ * (`baseDeliveryCharge` or legacy `zoneShippingCost`).
  * Never waives delivery for order value or advance payment.
  */
-export function applyShippingRules({ storePayment, baseDeliveryCharge }) {
+export function applyShippingRules({
+  storePayment,
+  baseDeliveryCharge,
+  zoneShippingCost,
+} = {}) {
   normalizeShippingRules(storePayment);
   const flat = STORE_POLICY.shipping.standardFeePKR;
+  const rawBase =
+    baseDeliveryCharge !== undefined && baseDeliveryCharge !== null
+      ? baseDeliveryCharge
+      : zoneShippingCost;
   const hasExplicitBase =
-    baseDeliveryCharge !== undefined &&
-    baseDeliveryCharge !== null &&
-    Number.isFinite(Number(baseDeliveryCharge));
-  const explicitBase = hasExplicitBase ? Math.max(0, Number(baseDeliveryCharge) || 0) : null;
+    rawBase !== undefined && rawBase !== null && Number.isFinite(Number(rawBase));
+  const explicitBase = hasExplicitBase ? Math.max(0, Number(rawBase) || 0) : null;
   const cost = hasExplicitBase ? explicitBase : flat;
 
   return {

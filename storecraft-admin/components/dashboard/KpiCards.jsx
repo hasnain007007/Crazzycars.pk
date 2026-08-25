@@ -123,15 +123,13 @@ export function KpiCards({ data }) {
   const d = data || {};
   const margin = Number(d.profitMargin) || 0;
   const rangeLabel = d.range?.label || "period";
-  const pendingToday = Number(d.pendingOrders) || 0;
-  const pendingPeriod = Number(d.pendingOrdersPeriod) || 0;
-  const paidOrders = Number(d.periodPaidOrders) || 0;
-  const todayOrders = Number(d.todayOrders) || 0;
-  const periodOrders = Number(d.periodOrders) || 0;
+  const unpaidPeriod = Number(d.unpaidOrdersPeriod) || 0;
+  const partialPeriod = Number(d.partialOrdersPeriod) || 0;
+  const unpaidToday = Number(d.unpaidOrdersToday) || 0;
 
   return (
     <div
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
+      className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
       data-kpi-source="storecraft-admin/components/dashboard/KpiCards.jsx"
     >
       <HeroCard
@@ -140,7 +138,7 @@ export function KpiCards({ data }) {
         trend={d.todaySalesGrowth}
         tone="money"
         money
-        hint="Paid revenue today (PKT)"
+        hint={`Paid revenue today (PKT)${unpaidToday > 0 ? ` · ${formatCount(unpaidToday)} unpaid COD` : ""}`}
       />
 
       {/* Money first — order count is secondary */}
@@ -150,7 +148,7 @@ export function KpiCards({ data }) {
         trend={d.todayOrdersGrowth}
         tone="money"
         money
-        hint={`${formatCount(todayOrders)} orders today · ${formatCount(pendingToday)} pending`}
+        hint={`${formatCount(todayOrders)} orders today · ${formatCount(pendingToday)} pending · ${formatCount(unpaidToday)} unpaid`}
       />
 
       <HeroCard
@@ -174,9 +172,17 @@ export function KpiCards({ data }) {
       <HeroCard
         label="Period Revenue"
         value={formatAdminPrice(d.periodSales)}
-        tone={pendingPeriod > 0 ? "attention" : "money"}
+        tone={unpaidPeriod > 0 || pendingPeriod > 0 ? "attention" : "money"}
         money
-        hint={`${formatCount(periodOrders)} orders · ${formatCount(paidOrders)} paid · ${formatCount(pendingPeriod)} pending · ${rangeLabel}`}
+        hint={`${formatCount(periodOrders)} orders · ${formatCount(paidOrders)} paid · ${formatCount(unpaidPeriod)} unpaid · ${formatCount(partialPeriod)} partial · ${rangeLabel}`}
+      />
+
+      <HeroCard
+        label="Unpaid COD pipeline"
+        value={formatAdminPrice(d.unpaidOrderValuePeriod)}
+        tone="attention"
+        money
+        hint={`${formatCount(unpaidPeriod + partialPeriod)} awaiting advance / collection · ${rangeLabel}`}
       />
 
       <HeroCard

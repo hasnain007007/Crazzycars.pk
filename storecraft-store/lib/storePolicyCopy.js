@@ -134,7 +134,7 @@ export function getFaqItems() {
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
       answer:
-        "Yes. Cash on Delivery is available nationwide. For COD orders you must pay the delivery charges in advance and send the payment screenshot on WhatsApp. The product amount is collected when your order arrives.",
+        "Yes. Cash on Delivery is available nationwide. For COD orders, pay delivery charges in advance after placing your order and send the payment screenshot on WhatsApp. The product amount is collected when your order arrives.",
     },
     {
       question: "How much are delivery charges?",

@@ -219,6 +219,11 @@ export async function GET(request) {
       weekdayOrders,
       todayVisitorCount,
       yesterdayVisitorCount,
+      unpaidOrdersPeriod,
+      partialOrdersPeriod,
+      unpaidOrdersToday,
+      unpaidValuePeriodAgg,
+      unpaidValueTodayAgg,
     ] = await Promise.all([
       Order.aggregate([{ $match: paidMatch }, { $group: { _id: null, total: sumTotal } }]),
       Order.countDocuments(period),
@@ -347,6 +352,41 @@ export async function GET(request) {
         .lean(),
       DailyVisitor.countDocuments({ dayKey: todayKey }),
       DailyVisitor.countDocuments({ dayKey: yesterdayKey }),
+      Order.countDocuments({
+        ...period,
+        orderStatus: NOT_VOID,
+        paymentStatus: "unpaid",
+      }),
+      Order.countDocuments({
+        ...period,
+        orderStatus: NOT_VOID,
+        paymentStatus: "partial",
+      }),
+      Order.countDocuments({
+        orderStatus: NOT_VOID,
+        paymentStatus: "unpaid",
+        createdAt: { $gte: todayStart, $lte: todayEnd },
+      }),
+      Order.aggregate([
+        {
+          $match: {
+            ...period,
+            orderStatus: NOT_VOID,
+            paymentStatus: { $in: ["unpaid", "partial"] },
+          },
+        },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            orderStatus: NOT_VOID,
+            paymentStatus: { $in: ["unpaid", "partial"] },
+            createdAt: { $gte: todayStart, $lte: todayEnd },
+          },
+        },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
     ]);
 
     const periodSales = periodSalesAgg[0]?.total ?? 0;
@@ -573,6 +613,11 @@ export async function GET(request) {
       pendingOrders: pendingOrdersToday,
       pendingOrdersPeriod,
       pendingOrdersAllTime,
+      unpaidOrdersPeriod,
+      partialOrdersPeriod,
+      unpaidOrdersToday,
+      unpaidOrderValuePeriod: unpaidValuePeriodAgg[0]?.total ?? 0,
+      unpaidOrderValueToday: unpaidValueTodayAgg[0]?.total ?? 0,
       ordersReceived,
       ordersDispatched,
       ordersDelivered,

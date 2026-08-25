@@ -40,7 +40,7 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   const waDisplay = formatWhatsAppDisplay(waNum || storePolicyWhatsApp());
   const messageBody = formatAdvancePaymentMessage(
     showPercent
-      ? `To confirm your order, please pay at least {amount} in advance (${advanceMaxPercent}% of eligible items).\n\nRemaining on delivery: ${formatPrice(remainingCod)}.\n\nSend payment screenshot on WhatsApp: {whatsapp}`
+      ? `Please pay at least {amount} in advance (${advanceMaxPercent}% of eligible items).\n\nRemaining on delivery: ${formatPrice(remainingCod)}.\n\nSend payment screenshot on WhatsApp: {whatsapp}`
       : rules.advancePaymentMessage,
     showPercent ? advanceRequired : rules.advancePaymentAmount || shipping || 250,
     waDisplay

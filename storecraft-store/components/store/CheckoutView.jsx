@@ -533,6 +533,7 @@ export function CheckoutView() {
   const shippingApplied = useMemo(
     () =>
       applyShippingRules({
+        baseDeliveryCharge: zoneShippingCost,
         zoneShippingCost,
         cartTotal: cartTotalAfterAllDiscounts,
         paymentMethod,

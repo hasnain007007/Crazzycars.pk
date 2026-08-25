@@ -162,6 +162,8 @@ export const FINANCIAL_DASHBOARD_KEYS = [
   "salesByCategory",
   "paymentMethods",
   "weekdayRevenueVsCost",
+  "unpaidOrderValuePeriod",
+  "unpaidOrderValueToday",
 ];
 
 /**

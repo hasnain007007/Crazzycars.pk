@@ -100,10 +100,10 @@ export const DEFAULT_STORE_PAYMENT = {
   freeShippingOnOrderAbove: 0,
   freeShippingOnOrderAboveEnabled: false,
   advancePaymentMessage:
-    "To confirm your order, please pay delivery charges of {amount} in advance.\n\nSend payment screenshot on WhatsApp: {whatsapp}",
+    "Your order is placed. Please pay delivery charges of {amount} in advance and send the screenshot on WhatsApp: {whatsapp}",
   advancePaymentAmount: STORE_POLICY.shipping.standardFeePKR,
   advancePaymentMessageEnabled: true,
-  advancePaymentMessageTitle: "Confirm Your Order",
+  advancePaymentMessageTitle: "Next step — confirm delivery",
   advancePaymentDiscountEnabled: true,
   advancePaymentDiscountPercent: 3,
   flatDeliveryCharge: STORE_POLICY.shipping.standardFeePKR,
