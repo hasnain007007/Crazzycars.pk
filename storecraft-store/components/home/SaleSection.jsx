@@ -31,7 +31,7 @@ function formatHMS(totalSeconds) {
 function CountdownTile({ value, label }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="font-display flex h-16 min-w-[64px] items-center justify-center rounded-md border border-white/10 bg-white/5 px-3 text-3xl text-white tabular-nums backdrop-blur-sm md:h-20 md:min-w-[80px] md:text-5xl">
+      <div className="font-display flex h-11 min-w-[44px] items-center justify-center rounded-md border border-white/10 bg-white/5 px-2 text-xl text-white tabular-nums backdrop-blur-sm md:h-20 md:min-w-[80px] md:px-3 md:text-5xl">
         {value}
       </div>
       <span className="mt-2 text-[10px] font-semibold tracking-widest text-white/50 uppercase">
@@ -93,7 +93,7 @@ export default function SaleSection() {
 
   return (
     <section
-      className="relative overflow-hidden py-20 md:py-24"
+      className="relative overflow-hidden py-8 md:py-24"
       style={{
         background:
           "linear-gradient(135deg, #1a0505 0%, #2a0707 50%, #0a0a0a 100%)",
@@ -113,32 +113,32 @@ export default function SaleSection() {
 
       <div className="relative mx-auto max-w-7xl px-4 md:px-8">
         {/* Header */}
-        <div className="mb-10 text-center">
-          <span className="mx-auto mb-4 block h-0.5 w-12 bg-[#DC2626]" />
-          <p className="text-xs font-semibold tracking-[0.3em] text-red-400 uppercase">
+        <div className="mb-6 text-center md:mb-10">
+          <span className="mx-auto mb-3 block h-0.5 w-12 bg-[#DC2626] md:mb-4" />
+          <p className="text-[10px] font-semibold tracking-[0.24em] text-red-400 uppercase md:text-xs md:tracking-[0.3em]">
             Limited Time Offers
           </p>
-          <h2 className="font-display mt-3 text-5xl text-white uppercase md:text-6xl lg:text-7xl">
+          <h2 className="font-display mt-2 text-2xl text-white uppercase md:mt-3 md:text-6xl lg:text-7xl">
             Hot Deals
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-sm text-white/60 md:text-base">
+          <p className="mx-auto mt-2 max-w-md text-sm text-white/60 md:mt-4 md:text-base">
             Limited time offers — grab them before they're gone.
           </p>
         </div>
 
         {/* Countdown */}
-        <div className="mb-10 flex justify-center">
-          <div className="flex items-center gap-3 md:gap-4">
+        <div className="mb-6 flex justify-center md:mb-10">
+          <div className="flex items-center gap-2 md:gap-4">
             <CountdownTile value={time.h} label="Hours" />
-            <span className="font-display text-3xl text-white/40 md:text-5xl">:</span>
+            <span className="font-display text-xl text-white/40 md:text-5xl">:</span>
             <CountdownTile value={time.m} label="Minutes" />
-            <span className="font-display text-3xl text-white/40 md:text-5xl">:</span>
+            <span className="font-display text-xl text-white/40 md:text-5xl">:</span>
             <CountdownTile value={time.s} label="Seconds" />
           </div>
         </div>
 
         {/* Filter pills */}
-        <div className="mb-10 flex flex-wrap justify-center gap-3">
+        <div className="mb-5 flex flex-wrap justify-center gap-2 md:mb-10 md:gap-3">
           {FILTERS.map((f) => {
             const isActive = active === f.id;
             return (

@@ -153,7 +153,7 @@ export function ProductListingToolbar({
             </select>
           </label>
 
-          <label className="pl-select-wrap">
+          <label className="pl-select-wrap pl-select-wrap--pagesize">
             <span className="sr-only">Products per page</span>
             <select
               value={String(pageSize)}

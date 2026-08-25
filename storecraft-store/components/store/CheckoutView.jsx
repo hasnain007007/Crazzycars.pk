@@ -843,9 +843,9 @@ export function CheckoutView() {
 
   if (!items.length) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+      <div className="mx-auto max-w-lg px-4 py-8 text-center md:py-16">
         <p className="text-zinc-600">{checkoutMessages.cartEmptyMessage || "Your cart is empty."}</p>
-        <Link href="/products" className="mt-4 inline-block font-semibold text-emerald-700 hover:underline">
+        <Link href="/shop" className="mt-4 inline-block font-semibold text-emerald-700 hover:underline">
           Continue shopping
         </Link>
       </div>
@@ -957,8 +957,8 @@ export function CheckoutView() {
   const placeOrderLabel = submitting ? "Placing order…" : "Place Order";
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-zinc-900">Checkout</h1>
+    <div className="mx-auto max-w-6xl px-4 py-5 md:py-8">
+      <h1 className="text-xl font-bold text-zinc-900 md:text-2xl">Checkout</h1>
       <CheckoutProgressSteps activeStep={activeStep} />
       {showOptionalLoginPrompt ? (
         <div

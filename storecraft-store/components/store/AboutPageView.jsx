@@ -108,12 +108,12 @@ export default function AboutPageView({ aboutPage }) {
       : DEFAULT_FAQ;
 
   return (
-    <div style={{ background: "#FFFFFF", minHeight: "60vh" }}>
+    <div className="about-page-view" style={{ background: "#FFFFFF", minHeight: "60vh" }}>
       <section
         style={{
           background: "linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%)",
           borderBottom: "1px solid #E5E5E5",
-          padding: "56px 0 48px",
+          padding: "28px 0 24px",
         }}
       >
         <div className="store-container" style={{ maxWidth: 900, textAlign: "center" }}>
@@ -127,7 +127,7 @@ export default function AboutPageView({ aboutPage }) {
           ) : null}
           <h1
             className="font-heading font-bold leading-tight"
-            style={{ color: "#111111", fontSize: "clamp(32px, 5vw, 48px)", margin: "12px 0 0" }}
+            style={{ color: "#111111", fontSize: "clamp(22px, 6vw, 48px)", margin: "12px 0 0" }}
           >
             {hero.title}
           </h1>
@@ -196,7 +196,7 @@ export default function AboutPageView({ aboutPage }) {
               {story.badge}
             </span>
           ) : null}
-          <h2 className="font-heading text-[32px] font-bold" style={{ color: "#111111", margin: "8px 0 0" }}>
+          <h2 className="font-heading text-xl font-bold md:text-[32px]" style={{ color: "#111111", margin: "8px 0 0" }}>
             {story.title}
           </h2>
           <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 12, marginBottom: 24 }} />
@@ -213,7 +213,7 @@ export default function AboutPageView({ aboutPage }) {
       {values.length > 0 ? (
         <section style={{ background: "#FAFAFA", padding: "64px 0", borderTop: "1px solid #E5E5E5" }}>
           <div className="store-container">
-            <h2 className="font-heading text-[28px] font-bold" style={{ color: "#111111", margin: 0 }}>
+            <h2 className="font-heading text-xl font-bold md:text-[28px]" style={{ color: "#111111", margin: 0 }}>
               What We Stand For
             </h2>
             <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 32 }} />
@@ -247,7 +247,7 @@ export default function AboutPageView({ aboutPage }) {
 
       <section style={{ padding: "64px 0" }}>
         <div className="store-container" style={{ maxWidth: 720 }}>
-          <h2 className="font-heading text-[28px] font-bold" style={{ color: "#111111", margin: 0 }}>
+          <h2 className="font-heading text-xl font-bold md:text-[28px]" style={{ color: "#111111", margin: 0 }}>
             {promise.title}
           </h2>
           <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 24 }} />
@@ -264,7 +264,7 @@ export default function AboutPageView({ aboutPage }) {
       {faq.length > 0 ? (
         <section style={{ background: "#FAFAFA", padding: "64px 0", borderTop: "1px solid #E5E5E5" }}>
           <div className="store-container" style={{ maxWidth: 720 }}>
-            <h2 className="font-heading text-[28px] font-bold" style={{ color: "#111111", margin: 0 }}>
+            <h2 className="font-heading text-xl font-bold md:text-[28px]" style={{ color: "#111111", margin: 0 }}>
               Frequently Asked Questions
             </h2>
             <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 28 }} />

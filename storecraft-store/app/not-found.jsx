@@ -46,9 +46,9 @@ export default async function NotFound() {
   }
 
   return (
-    <section className="mx-auto flex min-h-[55vh] max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
+    <section className="mx-auto flex min-h-[50vh] max-w-3xl flex-col items-center justify-center px-4 py-10 text-center md:px-6 md:py-16">
       <p className="text-sm font-semibold uppercase tracking-widest text-red-700">404</p>
-      <h1 className="mt-3 text-4xl font-bold">This page has driven away.</h1>
+      <h1 className="mt-2 text-2xl font-bold md:mt-3 md:text-4xl">This page has driven away.</h1>
       <p className="mt-4 text-gray-600">
         This URL is not on CrazzyCars.pk. Search for the product or category you need — we do not
         send missing pages to the homepage.

@@ -56,12 +56,12 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
   });
 
   return (
-    <section className="homepage-section bg-white py-12 md:py-20" style={{ paddingTop: 80, paddingBottom: 80 }}>
+    <section className="homepage-section bg-white py-8 md:py-20">
       <div className="store-container">
-        <div className="grid items-center gap-10 lg:grid-cols-[2fr_3fr]">
-          <div className="relative min-h-[280px] lg:min-h-[360px]">
+        <div className="grid items-center gap-6 lg:grid-cols-[2fr_3fr] lg:gap-10">
+          <div className="relative min-h-[160px] lg:min-h-[360px]">
             {image1Url || image2Url ? (
-              <div className="relative h-full min-h-[280px]">
+              <div className="relative h-full min-h-[160px] md:min-h-[280px]">
                 {image1Url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -70,8 +70,7 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
                     loading="lazy"
                     fetchPriority="low"
                     decoding="async"
-                    className="h-full w-full rounded-xl object-cover shadow-md"
-                    style={{ minHeight: 280 }}
+                    className="h-full min-h-[160px] w-full rounded-xl object-cover shadow-md md:min-h-[280px]"
                   />
                 ) : null}
                 {image2Url ? (
@@ -87,12 +86,12 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
               </div>
             ) : (
               <div
-                className="flex min-h-[280px] items-center justify-center rounded-xl lg:min-h-[360px]"
+                className="flex min-h-[160px] items-center justify-center rounded-xl md:min-h-[280px] lg:min-h-[360px]"
                 style={{
                   background: "linear-gradient(135deg, #1a1a1a 0%, #2a0f0f 100%)",
                 }}
               >
-                <span className="text-6xl opacity-80" aria-hidden>
+                <span className="text-4xl opacity-80 md:text-6xl" aria-hidden>
                   🚗
                 </span>
               </div>
@@ -110,7 +109,7 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
             ) : null}
 
             {story.heading ? (
-              <h2 className="font-heading text-[36px] font-bold leading-tight" style={{ color: "#111111" }}>
+              <h2 className="font-heading text-[22px] font-bold leading-tight md:text-[36px]" style={{ color: "#111111" }}>
                 {story.heading}
               </h2>
             ) : null}
@@ -128,10 +127,10 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
             ) : null}
 
             {stats.length > 0 ? (
-              <div className="mt-8 flex flex-wrap gap-8">
+              <div className="mt-5 flex flex-wrap gap-5 md:mt-8 md:gap-8">
                 {stats.map((stat, i) => (
                   <div key={`${stat.value}-${stat.label}-${i}`}>
-                    <p className="font-heading text-2xl font-bold" style={{ color: "#C41E1E" }}>
+                    <p className="font-heading text-xl font-bold md:text-2xl" style={{ color: "#C41E1E" }}>
                       {stat.value}
                     </p>
                     <p className="mt-1 text-xs" style={{ color: "#6B7280" }}>
@@ -145,7 +144,7 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
             {story.buttonText ? (
               <Link
                 href={story.buttonLink || "/about"}
-                className="mt-8 inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                className="mt-6 inline-flex items-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 md:mt-8 md:px-6 md:py-3"
                 style={{ background: "#C41E1E" }}
               >
                 {story.buttonText.includes("→") ? story.buttonText : `${story.buttonText} →`}

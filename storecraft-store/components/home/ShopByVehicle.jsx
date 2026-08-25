@@ -258,7 +258,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
               ? Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
-                    className="w-[46%] shrink-0 animate-pulse sm:w-[18%]"
+                    className="w-[40%] shrink-0 animate-pulse sm:w-[18%]"
                   >
                     <div className="aspect-square rounded-xl bg-[#E8E8E8]" />
                     <div className="mt-2 h-10 rounded bg-[#E8E8E8]" />
@@ -269,7 +269,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                     key={`${v.make}-${v.slug}`}
                     href={v.href}
                     data-vehicle-card
-                    className="group w-[46%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md sm:w-[18%]"
+                    className="group w-[40%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md sm:w-[18%]"
                     style={{ scrollSnapAlign: "start" }}
                   >
                     <div className="relative aspect-square w-full overflow-hidden bg-[#F3F4F6]">

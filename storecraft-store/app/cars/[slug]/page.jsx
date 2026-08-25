@@ -123,7 +123,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
         }}
       >
         <div
-          className="store-container"
+          className="store-container vehicle-hero-inner"
           style={{
             display: "grid",
             gap: 24,
@@ -186,7 +186,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
               >
                 {heroDesc}
               </p>
-              <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <div className="vehicle-hero-actions" style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 10 }}>
                 <Link
                   href="#compatible-products"
                   style={{

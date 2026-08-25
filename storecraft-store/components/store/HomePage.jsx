@@ -35,7 +35,7 @@ const BrandStory = dynamic(() => import("@/components/home/BrandStory"), {
 function SectionSkeleton({ height = 240 }) {
   return (
     <div
-      className="mx-auto my-6 max-w-7xl animate-pulse rounded-2xl bg-[#f3f4f6]"
+      className="mx-auto my-3 max-w-7xl animate-pulse rounded-2xl bg-[#f3f4f6] md:my-6"
       style={{ height }}
       aria-hidden
     />

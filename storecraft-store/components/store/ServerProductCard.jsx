@@ -131,8 +131,8 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
           />
         </div>
-        <div className="flex flex-1 flex-col p-4">
-          <h3 className="m-0 text-sm font-medium leading-snug text-[#111111]">{card.name}</h3>
+        <div className="cc-card-body flex flex-1 flex-col p-3 md:p-4">
+          <h3 className="cc-card-title m-0 text-sm font-medium leading-snug text-[#111111]">{card.name}</h3>
           {reviews ? (
             <p className="mt-1.5 text-[11px] text-[#9CA3AF]">
               {reviews.rating != null ? `${reviews.rating.toFixed(1)} ★ ` : null}(
@@ -143,7 +143,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             sale={sale}
             regular={regular}
             onSale={onSale}
-            nowClass="text-lg font-bold text-[#111111]"
+            nowClass="cc-card-price text-lg font-bold text-[#111111]"
             wasClass="text-[13px] line-through text-[#9CA3AF]"
           />
         </div>

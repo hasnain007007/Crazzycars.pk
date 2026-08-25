@@ -370,13 +370,13 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   }
 
   return (
-    <footer style={{
+    <footer className="store-footer" style={{
       background: '#000000',
       color: '#FFFFFF',
       marginTop: 48
     }}>
       {/* Main content */}
-      <div style={{
+      <div className="store-footer-inner" style={{
         maxWidth: '100%',
         margin: '0 auto',
         padding: '36px 48px 28px',
@@ -405,6 +405,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
                 <img
                   src={logoUrl}
                   alt={storeName}
+                  className="store-footer-logo"
                   style={{
                     width: 220,
                     height: 72,
@@ -672,7 +673,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
         borderTop: '1px solid rgba(255,255,255,0.08)',
         background: '#000000'
       }}>
-        <div style={{
+        <div className="store-footer-bar" style={{
           maxWidth: '100%',
           margin: '0 auto',
           padding: '16px 48px',

@@ -58,7 +58,7 @@ export default function ContactPageView({ contactPage, general = {} }) {
         style={{
           background: "linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%)",
           borderBottom: "1px solid #E5E5E5",
-          padding: "56px 0 48px",
+          padding: "28px 0 24px",
         }}
       >
         <div className="store-container" style={{ maxWidth: 900, textAlign: "center" }}>
@@ -72,7 +72,7 @@ export default function ContactPageView({ contactPage, general = {} }) {
           ) : null}
           <h1
             className="font-heading font-bold leading-tight"
-            style={{ color: "#111111", fontSize: "clamp(32px, 5vw, 48px)", margin: "12px 0 0" }}
+            style={{ color: "#111111", fontSize: "clamp(22px, 6vw, 48px)", margin: "12px 0 0" }}
           >
             {hero.title}
           </h1>
@@ -92,7 +92,7 @@ export default function ContactPageView({ contactPage, general = {} }) {
         </div>
       </section>
 
-      <section style={{ padding: "56px 0 72px" }}>
+      <section style={{ padding: "56px 0 40px" }} className="contact-body-section">
         <div
           className="store-container contact-layout"
           style={{
@@ -213,9 +213,9 @@ export default function ContactPageView({ contactPage, general = {} }) {
       </section>
 
       {faq.length > 0 ? (
-        <section style={{ background: "#FAFAFA", padding: "56px 0", borderTop: "1px solid #E5E5E5" }}>
+        <section style={{ background: "#FAFAFA", padding: "28px 0", borderTop: "1px solid #E5E5E5" }}>
           <div className="store-container" style={{ maxWidth: 720 }}>
-            <h2 className="font-heading text-[28px] font-bold" style={{ color: "#111111", margin: 0 }}>
+            <h2 className="font-heading text-xl font-bold md:text-[28px]" style={{ color: "#111111", margin: 0 }}>
               Common questions
             </h2>
             <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 28 }} />
@@ -249,7 +249,7 @@ export default function ContactPageView({ contactPage, general = {} }) {
         @media (max-width: 768px) {
           .contact-layout {
             grid-template-columns: 1fr !important;
-            gap: 36px !important;
+            gap: 20px !important;
           }
         }
       `}</style>

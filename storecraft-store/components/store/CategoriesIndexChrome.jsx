@@ -4,25 +4,24 @@
 export function CategoriesIndexChrome() {
   return (
     <div
+      className="cat-index-chrome"
       style={{
         background: "linear-gradient(180deg, #F8F8F8, #FFFFFF)",
-        padding: "24px 16px",
+        padding: "16px 16px",
         borderBottom: "1px solid #E5E5E5",
       }}
     >
       <div className="mx-auto max-w-7xl">
         <h1
+          className="font-heading text-xl font-extrabold uppercase md:text-[32px]"
           style={{
             margin: 0,
-            fontSize: 32,
-            fontWeight: 800,
             color: "#111111",
-            textTransform: "uppercase",
           }}
         >
           Shop by Category
         </h1>
-        <p style={{ margin: "6px 0 0", color: "#555555" }}>Home / Categories</p>
+        <p className="mt-1 text-sm text-[#555555] md:mt-1.5">Home / Categories</p>
       </div>
     </div>
   );

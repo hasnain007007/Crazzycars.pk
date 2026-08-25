@@ -55,11 +55,11 @@ export default function BestSellers({ initialProducts = [], settings }) {
   if (!loading && products.length === 0) return null;
 
   return (
-    <section className="homepage-section bg-white py-12 md:py-20">
+    <section className="homepage-section bg-white py-6 md:py-20">
       <div className="store-container">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <h2 className="font-heading text-[32px] font-bold text-[#111111]">
+            <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">
               {settings?.bestSellers?.title || "Best Sellers"}
             </h2>
             <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8 }} />
@@ -70,7 +70,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
         </div>
 
         {tabs.length > 1 ? (
-          <div className="mt-6 flex flex-wrap gap-6 border-b" style={{ borderColor: "#E5E7EB" }}>
+          <div className="mt-4 flex flex-wrap gap-4 border-b md:mt-6 md:gap-6" style={{ borderColor: "#E5E7EB" }}>
             {tabs.map((t) => (
               <button
                 key={t.categorySlug}

@@ -53,6 +53,7 @@ export default function AnnouncementBar() {
 
   return (
     <div
+      className="store-announcement-bar"
       style={{
         background: bg,
         height: "36px",

@@ -28,16 +28,16 @@ export function ShopListingLayout({
     products.length === 0;
 
   return (
-    <div>
-      <div className="border-b border-[rgba(0,0,0,0.08)] bg-[#F5F5F5] py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4">
+    <div className="shop-listing">
+      <div className="shop-listing-banner border-b border-[rgba(0,0,0,0.08)] bg-[#F5F5F5] py-2.5 md:py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4">
           <h1
-            className="font-heading text-2xl font-bold uppercase tracking-[0.05em]"
-            style={{ color: "#111111", letterSpacing: "0.06em" }}
+            className="font-heading text-lg font-bold uppercase tracking-[0.04em] md:text-2xl md:tracking-[0.05em]"
+            style={{ color: "#111111" }}
           >
             {title}
           </h1>
-          <nav className="text-sm text-[#555555]" aria-label="Breadcrumb">
+          <nav className="shrink-0 text-xs text-[#555555] md:text-sm" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-[#111111]">
               Home
             </Link>
@@ -48,11 +48,11 @@ export function ShopListingLayout({
       </div>
 
       {intro ? (
-        <p className="mx-auto max-w-7xl px-4 pt-6 text-[15px] leading-relaxed text-[#333333]">{intro}</p>
+        <p className="shop-listing-intro mx-auto max-w-7xl px-4 pt-3 text-[13px] leading-relaxed text-[#333333] md:pt-6 md:text-[15px]">{intro}</p>
       ) : null}
 
       {catalogEmpty ? (
-        <div className="mx-auto max-w-7xl px-4 py-16 text-center">
+        <div className="mx-auto max-w-7xl px-4 py-8 text-center md:py-16">
           <h2 className="font-heading text-xl font-bold text-[#111111]">Products coming soon</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-[#555555]">
             We&apos;re stocking the shelves with premium car accessories for Pakistan. Check back shortly.
@@ -65,7 +65,7 @@ export function ShopListingLayout({
           </Link>
         </div>
       ) : (
-        <div className="mx-auto flex max-w-7xl gap-6 px-4 py-8">
+        <div className="mx-auto flex max-w-7xl gap-6 px-4 py-4 md:py-8">
           <ShopFiltersClient pathname={pathname} urlState={urlState} highest={highest} />
           <div className="min-w-0 flex-1">
             <ProductListingSection

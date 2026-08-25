@@ -60,7 +60,7 @@ export default function AnnouncementBar() {
 
   return (
     <div
-      className="flex min-h-[36px] items-center justify-center px-4 text-center text-xs font-bold tracking-wide md:text-sm"
+      className="flex min-h-[28px] items-center justify-center px-3 py-1 text-center text-[11px] font-bold tracking-wide md:min-h-[36px] md:px-4 md:text-sm"
       style={{
         background: bar.backgroundColor,
         color: bar.textColor,

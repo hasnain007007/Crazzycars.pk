@@ -131,13 +131,13 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
   const viewAllLabel = String(viewAllText || "View all →").replace(/\s*→\s*$/, "").trim() || "View all";
 
   return (
-    <section className="homepage-section bg-white py-12 md:py-20">
+    <section className="homepage-section bg-white py-6 md:py-20">
       <div className="store-container">
         <div className="mb-3">
-          <h2 className="font-heading text-[28px] font-bold text-[#111111] sm:text-[32px]">{title}</h2>
-          <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, borderRadius: 2 }} />
+          <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">{title}</h2>
+          <div style={{ width: 40, height: 3, background: "#C41E1E", marginTop: 8, borderRadius: 2 }} />
         </div>
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-6 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {categories.map((c) => (
             <CategoryCard
               key={c.slug || c.href || c.name}
@@ -148,10 +148,10 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
             />
           ))}
         </div>
-        <div className="mt-8 flex justify-center">
+        <div className="mt-6 flex justify-center">
           <Link
             href="/categories"
-            className="inline-flex items-center gap-2 rounded-full border border-[#111111] bg-[#111111] px-6 py-3 text-sm font-semibold transition hover:bg-[#C41E1E] hover:border-[#C41E1E]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#111111] bg-[#111111] px-4 py-2 text-xs font-semibold transition hover:bg-[#C41E1E] hover:border-[#C41E1E] md:px-6 md:py-3 md:text-sm"
             // Inline: the unlayered `a { color: inherit }` in globals.css outranks Tailwind's layered text-white.
             style={{ color: "#FFFFFF" }}
           >

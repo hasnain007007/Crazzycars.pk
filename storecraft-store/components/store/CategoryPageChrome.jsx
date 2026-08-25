@@ -12,7 +12,7 @@ function plainText(htmlOrText) {
 function CategorySubcategoryMarquee({ subcategories = [] }) {
   if (!subcategories.length) return null;
   return (
-    <section className="subcat-circle-section" style={{ marginBottom: 48 }}>
+    <section className="subcat-circle-section" style={{ marginBottom: 20 }}>
       <h2 className="cat-section-title">Shop By Categories</h2>
       <div className="subcat-circle-marquee" aria-label="Subcategories">
         <div

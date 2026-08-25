@@ -22,7 +22,7 @@ export function ProductListingSection({
 }) {
   const urlState = urlStateProp || listingToUrlState(listing);
   const wrapClass =
-    layout === "embedded" ? "min-w-0" : "mx-auto max-w-7xl px-4 py-8 sm:px-6";
+    layout === "embedded" ? "min-w-0" : "mx-auto max-w-7xl px-4 py-4 sm:px-6 md:py-8";
   const prevHref = listing.page > 1 ? listingPageHref(pathname, urlState, listing.page - 1) : null;
   const nextHref =
     listing.page < totalPages ? listingPageHref(pathname, urlState, listing.page + 1) : null;

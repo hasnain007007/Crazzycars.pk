@@ -798,7 +798,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
 
   return (
     <>
-    <div className="bg-[#FFFFFF] pb-12">
+    <div className="bg-[#FFFFFF] pb-8 md:pb-12">
       <style>{`
         @keyframes productViewerPulse {
           0%, 100% { opacity: 1; }
@@ -815,15 +815,15 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
         </div>
       </div>
 
-      <div className="mx-auto mt-4 max-w-7xl px-4 md:mt-8">
+      <div className="mx-auto mt-3 max-w-7xl px-4 md:mt-8">
         <div
-          className="product-detail-grid grid items-start gap-10 lg:grid-cols-2 lg:gap-12"
+          className="product-detail-grid grid items-start gap-5 md:gap-10 lg:grid-cols-2 lg:gap-12"
           style={{ alignItems: "flex-start" }}
         >
           <div className="product-images-col min-w-0">
             <div
               className="product-main-viewer overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#F8F8F8]"
-              style={{ width: "100%", aspectRatio: "1 / 1" }}
+              style={{ width: "100%" }}
             >
               {!selectedItem ? (
                 <div className="grid h-full place-items-center text-sm text-[#707070]">No media available</div>
@@ -892,8 +892,8 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   aria-label={item.type === "image" ? `Image ${index + 1}` : "Product video"}
                   className="product-thumb-btn transition"
                   style={{
-                    width: 72,
-                    height: 72,
+                    width: 56,
+                    height: 56,
                     flexShrink: 0,
                     borderRadius: 4,
                     overflow: "hidden",
@@ -996,7 +996,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
               {hasSale ? (
                 <>
                   <span
-                    className="price"
+                    className="price pdp-price"
                     style={{
                       fontFamily: "Arial, Helvetica, sans-serif",
                       fontSize: 26,
@@ -1008,7 +1008,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                     {formatPrice(displayPrice)}
                   </span>
                   <span
-                    className="price"
+                    className="price pdp-price-was"
                     style={{
                       fontFamily: "Arial, Helvetica, sans-serif",
                       fontSize: 18,
@@ -1023,7 +1023,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                 </>
               ) : (
                 <span
-                  className="price"
+                  className="price pdp-price"
                   style={{
                     fontFamily: "Arial, Helvetica, sans-serif",
                     fontSize: 26,
@@ -1154,6 +1154,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
             ) : null}
 
             <div
+              className="pdp-cta-row"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1229,6 +1230,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                 type="button"
                 onClick={handleAddToCart}
                 disabled={btnDisabled}
+                className="pdp-add-btn"
                 style={{
                   flex: 1,
                   height: 52,
@@ -1290,6 +1292,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
               type="button"
               onClick={handleBuyNow}
               disabled={btnDisabled}
+              className="pdp-buy-btn"
               style={{
                 width: "100%",
                 height: 52,
@@ -1728,14 +1731,14 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
 
       {related.length ? (
         <section className="mx-auto mt-12 max-w-7xl px-4">
-          <h2 className="mb-6 text-center text-2xl font-bold">You May Also Like</h2>
+          <h2 className="mb-4 text-center text-xl font-bold md:mb-6 md:text-2xl">You May Also Like</h2>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
             {related.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         </section>
       ) : (
         <section className="mx-auto mt-12 max-w-7xl px-4">
-          <h2 className="mb-6 text-center text-2xl font-bold">You May Also Like</h2>
+          <h2 className="mb-4 text-center text-xl font-bold md:mb-6 md:text-2xl">You May Also Like</h2>
           <p className="text-center text-sm text-[#707070]">No related products available.</p>
         </section>
       )}

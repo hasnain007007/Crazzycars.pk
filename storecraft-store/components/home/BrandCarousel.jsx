@@ -168,7 +168,7 @@ export default function BrandCarousel({ settings }) {
 
   return (
     <section
-      className="overflow-hidden py-12 md:py-20"
+      className="overflow-hidden py-6 md:py-20"
       style={{
         background: "#F9FAFB",
         borderTop: "1px solid #E5E7EB",
@@ -176,7 +176,7 @@ export default function BrandCarousel({ settings }) {
       }}
     >
       <div className="store-container">
-        <h2 className="font-heading text-[32px] font-bold text-[#111111]">{settings?.sectionTitles?.brands || "Trusted Brands"}</h2>
+        <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">{settings?.sectionTitles?.brands || "Trusted Brands"}</h2>
         <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8, marginBottom: 24 }} />
       </div>
       <div className="brand-marquee-wrap group" style={{ height: 62 }} aria-label="Trusted brands">

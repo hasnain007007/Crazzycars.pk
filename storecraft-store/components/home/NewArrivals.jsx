@@ -20,7 +20,7 @@ export default function NewArrivals() {
   }, []);
 
   return (
-    <section className="bg-[var(--color-background)] py-12 md:py-16">
+    <section className="bg-[var(--color-background)] py-6 md:py-16">
       <div className="mx-auto max-w-[1280px] px-4 md:px-8">
         <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
@@ -30,7 +30,7 @@ export default function NewArrivals() {
             >
               Fresh Stock
             </p>
-            <h2 className="font-heading text-2xl font-bold text-[var(--color-text-primary)] md:text-3xl">
+            <h2 className="font-heading text-xl font-bold text-[var(--color-text-primary)] md:text-3xl">
               New Arrivals
             </h2>
           </div>

@@ -131,7 +131,7 @@ export default function FlashSale({ settings }) {
     <section className="homepage-section" style={{ background: "#FAFAFA" }}>
       <div className="store-container">
         <div
-          className="flex flex-col gap-8 rounded-2xl p-8 md:p-10 lg:flex-row lg:items-center"
+          className="flex flex-col gap-5 rounded-2xl p-4 md:gap-8 md:p-10 lg:flex-row lg:items-center"
           style={{ background: "#FFF8F0", borderLeft: "4px solid #C41E1E" }}
         >
           <div className="lg:w-[300px] lg:flex-shrink-0">
@@ -141,7 +141,7 @@ export default function FlashSale({ settings }) {
             >
               Flash Sale
             </p>
-            <h2 className="font-heading mt-2 text-[48px] font-bold leading-tight text-[#111111]">{saleTitle}</h2>
+            <h2 className="font-heading mt-2 text-[26px] font-bold leading-tight text-[#111111] md:text-[48px]">{saleTitle}</h2>
 
             <div className="mt-6 flex items-center gap-2">
               <CountdownUnit value={time.h} label="Hours" />

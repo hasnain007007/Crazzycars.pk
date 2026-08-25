@@ -571,7 +571,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
       ) : null}
       {/* Row 1 — main (above nav so search dropdown is never covered) */}
       <div className="relative z-[80] border-b bg-white" style={{ borderColor: "#E5E7EB" }}>
-        <div className="store-container relative grid h-[72px] grid-cols-[88px_1fr_88px] items-center md:flex md:gap-4">
+        <div className="store-container relative grid h-14 grid-cols-[72px_1fr_72px] items-center md:flex md:h-[72px] md:gap-4">
           <button
             type="button"
             className="relative z-[2] flex h-10 w-10 shrink-0 items-center justify-center justify-self-start md:hidden"
@@ -590,7 +590,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
               <img
                 src={trimmedLogoUrl(brand.logo)}
                 alt={brand.storeName}
-                className="h-12 max-w-[min(180px,46vw)] object-contain md:h-16 md:max-w-[220px]"
+                className="h-10 max-w-[min(148px,42vw)] object-contain md:h-16 md:max-w-[220px]"
                 style={{ width: "auto", objectFit: "contain" }}
               />
             ) : brand.showStoreName ? (
@@ -824,7 +824,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
                         <>
                           <button
                             type="button"
-                            className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
+                            className="flex w-full items-center justify-between py-2.5 text-left text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E] md:py-4"
                             onClick={() => setDrawerExpanded((s) => ({ ...s, [item.label]: !s[item.label] }))}
                           >
                             {item.label}
@@ -873,7 +873,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
                       ) : (
                         <Link
                           href={item.href}
-                          className={`block py-4 text-sm font-semibold uppercase transition-colors ${
+                          className={`block py-2.5 text-sm font-semibold uppercase transition-colors md:py-4 ${
                             isNavItemActive(item) ? "text-[#C41E1E]" : "text-[#111111] hover:text-[#C41E1E]"
                           }`}
                           aria-current={isNavItemActive(item) ? "page" : undefined}

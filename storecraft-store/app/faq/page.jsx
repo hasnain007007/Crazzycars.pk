@@ -22,9 +22,9 @@ export default function FaqPage() {
     })),
   };
   return (
-    <section className="mx-auto max-w-3xl px-6 py-16">
+    <section className="mx-auto max-w-3xl px-4 py-8 md:px-6 md:py-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
-      <h1 className="text-3xl font-bold">Frequently Asked Questions</h1>
+      <h1 className="text-2xl font-bold md:text-3xl">Frequently Asked Questions</h1>
       <p className="mt-3 text-gray-600">
         Quick answers about shopping car accessories on Crazzycars.pk — COD, payments, fitment, and
         delivery across Pakistan.

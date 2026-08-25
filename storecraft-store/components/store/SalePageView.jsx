@@ -92,7 +92,7 @@ export default function SalePageView({
 
   return (
     <main className="min-h-screen bg-white">
-      <section className="py-16 md:py-20">
+      <section className="py-6 md:py-20">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="mb-10 -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hidden md:mx-0 md:flex-wrap md:px-0">
             {SALE_TABS.map((tab) => {
@@ -102,7 +102,7 @@ export default function SalePageView({
                   key={tab.id}
                   type="button"
                   onClick={() => handleTab(tab.id)}
-                  className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-bold tracking-[0.15em] uppercase transition-all duration-300 ${
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.12em] uppercase transition-all duration-300 md:px-5 md:py-2.5 md:text-xs md:tracking-[0.15em] ${
                     isActive
                       ? "bg-[#DC2626] text-white shadow-lg shadow-red-200"
                       : "border border-gray-200 bg-white text-gray-700 hover:border-[#DC2626] hover:text-[#DC2626]"
@@ -115,7 +115,7 @@ export default function SalePageView({
           </div>
 
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
+            <h2 className="text-lg font-bold text-gray-900 md:text-3xl">
               {activeTab.label}
             </h2>
             <p className="text-sm text-gray-500">
@@ -128,7 +128,7 @@ export default function SalePageView({
           {loading ? (
             <SkeletonGrid />
           ) : products.length === 0 ? (
-            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-12 text-center">
+            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-6 text-center md:p-12">
               <p className="text-base font-semibold text-gray-900">
                 No products in this category yet
               </p>

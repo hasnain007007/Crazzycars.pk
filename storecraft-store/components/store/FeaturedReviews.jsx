@@ -30,13 +30,13 @@ export default function FeaturedReviews() {
   if (!reviews.length) return null;
 
   return (
-    <section className="bg-zinc-50 px-6 py-16 md:py-20">
+    <section className="bg-zinc-50 px-4 py-8 md:px-6 md:py-20">
       <div className="mx-auto max-w-[1200px]">
-        <div className="mb-12 text-center">
+        <div className="mb-6 text-center md:mb-12">
           <span className="mb-3 inline-block rounded-full bg-teal-50 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
             What our customers say
           </span>
-          <h2 className="mb-3 text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">Loved by thousands</h2>
+          <h2 className="mb-3 text-2xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">Loved by thousands</h2>
           <p className="m-0 text-base text-zinc-600">Real reviews from real customers</p>
         </div>
 
@@ -53,7 +53,7 @@ export default function FeaturedReviews() {
                 .slice(0, 2) || "?";
 
             return (
-              <div key={String(review._id)} className="rounded-2xl border border-zinc-100 bg-[#111111] p-6 shadow-sm">
+              <div key={String(review._id)} className="rounded-2xl border border-zinc-100 bg-[#111111] p-4 shadow-sm md:p-6">
                 <StarDisplay rating={review.rating} />
                 {review.title ? <p className="mb-2 text-[15px] font-bold text-zinc-900">{review.title}</p> : null}
                 <p className="mb-5 text-sm leading-relaxed text-zinc-700">&ldquo;{review.body}&rdquo;</p>

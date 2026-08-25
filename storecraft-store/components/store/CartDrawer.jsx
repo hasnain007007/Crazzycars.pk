@@ -75,7 +75,7 @@ export function CartDrawer() {
               </svg>
               <p className="mt-2 text-lg font-semibold text-[#111111]">{emptyMsg}</p>
               <p className="text-sm text-[#888888]">Discover our products</p>
-              <Link href="/products" onClick={() => setOpen(false)} className="mt-4 rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white">
+              <Link href="/shop" onClick={() => setOpen(false)} className="mt-4 rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white">
                 Start Shopping →
               </Link>
             </div>

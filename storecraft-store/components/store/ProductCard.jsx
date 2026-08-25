@@ -161,7 +161,7 @@ export function ProductCard({ product, compact = false }) {
 
   return (
     <article
-      className="group relative flex h-full flex-col overflow-hidden rounded-xl border bg-white transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.10)]"
+      className="product-card group relative flex h-full flex-col overflow-hidden rounded-xl border bg-white transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.10)]"
       style={{ borderColor: "#F3F4F6" }}
       onMouseEnter={() => hoverImageUrl && setHoverReady(true)}
       onFocusCapture={() => hoverImageUrl && setHoverReady(true)}
@@ -234,7 +234,7 @@ export function ProductCard({ product, compact = false }) {
         <button
           type="button"
           onClick={toggleWish}
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 opacity-0 shadow-sm transition group-hover:opacity-100"
+          className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 opacity-100 shadow-sm transition md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100"
           aria-label="Save to wishlist"
         >
           <span style={{ color: wish ? "#C41E1E" : "#6B7280", fontSize: 16 }}>{wish ? "♥" : "♡"}</span>
@@ -248,7 +248,7 @@ export function ProductCard({ product, compact = false }) {
           <button
             type="button"
             onClick={addToCart}
-            className="absolute bottom-0 left-0 right-0 translate-y-full py-3 text-sm font-semibold text-white opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100"
+            className="absolute bottom-0 left-0 right-0 py-1.5 text-[11px] font-semibold text-white transition-all duration-200 md:translate-y-full md:py-3 md:text-sm md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100"
             style={{ background: "#C41E1E" }}
           >
             {onBackorder ? "Order (backorder)" : "Add to Cart"}
@@ -256,8 +256,8 @@ export function ProductCard({ product, compact = false }) {
         )}
       </Link>
 
-      <div className={`flex flex-1 flex-col ${compact ? "p-3" : "p-4"}`}>
-        <Link href={href} className="line-clamp-2 text-sm font-medium leading-snug text-[#111111] hover:text-[#C41E1E]">
+      <div className={`cc-card-body flex flex-1 flex-col ${compact ? "p-2 md:p-3" : "p-2.5 md:p-4"}`}>
+        <Link href={href} className="cc-card-title line-clamp-2 text-sm font-medium leading-snug text-[#111111] hover:text-[#C41E1E]">
           {product.name}
         </Link>
 
@@ -275,7 +275,7 @@ export function ProductCard({ product, compact = false }) {
         ) : null}
 
         <div className="mt-2 flex flex-wrap items-baseline gap-2">
-          <span className="text-lg font-bold text-[#111111]">{formatPrice(sale)}</span>
+          <span className="cc-card-price text-lg font-bold text-[#111111]">{formatPrice(sale)}</span>
           {onSale ? (
             <>
               <span className="text-[13px] line-through" style={{ color: "#9CA3AF" }}>
