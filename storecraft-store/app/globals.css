@@ -2464,16 +2464,12 @@ textarea::placeholder {
   }
 }
 
-/* WhatsApp FAB — clear of filter selects + mobile tab bar */
-.store-whatsapp-fab {
-  left: 12px;
-  right: auto;
-}
-
+/* WhatsApp FAB — sit above the mobile tab bar; never cover left-side category pills */
+.store-whatsapp-fab,
+.store-whatsapp-fab--left,
 .store-whatsapp-fab--right {
-  /* On phones keep left so it never covers select chevrons / form fields */
-  left: 12px;
-  right: auto;
+  left: auto;
+  right: 12px;
 }
 
 @media (min-width: 768px) {
@@ -3001,12 +2997,12 @@ textarea::placeholder {
 .cat-breadcrumb {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   font-size: 13px;
   color: #9ca3af;
   margin: 0 0 14px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .cat-breadcrumb a {
@@ -3019,15 +3015,19 @@ textarea::placeholder {
   color: #c41e1e;
 }
 
+.cat-breadcrumb__bit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .cat-breadcrumb__sep {
   color: #cfcfcf;
-  text-transform: none;
 }
 
 .cat-breadcrumb__current {
-  color: #9ca3af;
-  text-transform: lowercase;
-  letter-spacing: 0.01em;
+  color: #6b7280;
+  font-weight: 600;
 }
 
 .cat-hero {

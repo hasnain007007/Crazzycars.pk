@@ -254,6 +254,7 @@ export default async function CategoryPage({ params, searchParams }) {
           subcategories={data.subcategories}
           products={data.products}
           brand={brand}
+          crumbs={uniqueCrumbs}
         />
         <ProductListingSection
           pathname={listingPath}
@@ -263,6 +264,7 @@ export default async function CategoryPage({ params, searchParams }) {
           totalPages={data.totalPages}
           title={data.category?.name}
           categoryName={data.category?.name}
+          showTitle={false}
           emptyMessage="No products found in this category."
         />
       </div>
@@ -298,6 +300,7 @@ export default async function CategoryPage({ params, searchParams }) {
           totalPages={paged.totalPages}
           title={collection.title}
           categoryName={collection.title}
+          showTitle={false}
           emptyMessage="No products found in this category."
         />
       </div>

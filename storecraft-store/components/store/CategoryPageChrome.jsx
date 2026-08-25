@@ -63,20 +63,40 @@ function CategorySubcategoryMarquee({ subcategories = [] }) {
  * Server-rendered category chrome (breadcrumb + hero H1 + intro + subcategories).
  * Keep this outside any client island so crawlers always see one H1.
  */
-export function CategoryPageChrome({ category, subcategories = [], products = [], brand = null }) {
+export function CategoryPageChrome({
+  category,
+  subcategories = [],
+  products = [],
+  brand = null,
+  crumbs = [],
+}) {
   if (!category) return null;
 
   const description =
     plainText(category?.shortDescription) || plainText(category?.description) || "";
 
+  const trail =
+    Array.isArray(crumbs) && crumbs.length
+      ? crumbs
+      : [
+          { name: "Home", url: "/" },
+          { name: "Categories", url: "/categories" },
+          { name: category.name, url: `/categories/${category.slug}` },
+        ];
+  const current = trail[trail.length - 1];
+  const parents = trail.slice(0, -1);
+
   return (
     <div className="cat-page-wrap">
       <nav className="cat-breadcrumb" aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
+        {parents.map((c, i) => (
+          <span key={c.url || `${c.name}-${i}`} className="cat-breadcrumb__bit">
+            {i > 0 ? <span className="cat-breadcrumb__sep">/</span> : null}
+            <Link href={c.url || "/"}>{c.name}</Link>
+          </span>
+        ))}
         <span className="cat-breadcrumb__sep">/</span>
-        <span className="cat-breadcrumb__current">
-          {String(category.slug || category.name || "").toLowerCase()}
-        </span>
+        <span className="cat-breadcrumb__current">{current?.name || category.name}</span>
       </nav>
 
       <CategoryHeroBanner
