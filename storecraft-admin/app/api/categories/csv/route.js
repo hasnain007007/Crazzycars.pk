@@ -62,9 +62,8 @@ function categoryToRow(cat, slugById) {
 export async function GET(request) {
   try {
     const user = getRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = denyUnlessCapability(user, "canManageCatalog");
+    if (denied) return denied;
 
     const { searchParams } = new URL(request.url);
     if (searchParams.get("template") === "1") {

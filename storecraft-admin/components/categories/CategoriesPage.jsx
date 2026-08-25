@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { CsvImportExportBar } from "@/components/ui/CsvImportExportBar";
 
 function statusBadge(status) {
   const active = status === "active";
@@ -255,16 +256,56 @@ export default function CategoriesPage() {
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
         <div>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>Categories</h1>
-          <p style={{ margin: "5px 0 0", color: "#6b7280" }}>Manage parent/subcategory hierarchy and storefront visibility.</p>
+          <p style={{ margin: "5px 0 0", color: "#6b7280" }}>
+            Manage parent/subcategory hierarchy and storefront visibility.
+          </p>
         </div>
         <Link href="/catalog/categories/new">
-          <button style={{ ...smallBtn, background: "#009688", color: "#fff", borderColor: "#009688", padding: "9px 14px" }}>
+          <button
+            style={{
+              ...smallBtn,
+              background: "#009688",
+              color: "#fff",
+              borderColor: "#009688",
+              padding: "9px 14px",
+              fontWeight: 600,
+            }}
+          >
             + Add Category
           </button>
         </Link>
+      </div>
+
+      <div
+        style={{
+          ...cardStyle,
+          display: "flex",
+          gap: 12,
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          background: "#f8fbff",
+          borderColor: "#dbeafe",
+        }}
+      >
+        <div>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#1e3a8a" }}>CSV Import / Export</p>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748b" }}>
+            Download a template, export all categories, or import a CSV to create/update categories (including parent slugs and SEO).
+          </p>
+        </div>
+        <CsvImportExportBar endpoint="/api/categories/csv" label="Categories" onImported={load} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 10 }}>
