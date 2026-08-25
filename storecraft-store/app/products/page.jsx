@@ -3,6 +3,8 @@ import { fetchProductsServer } from "@/lib/serverProductFetch";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { listingCanonicalPath, listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ searchParams }) {
   const listing = parseListingSearchParams(await searchParams);
   const title = listing.q

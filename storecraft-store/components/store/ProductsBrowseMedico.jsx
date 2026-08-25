@@ -107,13 +107,14 @@ export function ProductsBrowseMedico({
     initialProducts.length > 0 &&
     (initialProducts.length >= Math.min(pageSize, seededTotal || pageSize) ||
       initialProducts.length >= seededTotal);
-  // Seed when SSR payload matches current search (including empty q) and no extra filters.
+  // Seed when SSR payload has products. Empty SSR search must client-fetch /api/products.
   const hasInitial =
     seedMatchesSearch &&
     !hasExtraClientFilters &&
     page === (initialPage || 1) &&
     apiSort === "newest" &&
-    (initialPageComplete || (searchQ && seededTotal === 0 && initialProducts.length === 0));
+    initialProducts.length > 0 &&
+    initialPageComplete;
 
   const [products, setProducts] = useState(hasInitial ? initialProducts : []);
   const [totalCount, setTotalCount] = useState(hasInitial ? seededTotal : 0);

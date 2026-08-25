@@ -1,14 +1,11 @@
 /**
  * Smarter storefront search on top of MongoDB $text.
  *
- * Plain $text treats space-separated terms as OR, so
- * "Honda city side mirror indicator" ranks any Honda City product
- * (e.g. trunk spoilers) above the actual side-mirror indicator.
- *
- * Approach:
- *  1. Detect product phrases + significant tokens (+ light synonyms)
- *  2. Prefer phrase-quoted $text, plus a token-AND candidate pass
- *  3. Re-rank in JS: reward phrase/type coverage, penalize missing type words
+ * Goals:
+ *  - Long accessory queries still return matches (not exact-title only)
+ *  - Year ranges / stopwords don't kill recall
+ *  - Make + product-type beat unrelated OR noise from $text
+ *  - Progressive fallbacks: exact → text → typed AND → soft token match
  */
 
 function escapeRegex(s) {
@@ -43,6 +40,10 @@ const STOPWORDS = new Set([
   "cars",
   "auto",
   "universal",
+  "pakistan",
+  "pk",
+  "crazzycars",
+  "present",
 ]);
 
 /** Multi-word product phrases (longest first). */
@@ -64,18 +65,18 @@ const PHRASES = [
   "body kit",
   "side skirt",
   "front grille",
-  "grill",
-  "head light",
-  "headlight",
-  "tail light",
-  "taillight",
-  "fog light",
-  "number plate",
-  "license plate",
   "turn signal",
   "led strip",
   "under glow",
   "underglow",
+  "head light",
+  "tail light",
+  "fog light",
+  "number plate",
+  "license plate",
+  "neon indicator",
+  "mirror indicator",
+  "mirror cover",
 ];
 
 /** Product-type tokens — missing these from the title is a hard demotion. */
@@ -130,6 +131,12 @@ const TYPE_WORDS = new Set([
   "diffuser",
   "louver",
   "louvers",
+  "neon",
+  "sequential",
+  "led",
+  "rgb",
+  "reflector",
+  "bumper",
 ]);
 
 const MAKES = new Set([
@@ -149,20 +156,29 @@ const MAKES = new Set([
   "bmw",
   "audi",
   "mercedes",
+  "alto",
+  "civic",
+  "city",
+  "vitz",
+  "aqua",
+  "yaris",
+  "swift",
+  "sonata",
+  "elantra",
 ]);
 
 /** Expand user tokens with light accessory synonyms (one hop). */
 const SYNONYMS = {
-  indicator: ["indicators", "sequential", "flasher", "signal"],
-  indicators: ["indicator", "sequential", "flasher", "signal"],
+  indicator: ["indicators", "sequential", "flasher", "signal", "neon"],
+  indicators: ["indicator", "sequential", "flasher", "signal", "neon"],
   mirror: ["mirrors"],
   mirrors: ["mirror"],
   spoiler: ["spoilers", "wing"],
   spoilers: ["spoiler", "wing"],
   mat: ["mats", "carpet"],
   mats: ["mat", "carpet"],
-  cover: ["covers"],
-  covers: ["cover"],
+  cover: ["covers", "cap", "caps"],
+  covers: ["cover", "cap", "caps"],
   grille: ["grill", "grills"],
   grill: ["grille", "grills"],
   light: ["lights", "lamp", "lamps", "led"],
@@ -171,13 +187,29 @@ const SYNONYMS = {
   bulbs: ["bulb", "led"],
   signal: ["indicator", "indicators", "flasher"],
   flasher: ["indicator", "indicators", "signal"],
-  sequential: ["indicator", "indicators"],
+  sequential: ["indicator", "indicators", "neon"],
+  neon: ["indicator", "indicators", "sequential", "led"],
+  led: ["light", "lights", "neon"],
+  rgb: ["led", "neon"],
 };
+
+function isYearToken(t) {
+  const s = String(t || "");
+  if (/^\d{4}$/.test(s)) {
+    const y = Number(s);
+    return y >= 1980 && y <= 2035;
+  }
+  // 2015-2026, 2015–2026, 2009/2014
+  if (/^\d{4}\s*[-–—/]\s*\d{4}$/.test(s)) return true;
+  if (/^\d{4}\s*[-–—/]\s*present$/.test(s)) return true;
+  return false;
+}
 
 function normalizeQuery(q) {
   return String(q || "")
     .toLowerCase()
     .replace(/[’']/g, "'")
+    .replace(/[–—]/g, "-")
     .replace(/[^a-z0-9+\s.-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -189,9 +221,11 @@ function normalizeQuery(q) {
  *   normalized: string,
  *   phrases: string[],
  *   tokens: string[],
+ *   significantTokens: string[],
  *   typeTokens: string[],
  *   makeTokens: string[],
  *   modelTokens: string[],
+ *   yearTokens: string[],
  * }}
  */
 export function parseSearchQuery(q) {
@@ -215,24 +249,30 @@ export function parseSearchQuery(q) {
     .map((t) => t.replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, ""))
     .filter((t) => t.length >= 2 && !STOPWORDS.has(t));
 
-  // Keep phrase words as tokens too (for coverage scoring), de-duped.
   const phraseWords = phrases.flatMap((p) => p.split(/\s+/));
   const allTokens = [...new Set([...tokens, ...phraseWords])].filter(
     (t) => t.length >= 2 && !STOPWORDS.has(t)
   );
 
+  const yearTokens = allTokens.filter((t) => isYearToken(t));
   const typeTokens = allTokens.filter((t) => TYPE_WORDS.has(t));
-  const makeTokens = allTokens.filter((t) => MAKES.has(t));
-  const modelTokens = allTokens.filter((t) => !TYPE_WORDS.has(t) && !MAKES.has(t));
+  const makeTokens = allTokens.filter((t) => MAKES.has(t) && !TYPE_WORDS.has(t));
+  const modelTokens = allTokens.filter(
+    (t) => !TYPE_WORDS.has(t) && !MAKES.has(t) && !isYearToken(t)
+  );
+  // Years never belong in strict AND — they kill recall on near year ranges.
+  const significantTokens = allTokens.filter((t) => !isYearToken(t));
 
   return {
     raw,
     normalized,
     phrases,
     tokens: allTokens,
+    significantTokens,
     typeTokens,
     makeTokens,
     modelTokens,
+    yearTokens,
   };
 }
 
@@ -242,7 +282,6 @@ export function buildTextSearchString(parsed) {
   for (const phrase of parsed.phrases) {
     parts.push(`"${phrase}"`);
   }
-  // Quote make+next model token when present (e.g. "honda city").
   if (parsed.makeTokens.length && parsed.modelTokens.length) {
     const make = parsed.makeTokens[0];
     const model = parsed.modelTokens[0];
@@ -251,15 +290,12 @@ export function buildTextSearchString(parsed) {
       parts.push(`"${combo}"`);
     }
   }
-  for (const t of parsed.tokens) {
-    // Avoid duplicating phrase words already quoted as a unit when possible,
-    // but still include type words so they influence OR recall.
+  for (const t of parsed.significantTokens) {
     parts.push(t);
   }
-  // Synonym expansions as optional OR terms (helps "turn signal" ↔ indicator).
   for (const t of parsed.typeTokens) {
     for (const syn of SYNONYMS[t] || []) {
-      if (!parsed.tokens.includes(syn)) parts.push(syn);
+      if (!parsed.significantTokens.includes(syn)) parts.push(syn);
     }
   }
   return [...new Set(parts)].join(" ").trim() || parsed.normalized;
@@ -269,10 +305,17 @@ function haystackOf(doc) {
   const tags = Array.isArray(doc.tags) ? doc.tags.join(" ") : "";
   const cars = Array.isArray(doc.compatibleCars)
     ? doc.compatibleCars
+        .map((c) => `${c?.make || ""} ${c?.model || ""} ${c?.year || ""}`)
+        .join(" ")
+    : "";
+  const vehicles = Array.isArray(doc.vehicleCompatibility?.vehicles)
+    ? doc.vehicleCompatibility.vehicles
         .map((c) => `${c?.make || ""} ${c?.model || ""}`)
         .join(" ")
     : "";
-  return normalizeQuery(`${doc.name || ""} ${doc.slug || ""} ${doc.articleNo || ""} ${tags} ${cars}`);
+  return normalizeQuery(
+    `${doc.name || ""} ${doc.slug || ""} ${doc.articleNo || ""} ${doc.shortDescription || ""} ${tags} ${cars} ${vehicles}`
+  );
 }
 
 function tokenPresent(hay, token) {
@@ -284,53 +327,69 @@ function tokenPresent(hay, token) {
   return false;
 }
 
+function mergeAndFilter(baseFilter, andParts) {
+  const baseAnd = Array.isArray(baseFilter?.$and) ? baseFilter.$and : [];
+  return {
+    ...baseFilter,
+    $and: [...baseAnd, ...andParts],
+  };
+}
+
 /**
  * Higher is better. Tuned for accessory queries with make/model + product type.
  */
 export function scoreSearchCandidate(doc, parsed, textScore = 0) {
   const hay = haystackOf(doc);
   const name = normalizeQuery(doc.name || "");
+  const slug = normalizeQuery(String(doc.slug || "").replace(/-/g, " "));
   let score = Number(textScore) || 0;
 
-  // Phrases in the title are the strongest signal.
+  if (parsed.normalized && (name === parsed.normalized || slug === parsed.normalized)) {
+    score += 800;
+  } else if (parsed.normalized && name.includes(parsed.normalized)) {
+    score += 400;
+  }
+
   for (const phrase of parsed.phrases) {
     if (name.includes(phrase)) score += 220;
     else if (hay.includes(phrase)) score += 120;
-    else score -= 90;
-  }
-
-  // Make / model
-  for (const make of parsed.makeTokens) {
-    if (name.includes(make)) score += 70;
-    else if (hay.includes(make)) score += 35;
     else score -= 40;
   }
+
+  for (const make of parsed.makeTokens) {
+    if (name.includes(make) || slug.includes(make)) score += 70;
+    else if (hay.includes(make)) score += 35;
+    else score -= 25;
+  }
   for (const model of parsed.modelTokens.slice(0, 2)) {
-    if (name.includes(model)) score += 80;
+    if (name.includes(model) || slug.includes(model)) score += 80;
     else if (hay.includes(model)) score += 40;
   }
 
-  // Product-type words: missing them is why spoilers beat indicators.
   let typeHits = 0;
   for (const t of parsed.typeTokens) {
-    if (tokenPresent(name, t)) {
+    if (tokenPresent(name, t) || tokenPresent(slug, t)) {
       typeHits += 1;
       score += 160;
     } else if (tokenPresent(hay, t)) {
       typeHits += 1;
       score += 80;
     } else {
-      score -= 200;
+      score -= 120;
     }
   }
   if (parsed.typeTokens.length && typeHits === parsed.typeTokens.length) {
     score += 120;
+  } else if (parsed.typeTokens.length && typeHits > 0) {
+    score += 40;
   }
 
-  // General token coverage on the name
   let hits = 0;
-  for (const t of parsed.tokens) {
-    if (tokenPresent(name, t)) {
+  const scoreTokens = parsed.significantTokens.length
+    ? parsed.significantTokens
+    : parsed.tokens;
+  for (const t of scoreTokens) {
+    if (tokenPresent(name, t) || tokenPresent(slug, t)) {
       hits += 1;
       score += 28;
     } else if (tokenPresent(hay, t)) {
@@ -338,12 +397,16 @@ export function scoreSearchCandidate(doc, parsed, textScore = 0) {
       score += 12;
     }
   }
-  const coverage = parsed.tokens.length ? hits / parsed.tokens.length : 1;
+  const coverage = scoreTokens.length ? hits / scoreTokens.length : 1;
   score += Math.round(coverage * 100);
-  if (parsed.tokens.length >= 3 && coverage < 0.45) score -= 180;
-  if (coverage >= 0.85) score += 80;
+  if (scoreTokens.length >= 3 && coverage < 0.35) score -= 120;
+  if (coverage >= 0.75) score += 80;
 
-  // Prefer shorter, more specific titles slightly when coverage is equal.
+  // Soft year overlap bonus (never required).
+  for (const y of parsed.yearTokens) {
+    if (hay.includes(y.replace(/\s+/g, "")) || hay.includes(y)) score += 15;
+  }
+
   score -= Math.min(40, Math.floor((name.length || 0) / 12));
 
   return score;
@@ -352,6 +415,17 @@ export function scoreSearchCandidate(doc, parsed, textScore = 0) {
 function looksLikeSku(term) {
   const t = String(term || "").trim();
   return /^[a-z]{1,8}[-_][a-z0-9][-a-z0-9_]*$/i.test(t) || /^cc[-_]?\d+/i.test(t);
+}
+
+function nameRegexForToken(token) {
+  const alts = [token, ...(SYNONYMS[token] || [])];
+  return {
+    $or: alts.flatMap((a) => [
+      { name: new RegExp(escapeRegex(a), "i") },
+      { slug: new RegExp(escapeRegex(a).replace(/\s+/g, "[-\\s]+"), "i") },
+      { tags: new RegExp(escapeRegex(a), "i") },
+    ]),
+  };
 }
 
 /**
@@ -365,7 +439,7 @@ export async function queryProductsSmart(Product, baseFilter, q, opts = {}) {
     skip = 0,
     select,
     populate,
-    candidateLimit = Math.max(40, limit * 5),
+    candidateLimit = Math.max(80, limit * 6),
     sortSpec = null,
     countTotal = false,
   } = opts;
@@ -378,7 +452,7 @@ export async function queryProductsSmart(Product, baseFilter, q, opts = {}) {
     if (select) query = query.select(select);
     if (populate) query = query.populate(populate, "name slug");
     if (sort) query = query.sort(sort);
-    return query.limit(lim).maxTimeMS(3500).lean();
+    return query.limit(lim).maxTimeMS(4500).lean();
   }
 
   if (!term) {
@@ -420,7 +494,26 @@ export async function queryProductsSmart(Product, baseFilter, q, opts = {}) {
     }
   }
 
-  // Pass 1 — phrase-aware $text (best recall + index speed).
+  // Pass 0 — exact / near-exact title or slug (handles paste-from-product searches).
+  try {
+    const exactRx = new RegExp(`^${escapeRegex(term)}$`, "i");
+    const slugRx = new RegExp(`^${escapeRegex(normalizeQuery(term).replace(/\s+/g, "-"))}$`, "i");
+    const exactRows = await findLean(
+      mergeAndFilter(baseFilter, [
+        {
+          $or: [{ name: exactRx }, { slug: slugRx }, { articleNo: exactRx }],
+        },
+      ]),
+      null,
+      null,
+      8
+    );
+    addRows(exactRows, false);
+  } catch {
+    // ignore
+  }
+
+  // Pass 1 — phrase-aware $text.
   const textQ = buildTextSearchString(parsed);
   try {
     const textFilter = { ...baseFilter, $text: { $search: textQ } };
@@ -432,31 +525,30 @@ export async function queryProductsSmart(Product, baseFilter, q, opts = {}) {
     );
     addRows(textRows, true);
   } catch {
-    // no text index
+    // no text index / projection conflict
   }
 
-  // Pass 2 — when the user named a product type, insist name matches it
-  // (plus make/model if present) so indicators aren't drowned by Honda City OR hits.
-  if (parsed.typeTokens.length) {
+  // Pass 2 — typed soft AND: require make (if any) + at least one type token.
+  // Do NOT require every type token or year — that caused zero results.
+  if (parsed.typeTokens.length || parsed.makeTokens.length) {
     const and = [];
-    for (const t of parsed.typeTokens) {
-      const alts = [t, ...(SYNONYMS[t] || [])];
+    if (parsed.typeTokens.length) {
       and.push({
-        $or: alts.map((a) => ({ name: new RegExp(escapeRegex(a), "i") })),
+        $or: parsed.typeTokens.map((t) => nameRegexForToken(t)),
       });
     }
-    for (const make of parsed.makeTokens.slice(0, 1)) {
-      and.push({ name: new RegExp(escapeRegex(make), "i") });
+    if (parsed.makeTokens.length) {
+      and.push(nameRegexForToken(parsed.makeTokens[0]));
     }
-    for (const model of parsed.modelTokens.slice(0, 1)) {
-      and.push({ name: new RegExp(escapeRegex(model), "i") });
+    if (parsed.modelTokens.length) {
+      and.push(nameRegexForToken(parsed.modelTokens[0]));
     }
     try {
       const typed = await findLean(
-        { ...baseFilter, $and: and },
+        mergeAndFilter(baseFilter, and),
         null,
         { createdAt: -1 },
-        Math.min(30, candidateLimit)
+        Math.min(60, candidateLimit)
       );
       addRows(typed, false);
     } catch {
@@ -464,42 +556,57 @@ export async function queryProductsSmart(Product, baseFilter, q, opts = {}) {
     }
   }
 
-  // Pass 3 — regex fallback if still empty (typos / no text index).
-  if (!byId.size) {
-    const rx = new RegExp(escapeRegex(term), "i");
-    const regexOr = [
-      { name: rx },
-      { slug: rx },
-      { articleNo: rx },
-      { tags: rx },
-      { "compatibleCars.make": rx },
-      { "compatibleCars.model": rx },
-    ];
-    // Multi-token AND on name for longer queries.
-    if (parsed.tokens.length >= 2) {
-      const andName = parsed.tokens.slice(0, 5).map((t) => ({
-        name: new RegExp(escapeRegex(t), "i"),
-      }));
+  // Pass 3 — progressive token AND on significant tokens (drop years already).
+  if (!byId.size || byId.size < limit) {
+    const progressive = parsed.significantTokens.slice(0, 6);
+    for (let keep = Math.min(progressive.length, 5); keep >= 2; keep -= 1) {
+      const subset = progressive.slice(0, keep);
       try {
         const andRows = await findLean(
-          { ...baseFilter, $and: andName },
+          mergeAndFilter(
+            baseFilter,
+            subset.map((t) => nameRegexForToken(t))
+          ),
           null,
           { createdAt: -1 },
           candidateLimit
         );
         addRows(andRows, false);
+        if (byId.size >= limit) break;
       } catch {
         // ignore
       }
     }
-    if (!byId.size) {
+  }
+
+  // Pass 4 — broad OR regex fallback.
+  if (!byId.size) {
+    const rx = new RegExp(escapeRegex(term), "i");
+    const tokenOr = parsed.significantTokens.slice(0, 6).flatMap((t) => [
+      { name: new RegExp(escapeRegex(t), "i") },
+      { slug: new RegExp(escapeRegex(t), "i") },
+      { tags: new RegExp(escapeRegex(t), "i") },
+    ]);
+    const regexOr = [
+      { name: rx },
+      { slug: rx },
+      { articleNo: rx },
+      { tags: rx },
+      { shortDescription: rx },
+      { "compatibleCars.make": rx },
+      { "compatibleCars.model": rx },
+      ...tokenOr,
+    ];
+    try {
       const rows = await findLean(
-        { ...baseFilter, $or: regexOr },
+        mergeAndFilter(baseFilter, [{ $or: regexOr }]),
         null,
         { createdAt: -1 },
         candidateLimit
       );
       addRows(rows, false);
+    } catch {
+      // ignore
     }
   }
 
@@ -508,6 +615,7 @@ export async function queryProductsSmart(Product, baseFilter, q, opts = {}) {
       doc,
       smart: scoreSearchCandidate(doc, parsed, doc._textScore),
     }))
+    .filter(({ smart }) => smart > -250)
     .sort((a, b) => b.smart - a.smart || (b.doc._textScore || 0) - (a.doc._textScore || 0));
 
   let total = ranked.length;
@@ -529,7 +637,7 @@ export async function queryProductsSmart(Product, baseFilter, q, opts = {}) {
   return {
     rows: page,
     total,
-    mode: "smart",
+    mode: byId.size ? "smart" : "empty",
     parsed,
   };
 }

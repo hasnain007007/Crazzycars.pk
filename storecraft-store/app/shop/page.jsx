@@ -4,6 +4,8 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { listingCanonicalPath, listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ searchParams }) {
   const listing = parseListingSearchParams(await searchParams);
   const title = listing.q
