@@ -29,6 +29,15 @@ export function normalizeCartItems(rawItems) {
         price: unit,
         variantId: String(item?.variantId || "").trim(),
         variationLabel: String(item?.variationLabel || "").trim(),
+        selectedOptions:
+          item?.selectedOptions && typeof item.selectedOptions === "object"
+            ? item.selectedOptions
+            : undefined,
+        matchedCombination:
+          item?.matchedCombination && typeof item.matchedCombination === "object"
+            ? item.matchedCombination
+            : undefined,
+        selectedAddOns: Array.isArray(item?.selectedAddOns) ? item.selectedAddOns : undefined,
         articleNo: String(item?.articleNo || "").trim(),
         sku: String(item?.sku || "").trim(),
       };

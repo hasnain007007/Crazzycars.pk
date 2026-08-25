@@ -320,6 +320,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
       removeLine,
       clearCart,
       replaceItems,
+      cartReady,
     }),
     [
       items,
@@ -337,6 +338,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
       removeLine,
       clearCart,
       replaceItems,
+      cartReady,
     ]
   );
 

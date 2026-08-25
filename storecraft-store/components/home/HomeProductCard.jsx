@@ -35,9 +35,13 @@ export function HomeProductCard({ product }) {
   function handleAdd(e) {
     e.preventDefault();
     e.stopPropagation();
+    if (product.requiresOptions) {
+      window.location.href = `/${product.slug}`;
+      return;
+    }
     const allow =
       product.inventory?.trackInventory === false ||
-      product.inventory?.allowBackorder !== false ||
+      product.inventory?.allowBackorder === true ||
       product.inStock;
     if (!allow) return;
     addItem({
@@ -48,9 +52,9 @@ export function HomeProductCard({ product }) {
       price: displayPrice,
       unitPrice: displayPrice,
       inventory: product.inventory,
-      simpleVariations: [],
-      variationCombinations: [],
-      requiresVariant: false,
+      simpleVariations: product.simpleVariations || [],
+      variationCombinations: product.variationCombinations || [],
+      requiresVariant: Boolean(product.requiresOptions),
     });
   }
 
@@ -168,7 +172,7 @@ export function HomeProductCard({ product }) {
           }
           className="mt-3 w-full rounded-lg bg-[#111111] py-2.5 text-sm font-semibold text-white transition hover:bg-[#333333] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Add to Cart
+          {product.requiresOptions ? "Select options" : "Add to Cart"}
         </button>
       </div>
     </div>

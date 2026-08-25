@@ -15,14 +15,24 @@ const WISHLIST_KEY = "sialkot_wishlist";
 function getStock(product) {
   const q = Number(product?.inventory?.quantity ?? product?.stock ?? product?.quantity ?? 0);
   if (product?.inventory?.trackInventory === false) return 99;
-  if (product?.inventory?.allowBackorder !== false) return Math.max(q, 1);
+  if (product?.inventory?.allowBackorder === true) return Math.max(q, 1);
   return q;
 }
 
 function canSell(product) {
   if (product?.inventory?.trackInventory === false) return true;
-  if (product?.inventory?.allowBackorder !== false) return true;
+  if (product?.inventory?.allowBackorder === true) return true;
   return getStock(product) > 0;
+}
+
+function productNeedsOptions(product) {
+  if (product?.requiresOptions === true) return true;
+  const hasAxes = (product?.simpleVariations || []).some(
+    (v) => v?.enabled && Array.isArray(v.tags) && v.tags.length > 0
+  );
+  const hasCombos =
+    Array.isArray(product?.variationCombinations) && product.variationCombinations.length > 0;
+  return hasAxes && hasCombos;
 }
 
 function getProductImages(product) {
@@ -115,6 +125,11 @@ export function ProductCard({ product, compact = false }) {
     e.stopPropagation();
     if (!product?.id) {
       toast.error("Product unavailable");
+      return;
+    }
+    if (productNeedsOptions(product)) {
+      toast.error("Choose options on the product page first.");
+      window.location.href = productPath(product);
       return;
     }
     const variant = product.source === "shopify" ? product.variants?.find((item) => item.availableForSale) : null;

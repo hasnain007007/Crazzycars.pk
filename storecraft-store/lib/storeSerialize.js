@@ -16,10 +16,27 @@ function isInStock(product) {
   if (product?.inventory?.trackInventory === false) {
     return true;
   }
-  if (product?.inventory?.allowBackorder !== false) {
+  // Opt-in only — must match checkout allowsBackorder() or customers buy then fail at place-order.
+  if (product?.inventory?.allowBackorder === true) {
     return true;
   }
   return getStock(product) > 0;
+}
+
+function productRequiresOptions(p) {
+  const hasAxes = (p?.simpleVariations || []).some(
+    (v) => v?.enabled && Array.isArray(v.tags) && v.tags.length > 0
+  );
+  const hasCombos = Array.isArray(p?.variationCombinations) && p.variationCombinations.length > 0;
+  const hasLegacy =
+    Array.isArray(p?.variations) &&
+    p.variations.some((v) => Array.isArray(v?.options) && v.options.length > 0);
+  const hasMatrix =
+    Array.isArray(p?.variationTypes) &&
+    p.variationTypes.length > 0 &&
+    Array.isArray(p?.variants) &&
+    p.variants.length > 0;
+  return (hasAxes && hasCombos) || hasLegacy || hasMatrix;
 }
 
 function mainImage(product) {
@@ -104,9 +121,10 @@ export function serializeStoreProductSummary(p) {
       ...(p.inventory || {}),
       quantity: Number(p?.inventory?.quantity) || 0,
       trackInventory: p?.inventory?.trackInventory ?? true,
-      allowBackorder: p?.inventory?.allowBackorder !== false,
+      allowBackorder: p?.inventory?.allowBackorder === true,
       sku: p?.inventory?.sku || p.articleNo || "",
     },
+    requiresOptions: productRequiresOptions(p),
     rating: Number(p?.rating) || 0,
     averageRating: Number(p?.averageRating) || 0,
     ratingAverage: Number(p?.ratingAverage) || 0,
@@ -155,7 +173,7 @@ export function serializeStoreProductDetail(p) {
   const usesVariantMatrix = variationTypes.length > 0 && serializedVariants.length > 0;
   const stock = Number(p?.inventory?.quantity) || 0;
   const inStock =
-    p?.inventory?.trackInventory === false || p?.inventory?.allowBackorder !== false
+    p?.inventory?.trackInventory === false || p?.inventory?.allowBackorder === true
       ? true
       : stock > 0;
 
@@ -233,7 +251,7 @@ export function serializeStoreProductDetail(p) {
     quantityAvailable: stock,
     stock,
     trackInventory: p?.inventory?.trackInventory ?? true,
-    allowBackorder: p?.inventory?.allowBackorder !== false,
+    allowBackorder: p?.inventory?.allowBackorder === true,
     shippingBaseWeight: Number(p.inventory?.weight) || 0,
     shippingBaseWeightUnit: p.inventory?.weightUnit || "kg",
     seo: p.seo || {},

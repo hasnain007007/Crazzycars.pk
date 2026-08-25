@@ -483,7 +483,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
   const variationState = useMemo(() => {
     const tracksStock =
       product?.inventory?.trackInventory !== false && product?.trackInventory !== false;
-    const backorderOk = product?.inventory?.allowBackorder !== false;
+    const backorderOk = product?.inventory?.allowBackorder === true;
     const productStock = Number(product?.inventory?.quantity ?? product?.stock ?? 0);
 
     const hasVariations =

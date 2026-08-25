@@ -115,8 +115,8 @@ function pakistaniPaymentInstructions(methodKey, config) {
   const c = config || {};
   if (key === "cod") {
     return [
-      { text: "Pay cash when your order arrives" },
-      { text: "Delivery charges must be paid in advance to confirm your order." },
+      { text: "Pay product amount in cash when your order arrives." },
+      { text: "After placing the order, pay delivery charges in advance and send the screenshot on WhatsApp so we can confirm dispatch." },
     ];
   }
   if (key === "jazzcash" || key === "easypaisa") {
@@ -216,7 +216,7 @@ function CheckoutProgressSteps({ activeStep }) {
 }
 
 export function CheckoutView() {
-  const { items, subtotal, clearCart, replaceItems } = useCart();
+  const { items, subtotal, clearCart, replaceItems, cartReady } = useCart();
   const { customer: authCustomer, loading: authLoading } = useCustomer();
   const [checkoutSettings, setCheckoutSettings] = useState({
     requireAccount: false,
@@ -579,7 +579,7 @@ export function CheckoutView() {
     paymentMethod === "cod" && productAdvanceDue.mode === "percent" && productAdvanceDue.amount > 0;
   const advanceMessageBody = formatAdvancePaymentMessage(
     showProductAdvanceBox
-      ? `To confirm your order, please pay at least {amount} in advance (${productAdvanceDue.maxPercent}% of eligible items).\n\nSend payment screenshot on WhatsApp: {whatsapp}`
+      ? `To confirm after placing your order, please pay at least {amount} in advance (${productAdvanceDue.maxPercent}% of eligible items).\n\nSend payment screenshot on WhatsApp: {whatsapp}`
       : shippingRules.advancePaymentMessage,
     effectiveAdvanceAmount,
     whatsappDisplay
@@ -796,6 +796,14 @@ export function CheckoutView() {
     checkoutSettings.allowGuestCheckout !== false &&
     checkoutSettings.requireAccount !== true;
 
+  if (!cartReady) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-zinc-600">Loading your cart…</p>
+      </div>
+    );
+  }
+
   if (!items.length) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
@@ -909,11 +917,7 @@ export function CheckoutView() {
     );
   }
 
-  const placeOrderLabel = submitting
-    ? "Placing order…"
-    : calculatingShipping
-      ? "Calculating shipping…"
-      : "Place Order";
+  const placeOrderLabel = submitting ? "Placing order…" : "Place Order";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -1437,7 +1441,7 @@ export function CheckoutView() {
           <button
             type="button"
             onClick={handleProceedToPayment}
-            disabled={submitting || calculatingShipping}
+            disabled={submitting}
             className="w-full rounded-lg bg-[#C41E1E] py-3 text-sm font-bold text-white hover:bg-[#b91c1c] disabled:opacity-50 lg:hidden"
           >
             {placeOrderLabel}
@@ -1560,7 +1564,7 @@ export function CheckoutView() {
             <button
               type="button"
               onClick={handleProceedToPayment}
-              disabled={submitting || calculatingShipping}
+              disabled={submitting}
               className="hidden w-full rounded-lg bg-[#C41E1E] py-3 text-sm font-bold text-white hover:bg-[#b91c1c] disabled:opacity-50 lg:block"
             >
               {placeOrderLabel}

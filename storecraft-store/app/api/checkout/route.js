@@ -385,7 +385,7 @@ export async function POST(request) {
         "Too many checkout attempts. Please wait a few minutes and try again."
       );
     }
-    await recordActionAttempt(checkoutLimitKey, CHECKOUT_RATE);
+    // Count only successful placements (below) so stock/option retries do not lock shoppers out.
 
     const stateVal = String(body.shippingAddress?.state || body.shippingAddress?.province || "").trim();
     const streetVal = String(body.shippingAddress?.street || body.shippingAddress?.line1 || "").trim();
@@ -1006,6 +1006,12 @@ export async function POST(request) {
     sendAdminOrderNotification(order).catch((e) =>
       console.error("Admin order notification failed:", e)
     );
+
+    try {
+      await recordActionAttempt(checkoutLimitKey, CHECKOUT_RATE);
+    } catch {
+      /* ignore rate-limit write failures after successful order */
+    }
 
     // Mark matching cart session as recovered
     try {
