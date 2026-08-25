@@ -178,7 +178,7 @@ export function DashboardView() {
           </div>
         </div>
 
-        {/* Live + inventory + insights — single live-visitor card (header pill removed) */}
+        {/* Live + inventory + insights */}
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
           <LiveUsersCard variant="card" />
           <InventoryAlertsCard products={data.lowStockProducts} />
