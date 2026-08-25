@@ -1,6 +1,9 @@
 /**
  * Country / city + weight (grams) shipping for ShippingZone documents.
+ * Store policy: no free delivery — never waive shipping for order value.
  */
+
+const FLAT_FEE = 250;
 
 function norm(s) {
   return String(s || "")
@@ -51,84 +54,50 @@ function weightBasedCost(zone, weightGrams) {
   if (!weightRange) {
     const highest = [...sorted].sort((a, b) => (b.maxWeight || 0) - (a.maxWeight || 0))[0];
     return {
-      originalCost: Math.max(0, Number(highest?.price) || 0),
+      originalCost: Math.max(FLAT_FEE, Number(highest?.price) || 0),
       weightRange: highest || null,
       note: "highest_tier",
     };
   }
   return {
-    originalCost: Math.max(0, Number(weightRange.price) || 0),
+    originalCost: Math.max(FLAT_FEE, Number(weightRange.price) || 0),
     weightRange,
     note: null,
   };
 }
 
+function noFreeFields() {
+  return {
+    isFree: false,
+    freeShippingThreshold: 0,
+    freeShippingEnabled: false,
+    freeShippingNote: "",
+    showFreeShippingProgress: false,
+    freeApplied: false,
+  };
+}
+
 export function computeShippingForZone(zone, weightGrams, orderSubtotal = 0) {
+  void orderSubtotal;
   if (!zone || !Array.isArray(zone.weightRanges) || !zone.weightRanges.length) {
     return {
-      shippingCost: 0,
-      originalCost: 0,
+      shippingCost: FLAT_FEE,
+      originalCost: FLAT_FEE,
       weightRange: null,
-      note: null,
-      freeApplied: false,
-      isFree: false,
-      freeShippingNote: "",
-      freeShippingEnabled: false,
-      freeShippingThreshold: 0,
-      showFreeShippingProgress: false,
+      note: "flat_policy",
+      ...noFreeFields(),
     };
   }
 
   const { originalCost, weightRange, note: weightNote } = weightBasedCost(zone, weightGrams);
-  const order = Math.round(Math.max(0, Number(orderSubtotal) || 0) * 100) / 100;
-  const fs = zone.freeShipping && typeof zone.freeShipping === "object" ? zone.freeShipping : null;
-  const fsEnabled = Boolean(fs?.enabled);
-  const fsThreshold = Math.max(0, Number(fs?.threshold) || 0);
-  const legacyT = Math.max(0, Number(zone.freeShippingThreshold) || 0);
-
-  let isFree = false;
-  let freeShippingNote = "";
-  let freeApplied = false;
-
-  if (fsEnabled) {
-    if (fsThreshold === 0) {
-      isFree = true;
-      freeApplied = true;
-      freeShippingNote = "Free shipping on all orders";
-    } else if (order >= fsThreshold) {
-      isFree = true;
-      freeApplied = true;
-      freeShippingNote = `Free shipping on orders over Rs. ${Number(fsThreshold || 0).toLocaleString("en-PK")}`;
-    } else {
-      freeShippingNote = `Add Rs. ${Number(fsThreshold - order || 0).toLocaleString("en-PK")} more for free shipping`;
-    }
-  }
-
-  if (!isFree && legacyT > 0 && order >= legacyT) {
-    isFree = true;
-    freeApplied = true;
-    freeShippingNote = `Free shipping on orders over Rs. ${Number(legacyT || 0).toLocaleString("en-PK")}`;
-  }
-
-  const shippingCost = isFree ? 0 : originalCost;
-  const progressThreshold =
-    !isFree && fsEnabled && fsThreshold > 0
-      ? fsThreshold
-      : !isFree && !fsEnabled && legacyT > 0
-        ? legacyT
-        : 0;
+  const shippingCost = Math.max(FLAT_FEE, originalCost);
 
   return {
     shippingCost,
-    originalCost,
+    originalCost: shippingCost,
     weightRange,
-    note: freeApplied ? "free_threshold" : weightNote || undefined,
-    freeApplied,
-    isFree,
-    freeShippingNote,
-    freeShippingEnabled: fsEnabled,
-    freeShippingThreshold: progressThreshold,
-    showFreeShippingProgress: progressThreshold > 0 && !isFree,
+    note: weightNote || undefined,
+    ...noFreeFields(),
   };
 }
 
@@ -139,19 +108,15 @@ export function quoteShipping(zones, country, city, weightGrams, orderSubtotal =
       success: true,
       zoneName: "Standard Shipping",
       zoneId: null,
-      shippingCost: 0,
-      originalCost: 0,
-      isFree: false,
+      shippingCost: FLAT_FEE,
+      originalCost: FLAT_FEE,
       weight: weightGrams,
       weightRange: null,
       country,
       city,
-      freeShippingThreshold: 0,
-      freeShippingEnabled: false,
-      freeShippingNote: "",
-      showFreeShippingProgress: false,
       note: "no_zone_configured",
       isDefault: false,
+      ...noFreeFields(),
     };
   }
 
@@ -162,7 +127,6 @@ export function quoteShipping(zones, country, city, weightGrams, orderSubtotal =
     zoneId: zone._id,
     shippingCost: r.shippingCost,
     originalCost: r.originalCost,
-    isFree: r.isFree,
     weight: weightGrams,
     weightRange: r.weightRange
       ? {
@@ -173,11 +137,8 @@ export function quoteShipping(zones, country, city, weightGrams, orderSubtotal =
       : null,
     country,
     city,
-    freeShippingThreshold: r.freeShippingThreshold,
-    freeShippingEnabled: r.freeShippingEnabled,
-    freeShippingNote: r.freeShippingNote,
-    showFreeShippingProgress: r.showFreeShippingProgress,
     note: r.note,
     isDefault: Boolean(zone.isDefault),
+    ...noFreeFields(),
   };
 }

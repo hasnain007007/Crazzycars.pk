@@ -120,9 +120,8 @@ export function toPublicShippingQuote(raw) {
 
 /**
  * Apply store policy on top of zone/courier quotes.
- * Flat STORE_POLICY fee unless an explicit courier/zone base is passed
- * (`baseDeliveryCharge` or legacy `zoneShippingCost`).
- * Never waives delivery for order value or advance payment.
+ * Never free delivery — always charge at least STORE_POLICY.standardFeePKR.
+ * Higher zone/courier quotes are kept; 0 / missing falls back to the flat fee.
  */
 export function applyShippingRules({
   storePayment,
@@ -138,7 +137,7 @@ export function applyShippingRules({
   const hasExplicitBase =
     rawBase !== undefined && rawBase !== null && Number.isFinite(Number(rawBase));
   const explicitBase = hasExplicitBase ? Math.max(0, Number(rawBase) || 0) : null;
-  const cost = hasExplicitBase ? explicitBase : flat;
+  const cost = Math.max(flat, explicitBase != null && explicitBase > 0 ? explicitBase : flat);
 
   return {
     shippingCost: cost,
@@ -147,7 +146,7 @@ export function applyShippingRules({
     orderAboveThreshold: 0,
     orderAboveEnabled: false,
     freeDeliveryThreshold: 0,
-    baseDeliveryCharge: hasExplicitBase ? explicitBase : flat,
+    baseDeliveryCharge: cost,
   };
 }
 

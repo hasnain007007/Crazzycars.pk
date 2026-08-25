@@ -18,25 +18,17 @@ function normalizeZoneBody(body) {
         price: Math.max(0, Number(r?.price) || 0),
       }))
     : [];
-  const fsEnabled = Boolean(body?.freeShipping?.enabled);
-  const fsThreshold = Math.max(0, Number(body?.freeShipping?.threshold) || 0);
   const freeShipping = {
-    enabled: fsEnabled,
-    threshold: fsThreshold,
+    enabled: false,
+    threshold: 0,
   };
-  const legacyThreshold =
-    body?.freeShippingThreshold !== undefined && body?.freeShippingThreshold !== null
-      ? Math.max(0, Number(body.freeShippingThreshold) || 0)
-      : fsEnabled
-        ? fsThreshold
-        : 0;
   return {
     name,
     provinces,
     isDefault: Boolean(body?.isDefault),
     status: ["active", "inactive"].includes(body?.status) ? body.status : "active",
     freeShipping,
-    freeShippingThreshold: legacyThreshold,
+    freeShippingThreshold: 0,
     weightRanges,
     sortOrder: Number.isFinite(Number(body?.sortOrder)) ? Number(body.sortOrder) : 0,
   };

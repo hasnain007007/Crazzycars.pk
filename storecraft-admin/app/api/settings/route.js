@@ -94,6 +94,12 @@ export async function PUT(request) {
     if (body.storePayment !== undefined) {
       if (!doc.storePayment) doc.set("storePayment", {});
       mergeNested(doc.storePayment, body.storePayment);
+      // Policy: no free delivery — always strip free-shipping flags on save.
+      doc.storePayment.freeShippingThreshold = 0;
+      doc.storePayment.freeShippingOnAdvancePayment = false;
+      doc.storePayment.freeShippingOnOrderAbove = 0;
+      doc.storePayment.freeShippingOnOrderAboveEnabled = false;
+      doc.storePayment.flatDeliveryCharge = 250;
       doc.markModified("storePayment");
     }
     if (body.courier !== undefined) {

@@ -725,28 +725,12 @@ export async function POST(request) {
     shippingCost = Math.round(rulesResult.shippingCost * 100) / 100;
     shippingMethod = "Weight-based";
     shippingZoneLabel = String(quote.zoneName || "").trim();
-    if (rulesResult.freeReason === "order_above") {
-      shippingZoneLabel = shippingZoneLabel
-        ? `${shippingZoneLabel} (Free delivery — order above threshold)`
-        : "Free delivery — order above threshold";
-    } else if (rulesResult.freeReason === "advance_payment") {
-      shippingZoneLabel = shippingZoneLabel
-        ? `${shippingZoneLabel} (Free delivery — advance payment)`
-        : "Free delivery — advance payment";
-    } else if (quote.isFree || rulesResult.isFree) {
-      shippingZoneLabel = shippingZoneLabel ? `${shippingZoneLabel} (Free Shipping)` : "Free Shipping";
-    }
     const advanceNote = buildAdvancePaymentOrderNote(
       storePayment,
       whatsappNumber || storePolicyWhatsApp(),
       settingsDoc?.pakistaniPaymentMethods
     );
     const statusNotes = [];
-    if (rulesResult.freeReason === "advance_payment") {
-      statusNotes.push("Free delivery — advance payment");
-    } else if (rulesResult.freeReason === "order_above") {
-      statusNotes.push(`Free delivery — order above Rs. ${storePayment.freeShippingOnOrderAbove}`);
-    }
     if (advancePaymentDiscount > 0) {
       statusNotes.push(
         `Advance payment discount ${adv.percent}% (−Rs. ${advancePaymentDiscount})`

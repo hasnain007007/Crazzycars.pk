@@ -49,7 +49,7 @@ const DEFAULT_FAQ = [
   {
     question: "Do you deliver across Pakistan?",
     answer:
-      "Yes! We deliver to major cities and towns nationwide. Delivery times are typically 2–5 business days depending on your location. Free delivery may apply on qualifying order totals shown at checkout.",
+      "Yes! We deliver to major cities and towns nationwide. Delivery times are typically 2–5 business days depending on your location. A flat delivery charge of Rs. 250 applies to all orders.",
   },
   {
     question: "Can I pay with Cash on Delivery?",

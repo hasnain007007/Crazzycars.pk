@@ -1380,17 +1380,9 @@ export function CheckoutView() {
               );
             })}
 
-            {shippingApplied.freeReason === "advance_payment" ? (
+            {advanceDiscount > 0 ? (
               <p style={{ fontSize: 12, color: "#16A34A", margin: "4px 0 0", fontWeight: 500 }}>
-                🎉 Free delivery
-                {shippingRules.advancePaymentDiscountEnabled !== false
-                  ? ` + ${shippingRules.advancePaymentDiscountPercent || 3}% off`
-                  : ""}{" "}
-                when you pay in advance
-              </p>
-            ) : advanceDiscount > 0 ? (
-              <p style={{ fontSize: 12, color: "#16A34A", margin: "4px 0 0", fontWeight: 500 }}>
-                🎉 {advanceDiscountInfo.percent}% off for advance payment — delivery Rs.{" "}
+                {advanceDiscountInfo.percent}% off for advance payment — delivery Rs.{" "}
                 {shippingRules.flatDeliveryCharge || 250}
               </p>
             ) : null}
@@ -1516,34 +1508,18 @@ export function CheckoutView() {
                   </div>
                 </>
               ) : null}
-              {shippingApplied.freeReason === "order_above" && shippingRules.freeShippingOnOrderAboveEnabled ? (
+              {advanceDiscount > 0 ? (
                 <p style={{ fontSize: 13, color: "#16A34A", margin: "0 0 8px", fontWeight: 500 }}>
-                  🎉 Free delivery on orders above {formatPrice(shippingRules.freeShippingOnOrderAbove)}!
-                </p>
-              ) : null}
-              {shippingApplied.freeReason === "advance_payment" ? (
-                <p style={{ fontSize: 13, color: "#16A34A", margin: "0 0 8px", fontWeight: 500 }}>
-                  🎉 Free delivery + {advanceDiscountInfo.percent || shippingRules.advancePaymentDiscountPercent || 3}% off for advance payment!
-                </p>
-              ) : advanceDiscount > 0 ? (
-                <p style={{ fontSize: 13, color: "#16A34A", margin: "0 0 8px", fontWeight: 500 }}>
-                  🎉 {advanceDiscountInfo.percent}% off for advance payment
+                  {advanceDiscountInfo.percent}% off for advance payment
                 </p>
               ) : null}
               <div className="flex justify-between border-b border-zinc-100 pb-1.5">
                 <span className="text-zinc-700">Shipping</span>
-                <span
-                  className={[
-                    "text-sm font-semibold tabular-nums",
-                    showShippingAsFree ? "text-emerald-600" : "text-zinc-900",
-                  ].join(" ")}
-                >
+                <span className="text-sm font-semibold tabular-nums text-zinc-900">
                   {calculatingShipping ? (
                     <span className="font-normal text-zinc-400">Calculating…</span>
                   ) : !addr.state ? (
                     <span className="font-normal text-zinc-500">Select province</span>
-                  ) : showShippingAsFree ? (
-                    "Free"
                   ) : (
                     <span className="price">{formatPrice(displayShippingCost)}</span>
                   )}

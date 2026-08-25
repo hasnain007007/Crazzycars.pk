@@ -112,14 +112,13 @@ export default function ShippingPage() {
       toast.error("Add at least one weight range");
       return;
     }
-    const fs = form.freeShipping || { enabled: false, threshold: 0 };
     const payload = {
       ...form,
       freeShipping: {
-        enabled: Boolean(fs.enabled),
-        threshold: Math.max(0, Number(fs.threshold) || 0),
+        enabled: false,
+        threshold: 0,
       },
-      freeShippingThreshold: fs.enabled ? Math.max(0, Number(fs.threshold) || 0) : 0,
+      freeShippingThreshold: 0,
     };
     setSaving(true);
     try {
@@ -332,179 +331,20 @@ export default function ShippingPage() {
 
           <div
             style={{
-              background: "#f0fdf4",
-              border: "1px solid #bbf7d0",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
               borderRadius: 10,
               padding: 16,
               marginBottom: 20,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 12,
-              }}
-            >
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: "#166534", margin: 0 }}>🎁 Free Shipping</p>
-                <p style={{ fontSize: 12, color: "#16a34a", margin: "2px 0 0" }}>
-                  Offer free shipping to customers in this zone
-                </p>
-              </div>
-              <label
-                style={{
-                  position: "relative",
-                  display: "inline-block",
-                  width: 48,
-                  height: 26,
-                  cursor: "pointer",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={form.freeShipping?.enabled || false}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      freeShipping: {
-                        ...(f.freeShipping || {}),
-                        enabled: e.target.checked,
-                        threshold: f.freeShipping?.threshold ?? 0,
-                      },
-                    }))
-                  }
-                  style={{
-                    position: "absolute",
-                    opacity: 0,
-                    width: 48,
-                    height: 26,
-                    margin: 0,
-                    cursor: "pointer",
-                    zIndex: 2,
-                  }}
-                />
-                <span
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: form.freeShipping?.enabled ? "#009688" : "#d1d5db",
-                    borderRadius: 99,
-                    transition: "background 0.2s",
-                    pointerEvents: "none",
-                  }}
-                />
-                <span
-                  style={{
-                    position: "absolute",
-                    top: 3,
-                    left: form.freeShipping?.enabled ? 25 : 3,
-                    width: 20,
-                    height: 20,
-                    background: "#fff",
-                    borderRadius: "50%",
-                    transition: "left 0.2s",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                    pointerEvents: "none",
-                  }}
-                />
-              </label>
-            </div>
-
-            {form.freeShipping?.enabled ? (
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
-                  Minimum order amount for free shipping:
-                </p>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-                  {[
-                    { label: "All Orders", value: 0 },
-                    { label: "Rs. 2,500+", value: 2500 },
-                    { label: "Rs. 2,999+", value: 2999 },
-                    { label: "Rs. 5,000+", value: 5000 },
-                    { label: "Rs. 10,000+", value: 10000 },
-                  ].map((opt) => (
-                    <button
-                      key={opt.label}
-                      type="button"
-                      onClick={() =>
-                        setForm((f) => ({
-                          ...f,
-                          freeShipping: {
-                            ...(f.freeShipping || {}),
-                            threshold: opt.value,
-                          },
-                        }))
-                      }
-                      style={{
-                        padding: "5px 14px",
-                        border: "1px solid",
-                        borderRadius: 6,
-                        cursor: "pointer",
-                        fontSize: 12,
-                        fontWeight: 500,
-                        borderColor:
-                          (form.freeShipping?.threshold || 0) === opt.value ? "#009688" : "#e5e7eb",
-                        background:
-                          (form.freeShipping?.threshold || 0) === opt.value ? "#e6f7f5" : "#fff",
-                        color: (form.freeShipping?.threshold || 0) === opt.value ? "#009688" : "#374151",
-                      }}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, flexShrink: 0 }}>
-                    Or enter custom amount (Rs.):
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.freeShipping?.threshold ?? ""}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        freeShipping: {
-                          ...(f.freeShipping || {}),
-                          threshold: parseFloat(e.target.value) || 0,
-                        },
-                      }))
-                    }
-                    placeholder="e.g. 50"
-                    style={{
-                      width: 120,
-                      padding: "6px 10px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 6,
-                      fontSize: 13,
-                      outline: "none",
-                    }}
-                  />
-                </div>
-                <div
-                  style={{
-                    marginTop: 10,
-                    padding: "8px 12px",
-                    background: "#e6f7f5",
-                    borderRadius: 6,
-                    fontSize: 12,
-                    color: "#166534",
-                  }}
-                >
-                  ✓ Customers in {form.name || "this zone"} get
-                  {(form.freeShipping?.threshold || 0) === 0
-                    ? " FREE shipping on ALL orders"
-                    : ` FREE shipping on orders over Rs. ${(Number(form.freeShipping?.threshold) || 0).toLocaleString("en-PK")}`}
-                </div>
-              </div>
-            ) : (
-              <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
-                Free shipping is OFF for this zone. All orders pay shipping based on weight.
-              </p>
-            )}
+            <p style={{ fontSize: 14, fontWeight: 600, color: "#334155", margin: 0 }}>
+              Free shipping disabled
+            </p>
+            <p style={{ fontSize: 12, color: "#64748b", margin: "6px 0 0" }}>
+              Store policy: no free delivery. All orders charge at least Rs. 250 delivery (higher
+              zone rates still apply). Free-shipping toggles are locked off.
+            </p>
           </div>
 
           <div
@@ -841,23 +681,9 @@ export default function ShippingPage() {
                     </p>
                   ) : null;
                 })()}
-                {(() => {
-                  const fs = zone.freeShipping && typeof zone.freeShipping === "object" ? zone.freeShipping : null;
-                  const legacyT = Math.max(0, Number(zone.freeShippingThreshold) || 0);
-                  const enabled = fs && "enabled" in fs ? Boolean(fs.enabled) : legacyT > 0;
-                  const th = fs && "enabled" in fs ? Math.max(0, Number(fs.threshold) || 0) : legacyT;
-                  if (enabled) {
-                    return (
-                      <p style={{ fontSize: 12, color: "#16a34a", margin: "4px 0 0", fontWeight: 500 }}>
-                        🎁 Free shipping:{" "}
-                        {th === 0 ? "All orders" : `Orders over Rs. ${Number(th).toLocaleString("en-PK")}`}
-                      </p>
-                    );
-                  }
-                  return (
-                    <p style={{ fontSize: 12, color: "#9ca3af", margin: "4px 0 0" }}>No free shipping for this zone</p>
-                  );
-                })()}
+                <p style={{ fontSize: 12, color: "#9ca3af", margin: "4px 0 0" }}>
+                  Min delivery Rs. 250 (no free shipping)
+                </p>
               </div>
               <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                 <button

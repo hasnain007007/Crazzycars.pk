@@ -155,7 +155,7 @@ function BestSellerPicker({ productIds = [], onChange }) {
 
 const DEFAULT_FORM = {
   announcementMessages: [
-    { text: "Free delivery on orders over Rs. 2,999 — Pakistan wide", isActive: true },
+    { text: "Nationwide delivery — flat Rs. 250 delivery charges", isActive: true },
     { text: "Cash on delivery available at checkout", isActive: true },
     
   ],

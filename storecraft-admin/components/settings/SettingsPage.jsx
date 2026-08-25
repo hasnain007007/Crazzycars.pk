@@ -246,12 +246,12 @@ export function SettingsPage() {
     const raw = s.storePayment || {};
     return {
       ...raw,
-      freeShippingThreshold: Math.max(0, Number(raw.freeShippingThreshold) || 2999),
+      freeShippingThreshold: 0,
       minimumOrderAmount: Math.max(0, Number(raw.minimumOrderAmount) || 0),
       codFee: Math.max(0, Number(raw.codFee) || 0),
-      freeShippingOnAdvancePayment: raw.freeShippingOnAdvancePayment === true,
-      freeShippingOnOrderAbove: Math.max(0, Number(raw.freeShippingOnOrderAbove) || 10000),
-      freeShippingOnOrderAboveEnabled: raw.freeShippingOnOrderAboveEnabled === true,
+      freeShippingOnAdvancePayment: false,
+      freeShippingOnOrderAbove: 0,
+      freeShippingOnOrderAboveEnabled: false,
       advancePaymentAmount: Math.max(0, Number(raw.advancePaymentAmount) || 250),
       advancePaymentMessageEnabled: raw.advancePaymentMessageEnabled !== false,
       advancePaymentMessageTitle: String(raw.advancePaymentMessageTitle || "Confirm Your Order").trim(),
@@ -261,7 +261,7 @@ export function SettingsPage() {
         100,
         Math.max(0, Number(raw.advancePaymentDiscountPercent) || 3)
       ),
-      flatDeliveryCharge: Math.max(0, Number(raw.flatDeliveryCharge) || 250),
+      flatDeliveryCharge: 250,
       majorCitiesDays: String(raw.majorCitiesDays || "2-3").trim(),
       otherAreasDays: String(raw.otherAreasDays || "4-7").trim(),
       deliveryNote: String(raw.deliveryNote || "Delivery charges Rs. 250").trim(),
@@ -615,21 +615,9 @@ export function SettingsPage() {
           <section>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: "#111111", margin: "0 0 8px" }}>Store checkout rules</h3>
             <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 16px" }}>
-              Free delivery progress bar, minimum order, and COD fee on the storefront.
+              Flat delivery Rs. 250 on every order. Free delivery is disabled by store policy.
             </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <label className="text-xs font-medium text-slate-600">Free Shipping Threshold (Rs.)</label>
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={sp.freeShippingThreshold ?? 2999}
-                  onChange={(e) => patchStorePayment("freeShippingThreshold", parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-                />
-                <p className="mt-1 text-xs text-slate-500">Orders above this amount get free COD delivery</p>
-              </div>
               <div>
                 <label className="text-xs font-medium text-slate-600">Minimum Order Amount (Rs.)</label>
                 <input
@@ -651,7 +639,7 @@ export function SettingsPage() {
                   onChange={(e) => patchStorePayment("codFee", parseFloat(e.target.value) || 0)}
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 />
-                <p className="mt-1 text-xs text-slate-500">Extra charge for cash on delivery (0 = free)</p>
+                <p className="mt-1 text-xs text-slate-500">Extra charge for cash on delivery (0 = none)</p>
               </div>
             </div>
           </section>
@@ -687,9 +675,9 @@ export function SettingsPage() {
                 <label className="text-xs font-medium text-slate-600">Delivery Note</label>
                 <input
                   type="text"
-                  value={sp.deliveryNote ?? "Free delivery on orders over Rs. 2,999"}
+                  value={sp.deliveryNote ?? "Delivery charges Rs. 250"}
                   onChange={(e) => patchStorePayment("deliveryNote", e.target.value)}
-                  placeholder="Free delivery on orders over Rs. 2,999"
+                  placeholder="Delivery charges Rs. 250"
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 />
                 <p className="mt-1 text-xs text-slate-500">Shown in green below delivery estimate</p>
@@ -704,28 +692,12 @@ export function SettingsPage() {
             </p>
 
             <div className="space-y-4 rounded-lg border border-slate-100 p-4">
-              <div>
-                <label className="text-xs font-medium text-slate-600">Flat delivery charge (Rs.)</label>
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={sp.flatDeliveryCharge ?? 250}
-                  onChange={(e) => patchStorePayment("flatDeliveryCharge", parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-                />
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-sm font-semibold text-slate-800">Delivery charge: Rs. 250 (locked)</p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Charged on every order (e.g. 250). Set 0 to use shipping zones instead.
+                  Free delivery is not offered. Checkout always charges at least Rs. 250.
                 </p>
               </div>
-              <Toggle
-                label="Free Delivery on Advance Payment"
-                checked={sp.freeShippingOnAdvancePayment === true}
-                onChange={(v) => patchStorePayment("freeShippingOnAdvancePayment", v)}
-              />
-              <p style={{ fontSize: 11, color: "#6b7280", margin: "-8px 0 0", paddingLeft: 4 }}>
-                Off by default — delivery is charged even for bank / JazzCash / Meezan
-              </p>
               <Toggle
                 label="Discount on Advance Payment"
                 checked={sp.advancePaymentDiscountEnabled !== false}
@@ -746,28 +718,6 @@ export function SettingsPage() {
                 />
                 <p className="mt-1 text-xs text-slate-500">
                   e.g. 3 = customer gets 3% off when paying via JazzCash / bank / Meezan (not COD)
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 space-y-3 rounded-lg border border-slate-100 p-4">
-              <Toggle
-                label="Free Delivery on Orders Above"
-                checked={sp.freeShippingOnOrderAboveEnabled === true}
-                onChange={(v) => patchStorePayment("freeShippingOnOrderAboveEnabled", v)}
-              />
-              <div>
-                <label className="text-xs font-medium text-slate-600">Order total threshold (Rs.)</label>
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={sp.freeShippingOnOrderAbove ?? 10000}
-                  onChange={(e) => patchStorePayment("freeShippingOnOrderAbove", parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-                />
-                <p className="mt-1 text-xs text-slate-500">
-                  Orders above this amount get free delivery regardless of payment method
                 </p>
               </div>
             </div>
