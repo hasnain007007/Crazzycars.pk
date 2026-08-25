@@ -198,6 +198,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
                 : [],
             articleNo: row.articleNo || "",
             sku: row.sku || "",
+            codEnabled: row.codEnabled !== false,
           },
         ];
       }

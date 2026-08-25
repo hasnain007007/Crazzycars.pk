@@ -100,6 +100,13 @@ export async function PUT(request) {
       doc.storePayment.freeShippingOnOrderAbove = 0;
       doc.storePayment.freeShippingOnOrderAboveEnabled = false;
       doc.storePayment.flatDeliveryCharge = 250;
+      doc.storePayment.codFee = 0;
+      if (
+        !doc.storePayment.advancePaymentMessageTitle ||
+        /pay delivery charges to confirm/i.test(String(doc.storePayment.advancePaymentMessageTitle || ""))
+      ) {
+        doc.storePayment.advancePaymentMessageTitle = "Confirm Your Order";
+      }
       doc.markModified("storePayment");
     }
     if (body.courier !== undefined) {

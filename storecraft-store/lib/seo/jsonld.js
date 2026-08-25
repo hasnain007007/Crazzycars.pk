@@ -20,10 +20,16 @@ function conditionUrl(condition) {
   return "https://schema.org/NewCondition";
 }
 
-function availabilityUrl({ stock, trackInventory, allowBackorder }) {
+function availabilityUrl({ stock, trackInventory, allowBackorder, hasComboStock, anyComboInStock }) {
   const track = trackInventory !== false;
+  if (allowBackorder === true) {
+    return "https://schema.org/InStock";
+  }
+  if (hasComboStock) {
+    return anyComboInStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
+  }
   const qty = Number(stock) || 0;
-  if (!track || qty > 0 || allowBackorder === true) {
+  if (!track || qty > 0) {
     return "https://schema.org/InStock";
   }
   return "https://schema.org/OutOfStock";
@@ -49,7 +55,17 @@ function resolveOfferPrice(p) {
 export function productJsonLd(p) {
   const SITE = site();
   const price = resolveOfferPrice(p) ?? 0;
-  const stock = Number(p.stock ?? p.inventory?.quantity ?? 0);
+  const combos = Array.isArray(p.variationCombinations) ? p.variationCombinations : [];
+  const hasComboStock = combos.some(
+    (c) => c?.stock !== undefined && c?.stock !== null && Number.isFinite(Number(c.stock))
+  );
+  const anyComboInStock = hasComboStock
+    ? combos.some((c) => Number(c.stock) > 0)
+    : false;
+  const stock = hasComboStock
+    ? combos.reduce((sum, c) => sum + Math.max(0, Number(c.stock) || 0), 0)
+    : Number(p.stock ?? p.inventory?.quantity ?? 0);
+
   const images = Array.isArray(p.images)
     ? p.images
     : p.media?.images?.map((i) => i.url).filter(Boolean) || [];
@@ -91,6 +107,8 @@ export function productJsonLd(p) {
         stock,
         trackInventory: p.trackInventory ?? p.inventory?.trackInventory,
         allowBackorder: p.allowBackorder ?? p.inventory?.allowBackorder,
+        hasComboStock,
+        anyComboInStock,
       }),
       itemCondition: conditionUrl(p.condition),
       seller: {
@@ -169,7 +187,16 @@ export function collectionPageJsonLd({
       const path = p.urlPath || `/${slug}`;
       const itemUrl = absoluteProductUrl(path);
       const priceNum = resolveOfferPrice(p);
-      const stock = Number(p.stock ?? p.inventory?.quantity ?? 0);
+      const combos = Array.isArray(p.variationCombinations) ? p.variationCombinations : [];
+      const hasComboStock = combos.some(
+        (c) => c?.stock !== undefined && c?.stock !== null && Number.isFinite(Number(c.stock))
+      );
+      const anyComboInStock = hasComboStock
+        ? combos.some((c) => Number(c.stock) > 0)
+        : false;
+      const stock = hasComboStock
+        ? combos.reduce((sum, c) => sum + Math.max(0, Number(c.stock) || 0), 0)
+        : Number(p.stock ?? p.inventory?.quantity ?? 0);
       const productNode = {
         "@type": "Product",
         "@id": `${itemUrl}#product`,
@@ -190,6 +217,8 @@ export function collectionPageJsonLd({
             stock,
             trackInventory: p.trackInventory ?? p.inventory?.trackInventory,
             allowBackorder: p.allowBackorder ?? p.inventory?.allowBackorder,
+            hasComboStock,
+            anyComboInStock,
           }),
         };
       }

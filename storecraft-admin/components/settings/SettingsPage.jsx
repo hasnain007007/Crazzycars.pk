@@ -248,13 +248,17 @@ export function SettingsPage() {
       ...raw,
       freeShippingThreshold: 0,
       minimumOrderAmount: Math.max(0, Number(raw.minimumOrderAmount) || 0),
-      codFee: Math.max(0, Number(raw.codFee) || 0),
+      codFee: 0,
       freeShippingOnAdvancePayment: false,
       freeShippingOnOrderAbove: 0,
       freeShippingOnOrderAboveEnabled: false,
       advancePaymentAmount: Math.max(0, Number(raw.advancePaymentAmount) || 250),
       advancePaymentMessageEnabled: raw.advancePaymentMessageEnabled !== false,
-      advancePaymentMessageTitle: String(raw.advancePaymentMessageTitle || "Confirm Your Order").trim(),
+      advancePaymentMessageTitle: (() => {
+        const t = String(raw.advancePaymentMessageTitle || "").trim();
+        if (!t || /pay delivery charges to confirm/i.test(t)) return "Confirm Your Order";
+        return t;
+      })(),
       advancePaymentMessage: String(raw.advancePaymentMessage || "").trim(),
       advancePaymentDiscountEnabled: raw.advancePaymentDiscountEnabled !== false,
       advancePaymentDiscountPercent: Math.min(

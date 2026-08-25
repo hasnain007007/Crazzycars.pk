@@ -85,6 +85,15 @@ function validateCheckoutCartItems(items) {
   return null;
 }
 
+function validatePkPhone(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  // 03XXXXXXXXX (11) or 923XXXXXXXXX (12) or 3XXXXXXXXX (10)
+  if (/^03\d{9}$/.test(digits)) return { ok: true, digits };
+  if (/^923\d{9}$/.test(digits)) return { ok: true, digits };
+  if (/^3\d{9}$/.test(digits)) return { ok: true, digits: `0${digits}` };
+  return { ok: false, digits };
+}
+
 function validateCheckoutForm(customer, addr) {
   const errors = {};
   const fullName = `${String(customer.firstName || "").trim()} ${String(customer.lastName || "").trim()}`.trim();
@@ -95,8 +104,11 @@ function validateCheckoutForm(customer, addr) {
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.email = "Please enter a valid email address";
   }
-  if (!String(customer.phone || "").trim()) {
+  const phoneRaw = String(customer.phone || "").trim();
+  if (!phoneRaw) {
     errors.phone = "Phone number is required";
+  } else if (!validatePkPhone(phoneRaw).ok) {
+    errors.phone = "Enter a valid Pakistani mobile (e.g. 03XX XXXXXXX)";
   }
   if (!String(addr.street || "").trim()) {
     errors.address = "Street address is required";
@@ -270,6 +282,15 @@ export function CheckoutView() {
       setPaymentMethod(fallback);
     }
   }, [cartAllowsCod, paymentMethod, pakistaniMethods]);
+
+  const codBlockedNames = useMemo(
+    () =>
+      items
+        .filter((x) => x?.codEnabled === false)
+        .map((x) => x.name)
+        .filter(Boolean),
+    [items]
+  );
 
   // Restore cart from abandoned-cart recovery link (?recover=TOKEN)
   useEffect(() => {
@@ -1253,7 +1274,13 @@ export function CheckoutView() {
           <p className="mb-2 text-xs text-zinc-600">{freeDeliveryNote}</p>
           {!cartAllowsCod ? (
             <p className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-              Cash on Delivery is not available for one or more items in your cart. Please use advance payment.
+              Cash on Delivery is not available for{" "}
+              {codBlockedNames.length
+                ? `: ${codBlockedNames.slice(0, 3).join(", ")}${
+                    codBlockedNames.length > 3 ? ` (+${codBlockedNames.length - 3} more)` : ""
+                  }.`
+                : " one or more items in your cart."}{" "}
+              Please use JazzCash, Meezan, or Bank Transfer.
             </p>
           ) : null}
           <div
@@ -1361,11 +1388,6 @@ export function CheckoutView() {
                         </span>
                       ) : null}
                     </span>
-                    {m.key === "cod" && storePayment.codFee > 0 ? (
-                      <span style={{ marginLeft: "auto", fontSize: 11, color: "#6B7280" }}>
-                        +{formatPrice(storePayment.codFee)}
-                      </span>
-                    ) : null}
                   </div>
                   {selected ? (
                     <ul

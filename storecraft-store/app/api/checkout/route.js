@@ -375,15 +375,31 @@ export async function POST(request) {
 
     const customerIn = body.customer || {};
     const name = String(customerIn.name || "").trim();
-    const phone = String(customerIn.phone || "").trim();
+    const phoneRaw = String(customerIn.phone || "").trim();
     const emailInput = String(customerIn.email || "").trim().toLowerCase();
     const email = isValidCustomerEmail(emailInput) ? emailInput : "";
     if (!name) {
       return NextResponse.json({ success: false, error: "Name is required." }, { status: 400 });
     }
-    if (!phone) {
+    if (!phoneRaw) {
       return NextResponse.json({ success: false, error: "Phone number is required." }, { status: 400 });
     }
+    const phoneDigits = phoneRaw.replace(/\D/g, "");
+    const phoneOk =
+      /^03\d{9}$/.test(phoneDigits) ||
+      /^923\d{9}$/.test(phoneDigits) ||
+      /^3\d{9}$/.test(phoneDigits);
+    if (!phoneOk) {
+      return NextResponse.json(
+        { success: false, error: "Enter a valid Pakistani mobile number (e.g. 03XX XXXXXXX)." },
+        { status: 400 }
+      );
+    }
+    const phone = phoneDigits.startsWith("923")
+      ? `0${phoneDigits.slice(2)}`
+      : phoneDigits.startsWith("3") && phoneDigits.length === 10
+        ? `0${phoneDigits}`
+        : phoneDigits;
     const customerRecordEmail = email || guestEmailForPhone(phone);
     if (!customerRecordEmail) {
       return NextResponse.json({ success: false, error: "Phone number is required." }, { status: 400 });

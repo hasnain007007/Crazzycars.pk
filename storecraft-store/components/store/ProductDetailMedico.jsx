@@ -528,9 +528,10 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     };
 
     if (hasVariations && !allSelected) {
-      stockText = "In Stock";
-      stockColor = "#16a34a";
-      btnLabel = "Add to Cart";
+      stockStatus = "select_options";
+      stockText = "Select options";
+      stockColor = "#6b7280";
+      btnLabel = "Select options";
       btnDisabled = false;
       btnBg = "#111111";
     } else if (matched) {
