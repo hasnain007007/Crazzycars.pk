@@ -64,15 +64,15 @@ const settingsSchema = new mongoose.Schema(
       codDescription: { type: String, default: "Pay when your order arrives at your doorstep." },
       codFee: { type: Number, default: 0 },
       minimumOrderAmount: { type: Number, default: 0 },
-      freeShippingThreshold: { type: Number, default: 2999 },
+      freeShippingThreshold: { type: Number, default: 0 },
       majorCitiesDays: { type: String, default: "2-3" },
       otherAreasDays: { type: String, default: "4-7" },
       deliveryNote: {
         type: String,
-        default: "Free delivery on orders over Rs. 2,999",
+        default: "Delivery charges Rs. 250",
       },
       freeShippingOnAdvancePayment: { type: Boolean, default: false },
-      freeShippingOnOrderAbove: { type: Number, default: 10000 },
+      freeShippingOnOrderAbove: { type: Number, default: 0 },
       freeShippingOnOrderAboveEnabled: { type: Boolean, default: false },
       advancePaymentMessage: {
         type: String,
