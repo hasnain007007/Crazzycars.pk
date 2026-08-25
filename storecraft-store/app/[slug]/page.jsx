@@ -2,8 +2,6 @@ import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ProductDetailMedico } from "@/components/store/ProductDetailMedico";
 import PageView from "@/components/store/PageView";
-import { CategoryPageChrome } from "@/components/store/CategoryPageChrome";
-import { ProductListingSection } from "@/components/store/ProductListingSection";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Page from "@/lib/models/Page.model";
@@ -16,11 +14,9 @@ import {
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
 } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
-import { parseListingSearchParams, listingMetadata } from "@/lib/listingQuery";
-import { DEFAULT_LISTING_PAGE_SIZE } from "@/lib/productListing";
 
 /**
- * ISR for product / CMS / category-via-slug pages.
+ * ISR for product / CMS pages. Category slugs 308 to /categories/:slug.
  * 120s: prices & stock can lag up to ~2 minutes after admin edits
  * (acceptable vs force-dynamic on every visit). Revalidate webhook can
  * shorten this later without changing the page.
@@ -74,6 +70,32 @@ function buildProductSeoTitle({ name, metaTitle }) {
   const truncatedTitle = truncateProductTitleAtWord(unbrandedTitle, titleBudget);
 
   return `${truncatedTitle}${PRODUCT_TITLE_SUFFIX}`;
+}
+
+function querySuffix(searchParams) {
+  if (!searchParams) return "";
+  const params = new URLSearchParams();
+  const entries =
+    typeof searchParams.entries === "function"
+      ? [...searchParams.entries()]
+      : Object.entries(searchParams);
+  for (const [key, value] of entries) {
+    if (value == null || value === "") continue;
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item != null && item !== "") params.append(key, String(item));
+      }
+    } else {
+      params.append(key, String(value));
+    }
+  }
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
+
+function redirectWithQuery(to, searchParams) {
+  const suffix = querySuffix(searchParams);
+  permanentRedirect(suffix && !String(to).includes("?") ? `${to}${suffix}` : to);
 }
 
 async function loadRelatedProducts(product) {
@@ -173,17 +195,8 @@ const loadContent = cache(async (slug) => {
 
   const catDetail = await loadStoreCategoryDetail(slugStr);
   if (catDetail) {
-    return {
-      type: "category",
-      data: JSON.parse(
-        JSON.stringify({
-          category: catDetail.category,
-          subcategories: catDetail.subcategories,
-          products: catDetail.products,
-          breadcrumbs: catDetail.breadcrumbs,
-        })
-      ),
-    };
+    const catSlug = catDetail.category?.slug || slugStr;
+    return { type: "redirect", to: `/categories/${catSlug}` };
   }
 
   return null;
@@ -200,7 +213,7 @@ export async function generateMetadata({ params, searchParams }) {
     };
   }
   if (content.type === "redirect") {
-    permanentRedirect(content.to);
+    redirectWithQuery(content.to, await searchParams);
   }
   const canonical = `${BASE_URL}/${content.type === "product" ? content.data.slug : slugStr}`;
 
@@ -231,7 +244,7 @@ export async function generateMetadata({ params, searchParams }) {
           (p.metaDescription || p.seo?.metaDescription || "").trim() ||
           stripHtml(p.shortDescription || "").slice(0, 200) ||
           `Buy ${p.name} at ${BRAND}`,
-        type: "website",
+        type: "product",
         url: canonical,
         images: mainImg ? [{ url: mainImg, width: 800, height: 800, alt: p.name }] : [],
       },
@@ -241,39 +254,6 @@ export async function generateMetadata({ params, searchParams }) {
         description,
         images: mainImg ? [mainImg] : [],
       },
-    };
-  }
-
-  if (content.type === "category") {
-    const cat = content.data.category;
-    const listing = parseListingSearchParams(await searchParams);
-    const listingSeo = listingMetadata(`/${slugStr}`, listing, {
-      thin: Number(content.data.productCount) === 0,
-    });
-    const titleMeta = buildBrandedAbsoluteTitle(
-      (cat.seo?.metaTitle || "").trim() || cat.name,
-      { brand: BRAND }
-    );
-    const title = titleMeta.absolute;
-    const description =
-      (cat.seo?.metaDescription || "").trim() ||
-      `Shop ${cat.name} at ${BRAND}. Premium car accessories with Cash on Delivery nationwide.`;
-    const keywords = Array.isArray(cat.seo?.metaKeywords)
-      ? cat.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
-      : [];
-    return {
-      title: titleMeta,
-      description,
-      ...(keywords.length ? { keywords } : {}),
-      robots: listingSeo.robots,
-      alternates: listingSeo.alternates,
-      openGraph: {
-        title,
-        description,
-        url: listingSeo.alternates.canonical,
-        images: cat.image?.url ? [{ url: cat.image.url }] : [],
-      },
-      twitter: { card: "summary_large_image", title, description },
     };
   }
 
@@ -358,7 +338,7 @@ export default async function ProductPage({ params, searchParams }) {
   const content = await loadContent(slugStr);
   if (!content) notFound();
   if (content.type === "redirect") {
-    permanentRedirect(content.to);
+    redirectWithQuery(content.to, await searchParams);
   }
 
   if (content.type === "product") {
@@ -379,38 +359,6 @@ export default async function ProductPage({ params, searchParams }) {
 
   if (content.type === "page") {
     return <PageView page={content.data} slug={slugStr} />;
-  }
-
-  if (content.type === "category") {
-    const listing = parseListingSearchParams(await searchParams);
-    let d = content.data;
-    if (listing.page !== 1 || listing.pageSize !== DEFAULT_LISTING_PAGE_SIZE || listing.sort !== "default") {
-      const fresh = await loadStoreCategoryDetail(slugStr, {
-        page: listing.page,
-        limit: listing.pageSize,
-        sort: listing.sort,
-      });
-      if (fresh) d = JSON.parse(JSON.stringify(fresh));
-    }
-    return (
-      <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
-        <CategoryPageChrome
-          category={d.category}
-          subcategories={d.subcategories}
-          products={d.products}
-        />
-        <ProductListingSection
-          pathname={`/${slugStr}`}
-          listing={listing}
-          products={d.products}
-          total={d.productCount}
-          totalPages={d.totalPages}
-          title={d.category?.name}
-          categoryName={d.category?.name}
-          emptyMessage="No products found in this category."
-        />
-      </div>
-    );
   }
 
   notFound();

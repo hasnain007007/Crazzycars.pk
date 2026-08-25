@@ -49,7 +49,22 @@ const STRIP_QUERY_KEYS = new Set([
  * - Tag first-touch AI-referrer attribution cookies (14-day window).
  * - Protect storefront account pages (login/register excluded via path checks).
  */
+function wwwToApexRedirect(request) {
+  const raw = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (!raw.startsWith("www.")) return null;
+  const apex = raw.slice(4).split(":")[0];
+  if (!apex || apex.startsWith("localhost") || apex.startsWith("127.")) return null;
+  const dest = new URL(`https://${apex}${request.nextUrl.pathname}${request.nextUrl.search}`);
+  return NextResponse.redirect(dest, 308);
+}
+
 export async function middleware(request) {
+  const wwwRedirect = wwwToApexRedirect(request);
+  if (wwwRedirect) return wwwRedirect;
+
   const { pathname } = request.nextUrl;
   const lower = pathname.toLowerCase();
 
@@ -204,6 +219,6 @@ export const config = {
      * Match all paths except static assets / Next internals / liveness probe.
      * Includes public pages (for AI logging) and /account/* (for auth).
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)$).*)",
   ],
 };

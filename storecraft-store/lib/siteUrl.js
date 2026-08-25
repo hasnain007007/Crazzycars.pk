@@ -19,6 +19,19 @@ function cleanUrl(value) {
     .replace(/\/+$/, "");
 }
 
+function withoutWww(url) {
+  const raw = cleanUrl(url);
+  try {
+    const u = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    if (/^www\./i.test(u.hostname) && !u.hostname.endsWith(".vercel.app")) {
+      u.hostname = u.hostname.replace(/^www\./i, "");
+    }
+    return cleanUrl(u.toString());
+  } catch {
+    return raw;
+  }
+}
+
 function withHttps(hostOrUrl) {
   const raw = cleanUrl(hostOrUrl);
   if (!raw) return "";
@@ -28,13 +41,13 @@ function withHttps(hostOrUrl) {
 
 /** Env / platform fallbacks (no request context). */
 export function getConfiguredSiteUrl() {
-  return (
+  return withoutWww(
     cleanUrl(process.env.NEXT_PUBLIC_SITE_URL) ||
-    cleanUrl(process.env.SITE_URL) ||
-    cleanUrl(process.env.NEXT_PUBLIC_STORE_URL) ||
-    withHttps(process.env.VERCEL_PROJECT_PRODUCTION_URL) ||
-    withHttps(process.env.VERCEL_URL) ||
-    DEFAULT_SITE_URL
+      cleanUrl(process.env.SITE_URL) ||
+      cleanUrl(process.env.NEXT_PUBLIC_STORE_URL) ||
+      withHttps(process.env.VERCEL_PROJECT_PRODUCTION_URL) ||
+      withHttps(process.env.VERCEL_URL) ||
+      DEFAULT_SITE_URL
   );
 }
 
@@ -45,11 +58,13 @@ export function getSiteUrl(opts = null) {
   try {
     const h = opts?.headers;
     if (h && typeof h.get === "function") {
-      const host = cleanUrl(h.get("x-forwarded-host") || h.get("host"));
+      const host = cleanUrl(h.get("x-forwarded-host") || h.get("host"))
+        .split(",")[0]
+        .trim();
       // Ignore localhost hosts for absolute public links in discovery files.
       if (host && !/^localhost\b/i.test(host) && !/^127\.0\.0\.1\b/.test(host)) {
         const proto = cleanUrl(h.get("x-forwarded-proto")) || "https";
-        return `${proto}://${host}`.replace(/\/+$/, "");
+        return withoutWww(`${proto}://${host}`);
       }
     }
   } catch {
