@@ -123,6 +123,11 @@ export function KpiCards({ data }) {
   const d = data || {};
   const margin = Number(d.profitMargin) || 0;
   const rangeLabel = d.range?.label || "period";
+  const pendingToday = Number(d.pendingOrders) || 0;
+  const pendingPeriod = Number(d.pendingOrdersPeriod) || 0;
+  const paidOrders = Number(d.periodPaidOrders) || 0;
+  const todayOrders = Number(d.todayOrders) || 0;
+  const periodOrders = Number(d.periodOrders) || 0;
   const unpaidPeriod = Number(d.unpaidOrdersPeriod) || 0;
   const partialPeriod = Number(d.partialOrdersPeriod) || 0;
   const unpaidToday = Number(d.unpaidOrdersToday) || 0;
