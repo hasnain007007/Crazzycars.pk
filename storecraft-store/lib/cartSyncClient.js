@@ -52,6 +52,12 @@ function serializeItems(items) {
     variationLabel: item.variationLabel || "",
     articleNo: item.articleNo || "",
     sku: item.sku || "",
+    selectedOptions: item.selectedOptions || null,
+    matchedCombination: item.matchedCombination || null,
+    selectedVariation: item.selectedVariation || null,
+    selectedAddOns: Array.isArray(item.selectedAddOns) ? item.selectedAddOns : undefined,
+    categoryIds: Array.isArray(item.categoryIds) ? item.categoryIds : undefined,
+    requiresVariant: Boolean(item.requiresVariant),
   }));
 }
 

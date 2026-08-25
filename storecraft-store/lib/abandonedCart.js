@@ -37,9 +37,17 @@ export function normalizeCartItems(rawItems) {
           item?.matchedCombination && typeof item.matchedCombination === "object"
             ? item.matchedCombination
             : undefined,
+        selectedVariation:
+          item?.selectedVariation && typeof item.selectedVariation === "object"
+            ? item.selectedVariation
+            : undefined,
         selectedAddOns: Array.isArray(item?.selectedAddOns) ? item.selectedAddOns : undefined,
+        categoryIds: Array.isArray(item?.categoryIds)
+          ? item.categoryIds.map((c) => String(c || "").trim()).filter(Boolean)
+          : undefined,
         articleNo: String(item?.articleNo || "").trim(),
         sku: String(item?.sku || "").trim(),
+        requiresVariant: Boolean(item?.requiresVariant),
       };
     })
     .filter(Boolean)

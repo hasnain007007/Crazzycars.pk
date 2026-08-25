@@ -661,6 +661,9 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
       quantity: qty,
       articleNo: product.articleNo || "",
       sku: combo?.sku || product.sku || "",
+      categoryIds: (product.categories || [])
+        .map((c) => String(c?._id || c?.id || c || "").trim())
+        .filter(Boolean),
       variationLabel,
       selectedOptions: optionEntries.length ? optionEntries : null,
       // Keep both shapes so checkout can resolve price/stock even if combo state lagged.

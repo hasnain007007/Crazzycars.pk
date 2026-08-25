@@ -69,6 +69,22 @@ function aggregateInventoryNeeds(items) {
   return { byProduct, byVariant };
 }
 
+function productHasComboMatrix(p) {
+  return (
+    Array.isArray(p?.variationCombinations) &&
+    p.variationCombinations.length > 0 &&
+    (p.simpleVariations || []).some((v) => v?.enabled && Array.isArray(v.tags) && v.tags.length > 0)
+  );
+}
+
+/** True when cart lines for this product are stocked via variationCombinations, not base inventory. */
+function usesComboInventory(p, itemsIn, pid) {
+  if (!productHasComboMatrix(p)) return false;
+  const lines = (itemsIn || []).filter((it) => String(it.productId || "").trim() === pid);
+  if (!lines.length) return false;
+  return lines.every((raw) => Boolean(resolveCombinationFromCart(p, raw)?._id));
+}
+
 function normalizeMeasurements(raw) {
   if (!raw || typeof raw !== "object") return {};
   const out = {};
@@ -469,6 +485,8 @@ export async function POST(request) {
       const p = byId.get(pid);
       if (!p) continue;
       if ((p.variants || []).length) continue;
+      // Style/Size matrix stock lives on combinations — do not gate on base qty.
+      if (usesComboInventory(p, itemsIn, pid)) continue;
       if (allowsBackorder(p)) continue;
       if (p.inventory?.trackInventory && (Number(p.inventory.quantity) || 0) < need) {
         return NextResponse.json(
@@ -659,6 +677,7 @@ export async function POST(request) {
     subtotal = Math.round(subtotal * 100) / 100;
     let discount = 0;
     let couponCode = "";
+    let couponId = null;
     let advancePaymentDiscount = 0;
 
     const code = String(body.couponCode || "").trim().toUpperCase();
@@ -669,7 +688,7 @@ export async function POST(request) {
       if (r.valid) {
         discount = r.discount;
         couponCode = code;
-        await Coupon.updateOne({ _id: coupon._id }, { $inc: { usedCount: 1 } });
+        couponId = coupon._id;
       }
     }
 
@@ -836,16 +855,35 @@ export async function POST(request) {
       existing.markModified("addresses");
       await existing.save();
     } else {
-      const created = await Customer.create({
-        name,
-        firstName: nameParts[0] || "",
-        lastName: nameParts.slice(1).join(" ") || "",
-        email: customerRecordEmail,
-        phone,
-        address: legacyAddress,
-        addresses: [addrBookEntry],
-      });
-      customerId = created._id;
+      try {
+        const created = await Customer.create({
+          name,
+          firstName: nameParts[0] || "",
+          lastName: nameParts.slice(1).join(" ") || "",
+          email: customerRecordEmail,
+          phone,
+          address: legacyAddress,
+          addresses: [addrBookEntry],
+        });
+        customerId = created._id;
+      } catch (custErr) {
+        // Unique email race on guest+phone — reuse the row that won.
+        if (custErr?.code === 11000 && customerRecordEmail) {
+          const raced = await Customer.findOne({ email: customerRecordEmail });
+          if (raced) {
+            customerId = raced._id;
+            raced.name = name;
+            raced.phone = phone;
+            raced.address = legacyAddress;
+            raced.markModified("address");
+            await raced.save().catch(() => {});
+          } else {
+            throw custErr;
+          }
+        } else {
+          throw custErr;
+        }
+      }
     }
 
     const orderNumber = await allocateOrderNumber();
@@ -916,8 +954,9 @@ export async function POST(request) {
       );
     }
 
-    // Decrement stock only after the order exists. On failure, cancel the order
-    // so we never lose inventory without a matching order (or vice versa).
+    // Decrement stock only after the order exists. On failure, reverse any
+    // decrements already applied, then cancel the order.
+    const stockReversals = [];
     try {
       for (const [key, qty] of byVariant.entries()) {
         const [pid, vid] = key.split("::");
@@ -933,6 +972,12 @@ export async function POST(request) {
         if (r.matchedCount === 0 || r.modifiedCount === 0) {
           throw new Error("VARIANT_STOCK");
         }
+        stockReversals.push({
+          type: "variant",
+          pid,
+          oid,
+          qty,
+        });
       }
 
       for (const raw of itemsIn) {
@@ -959,6 +1004,7 @@ export async function POST(request) {
             { $inc: { "variationCombinations.$[el].stock": -qty } },
             { arrayFilters: [{ "el._id": oid }] }
           );
+          stockReversals.push({ type: "combo", pid: p._id, oid, qty, soft: true });
           continue;
         }
         const r = await Product.updateOne(
@@ -969,14 +1015,17 @@ export async function POST(request) {
         if (r.matchedCount === 0 || r.modifiedCount === 0) {
           throw new Error("COMBO_STOCK");
         }
+        stockReversals.push({ type: "combo", pid: p._id, oid, qty });
       }
 
       for (const [pid, qty] of byProduct.entries()) {
         const p = byId.get(pid);
         if (!p?.inventory?.trackInventory) continue;
         if ((p.variants || []).length) continue;
+        if (usesComboInventory(p, itemsIn, pid)) continue;
         if (allowsBackorder(p)) {
           await Product.updateOne({ _id: pid }, { $inc: { "inventory.quantity": -qty } });
+          stockReversals.push({ type: "base", pid, qty, soft: true });
           continue;
         }
         const updated = await Product.findOneAndUpdate(
@@ -987,8 +1036,30 @@ export async function POST(request) {
         if (!updated) {
           throw new Error("BASE_STOCK");
         }
+        stockReversals.push({ type: "base", pid, qty });
       }
     } catch (stockErr) {
+      for (const rev of [...stockReversals].reverse()) {
+        try {
+          if (rev.type === "variant") {
+            await Product.updateOne(
+              { _id: rev.pid },
+              { $inc: { "variants.$[el].stock": rev.qty } },
+              { arrayFilters: [{ "el._id": rev.oid }] }
+            );
+          } else if (rev.type === "combo") {
+            await Product.updateOne(
+              { _id: rev.pid },
+              { $inc: { "variationCombinations.$[el].stock": rev.qty } },
+              { arrayFilters: [{ "el._id": rev.oid }] }
+            );
+          } else if (rev.type === "base") {
+            await Product.updateOne({ _id: rev.pid }, { $inc: { "inventory.quantity": rev.qty } });
+          }
+        } catch (restoreErr) {
+          console.error("Stock restore failed:", restoreErr?.message || restoreErr);
+        }
+      }
       try {
         await Order.findByIdAndUpdate(order._id, {
           $set: {
@@ -1019,6 +1090,14 @@ export async function POST(request) {
         { success: false, error: "Stock changed while checking out. Try again." },
         { status: 409 }
       );
+    }
+
+    if (couponId) {
+      try {
+        await Coupon.updateOne({ _id: couponId }, { $inc: { usedCount: 1 } });
+      } catch (couponErr) {
+        console.error("Coupon usedCount increment failed:", couponErr?.message || couponErr);
+      }
     }
 
     if (isValidCustomerEmail(order.customer?.email)) {

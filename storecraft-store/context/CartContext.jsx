@@ -189,6 +189,13 @@ export function CartProvider({ children, shopifyEnabled = false }) {
             estimatedShipping: Number(row.estimatedShipping) || 0,
             estimatedShippingRates: Array.isArray(row.estimatedShippingRates) ? row.estimatedShippingRates : [],
             customMeasurements: normalizeMeasurements(row.customMeasurements),
+            categoryIds: Array.isArray(row.categoryIds)
+              ? row.categoryIds.map((c) => String(c || "").trim()).filter(Boolean)
+              : Array.isArray(row.categories)
+                ? row.categories
+                    .map((c) => String(c?._id || c?.id || c || "").trim())
+                    .filter(Boolean)
+                : [],
             articleNo: row.articleNo || "",
             sku: row.sku || "",
           },

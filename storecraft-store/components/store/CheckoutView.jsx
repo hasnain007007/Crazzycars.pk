@@ -297,6 +297,12 @@ export function CheckoutView() {
           variationLabel: i.variationLabel || "",
           articleNo: i.articleNo || "",
           sku: i.sku || "",
+          selectedOptions: i.selectedOptions || null,
+          matchedCombination: i.matchedCombination || null,
+          selectedVariation: i.selectedVariation || null,
+          selectedAddOns: Array.isArray(i.selectedAddOns) ? i.selectedAddOns : undefined,
+          categoryIds: Array.isArray(i.categoryIds) ? i.categoryIds : undefined,
+          requiresVariant: Boolean(i.requiresVariant),
         }));
         replaceItems(restored);
         if (data.customer?.email || data.customer?.phone || data.customer?.name) {
@@ -390,11 +396,20 @@ export function CheckoutView() {
       setCouponHint("");
       return;
     }
+    const categoryIds = [
+      ...new Set(
+        (items || []).flatMap((item) =>
+          Array.isArray(item.categoryIds)
+            ? item.categoryIds.map((c) => String(c || "").trim()).filter(Boolean)
+            : []
+        )
+      ),
+    ];
     try {
       const res = await fetch("/api/coupon/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, orderAmount: subtotal, categoryIds: [] }),
+        body: JSON.stringify({ code, orderAmount: subtotal, categoryIds }),
       });
       const json = await res.json();
       if (json.success && json.valid) {
@@ -408,7 +423,7 @@ export function CheckoutView() {
       setDiscountPreview(0);
       setCouponHint("");
     }
-  }, [couponCode, subtotal]);
+  }, [couponCode, subtotal, items]);
 
   useEffect(() => {
     const t = setTimeout(() => refreshCoupon(), 400);
