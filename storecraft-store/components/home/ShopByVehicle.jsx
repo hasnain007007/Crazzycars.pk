@@ -180,24 +180,24 @@ export default function ShopByVehicle({ initialCatalog = null }) {
   if (!loading && !items.length) return null;
 
   return (
-    <section id="shop-by-vehicle" className="border-t border-[#EFEFEF] bg-[#F8F8F8] pb-8 pt-5 md:pb-10 md:pt-6">
+    <section id="shop-by-vehicle" className="border-t border-[#EFEFEF] bg-[#F8F8F8] pb-5 pt-3 md:pb-10 md:pt-6">
       <div className="store-container">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#C41E1E]">
               Or browse by model
             </p>
-            <h2 className="font-heading mt-0.5 text-[20px] font-bold text-[#111111] sm:text-[22px]">
+            <h2 className="font-heading mt-0.5 text-[18px] font-bold text-[#111111] sm:text-[22px]">
               Shop By Your Vehicle
             </h2>
           </div>
 
           {!loading && byMake.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="shop-by-vehicle-pills -mx-1 flex gap-1.5 overflow-x-auto pb-0.5 sm:mx-0 sm:flex-wrap sm:overflow-visible">
               <button
                 type="button"
                 onClick={() => setActiveMake("")}
-                className={`rounded-full px-3 py-1 text-[11px] font-bold transition ${
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold transition sm:px-3 sm:text-[11px] ${
                   !activeMake
                     ? "bg-[#C41E1E] text-white"
                     : "border border-[#E5E7EB] bg-white text-[#374151] hover:border-[#C41E1E]/40"
@@ -210,7 +210,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                   key={make}
                   type="button"
                   onClick={() => setActiveMake(make)}
-                  className={`rounded-full px-3 py-1 text-[11px] font-bold transition ${
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold transition sm:px-3 sm:text-[11px] ${
                     activeMake === make
                       ? "bg-[#C41E1E] text-white"
                       : "border border-[#E5E7EB] bg-white text-[#374151] hover:border-[#C41E1E]/40"
@@ -223,7 +223,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
           ) : null}
         </div>
 
-        <div className="relative mt-4">
+        <div className="relative mt-3 md:mt-4">
           {visible.length > 3 ? (
             <>
               <button
@@ -258,9 +258,9 @@ export default function ShopByVehicle({ initialCatalog = null }) {
               ? Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
-                    className="w-[40%] shrink-0 animate-pulse sm:w-[18%]"
+                    className="w-[31%] shrink-0 animate-pulse sm:w-[18%]"
                   >
-                    <div className="aspect-square rounded-xl bg-[#E8E8E8]" />
+                    <div className="aspect-[4/3] rounded-xl bg-[#E8E8E8] sm:aspect-square" />
                     <div className="mt-2 h-10 rounded bg-[#E8E8E8]" />
                   </div>
                 ))
@@ -269,10 +269,10 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                     key={`${v.make}-${v.slug}`}
                     href={v.href}
                     data-vehicle-card
-                    className="group w-[40%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md sm:w-[18%]"
+                    className="group w-[31%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md sm:w-[18%]"
                     style={{ scrollSnapAlign: "start" }}
                   >
-                    <div className="relative aspect-square w-full overflow-hidden bg-[#F3F4F6]">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3F4F6] sm:aspect-square">
                       {v.image ? (
                         <Image
                           src={v.image}
@@ -285,15 +285,15 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                         <div className="flex h-full items-center justify-center text-3xl text-[#9CA3AF]">🚗</div>
                       )}
                     </div>
-                    <div className="px-2.5 py-2">
-                      <p className="truncate text-[9px] font-bold uppercase tracking-wider text-[#C41E1E]">
+                    <div className="px-1.5 py-1.5 sm:px-2.5 sm:py-2">
+                      <p className="truncate text-[8px] font-bold uppercase tracking-wider text-[#C41E1E] sm:text-[9px]">
                         {v.make}
                       </p>
-                      <p className="font-heading truncate text-[13px] font-bold leading-tight text-[#111111]">
+                      <p className="font-heading truncate text-[12px] font-bold leading-tight text-[#111111] sm:text-[13px]">
                         {v.model}
                       </p>
                       {yearLabel(v) ? (
-                        <p className="mt-0.5 truncate text-[10px] text-[#6B7280]">{yearLabel(v)}</p>
+                        <p className="mt-0.5 truncate text-[9px] text-[#6B7280] sm:text-[10px]">{yearLabel(v)}</p>
                       ) : null}
                     </div>
                   </Link>

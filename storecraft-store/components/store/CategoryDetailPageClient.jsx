@@ -304,7 +304,7 @@ export function CategoryDetailPageClient({
               ))}
             </div>
           ) : (
-            <div className={`grid gap-4 ${viewMeta.cols}`}>
+            <div className={`product-grid grid gap-2 md:gap-4 ${viewMeta.cols}`}>
               {pageSlice.map((product) => (
                 <div key={String(product.id || product._id)}>
                   <ProductCard product={product} />

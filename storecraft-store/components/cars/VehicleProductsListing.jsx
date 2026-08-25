@@ -131,7 +131,7 @@ function VehicleProductsListingInner({
           ))}
         </div>
       ) : (
-        <div className={`grid gap-4 ${viewMeta.cols}`}>
+        <div className={`product-grid grid gap-2 md:gap-4 ${viewMeta.cols}`}>
           {pageSlice.map((p) => (
             <div key={p.id || p._id || p.slug}>
               <ProductCard product={p} />
@@ -154,7 +154,7 @@ export function VehicleProductsListing(props) {
   return (
     <Suspense
       fallback={
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="product-grid grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-[#E5E7EB]" />
           ))}

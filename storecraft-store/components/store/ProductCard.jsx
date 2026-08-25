@@ -168,7 +168,7 @@ export function ProductCard({ product, compact = false }) {
     >
       <Link
         href={href}
-        className="relative block aspect-square overflow-hidden bg-[#F9FAFB]"
+        className="cc-card-media relative block aspect-square overflow-hidden bg-[#F9FAFB]"
         onTouchStart={() => hoverImageUrl && setHoverReady(true)}
       >
         {imageUrl ? (
@@ -217,14 +217,14 @@ export function ProductCard({ product, compact = false }) {
 
         {onSale && badgeConfig.showSaleBadge ? (
           <span
-            className="absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+            className="absolute left-1.5 top-1.5 rounded-full px-1.5 py-px text-[9px] font-semibold text-white md:left-2 md:top-2 md:px-2 md:py-0.5 md:text-[11px]"
             style={{ background: badgeConfig.saleBadgeColor }}
           >
             {badgeConfig.saleBadgeText}
           </span>
         ) : showNew && badgeConfig.showNewBadge ? (
           <span
-            className="absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+            className="absolute left-1.5 top-1.5 rounded-full px-1.5 py-px text-[9px] font-semibold text-white md:left-2 md:top-2 md:px-2 md:py-0.5 md:text-[11px]"
             style={{ background: badgeConfig.newBadgeColor || "#111111" }}
           >
             {badgeConfig.newBadgeText}
@@ -248,41 +248,46 @@ export function ProductCard({ product, compact = false }) {
           <button
             type="button"
             onClick={addToCart}
-            className="absolute bottom-0 left-0 right-0 py-1.5 text-[11px] font-semibold text-white transition-all duration-200 md:translate-y-full md:py-3 md:text-sm md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100"
+            className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-[15px] font-semibold leading-none text-white shadow-sm md:bottom-0 md:left-0 md:right-0 md:h-auto md:w-auto md:translate-y-full md:rounded-none md:py-3 md:text-sm md:opacity-0 md:shadow-none md:group-hover:translate-y-0 md:group-hover:opacity-100"
             style={{ background: "#C41E1E" }}
           >
-            {onBackorder ? "Order (backorder)" : "Add to Cart"}
+            {onBackorder ? "Order" : <span className="md:hidden">+</span>}
+            <span className="hidden md:inline">{onBackorder ? "Order (backorder)" : "Add to Cart"}</span>
           </button>
         )}
       </Link>
 
-      <div className={`cc-card-body flex flex-1 flex-col ${compact ? "p-2 md:p-3" : "p-2.5 md:p-4"}`}>
-        <Link href={href} className="cc-card-title line-clamp-2 text-sm font-medium leading-snug text-[#111111] hover:text-[#C41E1E]">
+      <div className={`cc-card-body flex flex-1 flex-col ${compact ? "p-1.5 md:p-3" : "p-1.5 md:p-4"}`}>
+        <Link href={href} className="cc-card-title line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E] md:text-sm">
           {product.name}
         </Link>
 
         {reviewCount > 0 ? (
-          <div className="mt-1.5 flex items-center gap-1">
+          <div className="cc-card-stars mt-0.5 flex items-center gap-px md:mt-1.5 md:gap-1">
             {[1, 2, 3, 4, 5].map((s) => (
-              <span key={s} style={{ color: s <= Math.round(rating) ? "#E8941A" : "#E5E7EB", fontSize: 12 }}>
+              <span
+                key={s}
+                className="text-[9px] leading-none md:text-[12px]"
+                style={{ color: s <= Math.round(rating) ? "#E8941A" : "#E5E7EB" }}
+              >
                 ★
               </span>
             ))}
-            <span className="text-[11px]" style={{ color: "#9CA3AF" }}>
+            <span className="ml-0.5 text-[9px] md:text-[11px]" style={{ color: "#9CA3AF" }}>
               ({reviewCount})
             </span>
           </div>
         ) : null}
 
-        <div className="mt-2 flex flex-wrap items-baseline gap-2">
-          <span className="cc-card-price text-lg font-bold text-[#111111]">{formatPrice(sale)}</span>
+        <div className="cc-card-price-row mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 md:mt-2 md:gap-2">
+          <span className="cc-card-price text-[13px] font-bold text-[#111111] md:text-lg">{formatPrice(sale)}</span>
           {onSale ? (
             <>
-              <span className="text-[13px] line-through" style={{ color: "#9CA3AF" }}>
+              <span className="text-[10px] line-through md:text-[13px]" style={{ color: "#9CA3AF" }}>
                 {formatPrice(regular)}
               </span>
               {pct > 0 && badgeConfig.showSaleBadge ? (
-                <span className="text-xs font-medium" style={{ color: badgeConfig.saleBadgeColor }}>
+                <span className="text-[10px] font-medium md:text-xs" style={{ color: badgeConfig.saleBadgeColor }}>
                   {pct}% off
                 </span>
               ) : null}

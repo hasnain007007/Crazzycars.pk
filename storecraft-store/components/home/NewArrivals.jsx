@@ -52,11 +52,9 @@ export default function NewArrivals() {
             New products coming soon.
           </p>
         ) : (
-          <div className="products-scroll -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-4">
+          <div className="product-grid grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
             {products.map((p) => (
-              <div key={p.id || p.slug} className="w-[72vw] shrink-0 md:w-auto">
-                <PremiumProductCard product={{ ...p, isNew: true, newArrival: true }} />
-              </div>
+              <PremiumProductCard key={p.id || p.slug} product={{ ...p, isNew: true, newArrival: true }} />
             ))}
           </div>
         )}

@@ -321,7 +321,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
                   ))}
                 </div>
               ) : (
-                <div className={`grid gap-4 ${viewMeta.cols}`}>
+                <div className={`product-grid grid gap-2 md:gap-4 ${viewMeta.cols}`}>
                   {pageSlice.map((p) => (
                     <div key={p.id || p.slug}>
                       <ProductCard product={p} />

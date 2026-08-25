@@ -485,9 +485,9 @@ export function ProductsBrowseMedico({
             ) : null}
 
             {loading && !products.length ? (
-              <div className={`grid gap-4 ${viewMeta.cols}`}>
+              <div className={`product-grid grid gap-2 md:gap-4 ${viewMeta.cols}`}>
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="h-72 animate-pulse rounded border border-[rgba(0,0,0,0.12)] bg-[#EFEFEF]" />
+                  <div key={i} className="h-44 animate-pulse rounded border border-[rgba(0,0,0,0.12)] bg-[#EFEFEF] md:h-72" />
                 ))}
               </div>
             ) : isRowView ? (
@@ -501,7 +501,7 @@ export function ProductsBrowseMedico({
                 ))}
               </div>
             ) : (
-              <div className={`grid gap-4 ${viewMeta.cols}`}>
+              <div className={`product-grid grid gap-2 md:gap-4 ${viewMeta.cols}`}>
                 {products.map((p) => (
                   <div key={p.id || p._id || p.slug}>
                     <ProductCard product={p} />

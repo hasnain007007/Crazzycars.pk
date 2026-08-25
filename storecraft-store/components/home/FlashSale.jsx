@@ -46,10 +46,10 @@ function FlashProductCard({ product }) {
   return (
     <Link
       href={product.slug ? `/${product.slug}` : "#"}
-      className="min-w-[160px] flex-shrink-0 overflow-hidden rounded-xl border bg-white md:min-w-[180px]"
+      className="min-w-[132px] flex-shrink-0 overflow-hidden rounded-xl border bg-white md:min-w-[180px]"
       style={{ borderColor: "#F3F4F6" }}
     >
-      <div className="relative aspect-square" style={{ background: "#F9FAFB" }}>
+      <div className="relative aspect-[4/3] md:aspect-square" style={{ background: "#F9FAFB" }}>
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={product.name || "Product"} loading="lazy" className="h-full w-full object-cover" />
@@ -65,8 +65,8 @@ function FlashProductCard({ product }) {
           </span>
         ) : null}
       </div>
-      <div className="p-3">
-        <p className="line-clamp-2 text-sm font-medium text-[#111111]">{product.name}</p>
+      <div className="p-2 md:p-3">
+        <p className="line-clamp-2 text-[11px] font-medium text-[#111111] md:text-sm">{product.name}</p>
         <div className="mt-1 flex items-baseline gap-2">
           <span className="text-sm font-bold text-[#111111]">{formatPrice(sale)}</span>
           {onSale ? (

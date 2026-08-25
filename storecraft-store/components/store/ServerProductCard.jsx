@@ -43,7 +43,7 @@ function CardImage({ src, alt, priority, sizes, className }) {
 
 function PriceBlock({ sale, regular, onSale, nowClass, wasClass }) {
   return (
-    <p className="mt-2 flex flex-wrap items-baseline gap-2">
+    <p className="cc-card-price-row mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 md:mt-2 md:gap-2">
       <span className={nowClass}>{formatPrice(sale)}</span>
       {onSale && regular > sale ? (
         <span className={wasClass}>{formatPrice(regular)}</span>
@@ -123,7 +123,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
   return (
     <article className="product-card group relative flex h-full flex-col overflow-hidden rounded-xl border border-[#F3F4F6] bg-white">
       <a href={href} className="flex h-full flex-col">
-        <div className="relative block aspect-square overflow-hidden bg-[#F9FAFB]">
+        <div className="cc-card-media relative block aspect-square overflow-hidden bg-[#F9FAFB]">
           <CardImage
             src={imageUrl}
             alt={alt}
@@ -131,10 +131,10 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
           />
         </div>
-        <div className="cc-card-body flex flex-1 flex-col p-3 md:p-4">
-          <h3 className="cc-card-title m-0 text-sm font-medium leading-snug text-[#111111]">{card.name}</h3>
+        <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-4">
+          <h3 className="cc-card-title m-0 line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] md:text-sm">{card.name}</h3>
           {reviews ? (
-            <p className="mt-1.5 text-[11px] text-[#9CA3AF]">
+            <p className="cc-card-stars mt-0.5 text-[9px] text-[#9CA3AF] md:mt-1.5 md:text-[11px]">
               {reviews.rating != null ? `${reviews.rating.toFixed(1)} ★ ` : null}(
               {reviews.reviewCount} {reviews.reviewCount === 1 ? "review" : "reviews"})
             </p>
@@ -143,8 +143,8 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             sale={sale}
             regular={regular}
             onSale={onSale}
-            nowClass="cc-card-price text-lg font-bold text-[#111111]"
-            wasClass="text-[13px] line-through text-[#9CA3AF]"
+            nowClass="cc-card-price text-[13px] font-bold text-[#111111] md:text-lg"
+            wasClass="text-[10px] line-through text-[#9CA3AF] md:text-[13px]"
           />
         </div>
       </a>

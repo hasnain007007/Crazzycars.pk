@@ -81,7 +81,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
           {title}
         </h2>
         <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8 }} />
-        <p className="mt-2 text-sm" style={{ color: "#6B7280" }}>
+        <p className="mt-1.5 text-xs md:mt-2 md:text-sm" style={{ color: "#6B7280" }}>
           {subtitle}
         </p>
         {!loading && hasDeals && settings?.flashSaleEnabled !== false ? (
@@ -95,7 +95,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
           </p>
         ) : null}
 
-        <div className="scrollbar-hidden mt-6 flex gap-2 overflow-x-auto pb-2">
+        <div className="scrollbar-hidden mt-3 flex gap-1.5 overflow-x-auto pb-1 md:mt-6 md:gap-2 md:pb-2">
           {tabs.map((t) => {
             const isActive = active === t.filter;
             return (
@@ -103,7 +103,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
                 key={`${t.filter}-${t.label}`}
                 type="button"
                 onClick={() => setActive(t.filter)}
-                className="shrink-0 border px-4 py-2 text-sm font-semibold transition duration-200"
+                className="shrink-0 border px-3 py-1.5 text-xs font-semibold transition duration-200 md:px-4 md:py-2 md:text-sm"
                 style={{
                   borderRadius: 99,
                   background: isActive ? "#C41E1E" : "#FFFFFF",
@@ -118,16 +118,16 @@ export default function HotDeals({ settings, initialProducts = null }) {
         </div>
 
         {loading ? (
-          <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
+          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-5">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="aspect-square animate-pulse rounded-xl bg-gradient-to-r from-[#F3F4F6] via-[#E5E7EB] to-[#F3F4F6]"
+                className="aspect-[4/3] animate-pulse rounded-xl bg-gradient-to-r from-[#F3F4F6] via-[#E5E7EB] to-[#F3F4F6] md:aspect-square"
               />
             ))}
           </div>
         ) : hasDeals ? (
-          <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
+          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-5">
             {products.map((p) => (
               <ProductCard key={p.id || p.slug} product={p} />
             ))}

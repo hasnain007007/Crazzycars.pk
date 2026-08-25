@@ -172,11 +172,9 @@ export default function SaleSection() {
         ) : (
           <>
             {/* Mobile horizontal scroll */}
-            <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 scrollbar-hidden md:hidden">
+            <div className="product-grid grid grid-cols-2 gap-2 md:hidden">
               {products.map((p) => (
-                <div key={p.id || p.slug} className="w-[260px] shrink-0 snap-start">
-                  <PremiumProductCard product={p} />
-                </div>
+                <PremiumProductCard key={p.id || p.slug} product={p} />
               ))}
             </div>
 

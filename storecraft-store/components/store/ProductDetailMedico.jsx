@@ -1732,7 +1732,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
       {related.length ? (
         <section className="mx-auto mt-12 max-w-7xl px-4">
           <h2 className="mb-4 text-center text-xl font-bold md:mb-6 md:text-2xl">You May Also Like</h2>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="product-grid grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
             {related.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         </section>
