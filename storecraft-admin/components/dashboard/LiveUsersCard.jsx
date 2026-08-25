@@ -77,7 +77,7 @@ export function LiveUsersCard({ variant = "badge" }) {
         <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
       </span>
       <span className="font-bold tabular-nums text-emerald-800 dark:text-emerald-200">{display}</span>
-      <span className="font-medium text-emerald-700/70 dark:text-emerald-400/80">live now</span>
+      <span className="font-medium text-emerald-700/70 dark:text-emerald-400/80">active users</span>
     </div>
   );
 }

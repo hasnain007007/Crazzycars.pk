@@ -143,6 +143,7 @@ export function DashboardView() {
           <p className="text-xs text-[var(--text-muted)]">CrazzyCars ops overview · {rangeLabel}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <LiveUsersCard variant="badge" />
           <DashboardDateRange
             rangeId={rangeId}
             from={customFrom}
