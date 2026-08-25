@@ -78,6 +78,8 @@ export function serializeCartSession(doc) {
     emailReminderCount: o.emailReminderCount || 0,
     lastEmailReminderAt: o.lastEmailReminderAt,
     lastPath: o.lastPath || "",
+    userAgent: o.userAgent || "",
+    expiresAt: o.expiresAt || null,
     createdAt: o.createdAt,
     updatedAt: o.updatedAt,
     recoverUrl: recoveryCheckoutUrl(o.recoveryToken),

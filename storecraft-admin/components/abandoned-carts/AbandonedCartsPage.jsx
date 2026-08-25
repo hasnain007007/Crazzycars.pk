@@ -6,6 +6,7 @@ import { formatAdminPrice } from "@/lib/currency";
 import { getAbandonedCartWhatsAppMessage } from "@/lib/abandonedCart";
 import { openWhatsApp } from "@/components/orders/OrderWhatsAppButton";
 import { getAdminSettings } from "@/lib/adminSettingsCache";
+import { AbandonedCartDetailModal } from "@/components/abandoned-carts/AbandonedCartDetailModal";
 
 function formatWhen(d) {
   if (!d) return "—";
@@ -52,6 +53,7 @@ export function AbandonedCartsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [waSettings, setWaSettings] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [viewCart, setViewCart] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -72,6 +74,11 @@ export function AbandonedCartsPage() {
       if (json.stats) setStats(json.stats);
       if (json.settings) setSettings((s) => ({ ...s, ...json.settings }));
       setTotalPages(json.totalPages || 1);
+      setViewCart((prev) => {
+        if (!prev) return null;
+        const next = (json.carts || []).find((c) => c.id === prev.id);
+        return next || prev;
+      });
     } catch {
       toast.error("Network error");
     } finally {
@@ -89,6 +96,15 @@ export function AbandonedCartsPage() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!viewCart) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setViewCart(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewCart]);
+
   async function patchAction(id, action) {
     try {
       const res = await fetch("/api/abandoned-carts", {
@@ -103,6 +119,7 @@ export function AbandonedCartsPage() {
         return;
       }
       toast.success("Updated");
+      if (action === "dismiss" || action === "reopen") setViewCart(null);
       load();
     } catch {
       toast.error("Network error");
@@ -325,9 +342,13 @@ export function AbandonedCartsPage() {
                 rows.map((cart) => (
                   <tr key={cart.id} className="align-top">
                     <td className="px-4 py-3">
-                      <div className="font-semibold text-slate-900 dark:text-white">
+                      <button
+                        type="button"
+                        onClick={() => setViewCart(cart)}
+                        className="text-left font-semibold text-slate-900 hover:text-[#1d6fb8] hover:underline dark:text-white"
+                      >
                         {cart.customer?.name || "Guest"}
-                      </div>
+                      </button>
                       <div className="text-xs text-slate-500">{cart.customer?.phone || "—"}</div>
                       <div className="text-xs text-slate-500">{cart.customer?.email || "—"}</div>
                     </td>
@@ -362,6 +383,13 @@ export function AbandonedCartsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setViewCart(cart)}
+                          className="rounded-md bg-slate-900 px-2 py-1 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-900"
+                        >
+                          View
+                        </button>
                         {cart.customer?.phone ? (
                           <button
                             type="button"
@@ -437,6 +465,17 @@ export function AbandonedCartsPage() {
           </div>
         ) : null}
       </div>
+
+      {viewCart ? (
+        <AbandonedCartDetailModal
+          cart={viewCart}
+          onClose={() => setViewCart(null)}
+          onWhatsApp={sendWhatsApp}
+          onEmail={sendEmail}
+          onDismiss={(id) => patchAction(id, "dismiss")}
+          onReopen={(id) => patchAction(id, "reopen")}
+        />
+      ) : null}
     </div>
   );
 }
