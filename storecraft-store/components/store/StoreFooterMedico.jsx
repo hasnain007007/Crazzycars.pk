@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { normalizeStoreEmail } from '@/lib/storeContact'
 import { resolveStoreLogoUrl, trimmedLogoUrl } from '@/lib/storeLogo'
+import { rewriteStorePath } from '@/lib/categoryHandleAliases'
 import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
 
 const DEFAULT_SHOP_LINKS = [
@@ -329,7 +330,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
     if (!href || href === "#") {
       return label ? { label, href: fallbackHref } : null
     }
-    return { label: label || href, href }
+    return { label: label || href, href: rewriteStorePath(href) || href }
   }
 
   let resolvedShopLinks = shopLinks

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import {
   loadProductsForVehicle,
@@ -10,7 +10,7 @@ import {
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
-import { listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
+import { listingHref, listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
@@ -27,6 +27,9 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
     await dbConnect();
     const vehicle = await loadVehicleBySlug(slugStr);
     if (!vehicle) return { title: "Vehicle Not Found", robots: { index: false, follow: false } };
+    if (vehicle.slug && String(vehicle.slug) !== slugStr) {
+      permanentRedirect(listingHref(`/cars/${vehicle.slug}`, listing));
+    }
 
     const titleMeta = buildBrandedAbsoluteTitle(
       (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
@@ -56,7 +59,8 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
         images: vehicle.image ? [vehicle.image] : [],
       },
     };
-  } catch {
+  } catch (err) {
+    if (String(err?.digest || "").startsWith("NEXT_REDIRECT")) throw err;
     return { title: "Car Accessories" };
   }
 });
@@ -76,6 +80,9 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     throw err;
   }
   if (!vehicle) notFound();
+  if (vehicle.slug && String(vehicle.slug) !== slugStr) {
+    permanentRedirect(listingHref(`/cars/${vehicle.slug}`, listing));
+  }
 
   let rawProducts = [];
   try {

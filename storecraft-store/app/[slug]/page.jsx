@@ -6,6 +6,8 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Page from "@/lib/models/Page.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
+import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
+import { findExistingVehicleSlug } from "@/lib/vehiclePageData";
 import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { findActiveProductBySlugParam } from "@/lib/resolveProductSlug";
@@ -199,6 +201,16 @@ const loadContent = cache(async (slug) => {
   if (catDetail) {
     const catSlug = catDetail.category?.slug || slugStr;
     return { type: "redirect", to: `/categories/${catSlug}` };
+  }
+
+  const aliasedCategory = await resolveCategoryHandle(slugStr);
+  if (aliasedCategory) {
+    return { type: "redirect", to: `/categories/${aliasedCategory}` };
+  }
+
+  const vehicleSlug = await findExistingVehicleSlug(slugStr);
+  if (vehicleSlug) {
+    return { type: "redirect", to: `/cars/${vehicleSlug}` };
   }
 
   return null;

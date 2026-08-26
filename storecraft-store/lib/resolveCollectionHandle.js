@@ -1,6 +1,6 @@
 import { dbConnect } from "@/lib/db";
-import Category from "@/lib/models/Category.model";
 import Vehicle from "@/lib/models/Vehicle.model";
+import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
 
 function escapeRegex(value) {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -29,34 +29,10 @@ export async function resolveCollectionHandleToPath(rawHandle) {
   try {
     await dbConnect();
 
+    const categorySlug = await resolveCategoryHandle(handle);
+    if (categorySlug) return `/categories/${categorySlug}`;
+
     const ci = { $regex: `^${escapeRegex(handle)}$`, $options: "i" };
-
-    const category =
-      (await Category.findOne({
-        status: { $regex: /^active$/i },
-        shopifyHandle: ci,
-      })
-        .select("slug")
-        .lean()) ||
-      (await Category.findOne({
-        status: { $regex: /^active$/i },
-        slug: ci,
-      })
-        .select("slug")
-        .lean());
-
-    if (category?.slug) return `/categories/${category.slug}`;
-
-    // interior-light → interior-lights (common Shopify plural drift)
-    if (!handle.endsWith("s")) {
-      const plural = await Category.findOne({
-        status: { $regex: /^active$/i },
-        $or: [{ slug: `${handle}s` }, { shopifyHandle: `${handle}s` }],
-      })
-        .select("slug")
-        .lean();
-      if (plural?.slug) return `/categories/${plural.slug}`;
-    }
 
     const vehicleExact =
       (await Vehicle.findOne({

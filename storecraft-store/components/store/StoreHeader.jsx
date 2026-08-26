@@ -11,6 +11,7 @@ import { normalizeStoreEmail } from "@/lib/storeContact";
 import { trimmedLogoUrl } from "@/lib/storeLogo";
 import { getCodFreeDeliveryProgress, getProgressBarThreshold } from "@/lib/freeDelivery";
 import { getCategoryMegaColumns } from "@/lib/categories";
+import { rewriteStorePath } from "@/lib/categoryHandleAliases";
 import { useCustomer } from "@/lib/customerAuth";
 import MegaMenu from "@/components/store/MegaMenu";
 import { SearchSuggest } from "@/components/store/SearchSuggest";
@@ -59,6 +60,8 @@ function normalizeNavHref(label, href) {
     "/blog": "/blogs",
   };
   if (brokenPaths[pathOnly.toLowerCase()]) return brokenPaths[pathOnly.toLowerCase()];
+  const rewritten = rewriteStorePath(raw);
+  if (rewritten !== raw) return rewritten;
   return raw.startsWith("/") || raw.startsWith("http") ? raw : `/${raw}`;
 }
 

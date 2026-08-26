@@ -136,7 +136,22 @@ async function resolveFromCarCatalogSlug(slug) {
 }
 
 /**
- * Resolve active vehicle by Vehicle.slug OR Car Catalog model.slug (auto-creates Vehicle).
+ * Existing vehicle only (no catalog auto-create). Used for Shopify-era root URLs.
+ */
+export async function findExistingVehicleSlug(raw) {
+  const slug = String(raw || "").trim().toLowerCase();
+  if (!slug) return null;
+  const ci = { $regex: `^${escapeRegex(slug)}$`, $options: "i" };
+  const active = { isActive: { $ne: false } };
+  const row =
+    (await Vehicle.findOne({ ...active, slug }).select("slug").lean()) ||
+    (await Vehicle.findOne({ ...active, shopifyHandle: ci }).select("slug").lean()) ||
+    (await Vehicle.findOne({ ...active, catalogModelSlug: slug }).select("slug").lean());
+  return row?.slug ? String(row.slug) : null;
+}
+
+/**
+ * Resolve active vehicle by Vehicle.slug, Shopify handle, OR Car Catalog model.slug (auto-creates Vehicle).
  */
 export async function loadVehicleBySlug(slugStr) {
   const slug = String(slugStr || "").trim().toLowerCase();
@@ -146,6 +161,13 @@ export async function loadVehicleBySlug(slugStr) {
   if (vehicle) return vehicle;
 
   vehicle = await Vehicle.findOne({ catalogModelSlug: slug, isActive: true }).lean();
+  if (vehicle) return vehicle;
+
+  const handleCi = { $regex: `^${escapeRegex(slug)}$`, $options: "i" };
+  vehicle = await Vehicle.findOne({
+    isActive: { $ne: false },
+    shopifyHandle: handleCi,
+  }).lean();
   if (vehicle) return vehicle;
 
   return resolveFromCarCatalogSlug(slug);

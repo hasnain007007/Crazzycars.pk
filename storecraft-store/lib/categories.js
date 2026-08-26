@@ -2,10 +2,13 @@
  * Category helpers for storefront routes.
  * Catalog categories come from MongoDB (admin → Categories / seed script).
  */
+import { aliasedCategorySlug } from "@/lib/categoryHandleAliases";
+
 export function categoryHref(slug) {
   const s = String(slug || "").trim();
   if (!s) return "/categories";
-  return `/categories/${s}`;
+  const canonical = aliasedCategorySlug(s) || s;
+  return `/categories/${canonical}`;
 }
 
 /** @deprecated Prefer GET /api/categories/tree — kept for legacy header fallbacks. */

@@ -3,6 +3,7 @@ import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods"
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { STORE_POLICY } from "@/config/store-policy";
 import { sanitizeSettingsDocument, sanitizeStoreName } from "@/lib/sanitizeForeignBrand";
+import { rewriteStorePath } from "@/lib/categoryHandleAliases";
 import {
   sanitizeAnnouncementItems,
   sanitizeCustomerShippingNote,
@@ -129,8 +130,8 @@ const DEFAULT_NAV = [
   { label: "Categories", href: "/categories", mega: true },
   { label: "Exterior", href: "/categories/exterior", mega: false },
   { label: "Interior", href: "/categories/interior", mega: false },
-  { label: "Lighting", href: "/categories/car-lighting", mega: false },
-  { label: "Car Care", href: "/categories/car-care", mega: false },
+  { label: "Lighting", href: "/categories/led-lighting", mega: false },
+  { label: "Car Care", href: "/categories/car-care-safety", mega: false },
   { label: "Deals", href: "/shop?deals=1", mega: false, deals: true },
   { label: "Blog", href: "/blogs", mega: false },
 ];
@@ -268,6 +269,15 @@ export function normalizeProductBadgeUi(raw) {
   };
 }
 
+function rewriteFooterLinks(links) {
+  if (!Array.isArray(links)) return [];
+  return links.map((link) => {
+    if (!link || typeof link !== "object") return link;
+    const href = rewriteStorePath(String(link.href || link.url || "").trim());
+    return href ? { ...link, href, url: href } : link;
+  });
+}
+
 function normalizeMegaMenuItem(item) {
   const columns = Array.isArray(item?.columns)
     ? item.columns
@@ -277,14 +287,14 @@ function normalizeMegaMenuItem(item) {
             .filter((l) => String(l?.label || "").trim())
             .map((l) => ({
               label: String(l.label).trim(),
-              href: String(l.url || l.href || "#").trim() || "#",
+              href: rewriteStorePath(String(l.url || l.href || "#").trim() || "#"),
             })),
         }))
         .filter((c) => c.heading || c.links.length)
     : [];
   return {
     label: String(item?.label || "").trim(),
-    href: String(item?.url || item?.href || "/").trim() || "/",
+    href: rewriteStorePath(String(item?.url || item?.href || "/").trim() || "/"),
     featured: item?.featured === true,
     mega: item?.mega !== false && columns.length > 0,
     deals: /deal/i.test(String(item?.label || "")),
@@ -408,9 +418,9 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
       contactEmail: f.contactEmail || f.email || f.contact?.email || "",
       phone: f.phone || f.contact?.phone || "",
       paymentMethods: Array.isArray(f.paymentMethods) ? f.paymentMethods : [],
-      shopLinks: Array.isArray(f.shopLinks) ? f.shopLinks : [],
-      customerCareLinks: Array.isArray(f.customerCareLinks) ? f.customerCareLinks : [],
-      categoriesLinks: Array.isArray(f.categoriesLinks) ? f.categoriesLinks : [],
+      shopLinks: rewriteFooterLinks(f.shopLinks),
+      customerCareLinks: rewriteFooterLinks(f.customerCareLinks),
+      categoriesLinks: rewriteFooterLinks(f.categoriesLinks),
       social: f.social && typeof f.social === "object" ? f.social : {},
       showPaymentIcons: f.showPaymentIcons !== false,
       showLogoInFooter: f.showLogoInFooter !== false,

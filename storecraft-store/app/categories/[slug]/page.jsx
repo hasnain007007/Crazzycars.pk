@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
@@ -12,10 +12,11 @@ import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
 import { getServerStoreSettings } from "@/lib/serverSettings";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
-import { listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
+import { listingHref, listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
+import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
 
 /** ISR: prerender active categories at build; refresh every 2 minutes. */
 export const revalidate = 120;
@@ -118,6 +119,10 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
   const slugStr = String(slug || "").trim();
   const listing = parseListingSearchParams(await searchParams);
   const listingPath = `/categories/${slugStr}`;
+  const canonicalSlug = await resolveCategoryHandle(slugStr);
+  if (canonicalSlug && canonicalSlug !== slugStr) {
+    permanentRedirect(listingHref(`/categories/${canonicalSlug}`, listing));
+  }
 
   try {
     const [category, detail] = await Promise.all([
@@ -203,6 +208,11 @@ export default async function CategoryPage({ params, searchParams }) {
   if (!slugStr) notFound();
   const listing = parseListingSearchParams(await searchParams);
   const listingPath = `/categories/${slugStr}`;
+
+  const canonicalSlug = await resolveCategoryHandle(slugStr);
+  if (canonicalSlug && canonicalSlug !== slugStr) {
+    permanentRedirect(listingHref(`/categories/${canonicalSlug}`, listing));
+  }
 
   // Prefer Mongo catalog (seeded categories) so /categories/[slug] never 404s
   // when Shopify is enabled but collections use different handles.
