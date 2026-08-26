@@ -11,13 +11,15 @@ import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
 import { listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
+import { withSafeMetadata } from "@/lib/safeMetadata";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
 
 export const revalidate = 300;
 
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "CrazzyCars.pk";
 
-export async function generateMetadata({ params, searchParams }) {
+export const generateMetadata = withSafeMetadata(async function vehicleMetadata({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const listing = parseListingSearchParams(await searchParams);
@@ -57,7 +59,7 @@ export async function generateMetadata({ params, searchParams }) {
   } catch {
     return { title: "Car Accessories" };
   }
-}
+});
 
 export default async function VehicleSlugPage({ params, searchParams }) {
   const { slug } = await params;
@@ -65,12 +67,32 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   if (!slugStr) notFound();
   const listing = parseListingSearchParams(await searchParams);
 
-  await dbConnect();
-  const vehicle = await loadVehicleBySlug(slugStr);
+  let vehicle = null;
+  try {
+    await dbConnect();
+    vehicle = await loadVehicleBySlug(slugStr);
+  } catch (err) {
+    console.error("[vehicle page] load failed:", err?.message || err);
+    throw err;
+  }
   if (!vehicle) notFound();
 
-  const rawProducts = await loadProductsForVehicle(vehicle);
-  const allProducts = rawProducts.map(serializeVehicleProduct);
+  let rawProducts = [];
+  try {
+    rawProducts = await loadProductsForVehicle(vehicle);
+  } catch (err) {
+    console.error("[vehicle page] products failed:", err?.message || err);
+  }
+  const allProducts = rawProducts
+    .map((row) => {
+      try {
+        return serializeVehicleProduct(row);
+      } catch (err) {
+        console.error("[serializeVehicleProduct]", row?.slug, err);
+        return null;
+      }
+    })
+    .filter(Boolean);
   const sorted = sortProductsClient(allProducts, listing.sort);
   const total = sorted.length;
   const totalPages = Math.max(1, Math.ceil(total / listing.pageSize) || 1);
@@ -108,11 +130,11 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(collectionLd) }}
       />
 
       <section

@@ -1,10 +1,11 @@
 import ContactPageView from "@/components/store/ContactPageView";
 import { getServerStoreSettings } from "@/lib/serverSettings";
 import { buildPageMetadata } from "@/lib/pageMetadata";
+import { withSafeMetadata } from "@/lib/safeMetadata";
 
 const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
 
-export async function generateMetadata() {
+export const generateMetadata = withSafeMetadata(async function contactMetadata() {
   const settings = await getServerStoreSettings();
   const hero = settings?.contactPage?.hero || {};
   const title = hero.title ? `${hero.title} | ${STORE}` : `Contact Us | ${STORE}`;
@@ -17,7 +18,7 @@ export async function generateMetadata() {
     path: "/contact",
     absoluteTitle: true,
   });
-}
+});
 
 export const dynamic = "force-dynamic";
 

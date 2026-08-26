@@ -6,6 +6,7 @@ import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { loadShopByCarIndex } from "@/lib/vehiclePageData";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 
 export const revalidate = 300;
 
@@ -26,8 +27,13 @@ function yearLabel(v) {
 }
 
 export default async function CarsIndexPage() {
-  await dbConnect();
-  const vehicles = await loadShopByCarIndex();
+  let vehicles = [];
+  try {
+    await dbConnect();
+    vehicles = await loadShopByCarIndex();
+  } catch (err) {
+    console.error("[cars index] load failed:", err?.message || err);
+  }
   const byMake = new Map();
   for (const v of vehicles) {
     const make = v.make || "Other";
@@ -61,8 +67,8 @@ export default async function CarsIndexPage() {
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(crumbs) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(listLd) }} />
 
       <div
         className="cat-index-chrome"

@@ -14,6 +14,8 @@ import {
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
 } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
+import { withSafeMetadata } from "@/lib/safeMetadata";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 
 /**
  * ISR for product / CMS pages. Category slugs 308 to /categories/:slug.
@@ -202,7 +204,10 @@ const loadContent = cache(async (slug) => {
   return null;
 });
 
-export async function generateMetadata({ params, searchParams }) {
+export const generateMetadata = withSafeMetadata(async function buildSlugMetadata({
+  params,
+  searchParams,
+}) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const content = await loadContent(slugStr);
@@ -283,7 +288,7 @@ export async function generateMetadata({ params, searchParams }) {
       description: page.seo?.metaDescription || "",
     },
   };
-}
+});
 
 function toProductLd(product) {
   const images = (product.media?.images || product.images || [])
@@ -348,11 +353,29 @@ export default async function ProductPage({ params, searchParams }) {
       <>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(toProductLd(content.data)) }}
+          dangerouslySetInnerHTML={{
+            __html: (() => {
+              try {
+                return safeJsonLd(toProductLd(content.data));
+              } catch (e) {
+                console.error("product json-ld:", e);
+                return "{}";
+              }
+            })(),
+          }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(toBreadcrumbLd(content.data)) }}
+          dangerouslySetInnerHTML={{
+            __html: (() => {
+              try {
+                return safeJsonLd(toBreadcrumbLd(content.data));
+              } catch (e) {
+                console.error("breadcrumb json-ld:", e);
+                return "{}";
+              }
+            })(),
+          }}
         />
         <ProductDetailMedico product={content.data} relatedProducts={content.relatedProducts || []} />
       </>

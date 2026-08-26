@@ -161,7 +161,16 @@ export async function fetchProductsServer(params = {}) {
     });
 
     return {
-      products: rows.map(serializeStoreProductSummary),
+      products: rows
+        .map((row) => {
+          try {
+            return serializeStoreProductSummary(row);
+          } catch (err) {
+            console.error("[serializeStoreProductSummary]", row?.slug, err);
+            return null;
+          }
+        })
+        .filter(Boolean),
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1,

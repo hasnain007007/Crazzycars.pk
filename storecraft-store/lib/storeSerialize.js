@@ -3,6 +3,12 @@ import { serializeStoreOption } from "@/lib/variationOptions";
 import { combinationSignature } from "@/lib/variantMatrix";
 import { sanitizeProductHtml, toPlainText } from "@/lib/sanitizeHtml";
 
+function productDocId(p) {
+  if (p?._id != null) return String(p._id);
+  if (p?.id != null) return String(p.id);
+  return "";
+}
+
 function getStock(product) {
   return (
     Number(product?.inventory?.quantity) ||
@@ -80,7 +86,7 @@ export function serializeStoreProductSummary(p) {
     ? p.media.images.map((i) => i?.url).filter(Boolean)
     : [];
   return {
-    id: p._id.toString(),
+    id: productDocId(p),
     name: p.name,
     slug: p.slug,
     articleNo: p.articleNo || p.inventory?.sku || "",
@@ -178,7 +184,7 @@ export function serializeStoreProductDetail(p) {
       : stock > 0;
 
   return {
-    id: p._id.toString(),
+    id: productDocId(p),
     name: p.name,
     slug: p.slug,
     articleNo: p.articleNo || "",

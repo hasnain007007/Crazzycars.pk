@@ -1,10 +1,11 @@
 import BlogListView from "@/components/store/BlogListView";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW } from "@/lib/seo/robotsMeta";
+import { withSafeMetadata } from "@/lib/safeMetadata";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ searchParams }) {
+export const generateMetadata = withSafeMetadata(async function blogsMetadata({ searchParams }) {
   const sp = (await searchParams) || {};
   const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
   const base = buildPageMetadata({
@@ -19,7 +20,7 @@ export async function generateMetadata({ searchParams }) {
     ...base,
     robots: page > 1 ? ROBOTS_NOINDEX_FOLLOW : ROBOTS_INDEX_FOLLOW,
   };
-}
+});
 
 export default async function BlogPage({ searchParams }) {
   const params = await searchParams;

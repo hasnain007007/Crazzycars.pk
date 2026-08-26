@@ -185,8 +185,8 @@ export function serializeVehicleProduct(p) {
   const compare = onSale && regular > price ? regular : null;
   const salePrice = onSale ? Number(p.pricing?.salePrice) || 0 : 0;
   return {
-    id: String(p._id),
-    _id: String(p._id),
+    id: p?._id != null ? String(p._id) : String(p?.id || ""),
+    _id: p?._id != null ? String(p._id) : String(p?.id || ""),
     name: p.name,
     slug: p.slug,
     href: `/${p.slug}`,

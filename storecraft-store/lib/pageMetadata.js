@@ -1,9 +1,6 @@
 import { absoluteUrl } from "@/lib/siteUrl";
-import {
-  ROBOTS_INDEX_FOLLOW,
-  ROBOTS_NOINDEX_FOLLOW,
-  ROBOTS_NOINDEX_NOFOLLOW,
-} from "@/lib/seo/robotsMeta";
+import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, ROBOTS_NOINDEX_NOFOLLOW } from "@/lib/seo/robotsMeta";
+import { sanitizeMetadata } from "@/lib/safeMetadata";
 
 export function buildPageMetadata({
   title,
@@ -15,7 +12,7 @@ export function buildPageMetadata({
 }) {
   const url = absoluteUrl(path);
   const ogImage = absoluteUrl("/og-image.jpg");
-  return {
+  return sanitizeMetadata({
     // The root layout appends "| <storeName>" from the settings document. Titles
     // that already carry the brand opt out, otherwise the name renders twice —
     // and a stale storeName in settings would override the correct brand.
@@ -40,5 +37,5 @@ export function buildPageMetadata({
       description,
       images: [ogImage],
     },
-  };
+  });
 }

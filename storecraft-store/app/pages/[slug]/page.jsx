@@ -4,6 +4,7 @@ import Page from "@/lib/models/Page.model";
 import PageView from "@/components/store/PageView";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
+import { withSafeMetadata } from "@/lib/safeMetadata";
 
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
 
@@ -20,7 +21,7 @@ async function loadPage(slug) {
   }
 }
 
-export async function generateMetadata({ params }) {
+export const generateMetadata = withSafeMetadata(async function cmsPageMetadata({ params }) {
   const { slug } = await params;
   const page = await loadPage(slug);
   if (!page) return { title: "Page Not Found" };
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }) {
     },
     twitter: { card: "summary_large_image", title, description },
   };
-}
+});
 
 export const dynamic = "force-dynamic";
 

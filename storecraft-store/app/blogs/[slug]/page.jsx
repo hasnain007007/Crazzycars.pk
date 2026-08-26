@@ -4,6 +4,8 @@ import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
 import BlogPostView from "@/components/store/BlogPostView";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { withSafeMetadata, isNextNavigationError } from "@/lib/safeMetadata";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 const BASE_URL = getSiteUrl();
 
 function withClientId(doc) {
@@ -48,7 +50,7 @@ async function loadRecentPosts(excludeSlug) {
   }
 }
 
-export async function generateMetadata({ params }) {
+export const generateMetadata = withSafeMetadata(async function blogPostMetadata({ params }) {
   const { slug } = await params;
   const post = await loadBlogPost(slug);
   if (!post) return { title: "Blog Not Found" };
@@ -82,7 +84,7 @@ export async function generateMetadata({ params }) {
       images: post.featuredImage?.url ? [post.featuredImage.url] : [],
     },
   };
-}
+});
 
 export const dynamic = "force-dynamic";
 
@@ -133,12 +135,13 @@ export default async function BlogPostPage({ params }) {
 
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
         <BlogPostView initialPost={post} initialRecent={recentPosts} />
       </div>
     );
   } catch (error) {
+    if (isNextNavigationError(error)) throw error;
     console.error("Blog post page error:", error);
-    notFound();
+    throw error;
   }
 }

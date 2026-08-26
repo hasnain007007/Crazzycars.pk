@@ -15,6 +15,8 @@ import { isShopifyEnabled } from "@/lib/shopify";
 import { fetchCategoryTreeServer } from "@/lib/serverCategoryTree";
 import { getSiteUrl, isIndexableEnvironment, absoluteUrl } from "@/lib/siteUrl";
 import { buildFaviconMetadata } from "@/lib/faviconUrl";
+import { sanitizeMetadata, withSafeMetadata } from "@/lib/safeMetadata";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import "./globals.css";
 
@@ -65,7 +67,7 @@ function robotsFromSeo(robotsTxt) {
   };
 }
 
-export async function generateMetadata() {
+export const generateMetadata = withSafeMetadata(async function rootMetadata() {
   try {
     const settings = await getLayoutSettings();
     const seo = settings?.seo || {};
@@ -121,8 +123,15 @@ export async function generateMetadata() {
 
     const icons = buildFaviconMetadata(general);
 
-    return {
-      metadataBase: new URL(siteUrl),
+    let metadataBase;
+    try {
+      metadataBase = new URL(siteUrl);
+    } catch {
+      metadataBase = new URL("https://crazzycars.pk");
+    }
+
+    return sanitizeMetadata({
+      metadataBase,
       title: {
         default: title,
         template: `%s | ${storeName}`,
@@ -151,11 +160,17 @@ export async function generateMetadata() {
       // Do NOT set alternates.canonical here — a sitewide homepage canonical
       // makes every page look like a duplicate of /. Child routes set their own.
       verification,
-    };
+    });
   } catch (e) {
     console.error("generateMetadata error:", e);
-    return {
-      metadataBase: new URL(getSiteUrl()),
+    let metadataBase;
+    try {
+      metadataBase = new URL(getSiteUrl());
+    } catch {
+      metadataBase = new URL("https://crazzycars.pk");
+    }
+    return sanitizeMetadata({
+      metadataBase,
       title: "CrazzyCars.pk | Car Accessories Pakistan",
       description: FALLBACK_DESCRIPTION,
       icons: buildFaviconMetadata(),
@@ -169,7 +184,7 @@ export async function generateMetadata() {
       },
     };
   }
-}
+});
 
 export default async function RootLayout({ children }) {
   let settings = {};
@@ -236,13 +251,13 @@ export default async function RootLayout({ children }) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationJsonLd),
+            __html: safeJsonLd(organizationJsonLd),
           }}
         />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteJsonLd),
+            __html: safeJsonLd(websiteJsonLd),
           }}
         />
         <CustomerProvider>

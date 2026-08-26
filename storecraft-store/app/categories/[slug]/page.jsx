@@ -13,6 +13,8 @@ import { getServerStoreSettings } from "@/lib/serverSettings";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
+import { withSafeMetadata } from "@/lib/safeMetadata";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
 
 /** ISR: prerender active categories at build; refresh every 2 minutes. */
@@ -111,7 +113,7 @@ function paginateRows(rows, listing) {
   };
 }
 
-export async function generateMetadata({ params, searchParams }) {
+export const generateMetadata = withSafeMetadata(async function categoryMetadata({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const listing = parseListingSearchParams(await searchParams);
@@ -193,7 +195,7 @@ export async function generateMetadata({ params, searchParams }) {
   }
 
   return { title: "Category Not Found", robots: { index: false, follow: false } };
-}
+});
 
 export default async function CategoryPage({ params, searchParams }) {
   const { slug } = await params;
@@ -243,11 +245,11 @@ export default async function CategoryPage({ params, searchParams }) {
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(collectionLd) }}
         />
         <CategoryPageChrome
           category={data.category}
