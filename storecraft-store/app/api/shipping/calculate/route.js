@@ -19,7 +19,7 @@ async function calculateQuote({ country, city, province, totalWeight, orderSubto
   return data;
 }
 
-/** GET /api/shipping/calculate?province=Punjab&total=2999&city=Lahore */
+/** GET /api/shipping/calculate?province=Punjab&total=4000&city=Lahore */
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);

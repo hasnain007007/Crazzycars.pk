@@ -155,7 +155,7 @@ function BestSellerPicker({ productIds = [], onChange }) {
 
 const DEFAULT_FORM = {
   announcementMessages: [
-    { text: "Nationwide delivery — flat Rs. 250 delivery charges", isActive: true },
+    { text: "Nationwide delivery — courier fee shown at checkout", isActive: true },
     { text: "Cash on delivery available at checkout", isActive: true },
     
   ],
@@ -163,7 +163,7 @@ const DEFAULT_FORM = {
   whyChooseUs: [
     { icon: "🚚", title: "We Deliver Everywhere", description: "From Karachi to Khyber — COD nationwide", isActive: true },
     { icon: "💰", title: "Pay When It Arrives", description: "Cash on delivery — no card needed", isActive: true },
-    { icon: "🔄", title: "No Hassle Returns", description: "Changed your mind? 7 days, no questions asked", isActive: true },
+    { icon: "🔄", title: "Returns, done honestly", description: "Refund if defective or wrong — exchange if you change your mind", isActive: true },
     { icon: "✅", title: "Real Products, Real Quality", description: "Every item tested before it reaches you", isActive: true },
   ],
   brands: [

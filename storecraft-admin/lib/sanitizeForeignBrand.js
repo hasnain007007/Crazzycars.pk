@@ -10,7 +10,7 @@ export const CANONICAL_PHONE = "03284010007";
 export const CANONICAL_ADDRESS = "Gujranwala, Punjab, Pakistan";
 export const CANONICAL_INSTAGRAM = "https://www.instagram.com/crazzycars.pk";
 export const CANONICAL_TIKTOK = "https://www.tiktok.com/@crazzycars.pk";
-export const CANONICAL_TAGLINE = "Fitment-first car accessories from Gujranwala";
+export const CANONICAL_TAGLINE = "The original performance-parts shop in Gujranwala";
 
 const FOREIGN_BRAND = /homefy/i;
 const PLACEHOLDER = /\[FILL IN/i;

@@ -196,7 +196,7 @@ export default async function RootLayout({ children }) {
       footer: {
         ...footerRaw,
         copyrightText: footerRaw.copyrightText || settings?.footerMeta?.copyrightText || "",
-        tagline: footerRaw.tagline || settings?.footerMeta?.tagline || "Exterior performance styling from Gujranwala",
+        tagline: footerRaw.tagline || settings?.footerMeta?.tagline || "The original performance-parts shop in Gujranwala",
         paymentMethods: footerRaw.paymentMethods || settings?.footerMeta?.paymentMethods || [],
         shopLinks: footerRaw.shopLinks || [],
         customerCareLinks: footerRaw.customerCareLinks || [],

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
-import { standardDeliveryFeeShort, returnsHeroTrustChip } from "@/lib/storePolicyCopy";
+import { homepageHeroTrustItems } from "@/lib/storePolicyCopy";
 import {
   heroHeightStyle,
   mapBannerToSlide,
@@ -15,10 +15,7 @@ const SWIPE_PX = 48;
 const SLIDE_MS = 560;
 
 function useTrustItems() {
-  return useMemo(
-    () => ["Nationwide COD", standardDeliveryFeeShort(), returnsHeroTrustChip()],
-    []
-  );
+  return useMemo(() => homepageHeroTrustItems(), []);
 }
 
 function normalizeButtonUrl(url) {

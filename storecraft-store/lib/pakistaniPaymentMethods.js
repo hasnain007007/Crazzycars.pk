@@ -95,7 +95,7 @@ export function isOfflinePakistaniPayment(method) {
   return PAKISTANI_PAYMENT_METHOD_KEYS.includes(id);
 }
 
-/** JazzCash, Easypaisa, banks, etc. — advance payment qualifies for free delivery. */
+/** JazzCash, Easypaisa, banks, etc. — paid before dispatch, not Cash on Delivery. */
 export function isAdvancePaymentMethod(method) {
   const id = String(method || "cod").trim();
   if (!id || id.toLowerCase() === "cod") return false;

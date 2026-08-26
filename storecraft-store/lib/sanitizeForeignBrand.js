@@ -2,6 +2,7 @@
  * Strip leftover Homefy.pk (and similar template) branding from Settings.
  * A find-replace of "Crazzycars" → "Homefy.pk" produced "Homefy.pk.pk" in copy.
  */
+import { returnsTrustBadge, standardDeliveryFeeStatement } from "./storePolicyCopy.js";
 
 export const CANONICAL_STORE_NAME = "Crazzycars.pk";
 export const CANONICAL_EMAIL = "info@crazzycars.pk";
@@ -10,7 +11,9 @@ export const CANONICAL_PHONE = "03284010007";
 export const CANONICAL_ADDRESS = "Gujranwala, Punjab, Pakistan";
 export const CANONICAL_INSTAGRAM = "https://www.instagram.com/crazzycars.pk";
 export const CANONICAL_TIKTOK = "https://www.tiktok.com/@crazzycars.pk";
-export const CANONICAL_TAGLINE = "Fitment-first car accessories from Gujranwala";
+export const CANONICAL_TAGLINE = "The original performance-parts shop in Gujranwala";
+export const CANONICAL_BRAND_SUBHEADING = "Splitters, kits, and carbon accents for Pakistani builds";
+const STALE_TEMPLATE_TAGLINE = /fitment-first car accessories from/i;
 
 const FOREIGN_BRAND = /homefy/i;
 const PLACEHOLDER = /\[FILL IN/i;
@@ -33,7 +36,7 @@ function isForeignBrandAssetUrl(value) {
 export function replaceForeignBrandString(value) {
   if (typeof value !== "string") return value;
   if (isForeignBrandAssetUrl(value)) return "";
-  if (KITCHEN_TAGLINE.test(value)) return CANONICAL_TAGLINE;
+  if (KITCHEN_TAGLINE.test(value) || STALE_TEMPLATE_TAGLINE.test(value)) return CANONICAL_TAGLINE;
 
   let s = value;
   s = s.replace(/https?:\/\/(?:www\.)?homefy\.pk(?:\.pk)?/gi, CANONICAL_WEBSITE);
@@ -118,7 +121,12 @@ function applyCanonicalFieldFixes(settings) {
     if (!footer.companyName || looksLikeForeignBrand(footer.companyName)) {
       footer.companyName = CANONICAL_STORE_NAME;
     }
-    if (!footer.tagline || KITCHEN_TAGLINE.test(footer.tagline) || looksLikeForeignBrand(footer.tagline)) {
+    if (
+      !footer.tagline ||
+      KITCHEN_TAGLINE.test(footer.tagline) ||
+      looksLikeForeignBrand(footer.tagline) ||
+      STALE_TEMPLATE_TAGLINE.test(footer.tagline)
+    ) {
       footer.tagline = CANONICAL_TAGLINE;
     }
     footer.contactEmail = sanitizeStoreEmail(footer.contactEmail);
@@ -182,6 +190,45 @@ function applyCanonicalFieldFixes(settings) {
     settings.invoice.bankAccountTitle = CANONICAL_STORE_NAME;
   }
 
+  const brandStory = settings.brandStory;
+  if (brandStory && typeof brandStory === "object") {
+    if (!brandStory.subheading || STALE_TEMPLATE_TAGLINE.test(brandStory.subheading)) {
+      brandStory.subheading = CANONICAL_BRAND_SUBHEADING;
+    }
+  }
+
+  const aboutHero = settings.aboutPage?.hero;
+  if (aboutHero && typeof aboutHero === "object") {
+    if (!aboutHero.title || STALE_TEMPLATE_TAGLINE.test(aboutHero.title)) {
+      aboutHero.title = CANONICAL_TAGLINE;
+    }
+  }
+
+  const trustBadges = settings.productBadges?.trustBadges;
+  if (Array.isArray(trustBadges)) {
+    const returns = returnsTrustBadge();
+    for (const badge of trustBadges) {
+      if (!badge || typeof badge !== "object") continue;
+      const blob = `${badge.text || ""} ${badge.subtext || ""}`;
+      if (/\d+\s*day returns/i.test(blob) || /hassle[\s-]*free/i.test(blob)) {
+        badge.text = returns.text;
+        badge.subtext = returns.subtext;
+      }
+    }
+  }
+
+  const why = settings.homepageSettings?.whyChooseUs;
+  if (Array.isArray(why)) {
+    for (const item of why) {
+      if (!item || typeof item !== "object") continue;
+      const blob = `${item.title || ""} ${item.description || ""}`;
+      if (/no questions asked/i.test(blob) || /hassle[\s-]*free/i.test(blob)) {
+        item.title = "Returns, done honestly";
+        item.description = "Refund if defective or wrong — exchange if you change your mind";
+      }
+    }
+  }
+
   const faqs = settings.aboutPage?.faq;
   if (Array.isArray(faqs)) {
     for (const item of faqs) {
@@ -189,12 +236,11 @@ function applyCanonicalFieldFixes(settings) {
       const question = String(item.question || "");
       const answer = String(item.answer || "");
       if (/free[\s-]+deliver/i.test(answer)) {
-        item.answer =
-          "Yes. We deliver nationwide from Gujranwala. Standard delivery is a flat Rs. 250 on every order — there is no order-value waiver. Lahore typically arrives in 2–3 business days; other cities are confirmed at checkout.";
+        item.answer = `Yes. We deliver nationwide from Gujranwala. ${standardDeliveryFeeStatement()} Lahore typically arrives in 2–3 business days; other cities are confirmed at checkout.`;
       }
       if (/return policy/i.test(question) && (/30 days/i.test(answer) || looksLikeForeignBrand(answer))) {
         item.answer =
-          "Within 7 days of delivery: full refund if the item arrived defective or we shipped the wrong item. Change-of-mind requests are exchange-only (not a cash refund). Message us on WhatsApp or email info@crazzycars.pk to start a claim.";
+          "Within our returns window: full refund if the item arrived defective or we shipped the wrong item. Change-of-mind requests are exchange-only (not a cash refund). Message us on WhatsApp or email info@crazzycars.pk to start a claim.";
       }
     }
   }

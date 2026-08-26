@@ -14,7 +14,7 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
   whyChooseUs: [
     { icon: "🚚", title: "Nationwide Delivery", description: "We ship across Pakistan", isActive: true },
     { icon: "💰", title: "Cash on Delivery", description: "Pay when your order arrives", isActive: true },
-    { icon: "🔄", title: "Easy Returns", description: "Hassle-free returns on eligible items", isActive: true },
+    { icon: "🔄", title: "Returns, done honestly", description: "Refund if defective or wrong — exchange if you change your mind", isActive: true },
     { icon: "✅", title: "Quality Checked", description: "Products checked before dispatch", isActive: true },
   ],
   brands: [
@@ -102,12 +102,19 @@ export function normalizeHomepageSettings(raw) {
     heroCtaUrl: raw.heroCtaUrl || d.heroCtaUrl,
     whyChooseUs:
       Array.isArray(raw.whyChooseUs) && raw.whyChooseUs.length
-        ? raw.whyChooseUs.map((item) => ({
-            icon: String(item?.icon ?? ""),
-            title: String(item?.title ?? ""),
-            description: String(item?.description ?? ""),
-            isActive: item?.isActive !== false,
-          }))
+        ? raw.whyChooseUs.map((item) => {
+            const title = String(item?.title ?? "");
+            const description = String(item?.description ?? "");
+            const blob = `${title} ${description}`;
+            const stale = /no questions asked/i.test(blob) || /hassle[\s-]*free/i.test(blob);
+            const fallback = d.whyChooseUs.find((x) => /returns/i.test(x.title)) || d.whyChooseUs[2];
+            return {
+              icon: String(item?.icon ?? ""),
+              title: stale ? fallback.title : title,
+              description: stale ? fallback.description : description,
+              isActive: item?.isActive !== false,
+            };
+          })
         : d.whyChooseUs,
     brands:
       Array.isArray(raw.brands) && raw.brands.length

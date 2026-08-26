@@ -2,6 +2,32 @@ import { productPath } from "@/lib/productPath";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 
 const GENERIC_ALTS = new Set(["", "product", "image", "photo", "img", "n/a", "na"]);
+const ALT_STOP = new Set([
+  "the", "and", "with", "for", "from", "style", "car", "cars", "auto",
+  "premium", "quality", "pakistan", "crazzycars",
+]);
+
+function significantAltTokens(value) {
+  return new Set(
+    String(value || "")
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((t) => t.length >= 4 && !ALT_STOP.has(t) && !/^\d+$/.test(t))
+  );
+}
+
+/** True when image alt is about this product, not a leftover from another SKU. */
+export function altBelongsToProduct(alt, product) {
+  const altTok = significantAltTokens(alt);
+  const own = new Set([
+    ...significantAltTokens(product?.name),
+    ...significantAltTokens(product?.slug),
+  ]);
+  if (!altTok.size || !own.size) return false;
+  let overlap = 0;
+  for (const t of altTok) if (own.has(t)) overlap += 1;
+  return overlap >= 2;
+}
 
 export function normalizeProductForCard(product) {
   if (!product) return null;
@@ -48,7 +74,7 @@ function mediaImageAlt(product) {
 
 export function productCardAlt(product, categoryName) {
   const fromMedia = mediaImageAlt(product);
-  if (fromMedia) return fromMedia;
+  if (fromMedia && altBelongsToProduct(fromMedia, product)) return fromMedia;
   const name = String(product?.name || "").trim();
   const cat = String(categoryName || "").trim();
   if (name && cat) return `${name} — ${cat}`;

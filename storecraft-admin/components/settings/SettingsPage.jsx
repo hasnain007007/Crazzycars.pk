@@ -18,6 +18,11 @@ import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
 import WhatsAppTemplateSettings from "@/components/settings/WhatsAppTemplateSettings";
 import PakistaniPaymentSettings from "@/components/settings/PakistaniPaymentSettings";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import {
+  deliveryChargesShort,
+  formatPkrAmount,
+  standardFeePkr,
+} from "@/lib/storePolicyDefaults";
 import { defaultOrderNumberConfig, formatOrderNumber, previewNextSequence } from "@/lib/orderNumberFormat";
 import { clearStorefrontBrowserCache } from "@/lib/clearStorefrontBrowserCache";
 import { clearAdminSettingsCache } from "@/lib/adminSettingsCache";
@@ -268,7 +273,7 @@ export function SettingsPage() {
       flatDeliveryCharge: 250,
       majorCitiesDays: String(raw.majorCitiesDays || "2-3").trim(),
       otherAreasDays: String(raw.otherAreasDays || "4-7").trim(),
-      deliveryNote: String(raw.deliveryNote || "Delivery charges Rs. 250").trim(),
+      deliveryNote: String(raw.deliveryNote || deliveryChargesShort()).trim(),
     };
   }
 
@@ -619,7 +624,7 @@ export function SettingsPage() {
           <section>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: "#111111", margin: "0 0 8px" }}>Store checkout rules</h3>
             <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 16px" }}>
-              Flat delivery Rs. 250 on every order. Free delivery is disabled by store policy.
+              Flat delivery {formatPkrAmount(standardFeePkr())} on every order. Order-value courier waiver is disabled by store policy.
             </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
@@ -679,9 +684,9 @@ export function SettingsPage() {
                 <label className="text-xs font-medium text-slate-600">Delivery Note</label>
                 <input
                   type="text"
-                  value={sp.deliveryNote ?? "Delivery charges Rs. 250"}
+                  value={sp.deliveryNote ?? deliveryChargesShort()}
                   onChange={(e) => patchStorePayment("deliveryNote", e.target.value)}
-                  placeholder="Delivery charges Rs. 250"
+                  placeholder={deliveryChargesShort()}
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 />
                 <p className="mt-1 text-xs text-slate-500">Shown in green below delivery estimate</p>
@@ -697,9 +702,11 @@ export function SettingsPage() {
 
             <div className="space-y-4 rounded-lg border border-slate-100 p-4">
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm font-semibold text-slate-800">Delivery charge: Rs. 250 (locked)</p>
+                <p className="text-sm font-semibold text-slate-800">
+                  Delivery charge: {formatPkrAmount(standardFeePkr())} (locked)
+                </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Free delivery is not offered. Checkout always charges at least Rs. 250.
+                  Checkout always charges at least {formatPkrAmount(standardFeePkr())}. There is no order-value courier waiver.
                 </p>
               </div>
               <Toggle

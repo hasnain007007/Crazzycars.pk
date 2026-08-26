@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { clearStorefrontBrowserCache } from "@/lib/clearStorefrontBrowserCache";
 import { clearAdminSettingsCache } from "@/lib/adminSettingsCache";
+import { standardDeliveryFeeStatement } from "@/lib/storePolicyDefaults";
 
 const DEFAULT_STATS = [];
 
@@ -49,7 +50,7 @@ const DEFAULT_FAQ = [
   {
     question: "Do you deliver across Pakistan?",
     answer:
-      "Yes! We deliver to major cities and towns nationwide. Delivery times are typically 2–5 business days depending on your location. A flat delivery charge of Rs. 250 applies to all orders.",
+      `Yes! We deliver to major cities and towns nationwide. ${standardDeliveryFeeStatement()} Lahore typically arrives in 2–3 business days; other cities are confirmed at checkout.`,
   },
   {
     question: "Can I pay with Cash on Delivery?",
@@ -80,7 +81,7 @@ const DEFAULT_FAQ = [
 
 const HERO_DEFAULT = {
   badge: "Our Story",
-  title: "Fitment-first car accessories from Gujranwala",
+  title: "The original performance-parts shop in Gujranwala",
   subtitle:
     `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
 };
@@ -300,7 +301,7 @@ export default function AboutPageSettings() {
             <label style={labelStyle}>Main Headline *</label>
             <input
               style={inputStyle}
-              placeholder="e.g. Fitment-first car accessories from Gujranwala"
+              placeholder="e.g. The original performance-parts shop in Gujranwala"
               value={hero.title || ""}
               onChange={(e) => setHero((h) => ({ ...h, title: e.target.value }))}
             />

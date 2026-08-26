@@ -12,8 +12,8 @@ const DEFAULT_TRUST_BADGES = [
   },
   {
     icon: "↩️",
-    text: "30 Day Returns",
-    subtext: "Hassle Free Returns",
+    text: "Returns window",
+    subtext: "Refund if defective or wrong; exchange for change of mind",
     enabled: true,
   },
   {

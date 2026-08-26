@@ -5,11 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useCart } from "@/context/CartContext";
-import { useStorePayment, useStoreSettings } from "@/context/StoreSettingsContext";
-import { formatPrice } from "@/lib/currency";
+import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { normalizeStoreEmail } from "@/lib/storeContact";
 import { trimmedLogoUrl } from "@/lib/storeLogo";
-import { getCodFreeDeliveryProgress, getProgressBarThreshold } from "@/lib/freeDelivery";
 import { getCategoryMegaColumns } from "@/lib/categories";
 import { rewriteStorePath } from "@/lib/categoryHandleAliases";
 import { useCustomer } from "@/lib/customerAuth";
@@ -302,7 +300,6 @@ export function StoreHeader({ initialCategoryTree = null }) {
   const { items, setOpen } = useCart();
   const { customer } = useCustomer();
   const ctxSettings = useStoreSettings();
-  const storePayment = useStorePayment();
   const wishCount = useWishlistCount();
   const [cartToast, setCartToast] = useState(null);
   const [q, setQ] = useState(() => searchParams?.get("q") || "");
@@ -447,17 +444,11 @@ export function StoreHeader({ initialCategoryTree = null }) {
 
   useEffect(() => {
     const onAdded = (e) => {
-      const subtotal = Number(e.detail?.subtotal) || 0;
-      const threshold = getProgressBarThreshold(storePayment);
-      const progress = getCodFreeDeliveryProgress(subtotal, threshold);
-      const message = progress.unlocked
-        ? "🎉 You have free delivery!"
-        : `🛒 Item added! Add ${formatPrice(progress.remaining)} more for free delivery`;
-      setCartToast({ message, id: Date.now() });
+      setCartToast({ message: "Added to cart", id: Date.now() });
     };
     window.addEventListener("cart-item-added", onAdded);
     return () => window.removeEventListener("cart-item-added", onAdded);
-  }, [storePayment]);
+  }, []);
 
   useEffect(() => {
     if (!cartToast) return;

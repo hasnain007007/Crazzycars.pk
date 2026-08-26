@@ -12,7 +12,7 @@ const DEFAULT_FORM = {
   enabled: true,
   badge: "Our Story",
   heading: "Built for Pakistani Car Enthusiasts",
-  subheading: "Fitment-first car accessories from Gujranwala",
+  subheading: "Splitters, kits, and carbon accents for Pakistani builds",
   description:
     "Crazzycars.pk was founded in Gujranwala to bring splitters, LED lighting, body kits, and carbon fiber accessories to drivers across Pakistan — with COD nationwide.",
   buttonText: "Shop Car Accessories",
@@ -286,7 +286,7 @@ export default function BrandStorySettings() {
           <label style={labelStyle}>Subheading (optional)</label>
           <input
             style={inputStyle}
-            placeholder="Fitment-first car accessories from Gujranwala"
+            placeholder="Splitters, kits, and carbon accents for Pakistani builds"
             value={form.subheading}
             onChange={(e) => setForm((f) => ({ ...f, subheading: e.target.value }))}
           />

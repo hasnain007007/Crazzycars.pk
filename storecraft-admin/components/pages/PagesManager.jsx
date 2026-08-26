@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
 import { getStorefrontBaseUrl, getStorefrontPageUrl } from "@/lib/storefrontUrl";
+import { standardDeliveryFeeStatement } from "@/lib/storePolicyDefaults";
 
 const RichTextEditor = dynamic(() => import("../ui/RichTextEditor"), { ssr: false });
 
@@ -138,11 +139,11 @@ const PAGE_TEMPLATES = [
     template: "policy",
     content: `<h2>Shipping Information</h2>
 <h3>Pakistan — major cities</h3>
-<p>Standard delivery 1–3 business days. Free delivery on orders over Rs. 2,999 (where applicable by zone).</p>
+<p>${standardDeliveryFeeStatement()} Lahore typically arrives in 2–3 business days; other cities are confirmed at checkout.</p>
 <h3>Pakistan — other areas</h3>
-<p>Delivery typically 2–5 business days; rates vary by city and weight band (shown at checkout).</p>
+<p>Delivery time is confirmed at checkout; rates vary by city and courier (shown before you pay).</p>
 <h3>Remote areas</h3>
-<p>Allow extra transit time; free shipping thresholds may be higher for remote zones.</p>
+<p>Allow extra transit time. Courier is always charged — there is no order-value waiver.</p>
 <h2>Secure Packaging</h2>
 <p>All orders are packed securely to protect your car accessories in transit.</p>`,
   },
@@ -151,12 +152,12 @@ const PAGE_TEMPLATES = [
     slug: "returns-policy",
     template: "policy",
     content: `<h2>Returns & Exchanges</h2>
-<h3>30 Day Returns</h3>
-<p>We accept returns within 30 days of purchase on unworn items.</p>
+<h3>Returns window</h3>
+<p>Full refund if the item arrived defective or we shipped the wrong item. Change-of-mind requests are exchange-only (not a cash refund).</p>
 <h3>Hygiene Policy</h3>
 <p>Opened or installed accessories may not be eligible for return unless faulty — see product page for details.</p>
 <h3>How to Return</h3>
-<p>Contact our team at support@crazzycars.pk to start a return.</p>`,
+<p>Contact our team at info@crazzycars.pk to start a return.</p>`,
   },
   {
     title: "FAQ",

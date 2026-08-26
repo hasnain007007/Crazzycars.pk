@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { clearStorefrontBrowserCache } from '@/lib/clearStorefrontBrowserCache'
 import { clearAdminSettingsCache } from '@/lib/adminSettingsCache'
+import { standardDeliveryFeeShort } from '@/lib/storePolicyDefaults'
 
 const DEFAULT_ITEMS = [
-  { text: 'Free Delivery on Orders Over Rs. 2,999', link: '', enabled: true },
+  { text: standardDeliveryFeeShort(), link: '/shipping-policy', enabled: true },
   { text: 'Welcome to Crazzycars.pk', link: '/shop', enabled: true },
   { text: 'Cash on Delivery Available', link: '', enabled: true }
 ]
@@ -489,7 +490,7 @@ export default function AnnouncementBarSettings() {
                   </label>
                   <input
                     style={inputStyle}
-                    placeholder="Free Delivery on Orders Over Rs. 2,999"
+                    placeholder="Cash on Delivery Available"
                     value={item.text}
                     onChange={e => updateItem(
                       index, 'text', e.target.value

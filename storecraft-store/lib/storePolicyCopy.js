@@ -95,7 +95,16 @@ export function returnsTrustBadge() {
 
 /** Homepage hero trust chip — short, no implied any-reason refund. */
 export function returnsHeroTrustChip() {
-  return "Refunds for defective/wrong · exchanges for change of mind";
+  return "Refund for a defective or wrong part · exchange if you change your mind";
+}
+
+/** Homepage hero rail — same facts as other stores, Crazzycars wording only. */
+export function homepageHeroTrustItems() {
+  return [
+    "Pay cash when the courier arrives",
+    `Flat ${formatPkrAmount(STORE_POLICY.shipping.standardFeePKR)} courier on every order`,
+    returnsHeroTrustChip(),
+  ];
 }
 
 export function returnsPolicyMetaDescription() {

@@ -76,7 +76,7 @@ export function computeAdvancePaymentDiscount({
   return { discount, percent, applied: discount > 0 };
 }
 
-/** @deprecated Always 0 — no free-delivery threshold. */
+/** @deprecated Always 0 — no order-value courier waiver. */
 export function getFreeShippingThreshold() {
   return 0;
 }
@@ -96,12 +96,12 @@ export function formatFreeDeliveryThreshold() {
   return standardDeliveryFeeShort();
 }
 
-/** No free-delivery progress — stub for any leftover callers. */
+/** No courier-waiver progress — stub for leftover callers. */
 export function getCodFreeDeliveryProgress() {
   return { unlocked: true, remaining: 0, percent: 100, threshold: 0 };
 }
 
-/** Strip free-delivery marketing fields from shipping API responses. */
+/** Strip complimentary-courier marketing fields from shipping API responses. */
 export function toPublicShippingQuote(raw) {
   if (!raw || typeof raw !== "object") return raw;
   const {
@@ -120,7 +120,7 @@ export function toPublicShippingQuote(raw) {
 
 /**
  * Apply store policy on top of zone/courier quotes.
- * Never free delivery — always charge at least STORE_POLICY.standardFeePKR.
+ * Courier is always charged — never waive the fee for order value.
  * Higher zone/courier quotes are kept; 0 / missing falls back to the flat fee.
  */
 export function applyShippingRules({

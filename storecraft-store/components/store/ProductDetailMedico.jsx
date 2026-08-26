@@ -20,6 +20,7 @@ import {
   nonLahoreEtaStatement,
   returnsExchangePathStatement,
   returnsRefundPathStatement,
+  returnsTrustBadge,
   standardDeliveryFeeStatement,
 } from "@/lib/storePolicyCopy";
 
@@ -68,9 +69,10 @@ function saveCompare(items) {
   }
 }
 
+const RETURNS_BADGE = returnsTrustBadge();
 const DEFAULT_PRODUCT_PAGE_TRUST_BADGES = [
   { icon: "🛡️", text: "Premium Quality", subtext: "Exceptional Standards", enabled: true },
-  { icon: "↩️", text: "7 Day Returns", subtext: "Hassle Free Returns", enabled: true },
+  { icon: "↩️", text: RETURNS_BADGE.text, subtext: RETURNS_BADGE.subtext, enabled: true },
   { icon: "🔒", text: "Secure Payment", subtext: "100% Secure Checkout", enabled: true },
   { icon: "🚚", text: "Fast Dispatch", subtext: "Quick Delivery", enabled: true },
 ];
@@ -80,8 +82,13 @@ function normalizeProductTrustBadges(arr) {
   const iconFallback = ["🛡️", "↩️", "🔒", "🚚"];
   return arr.map((b, i) => {
     const d = DEFAULT_PRODUCT_PAGE_TRUST_BADGES[Math.min(i, DEFAULT_PRODUCT_PAGE_TRUST_BADGES.length - 1)];
-    const text = String(b?.text ?? b?.title ?? "").trim();
-    const subtext = String(b?.subtext ?? b?.description ?? "").trim();
+    let text = String(b?.text ?? b?.title ?? "").trim();
+    let subtext = String(b?.subtext ?? b?.description ?? "").trim();
+    const blob = `${text} ${subtext}`;
+    if (/\d+\s*day returns/i.test(blob) || /hassle[\s-]*free/i.test(blob)) {
+      text = RETURNS_BADGE.text;
+      subtext = RETURNS_BADGE.subtext;
+    }
     const icon = String(b?.icon ?? "").trim() || iconFallback[i % iconFallback.length] || d.icon;
     return {
       icon,

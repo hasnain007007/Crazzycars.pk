@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { standardDeliveryFeeStatement } from "../storePolicyCopy.js";
 
 const imageSchema = new mongoose.Schema(
   {
@@ -55,7 +56,7 @@ const settingsSchema = new mongoose.Schema(
       orderSuccessMessage: { type: String, default: "Order Placed! We will deliver to your doorstep." },
       orderSuccessSubtext: { type: String, default: "Thank you for shopping with Crazzycars.pk" },
       codInstructions: { type: String, default: "Pay cash when your order arrives." },
-      shippingNote: { type: String, default: "Standard delivery is a flat Rs. 250 on every order. There is no order-value waiver for delivery." },
+      shippingNote: { type: String, default: standardDeliveryFeeStatement },
       cartEmptyMessage: { type: String, default: "Your cart is empty" },
     },
     storePayment: {
@@ -69,8 +70,7 @@ const settingsSchema = new mongoose.Schema(
       otherAreasDays: { type: String, default: "4-7" },
       deliveryNote: {
         type: String,
-        default:
-          "Standard delivery is a flat Rs. 250 on every order. There is no order-value waiver for delivery.",
+        default: standardDeliveryFeeStatement,
       },
       freeShippingOnAdvancePayment: { type: Boolean, default: false },
       freeShippingOnOrderAbove: { type: Number, default: 0 },
@@ -676,7 +676,7 @@ Shukriya — Crazzycars.pk ✨`,
       },
     },
     footer: {
-      tagline: { type: String, default: "Exterior performance styling from Gujranwala" },
+      tagline: { type: String, default: "The original performance-parts shop in Gujranwala" },
       social: {
         facebook: { type: String, default: "" },
         instagram: { type: String, default: "" },

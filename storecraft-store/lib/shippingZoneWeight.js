@@ -1,6 +1,6 @@
 /**
  * Country / city + weight (grams) shipping for ShippingZone documents.
- * Store policy: no free delivery — never waive shipping for order value.
+ * Store policy: courier is always charged — never waive the fee for order value.
  */
 import { STORE_POLICY } from "@/config/store-policy";
 
@@ -83,7 +83,7 @@ function getZoneFlatRate(zone) {
   return FLAT_FEE;
 }
 
-/** @deprecated Always 0 — store does not offer free delivery. */
+/** @deprecated Always 0 — store does not waive courier for order value. */
 export function getZoneFreeThreshold() {
   return 0;
 }

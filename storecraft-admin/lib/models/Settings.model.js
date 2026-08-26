@@ -239,7 +239,7 @@ const settingsSchema = new mongoose.Schema(
     aboutPage: {
       hero: {
         badge: { type: String, default: "Our Story" },
-        title: { type: String, default: "Fitment-first car accessories from Gujranwala" },
+        title: { type: String, default: "The original performance-parts shop in Gujranwala" },
         subtitle: {
           type: String,
           default:
@@ -577,7 +577,7 @@ Shukriya — Crazzycars.pk ✨`,
       enabled: { type: Boolean, default: true },
       badge: { type: String, default: "Our Story" },
       heading: { type: String, default: "Built for Pakistani Car Enthusiasts" },
-      subheading: { type: String, default: "Fitment-first car accessories from Gujranwala" },
+      subheading: { type: String, default: "Splitters, kits, and carbon accents for Pakistani builds" },
       description: {
         type: String,
         default:
@@ -716,7 +716,7 @@ Shukriya — Crazzycars.pk ✨`,
       },
     },
     footer: {
-      tagline: { type: String, default: "Fitment-first car accessories from Gujranwala" },
+      tagline: { type: String, default: "The original performance-parts shop in Gujranwala" },
       social: {
         facebook: { type: String, default: "" },
         instagram: { type: String, default: "" },

@@ -100,7 +100,7 @@ export const SHIPPING_ZONES = [
     rate: 0,
     cities: ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad"],
     description: "2-3 business days",
-    freeShippingThreshold: 2999,
+    freeShippingThreshold: 0,
     estimatedDays: "2-3 business days",
   },
   {
@@ -123,7 +123,7 @@ export const SHIPPING_ZONES = [
       "Other",
     ],
     description: "3-5 business days",
-    freeShippingThreshold: 2999,
+    freeShippingThreshold: 0,
     estimatedDays: "3-5 business days",
   },
   {
