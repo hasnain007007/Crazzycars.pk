@@ -313,7 +313,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   const showLogoInFooter = footer.showLogoInFooter !== false
 
   const tagline = footer.tagline
-    || "Fitment-first car accessories from Gujranwala"
+    || "Exterior performance styling from Gujranwala"
 
   const shopLinks = (settings?.footer?.shopLinks || []).filter(
     (l) => l.enabled !== false

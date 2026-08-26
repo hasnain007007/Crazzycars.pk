@@ -26,11 +26,11 @@ export const DEFAULT_TRUST_BADGES = {
 
 export const DEFAULT_BRAND_STORY = {
   enabled: true,
-  badge: "Our Story",
-  heading: "Built for Pakistani Car Enthusiasts",
-  subheading: "Fitment-first car accessories from Gujranwala",
+  badge: "Gujranwala flagship",
+  heading: "Exterior performance for street and show",
+  subheading: "Splitters, kits, and carbon accents for Pakistani builds",
   description:
-    "Crazzycars.pk is based in Gujranwala and ships car accessories nationwide — splitters, LED lighting, body kits, carbon fiber parts, and more. We focus on clear year compatibility, practical installs, and Cash on Delivery.",
+    "Crazzycars.pk is our Gujranwala flagship for exterior performance styling — body kits, spoilers, carbon fiber, and aggressive lighting. Fitment is listed by generation, installs stay practical, and Cash on Delivery covers Pakistan.",
   buttonText: "About Us",
   buttonLink: "/about",
   image1: "",

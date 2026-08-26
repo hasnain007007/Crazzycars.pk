@@ -56,7 +56,7 @@ export function standardDeliveryFeeStatement() {
 }
 
 export function standardDeliveryFeeShort() {
-  return `Delivery ${formatPkrAmount(STORE_POLICY.shipping.standardFeePKR)}`;
+  return `Standard delivery Rs. ${Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK")}`;
 }
 
 export function returnsPolicyCanonical() {
@@ -95,7 +95,7 @@ export function returnsTrustBadge() {
 
 /** Homepage hero trust chip — short, no implied any-reason refund. */
 export function returnsHeroTrustChip() {
-  return "Refund if defective/wrong · exchange for change of mind";
+  return "Refunds for defective/wrong · exchanges for change of mind";
 }
 
 export function returnsPolicyMetaDescription() {

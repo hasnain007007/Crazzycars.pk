@@ -1,0 +1,53 @@
+﻿make,model,generation,nickname,slug,year_from,year_to,body_style,is_popular
+Haval,H6,,Haval H6 (2021–Present),haval-h6-2021-present,2021,2026,SUV,yes
+Honda,Civic,Reborn,Reborn,honda-civic-reborn-2006-2012,2006,2012,Sedan,yes
+Honda,Civic,Rebirth,Rebirth,honda-civic-rebirth-2012-2016,2012,2016,Sedan,yes
+Honda,Civic,Civic X,Civic X,honda-civic-x-2016-2021,2016,2021,Sedan,yes
+Honda,Civic,11th Gen,11th Gen,honda-civic-11th-gen-2022-present,2022,2026,Sedan,yes
+Suzuki,Alto,,Suzuki Alto (2020–Present),suzuki-alto-2020-present,2020,2026,Hatchback,yes
+Toyota,Corolla,E140,E140,toyota-corolla-e140-2009-2014,2009,2014,Sedan,yes
+Toyota,Corolla,E170–E210,E170–E210,toyota-corolla-e170-2014-2026,2014,2026,Sedan,yes
+BAIC,BJ40,,BAIC BJ40 (2020–2026),baic-bj40-2020-present,2020,2026,SUV,no
+BYD,Atto 3,,BYD Atto 3 (2025–present),byd-atto3-2025-present,2025,2026,SUV,no
+BYD,Shark 6,,BYD Shark 6 (2025–present),byd-shark6-2025-present,2025,2026,SUV,no
+Changan,Alsvin,,Changan Alsvin (2021–present),changan-alsvin-2021-present,2021,2026,Sedan,no
+Changan,Oshan X7,,Changan Oshan X7 (2022–present),changan-oshanx7-2022-present,2022,2026,SUV,no
+Chery,Tiggo 4 Pro,,Chery Tiggo 4 Pro (2022–2026),chery-tiggo4pro-2022-present,2022,2026,SUV,no
+Chery,Tiggo 8 Pro,,Chery Tiggo 8 Pro (2022–present),chery-tiggo8pro-2022-present,2022,2026,SUV,no
+Deepal,S05,,Deepal S05 (2024–present),deepal-s05-2024-present,2024,2026,Sedan,no
+DFSK,Glory 580,PRO,PRO,dfsk-glory-580-2018-present,2018,2026,SUV,no
+Honda,Civic,7th Gen (ES),7th Gen (ES),honda-civic-es-2001-2005,2001,2005,Sedan,no
+Honda,City,Classic,Classic,honda-city-classic-2009-2020,2009,2020,Sedan,no
+Honda,BR-V,,Honda BR-V (2017–present),honda-brv-2017-present,2017,2026,Sedan,no
+Honda,Vezel,2nd Gen,2nd Gen,honda-vezel-2020-2026,2020,2026,Sedan,no
+Honda,City,7th Gen,7th Gen,honda-city-2021-present,2021,2026,Sedan,no
+Honda,HR-V,,Honda HR-V (2022–present),honda-hrv-2022-present,2022,2026,Sedan,no
+Hyundai,Elantra,CN7,CN7,hyundai-elantra-2020-2024,2020,2024,Sedan,no
+Hyundai,Sonata,DN8,DN8,hyundai-sonata-2020-2024,2020,2024,Sedan,no
+Hyundai,Tucson,NX4,NX4,hyundai-tucson-2020-2024,2020,2024,SUV,no
+Hyundai,Elantra Hybrid,CN7 Facelift,CN7 Facelift,hyundai-elantra-hybrid-2025-present,2025,2026,Sedan,no
+KIA,Picanto,,KIA Picanto (2019–present),kia-picanto-2019-present,2019,2026,Hatchback,no
+KIA,Sportage,,KIA Sportage (2019–2024),kia-sportage-2019-2024,2019,2024,SUV,no
+KIA,Sorento,,KIA Sorento (2021–2024),kia-sorento-2021-2024,2021,2024,SUV,no
+KIA,Stonic,,KIA Stonic (2021–2026),kia-stonic-2021-present,2021,2026,SUV,no
+MG,HS,,MG HS (2020–2025),mg-hs-2020-2025,2020,2025,SUV,no
+Nissan,Note,,Nissan Note (2012–2026),nissan-note-2012-present,2012,2026,Hatchback,no
+Proton,X70,,Proton X70 (2020–2026),proton-x70-2020-present,2020,2026,SUV,no
+Suzuki,Liana,,Suzuki Liana (2006–2014),suzuki-liana-2006-2014,2006,2014,Sedan,no
+Suzuki,Wagon R,,Suzuki Wagon R (2014–present),suzuki-wagonr-2014-present,2014,2026,Hatchback,no
+Suzuki,Cultus,,Suzuki Cultus (2017–present),suzuki-cultus-2017-present,2017,2026,Hatchback,no
+Suzuki,Swift,3rd Gen,3rd Gen,suzuki-swift-2018-2024,2018,2024,Hatchback,no
+Suzuki,Swift,4th Gen (Z Series),4th Gen (Z Series),suzuki-swift-2025-present,2025,2026,Hatchback,no
+Toyota,Corolla,E120,E120,toyota-corolla-e120-2002-2008,2002,2008,Sedan,no
+Toyota,Mark X,1st Gen (X120),1st Gen (X120),toyota-mark-x-2004-1-genx120,2004,2011,Sedan,no
+Toyota,Prius,XW20,XW20,toyota-prius-2004-2009,2004,2009,Sedan,no
+Toyota,Prius,XW30,XW30,toyota-prius-2009-2015,2009,2015,Sedan,no
+Toyota,Aqua,,Toyota Aqua (2012–Present),toyota-aqua-2012-present,2012,2026,Hatchback,no
+Toyota,Vitz,,Toyota Vitz (2012–Present),toyota-vitz-2012-present,2012,2026,Hatchback,no
+Toyota,Hilux Revo,,Toyota Hilux Revo (2016–present),toyota-hilux-revo-2016-present,2016,2026,Pickup,no
+Toyota,Prius,4th Gen (XW50),4th Gen (XW50),toyota-prius-2016-2022,2016,2022,Sedan,no
+Toyota,Raize,,Toyota Raize (2019–present),toyota-raize-2019-present,2019,2026,Pickup,no
+Toyota,Corolla Cross,,Toyota Corolla Cross (2020–present),toyota-corolla-cross-2020-present,2020,2026,Sedan,no
+Toyota,Fortuner,,Toyota Fortuner (2020–present),toyota-fortuner-2020-present,2020,2026,SUV,no
+Toyota,Yaris,,Toyota Yaris (2020–Present),toyota-yaris-2020-present,2020,2026,Hatchback,no
+Toyota,Yaris Cross,,Toyota Yaris Cross (2020–2026),toyota-yaris-cross-2020-present,2020,2026,Hatchback,no

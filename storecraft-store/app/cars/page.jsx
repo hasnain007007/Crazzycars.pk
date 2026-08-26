@@ -12,7 +12,7 @@ export const revalidate = 300;
 export const metadata = buildPageMetadata({
   title: "Shop by Car | Crazzycars.pk",
   description:
-    "Browse car accessories by make and model — Honda Civic, Toyota Corolla, Suzuki Alto, and more. Fitment-first parts with Cash on Delivery across Pakistan.",
+    "Browse car accessories by make and model — Honda Civic, Toyota Corolla, Suzuki Alto, and more. Generation-matched parts with Cash on Delivery across Pakistan.",
   path: "/cars",
   absoluteTitle: true,
 });

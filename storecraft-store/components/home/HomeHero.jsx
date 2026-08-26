@@ -16,7 +16,7 @@ const SLIDE_MS = 560;
 
 function useTrustItems() {
   return useMemo(
-    () => ["Cash on delivery", standardDeliveryFeeShort(), returnsHeroTrustChip()],
+    () => ["Nationwide COD", standardDeliveryFeeShort(), returnsHeroTrustChip()],
     []
   );
 }
