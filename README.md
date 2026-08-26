@@ -120,12 +120,7 @@ Committed templates: `storecraft-store/.env.local.example` and `storecraft-admin
 
 ## First login
 
-After seeding:
-
-- **Email:** `admin@crazzycars.pk`
-- **Password:** `@Hasnain0007`
-
-Change this password immediately in production.
+Set `ADMIN_SEED_PASSWORD` in `storecraft-admin/.env.local` (min 12 characters), then run `node scripts/seed-admin.mjs`. Log in as `admin@crazzycars.pk` with that password. Change it immediately in production. Never commit the password.
 
 ## Required third-party accounts
 

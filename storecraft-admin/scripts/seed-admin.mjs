@@ -14,13 +14,17 @@ const envPath = path.resolve(__dirname, "../.env.local");
 
 dotenv.config({ path: envPath });
 
-const ADMIN_USER = {
-  name: "Crazzycars.pk",
-  email: "admin@crazzycars.pk",
-  password: "@Hasnain0007",
-  role: "superadmin",
-  status: "active",
-};
+const ADMIN_EMAIL = "admin@crazzycars.pk";
+
+function seedPassword() {
+  const password = String(process.env.ADMIN_SEED_PASSWORD || "").trim();
+  if (password.length < 12) {
+    throw new Error(
+      "ADMIN_SEED_PASSWORD must be set in .env.local (min 12 characters). Do not hardcode a password in this script."
+    );
+  }
+  return password;
+}
 
 const LEGACY_EMAILS = ["admin@example.com", "crazzycars.pk"];
 
@@ -33,14 +37,14 @@ async function seedAdmin() {
   await mongoose.connect(MONGODB_URI, { bufferCommands: false });
 
   const force = process.argv.includes("--force");
-  const hashedPassword = await bcrypt.hash(ADMIN_USER.password, 12);
-  let existingUser = await User.findOne({ email: ADMIN_USER.email });
+  const hashedPassword = await bcrypt.hash(seedPassword(), 12);
+  let existingUser = await User.findOne({ email: ADMIN_EMAIL });
 
   if (!existingUser) {
     for (const legacy of LEGACY_EMAILS) {
       const legacyUser = await User.findOne({ email: legacy });
       if (legacyUser) {
-        legacyUser.email = ADMIN_USER.email;
+        legacyUser.email = ADMIN_EMAIL;
         existingUser = legacyUser;
         break;
       }
@@ -48,27 +52,30 @@ async function seedAdmin() {
   }
 
   if (existingUser) {
-    // Always re-activate; --force also resets password to the seed default.
-    existingUser.email = ADMIN_USER.email;
+    // Always re-activate; --force also resets password from ADMIN_SEED_PASSWORD.
+    existingUser.email = ADMIN_EMAIL;
     existingUser.status = "active";
-    existingUser.role = ADMIN_USER.role;
-    existingUser.name = ADMIN_USER.name;
+    existingUser.role = "superadmin";
+    existingUser.name = "Crazzycars.pk";
     if (force) existingUser.password = hashedPassword;
     await existingUser.save();
     console.log(
       force
-        ? `Superadmin reset (active + password): ${ADMIN_USER.email}`
-        : `Superadmin already exists — set active: ${ADMIN_USER.email}`
+        ? `Superadmin reset (active + password): ${ADMIN_EMAIL}`
+        : `Superadmin already exists — set active: ${ADMIN_EMAIL}`
     );
     return;
   }
 
   await User.create({
-    ...ADMIN_USER,
+    name: "Crazzycars.pk",
+    email: ADMIN_EMAIL,
     password: hashedPassword,
+    role: "superadmin",
+    status: "active",
   });
 
-  console.log(`Superadmin created successfully: ${ADMIN_USER.email}`);
+  console.log(`Superadmin created successfully: ${ADMIN_EMAIL}`);
 }
 
 seedAdmin()

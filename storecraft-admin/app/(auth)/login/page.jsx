@@ -5,13 +5,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-
-function safeReturnPath(from) {
-  if (!from || typeof from !== "string") return "/dashboard";
-  if (!from.startsWith("/") || from.startsWith("//")) return "/dashboard";
-  if (from.startsWith("/login")) return "/dashboard";
-  return from;
-}
+import { safeReturnPath } from "@/lib/safeReturnPath";
 
 function LoginForm() {
   const router = useRouter();

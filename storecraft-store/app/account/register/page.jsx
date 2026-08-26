@@ -5,13 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useCustomer } from "@/lib/customerAuth";
-
-function safeRedirectPath(raw) {
-  if (!raw || typeof raw !== "string") return "/account";
-  const t = raw.trim();
-  if (!t.startsWith("/") || t.startsWith("//")) return "/account";
-  return t;
-}
+import { safeRedirectPath } from "@/lib/safeRedirectPath";
 
 function RegisterPageContent() {
   const router = useRouter();
