@@ -244,7 +244,9 @@ export async function generateMetadata({ params, searchParams }) {
           (p.metaDescription || p.seo?.metaDescription || "").trim() ||
           stripHtml(p.shortDescription || "").slice(0, 200) ||
           `Buy ${p.name} at ${BRAND}`,
-        type: "product",
+        // Next.js metadata only allows website|article|profile|… — not OG "product".
+        // Product schema stays in JSON-LD (toProductLd).
+        type: "website",
         url: canonical,
         images: mainImg ? [{ url: mainImg, width: 800, height: 800, alt: p.name }] : [],
       },
