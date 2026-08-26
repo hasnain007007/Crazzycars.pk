@@ -4,6 +4,7 @@
 import CarCatalog from "@/lib/models/CarCatalog.model";
 import Product from "@/lib/models/Product.model";
 import Vehicle from "@/lib/models/Vehicle.model";
+import { VEHICLE_HANDLE_ALIASES } from "@/lib/categoryHandleAliases";
 import { buildVehiclePageProductFilter } from "@/lib/productVehicleQuery";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 
@@ -147,7 +148,14 @@ export async function findExistingVehicleSlug(raw) {
     (await Vehicle.findOne({ ...active, slug }).select("slug").lean()) ||
     (await Vehicle.findOne({ ...active, shopifyHandle: ci }).select("slug").lean()) ||
     (await Vehicle.findOne({ ...active, catalogModelSlug: slug }).select("slug").lean());
-  return row?.slug ? String(row.slug) : null;
+  if (row?.slug) return String(row.slug);
+  const mapped = VEHICLE_HANDLE_ALIASES[slug];
+  if (mapped) {
+    const aliased = await Vehicle.findOne({ ...active, slug: mapped }).select("slug").lean();
+    if (aliased?.slug) return String(aliased.slug);
+    return mapped;
+  }
+  return null;
 }
 
 /**
@@ -169,6 +177,12 @@ export async function loadVehicleBySlug(slugStr) {
     shopifyHandle: handleCi,
   }).lean();
   if (vehicle) return vehicle;
+
+  const mapped = VEHICLE_HANDLE_ALIASES[slug];
+  if (mapped && mapped !== slug) {
+    vehicle = await Vehicle.findOne({ slug: mapped, isActive: { $ne: false } }).lean();
+    if (vehicle) return vehicle;
+  }
 
   return resolveFromCarCatalogSlug(slug);
 }

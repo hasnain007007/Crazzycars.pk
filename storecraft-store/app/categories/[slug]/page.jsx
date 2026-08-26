@@ -17,6 +17,7 @@ import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
 import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
+import { resolveCollectionHandleToPath } from "@/lib/resolveCollectionHandle";
 
 /** ISR: prerender active categories at build; refresh every 2 minutes. */
 export const revalidate = 120;
@@ -114,15 +115,29 @@ function paginateRows(rows, listing) {
   };
 }
 
+async function redirectLegacyCategoryParam(slugStr, listing) {
+  const canonicalSlug = await resolveCategoryHandle(slugStr);
+  if (canonicalSlug && canonicalSlug !== slugStr) {
+    permanentRedirect(listingHref(`/categories/${canonicalSlug}`, listing));
+  }
+  if (!canonicalSlug) {
+    const dest = await resolveCollectionHandleToPath(slugStr);
+    if (dest && dest !== "/categories" && dest !== `/categories/${slugStr}`) {
+      if (dest.startsWith("/categories/")) {
+        permanentRedirect(listingHref(dest, listing));
+      } else {
+        permanentRedirect(dest);
+      }
+    }
+  }
+}
+
 export const generateMetadata = withSafeMetadata(async function categoryMetadata({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const listing = parseListingSearchParams(await searchParams);
   const listingPath = `/categories/${slugStr}`;
-  const canonicalSlug = await resolveCategoryHandle(slugStr);
-  if (canonicalSlug && canonicalSlug !== slugStr) {
-    permanentRedirect(listingHref(`/categories/${canonicalSlug}`, listing));
-  }
+  await redirectLegacyCategoryParam(slugStr, listing);
 
   try {
     const [category, detail] = await Promise.all([
@@ -208,11 +223,7 @@ export default async function CategoryPage({ params, searchParams }) {
   if (!slugStr) notFound();
   const listing = parseListingSearchParams(await searchParams);
   const listingPath = `/categories/${slugStr}`;
-
-  const canonicalSlug = await resolveCategoryHandle(slugStr);
-  if (canonicalSlug && canonicalSlug !== slugStr) {
-    permanentRedirect(listingHref(`/categories/${canonicalSlug}`, listing));
-  }
+  await redirectLegacyCategoryParam(slugStr, listing);
 
   // Prefer Mongo catalog (seeded categories) so /categories/[slug] never 404s
   // when Shopify is enabled but collections use different handles.

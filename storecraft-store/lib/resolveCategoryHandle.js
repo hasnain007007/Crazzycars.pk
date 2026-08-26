@@ -41,7 +41,22 @@ export async function resolveCategoryHandle(rawHandle) {
       $or: [{ slug: `${handle}s` }, { shopifyHandle: `${handle}s` }],
     });
     if (plural) return plural;
+  } else if (handle.length >= 8) {
+    const singular = handle.replace(/s$/, "");
+    const fromSingular =
+      (await findActiveCategorySlug({ slug: singular })) ||
+      (await findActiveCategorySlug({ shopifyHandle: singular }));
+    if (fromSingular) return fromSingular;
   }
+
+  const tokenHits = await Category.find({
+    status: "active",
+    slug: { $regex: `(^|-)${escapeRegex(handle)}(-|$)`, $options: "i" },
+  })
+    .select("slug")
+    .limit(5)
+    .lean();
+  if (tokenHits.length === 1 && tokenHits[0]?.slug) return String(tokenHits[0].slug);
 
   const prefixHits = await Category.find({
     status: "active",

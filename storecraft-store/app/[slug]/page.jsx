@@ -7,6 +7,7 @@ import Product from "@/lib/models/Product.model";
 import Page from "@/lib/models/Page.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
+import { resolveLegacyDestination } from "@/lib/categoryHandleAliases";
 import { findExistingVehicleSlug } from "@/lib/vehiclePageData";
 import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
@@ -211,6 +212,11 @@ const loadContent = cache(async (slug) => {
   const vehicleSlug = await findExistingVehicleSlug(slugStr);
   if (vehicleSlug) {
     return { type: "redirect", to: `/cars/${vehicleSlug}` };
+  }
+
+  const legacy = resolveLegacyDestination(slugStr);
+  if (legacy && legacy !== `/${slugStr}`) {
+    return { type: "redirect", to: legacy };
   }
 
   return null;

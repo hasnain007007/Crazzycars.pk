@@ -1,6 +1,7 @@
 import { dbConnect } from "@/lib/db";
 import Vehicle from "@/lib/models/Vehicle.model";
 import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
+import { resolveLegacyDestination } from "@/lib/categoryHandleAliases";
 
 function escapeRegex(value) {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -29,8 +30,15 @@ export async function resolveCollectionHandleToPath(rawHandle) {
   try {
     await dbConnect();
 
+    const staticDest = resolveLegacyDestination(handle);
+    if (staticDest && (staticDest.startsWith("/cars/") || staticDest === "/cars" || staticDest === "/sale" || staticDest === "/shop")) {
+      return staticDest;
+    }
+
     const categorySlug = await resolveCategoryHandle(handle);
     if (categorySlug) return `/categories/${categorySlug}`;
+
+    if (staticDest) return staticDest;
 
     const ci = { $regex: `^${escapeRegex(handle)}$`, $options: "i" };
 

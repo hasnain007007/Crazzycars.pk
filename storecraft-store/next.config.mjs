@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+import { buildLegacyRedirects } from "./lib/legacyHandleMaps.mjs";
+
 const nextConfig = {
   async redirects() {
     return [
@@ -38,77 +40,8 @@ const nextConfig = {
         destination: "/terms-conditions",
         permanent: true,
       },
-      // Short Shopify handles → canonical category slugs (before /pages/:slug)
-      {
-        source: "/body-kits",
-        destination: "/categories/body-kits-extensions",
-        permanent: true,
-      },
-      {
-        source: "/body-kit",
-        destination: "/categories/body-kits-extensions",
-        permanent: true,
-      },
-      {
-        source: "/bodykits",
-        destination: "/categories/body-kits-extensions",
-        permanent: true,
-      },
-      {
-        source: "/pages/body-kits",
-        destination: "/categories/body-kits-extensions",
-        permanent: true,
-      },
-      {
-        source: "/pages/body-kit",
-        destination: "/categories/body-kits-extensions",
-        permanent: true,
-      },
-      {
-        source: "/categories/body-kits",
-        destination: "/categories/body-kits-extensions",
-        permanent: true,
-      },
-      {
-        source: "/categories/body-kit",
-        destination: "/categories/body-kits-extensions",
-        permanent: true,
-      },
-      {
-        source: "/collections/body-kits",
-        destination: "/categories/body-kits-extensions",
-        permanent: true,
-      },
-      {
-        source: "/collections/body-kit",
-        destination: "/categories/body-kits-extensions",
-        permanent: true,
-      },
-      {
-        source: "/categories/car-lighting",
-        destination: "/categories/led-lighting",
-        permanent: true,
-      },
-      {
-        source: "/categories/car-care",
-        destination: "/categories/car-care-safety",
-        permanent: true,
-      },
-      {
-        source: "/categories/led-lights",
-        destination: "/categories/led-lighting",
-        permanent: true,
-      },
-      {
-        source: "/categories/steering-covers",
-        destination: "/categories/steering-wheel-covers",
-        permanent: true,
-      },
-      {
-        source: "/categories/phone-holders",
-        destination: "/categories/mobile-holders-chargers",
-        permanent: true,
-      },
+      // Short Shopify / leftover handles → canonical paths (before /pages/:slug)
+      ...buildLegacyRedirects(),
       {
         source: "/pages/:slug",
         destination: "/:slug",
