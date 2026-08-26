@@ -10,7 +10,7 @@ import {
   ProductListingPagination,
   ProductListingToolbar,
 } from "./ProductListingToolbar";
-import { CAR_MAKES } from "@/lib/carCatalog";
+import { SHOP_COLORS, SHOP_DEPARTMENTS } from "@/lib/homefyShopFilters";
 import {
   DEFAULT_LISTING_PAGE_SIZE,
   LISTING_VIEWS,
@@ -20,8 +20,7 @@ import {
   normalizeListingView,
 } from "@/lib/productListing";
 
-/** Real vehicle brands only — not product attributes like Universal/Premium. */
-const SHOP_BRANDS = ["Honda", "Toyota", "Suzuki", "KIA", "Hyundai", "Changan", "MG"];
+/** Homefy departments and bag colors — not vehicle brands. */
 const DEFAULT_PAGE_SIZE = DEFAULT_LISTING_PAGE_SIZE;
 
 function Section({ title, children }) {
@@ -126,7 +125,7 @@ export function ProductsBrowseMedico({
   const [priceFrom, setPriceFrom] = useState("");
   const [priceTo, setPriceTo] = useState("");
   const [filterCategory, setFilterCategory] = useState(category);
-  const [filterBrand, setFilterBrand] = useState("");
+  const [filterBrand, setFilterBrand] = useState(searchParams.get("brand") || "");
   const [filterMake, setFilterMake] = useState(carMake);
   const [highest, setHighest] = useState(0);
 
@@ -408,7 +407,7 @@ export function ProductsBrowseMedico({
                 />
               </div>
             </Section>
-            <Section title="Category">
+            <Section title="Department">
               <select
                 value={filterCategory}
                 onChange={(e) => {
@@ -418,40 +417,28 @@ export function ProductsBrowseMedico({
                 }}
                 className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
               >
-                <option value="">All categories</option>
-              </select>
-            </Section>
-            <Section title="Brand">
-              <select
-                value={filterBrand}
-                onChange={(e) => {
-                  setFilterBrand(e.target.value);
-                  goToPage(1, { replace: true });
-                }}
-                className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
-              >
-                <option value="">All brands</option>
-                {SHOP_BRANDS.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
+                <option value="">All departments</option>
+                {SHOP_DEPARTMENTS.map((d) => (
+                  <option key={d.slug} value={d.slug}>
+                    {d.label}
                   </option>
                 ))}
               </select>
             </Section>
-            <Section title="Car Make">
+            <Section title="Color">
               <select
-                value={filterMake}
+                value={filterBrand}
                 onChange={(e) => {
                   const v = e.target.value;
-                  setFilterMake(v);
-                  setFilterParam("make", v);
+                  setFilterBrand(v);
+                  setFilterParam("brand", v);
                 }}
                 className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
               >
-                <option value="">Any vehicle</option>
-                {CAR_MAKES.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
+                <option value="">All colors</option>
+                {SHOP_COLORS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
                   </option>
                 ))}
               </select>

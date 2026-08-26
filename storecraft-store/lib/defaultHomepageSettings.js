@@ -38,7 +38,12 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
     enabled: true,
     title: "Featured Products",
     productIds: [],
-    tabs: [{ label: "All", categorySlug: "all", enabled: true, order: 1 }],
+    tabs: [
+      { label: "All", categorySlug: "all", enabled: true, order: 1 },
+      { label: "Kitchen", categorySlug: "kitchen-accessories", enabled: true, order: 2 },
+      { label: "Beauty", categorySlug: "beauty-bags", enabled: true, order: 3 },
+      { label: "Ladies", categorySlug: "ladies-bags", enabled: true, order: 4 },
+    ],
   },
   hotDeals: {
     enabled: true,

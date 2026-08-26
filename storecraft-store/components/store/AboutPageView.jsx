@@ -4,34 +4,34 @@ const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
 
 const DEFAULT_HERO = {
   badge: "Our Story",
-  title: "Pakistan's Car Accessories Store",
-  subtitle: `At ${STORE}, we help drivers upgrade their ride with splitters, LED lighting, body kits, carbon fiber parts, and car care — delivered across Pakistan.`,
+  title: "Kitchen, beauty bags and ladies bags for Pakistani homes",
+  subtitle: `At ${STORE}, we bring cookware, makeup pouches and ladies handbags to homes across Pakistan — with Cash on Delivery nationwide.`,
 };
 
 const DEFAULT_STORY = {
   badge: "Who We Are",
-  title: "Built for Pakistani Car Enthusiasts",
-  paragraph1: `${STORE} is based in Gujranwala, Pakistan, and focuses on exterior and lighting upgrades that fit real Pakistani driving conditions.`,
+  title: "Built for Pakistani Homes",
+  paragraph1: `${STORE} is a home and lifestyle store for kitchen accessories, girls’ beauty bags and ladies bags — quality pieces at fair prices.`,
   paragraph2:
-    "From bumper splitters and spoilers to LED headlights and body kits, we stock accessories chosen for fitment, finish, and everyday use.",
+    "From pans and storage to makeup pouches, totes and clutches, every product is chosen for everyday use in Pakistani kitchens and wardrobes.",
   paragraph3:
-    "We serve customers nationwide with Cash on Delivery, clear product details, and support when you need help choosing the right part.",
+    "We serve customers nationwide with Cash on Delivery, clear product details, and support when you need help choosing the right piece.",
 };
 
 const DEFAULT_STATS = [];
 
 const DEFAULT_VALUES = [
   {
-    icon: "🚗",
-    title: "Premium Quality",
+    icon: "🏡",
+    title: "Everyday Quality",
     description:
-      "Every product is selected for durability, fit, and finish. We only stock accessories we would install on our own cars.",
+      "Every product is selected for durability and finish — pieces we would use in our own kitchens and wardrobes.",
   },
   {
     icon: "✨",
-    title: "Clear Fitment Info",
+    title: "Clear Product Details",
     description:
-      "Compatible makes and models are listed where available so you can order with confidence.",
+      "Materials, care notes and sizes are listed so you can order with confidence.",
   },
   {
     icon: "💳",
@@ -42,15 +42,15 @@ const DEFAULT_VALUES = [
     icon: "🚚",
     title: "Nationwide Delivery",
     description:
-      "Fast delivery to Lahore, Karachi, Islamabad, Gujranwala, and cities across Pakistan with tracking where available.",
+      "Fast delivery to Lahore, Karachi, Islamabad and cities across Pakistan with tracking where available.",
   },
 ];
 
 const DEFAULT_PROMISE = {
   title: `${STORE} Promise`,
   paragraph1:
-    "We promise honest product descriptions, fair pricing, and accessories we would use on our own vehicles. Every item is checked before it ships.",
-  paragraph2: `Your satisfaction and your car's comfort come first. That is the ${STORE} way.`,
+    "We promise honest product descriptions, fair pricing, and pieces we would use at home. Every item is checked before it ships.",
+  paragraph2: `Your satisfaction and your home come first. That is the ${STORE} way.`,
 };
 
 const DEFAULT_FAQ = [

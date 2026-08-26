@@ -5,10 +5,30 @@ import { useState } from "react";
 export default function NewsletterSignup() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault();
-    setDone(true);
+    setError("");
+    setBusy(true);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.success === false) {
+        setError(json.error || "Could not subscribe. Try again.");
+        return;
+      }
+      setDone(true);
+    } catch {
+      setError("Could not subscribe. Try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -41,13 +61,15 @@ export default function NewsletterSignup() {
             />
             <button
               type="submit"
-              className="h-11 rounded-lg px-5 text-sm font-semibold text-white"
+              disabled={busy}
+              className="h-11 rounded-lg px-5 text-sm font-semibold text-white disabled:opacity-60"
               style={{ background: "var(--color-primary)" }}
             >
-              Subscribe
+              {busy ? "Saving…" : "Subscribe"}
             </button>
           </form>
         )}
+        {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
       </div>
     </section>
   );

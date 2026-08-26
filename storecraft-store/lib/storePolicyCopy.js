@@ -194,8 +194,8 @@ export function getReturnsPage() {
       {
         heading: "Not eligible",
         paragraphs: [
-          "Installed, modified, damaged-by-use, or missing-parts items cannot be returned.",
-          "Vehicle-specific parts ordered against the fitment listed on the product page are not returnable for “does not fit” unless we listed the wrong vehicle.",
+          "Used, washed, or damaged-by-use items cannot be returned.",
+          "Personal-care and beauty bags that have been used cannot be returned for hygiene reasons unless they arrived defective.",
         ],
       },
       {

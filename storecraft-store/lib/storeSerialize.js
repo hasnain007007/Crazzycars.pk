@@ -125,6 +125,7 @@ export function serializeStoreProductSummary(p) {
       sku: p?.inventory?.sku || p.articleNo || "",
     },
     requiresOptions: productRequiresOptions(p),
+    simpleVariations: Array.isArray(p.simpleVariations) ? p.simpleVariations : [],
     rating: Number(p?.rating) || 0,
     averageRating: Number(p?.averageRating) || 0,
     ratingAverage: Number(p?.ratingAverage) || 0,

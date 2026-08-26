@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import HomeHero from "@/components/home/HomeHero";
 import StatsBar from "@/components/home/StatsBar";
 import CategoryHighlights from "@/components/home/CategoryHighlights";
+import LookbookStrip from "@/components/home/LookbookStrip";
 import NewsletterSignup from "@/components/home/NewsletterSignup";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
@@ -77,6 +78,7 @@ export function HomePage({
         activeProductCount={activeProductCount}
       />
       <CategoryHighlights />
+      <LookbookStrip />
       {sectionEnabled("categories") && homepageSettings.sections?.showCategories !== false ? (
         <CategoryGrid
           title={homepageSettings.categories?.title || homepageSettings.sectionTitles?.categories}

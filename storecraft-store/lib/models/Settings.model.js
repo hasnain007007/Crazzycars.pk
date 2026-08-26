@@ -707,7 +707,7 @@ Shukriya — Homefy.pk ✨`,
       companyName: { type: String, default: "Homefy.pk" },
       companyNumber: { type: String, default: "" },
       vatNumber: { type: String, default: "" },
-      registeredAddress: { type: String, default: "Gujranwala, Punjab, Pakistan" },
+      registeredAddress: { type: String, default: "" },
       trustpilotUrl: { type: String, default: "" },
       shopLinks: [
         {

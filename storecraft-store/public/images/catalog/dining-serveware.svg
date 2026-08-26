@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <rect width="800" height="800" fill="#D98BA0"/>
+  <ellipse cx="400" cy="340" rx="240" ry="160" fill="none" stroke="#FAF7F2" stroke-width="16"/><ellipse cx="400" cy="340" rx="140" ry="90" fill="none" stroke="#FAF7F2" stroke-width="10"/>
+  <text x="400" y="720" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="#FAF7F2" opacity="0.85">Homefy.pk</text>
+</svg>

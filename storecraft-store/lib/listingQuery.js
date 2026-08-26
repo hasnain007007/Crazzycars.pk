@@ -177,11 +177,10 @@ export function listingPageHref(pathname, urlState, pageNum) {
 
 export function shopListingTitle(listing) {
   if (listing?.q) return `Results for “${listing.q}”`;
-  if (listing?.sale || listing?.deals) return "Hot Deals";
-  if (listing?.make) {
-    return `Parts for ${listing.make}${listing.model ? ` ${listing.model}` : ""}${
-      listing.year ? ` ${listing.year}` : ""
-    }`;
-  }
-  return "Products";
+  if (listing?.sale || listing?.deals) return "On Sale";
+  if (listing?.category === "kitchen-accessories") return "Kitchen Accessories";
+  if (listing?.category === "beauty-bags") return "Beauty Bags";
+  if (listing?.category === "ladies-bags") return "Ladies Bags";
+  if (listing?.brand) return `${listing.brand} bags`;
+  return "Shop Homefy";
 }

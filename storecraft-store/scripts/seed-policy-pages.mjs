@@ -38,14 +38,14 @@ const PAGES = [
     seo: {
       metaTitle: "Privacy Policy | Homefy.pk",
       metaDescription:
-        "How Homefy.pk collects, uses, and protects your personal information when you shop for car accessories in Pakistan.",
+        "How Homefy.pk collects, uses, and protects your personal information when you shop kitchen accessories and bags in Pakistan.",
     },
     content: `
 <h2>Privacy Policy</h2>
 <p><em>Last updated: 27 July 2026 · Placeholder copy for launch — final legal review pending.</em></p>
 
 <h3>Who we are</h3>
-<p>Homefy.pk (“we”, “us”) is an online car-accessories store based in Gujranwala, Punjab, Pakistan. Contact: <a href="mailto:info@homefy.pk">info@homefy.pk</a> · WhatsApp 03284010007.</p>
+<p>Homefy.pk (“we”, “us”) is an online store for kitchen accessories, beauty bags and ladies bags, serving customers across Pakistan. Contact: <a href="mailto:support@homefy.pk">support@homefy.pk</a>.</p>
 
 <h3>Information we collect</h3>
 <ul>
@@ -58,7 +58,7 @@ const PAGES = [
 <h3>How we use your information</h3>
 <ul>
   <li>To process, confirm, ship, and support your orders (including courier booking).</li>
-  <li>To contact you about order status, delivery charges, or product fitment questions.</li>
+  <li>To contact you about order status, delivery charges, or product questions.</li>
   <li>To improve the storefront, prevent fraud, and measure marketing performance.</li>
   <li>We do <strong>not</strong> sell your personal data to third parties.</li>
 </ul>
@@ -80,7 +80,7 @@ const PAGES = [
     showInFooter: true,
     seo: {
       metaTitle: "Terms & Conditions | Homefy.pk",
-      metaDescription: "Terms of use and ordering rules for shopping car accessories at Homefy.pk.",
+      metaDescription: "Terms of use and ordering rules for shopping kitchen accessories and bags at Homefy.pk.",
     },
     content: `
 <h2>Terms &amp; Conditions</h2>
@@ -94,7 +94,7 @@ const PAGES = [
   <li>All prices are in Pakistani Rupees (PKR) and include applicable display prices shown on the product page.</li>
   <li>We may correct pricing or listing errors; if we cannot fulfil an order at the listed price we will contact you.</li>
   <li>Product photos are illustrative; colour and finish may vary slightly.</li>
-  <li>Vehicle fitment notes are guidance — always confirm compatibility for your exact make/model/year before ordering.</li>
+  <li>Colour and finish may vary slightly from photos.</li>
 </ul>
 
 <h3>Orders</h3>
@@ -155,7 +155,7 @@ const PAGES = [
     showInFooter: true,
     seo: {
       metaTitle: "Returns & Refunds | Homefy.pk",
-      metaDescription: "Return and refund conditions for COD car accessories orders at Homefy.pk.",
+      metaDescription: "Return and refund conditions for Homefy.pk kitchen and bag orders.",
     },
     content: `
 <h2>Returns &amp; Refunds</h2>
@@ -170,15 +170,15 @@ const PAGES = [
 <h3>What cannot be returned</h3>
 <ul>
   <li>Items that have been installed, modified, or show signs of use (unless faulty).</li>
-  <li>Opened consumables (e.g. fragrances, cleaning chemicals) for hygiene reasons.</li>
-  <li>Custom-cut or special-order fitment parts once work has started.</li>
+  <li>Used cookware, opened personal-care items, or beauty bags that have been used (unless they arrived defective).</li>
+  <li>Items missing original packaging or tags.</li>
 </ul>
 
 <h3>COD refunds</h3>
 <p>For Cash on Delivery orders, approved refunds are typically issued via bank transfer or JazzCash to the account details you provide — please allow a few business days after we receive the returned item.</p>
 
 <h3>How to start a return</h3>
-<p>WhatsApp <strong>03284010007</strong> or email <a href="mailto:info@homefy.pk">info@homefy.pk</a> with: order number, product name, reason, and clear photos. Do not refuse the parcel at the door without contacting us first if you need help with fitment.</p>
+<p>Email <a href="mailto:support@homefy.pk">support@homefy.pk</a> with: order number, product name, reason, and clear photos. Do not refuse the parcel at the door without contacting us first if you need help with your order.</p>
 `.trim(),
   },
 ];

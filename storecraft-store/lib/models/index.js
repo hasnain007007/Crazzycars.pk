@@ -15,7 +15,7 @@ export { default as FeaturedMedia } from "./FeaturedMedia.model";
 export { default as DailyVisitor } from "./DailyVisitor.model";
 export { default as LivePresence } from "./LivePresence.model";
 export { default as LoginAttempt } from "./LoginAttempt.model";
-export { default as Order } from "./Order.model";
+export { default as NewsletterSubscriber } from "./NewsletterSubscriber.model";
 export { default as Page } from "./Page.model";
 export { default as Product } from "./Product.model";
 export { default as Review } from "./Review.model";

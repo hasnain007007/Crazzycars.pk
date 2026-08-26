@@ -84,7 +84,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
         <p className="mt-1.5 text-xs md:mt-2 md:text-sm" style={{ color: "#6B7280" }}>
           {subtitle}
         </p>
-        {!loading && hasDeals && settings?.flashSaleEnabled !== false ? (
+        {!loading && hasDeals && settings?.flashSaleEnabled === true ? (
           <p
             className="mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold"
             style={{ borderColor: "#E5E7EB", color: "#374151", background: "#FFFFFF" }}

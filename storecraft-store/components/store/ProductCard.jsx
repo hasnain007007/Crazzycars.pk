@@ -9,6 +9,7 @@ import { WatermarkedImage } from "./WatermarkedImage";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
+import { COLOR_SWATCH } from "@/lib/homefyShopFilters";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -87,6 +88,9 @@ export function ProductCard({ product, compact = false }) {
   const reviewCount = Number(product.reviewCount || product.reviews_count || 0);
   const rating = Number(product.rating || 0);
   const showNew = !onSale && isNewProduct(product);
+  const colorTags =
+    (product?.simpleVariations || []).find((v) => /color/i.test(String(v?.name || "")) && v.enabled)?.tags ||
+    [];
 
   useEffect(() => {
     try {
@@ -261,6 +265,19 @@ export function ProductCard({ product, compact = false }) {
         <Link href={href} className="cc-card-title line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] hover:text-[var(--color-primary)] md:text-sm">
           {product.name}
         </Link>
+
+        {colorTags.length > 0 ? (
+          <div className="mt-1.5 flex items-center gap-1" aria-label="Available colors">
+            {colorTags.slice(0, 4).map((color) => (
+              <span
+                key={color}
+                title={color}
+                className="inline-block h-2.5 w-2.5 rounded-full border border-black/10"
+                style={{ background: COLOR_SWATCH[color] || "#D1D5DB" }}
+              />
+            ))}
+          </div>
+        ) : null}
 
         {reviewCount > 0 ? (
           <div className="cc-card-stars mt-0.5 flex items-center gap-px md:mt-1.5 md:gap-1">

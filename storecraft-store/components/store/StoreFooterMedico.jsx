@@ -296,6 +296,9 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   ) || "support@homefy.pk"
   const footerPhone = footer.phone || footer.contact?.phone || settings?.phone || "[FILL IN]"
   const footerAddress = footer.address || footer.contact?.address || "[FILL IN — city, Pakistan]"
+  const registeredAddress = /gujranwala/i.test(String(footer.registeredAddress || ""))
+    ? ""
+    : String(footer.registeredAddress || "").trim()
   const socialLinks = Array.isArray(footer.socialLinks) && footer.socialLinks.length > 0
     ? footer.socialLinks.filter((s) => s?.url)
     : Object.entries(footer.social || {}).filter(([, url]) => url).length
@@ -619,7 +622,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
               </p>
             ) : null}
 
-            {footer.registeredAddress ? (
+            {registeredAddress ? (
               <div style={{ marginBottom: 16 }}>
                 <p
                   style={{
@@ -633,7 +636,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
                 >
                   Registered Address:
                 </p>
-                {footer.registeredAddress
+                {registeredAddress
                   .split('\n')
                   .filter((line) => line.trim())
                   .map((line, i) => (

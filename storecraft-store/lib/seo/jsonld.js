@@ -284,28 +284,26 @@ export function collectionPageJsonLd({
   return ld;
 }
 
-/** AutoPartsStore — root layout once */
+/** Store — root layout once */
 export function organizationJsonLd(overrides = {}) {
   const SITE = site();
   return {
     "@context": "https://schema.org",
-    "@type": "AutoPartsStore",
+    "@type": "Store",
     name: overrides.name || "Homefy.pk",
     url: SITE,
     logo: overrides.logo || `${SITE}/og-image.jpg`,
-    email: overrides.email || "info@homefy.pk",
-    telephone: overrides.telephone || "+92-328-4010007",
+    email: overrides.email || "support@homefy.pk",
+    telephone: overrides.telephone || undefined,
     address: {
       "@type": "PostalAddress",
-      addressLocality: "Gujranwala",
-      addressRegion: "Punjab",
       addressCountry: "PK",
+      ...(overrides.addressLocality ? { addressLocality: overrides.addressLocality } : {}),
+      ...(overrides.addressRegion ? { addressRegion: overrides.addressRegion } : {}),
       ...(overrides.streetAddress ? { streetAddress: overrides.streetAddress } : {}),
     },
     sameAs: overrides.sameAs || [
-      "https://www.facebook.com/share/1EDTxnjBzS/",
       "https://www.instagram.com/homefy.pk",
-      "https://www.tiktok.com/@homefy.pk",
     ],
   };
 }

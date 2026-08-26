@@ -10,7 +10,7 @@ import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
 
 /** Fields needed for product cards / homepage grids. */
 export const PRODUCT_CARD_SELECT =
-  "name slug media pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo createdAt tags compatibleCars vehicleCompatibility";
+  "name slug media pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo createdAt tags simpleVariations compatibleCars vehicleCompatibility";
 
 function escapeRegex(s) {
   return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

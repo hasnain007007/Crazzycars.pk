@@ -8,7 +8,6 @@ import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { computeProductSaleState } from "@/lib/productSale";
-import { getFitmentBadge } from "@/lib/vehicleCompatibility";
 import { formatAdminPrice } from "@/lib/currency";
 import { getStorefrontBaseUrl } from "@/lib/storefrontUrl";
 import { ProductQrCompact } from "./QRCodeGenerator";
@@ -139,7 +138,7 @@ export function ProductsTable({
               </th>
               <th className="w-16 px-2 py-3 font-medium">Image</th>
               <th className="min-w-[200px] px-3 py-3 font-medium">Name &amp; Article</th>
-              <th className="min-w-[100px] px-3 py-3 font-medium">Fitment</th>
+              <th className="min-w-[120px] px-3 py-3 font-medium">Type</th>
               <th className="min-w-[140px] px-3 py-3 font-medium">Category</th>
               <th className="px-3 py-3 font-medium">Price</th>
               <th className="px-3 py-3 font-medium">Stock</th>
@@ -174,7 +173,7 @@ export function ProductsTable({
                   <span>{formatAdminPrice(reg || 0)}</span>
                 );
               const img = thumbUrl(row);
-              const fitBadge = getFitmentBadge(row);
+              const typeLabel = row.productType || row.collections?.[0] || row.vendor || "—";
 
               return (
                 <tr key={id} className="border-b border-[#f3f4f6] hover:bg-[#fafafa]">
@@ -201,13 +200,7 @@ export function ProductsTable({
                     <p className="text-xs text-[#6b7280]">{row.articleNo || "—"}</p>
                   </td>
                   <td className="px-3 py-2">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${fitBadge.className}`}
-                      title={fitBadge.label}
-                    >
-                      <span aria-hidden>{fitBadge.icon}</span>
-                      {fitBadge.label}
-                    </span>
+                    <span className="text-xs text-[#6b7280]">{typeLabel}</span>
                   </td>
                   <td className="max-w-[180px] truncate px-3 py-2 text-[#374151]">{catLabel || "—"}</td>
                   <td className="px-3 py-2 tabular-nums">{priceLabel}</td>

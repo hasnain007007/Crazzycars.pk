@@ -27,16 +27,16 @@ export const DEFAULT_TRUST_BADGES = {
 export const DEFAULT_BRAND_STORY = {
   enabled: true,
   badge: "Our Story",
-  heading: "Built for Pakistani Car Enthusiasts",
-  subheading: "Fitment-first car accessories from Gujranwala",
+  heading: "Built for Pakistani Homes",
+  subheading: "Kitchen, beauty bags and ladies bags",
   description:
-    "Homefy.pk is based in Gujranwala and ships car accessories nationwide — splitters, LED lighting, body kits, carbon fiber parts, and more. We focus on clear year compatibility, practical installs, and Cash on Delivery.",
+    "Homefy.pk brings cookware, makeup pouches and ladies handbags to homes across Pakistan — with Cash on Delivery nationwide.",
   buttonText: "About Us",
   buttonLink: "/about",
   image1: "",
   image2: "",
   stats: [
-    { value: "393+", label: "Active products" },
+    { value: "66+", label: "Active products" },
     { value: "COD", label: "Nationwide" },
   ],
 };

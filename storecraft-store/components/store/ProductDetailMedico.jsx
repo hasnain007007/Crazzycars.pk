@@ -578,11 +578,14 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     inStock,
   } = variationState;
 
-  const displayPrice = Number.isFinite(Number(matchedCombo?.price))
-    ? Number(matchedCombo?.price)
-    : Number.isFinite(Number(matchedVariation?.price))
-      ? Number(matchedVariation?.price)
-      : Number(product?.price || basePrice || 0);
+  const comboOverride = Number(matchedCombo?.price);
+  const variationOverride = Number(matchedVariation?.price);
+  const displayPrice =
+    Number.isFinite(comboOverride) && comboOverride > 0
+      ? comboOverride
+      : Number.isFinite(variationOverride) && variationOverride > 0
+        ? variationOverride
+        : Number(product?.price || basePrice || 0);
   const availableStock = usesCombinationStock
     ? (matchedCombo || matchedVariation) != null &&
       Number.isFinite(Number((matchedCombo || matchedVariation)?.stock))
@@ -783,6 +786,15 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     product.descriptionHtml || product.longDescription || product.description
   );
   const descriptionPlain = toPlain(product.shortDescription);
+  const highlightFeatures = Array.isArray(product.features)
+    ? product.features.map((f) => String(f || "").trim()).filter(Boolean)
+    : [];
+  const careNote = (product.specifications || []).find((s) => /care/i.test(String(s.label || "")));
+  const isBagProduct = (product.categories || []).some((c) =>
+    /bag|pouch|clutch|tote|handbag|makeup|toiletry|vanity/.test(
+      `${c?.slug || ""} ${c?.name || ""}`.toLowerCase()
+    )
+  );
   const shortDesc =
     truncatePlain(toPlain(product?.shortDescription), 180) ||
     "Quality product with refined finish and modern design.";
@@ -1543,6 +1555,22 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                 )}
               </AccordionSection>
 
+              {highlightFeatures.length > 0 ? (
+                <AccordionSection
+                  id="highlights"
+                  title="Highlights"
+                  icon="Highlights"
+                  isOpen={openSection === "highlights"}
+                  onToggle={(sid) => setOpenSection(openSection === sid ? null : sid)}
+                >
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "#555555", lineHeight: 1.7 }}>
+                    {highlightFeatures.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </AccordionSection>
+              ) : null}
+
               {product.specifications?.length > 0 ? (
                 <AccordionSection
                   id="specifications"
@@ -1567,6 +1595,39 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                       </div>
                     ))}
                   </div>
+                </AccordionSection>
+              ) : null}
+
+              {careNote || isBagProduct ? (
+                <AccordionSection
+                  id="care"
+                  title="Care & Size"
+                  icon="Care"
+                  isOpen={openSection === "care"}
+                  onToggle={(sid) => setOpenSection(openSection === sid ? null : sid)}
+                >
+                  {careNote?.value ? (
+                    <p style={{ fontSize: 13, color: "#555555", lineHeight: 1.7, margin: "0 0 12px" }}>
+                      {careNote.value}
+                    </p>
+                  ) : null}
+                  {isBagProduct ? (
+                    <p style={{ fontSize: 13, color: "#555555", lineHeight: 1.7, margin: 0 }}>
+                      Need dimensions? See the{" "}
+                      <Link href="/size-guide" className="font-semibold text-[var(--color-primary)] underline">
+                        bag size guide
+                      </Link>{" "}
+                      or the Care guide for cleaning notes.
+                    </p>
+                  ) : (
+                    <p style={{ fontSize: 13, color: "#555555", lineHeight: 1.7, margin: 0 }}>
+                      Kitchen care tips are in our{" "}
+                      <Link href="/care-guide" className="font-semibold text-[var(--color-primary)] underline">
+                        care guide
+                      </Link>
+                      .
+                    </p>
+                  )}
                 </AccordionSection>
               ) : null}
 

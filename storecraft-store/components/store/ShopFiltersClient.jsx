@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/currency";
-import { CAR_MAKES } from "@/lib/carCatalog";
 import { hrefFromUrlState } from "@/lib/listingQuery";
-
-const SHOP_BRANDS = ["Honda", "Toyota", "Suzuki", "KIA", "Hyundai", "Changan", "MG"];
+import { SHOP_COLORS, SHOP_DEPARTMENTS } from "@/lib/homefyShopFilters";
 
 function Section({ title, children }) {
   const [open, setOpen] = useState(true);
@@ -49,7 +47,7 @@ export function ShopFiltersClient({ pathname = "/shop", urlState = {}, highest =
             type="checkbox"
             checked={urlState.inStock === "true"}
             onChange={(e) => push({ inStock: e.target.checked ? "true" : "" })}
-            className="accent-[#D72323]"
+            className="accent-[var(--color-primary)]"
           />{" "}
           In stock
         </label>
@@ -58,7 +56,7 @@ export function ShopFiltersClient({ pathname = "/shop", urlState = {}, highest =
             type="checkbox"
             checked={urlState.outOfStock === "true"}
             onChange={(e) => push({ outOfStock: e.target.checked ? "true" : "" })}
-            className="accent-[#D72323]"
+            className="accent-[var(--color-primary)]"
           />{" "}
           Out of stock
         </label>
@@ -97,30 +95,30 @@ export function ShopFiltersClient({ pathname = "/shop", urlState = {}, highest =
           </button>
         </form>
       </Section>
-      <Section title="Brand">
+      <Section title="Department">
+        <select
+          value={urlState.category || ""}
+          onChange={(e) => push({ category: e.target.value })}
+          className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
+        >
+          <option value="">All departments</option>
+          {SHOP_DEPARTMENTS.map((d) => (
+            <option key={d.slug} value={d.slug}>
+              {d.label}
+            </option>
+          ))}
+        </select>
+      </Section>
+      <Section title="Color">
         <select
           value={urlState.brand || ""}
           onChange={(e) => push({ brand: e.target.value })}
           className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
         >
-          <option value="">All brands</option>
-          {SHOP_BRANDS.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
-      </Section>
-      <Section title="Car Make">
-        <select
-          value={urlState.make || ""}
-          onChange={(e) => push({ make: e.target.value })}
-          className="w-full min-h-[44px] rounded border border-[rgba(0,0,0,0.12)] px-2 text-sm"
-        >
-          <option value="">Any vehicle</option>
-          {CAR_MAKES.map((m) => (
-            <option key={m} value={m}>
-              {m}
+          <option value="">All colors</option>
+          {SHOP_COLORS.map((c) => (
+            <option key={c} value={c}>
+              {c}
             </option>
           ))}
         </select>

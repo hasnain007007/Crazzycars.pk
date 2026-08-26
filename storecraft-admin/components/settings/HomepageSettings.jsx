@@ -187,12 +187,17 @@ const DEFAULT_FORM = {
     enabled: true,
     title: "Best Sellers",
     productIds: [],
-    tabs: [{ label: "All", categorySlug: "all", enabled: true, order: 1 }],
+    tabs: [
+      { label: "All", categorySlug: "all", enabled: true, order: 1 },
+      { label: "Kitchen", categorySlug: "kitchen-accessories", enabled: true, order: 2 },
+      { label: "Beauty", categorySlug: "beauty-bags", enabled: true, order: 3 },
+      { label: "Ladies", categorySlug: "ladies-bags", enabled: true, order: 4 },
+    ],
   },
   hotDeals: {
     enabled: true,
-    title: "🔥 Hot Deals",
-    subtitle: "Limited time offers",
+    title: "On Sale",
+    subtitle: "Seasonal prices on kitchen, beauty bags and ladies bags",
     tabs: [
       { label: "All Deals", filter: "all", maxPrice: null, enabled: true, order: 1 },
       { label: "Under Rs.1,000", filter: "under1000", maxPrice: 1000, enabled: true, order: 2 },

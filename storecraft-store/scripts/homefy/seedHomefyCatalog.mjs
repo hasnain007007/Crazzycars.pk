@@ -9,9 +9,9 @@ import mongoose from "mongoose";
 import Category from "../../lib/models/Category.model.js";
 import Product from "../../lib/models/Product.model.js";
 import Settings, { SETTINGS_SINGLETON_KEY } from "../../lib/models/Settings.model.js";
+import Page from "../../lib/models/Page.model.js";
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
-const PLACEHOLDER = "/images/placeholder-product.svg";
 
 const TREE = [
   {
@@ -20,10 +20,10 @@ const TREE = [
     description: "Cookware, storage, cutlery and dining pieces for Pakistani kitchens.",
     icon: "🍳",
     children: [
-      { name: "Cookware", slug: "cookware" },
-      { name: "Storage & Containers", slug: "storage-containers" },
-      { name: "Cutlery & Gadgets", slug: "cutlery-gadgets" },
-      { name: "Dining & Serveware", slug: "dining-serveware" },
+      { name: "Cookware", slug: "cookware", description: "Pans, pots, tawa and mixing bowls for everyday Pakistani cooking." },
+      { name: "Storage & Containers", slug: "storage-containers", description: "Airtight jars, lunch boxes and pantry organisers." },
+      { name: "Cutlery & Gadgets", slug: "cutlery-gadgets", description: "Knives, choppers, scissors and prep tools." },
+      { name: "Dining & Serveware", slug: "dining-serveware", description: "Plates, tea sets, trays and table pieces for guests." },
     ],
   },
   {
@@ -32,9 +32,9 @@ const TREE = [
     description: "Makeup pouches, travel toiletry bags and vanity organizers.",
     icon: "💄",
     children: [
-      { name: "Makeup Pouches", slug: "makeup-pouches" },
-      { name: "Travel Toiletry Bags", slug: "travel-toiletry-bags" },
-      { name: "Vanity & Organizer Bags", slug: "vanity-organizer-bags" },
+      { name: "Makeup Pouches", slug: "makeup-pouches", description: "Everyday cosmetics bags in quilted, velvet and clear styles." },
+      { name: "Travel Toiletry Bags", slug: "travel-toiletry-bags", description: "Hanging kits and waterproof wash bags for travel." },
+      { name: "Vanity & Organizer Bags", slug: "vanity-organizer-bags", description: "Jewellery rolls, brush holders and drawer organisers." },
     ],
   },
   {
@@ -43,10 +43,10 @@ const TREE = [
     description: "Handbags, totes, crossbody bags and clutches for everyday wear.",
     icon: "👜",
     children: [
-      { name: "Mini Handbags", slug: "mini-handbags" },
-      { name: "Tote Bags", slug: "tote-bags" },
-      { name: "Crossbody Bags", slug: "crossbody-bags" },
-      { name: "Clutches", slug: "clutches" },
+      { name: "Mini Handbags", slug: "mini-handbags", description: "Compact handbags for evenings and daily errands." },
+      { name: "Tote Bags", slug: "tote-bags", description: "Shopper and work totes with enough room for a day out." },
+      { name: "Crossbody Bags", slug: "crossbody-bags", description: "Hands-free bags with adjustable straps." },
+      { name: "Clutches", slug: "clutches", description: "Evening clutches and wristlets for events." },
     ],
   },
 ];
@@ -144,6 +144,214 @@ const PRODUCTS = {
 
 const BAG_COLORS = ["Black", "Beige", "Blush Pink", "Brown"];
 
+const SUB_META = {
+  cookware: {
+    productType: "Cookware",
+    collection: "Kitchen Accessories",
+    material: "Aluminium / stainless steel / cast iron (see title)",
+    dimensions: "See product title for size",
+    care: "Hand wash recommended. Avoid metal utensils on non-stick coatings. Dry fully before storing.",
+    weight: 900,
+    blurb: "Built for daily Pakistani cooking on gas stoves — from tadka to roti.",
+    features: [
+      "Everyday kitchen use on gas stoves",
+      "Homefy quality check before dispatch",
+      "Nationwide Cash on Delivery",
+    ],
+  },
+  "storage-containers": {
+    productType: "Kitchen Storage",
+    collection: "Kitchen Accessories",
+    material: "Food-grade glass or BPA-conscious plastic (see title)",
+    dimensions: "Stackable — see set contents in the title",
+    care: "Wash before first use. Glass jars are dishwasher-safe; lids may be hand-wash only.",
+    weight: 700,
+    blurb: "Keep masala, daal and leftovers fresh with airtight pantry storage.",
+    features: [
+      "Airtight seals for masala and leftovers",
+      "Stackable for small Pakistani kitchens",
+      "Homefy quality check before dispatch",
+    ],
+  },
+  "cutlery-gadgets": {
+    productType: "Kitchen Tools",
+    collection: "Kitchen Accessories",
+    material: "Stainless steel and food-safe plastics",
+    dimensions: "See product title",
+    care: "Hand wash blades. Dry immediately to prevent spotting.",
+    weight: 450,
+    blurb: "Prep tools that speed up chopping, measuring and serving.",
+    features: [
+      "Sharp, practical tools for daily prep",
+      "Comfortable grip for home cooks",
+      "Homefy quality check before dispatch",
+    ],
+  },
+  "dining-serveware": {
+    productType: "Dining & Serveware",
+    collection: "Kitchen Accessories",
+    material: "Ceramic, glass or wood (see title)",
+    dimensions: "Set contents listed in the product title",
+    care: "Ceramic and glass: dishwasher-safe unless noted. Wooden trays: wipe clean, do not soak.",
+    weight: 1800,
+    blurb: "Table pieces for guests, chai and family dinners.",
+    features: [
+      "Ready for hosting and everyday meals",
+      "Finish chosen for Pakistani dining tables",
+      "Homefy quality check before dispatch",
+    ],
+  },
+  "makeup-pouches": {
+    productType: "Makeup Pouch",
+    collection: "Beauty Bags",
+    material: "PU leather, velvet or quilted fabric (see title)",
+    dimensions: "Compact — fits in a handbag",
+    care: "Wipe with a damp cloth. Do not machine wash. Keep away from sharp objects.",
+    weight: 180,
+    blurb: "Keep lipstick, compact and brushes together without bulk.",
+    features: [
+      "Fits everyday makeup without bulk",
+      "Available in Black, Beige, Blush Pink and Brown",
+      "Smooth zip and wipe-clean lining",
+    ],
+  },
+  "travel-toiletry-bags": {
+    productType: "Toiletry Bag",
+    collection: "Beauty Bags",
+    material: "Water-resistant fabric with wipe-clean lining",
+    dimensions: "Travel size — hang or fold flat (see title)",
+    care: "Wipe lining after wet items. Air dry open. Do not machine wash.",
+    weight: 280,
+    blurb: "Separate wet and dry toiletries for weekends and flights.",
+    features: [
+      "Water-resistant lining for bottles",
+      "Available in Black, Beige, Blush Pink and Brown",
+      "Hangs or packs flat for travel",
+    ],
+  },
+  "vanity-organizer-bags": {
+    productType: "Vanity Organizer",
+    collection: "Beauty Bags",
+    material: "Acrylic, fabric or PU (see title)",
+    dimensions: "Desktop / drawer size — see title",
+    care: "Wipe clean. Keep jewellery trays dry. Do not overload hanging rolls.",
+    weight: 400,
+    blurb: "Organise brushes, jewellery and cosmetics on the dressing table.",
+    features: [
+      "Keeps brushes and jewellery sorted",
+      "Desktop or drawer-friendly footprint",
+      "Homefy quality check before dispatch",
+    ],
+  },
+  "mini-handbags": {
+    productType: "Mini Handbag",
+    collection: "Ladies Bags",
+    material: "PU leather with fabric lining",
+    dimensions: "Mini — phone, wallet and keys",
+    care: "Wipe with a soft cloth. Stuff with tissue when storing to keep shape.",
+    weight: 350,
+    blurb: "A structured mini for evenings and errands — phone, wallet, keys.",
+    features: [
+      "Holds phone, wallet and keys",
+      "Available in Black, Beige, Blush Pink and Brown",
+      "Detachable or short handle (see title)",
+    ],
+  },
+  "tote-bags": {
+    productType: "Tote Bag",
+    collection: "Ladies Bags",
+    material: "Canvas or PU leather (see title)",
+    dimensions: "Day tote — laptop sizes listed in title where relevant",
+    care: "Spot clean canvas. Wipe PU leather. Do not machine wash structured totes.",
+    weight: 550,
+    blurb: "Room for a day out — market, office or weekend.",
+    features: [
+      "Open top or zip (see title) with inner pocket",
+      "Available in Black, Beige, Blush Pink and Brown",
+      "Comfortable shoulder straps",
+    ],
+  },
+  "crossbody-bags": {
+    productType: "Crossbody Bag",
+    collection: "Ladies Bags",
+    material: "PU leather with adjustable strap",
+    dimensions: "Hands-free — phone and essentials",
+    care: "Wipe clean. Adjust strap hardware gently. Store stuffed to keep shape.",
+    weight: 320,
+    blurb: "Hands-free everyday bag with an adjustable strap.",
+    features: [
+      "Adjustable strap for crossbody wear",
+      "Available in Black, Beige, Blush Pink and Brown",
+      "Secure zip or flap closure",
+    ],
+  },
+  clutches: {
+    productType: "Clutch",
+    collection: "Ladies Bags",
+    material: "Satin, PU or beaded overlay (see title)",
+    dimensions: "Evening size — phone and compact",
+    care: "Keep beading dry. Wipe satin gently. Store in a dust bag or pouch.",
+    weight: 220,
+    blurb: "Evening clutches and wristlets for events and dinners.",
+    features: [
+      "Fits phone and a compact",
+      "Available in Black, Beige, Blush Pink and Brown",
+      "Optional chain or wristlet (see title)",
+    ],
+  },
+};
+
+const CMS_PAGES = [
+  {
+    title: "Bag Size Guide",
+    slug: "size-guide",
+    template: "custom",
+    showInFooter: true,
+    seo: {
+      metaTitle: "Bag Size Guide | Homefy.pk",
+      metaDescription: "How Homefy.pk mini handbags, totes, crossbody bags and clutches typically fit everyday essentials.",
+    },
+    content: `
+<h2>Bag size guide</h2>
+<p>Use this as a starting point. Exact measurements are listed on each product page.</p>
+<h3>Mini handbags</h3>
+<p>Phone, compact wallet and keys. Best for evenings and short outings.</p>
+<h3>Crossbody bags</h3>
+<p>Hands-free everyday carry — phone, small wallet, lipstick, cards.</p>
+<h3>Tote bags</h3>
+<p>Day bags with room for a water bottle, dupatta or a 13–15 inch laptop where the title says so.</p>
+<h3>Clutches</h3>
+<p>Phone and a compact. Add a chain or wristlet when the style includes one.</p>
+<h3>Beauty bags</h3>
+<p>Makeup pouches sit inside a handbag. Travel toiletry bags are sized for weekend bottles; hang or fold as described on the product.</p>
+`.trim(),
+  },
+  {
+    title: "Care Guide",
+    slug: "care-guide",
+    template: "custom",
+    showInFooter: true,
+    seo: {
+      metaTitle: "Care Guide | Homefy.pk",
+      metaDescription: "How to care for Homefy.pk cookware, storage, beauty bags and ladies bags.",
+    },
+    content: `
+<h2>Care guide</h2>
+<p>A little care keeps Homefy pieces looking new. Always follow the notes on the product page if they differ.</p>
+<h3>Cookware</h3>
+<p>Hand wash non-stick pans. Avoid metal spatulas on coated surfaces. Dry fully before stacking.</p>
+<h3>Storage &amp; dining</h3>
+<p>Wash before first use. Glass and ceramic are usually dishwasher-safe; wooden trays should be wiped, not soaked.</p>
+<h3>Beauty bags &amp; ladies bags</h3>
+<p>Wipe PU leather and linings with a damp cloth. Do not machine wash structured bags. Stuff handbags with tissue when storing so they keep their shape.</p>
+`.trim(),
+  },
+];
+
+function catalogImg(slug) {
+  return `/images/catalog/${slug}.svg`;
+}
+
 function slugify(name) {
   return String(name)
     .toLowerCase()
@@ -162,6 +370,17 @@ function bagVariants() {
       image: "",
     })),
   };
+}
+
+function productCopy(name, parentName, meta) {
+  const short = `${name} from Homefy.pk — ${meta.blurb}`;
+  const long = [
+    `<p>${name} is part of our ${parentName} collection at Homefy.pk. ${meta.blurb}</p>`,
+    `<p>Materials, care and typical size are listed in the specifications below. Every piece is checked before dispatch.</p>`,
+    `<ul>${meta.features.map((f) => `<li>${f}</li>`).join("")}</ul>`,
+    `<p>Cash on Delivery nationwide. Easy returns on eligible unused items.</p>`,
+  ].join("");
+  return { short, long };
 }
 
 async function upsertCategory(fields) {
@@ -205,6 +424,12 @@ async function run() {
       showInNav: true,
       showOnHomepage: true,
       homepageIcon: parent.icon,
+      image: {
+        url: catalogImg(parent.slug),
+        publicId: "",
+        altText: parent.name,
+        title: parent.name,
+      },
       seo: {
         metaTitle: `${parent.name} | Homefy.pk`,
         metaDescription: parent.description,
@@ -217,7 +442,7 @@ async function run() {
       const childDoc = await upsertCategory({
         name: child.name,
         slug: child.slug,
-        description: `${child.name} at Homefy.pk`,
+        description: child.description || `${child.name} at Homefy.pk`,
         parentCategory: parentDoc._id,
         parents: [parentDoc._id],
         ancestors: [parentDoc._id],
@@ -228,6 +453,12 @@ async function run() {
         featured: true,
         showInNav: true,
         showOnHomepage: true,
+        image: {
+          url: catalogImg(child.slug),
+          publicId: "",
+          altText: child.name,
+          title: child.name,
+        },
         seo: {
           metaTitle: `${child.name} | Homefy.pk`,
           metaDescription: `Shop ${child.name.toLowerCase()} online in Pakistan at Homefy.pk. Cash on Delivery nationwide.`,
@@ -244,8 +475,18 @@ async function run() {
     if (!cat) throw new Error(`Unknown subcategory slug ${subSlug}`);
     for (const [name, price, featured, withColors] of rows) {
       const slug = slugify(name);
+      const meta = SUB_META[subSlug];
+      if (!meta) throw new Error(`Missing SUB_META for ${subSlug}`);
       const variants = withColors ? bagVariants() : { simpleVariations: [], variationCombinations: [] };
       const sku = `HF-${subSlug.slice(0, 3).toUpperCase()}-${slug.slice(0, 8).toUpperCase()}`;
+      const copy = productCopy(name, cat.parentName, meta);
+      const tags = [
+        "Homefy",
+        meta.collection,
+        meta.productType,
+        cat.parentName,
+        ...(withColors ? BAG_COLORS : []),
+      ];
       await Product.findOneAndUpdate(
         { slug },
         {
@@ -253,18 +494,48 @@ async function run() {
             name,
             slug,
             articleNo: sku,
-            shortDescription: `${name} from Homefy.pk — quality for Pakistani homes.`,
-            longDescription: `<p>${name} is part of our ${cat.parentName} collection. Nationwide Cash on Delivery.</p>`,
+            shortDescription: copy.short,
+            longDescription: copy.long,
             categories: [cat.id, cat.parentId],
             pricing: { regularPrice: price, salePrice: featured ? Math.round(price * 0.9) : null },
-            inventory: { quantity: 40, sku, trackInventory: true, allowBackorder: false, weight: 400, weightUnit: "g" },
+            inventory: {
+              quantity: 40,
+              sku,
+              trackInventory: true,
+              allowBackorder: false,
+              weight: meta.weight,
+              weightUnit: "g",
+            },
             media: {
               images: [
-                { url: PLACEHOLDER, altText: name, isMain: true, publicId: "" },
+                { url: catalogImg(subSlug), altText: name, isMain: true, publicId: "" },
+                { url: catalogImg(subSlug), altText: `${name} detail`, isMain: false, publicId: "" },
               ],
             },
             simpleVariations: variants.simpleVariations,
             variationCombinations: variants.variationCombinations,
+            features: meta.features,
+            specifications: [
+              { label: "Brand", value: "Homefy" },
+              { label: "Collection", value: meta.collection },
+              { label: "Material", value: meta.material },
+              { label: "Dimensions", value: meta.dimensions },
+              { label: "Care", value: meta.care },
+              { label: "Cash on Delivery", value: "Available nationwide" },
+            ],
+            vendor: "Homefy",
+            productType: meta.productType,
+            collections: [meta.collection],
+            tags,
+            isUniversal: false,
+            compatibleVehicles: [],
+            compatibleCars: [],
+            vehicleCompatibility: {
+              fitmentType: "universal",
+              universalNote: "Not a vehicle part.",
+              vehicles: [],
+              categories: [],
+            },
             status: "active",
             featured: Boolean(featured),
             isFeatured: Boolean(featured),
@@ -273,7 +544,7 @@ async function run() {
             codEnabled: true,
             seo: {
               metaTitle: `${name} | Homefy.pk`,
-              metaDescription: `Buy ${name} online in Pakistan at Homefy.pk. Cash on Delivery nationwide.`,
+              metaDescription: `Buy ${name} online in Pakistan at Homefy.pk. ${meta.blurb} Cash on Delivery nationwide.`,
             },
           },
         },
@@ -286,6 +557,23 @@ async function run() {
   const categoryCount = await Category.countDocuments();
   const productCount = await Product.countDocuments();
   const featuredCount = await Product.countDocuments({ $or: [{ featured: true }, { isFeatured: true }] });
+
+  for (const page of CMS_PAGES) {
+    await Page.findOneAndUpdate(
+      { slug: page.slug },
+      {
+        $set: {
+          ...page,
+          status: "published",
+          showInNav: false,
+          showInInfoBar: false,
+          sortOrder: 50,
+        },
+      },
+      { upsert: true, setDefaultsOnInsert: true }
+    );
+    console.log(`Page: ${page.slug}`);
+  }
 
   await Settings.findOneAndUpdate(
     { singletonKey: SETTINGS_SINGLETON_KEY },
@@ -304,10 +592,22 @@ async function run() {
         "homepageSettings.heroHeadline": "Kitchen, beauty bags & ladies bags",
         "homepageSettings.heroSubtext":
           "Cookware, makeup pouches and handbags for Pakistani homes — Cash on Delivery nationwide.",
+        "homepageSettings.flashSaleEnabled": false,
         "homepageSettings.sections.showShopByCar": false,
         "homepageSettings.sections.showFlashSale": false,
         "homepageSettings.sections.showBrands": false,
         "homepageSettings.brands": [],
+        "homepageSettings.bestSellers.title": "Best Sellers",
+        "homepageSettings.bestSellers.enabled": true,
+        "homepageSettings.bestSellers.tabs": [
+          { label: "All", categorySlug: "all", enabled: true, order: 1 },
+          { label: "Kitchen", categorySlug: "kitchen-accessories", enabled: true, order: 2 },
+          { label: "Beauty", categorySlug: "beauty-bags", enabled: true, order: 3 },
+          { label: "Ladies", categorySlug: "ladies-bags", enabled: true, order: 4 },
+        ],
+        "homepageSettings.hotDeals.enabled": true,
+        "homepageSettings.hotDeals.title": "On Sale",
+        "homepageSettings.hotDeals.subtitle": "Seasonal prices on kitchen, beauty bags and ladies bags",
         "brandStory.heading": "Built for Pakistani Homes",
         "brandStory.subheading": "Kitchen, beauty bags and ladies bags",
         "brandStory.description":
@@ -317,6 +617,7 @@ async function run() {
         "footer.contactEmail": "support@homefy.pk",
         "footer.email": "support@homefy.pk",
         "footer.phone": "",
+        "footer.registeredAddress": "",
         "footer.shopLinks": [
           { label: "Home", href: "/", enabled: true },
           { label: "Kitchen Accessories", href: "/categories/kitchen-accessories", enabled: true },
@@ -324,6 +625,8 @@ async function run() {
           { label: "Ladies Bags", href: "/categories/ladies-bags", enabled: true },
           { label: "New Arrivals", href: "/shop?sort=newest", enabled: true },
           { label: "Sale", href: "/sale", enabled: true },
+          { label: "Size Guide", href: "/size-guide", enabled: true },
+          { label: "Care Guide", href: "/care-guide", enabled: true },
           { label: "Contact", href: "/contact", enabled: true },
         ],
         "whatsapp.message": "Hi! I have a question about Homefy.pk.",
