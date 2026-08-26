@@ -182,7 +182,7 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
         card: "summary_large_image",
         images: [absoluteUrl("/og-image.jpg")],
       },
-    };
+    });
   }
 });
 
