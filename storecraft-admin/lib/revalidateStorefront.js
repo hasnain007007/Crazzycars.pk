@@ -19,6 +19,15 @@ function isLikelyShopify(url) {
   return SHOPIFY_HOST_HINTS.some((h) => u.includes(h));
 }
 
+function isCrazzyCarsHost(url) {
+  const u = normalizeBase(url).toLowerCase();
+  return (
+    u.includes("crazzycars.pk") ||
+    u.includes("admin.crazzycars") ||
+    u.includes("storecraft-store-iota.vercel.app")
+  );
+}
+
 function isAdminOrigin(url) {
   const u = normalizeBase(url).toLowerCase();
   return (
@@ -42,7 +51,7 @@ function getRevalidateBases() {
   const bases = [];
   for (const raw of candidates) {
     const base = normalizeBase(raw);
-    if (!base || seen.has(base) || isAdminOrigin(base) || isLikelyShopify(base)) continue;
+    if (!base || seen.has(base) || isAdminOrigin(base) || isLikelyShopify(base) || isCrazzyCarsHost(base)) continue;
     seen.add(base);
     bases.push(base);
   }

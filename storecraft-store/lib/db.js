@@ -7,6 +7,12 @@ if (!MONGODB_URI) {
   throw new Error("MONGODB_URI environment variable is not set");
 }
 
+if (/yg8dcwr|sialkot_motorsports|crazzycars/i.test(MONGODB_URI)) {
+  throw new Error(
+    "Refusing CrazzyCars production Mongo. Homefy local uses mongodb://127.0.0.1:27017/homefy"
+  );
+}
+
 let cached = global.mongoose;
 if (!cached) cached = global.mongoose = { conn: null, promise: null };
 
