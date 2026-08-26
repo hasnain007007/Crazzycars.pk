@@ -10,7 +10,7 @@ function escapeRegex(value) {
  *
  * Handles Shopify / Meta leftovers:
  * - exact slug
- * - `-crazzycars-pk` suffix added on migration
+ * - `-homefy-pk` suffix added on migration
  * - shortened handles that are a prefix of the current slug
  * - year-range drift (2021-2024 → 2021-2026) with same stem
  *
@@ -28,9 +28,9 @@ export async function findActiveProductBySlugParam(rawSlug) {
   const exact = await Product.findOne({ slug, status: "active" }).select(select).lean();
   if (exact) return exact;
 
-  if (!/-crazzycars-pk$/i.test(slug)) {
+  if (!/-homefy-pk$/i.test(slug)) {
     const withBrand = await Product.findOne({
-      slug: `${slug}-crazzycars-pk`,
+      slug: `${slug}-homefy-pk`,
       status: "active",
     })
       .select(select)
@@ -46,9 +46,9 @@ export async function findActiveProductBySlugParam(rawSlug) {
     .lean();
   if (ci) return ci;
 
-  if (!/-crazzycars-pk$/i.test(slug)) {
+  if (!/-homefy-pk$/i.test(slug)) {
     const ciBrand = await Product.findOne({
-      slug: { $regex: `^${escapeRegex(slug)}-crazzycars-pk$`, $options: "i" },
+      slug: { $regex: `^${escapeRegex(slug)}-homefy-pk$`, $options: "i" },
       status: "active",
     })
       .select(select)

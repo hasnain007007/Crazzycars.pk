@@ -34,8 +34,8 @@ export const CATEGORY_CSV_SAMPLE_ROWS = [
     showOnHomepage: "true",
     imageUrl: "https://cdn.example.com/exterior.jpg",
     imageAlt: "Car exterior accessories",
-    imageTitle: "Exterior – CrazzyCars.pk",
-    metaTitle: "Car Exterior Accessories in Pakistan | CrazzyCars.pk",
+    imageTitle: "Exterior – Homefy.pk",
+    metaTitle: "Car Exterior Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Shop car exterior accessories in Pakistan — body kits, splitters, spoilers. Cash on Delivery.",
     metaKeywords: "exterior accessories|body kits|spoilers pakistan",
@@ -53,9 +53,9 @@ export const CATEGORY_CSV_SAMPLE_ROWS = [
     showOnHomepage: "false",
     imageUrl: "https://cdn.example.com/body-kits.jpg",
     imageAlt: "Body kits for cars",
-    imageTitle: "Body Kits – CrazzyCars.pk",
-    metaTitle: "Car Body Kits in Pakistan | CrazzyCars.pk",
-    metaDescription: "Buy car body kits and extensions online in Pakistan at CrazzyCars.pk.",
+    imageTitle: "Body Kits – Homefy.pk",
+    metaTitle: "Car Body Kits in Pakistan | Homefy.pk",
+    metaDescription: "Buy car body kits and extensions online in Pakistan at Homefy.pk.",
     metaKeywords: "body kits pakistan|car body kit|front lip",
   },
 ];

@@ -5,7 +5,7 @@ export const DEFAULT_WHATSAPP_TEMPLATES = {
     enabled: true,
     template: `Assalam o Alaikum {customerName}! 🚗
 
-*Crazzycars.pk* — please confirm your order:
+*Homefy.pk* — please confirm your order:
 
 ❓ *Is your order confirmed?*
 Tap one option below:
@@ -44,7 +44,7 @@ Or reply with:
 1️⃣ CONFIRM
 2️⃣ CANCEL
 
-Shukriya — Crazzycars.pk 🚗✨`,
+Shukriya — Homefy.pk 🚗✨`,
   },
   adminNewOrder: {
     enabled: true,
@@ -72,7 +72,7 @@ Shukriya — Crazzycars.pk 🚗✨`,
 
 Assalam o Alaikum {customerName}!
 
-Your Crazzycars.pk order #{orderNumber} has been shipped via *{courier}*!
+Your Homefy.pk order #{orderNumber} has been shipped via *{courier}*!
 
 🔍 *Tracking Number:* {trackingNumber}
 🔗 Track here: {trackingUrl}
@@ -88,7 +88,7 @@ Thank you! 🚗✨`,
     enabled: true,
     template: `Assalam o Alaikum {customerName}! 🚗
 
-You left items in your *Crazzycars.pk* cart:
+You left items in your *Homefy.pk* cart:
 
 🛍️ *Items:*
 {itemsList}
@@ -100,7 +100,7 @@ Complete your order here:
 
 Need help? Call {storePhone}
 
-Shukriya — Crazzycars.pk ✨`,
+Shukriya — Homefy.pk ✨`,
   },
 };
 
@@ -284,7 +284,7 @@ export function buildCustomerOrderVariables(order, settings = {}, extras = {}) {
   const shipping = Number(pricing.shippingCost ?? pricing.shipping ?? 0);
   const total = Number(pricing.total ?? order?.total ?? 0);
   const pay = getOrderPaymentBreakdown(order);
-  const storeName = settings?.general?.storeName || "Crazzycars.pk";
+  const storeName = settings?.general?.storeName || "Homefy.pk";
   const storePhone = settings?.general?.phone || "";
   const orderId = order?.id || order?._id || "";
   const base =
@@ -412,7 +412,7 @@ export function getOrderShippedWhatsAppMessage(order, settings, overrides = {}) 
 
 /** Legacy fallback when templates disabled or empty */
 export function getLegacyTrackingWhatsAppMessage({
-  storeName = "Crazzycars.pk",
+  storeName = "Homefy.pk",
   orderNumber,
   trackingNumber,
   storeUrl = "",

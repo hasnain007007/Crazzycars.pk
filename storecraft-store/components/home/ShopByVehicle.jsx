@@ -184,13 +184,13 @@ export default function ShopByVehicle({ initialCatalog = null }) {
       <div className="store-container">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#C41E1E]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-primary)]">
               Or browse by model
             </p>
             <h2 className="font-heading mt-0.5 text-[18px] font-bold text-[#111111] sm:text-[22px]">
               Shop By Your Vehicle
             </h2>
-            <Link href="/cars" className="mt-1 inline-block text-xs font-semibold text-[#C41E1E] hover:underline">
+            <Link href="/cars" className="mt-1 inline-block text-xs font-semibold text-[var(--color-primary)] hover:underline">
               View all cars →
             </Link>
           </div>
@@ -202,8 +202,8 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                 onClick={() => setActiveMake("")}
                 className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold transition sm:px-3 sm:text-[11px] ${
                   !activeMake
-                    ? "bg-[#C41E1E] text-white"
-                    : "border border-[#E5E7EB] bg-white text-[#374151] hover:border-[#C41E1E]/40"
+                    ? "bg-[var(--color-primary)] text-white"
+                    : "border border-[#E5E7EB] bg-white text-[#374151] hover:border-[var(--color-primary)]/40"
                 }`}
               >
                 All · {items.length}
@@ -215,8 +215,8 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                   onClick={() => setActiveMake(make)}
                   className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold transition sm:px-3 sm:text-[11px] ${
                     activeMake === make
-                      ? "bg-[#C41E1E] text-white"
-                      : "border border-[#E5E7EB] bg-white text-[#374151] hover:border-[#C41E1E]/40"
+                      ? "bg-[var(--color-primary)] text-white"
+                      : "border border-[#E5E7EB] bg-white text-[#374151] hover:border-[var(--color-primary)]/40"
                   }`}
                 >
                   {make} · {list.length}
@@ -272,7 +272,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                     key={`${v.make}-${v.slug}`}
                     href={v.href}
                     data-vehicle-card
-                    className="group w-[31%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md sm:w-[18%]"
+                    className="group w-[31%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[var(--color-primary)]/45 hover:shadow-md sm:w-[18%]"
                     style={{ scrollSnapAlign: "start" }}
                   >
                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3F4F6] sm:aspect-square">
@@ -289,7 +289,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                       )}
                     </div>
                     <div className="px-1.5 py-1.5 sm:px-2.5 sm:py-2">
-                      <p className="truncate text-[8px] font-bold uppercase tracking-wider text-[#C41E1E] sm:text-[9px]">
+                      <p className="truncate text-[8px] font-bold uppercase tracking-wider text-[var(--color-primary)] sm:text-[9px]">
                         {v.make}
                       </p>
                       <p className="font-heading truncate text-[12px] font-bold leading-tight text-[#111111] sm:text-[13px]">

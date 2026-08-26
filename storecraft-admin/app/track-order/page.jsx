@@ -68,7 +68,7 @@ function TrackOrderInner() {
   }, [initial, track]);
 
   const badge = useMemo(() => (data ? statusStyle(data.status) : null), [data]);
-  const storeUrl = String(process.env.NEXT_PUBLIC_STORE_URL || "https://crazzycars.pk").replace(/\/$/, "");
+  const storeUrl = String(process.env.NEXT_PUBLIC_STORE_URL || "https://homefy.pk").replace(/\/$/, "");
 
   return (
     <div
@@ -89,7 +89,7 @@ function TrackOrderInner() {
           gap: 12,
         }}
       >
-        <strong style={{ fontSize: 18 }}>CrazzyCars.pk</strong>
+        <strong style={{ fontSize: 18 }}>Homefy.pk</strong>
         <a href={storeUrl} style={{ color: "#fff", fontSize: 14, opacity: 0.85 }}>
           Back to shop
         </a>
@@ -128,7 +128,7 @@ function TrackOrderInner() {
             disabled={loading}
             style={{
               padding: "12px 28px",
-              background: loading ? "#94a3b8" : "#C41E1E",
+              background: loading ? "#94a3b8" : "#C6633B",
               color: "#fff",
               border: "none",
               borderRadius: 8,
@@ -226,8 +226,8 @@ function TrackOrderInner() {
                       width: 28,
                       height: 28,
                       borderRadius: "50%",
-                      background: i === 0 ? "#C41E1E" : "#fff",
-                      border: `2px solid ${i === 0 ? "#C41E1E" : "#cbd5e1"}`,
+                      background: i === 0 ? "#C6633B" : "#fff",
+                      border: `2px solid ${i === 0 ? "#C6633B" : "#cbd5e1"}`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",

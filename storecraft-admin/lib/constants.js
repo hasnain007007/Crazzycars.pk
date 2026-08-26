@@ -7,7 +7,7 @@ export const USER_STATUSES = ["active", "inactive"];
 export const STORE_CURRENCY = "PKR";
 export const STORE_COUNTRY = "Pakistan";
 export const STORE_WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP;
-export const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk';
+export const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk';
 export const ORDER_NUMBER_PREFIX = "CC";
 export const ORDER_STATUSES = [
   "pending",

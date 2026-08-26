@@ -342,10 +342,10 @@ export default function OrdersPage() {
                       style={{
                         fontSize: 12,
                         fontWeight: 700,
-                        color: "#C41E1E",
+                        color: "#C6633B",
                         textDecoration: "none",
                         padding: "8px 16px",
-                        border: "1px solid #C41E1E",
+                        border: "1px solid #C6633B",
                         borderRadius: 4,
                         letterSpacing: "0.04em",
                       }}

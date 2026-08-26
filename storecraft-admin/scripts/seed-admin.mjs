@@ -15,14 +15,14 @@ const envPath = path.resolve(__dirname, "../.env.local");
 dotenv.config({ path: envPath });
 
 const ADMIN_USER = {
-  name: "Crazzycars.pk",
-  email: "admin@crazzycars.pk",
+  name: "Homefy.pk",
+  email: "admin@homefy.pk",
   password: "@Hasnain0007",
   role: "superadmin",
   status: "active",
 };
 
-const LEGACY_EMAILS = ["admin@example.com", "crazzycars.pk"];
+const LEGACY_EMAILS = ["admin@example.com", "homefy.pk"];
 
 async function seedAdmin() {
   const { MONGODB_URI } = process.env;

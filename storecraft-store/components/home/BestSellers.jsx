@@ -62,9 +62,9 @@ export default function BestSellers({ initialProducts = [], settings }) {
             <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">
               {settings?.bestSellers?.title || "Best Sellers"}
             </h2>
-            <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8 }} />
+            <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 8 }} />
           </div>
-          <Link href="/shop" className="text-sm font-semibold text-[#C41E1E] hover:underline">
+          <Link href="/shop" className="text-sm font-semibold text-[var(--color-primary)] hover:underline">
             View All →
           </Link>
         </div>
@@ -78,8 +78,8 @@ export default function BestSellers({ initialProducts = [], settings }) {
                 onClick={() => setTab(t.categorySlug)}
                 className="pb-3 text-sm font-semibold transition"
                 style={{
-                  color: tab === t.categorySlug ? "#C41E1E" : "#6B7280",
-                  borderBottom: tab === t.categorySlug ? "2px solid #C41E1E" : "2px solid transparent",
+                  color: tab === t.categorySlug ? "#C6633B" : "#6B7280",
+                  borderBottom: tab === t.categorySlug ? "2px solid #C6633B" : "2px solid transparent",
                   marginBottom: -1,
                 }}
               >

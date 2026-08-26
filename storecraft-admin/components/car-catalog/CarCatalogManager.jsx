@@ -338,7 +338,7 @@ function ModelModal({ draft, setDraft, onClose, onSave, saving }) {
               </div>
               <button
                 type="button"
-                className="text-xs font-semibold text-[#C41E1E]"
+                className="text-xs font-semibold text-[var(--color-primary)]"
                 onClick={() =>
                   setDraft((d) => ({
                     ...d,
@@ -448,7 +448,7 @@ function ModelModal({ draft, setDraft, onClose, onSave, saving }) {
             type="button"
             disabled={saving}
             onClick={onSave}
-            className="rounded-lg bg-[#C41E1E] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save model"}
           </button>
@@ -731,7 +731,7 @@ export default function CarCatalogManager() {
           type="button"
           onClick={saveMake}
           disabled={saving}
-          className="rounded-lg bg-[#C41E1E] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
           {saving ? "Saving…" : "Save Changes"}
         </button>
@@ -763,7 +763,7 @@ export default function CarCatalogManager() {
               <li key={m._id} className="mb-1">
                 <div
                   className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm ${
-                    String(selectedId) === String(m._id) ? "bg-[#C41E1E]/10" : "hover:bg-slate-50"
+                    String(selectedId) === String(m._id) ? "bg-[var(--color-primary)]/10" : "hover:bg-slate-50"
                   }`}
                 >
                   {m.logo ? (
@@ -850,7 +850,7 @@ export default function CarCatalogManager() {
                 <strong>Save Changes</strong>.
               </p>
             </div>
-            <button type="button" className="text-sm text-[#C41E1E] font-semibold" onClick={() => openModelModal("new")}>
+            <button type="button" className="text-sm text-[var(--color-primary)] font-semibold" onClick={() => openModelModal("new")}>
               + Add Model
             </button>
           </div>
@@ -909,7 +909,7 @@ export default function CarCatalogManager() {
                     ) : null}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <button type="button" className="text-xs font-semibold text-[#C41E1E]" onClick={() => openModelModal(i)}>
+                    <button type="button" className="text-xs font-semibold text-[var(--color-primary)]" onClick={() => openModelModal(i)}>
                       Edit
                     </button>
                     {form._id && model._id ? (

@@ -14,7 +14,7 @@ export default function WhyChooseUs({ settings }) {
         <h2 className="font-heading text-[32px] font-bold" style={{ color: "#FFFFFF" }}>
           {settings?.sectionTitles?.whyChooseUs || "Why Choose Us"}
         </h2>
-        <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8, marginBottom: 24 }} />
+        <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 8, marginBottom: 24 }} />
         <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 lg:gap-10">
           {items.slice(0, 4).map((item, i) => (
             <div

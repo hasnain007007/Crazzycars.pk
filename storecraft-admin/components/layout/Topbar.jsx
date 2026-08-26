@@ -146,7 +146,7 @@ export function Topbar({ onMenuClick }) {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     window.location.href = "/login";
   }, []);
-  const storeName = storeSettings?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk';
+  const storeName = storeSettings?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk';
   const logoUrl = storeSettings?.logoUrl || "";
 
   return (

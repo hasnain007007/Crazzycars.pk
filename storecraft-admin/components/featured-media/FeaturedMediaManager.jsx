@@ -318,7 +318,7 @@ export default function FeaturedMediaManager() {
             <label style={labelStyle}>Link (when clicked) - optional</label>
             <input
               style={inputStyle}
-              placeholder={`${process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://crazzycars.pk"}/seat-covers OR /products OR /categories/seat-covers`}
+              placeholder={`${process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://homefy.pk"}/seat-covers OR /products OR /categories/seat-covers`}
               value={form.link}
               onChange={(e) =>
                 setForm((f) => ({
@@ -329,7 +329,7 @@ export default function FeaturedMediaManager() {
               }
             />
             <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>
-              Paste any link. Examples: /products | /categories/seat-covers | /shop | https://crazzycars.pk
+              Paste any link. Examples: /products | /categories/seat-covers | /shop | https://homefy.pk
             </p>
           </div>
 

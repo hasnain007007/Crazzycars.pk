@@ -44,7 +44,7 @@ export async function POST(req) {
     // Attempt a no-op-ish send to reveal Resend's real rejection reason.
     const result = await sendEmail({
       to: to || getAdminEmail(),
-      subject: "Crazzycars.pk email probe",
+      subject: "Homefy.pk email probe",
       html: "<p>Probe — ignore.</p>",
     });
     return NextResponse.json({

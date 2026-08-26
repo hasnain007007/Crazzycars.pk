@@ -10,7 +10,7 @@ import {
   normalizeImageDisplay,
 } from "@/lib/heroBannerDisplay";
 
-const BRAND = "Crazzycars.pk";
+const BRAND = "Homefy.pk";
 const SWIPE_PX = 48;
 const SLIDE_MS = 560;
 
@@ -26,7 +26,7 @@ function normalizeButtonUrl(url) {
   if (!raw) return "/shop";
 
   let u = raw;
-  // "crazzycars.pk/cars" → treat as absolute host
+  // "homefy.pk/cars" → treat as absolute host
   if (!/^https?:\/\//i.test(u) && !u.startsWith("/") && /^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(u)) {
     u = `https://${u}`;
   }
@@ -35,7 +35,7 @@ function normalizeButtonUrl(url) {
     try {
       const parsed = new URL(u);
       // Keep same-store links in-app (no new tab / full reload)
-      if (/(^|\.)crazzycars\.pk$/i.test(parsed.hostname)) {
+      if (/(^|\.)homefy\.pk$/i.test(parsed.hostname)) {
         return `${parsed.pathname || "/"}${parsed.search || ""}${parsed.hash || ""}` || "/";
       }
     } catch {
@@ -82,7 +82,7 @@ function resolveCopy(slide, settings) {
           text: hp.heroCtaText || "Shop Now",
           url: hp.heroCtaUrl || "/shop",
           style: "primary",
-          bgColor: "#C41E1E",
+          bgColor: "#C6633B",
         },
       ];
 
@@ -123,7 +123,7 @@ function primaryButtonColors(button) {
     raw === "#0a0a0a" ||
     raw === "#0b0b0b";
   return {
-    background: unusable ? "#C41E1E" : button.bgColor,
+    background: unusable ? "#C6633B" : button.bgColor,
     color: button?.textColor || button?.color || "#FFFFFF",
   };
 }
@@ -170,7 +170,7 @@ function HeroCopy({ slide, settings, animateKey, headingLevel = "p" }) {
     if (headingLevel === "h1") {
       return (
         <h1 className="sr-only" key={animateKey}>
-          {BRAND} — Car Accessories Pakistan
+          {BRAND} — Kitchen, beauty bags & ladies bags
         </h1>
       );
     }
@@ -182,7 +182,7 @@ function HeroCopy({ slide, settings, animateKey, headingLevel = "p" }) {
       {headline ? (
         <TitleTag className="home-hero__title">{headline}</TitleTag>
       ) : headingLevel === "h1" ? (
-        <h1 className="sr-only">{BRAND} — Car Accessories Pakistan</h1>
+        <h1 className="sr-only">{BRAND} — Kitchen, beauty bags & ladies bags</h1>
       ) : null}
       {sub ? <p className="home-hero__sub">{sub}</p> : null}
       {buttons.length ? (
@@ -280,7 +280,7 @@ function HeroSlidePanel({
             src={bgImage}
             alt={
               String(slide.altText || slide.title || "").trim() ||
-              `${BRAND} — Car Accessories Pakistan`
+              `${BRAND} — Kitchen, beauty bags & ladies bags`
             }
             fetchPriority={isLcp ? "high" : "low"}
             loading={isLcp ? "eager" : "lazy"}
@@ -306,7 +306,7 @@ function HeroSlidePanel({
         >
           {/* Only the active slide may own the page H1 (sr-only brand fallback). */}
           {isActive ? (
-            <h1 className="sr-only">{BRAND} — Car Accessories Pakistan</h1>
+            <h1 className="sr-only">{BRAND} — Kitchen, beauty bags & ladies bags</h1>
           ) : (
             <span className="sr-only">{BRAND}</span>
           )}
@@ -330,10 +330,34 @@ function HeroSlidePanel({
  * (height, fit, dark overlay, hover zoom). Text overlays only when
  * the banner has heading/subheading in admin.
  */
+function homefyFallbackSlide(settings) {
+  const hp = settings || DEFAULT_HOMEPAGE_SETTINGS;
+  return {
+    id: "homefy-placeholder",
+    title: hp.heroHeadline || "Kitchen, beauty bags & ladies bags",
+    subtitle: hp.heroSubtext || "For the Pakistani home — Cash on Delivery nationwide.",
+    buttons: [
+      { text: "Shop kitchen", url: "/categories/kitchen-accessories", style: "primary", bgColor: "#C6633B" },
+      { text: "Shop bags", url: "/categories/ladies-bags", style: "outline" },
+    ],
+    backgroundColor: "#C6633B",
+    imageUrl: "/images/placeholder-hero.svg",
+    imageUrlMobile: "/images/placeholder-hero.svg",
+    targetUrl: "",
+    imageDisplay: normalizeImageDisplay(null),
+  };
+}
+
 export default function HomeHero({ settings, initialSlides = null }) {
   const trust = useTrustItems();
   const hasInitial = Array.isArray(initialSlides);
-  const [slides, setSlides] = useState(() => (hasInitial ? initialSlides : []));
+  const [slides, setSlides] = useState(() =>
+    hasInitial && Array.isArray(initialSlides) && initialSlides.length
+      ? initialSlides
+      : hasInitial
+        ? [homefyFallbackSlide(settings)]
+        : []
+  );
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(!hasInitial);
   const [paused, setPaused] = useState(false);
@@ -353,7 +377,11 @@ export default function HomeHero({ settings, initialSlides = null }) {
 
   useEffect(() => {
     if (hasInitial) {
-      setSlides(initialSlides);
+      setSlides(
+        Array.isArray(initialSlides) && initialSlides.length
+          ? initialSlides
+          : [homefyFallbackSlide(settings)]
+      );
       setLoading(false);
     }
     let cancelled = false;
@@ -365,7 +393,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
         if (cancelled) return;
         const heroList = Array.isArray(data?.hero_slider) ? data.hero_slider : [];
         const mapped = heroList.map(mapApiBanner).filter((s) => s.imageUrl || s.title);
-        setSlides(mapped);
+        setSlides(mapped.length ? mapped : [homefyFallbackSlide(settings)]);
       })
       .catch(() => {
         if (!cancelled && !hasInitial) setSlides([]);

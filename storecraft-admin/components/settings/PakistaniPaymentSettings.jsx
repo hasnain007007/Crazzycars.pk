@@ -46,7 +46,7 @@ function Toggle({ checked, onChange }) {
         style={{
           position: "absolute",
           inset: 0,
-          background: checked ? "#C41E1E" : "#d1d5db",
+          background: checked ? "#C6633B" : "#d1d5db",
           borderRadius: 99,
           transition: "background 0.2s",
         }}
@@ -107,7 +107,7 @@ function MethodCard({ methodKey, data, onChange }) {
     <div
       style={{
         background: "#FFFFFF",
-        border: `1px solid ${enabled ? "#C41E1E" : "#E5E7EB"}`,
+        border: `1px solid ${enabled ? "#C6633B" : "#E5E7EB"}`,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
@@ -144,7 +144,7 @@ function MethodCard({ methodKey, data, onChange }) {
                 label="Account name"
                 value={data.accountName || ""}
                 onChange={(v) => patch({ accountName: v })}
-                placeholder="Crazzycars.pk"
+                placeholder="Homefy.pk"
               />
             </>
           ) : null}
@@ -167,7 +167,7 @@ function MethodCard({ methodKey, data, onChange }) {
                 label="Account title"
                 value={data.accountTitle || ""}
                 onChange={(v) => patch({ accountTitle: v })}
-                placeholder="Crazzycars.pk"
+                placeholder="Homefy.pk"
               />
               <Field label="IBAN (optional)" value={data.iban || ""} onChange={(v) => patch({ iban: v })} placeholder="PK00..." />
             </>
@@ -185,7 +185,7 @@ function MethodCard({ methodKey, data, onChange }) {
                 label="Account title"
                 value={data.accountTitle || ""}
                 onChange={(v) => patch({ accountTitle: v })}
-                placeholder="Crazzycars.pk"
+                placeholder="Homefy.pk"
               />
             </>
           ) : null}
@@ -242,7 +242,7 @@ export default function PakistaniPaymentSettings({ settings, setSettings, onSave
         disabled={saving}
         style={{
           padding: "12px 28px",
-          background: saving ? "#9ca3af" : "#C41E1E",
+          background: saving ? "#9ca3af" : "#C6633B",
           color: "#FFFFFF",
           border: "none",
           borderRadius: 8,

@@ -25,7 +25,7 @@ function measurementEntries(item) {
 export function PrintInvoice({ order, storeName, logoUrl }) {
   if (!order) return null;
   const p = order.pricing || { subtotal: 0, discount: 0, shippingCost: 0, total: 0 };
-  const resolvedStoreName = storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk';
+  const resolvedStoreName = storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk';
 
   return (
     <div className="hidden print:block print:bg-white print:p-10 print:text-black">
@@ -120,7 +120,7 @@ export function PrintInvoice({ order, storeName, logoUrl }) {
       </div>
 
       <footer className="mt-12 border-t border-slate-300 pt-6 text-center text-sm text-slate-600">
-        Thank you for shopping with Crazzycars.pk.
+        Thank you for shopping with Homefy.pk.
       </footer>
     </div>
   );

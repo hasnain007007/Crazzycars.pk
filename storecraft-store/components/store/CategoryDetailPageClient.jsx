@@ -219,7 +219,7 @@ export function CategoryDetailPageClient({
     return (
       <div className="mx-auto max-w-4xl px-4 py-14 text-center">
         <p className="text-3xl font-bold">Category not found</p>
-        <Link href="/categories" className="mt-5 inline-block text-[#C41E1E] underline">
+        <Link href="/categories" className="mt-5 inline-block text-[var(--color-primary)] underline">
           Back to categories
         </Link>
       </div>
@@ -320,7 +320,7 @@ export function CategoryDetailPageClient({
               style={{
                 display: "inline-block",
                 padding: "12px 28px",
-                background: "#C41E1E",
+                background: "#C6633B",
                 color: "#FFFFFF",
                 textDecoration: "none",
                 fontSize: 13,

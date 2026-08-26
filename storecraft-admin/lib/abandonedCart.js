@@ -9,7 +9,7 @@ export const DEFAULT_ABANDONED_CART_WHATSAPP = {
   enabled: true,
   template: `Assalam o Alaikum {customerName}! 🚗
 
-You left items in your *Crazzycars.pk* cart:
+You left items in your *Homefy.pk* cart:
 
 🛍️ *Items:*
 {itemsList}
@@ -21,11 +21,11 @@ Complete your order here:
 
 Need help? Call {storePhone}
 
-Shukriya — Crazzycars.pk ✨`,
+Shukriya — Homefy.pk ✨`,
 };
 
 export function recoveryCheckoutUrl(token) {
-  const base = getStorefrontBaseUrl().replace(/\/$/, "") || "https://crazzycars.pk";
+  const base = getStorefrontBaseUrl().replace(/\/$/, "") || "https://homefy.pk";
   return `${base}/checkout?recover=${encodeURIComponent(token || "")}`;
 }
 
@@ -53,7 +53,7 @@ export function getAbandonedCartWhatsAppMessage(cart, settings = {}) {
     itemCount: String(cart?.itemCount || 0),
     recoverUrl: recoveryCheckoutUrl(cart?.recoveryToken),
     storePhone: phone || "—",
-    storeName: settings?.general?.storeName || "Crazzycars.pk",
+    storeName: settings?.general?.storeName || "Homefy.pk",
   });
 }
 

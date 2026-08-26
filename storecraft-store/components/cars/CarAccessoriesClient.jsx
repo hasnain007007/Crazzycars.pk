@@ -39,8 +39,8 @@ function pillClass(active) {
   return [
     "rounded-full border px-3 py-1.5 text-sm font-medium transition",
     active
-      ? "border-[#C41E1E] bg-[#C41E1E] text-white"
-      : "border-[#E5E7EB] bg-white text-[#374151] hover:border-[#C41E1E]",
+      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+      : "border-[#E5E7EB] bg-white text-[#374151] hover:border-[var(--color-primary)]",
   ].join(" ");
 }
 
@@ -170,7 +170,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
       <div className="store-container mx-auto max-w-6xl px-4 py-16 text-center">
         <h1 className="text-2xl font-bold text-[#111111]">Vehicle not found</h1>
         <p className="mt-2 text-[#6B7280]">We could not find this car in our catalog.</p>
-        <Link href="/" className="mt-6 inline-block text-[#C41E1E] font-semibold hover:underline">
+        <Link href="/" className="mt-6 inline-block text-[var(--color-primary)] font-semibold hover:underline">
           ← Back to home
         </Link>
       </div>
@@ -181,7 +181,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
     <div className="min-h-screen bg-[#F8F8F8]">
       <div className="store-container mx-auto max-w-6xl px-4 py-8">
         <nav className="mb-6 text-sm text-[#6B7280]">
-          <Link href="/" className="hover:text-[#C41E1E]">
+          <Link href="/" className="hover:text-[var(--color-primary)]">
             Home
           </Link>
           <span className="mx-2">/</span>
@@ -201,7 +201,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full min-h-[192px] items-center justify-center bg-gradient-to-br from-[#1A1A1A] to-[#C41E1E] text-5xl font-bold text-white">
+                <div className="flex h-full min-h-[192px] items-center justify-center bg-gradient-to-br from-[#1A1A1A] to-[var(--color-primary)] text-5xl font-bold text-white">
                   {displayName.charAt(0)}
                 </div>
               )}
@@ -332,7 +332,7 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
             ) : (
               <div className="mt-10 rounded-xl border border-dashed border-[#E5E7EB] bg-white p-10 text-center">
                 <p className="text-[#374151]">No accessories found for this selection yet.</p>
-                <Link href="/shop" className="mt-4 inline-block text-sm font-semibold text-[#C41E1E] hover:underline">
+                <Link href="/shop" className="mt-4 inline-block text-sm font-semibold text-[var(--color-primary)] hover:underline">
                   Browse all products →
                 </Link>
               </div>

@@ -46,7 +46,7 @@ function escapeHtml(value) {
 }
 
 function buildCustomerStatementHtml(customer, orders, options = {}) {
-  const { storeName = `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`, logoUrl = "" } = options;
+  const { storeName = `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`, logoUrl = "" } = options;
   const safeOrders = Array.isArray(orders) ? orders : [];
   const totalSpent = safeOrders.reduce((sum, o) => sum + (o?.pricing?.total || o?.total || 0), 0);
   const avgOrderValue = safeOrders.length ? Math.round(totalSpent / safeOrders.length) : 0;
@@ -275,7 +275,7 @@ export function CustomerDetailPage({ customerId }) {
         settingsData?.general?.storeName ||
         settingsData?.settings?.general?.storeName ||
         process.env.NEXT_PUBLIC_APP_NAME ||
-        `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+        `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`;
       const statementHtml = buildCustomerStatementHtml(data.customer, data.orders || [], {
         storeName,
         logoUrl,

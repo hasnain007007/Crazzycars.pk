@@ -1,7 +1,6 @@
 import { HomePage } from "@/components/store/HomePage";
 import { fetchHotDealsServer } from "@/lib/serverHotDeals";
 import { fetchBestSellersServer } from "@/lib/serverBestSellers";
-import { fetchCarCatalogServer } from "@/lib/serverCarCatalog";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getHeroSlides } from "@/lib/heroBanners";
 import { getBestSellingProducts, getHotDealProducts, isShopifyEnabled } from "@/lib/shopify";
@@ -11,9 +10,9 @@ import Product from "@/lib/models/Product.model";
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "CrazzyCars.pk | Car Accessories Pakistan",
+  title: "Homefy.pk | Kitchen, Beauty Bags & Ladies Bags",
   description:
-    "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide. CrazzyCars.pk",
+    "Shop kitchen accessories, girls' beauty bags and ladies handbags online in Pakistan. Cookware, makeup pouches, totes and more. Cash on Delivery nationwide. Homefy.pk",
   path: "/",
 });
 
@@ -22,17 +21,13 @@ export default async function Page() {
   let bestSellers = [];
   let hotDeals = [];
   let heroSlides = [];
-  let carCatalog = null;
   let activeProductCount = null;
 
-  // Never let a single Mongo/Shopify failure 500 the document — degrade to empty SSR props
-  // (client components can still fall back to their own fetches if needed).
   try {
-    [bestSellers, hotDeals, heroSlides, carCatalog, activeProductCount] = await Promise.all([
+    [bestSellers, hotDeals, heroSlides, activeProductCount] = await Promise.all([
       shopify ? getBestSellingProducts(100) : fetchBestSellersServer({ limit: 100 }),
       shopify ? getHotDealProducts(24) : fetchHotDealsServer({ filter: "all", limit: 24 }),
       getHeroSlides(),
-      fetchCarCatalogServer(),
       (async () => {
         try {
           await dbConnect();
@@ -46,7 +41,7 @@ export default async function Page() {
     console.error("[homepage] SSR data load failed:", err?.message || err);
   }
 
-  const preloadUrl = heroSlides[0]?.imageUrl || "";
+  const preloadUrl = heroSlides[0]?.imageUrl || "/images/placeholder-hero.svg";
 
   return (
     <>
@@ -58,7 +53,6 @@ export default async function Page() {
         initialBestSellers={bestSellers}
         initialHotDeals={hotDeals}
         initialHeroSlides={heroSlides}
-        initialCarCatalog={carCatalog}
         activeProductCount={activeProductCount}
       />
     </>

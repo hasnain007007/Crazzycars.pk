@@ -723,7 +723,7 @@ export function FullScreenImageEditor({
       ox.drawImage(im, 0, 0, out.width, out.height);
       ox.filter = "none";
       if (enableWatermark && watermarkEnabled) {
-        const wm = watermarkText || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+        const wm = watermarkText || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`;
         drawTextWatermark(ox, out.width, out.height, wm);
       }
       const file = await canvasToWebpFile(out, "enhanced.webp");

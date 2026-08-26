@@ -39,7 +39,7 @@ export function buildOrderInvoiceBodyHtml(order, storeMeta = {}) {
 
 export function buildOrderInvoiceEmailHtml(order, storeMeta = {}, options = {}) {
   const enriched = enrichOrderForInvoice(order);
-  const storeName = storeMeta.storeName || "Crazzycars.pk";
+  const storeName = storeMeta.storeName || "Homefy.pk";
   const customerName = enriched.customer?.name || "Customer";
   const note = String(options.note || "").trim();
   const body = buildOrderInvoiceBodyHtml(enriched, storeMeta);
@@ -87,7 +87,7 @@ const PAYMENT_LABELS = {
 /** Plain-text invoice summary for WhatsApp. */
 export function buildOrderInvoiceWhatsAppMessage(order, storeMeta = {}) {
   const enriched = enrichOrderForInvoice(order);
-  const storeName = storeMeta.storeName || "Crazzycars.pk";
+  const storeName = storeMeta.storeName || "Homefy.pk";
   const pricing = enriched.pricing || {};
   const customerName = enriched.customer?.name || "Customer";
   const payMethod =
@@ -131,7 +131,7 @@ export function buildOrderInvoiceWhatsAppMessage(order, storeMeta = {}) {
     parts.push("", `📦 Tracking: ${tracking}`);
   }
 
-  parts.push("", "Thank you for shopping with Crazzycars.pk! 🙏");
+  parts.push("", "Thank you for shopping with Homefy.pk! 🙏");
   return parts.join("\n");
 }
 

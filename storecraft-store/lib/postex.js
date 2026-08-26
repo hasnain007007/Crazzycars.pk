@@ -172,7 +172,7 @@ export function parsePostexOrderDetail(json, trackingNumber) {
       "edd"
     ),
     // Never expose raw pickup/delivery street addresses on the public tracking page.
-    origin: "CrazzyCars.pk Warehouse",
+    origin: "Homefy.pk Warehouse",
     destination: destinationCity,
     currentLocation: locationInsight.currentLocation,
     currentLocationDetail: locationInsight.currentLocationDetail,
@@ -190,7 +190,7 @@ export function parsePostexOrderDetail(json, trackingNumber) {
  *  - "Arrived at Transit Hub PHL"
  *  - "Departed to PHALIA"
  *  - "Received at GUJ Warehouse"
- *  - "At Crazzycars Warehouse"
+ *  - "At Homefy Warehouse"
  */
 export function derivePostexLocationInsight(status, events = [], destinationCity = "") {
   const dest = String(destinationCity || "").trim();
@@ -204,7 +204,7 @@ export function derivePostexLocationInsight(status, events = [], destinationCity
   let currentLocationDetail = latestText || statusText || "Awaiting first scan";
 
   if (/warehouse|unbook/i.test(haystack)) {
-    currentLocation = "CrazzyCars.pk Warehouse";
+    currentLocation = "Homefy.pk Warehouse";
   } else if (/enroute for delivery|out for delivery|waiting for delivery/i.test(haystack)) {
     currentLocation = dest ? `Out for delivery in ${dest}` : "Out for delivery";
   } else if (/arrived at transit hub\s+([a-z0-9]+)/i.test(latestText)) {
@@ -253,7 +253,7 @@ export function derivePostexLocationInsight(status, events = [], destinationCity
   } else if (/warehouse|unbook/i.test(haystack)) {
     destinationReceivedLabel = dest
       ? `Still at warehouse · heading to ${dest}`
-      : "Still at CrazzyCars.pk Warehouse";
+      : "Still at Homefy.pk Warehouse";
   }
 
   const lastScanAt = [latest?.date, latest?.time].filter(Boolean).join(" · ");
@@ -354,7 +354,7 @@ export async function fetchPostexTracking(trackingNumber, options = {}) {
 }
 
 export function buildTrackingWhatsAppMessage({
-  storeName = "Crazzycars.pk",
+  storeName = "Homefy.pk",
   orderNumber,
   trackingNumber,
   storeUrl = "",

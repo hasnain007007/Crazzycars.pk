@@ -13,9 +13,9 @@ import {
 export const revalidate = 120;
 
 export const metadata = buildPageMetadata({
-  title: `Hot Deals & Sale — ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`,
+  title: `Hot Deals & Sale — ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"}`,
   description:
-    "Shop sale deals on car accessories — splitters, LED lights, body kits, and more from Crazzycars.pk.",
+    "Shop sale deals on car accessories — splitters, LED lights, body kits, and more from Homefy.pk.",
   path: "/sale",
   absoluteTitle: true,
 });

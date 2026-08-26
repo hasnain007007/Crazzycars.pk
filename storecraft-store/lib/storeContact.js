@@ -1,6 +1,6 @@
-/** Canonical storefront contact email and default brand name (Crazzycars.pk). */
-export const STORE_DEFAULT_NAME = "Crazzycars.pk";
-export const STORE_CONTACT_EMAIL = "info@crazzycars.pk";
+/** Canonical storefront contact email and default brand name (Homefy.pk). */
+export const STORE_DEFAULT_NAME = "Homefy.pk";
+export const STORE_CONTACT_EMAIL = "support@homefy.pk"; // TODO: replace with real business info
 
 const LEGACY_EMAILS = new Set([
   "support@chaingang.com",

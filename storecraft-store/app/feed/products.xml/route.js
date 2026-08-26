@@ -31,9 +31,9 @@ export async function GET() {
       .filter((it) => it.id && it.title && it.link && it.image_link);
 
     const xml = buildMerchantRssXml(items, {
-      title: "CrazzyCars.pk Products",
+      title: "Homefy.pk Products",
       link: site,
-      description: "Active car accessories and auto parts catalog — CrazzyCars.pk",
+      description: "Active kitchen, beauty bag and ladies bag catalog — Homefy.pk",
     });
 
     return new NextResponse(xml, {

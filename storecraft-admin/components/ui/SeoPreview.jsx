@@ -4,7 +4,7 @@ export function SeoPreview({ title, description, slug, baseUrl }) {
   const safeTitle = (title || "Untitled page").slice(0, 120);
   const safeDescription = (description || "No description provided.").slice(0, 240);
   const safeSlug = (slug || "products/surgical-steel-nose-ring").replace(/^\/+/, "");
-  const host = (baseUrl || "crazzycars.pk").replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const host = (baseUrl || "homefy.pk").replace(/^https?:\/\//, "").replace(/\/$/, "");
   const urlLine = `${host}/${safeSlug}`;
   const titleOk = safeTitle.length >= 31 && safeTitle.length <= 60;
 

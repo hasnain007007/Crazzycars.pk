@@ -293,7 +293,7 @@ export function ModelProductsPanel({ makeId, modelId, makeName, modelName, onClo
                     href={`${process.env.NEXT_PUBLIC_STORE_URL || "https://storecraft-store-iota.vercel.app"}/cars/${vehicle.slug}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-medium text-[#C41E1E] hover:underline"
+                    className="font-medium text-[var(--color-primary)] hover:underline"
                   >
                     /cars/{vehicle.slug}
                   </a>
@@ -443,7 +443,7 @@ export function ModelProductsPanel({ makeId, modelId, makeName, modelName, onClo
                     type="checkbox"
                     checked={allListSelected}
                     onChange={toggleListSelectAll}
-                    className="accent-[#C41E1E]"
+                    className="accent-[var(--color-primary)]"
                   />
                   Select all
                 </label>
@@ -479,7 +479,7 @@ export function ModelProductsPanel({ makeId, modelId, makeName, modelName, onClo
                         type="checkbox"
                         checked={allListSelected}
                         onChange={toggleListSelectAll}
-                        className="accent-[#C41E1E]"
+                        className="accent-[var(--color-primary)]"
                         aria-label="Select all products"
                       />
                     </th>
@@ -507,7 +507,7 @@ export function ModelProductsPanel({ makeId, modelId, makeName, modelName, onClo
                             checked={checked}
                             disabled={busy}
                             onChange={() => toggleListSelected(id)}
-                            className="accent-[#C41E1E]"
+                            className="accent-[var(--color-primary)]"
                             aria-label={`Select ${p.name}`}
                           />
                         </td>
@@ -521,7 +521,7 @@ export function ModelProductsPanel({ makeId, modelId, makeName, modelName, onClo
                             <div className="min-w-0">
                               <Link
                                 href={`/catalog/products/${p._id}`}
-                                className="font-semibold text-slate-900 no-underline hover:text-[#C41E1E]"
+                                className="font-semibold text-slate-900 no-underline hover:text-[var(--color-primary)]"
                               >
                                 {p.name}
                               </Link>

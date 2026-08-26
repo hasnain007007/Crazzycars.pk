@@ -385,7 +385,7 @@ export function SearchSuggest({
                             <span className="line-clamp-2 text-sm font-medium text-[#111111]">
                               {p.name}
                             </span>
-                            <span className="mt-0.5 block text-sm font-semibold text-[#C41E1E]">
+                            <span className="mt-0.5 block text-sm font-semibold text-[var(--color-primary)]">
                               {formatPrice(p.price ?? p.salePrice ?? p.regularPrice ?? 0)}
                             </span>
                           </span>
@@ -405,8 +405,8 @@ export function SearchSuggest({
                   aria-selected={activeIndex === displayHits.length}
                   className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold transition ${
                     activeIndex === displayHits.length
-                      ? "bg-[#FEF2F2] text-[#C41E1E]"
-                      : "text-[#C41E1E] hover:bg-[#FEF2F2]"
+                      ? "bg-[#FEF2F2] text-[var(--color-primary)]"
+                      : "text-[var(--color-primary)] hover:bg-[#FEF2F2]"
                   }`}
                   onMouseEnter={() => setActiveIndex(displayHits.length)}
                   onMouseDown={(e) => e.preventDefault()}
@@ -457,7 +457,7 @@ export function SearchSuggest({
             setOpen(true);
             updatePanelBox();
           }
-          if (inputStyle) e.target.style.borderColor = "#C41E1E";
+          if (inputStyle) e.target.style.borderColor = "#C6633B";
         }}
         onBlur={(e) => {
           if (inputStyle) e.target.style.borderColor = "#E5E7EB";

@@ -61,7 +61,7 @@ export function FreeDeliveryProgress({ cartTotal, threshold: thresholdProp, clas
     >
       <p style={{ fontSize: 13, color: "#374151", margin: "0 0 8px", lineHeight: 1.5 }}>
         Add{" "}
-        <strong style={{ color: "#C41E1E" }}>{formatPrice(progress.remaining)}</strong> more for FREE
+        <strong style={{ color: "#C6633B" }}>{formatPrice(progress.remaining)}</strong> more for FREE
         delivery!
       </p>
       <div
@@ -76,7 +76,7 @@ export function FreeDeliveryProgress({ cartTotal, threshold: thresholdProp, clas
           style={{
             height: "100%",
             width: `${progress.percent}%`,
-            background: "#C41E1E",
+            background: "#C6633B",
             borderRadius: 99,
             transition: "width 0.3s ease",
           }}

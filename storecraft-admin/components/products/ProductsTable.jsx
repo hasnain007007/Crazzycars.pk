@@ -257,7 +257,7 @@ export function ProductsTable({
                       onClick={() => setHotDeal(row, !row.isDeal)}
                       className={[
                         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
-                        row.isDeal ? "bg-[#C41E1E]" : "bg-[#e5e7eb]",
+                        row.isDeal ? "bg-[var(--color-primary)]" : "bg-[#e5e7eb]",
                         busyDeal === id ? "opacity-60" : "",
                       ].join(" ")}
                       aria-pressed={Boolean(row.isDeal)}

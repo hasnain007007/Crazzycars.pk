@@ -5,6 +5,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import HomefyTextLogo from "@/components/brand/HomefyTextLogo";
 
 function safeReturnPath(from) {
   if (!from || typeof from !== "string") return "/dashboard";
@@ -69,8 +70,10 @@ function LoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
       <div className="w-full max-w-md rounded-xl border border-border bg-white p-8 shadow-sm">
+        {/* TODO: replace logo */}
+        <HomefyTextLogo className="mb-3 text-2xl" />
         <h1 className="text-2xl font-semibold text-slate-900">
-          {process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} Admin
+          {process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} Admin
         </h1>
         <p className="mt-2 text-sm text-slate-500">Sign in to continue.</p>
 
@@ -88,7 +91,7 @@ function LoginForm() {
               onChange={onFieldChange}
               required
               className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none ring-primary/30 placeholder:text-slate-400 focus:ring-2"
-              placeholder="admin@crazzycars.pk"
+              placeholder="admin@homefy.pk"
             />
           </div>
 

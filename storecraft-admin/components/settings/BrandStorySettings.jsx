@@ -11,11 +11,11 @@ const DEFAULT_STATS = [];
 const DEFAULT_FORM = {
   enabled: true,
   badge: "Our Story",
-  heading: "Built for Pakistani Car Enthusiasts",
-  subheading: "Fitment-first car accessories from Gujranwala",
+  heading: "Built for Pakistani Homes",
+  subheading: "Kitchen, beauty bags and ladies bags",
   description:
-    "Crazzycars.pk was founded in Gujranwala to bring splitters, LED lighting, body kits, and carbon fiber accessories to drivers across Pakistan — with COD nationwide.",
-  buttonText: "Shop Car Accessories",
+    "Homefy.pk brings cookware, makeup pouches and ladies handbags to homes across Pakistan — with COD nationwide.",
+  buttonText: "Shop Homefy",
   buttonLink: "/about",
   image1: "",
   image2: "",
@@ -286,7 +286,7 @@ export default function BrandStorySettings() {
           <label style={labelStyle}>Subheading (optional)</label>
           <input
             style={inputStyle}
-            placeholder="Fitment-first car accessories from Gujranwala"
+            placeholder="Kitchen, beauty bags and ladies bags"
             value={form.subheading}
             onChange={(e) => setForm((f) => ({ ...f, subheading: e.target.value }))}
           />
@@ -301,7 +301,7 @@ export default function BrandStorySettings() {
               resize: "vertical",
               lineHeight: 1.6,
             }}
-            placeholder="Crazzycars.pk was founded in Gujranwala to deliver premium car accessories across Pakistan..."
+            placeholder="Homefy.pk brings kitchen accessories, beauty bags and ladies bags across Pakistan..."
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           />

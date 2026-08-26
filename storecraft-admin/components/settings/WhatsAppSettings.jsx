@@ -10,7 +10,7 @@ export default function WhatsAppSettings() {
   const [form, setForm] = useState({
     enabled: false,
     number: "",
-    message: "Hi! I have a question about car accessories from Crazzycars.pk.",
+    message: "Hi! I have a question about Homefy.pk.",
     showInNav: false,
     showInFooter: true,
     showFloating: true,
@@ -152,7 +152,7 @@ export default function WhatsAppSettings() {
               <label style={labelStyle}>Default Message</label>
               <textarea
                 style={{ ...inputStyle, minHeight: 80, resize: "vertical", lineHeight: 1.6 }}
-                placeholder="Hi! I have a question about car accessories from Crazzycars.pk."
+                placeholder="Hi! I have a question about Homefy.pk."
                 value={form.message}
                 onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
               />

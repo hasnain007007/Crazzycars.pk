@@ -6,7 +6,7 @@ import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 
 /** Resend sandbox sender — works before a custom domain is verified. */
-export const RESEND_SANDBOX_FROM = "Crazzycars.pk <onboarding@resend.dev>";
+export const RESEND_SANDBOX_FROM = "Homefy.pk <onboarding@resend.dev>";
 
 /** Default staff inbox when Settings / env are empty. */
 export const DEFAULT_ORDER_ADMIN_EMAIL = "ordersatall@gmail.com";
@@ -100,7 +100,7 @@ function isUnverifiedSenderError(error) {
 }
 
 function buildSender(fromOverride) {
-  const fromName = process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const fromName = process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
   const fromEmail = getFromEmail();
   if (fromOverride && String(fromOverride).trim()) return String(fromOverride).trim();
   if (!fromEmail) return null;
@@ -183,7 +183,7 @@ export async function sendTestEmail(toOverride) {
   const to = String(toOverride || "").trim() || getAdminEmail();
   const result = await sendEmail({
     to,
-    subject: `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} - Email Test`,
+    subject: `${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} - Email Test`,
     html: `<h1>Email test working!</h1><p>Sent at ${new Date().toISOString()}</p>`,
   });
   return { ...result, to };
@@ -253,8 +253,8 @@ export async function sendAdminOrderNotification(order) {
     return { success: true, skipped: true, error: "Admin already notified for this order" };
   }
 
-  const storeName = process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`;
-  const adminBase = String(process.env.NEXT_PUBLIC_ADMIN_URL || "https://admin.crazzycars.pk").replace(
+  const storeName = process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"}`;
+  const adminBase = String(process.env.NEXT_PUBLIC_ADMIN_URL || "https://admin.homefy.pk").replace(
     /\/$/,
     ""
   );
@@ -349,7 +349,7 @@ export async function sendAdminOrderNotification(order) {
 
           <div style="text-align:center;margin-top:24px;">
             <a href="${orderUrl}"
-              style="display:inline-block;padding:12px 28px;background:#C41E1E;color:#fff;text-decoration:none;font-weight:700;border-radius:6px;font-size:13px;">
+              style="display:inline-block;padding:12px 28px;background:#C6633B;color:#fff;text-decoration:none;font-weight:700;border-radius:6px;font-size:13px;">
               View Order in Admin
             </a>
           </div>
@@ -388,7 +388,7 @@ export async function sendCustomerOrderConfirmation(order, { storeName, logoUrl 
     return { success: true, skipped: true, error: "Confirmation already sent" };
   }
   const name =
-    storeName || process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+    storeName || process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
   const { subject, html } = await resolveOrderConfirmationEmail(order, name, logoUrl || "");
   const sent = await sendEmail({ to, subject, html });
   if (sent?.success && order?._id) {
@@ -477,7 +477,7 @@ export async function resolveOrderConfirmationEmail(order, storeName, logoUrl) {
     customer_name: order.customer?.name || "Customer",
     order_id: order.orderNumber || order._id,
     total: formatPrice(order.pricing?.total || order.total || 0),
-    store_name: storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
+    store_name: storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk",
     tracking_link: order.tracking?.url || "",
   };
   const subject =
@@ -502,7 +502,7 @@ export async function resolvePasswordResetEmail(vars = {}) {
 }
 
 export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact = {}) {
-  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`;
   const codDeliverySection = buildCodDeliveryChargeEmailSection(order, contact);
 
   const items =
@@ -549,7 +549,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
             ${sName}
           </h1>
           <p style="color:rgba(255,255,255,0.6);font-size:11px;margin:4px 0 0;letter-spacing:0.1em;text-transform:uppercase;">
-            Premium car accessories
+            Kitchen, beauty bags &amp; ladies bags
           </p>
         </div>
 
@@ -558,7 +558,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
           <p style="font-size:32px;margin:0 0 8px;">&#10003;</p>
           <h2 style="color:#166534;font-size:20px;margin:0 0 4px;">Order Confirmed!</h2>
           <p style="color:#16a34a;font-size:14px;margin:0;">
-            Thank you for shopping at Crazzycars.pk. We will deliver to your doorstep.
+            Thank you for shopping at Homefy.pk. We will deliver to your doorstep.
           </p>
         </div>
 
@@ -648,7 +648,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
 
           <!-- CTA -->
           <div style="text-align:center;margin-top:32px;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crazzycars.pk"}/shop"
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://homefy.pk"}/shop"
               style="display:inline-block;padding:14px 36px;background:#111111;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border-radius:2px;">
               Continue Shopping
             </a>
@@ -658,7 +658,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
         <!-- Footer -->
         <div style="background:#111111;padding:24px 40px;text-align:center;">
           <p style="color:rgba(255,255,255,0.5);font-size:11px;margin:0;line-height:1.8;">
-            ${sName} &mdash; Premium car accessories<br>
+            ${sName} &mdash; Kitchen, beauty bags &amp; ladies bags<br>
             If you have any questions, contact us at ${process.env.FROM_EMAIL || process.env.ADMIN_EMAIL || ""}<br>
             &copy; ${new Date().getFullYear()} ${sName}. All rights reserved.
           </p>
@@ -671,7 +671,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
 }
 
 export function buildShippingEmail(order, storeName, logoUrl) {
-  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`;
 
   return `
     <!DOCTYPE html>

@@ -15,7 +15,7 @@ export default function WhatsAppButton() {
       setConfig({
         enabled: wa?.enabled === true && !!num && wa?.showFloating !== false,
         number: num,
-        message: wa?.message || "Hi, I need help with car accessories",
+        message: wa?.message || "Hi, I have a question about Homefy.pk",
         position: wa?.position === "bottom-right" ? "bottom-right" : "bottom-left",
         buttonColor: wa?.buttonColor || "#25D366",
       });
@@ -29,7 +29,7 @@ export default function WhatsAppButton() {
       .then((data) => apply(data?.data?.whatsapp))
       .catch(() => {
         if (ENV_WA) {
-          apply({ enabled: true, number: ENV_WA, showFloating: true, message: "Hi, I need help with car accessories" });
+          apply({ enabled: true, number: ENV_WA, showFloating: true, message: "Hi, I have a question about Homefy.pk" });
         } else {
           setConfig({ enabled: false });
         }

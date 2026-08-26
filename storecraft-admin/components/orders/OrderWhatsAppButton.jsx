@@ -109,7 +109,7 @@ Your order is being processed and will be shipped soon.
 
 If you have any questions, feel free to ask!
 
-Thank you for shopping at Crazzycars.pk! 🙏
+Thank you for shopping at Homefy.pk! 🙏
 ${STORE_NAME}`;
 }
 

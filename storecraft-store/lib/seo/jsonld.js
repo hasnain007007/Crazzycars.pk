@@ -96,7 +96,7 @@ export function productJsonLd(p) {
     image: images,
     description: p.metaDescription || p.seo?.metaDescription || p.shortDescription || "",
     sku: sku || undefined,
-    brand: { "@type": "Brand", name: p.brand || "CrazzyCars.pk" },
+    brand: { "@type": "Brand", name: p.brand || "Homefy.pk" },
     offers: {
       "@type": "Offer",
       url,
@@ -113,7 +113,7 @@ export function productJsonLd(p) {
       itemCondition: conditionUrl(p.condition),
       seller: {
         "@type": "Organization",
-        name: "CrazzyCars.pk",
+        name: "Homefy.pk",
         url: SITE,
       },
     },
@@ -265,7 +265,7 @@ export function collectionPageJsonLd({
     url: pageUrl,
     isPartOf: {
       "@type": "WebSite",
-      name: isPartOfName || "CrazzyCars.pk",
+      name: isPartOfName || "Homefy.pk",
       url: SITE,
     },
     mainEntity: {
@@ -290,10 +290,10 @@ export function organizationJsonLd(overrides = {}) {
   return {
     "@context": "https://schema.org",
     "@type": "AutoPartsStore",
-    name: overrides.name || "CrazzyCars.pk",
+    name: overrides.name || "Homefy.pk",
     url: SITE,
     logo: overrides.logo || `${SITE}/og-image.jpg`,
-    email: overrides.email || "info@crazzycars.pk",
+    email: overrides.email || "info@homefy.pk",
     telephone: overrides.telephone || "+92-328-4010007",
     address: {
       "@type": "PostalAddress",
@@ -304,8 +304,8 @@ export function organizationJsonLd(overrides = {}) {
     },
     sameAs: overrides.sameAs || [
       "https://www.facebook.com/share/1EDTxnjBzS/",
-      "https://www.instagram.com/crazzycars.pk",
-      "https://www.tiktok.com/@crazzycars.pk",
+      "https://www.instagram.com/homefy.pk",
+      "https://www.tiktok.com/@homefy.pk",
     ],
   };
 }
@@ -316,7 +316,7 @@ export function websiteJsonLd(overrides = {}) {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: overrides.name || "CrazzyCars.pk",
+    name: overrides.name || "Homefy.pk",
     url: SITE,
     potentialAction: {
       "@type": "SearchAction",

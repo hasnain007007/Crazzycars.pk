@@ -5,14 +5,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { categoryHref } from "@/lib/categories";
 
-/** Category display picture (main image → icon → homepage icon). */
+/** Category display picture (main image → icon URL). Emoji homepageIcon is not an image. */
+function isMediaUrl(value) {
+  return /^(https?:\/\/|\/)/i.test(String(value || "").trim());
+}
+
 function catImage(node) {
   if (!node) return "";
-  if (typeof node.image === "string" && node.image) return node.image;
-  if (node.image?.url) return node.image.url;
-  if (typeof node.icon === "string" && node.icon) return node.icon;
-  if (typeof node.homepageIcon === "string" && node.homepageIcon) return node.homepageIcon;
-  return "";
+  const candidates = [
+    typeof node.image === "string" ? node.image : node.image?.url,
+    node.icon,
+    node.homepageIcon,
+  ];
+  return candidates.find((u) => isMediaUrl(u)) || "";
 }
 
 /**

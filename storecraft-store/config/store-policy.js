@@ -10,13 +10,14 @@
  * Single source for WhatsApp / phone; do not hardcode 03284010007 elsewhere.
  */
 export const STORE_CONTACT = {
-  phone: "03284010007",
-  phoneE164: "+923284010007",
-  whatsapp: "03284010007",
-  email: "info@crazzycars.pk",
+  // TODO: replace with real business info
+  phone: "[FILL IN]",
+  phoneE164: "",
+  whatsapp: "",
+  email: "support@homefy.pk",
   address: {
-    city: "Gujranwala",
-    region: "Punjab",
+    city: "[FILL IN — city, Pakistan]",
+    region: "Pakistan",
     country: "PK",
   },
 };

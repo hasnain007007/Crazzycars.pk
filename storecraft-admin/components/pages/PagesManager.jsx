@@ -93,11 +93,11 @@ const PAGE_TEMPLATES = [
     slug: "about-us",
     template: "about",
     content: `<h2>Our Story</h2>
-<p>${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Gujranwala, Pakistan, to bring premium car accessories — splitters, LED lighting, body kits, and more — to drivers nationwide.</p>
+<p>${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} is a home and lifestyle store for kitchen accessories, girls' beauty bags and ladies handbags — delivered across Pakistan.</p>
 <h2>Our Promise</h2>
-<p>Every product is selected for quality, fit, and value. We only stock accessories we would use on our own cars.</p>
+<p>Every product is selected for quality and value. We only stock pieces we would use in our own homes.</p>
 <h2>Why Shop With Us</h2>
-<p>Cash on Delivery, fast delivery across Pakistan, and expert support for every make and model.</p>`,
+<p>Cash on Delivery, delivery across Pakistan, and friendly support for kitchen, beauty and bag finds.</p>`,
   },
   {
     title: "Contact Us",
@@ -106,7 +106,7 @@ const PAGE_TEMPLATES = [
     content: `<h2>Get In Touch</h2>
 <p>We would love to hear from you. Contact us using the details below or fill in the contact form.</p>
 <h2>Email</h2>
-<p>support@crazzycars.pk</p>
+<p>support@homefy.pk</p>
 <h2>Response Time</h2>
 <p>We reply to all enquiries within 24 hours Monday to Friday.</p>`,
   },
@@ -144,7 +144,7 @@ const PAGE_TEMPLATES = [
 <h3>Remote areas</h3>
 <p>Allow extra transit time; free shipping thresholds may be higher for remote zones.</p>
 <h2>Secure Packaging</h2>
-<p>All orders are packed securely to protect your car accessories in transit.</p>`,
+<p>All orders are packed securely to protect your kitchen, beauty and bag items in transit.</p>`,
   },
   {
     title: "Returns Policy",
@@ -156,7 +156,7 @@ const PAGE_TEMPLATES = [
 <h3>Hygiene Policy</h3>
 <p>Opened or installed accessories may not be eligible for return unless faulty — see product page for details.</p>
 <h3>How to Return</h3>
-<p>Contact our team at support@crazzycars.pk to start a return.</p>`,
+<p>Contact our team at support@homefy.pk to start a return.</p>`,
   },
   {
     title: "FAQ",
@@ -624,7 +624,7 @@ export default function PagesManager() {
             <input
               type="url"
               style={inputStyle}
-              placeholder="https://crazzycars.pk (leave blank for normal page)"
+              placeholder="https://homefy.pk (leave blank for normal page)"
               value={form.externalUrl || ""}
               onChange={(e) => setForm((f) => ({ ...f, externalUrl: e.target.value }))}
             />
@@ -654,7 +654,7 @@ export default function PagesManager() {
                 </div>
                 <input
                   style={inputStyle}
-                  placeholder={(form.title || "Page Title") + " | " + (process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk")}
+                  placeholder={(form.title || "Page Title") + " | " + (process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk")}
                   value={form.seo?.metaTitle || ""}
                   onChange={(e) => setForm((f) => ({ ...f, seo: { ...f.seo, metaTitle: e.target.value } }))}
                 />
@@ -690,7 +690,7 @@ export default function PagesManager() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="car accessories pakistan, seat covers, floor mats, Crazzycars.pk"
+                  placeholder="kitchen accessories, beauty bags, ladies bags, Homefy.pk"
                   value={form.seo?.keywords || ""}
                   onChange={(e) => setForm((f) => ({ ...f, seo: { ...f.seo, keywords: e.target.value } }))}
                 />
@@ -720,7 +720,7 @@ export default function PagesManager() {
                     {getStorefrontBaseUrl()}/pages/{form.slug || "page-slug"}
                   </p>
                   <p style={{ fontSize: 18, color: "#1a0dab", margin: "0 0 4px", fontWeight: 400, lineHeight: 1.3, maxWidth: 500 }}>
-                    {form.seo?.metaTitle || (form.title ? form.title + " | " + (process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk") : "Page Title | " + (process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"))}
+                    {form.seo?.metaTitle || (form.title ? form.title + " | " + (process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk") : "Page Title | " + (process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"))}
                   </p>
                   <p style={{ fontSize: 13, color: "#545454", margin: 0, lineHeight: 1.5, maxWidth: 500, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
                     {form.seo?.metaDescription || "No description set. Add a meta description to improve click-through rates from Google."}

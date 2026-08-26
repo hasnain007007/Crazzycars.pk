@@ -28,7 +28,7 @@ async function sendPaidOrderEmail(orderId) {
   const order = await Order.findById(orderId).lean();
   if (!order) return;
   const settings = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean();
-  const storeName = settings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const storeName = settings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
   const logoUrl = settings?.general?.logo?.url || "";
   await sendCustomerOrderConfirmation(order, { storeName, logoUrl });
   await sendAdminOrderNotification(order);

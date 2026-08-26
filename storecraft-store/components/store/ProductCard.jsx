@@ -237,7 +237,7 @@ export function ProductCard({ product, compact = false }) {
           className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 opacity-100 shadow-sm transition md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100"
           aria-label="Save to wishlist"
         >
-          <span style={{ color: wish ? "#C41E1E" : "#6B7280", fontSize: 16 }}>{wish ? "♥" : "♡"}</span>
+          <span style={{ color: wish ? "#C6633B" : "#6B7280", fontSize: 16 }}>{wish ? "♥" : "♡"}</span>
         </button>
 
         {!inStock ? (
@@ -249,7 +249,7 @@ export function ProductCard({ product, compact = false }) {
             type="button"
             onClick={addToCart}
             className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-[15px] font-semibold leading-none text-white shadow-sm md:bottom-0 md:left-0 md:right-0 md:h-auto md:w-auto md:translate-y-full md:rounded-none md:py-3 md:text-sm md:opacity-0 md:shadow-none md:group-hover:translate-y-0 md:group-hover:opacity-100"
-            style={{ background: "#C41E1E" }}
+            style={{ background: "#C6633B" }}
           >
             {onBackorder ? "Order" : <span className="md:hidden">+</span>}
             <span className="hidden md:inline">{onBackorder ? "Order (backorder)" : "Add to Cart"}</span>
@@ -258,7 +258,7 @@ export function ProductCard({ product, compact = false }) {
       </Link>
 
       <div className={`cc-card-body flex flex-1 flex-col ${compact ? "p-1.5 md:p-3" : "p-1.5 md:p-4"}`}>
-        <Link href={href} className="cc-card-title line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E] md:text-sm">
+        <Link href={href} className="cc-card-title line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] hover:text-[var(--color-primary)] md:text-sm">
           {product.name}
         </Link>
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
 
 const DEFAULT_HERO = {
   badge: "Our Story",
@@ -148,7 +148,7 @@ export default function AboutPageView({ aboutPage }) {
             <Link
               href="/shop"
               className="inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-              style={{ background: "#C41E1E" }}
+              style={{ background: "#C6633B" }}
             >
               Shop Accessories
             </Link>
@@ -199,7 +199,7 @@ export default function AboutPageView({ aboutPage }) {
           <h2 className="font-heading text-xl font-bold md:text-[32px]" style={{ color: "#111111", margin: "8px 0 0" }}>
             {story.title}
           </h2>
-          <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 12, marginBottom: 24 }} />
+          <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 12, marginBottom: 24 }} />
           {[story.paragraph1, story.paragraph2, story.paragraph3]
             .filter((p) => String(p || "").trim())
             .map((p, i) => (
@@ -216,7 +216,7 @@ export default function AboutPageView({ aboutPage }) {
             <h2 className="font-heading text-xl font-bold md:text-[28px]" style={{ color: "#111111", margin: 0 }}>
               What We Stand For
             </h2>
-            <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 32 }} />
+            <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 10, marginBottom: 32 }} />
             <div
               style={{
                 display: "grid",
@@ -250,7 +250,7 @@ export default function AboutPageView({ aboutPage }) {
           <h2 className="font-heading text-xl font-bold md:text-[28px]" style={{ color: "#111111", margin: 0 }}>
             {promise.title}
           </h2>
-          <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 24 }} />
+          <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 10, marginBottom: 24 }} />
           {[promise.paragraph1, promise.paragraph2]
             .filter((p) => String(p || "").trim())
             .map((p, i) => (
@@ -267,7 +267,7 @@ export default function AboutPageView({ aboutPage }) {
             <h2 className="font-heading text-xl font-bold md:text-[28px]" style={{ color: "#111111", margin: 0 }}>
               Frequently Asked Questions
             </h2>
-            <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 28 }} />
+            <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 10, marginBottom: 28 }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {faq.map((item, i) => (
                 <details

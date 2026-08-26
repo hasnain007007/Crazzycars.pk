@@ -37,7 +37,7 @@ export function postexPublicTrackingUrl(trackingNumber) {
  *
  * Priority:
  * 1. NEXT_PUBLIC_TRACKING_PAGE_URL (full page URL without query, e.g. https://admin…/track-order)
- * 2. NEXT_PUBLIC_ADMIN_URL + /track-order (works while crazzycars.pk is still on Shopify)
+ * 2. NEXT_PUBLIC_ADMIN_URL + /track-order (works while homefy.pk is still on Shopify)
  * 3. storeUrl / NEXT_PUBLIC_STORE_URL + /track-order (after storefront cutover)
  */
 export function storefrontTrackingUrl(trackingNumber, storeUrl = "") {
@@ -68,7 +68,7 @@ export function storefrontTrackingUrl(trackingNumber, storeUrl = "") {
   }
 
   // Last resort — branded production admin host
-  return `https://admin.crazzycars.pk/track-order?tracking=${encodeURIComponent(id)}`;
+  return `https://admin.homefy.pk/track-order?tracking=${encodeURIComponent(id)}`;
 }
 
 function pick(obj, ...keys) {
@@ -281,7 +281,7 @@ export async function fetchPostexTracking(trackingNumber, options = {}) {
 }
 
 export function buildTrackingWhatsAppMessage({
-  storeName = "Crazzycars.pk",
+  storeName = "Homefy.pk",
   orderNumber,
   trackingNumber,
   storeUrl = "",

@@ -13,7 +13,6 @@ import ProductReviews, { StarDisplay } from "./ProductReviews";
 import { formatPrice } from "@/lib/currency";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
-import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import {
   lahoreEtaStatement,
@@ -1523,10 +1522,6 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   ))}
               </div>
             )}
-
-            <div className="mt-6">
-              <VehicleCompatibilitySection product={product} />
-            </div>
 
             <div className="product-accordions mt-6 border-t border-[#E5E5E5] pt-2 lg:mt-6">
               <AccordionSection

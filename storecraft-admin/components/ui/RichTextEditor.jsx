@@ -1058,7 +1058,7 @@ export function RichTextEditor({
         >
           <input
             type="url"
-            placeholder="https://crazzycars.pk"
+            placeholder="https://homefy.pk"
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
             onKeyDown={(e) => {

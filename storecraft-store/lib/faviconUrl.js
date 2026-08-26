@@ -33,10 +33,11 @@ export function configuredFaviconUrl(general = {}) {
 export function buildFaviconMetadata(general = {}) {
   const configured = configuredFaviconUrl(general);
   if (!configured) {
+    // TODO: replace logo — drop the real Homefy.pk favicon into public/favicon.ico
     return {
-      icon: [{ url: "/favicon.ico" }],
-      shortcut: [{ url: "/favicon.ico" }],
-      apple: [{ url: "/favicon.ico" }],
+      icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/favicon.ico" }],
+      shortcut: [{ url: "/favicon.svg" }],
+      apple: [{ url: "/favicon.svg" }],
     };
   }
 

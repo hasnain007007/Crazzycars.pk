@@ -5,7 +5,7 @@ import PageView from "@/components/store/PageView";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
 
 async function loadPage(slug) {
   try {

@@ -85,7 +85,7 @@ function ViewIcon({ view, active }) {
 }
 
 /**
- * WooCommerce-style listing controls adapted to CrazzyCars branding.
+ * WooCommerce-style listing controls adapted to Homefy branding.
  */
 export function ProductListingToolbar({
   title,

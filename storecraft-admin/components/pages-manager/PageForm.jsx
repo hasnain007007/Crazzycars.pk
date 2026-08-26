@@ -268,7 +268,7 @@ export function PageForm({ pageId }) {
                 title={form.seo.metaTitle || form.title}
                 description={form.seo.metaDescription}
                 slug={form.slug}
-                baseUrl="crazzycars.pk"
+                baseUrl="homefy.pk"
               />
             </div>
           </details>

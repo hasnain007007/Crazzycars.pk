@@ -2,7 +2,7 @@ import { normalizeAppearance } from "@/lib/normalizeStoreSettings";
 
 function darken(hex, pct = 12) {
   const h = String(hex || "").replace("#", "");
-  if (h.length !== 6) return hex || "#A01818";
+  if (h.length !== 6) return hex || "#A85230";
   const n = (x) => Math.max(0, Math.min(255, Math.round(parseInt(x, 16) * (1 - pct / 100))));
   return `#${n(h.slice(0, 2)).toString(16).padStart(2, "0")}${n(h.slice(2, 4)).toString(16).padStart(2, "0")}${n(h.slice(4, 6)).toString(16).padStart(2, "0")}`;
 }

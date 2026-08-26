@@ -550,7 +550,7 @@ export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
                       seo: { ...f.seo, keywords: e.target.value },
                     }))
                   }
-                  placeholder="car accessories, seat covers, floor mats, Crazzycars.pk"
+                  placeholder="kitchen accessories, beauty bags, ladies bags, Homefy.pk"
                   style={{
                     width: "100%",
                     padding: "9px 12px",

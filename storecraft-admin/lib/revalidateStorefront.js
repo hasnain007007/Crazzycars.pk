@@ -25,7 +25,7 @@ function isAdminOrigin(url) {
     !u ||
     u.includes("localhost:3001") ||
     u.includes("storecraft-admin") ||
-    u.includes("admin.crazzycars.pk") ||
+    u.includes("admin.homefy.pk") ||
     u.endsWith("/admin")
   );
 }

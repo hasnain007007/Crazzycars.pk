@@ -42,7 +42,7 @@ export async function processImageToWebp(file, options = {}) {
     quality = WEBP_QUALITY_START,
     maxWidth = 1200,
     watermark = false,
-    watermarkText = process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+    watermarkText = process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`,
     skipResize = false,
     maxBytes,
   } = options;
@@ -102,7 +102,7 @@ export async function processImageToWebp(file, options = {}) {
 
           ctx.drawImage(img, 0, 0, width, height);
 
-          const wmText = watermarkText || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+          const wmText = watermarkText || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`;
           if (watermark && wmText) {
             drawWatermark(ctx, width, height, wmText);
           }

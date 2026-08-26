@@ -127,7 +127,7 @@ export function ImageUploader({
     else setWatermarkEnabledInternal(next);
   };
   const [watermarkText, setWatermarkText] = useState(
-    () => defaultWatermarkText || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`
+    () => defaultWatermarkText || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`
   );
   const [processing, setProcessing] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
@@ -257,7 +257,7 @@ export function ImageUploader({
             maxWidth: maxImageWidth,
             skipResize,
             watermark: Boolean(enableWatermark && watermarkEnabled),
-            watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+            watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`,
             maxBytes,
             quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
           });
@@ -334,7 +334,7 @@ export function ImageUploader({
             maxWidth: maxImageWidth,
             skipResize,
             watermark: Boolean(enableWatermark && watermarkEnabled),
-            watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+            watermarkText: wm || process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`,
             maxBytes,
             quality: Number.isFinite(webpQuality) ? Math.min(1, Math.max(0.5, webpQuality)) : WEBP_Q,
           });

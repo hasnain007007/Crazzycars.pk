@@ -36,16 +36,16 @@ const PAGES = [
     template: "policy",
     showInFooter: true,
     seo: {
-      metaTitle: "Privacy Policy | Crazzycars.pk",
+      metaTitle: "Privacy Policy | Homefy.pk",
       metaDescription:
-        "How Crazzycars.pk collects, uses, and protects your personal information when you shop for car accessories in Pakistan.",
+        "How Homefy.pk collects, uses, and protects your personal information when you shop for car accessories in Pakistan.",
     },
     content: `
 <h2>Privacy Policy</h2>
 <p><em>Last updated: 27 July 2026 · Placeholder copy for launch — final legal review pending.</em></p>
 
 <h3>Who we are</h3>
-<p>Crazzycars.pk (“we”, “us”) is an online car-accessories store based in Gujranwala, Punjab, Pakistan. Contact: <a href="mailto:info@crazzycars.pk">info@crazzycars.pk</a> · WhatsApp 03284010007.</p>
+<p>Homefy.pk (“we”, “us”) is an online car-accessories store based in Gujranwala, Punjab, Pakistan. Contact: <a href="mailto:info@homefy.pk">info@homefy.pk</a> · WhatsApp 03284010007.</p>
 
 <h3>Information we collect</h3>
 <ul>
@@ -79,15 +79,15 @@ const PAGES = [
     template: "policy",
     showInFooter: true,
     seo: {
-      metaTitle: "Terms & Conditions | Crazzycars.pk",
-      metaDescription: "Terms of use and ordering rules for shopping car accessories at Crazzycars.pk.",
+      metaTitle: "Terms & Conditions | Homefy.pk",
+      metaDescription: "Terms of use and ordering rules for shopping car accessories at Homefy.pk.",
     },
     content: `
 <h2>Terms &amp; Conditions</h2>
 <p><em>Last updated: 27 July 2026 · Placeholder copy for launch — final legal review pending.</em></p>
 
 <h3>Using this website</h3>
-<p>By browsing or placing an order on Crazzycars.pk you agree to these terms. If you do not agree, please do not use the site.</p>
+<p>By browsing or placing an order on Homefy.pk you agree to these terms. If you do not agree, please do not use the site.</p>
 
 <h3>Products &amp; pricing</h3>
 <ul>
@@ -109,7 +109,7 @@ const PAGES = [
 <p>You are responsible for keeping your login details secure and for activity under your account.</p>
 
 <h3>Limitation of liability</h3>
-<p>To the fullest extent permitted by Pakistani law, Crazzycars.pk is not liable for indirect or consequential losses arising from use of the site or products, beyond the amount you paid for the affected order.</p>
+<p>To the fullest extent permitted by Pakistani law, Homefy.pk is not liable for indirect or consequential losses arising from use of the site or products, beyond the amount you paid for the affected order.</p>
 
 <h3>Changes</h3>
 <p>We may update these terms; the “Last updated” date will change. Continued use of the site after changes means you accept the updated terms.</p>
@@ -121,8 +121,8 @@ const PAGES = [
     template: "policy",
     showInFooter: true,
     seo: {
-      metaTitle: "Shipping Policy | Crazzycars.pk",
-      metaDescription: `Delivery timeframes, charges, and free delivery on orders over Rs. ${FREE_DELIVERY_RS.toLocaleString("en-PK")} at Crazzycars.pk.`,
+      metaTitle: "Shipping Policy | Homefy.pk",
+      metaDescription: `Delivery timeframes, charges, and free delivery on orders over Rs. ${FREE_DELIVERY_RS.toLocaleString("en-PK")} at Homefy.pk.`,
     },
     content: `
 <h2>Shipping Policy</h2>
@@ -154,8 +154,8 @@ const PAGES = [
     template: "policy",
     showInFooter: true,
     seo: {
-      metaTitle: "Returns & Refunds | Crazzycars.pk",
-      metaDescription: "Return and refund conditions for COD car accessories orders at Crazzycars.pk.",
+      metaTitle: "Returns & Refunds | Homefy.pk",
+      metaDescription: "Return and refund conditions for COD car accessories orders at Homefy.pk.",
     },
     content: `
 <h2>Returns &amp; Refunds</h2>
@@ -178,7 +178,7 @@ const PAGES = [
 <p>For Cash on Delivery orders, approved refunds are typically issued via bank transfer or JazzCash to the account details you provide — please allow a few business days after we receive the returned item.</p>
 
 <h3>How to start a return</h3>
-<p>WhatsApp <strong>03284010007</strong> or email <a href="mailto:info@crazzycars.pk">info@crazzycars.pk</a> with: order number, product name, reason, and clear photos. Do not refuse the parcel at the door without contacting us first if you need help with fitment.</p>
+<p>WhatsApp <strong>03284010007</strong> or email <a href="mailto:info@homefy.pk">info@homefy.pk</a> with: order number, product name, reason, and clear photos. Do not refuse the parcel at the door without contacting us first if you need help with fitment.</p>
 `.trim(),
   },
 ];

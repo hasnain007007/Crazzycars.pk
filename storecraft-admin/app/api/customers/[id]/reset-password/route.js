@@ -77,14 +77,14 @@ export async function POST(req, context) {
         if (apiKey) {
           const resend = new Resend(apiKey);
           await resend.emails.send({
-            from: `${process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} <${process.env.FROM_EMAIL}>`,
+            from: `${process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'} <${process.env.FROM_EMAIL}>`,
             to: customer.email,
-            subject: `Your Password Has Been Reset - ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+            subject: `Your Password Has Been Reset - ${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`,
             html: `
             <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
               <div style="background:#111111;padding:24px;text-align:center;">
                 <h1 style="color:#C9A84C;margin:0;font-size:20px;letter-spacing:0.1em;">
-                  CRAZZYCARS.PK
+                  HOMEFY.PK
                 </h1>
               </div>
               <div style="padding:32px;background:#ffffff;">
@@ -113,7 +113,7 @@ export async function POST(req, context) {
               </div>
               <div style="background:#111111;padding:16px;text-align:center;">
                 <p style="color:rgba(255,255,255,0.5);font-size:11px;margin:0;">
-                  © ${new Date().getFullYear()} ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}
+                  © ${new Date().getFullYear()} ${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}
                 </p>
               </div>
             </div>

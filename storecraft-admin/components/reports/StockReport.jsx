@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { StockTable } from "./StockTable";
 
-const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk';
+const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk';
 
 function StatCard({ title, value, tone }) {
   const tones = {

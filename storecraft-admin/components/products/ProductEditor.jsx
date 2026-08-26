@@ -20,7 +20,6 @@ import TabMedia from "./TabMedia";
 import { TabAddons } from "./TabAddons";
 import { TabOptions } from "./TabOptions";
 import { TabOrganisation } from "./TabOrganisation";
-import TabVehicleFitment from "./TabVehicleFitment";
 import {
   buildVehicleCompatibilityPayload,
   emptyVehicleCompatibility,
@@ -734,23 +733,6 @@ export function ProductEditor({ mode, productId }) {
             </div>
           </section>
 
-          <section id="product-section-fitment" className={cardClass}>
-            <h2 className="mb-4 text-base font-semibold text-gray-900">Vehicle Fitment 🚗</h2>
-            <TabVehicleFitment
-              value={form.vehicleCompatibility}
-              onChange={(vehicleCompatibility) => {
-                const payload = buildVehicleCompatibilityPayload(vehicleCompatibility);
-                setForm((f) => ({
-                  ...f,
-                  // Keep editor rows (incl. empty drafts + stable _rowId)
-                  vehicleCompatibility,
-                  isUniversal: payload.isUniversal,
-                  compatibleCars: payload.compatibleCars,
-                }));
-              }}
-            />
-          </section>
-
           <section id="product-section-seo" className={cardClass}>
             <h2 className="mb-4 text-base font-semibold text-gray-900">SEO Settings</h2>
             <div className="space-y-4">
@@ -1028,7 +1010,7 @@ export function ProductEditor({ mode, productId }) {
                     style={{
                       position: "absolute",
                       inset: 0,
-                      background: form.isDeal ? "#C41E1E" : "#d1d5db",
+                      background: form.isDeal ? "#C6633B" : "#d1d5db",
                       borderRadius: 99,
                       transition: "background 0.2s",
                     }}

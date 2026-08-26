@@ -41,7 +41,7 @@ function measurementHtml(item) {
 }
 
 export function packingSlipInnerHtml(order, options = {}) {
-  const name = options.storeName || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+  const name = options.storeName || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`;
   const logoUrl = options.logoUrl || "";
   const addr = formatAddrLines(order.shippingAddress);
   const items = order.items || [];
@@ -84,13 +84,13 @@ export function packingSlipInnerHtml(order, options = {}) {
              <div style="margin-top:6px;font-size:11px;color:#475569;">TRACKING: ${esc(trackingNum)}</div>`
           : ""
       }
-      <div style="margin-top:18px;border-top:1px solid #ccc;padding-top:10px;font-size:12px;color:#334155;">Thank you for shopping with Crazzycars.pk!</div>
+      <div style="margin-top:18px;border-top:1px solid #ccc;padding-top:10px;font-size:12px;color:#334155;">Thank you for shopping with Homefy.pk!</div>
     </div>
   `;
 }
 
 export function invoiceInnerHtml(order, options = {}) {
-  const name = options.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const name = options.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
   const logoUrl = options.logoUrl || "";
   const phone = options.phone || "";
   const email = options.email || "";

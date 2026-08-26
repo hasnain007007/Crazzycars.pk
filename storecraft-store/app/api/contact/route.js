@@ -60,7 +60,7 @@ export async function POST(req) {
     const safeMessage = escapeHtml(message.trim());
     const safeOrder = escapeHtml(orderNumber?.trim() || "");
 
-    const storeLabel = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+    const storeLabel = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
     const toAddr = process.env.CONTACT_EMAIL || getAdminEmail();
 
     const result = await sendEmail({

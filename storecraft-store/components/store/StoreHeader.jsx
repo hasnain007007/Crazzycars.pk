@@ -14,6 +14,7 @@ import { getCategoryMegaColumns } from "@/lib/categories";
 import { useCustomer } from "@/lib/customerAuth";
 import MegaMenu from "@/components/store/MegaMenu";
 import { SearchSuggest } from "@/components/store/SearchSuggest";
+import HomefyTextLogo from "@/components/brand/HomefyTextLogo";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -32,11 +33,12 @@ function useDocumentSearchParams() {
 
 const DEFAULT_NAV = [
   { label: "Home", href: "/" },
-  { label: "Shop", href: "/shop", mega: true },
-  { label: "Categories", href: "/categories", mega: true },
-  { label: "Deals", href: "/shop?deals=1", deals: true },
-  { label: "📦 Track Order", href: "/track-order", track: true },
-  { label: "Blog", href: "/blogs" },
+  { label: "Kitchen Accessories", href: "/categories/kitchen-accessories", mega: true },
+  { label: "Beauty Bags", href: "/categories/beauty-bags", mega: true },
+  { label: "Ladies Bags", href: "/categories/ladies-bags", mega: true },
+  { label: "New Arrivals", href: "/shop?sort=newest" },
+  { label: "Sale", href: "/sale", deals: true },
+  { label: "Contact", href: "/contact" },
 ];
 
 const DEFAULT_MEGA_COLS = getCategoryMegaColumns();
@@ -53,6 +55,7 @@ function normalizeNavHref(label, href) {
     shop: "/shop",
     home: "/",
   };
+  if (pathOnly === "/cars" || pathOnly.startsWith("/cars/")) return "/shop";
   if (byLabel[labelOnly]) return byLabel[labelOnly];
 
   const brokenPaths = {
@@ -135,7 +138,7 @@ function deriveHeaderConfig(data) {
   const mega = data?.megaMenu || {};
 
   const brand = {
-    storeName: general.storeName || data?.storeName || "Crazzycars.pk",
+    storeName: general.storeName || data?.storeName || "Homefy.pk",
     logo: general.logo || general.logoUrl || data?.logoUrl || "",
     phone: general.phone || data?.phone || "",
     email: normalizeStoreEmail(general.email || data?.email || ""),
@@ -171,7 +174,8 @@ function deriveHeaderConfig(data) {
       .filter((i) => i.label);
     // Old template mega nav (Exterior/Interior/…) → clean default nav (no fake categories)
     const looksLegacy = nav.some((i) =>
-      /^(exterior|interior|lighting|car care)$/i.test(String(i.label || "").trim())
+      /^(exterior|interior|lighting|car care|shop by car)$/i.test(String(i.label || "").trim())
+      || /shop by car/i.test(String(i.label || ""))
     );
     if (looksLegacy) {
       nav = DEFAULT_NAV;
@@ -185,16 +189,6 @@ function deriveHeaderConfig(data) {
   }
 
   return { brand, nav, megaCols, megaEnabled: mega.enabled !== false };
-}
-
-function splitStoreName(name) {
-  const n = String(name || "Crazzycars.pk").trim();
-  const parts = n.split(/\s+/);
-  if (parts.length <= 1) return { line1: n.toUpperCase(), line2: "" };
-  return {
-    line1: parts.slice(0, -1).join(" ").toUpperCase(),
-    line2: parts[parts.length - 1].toUpperCase(),
-  };
 }
 
 function useWishlistCount() {
@@ -260,7 +254,7 @@ function HeaderAction({ href, onClick, label, icon, badge }) {
         {badge > 0 ? (
           <span
             className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white"
-            style={{ background: "#C41E1E" }}
+            style={{ background: "#C6633B" }}
           >
             {badge > 9 ? "9+" : badge}
           </span>
@@ -381,7 +375,6 @@ export function StoreHeader({ initialCategoryTree = null }) {
   const badgeCart = mounted ? cartCount : 0;
   const badgeWish = mounted ? wishCount : 0;
   const accountHref = customer ? "/account" : "/account/login";
-  const { line1, line2 } = splitStoreName(brand.storeName);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -593,21 +586,9 @@ export function StoreHeader({ initialCategoryTree = null }) {
                 className="h-10 max-w-[min(148px,42vw)] object-contain md:h-16 md:max-w-[220px]"
                 style={{ width: "auto", objectFit: "contain" }}
               />
-            ) : brand.showStoreName ? (
-              <span className="flex min-w-0 flex-col items-center md:items-start">
-                <span className="font-heading text-lg font-bold tracking-tight md:text-xl" style={{ color: "#111111" }}>
-                  {line1}
-                </span>
-                {line2 ? (
-                  <span className="font-heading text-sm font-normal md:text-base" style={{ color: "#C41E1E" }}>
-                    {line2}
-                  </span>
-                ) : null}
-              </span>
             ) : (
-              <span className="font-heading truncate text-lg font-bold md:text-xl" style={{ color: "#111111" }}>
-                {brand.storeName}
-              </span>
+              /* TODO: replace logo */
+              <HomefyTextLogo className="text-lg md:text-2xl" />
             )}
           </Link>
           <form onSubmit={search} className="mx-auto hidden max-w-[480px] flex-1 md:block">
@@ -626,7 +607,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
               <button
                 type="submit"
                 className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
-                style={{ background: "#C41E1E" }}
+                style={{ background: "#C6633B" }}
                 aria-label="Search"
               >
                 <IconSearch />
@@ -660,7 +641,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
               {badgeCart > 0 ? (
                 <span
                   className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white"
-                  style={{ background: "#C41E1E" }}
+                  style={{ background: "#C6633B" }}
                 >
                   {badgeCart > 9 ? "9+" : badgeCart}
                 </span>
@@ -692,12 +673,12 @@ export function StoreHeader({ initialCategoryTree = null }) {
                       autoFocus
                       variant="mobile"
                       inputClassName="h-11 w-full rounded-lg border-[1.5px] bg-white pl-4 pr-12 text-base outline-none"
-                      inputStyle={{ borderColor: "#C41E1E", fontSize: 16 }}
+                      inputStyle={{ borderColor: "#C6633B", fontSize: 16 }}
                     />
                     <button
                       type="submit"
                       className="absolute right-1.5 top-1/2 z-[81] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white"
-                      style={{ background: "#C41E1E" }}
+                      style={{ background: "#C6633B" }}
                       aria-label="Search"
                     >
                       <IconSearch />
@@ -720,14 +701,14 @@ export function StoreHeader({ initialCategoryTree = null }) {
       {/* Row 3 — nav */}
       <nav
         className="relative z-10 hidden border-b-2 bg-white md:block"
-        style={{ borderBottomColor: "#C41E1E" }}
+        style={{ borderBottomColor: "#C6633B" }}
         onMouseLeave={() => setMegaOpen(false)}
       >
         <div className="store-container flex items-center gap-1">
           <button
             type="button"
             className="mr-2 flex items-center gap-2 rounded px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-white"
-            style={{ background: "#C41E1E" }}
+            style={{ background: "#C6633B" }}
             onMouseEnter={() => {
               setMegaOpen(true);
               setActiveMegaItem({ label: "Categories", href: "/categories", mega: true });
@@ -796,16 +777,8 @@ export function StoreHeader({ initialCategoryTree = null }) {
                         style={{ height: 40, width: "auto", maxWidth: 160, objectFit: "contain" }}
                       />
                     ) : (
-                      <span className="flex flex-col items-center leading-none">
-                        <span className="font-heading text-lg font-bold" style={{ color: "#111111" }}>
-                          {line1}
-                        </span>
-                        {line2 ? (
-                          <span className="font-heading text-sm" style={{ color: "#C41E1E" }}>
-                            {line2}
-                          </span>
-                        ) : null}
-                      </span>
+                      /* TODO: replace logo */
+                      <HomefyTextLogo className="text-lg" />
                     )}
                   </Link>
                   <button
@@ -824,7 +797,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
                         <>
                           <button
                             type="button"
-                            className="flex w-full items-center justify-between py-2.5 text-left text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E] md:py-4"
+                            className="flex w-full items-center justify-between py-2.5 text-left text-sm font-semibold text-[#111111] transition-colors hover:text-[var(--color-primary)] md:py-4"
                             onClick={() => setDrawerExpanded((s) => ({ ...s, [item.label]: !s[item.label] }))}
                           >
                             {item.label}
@@ -837,7 +810,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
                                     <li key={String(cat._id)}>
                                       <Link
                                         href={`/categories/${cat.slug}`}
-                                        className="block py-2 text-sm font-semibold text-[#111111] transition-colors hover:text-[#C41E1E]"
+                                        className="block py-2 text-sm font-semibold text-[#111111] transition-colors hover:text-[var(--color-primary)]"
                                         onClick={() => setMenuOpen(false)}
                                       >
                                         {cat.name}
@@ -846,7 +819,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
                                         <Link
                                           key={String(sub._id)}
                                           href={`/categories/${sub.slug}`}
-                                          className="block py-1.5 pl-3 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
+                                          className="block py-1.5 pl-3 text-sm text-[#6B7280] transition-colors hover:text-[var(--color-primary)]"
                                           onClick={() => setMenuOpen(false)}
                                         >
                                           {sub.name}
@@ -860,7 +833,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
                                       <li key={l.label}>
                                         <Link
                                           href={l.href}
-                                          className="block py-2 text-sm text-[#6B7280] transition-colors hover:text-[#C41E1E]"
+                                          className="block py-2 text-sm text-[#6B7280] transition-colors hover:text-[var(--color-primary)]"
                                           onClick={() => setMenuOpen(false)}
                                         >
                                           {l.label}
@@ -874,7 +847,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
                         <Link
                           href={item.href}
                           className={`block py-2.5 text-sm font-semibold uppercase transition-colors md:py-4 ${
-                            isNavItemActive(item) ? "text-[#C41E1E]" : "text-[#111111] hover:text-[#C41E1E]"
+                            isNavItemActive(item) ? "text-[var(--color-primary)]" : "text-[#111111] hover:text-[var(--color-primary)]"
                           }`}
                           aria-current={isNavItemActive(item) ? "page" : undefined}
                           onClick={() => setMenuOpen(false)}

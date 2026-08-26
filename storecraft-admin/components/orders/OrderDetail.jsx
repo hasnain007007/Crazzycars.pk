@@ -818,7 +818,7 @@ export function OrderDetail({ orderId }) {
   const [showInvoicePanel, setShowInvoicePanel] = useState(false);
   const [invoiceStoreMeta, setInvoiceStoreMeta] = useState(null);
   const [storeMeta, setStoreMeta] = useState({
-    storeName: process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
+    storeName: process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk",
     logoUrl: "",
   });
   const [settings, setSettings] = useState(null);
@@ -907,7 +907,7 @@ export function OrderDetail({ orderId }) {
         const loaded = data.settings || data.data || {};
         setSettings(loaded);
         setStoreMeta({
-          storeName: loaded.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
+          storeName: loaded.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk",
           logoUrl: loaded.general?.logo?.url || "",
         });
         setStoreUrl(loaded.general?.website || process.env.NEXT_PUBLIC_STORE_URL || "");
@@ -1255,7 +1255,7 @@ export function OrderDetail({ orderId }) {
             setShowPostexForm(true);
           }}
           style={{
-            background: "#C41E1E",
+            background: "#C6633B",
             color: "#fff",
             border: "none",
             borderRadius: 8,
@@ -1553,7 +1553,7 @@ export function OrderDetail({ orderId }) {
               onClick={handleBookPostex}
               disabled={bookingPostex}
               style={{
-                background: bookingPostex ? "#9CA3AF" : "#C41E1E",
+                background: bookingPostex ? "#9CA3AF" : "#C6633B",
                 color: "#fff",
                 border: "none",
                 borderRadius: 8,

@@ -16,13 +16,13 @@ import mongoose from "mongoose";
 import Category from "../lib/models/Category.model.js";
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
-const BRAND_SUFFIX = " | CrazzyCars.pk";
+const BRAND_SUFFIX = " | Homefy.pk";
 const DRY_RUN = process.argv.includes("--dry-run");
 
 /** Hardcoded calibration copy (from brief) — keyed by slug. */
 const CALIBRATED = {
   exterior: {
-    metaTitle: "Car Exterior Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Exterior Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Shop body kits, splitters, spoilers, mirror covers & more for your car's exterior. Premium fitment for Honda, Toyota & Suzuki. Cash on delivery nationwide.",
     metaKeywords: [
@@ -34,7 +34,7 @@ const CALIBRATED = {
     ],
   },
   "body-kits-extensions": {
-    metaTitle: "Body Kits & Extensions – Exterior | CrazzyCars.pk",
+    metaTitle: "Body Kits & Extensions – Exterior | Homefy.pk",
     metaDescription:
       "Complete body kit extensions for a wider, more aggressive stance — front lips, side extensions & rear add-ons built for Pakistani roads. Nationwide COD.",
     metaKeywords: [
@@ -46,7 +46,7 @@ const CALIBRATED = {
     ],
   },
   "splitters-side-skirts": {
-    metaTitle: "Front Splitters & Side Skirts | CrazzyCars.pk",
+    metaTitle: "Front Splitters & Side Skirts | Homefy.pk",
     metaDescription:
       "ABS plastic front splitters and side skirt kits that lower your car's visual stance without touching ride height. Easy bolt-on fit, COD nationwide.",
     metaKeywords: [
@@ -57,7 +57,7 @@ const CALIBRATED = {
     ],
   },
   "spoilers-diffusers": {
-    metaTitle: "Car Spoilers & Rear Diffusers | CrazzyCars.pk",
+    metaTitle: "Car Spoilers & Rear Diffusers | Homefy.pk",
     metaDescription:
       "Rear spoilers and diffusers that sharpen your car's rear profile — direct-fit kits for popular Honda & Toyota models. Cash on delivery across Pakistan.",
     metaKeywords: [
@@ -68,7 +68,7 @@ const CALIBRATED = {
     ],
   },
   "side-mirror-covers": {
-    metaTitle: "Carbon Fiber Side Mirror Covers | CrazzyCars.pk",
+    metaTitle: "Carbon Fiber Side Mirror Covers | Homefy.pk",
     metaDescription:
       "Carbon fiber-finish mirror covers that swap on in minutes for an instant sporty upgrade. Scratch-resistant, direct OEM fit. Nationwide delivery.",
     metaKeywords: [
@@ -78,7 +78,7 @@ const CALIBRATED = {
     ],
   },
   "quarter-window-louvers": {
-    metaTitle: "Quarter Window Louvers | CrazzyCars.pk",
+    metaTitle: "Quarter Window Louvers | Homefy.pk",
     metaDescription:
       "Sedan-style quarter window louvers for a race-inspired rear profile — clip-on fitment, no drilling required. Ships nationwide with COD.",
     metaKeywords: [
@@ -89,7 +89,7 @@ const CALIBRATED = {
     ],
   },
   "exhaust-systems-tips": {
-    metaTitle: "Exhaust Tips & Systems | CrazzyCars.pk",
+    metaTitle: "Exhaust Tips & Systems | Homefy.pk",
     metaDescription:
       "Stainless steel exhaust tips and system upgrades for a deeper tone and a finished rear look. Universal and model-specific fitments available.",
     metaKeywords: [
@@ -99,7 +99,7 @@ const CALIBRATED = {
     ],
   },
   "door-handle-covers": {
-    metaTitle: "Door Handle Covers | CrazzyCars.pk",
+    metaTitle: "Door Handle Covers | Homefy.pk",
     metaDescription:
       "Carbon fiber and chrome-finish door handle covers that protect against scratches while sharpening your car's exterior details.",
     metaKeywords: [
@@ -109,7 +109,7 @@ const CALIBRATED = {
     ],
   },
   "front-grilles": {
-    metaTitle: "Front Grilles | CrazzyCars.pk",
+    metaTitle: "Front Grilles | Homefy.pk",
     metaDescription:
       "Direct-fit front grille upgrades that transform your car's face — mesh and honeycomb styles for popular Pakistani-market models.",
     metaKeywords: [
@@ -120,7 +120,7 @@ const CALIBRATED = {
     ],
   },
   antennas: {
-    metaTitle: "Car Antennas | CrazzyCars.pk",
+    metaTitle: "Car Antennas | Homefy.pk",
     metaDescription:
       "Shark fin and short antenna upgrades for a cleaner roofline — functional and decorative options, easy self-install. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -130,7 +130,7 @@ const CALIBRATED = {
     ],
   },
   "door-guards": {
-    metaTitle: "Door Edge Guards | CrazzyCars.pk",
+    metaTitle: "Door Edge Guards | Homefy.pk",
     metaDescription:
       "Clear and color-matched door edge guards that stop chips and scrapes from car park dings — an easy first upgrade for any car.",
     metaKeywords: [
@@ -141,7 +141,7 @@ const CALIBRATED = {
   },
   // DB products = window visors / rain guards (not fresheners). Accurate copy.
   "air-press": {
-    metaTitle: "Car Air Press & Wind Deflectors | CrazzyCars.pk",
+    metaTitle: "Car Air Press & Wind Deflectors | Homefy.pk",
     metaDescription:
       "Chrome-strip air press window visors that block rain and sun glare — model-specific for Honda, Toyota & Suzuki. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -153,7 +153,7 @@ const CALIBRATED = {
     ],
   },
   "stickers-monograms-emblems": {
-    metaTitle: "Car Stickers, Monograms & Emblems | CrazzyCars.pk",
+    metaTitle: "Car Stickers, Monograms & Emblems | Homefy.pk",
     metaDescription:
       "Brand emblems, monogram badges and decal sets to personalize your car — genuine-fit for Toyota, Honda & Suzuki logos. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -164,7 +164,7 @@ const CALIBRATED = {
     ],
   },
   "mud-flaps": {
-    metaTitle: "Mud Flaps | CrazzyCars.pk",
+    metaTitle: "Mud Flaps | Homefy.pk",
     metaDescription:
       "Direct-fit mud flaps that protect your paint and undercarriage from splashback on Pakistan's roads — front and rear sets available.",
     metaKeywords: [
@@ -174,7 +174,7 @@ const CALIBRATED = {
     ],
   },
   interior: {
-    metaTitle: "Car Interior Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Interior Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Upgrade your cabin with steering covers, ambient lighting, multimedia controls & more — premium interior parts with nationwide COD.",
     metaKeywords: [
@@ -184,7 +184,7 @@ const CALIBRATED = {
     ],
   },
   "steering-wheel-covers": {
-    metaTitle: "Steering Wheel Covers | CrazzyCars.pk",
+    metaTitle: "Steering Wheel Covers | Homefy.pk",
     metaDescription:
       "Leather-finish steering wheel covers for better grip and a refreshed cabin look — universal sizing, easy self-fit. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -194,7 +194,7 @@ const CALIBRATED = {
     ],
   },
   "multimedia-steering-controls": {
-    metaTitle: "Multimedia Steering Controls | CrazzyCars.pk",
+    metaTitle: "Multimedia Steering Controls | Homefy.pk",
     metaDescription:
       "Bluetooth steering-mounted controls to answer calls and control music without leaving the wheel — plug-and-play install. COD nationwide.",
     metaKeywords: [
@@ -207,7 +207,7 @@ const CALIBRATED = {
 /** Hand-written unique SEO for remaining categories (not in calibration table). */
 const GENERATED = {
   "led-lighting": {
-    metaTitle: "Car LED Lights & Lighting in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car LED Lights & Lighting in Pakistan | Homefy.pk",
     metaDescription:
       "Brighten every drive with SOS flashers, LED headlights, indicators and cabin lights — plug-and-play kits for Pakistani cars. Cash on delivery nationwide.",
     metaKeywords: [
@@ -219,7 +219,7 @@ const GENERATED = {
     ],
   },
   "carbon-fiber": {
-    metaTitle: "Carbon Fiber Car Accessories Pakistan | CrazzyCars.pk",
+    metaTitle: "Carbon Fiber Car Accessories Pakistan | Homefy.pk",
     metaDescription:
       "Genuine-look carbon fiber trims, mirror covers and interior accents that add a race-ready finish — built for Honda, Toyota & Hyundai. COD available.",
     metaKeywords: [
@@ -230,7 +230,7 @@ const GENERATED = {
     ],
   },
   "car-care-safety": {
-    metaTitle: "Car Care & Safety Products in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Care & Safety Products in Pakistan | Homefy.pk",
     metaDescription:
       "Keep your car clean and road-ready with wash kits, polish, emergency gear and safety essentials — trusted products, Cash on Delivery across Pakistan.",
     metaKeywords: [
@@ -241,7 +241,7 @@ const GENERATED = {
     ],
   },
   gadgets: {
-    metaTitle: "Car Gadgets Online in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Gadgets Online in Pakistan | Homefy.pk",
     metaDescription:
       "Smart car gadgets — dash cams, jump starters, HUD displays, chargers and more for safer, smarter drives. Nationwide shipping with Cash on Delivery.",
     metaKeywords: [
@@ -252,7 +252,7 @@ const GENERATED = {
     ],
   },
   fragrances: {
-    metaTitle: "Car Fragrances & Perfumes in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Fragrances & Perfumes in Pakistan | Homefy.pk",
     metaDescription:
       "Dashboard, hanging and AC-vent car fragrances that keep your cabin fresh for weeks — premium scents with easy clip-on install. COD nationwide.",
     metaKeywords: [
@@ -263,7 +263,7 @@ const GENERATED = {
     ],
   },
   "universal-accessories": {
-    metaTitle: "Universal Car Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Universal Car Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Universal-fit accessories that suit almost any car — covers, chargers, styling kits and cabin upgrades. Easy install, Cash on Delivery nationwide.",
     metaKeywords: [
@@ -273,7 +273,7 @@ const GENERATED = {
     ],
   },
   "sos-flasher-led-lights": {
-    metaTitle: "SOS & Flasher LED Lights | CrazzyCars.pk",
+    metaTitle: "SOS & Flasher LED Lights | Homefy.pk",
     metaDescription:
       "Police-style SOS strobes and grille flashers in red, blue and amber — high-visibility warning lights with simple wiring. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -284,7 +284,7 @@ const GENERATED = {
     ],
   },
   "led-headlights-bulbs": {
-    metaTitle: "LED Headlights & Bulbs | CrazzyCars.pk",
+    metaTitle: "LED Headlights & Bulbs | Homefy.pk",
     metaDescription:
       "Brighter night drives with plug-and-play LED headlight bulbs — cooler running and clearer beam patterns for popular Pakistani cars. COD available.",
     metaKeywords: [
@@ -295,7 +295,7 @@ const GENERATED = {
     ],
   },
   "led-indicator-lights": {
-    metaTitle: "LED Indicator Lights | CrazzyCars.pk",
+    metaTitle: "LED Indicator Lights | Homefy.pk",
     metaDescription:
       "Sharp LED side markers and turn indicators that replace dull stock bulbs — smoke and clear lens options. Easy fit, ships nationwide with COD.",
     metaKeywords: [
@@ -306,7 +306,7 @@ const GENERATED = {
     ],
   },
   "backlights-tail-lamps": {
-    metaTitle: "Backlights & Tail Lamps | CrazzyCars.pk",
+    metaTitle: "Backlights & Tail Lamps | Homefy.pk",
     metaDescription:
       "LED tail lamp upgrades that modernize your rear end — brighter brake and reverse lighting for safer night driving. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -317,7 +317,7 @@ const GENERATED = {
     ],
   },
   "fog-lamps-drl-covers": {
-    metaTitle: "Fog Lamps & DRL Covers | CrazzyCars.pk",
+    metaTitle: "Fog Lamps & DRL Covers | Homefy.pk",
     metaDescription:
       "Fog lamp bezels and DRL covers that finish your front fascia — direct-fit pieces for a cleaner aftermarket look. Nationwide COD.",
     metaKeywords: [
@@ -328,7 +328,7 @@ const GENERATED = {
     ],
   },
   "led-sill-plates": {
-    metaTitle: "LED Sill Plates | CrazzyCars.pk",
+    metaTitle: "LED Sill Plates | Homefy.pk",
     metaDescription:
       "Illuminated door sill plates that light up when you open the door — welcome-light branding with scratch protection. Easy wire-in, COD nationwide.",
     metaKeywords: [
@@ -339,7 +339,7 @@ const GENERATED = {
     ],
   },
   "rear-reflectors": {
-    metaTitle: "Rear Reflectors | CrazzyCars.pk",
+    metaTitle: "Rear Reflectors | Homefy.pk",
     metaDescription:
       "OEM-style rear reflectors and bumper light accents that restore or upgrade your rear visibility — direct-fit for popular models. COD across Pakistan.",
     metaKeywords: [
@@ -350,7 +350,7 @@ const GENERATED = {
     ],
   },
   "floor-mats": {
-    metaTitle: "Car Floor Mats in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Floor Mats in Pakistan | Homefy.pk",
     metaDescription:
       "Custom-fit TPE and carpet floor mats that trap mud and spills — model-specific sets for Honda, Toyota, Suzuki & Kia. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -361,7 +361,7 @@ const GENERATED = {
     ],
   },
   "luxury-7d-9d-floor-mats": {
-    metaTitle: "Luxury 7D / 9D Floor Mats | CrazzyCars.pk",
+    metaTitle: "Luxury 7D / 9D Floor Mats | Homefy.pk",
     metaDescription:
       "Full-coverage 7D and 9D luxury mats with raised edges that seal the footwell — waterproof, easy to wipe clean. Model-fit options, COD nationwide.",
     metaKeywords: [
@@ -372,7 +372,7 @@ const GENERATED = {
     ],
   },
   "dashboard-mats": {
-    metaTitle: "Dashboard Mats | CrazzyCars.pk",
+    metaTitle: "Dashboard Mats | Homefy.pk",
     metaDescription:
       "Velvet anti-slip dashboard mats that cut glare and protect against sun fade — custom cut for Corolla, Civic, City & Alto. Ships with COD.",
     metaKeywords: [
@@ -383,7 +383,7 @@ const GENERATED = {
     ],
   },
   "trunk-mats": {
-    metaTitle: "Trunk Mats | CrazzyCars.pk",
+    metaTitle: "Trunk Mats | Homefy.pk",
     metaDescription:
       "Waterproof trunk mats that protect cargo floors from dirt and spills — snug custom-fit liners for sedan and hatch models. Cash on Delivery.",
     metaKeywords: [
@@ -394,7 +394,7 @@ const GENERATED = {
     ],
   },
   "seat-covers": {
-    metaTitle: "Car Seat Covers in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Seat Covers in Pakistan | Homefy.pk",
     metaDescription:
       "Leatherette and fabric seat covers that refresh tired upholstery — full sets with airbag-safe stitching for daily drivers. COD nationwide.",
     metaKeywords: [
@@ -405,7 +405,7 @@ const GENERATED = {
     ],
   },
   "seat-belt-accessories": {
-    metaTitle: "Seat Belt Accessories | CrazzyCars.pk",
+    metaTitle: "Seat Belt Accessories | Homefy.pk",
     metaDescription:
       "Seat belt pads, clips and covers that soften shoulder pressure and tidy loose belts — quick clip-on comfort upgrades. Nationwide COD.",
     metaKeywords: [
@@ -416,7 +416,7 @@ const GENERATED = {
     ],
   },
   "car-curtains": {
-    metaTitle: "Car Curtains | CrazzyCars.pk",
+    metaTitle: "Car Curtains | Homefy.pk",
     metaDescription:
       "Magnetic and rail car curtains that block harsh sun and add rear privacy — ideal for family and ride-hailing cars. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -427,7 +427,7 @@ const GENERATED = {
     ],
   },
   "sun-shades": {
-    metaTitle: "Car Sun Shades | CrazzyCars.pk",
+    metaTitle: "Car Sun Shades | Homefy.pk",
     metaDescription:
       "Foldable windshield and side sun shades that drop cabin heat fast — compact storage, universal and model-fit sizes. COD across Pakistan.",
     metaKeywords: [
@@ -438,7 +438,7 @@ const GENERATED = {
     ],
   },
   "interior-lights": {
-    metaTitle: "Interior Ambient Lights | CrazzyCars.pk",
+    metaTitle: "Interior Ambient Lights | Homefy.pk",
     metaDescription:
       "RGB and white ambient interior lights that glow along footwells and dash lines — USB and hardwire kits for any cabin. Cash on Delivery.",
     metaKeywords: [
@@ -449,7 +449,7 @@ const GENERATED = {
     ],
   },
   "arm-rests-console-boxes": {
-    metaTitle: "Arm Rests & Console Boxes | CrazzyCars.pk",
+    metaTitle: "Arm Rests & Console Boxes | Homefy.pk",
     metaDescription:
       "Center armrests and console organizers with padded lids and hidden storage — elevates comfort on long Pakistani highways. COD nationwide.",
     metaKeywords: [
@@ -460,7 +460,7 @@ const GENERATED = {
     ],
   },
   "shift-knob-accessories": {
-    metaTitle: "Shift Knob Accessories | CrazzyCars.pk",
+    metaTitle: "Shift Knob Accessories | Homefy.pk",
     metaDescription:
       "Sport shift knobs, gaiters and trim rings that refresh your gear surround — threaded and clip-fit options. Easy swap, COD nationwide.",
     metaKeywords: [
@@ -471,7 +471,7 @@ const GENERATED = {
     ],
   },
   "back-neck-care": {
-    metaTitle: "Back & Neck Care Car Pillows | CrazzyCars.pk",
+    metaTitle: "Back & Neck Care Car Pillows | Homefy.pk",
     metaDescription:
       "Memory-foam lumbar and neck pillows that ease long-drive fatigue — breathable covers for daily commuting comfort. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -482,7 +482,7 @@ const GENERATED = {
     ],
   },
   ashtrays: {
-    metaTitle: "Car Ashtrays | CrazzyCars.pk",
+    metaTitle: "Car Ashtrays | Homefy.pk",
     metaDescription:
       "Portable cup-holder ashtrays with lids that contain ash and odor — LED and plain styles for a tidier cabin. Ships nationwide with COD.",
     metaKeywords: [
@@ -493,7 +493,7 @@ const GENERATED = {
     ],
   },
   "tissue-boxes": {
-    metaTitle: "Car Tissue Boxes | CrazzyCars.pk",
+    metaTitle: "Car Tissue Boxes | Homefy.pk",
     metaDescription:
       "Leather-look tissue box covers that sit neatly on the rear parcel or console — keeps tissues handy without looking messy. COD nationwide.",
     metaKeywords: [
@@ -504,7 +504,7 @@ const GENERATED = {
     ],
   },
   "mirror-hangings": {
-    metaTitle: "Mirror Hangings | CrazzyCars.pk",
+    metaTitle: "Mirror Hangings | Homefy.pk",
     metaDescription:
       "Rear-view mirror hangings and charms that personalize your cabin — lightweight designs that won't block your view. Cash on Delivery.",
     metaKeywords: [
@@ -515,7 +515,7 @@ const GENERATED = {
     ],
   },
   "air-freshener-decoration": {
-    metaTitle: "Air Freshener & Decorations | CrazzyCars.pk",
+    metaTitle: "Air Freshener & Decorations | Homefy.pk",
     metaDescription:
       "Decorative cabin fresheners and accent pieces that scent and style your interior — clip, hang and dash-mount options. COD across Pakistan.",
     metaKeywords: [
@@ -526,7 +526,7 @@ const GENERATED = {
     ],
   },
   "carbon-fiber-accessories": {
-    metaTitle: "Carbon Fiber Accessories – Carbon Fiber | CrazzyCars.pk",
+    metaTitle: "Carbon Fiber Accessories – Carbon Fiber | Homefy.pk",
     metaDescription:
       "Interior and exterior carbon-look accessories — trim wraps, knobs and covers for a cohesive sport finish. Nationwide Cash on Delivery.",
     metaKeywords: [
@@ -537,7 +537,7 @@ const GENERATED = {
     ],
   },
   "car-care-cleaning": {
-    metaTitle: "Car Care & Cleaning Kits | CrazzyCars.pk",
+    metaTitle: "Car Care & Cleaning Kits | Homefy.pk",
     metaDescription:
       "All-in-one cleaning kits with washes, cloths and detail tools for weekend detailing at home — shine without a workshop. COD nationwide.",
     metaKeywords: [
@@ -548,7 +548,7 @@ const GENERATED = {
     ],
   },
   "all-purpose-cleaners": {
-    metaTitle: "All Purpose Car Cleaners | CrazzyCars.pk",
+    metaTitle: "All Purpose Car Cleaners | Homefy.pk",
     metaDescription:
       "Multi-surface cleaners that cut grease on dash, plastic and door cards without sticky residue — cabin-safe formulas. Cash on Delivery.",
     metaKeywords: [
@@ -558,7 +558,7 @@ const GENERATED = {
     ],
   },
   "car-polish-wax": {
-    metaTitle: "Car Polish & Wax | CrazzyCars.pk",
+    metaTitle: "Car Polish & Wax | Homefy.pk",
     metaDescription:
       "Polish and wax formulas that restore gloss and add UV protection — hand-apply or machine-buff for showroom shine. COD nationwide.",
     metaKeywords: [
@@ -569,7 +569,7 @@ const GENERATED = {
     ],
   },
   "scratch-swirl-restore": {
-    metaTitle: "Scratch & Swirl Restore | CrazzyCars.pk",
+    metaTitle: "Scratch & Swirl Restore | Homefy.pk",
     metaDescription:
       "Scratch removers and swirl correctors that fade light paint marks before they rust — DIY paint rescue in a bottle. Ships with COD.",
     metaKeywords: [
@@ -580,7 +580,7 @@ const GENERATED = {
     ],
   },
   "engine-cleaners": {
-    metaTitle: "Engine Cleaners | CrazzyCars.pk",
+    metaTitle: "Engine Cleaners | Homefy.pk",
     metaDescription:
       "Degreasers and engine bay cleaners that dissolve oil film safely around plastics and wiring — rinse-ready formulas. Cash on Delivery.",
     metaKeywords: [
@@ -591,7 +591,7 @@ const GENERATED = {
     ],
   },
   "shampoo-foam": {
-    metaTitle: "Car Shampoo & Foam | CrazzyCars.pk",
+    metaTitle: "Car Shampoo & Foam | Homefy.pk",
     metaDescription:
       "pH-balanced car shampoos and snow foams that lift dirt without stripping wax — thick foam for safer hand washes. COD nationwide.",
     metaKeywords: [
@@ -602,7 +602,7 @@ const GENERATED = {
     ],
   },
   "windshield-glass-wash": {
-    metaTitle: "Windshield & Glass Wash | CrazzyCars.pk",
+    metaTitle: "Windshield & Glass Wash | Homefy.pk",
     metaDescription:
       "Glass cleaners and washer fluid additives that clear haze and road film for sharper night visibility. Easy spray-on, COD across Pakistan.",
     metaKeywords: [
@@ -613,7 +613,7 @@ const GENERATED = {
     ],
   },
   "wheel-tyre-care": {
-    metaTitle: "Wheel & Tyre Care | CrazzyCars.pk",
+    metaTitle: "Wheel & Tyre Care | Homefy.pk",
     metaDescription:
       "Wheel cleaners, tyre shine and rim protectors that blacken sidewalls and cut brake dust — weekend-ready wheel care. Cash on Delivery.",
     metaKeywords: [
@@ -624,7 +624,7 @@ const GENERATED = {
     ],
   },
   "microfiber-accessories": {
-    metaTitle: "Microfiber Accessories | CrazzyCars.pk",
+    metaTitle: "Microfiber Accessories | Homefy.pk",
     metaDescription:
       "Soft microfiber towels, applicators and mitts that dry paint safely without swirls — must-have detailing staples. COD nationwide.",
     metaKeywords: [
@@ -635,7 +635,7 @@ const GENERATED = {
     ],
   },
   "polisher-machines-buffers": {
-    metaTitle: "Polisher Machines & Buffers | CrazzyCars.pk",
+    metaTitle: "Polisher Machines & Buffers | Homefy.pk",
     metaDescription:
       "Dual-action polishers and buffer pads for DIY paint correction — smoother finishes than hand rubbing alone. Nationwide COD.",
     metaKeywords: [
@@ -646,7 +646,7 @@ const GENERATED = {
     ],
   },
   "pressure-washers": {
-    metaTitle: "Pressure Washers | CrazzyCars.pk",
+    metaTitle: "Pressure Washers | Homefy.pk",
     metaDescription:
       "Compact pressure washers that blast mud from arches and underbody — home driveway cleaning without a wash bay. Cash on Delivery.",
     metaKeywords: [
@@ -657,7 +657,7 @@ const GENERATED = {
     ],
   },
   "emergency-safety": {
-    metaTitle: "Emergency & Safety Car Kits | CrazzyCars.pk",
+    metaTitle: "Emergency & Safety Car Kits | Homefy.pk",
     metaDescription:
       "Roadside emergency kits, triangles and safety gear so you're prepared for breakdowns and night stops. Ships nationwide with COD.",
     metaKeywords: [
@@ -668,7 +668,7 @@ const GENERATED = {
     ],
   },
   "dash-cameras": {
-    metaTitle: "Dash Cameras in Pakistan | CrazzyCars.pk",
+    metaTitle: "Dash Cameras in Pakistan | Homefy.pk",
     metaDescription:
       "Front and dual dash cams that record clear evidence day and night — loop recording with easy windscreen mount. Cash on Delivery.",
     metaKeywords: [
@@ -679,7 +679,7 @@ const GENERATED = {
     ],
   },
   "android-lcd-panels": {
-    metaTitle: "Android LCD Panels | CrazzyCars.pk",
+    metaTitle: "Android LCD Panels | Homefy.pk",
     metaDescription:
       "Android head-unit LCD panels with navigation, Bluetooth and reverse-cam support — modernize older dashboards. COD nationwide.",
     metaKeywords: [
@@ -690,7 +690,7 @@ const GENERATED = {
     ],
   },
   "mobile-holders-chargers": {
-    metaTitle: "Mobile Holders & Chargers | CrazzyCars.pk",
+    metaTitle: "Mobile Holders & Chargers | Homefy.pk",
     metaDescription:
       "Phone mounts and fast car chargers that keep maps visible and batteries topped up on every trip. Clip or vent fit, COD nationwide.",
     metaKeywords: [
@@ -701,7 +701,7 @@ const GENERATED = {
     ],
   },
   "jump-starters-booster-cables": {
-    metaTitle: "Jump Starters & Booster Cables | CrazzyCars.pk",
+    metaTitle: "Jump Starters & Booster Cables | Homefy.pk",
     metaDescription:
       "Portable jump starters and heavy-duty booster cables that revive flat batteries without waiting for a tow. Cash on Delivery.",
     metaKeywords: [
@@ -712,7 +712,7 @@ const GENERATED = {
     ],
   },
   "power-inverters": {
-    metaTitle: "Car Power Inverters | CrazzyCars.pk",
+    metaTitle: "Car Power Inverters | Homefy.pk",
     metaDescription:
       "12V to 220V power inverters that run laptops and small appliances from your cigarette socket — travel power on tap. COD nationwide.",
     metaKeywords: [
@@ -723,7 +723,7 @@ const GENERATED = {
     ],
   },
   "air-compressors-inflators": {
-    metaTitle: "Air Compressors & Inflators | CrazzyCars.pk",
+    metaTitle: "Air Compressors & Inflators | Homefy.pk",
     metaDescription:
       "Digital tyre inflators that hit the right PSI at the roadside — compact 12V compressors for cars and bikes. Cash on Delivery.",
     metaKeywords: [
@@ -734,7 +734,7 @@ const GENERATED = {
     ],
   },
   "key-covers-key-chains": {
-    metaTitle: "Key Covers & Key Chains | CrazzyCars.pk",
+    metaTitle: "Key Covers & Key Chains | Homefy.pk",
     metaDescription:
       "Soft key fob covers and metal key chains that protect buttons and add a branded touch — model-fit sleeves available. COD nationwide.",
     metaKeywords: [
@@ -745,7 +745,7 @@ const GENERATED = {
     ],
   },
   "security-gadgets": {
-    metaTitle: "Car Security Gadgets | CrazzyCars.pk",
+    metaTitle: "Car Security Gadgets | Homefy.pk",
     metaDescription:
       "Alarms, locks and anti-theft gadgets that deter break-ins — practical security add-ons for city parking. Ships with Cash on Delivery.",
     metaKeywords: [
@@ -756,7 +756,7 @@ const GENERATED = {
     ],
   },
   "ac-grill-perfumes": {
-    metaTitle: "AC Grill Perfumes | CrazzyCars.pk",
+    metaTitle: "AC Grill Perfumes | Homefy.pk",
     metaDescription:
       "Clip-on AC grill perfumes that circulate scent whenever the blower runs — refillable and solid-gel options. COD across Pakistan.",
     metaKeywords: [
@@ -767,7 +767,7 @@ const GENERATED = {
     ],
   },
   "dashboard-perfumes": {
-    metaTitle: "Dashboard Perfumes | CrazzyCars.pk",
+    metaTitle: "Dashboard Perfumes | Homefy.pk",
     metaDescription:
       "Dashboard bottle and gel perfumes with a premium look that scent the cabin for weeks — spill-resistant bases. Cash on Delivery.",
     metaKeywords: [
@@ -778,7 +778,7 @@ const GENERATED = {
     ],
   },
   "hanging-perfumes": {
-    metaTitle: "Hanging Car Perfumes | CrazzyCars.pk",
+    metaTitle: "Hanging Car Perfumes | Homefy.pk",
     metaDescription:
       "Mirror-hanging car perfumes and scent cards that freshen every ride — light enough not to swing wildly on rough roads. Cash on Delivery nationwide.",
     metaKeywords: [
@@ -789,7 +789,7 @@ const GENERATED = {
     ],
   },
   "fancy-air-fresheners": {
-    metaTitle: "Fancy Air Fresheners | CrazzyCars.pk",
+    metaTitle: "Fancy Air Fresheners | Homefy.pk",
     metaDescription:
       "Designer-style fancy air fresheners that double as cabin décor — unique shapes and long-lasting fragrance oils. Cash on Delivery.",
     metaKeywords: [
@@ -861,8 +861,8 @@ function expandKeywords(baseList, cat, parentName) {
     parentLc ? `${parentLc} accessories` : "car accessories pakistan",
     parentLc ? `${nameLc} ${parentLc}` : null,
     "car accessories pakistan",
-    "crazzycars",
-    "crazzycars.pk",
+    "homefy",
+    "homefy.pk",
     "cash on delivery pakistan",
     "cod nationwide",
     "honda toyota suzuki",
@@ -886,14 +886,14 @@ function buildFallback(cat, parentName) {
     : `${name} – ${parentName}`;
   const metaTitle = fitTitle(titleMain);
   const metaDescription = fitDescription(
-    `Shop ${name}${parentName ? ` under ${parentName}` : ""} at CrazzyCars.pk — quality fitment for Pakistani cars with Cash on Delivery nationwide.`
+    `Shop ${name}${parentName ? ` under ${parentName}` : ""} at Homefy.pk — quality fitment for Pakistani cars with Cash on Delivery nationwide.`
   );
   const metaKeywords = expandKeywords(
     [
       name.toLowerCase(),
       `${name.toLowerCase()} pakistan`,
       parentName ? parentName.toLowerCase() : "car accessories",
-      "crazzycars",
+      "homefy",
       "cash on delivery",
       "pakistan",
     ],

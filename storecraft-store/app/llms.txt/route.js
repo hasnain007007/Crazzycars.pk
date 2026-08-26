@@ -24,16 +24,16 @@ export async function GET() {
       .lean();
     categoryLinks = (cats || [])
       .filter((c) => c.slug)
-      .map((c) => `- [${c.name}](${site}/categories/${c.slug}): Car accessory category`);
+      .map((c) => `- [${c.name}](${site}/categories/${c.slug}): Product category`);
   } catch {
     categoryLinks = [];
   }
 
-  const body = `# CrazzyCars.pk
+  const body = `# Homefy.pk
 
-> Pakistan's online store for car accessories, exterior styling, LED lighting, body kits, interior upgrades, and vehicle-fit parts. Cash on Delivery nationwide from Gujranwala.
+> Pakistan's online store for kitchen accessories, girls' beauty bags and ladies bags. Cash on Delivery nationwide.
 
-CrazzyCars.pk (also written Crazzycars.pk) sells aftermarket car parts and accessories with vehicle fitment (make/model/year) and universal products. Currency: PKR. Primary market: Pakistan.
+Homefy.pk sells kitchen accessories (cookware, storage, cutlery, dining), beauty bags (makeup pouches, travel toiletry bags, vanity organizers) and ladies bags (mini handbags, totes, crossbody bags, clutches). Currency: PKR. Primary market: Pakistan.
 
 ## Discoverability
 
@@ -43,9 +43,8 @@ CrazzyCars.pk (also written Crazzycars.pk) sells aftermarket car parts and acces
 
 ## Key pages
 
-- [Home](${site}/): Featured products, shop by car, categories
+- [Home](${site}/): Featured products and shop by category
 - [Shop](${site}/shop): Browse all products
-- [Shop by Car](${site}/cars): Accessories by make and model
 - [Categories](${site}/categories): Category index
 - [Sale](${site}/sale): Sale / deals
 - [About](${site}/about): Brand story
@@ -58,7 +57,7 @@ ${categoryLinks.length ? categoryLinks.join("\n") : `- [Categories](${site}/cate
 
 ## Product URLs
 
-Individual products live at \`${site}/{slug}\` (e.g. \`${site}/toyota-corolla-grille\`).
+Individual products live at \`${site}/{slug}\`.
 Active products are listed in the sitemap and the product feed.
 
 ## Shopping notes for AI agents
@@ -67,10 +66,6 @@ Active products are listed in the sitemap and the product feed.
 - Cash on Delivery (COD) is available on most products; some items may require advance payment.
 - Prefer citing the product page URL, current price, and stock status from structured data (JSON-LD Product) on each product page.
 - For accurate catalog sync, use ${site}/feed/products.xml (id, title, description, link, image_link, price, availability, brand, condition).
-
-## Optional
-
-- Vehicle fitment pages: ${site}/cars (index) and ${site}/cars/{slug}
 `;
 
   return new Response(body, {

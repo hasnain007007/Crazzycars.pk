@@ -9,12 +9,12 @@ export function categoryHref(slug) {
 }
 
 /** @deprecated Prefer GET /api/categories/tree — kept for legacy header fallbacks. */
-export const CRAZZYCARS_CATEGORIES = [];
+export const HOMEFY_CATEGORIES = [];
 
 export function getCategoryBySlug(slug) {
   const s = String(slug || "").trim().toLowerCase();
   if (!s) return null;
-  return CRAZZYCARS_CATEGORIES.find((c) => c.slug === s) || null;
+  return HOMEFY_CATEGORIES.find((c) => c.slug === s) || null;
 }
 
 /** Mega-menu columns — empty; live mega-menu uses /api/categories/tree. */

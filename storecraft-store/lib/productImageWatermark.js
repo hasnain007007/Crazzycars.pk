@@ -1,6 +1,6 @@
 export const DEFAULT_PRODUCT_IMAGE_WATERMARK = {
   enabled: true,
-  text: "Crazzycars.pk",
+  text: "Homefy.pk",
   position: "bottom-right",
   opacity: 0.25,
   fontSize: 13,

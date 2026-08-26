@@ -15,7 +15,7 @@ import { sortProductsClient } from "@/lib/productListing";
 
 export const revalidate = 300;
 
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "CrazzyCars.pk";
+const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Homefy.pk";
 
 export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
@@ -193,7 +193,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
                     display: "inline-flex",
                     alignItems: "center",
                     borderRadius: 8,
-                    background: "#C41E1E",
+                    background: "#C6633B",
                     color: "#FFFFFF",
                     fontSize: 13,
                     fontWeight: 700,

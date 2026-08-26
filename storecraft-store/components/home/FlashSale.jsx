@@ -59,7 +59,7 @@ function FlashProductCard({ product }) {
         {onSale ? (
           <span
             className="absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
-            style={{ background: "#C41E1E" }}
+            style={{ background: "#C6633B" }}
           >
             Sale
           </span>
@@ -132,12 +132,12 @@ export default function FlashSale({ settings }) {
       <div className="store-container">
         <div
           className="flex flex-col gap-5 rounded-2xl p-4 md:gap-8 md:p-10 lg:flex-row lg:items-center"
-          style={{ background: "#FFF8F0", borderLeft: "4px solid #C41E1E" }}
+          style={{ background: "#FFF8F0", borderLeft: "4px solid #C6633B" }}
         >
           <div className="lg:w-[300px] lg:flex-shrink-0">
             <p
               className="font-body uppercase"
-              style={{ fontSize: 11, letterSpacing: "2px", color: "#C41E1E" }}
+              style={{ fontSize: 11, letterSpacing: "2px", color: "#C6633B" }}
             >
               Flash Sale
             </p>
@@ -145,17 +145,17 @@ export default function FlashSale({ settings }) {
 
             <div className="mt-6 flex items-center gap-2">
               <CountdownUnit value={time.h} label="Hours" />
-              <span className="font-heading text-2xl font-bold" style={{ color: "#C41E1E" }}>
+              <span className="font-heading text-2xl font-bold" style={{ color: "#C6633B" }}>
                 :
               </span>
               <CountdownUnit value={time.m} label="Mins" />
-              <span className="font-heading text-2xl font-bold" style={{ color: "#C41E1E" }}>
+              <span className="font-heading text-2xl font-bold" style={{ color: "#C6633B" }}>
                 :
               </span>
               <CountdownUnit value={time.s} label="Secs" />
             </div>
 
-            <Link href="/shop?deals=1" className="mt-6 inline-block text-sm font-semibold text-[#C41E1E] hover:underline">
+            <Link href="/shop?deals=1" className="mt-6 inline-block text-sm font-semibold text-[var(--color-primary)] hover:underline">
               Shop deals →
             </Link>
           </div>

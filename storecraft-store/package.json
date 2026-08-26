@@ -1,9 +1,9 @@
 {
-  "name": "storecraft-store",
+  "name": "homefy-store",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -14,7 +14,7 @@
     "seed:car-catalog": "node --env-file=.env.local scripts/vehicles/seedCarCatalog.mjs",
     "seed:car-catalog:replace": "node --env-file=.env.local scripts/vehicles/replaceCarCatalog.mjs",
     "seed:products": "node --env-file=.env.local scripts/products/seedProducts.mjs",
-    "seed:all": "npm run seed:categories && npm run seed:vehicles && npm run seed:car-catalog:replace && npm run seed:products"
+    "seed:homefy": "node --env-file=.env.local scripts/homefy/seedHomefyCatalog.mjs"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.3.0",

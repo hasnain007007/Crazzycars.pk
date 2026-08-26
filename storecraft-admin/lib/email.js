@@ -31,7 +31,7 @@ function getSmtpTransporter() {
 }
 
 export async function sendEmail({ to, subject, html, from }) {
-  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
   const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER;
   const fromAddress = from || (fromEmail ? `"${storeName}" <${fromEmail}>` : null);
 
@@ -112,16 +112,16 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl) {
         <div style="background:#009688;padding:30px;text-align:center">
           ${logoUrl ? `<img src="${logoUrl}" alt="${storeName}" style="max-height:60px;object-fit:contain;margin-bottom:10px"><br>` : ""}
           <h1 style="color:white;margin:0;font-size:24px">${storeName}</h1>
-          <p style="color:rgba(255,255,255,0.8);margin:5px 0 0">Order Confirmed — Crazzycars.pk</p>
+          <p style="color:rgba(255,255,255,0.8);margin:5px 0 0">Order Confirmed — Homefy.pk</p>
         </div>
         
         <div style="padding:30px">
           <h2 style="color:#333;margin:0 0 10px">
-            Your Crazzycars.pk Order is Confirmed
+            Your Homefy.pk Order is Confirmed
           </h2>
           <p style="color:#666;margin:0 0 20px">
             Dear ${order.customer?.name || "Customer"},<br>
-            Thank you for shopping at Crazzycars.pk. Your order is confirmed and being prepared for delivery.
+            Thank you for shopping at Homefy.pk. Your order is confirmed and being prepared for delivery.
           </p>
           
           <div style="background:#f0faf9;border:1px solid #009688;border-radius:8px;padding:15px;margin-bottom:20px">
@@ -213,7 +213,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl) {
             © ${new Date().getFullYear()} ${storeName}. All rights reserved.
           </p>
           <p style="color:#009688;font-size:12px;margin:5px 0 0">
-            Thank you for shopping at Crazzycars.pk!
+            Thank you for shopping at Homefy.pk!
           </p>
         </div>
         
@@ -257,7 +257,7 @@ export function buildShippingEmail(order, storeName, logoUrl) {
               : ""
           }
           
-          <p style="color:#666">Thank you for shopping at Crazzycars.pk!</p>
+          <p style="color:#666">Thank you for shopping at Homefy.pk!</p>
         </div>
         <div style="background:#f5f5f5;padding:20px;text-align:center">
           <p style="color:#999;font-size:12px;margin:0">© ${new Date().getFullYear()} ${storeName}</p>

@@ -95,7 +95,7 @@ export async function POST(req) {
           if (paidOrder) {
             const siteSettings =
               (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).select("general").lean()) || {};
-            const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+            const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
             const logoUrl = siteSettings?.general?.logo?.url || "";
             sendCustomerOrderConfirmation(paidOrder, { storeName, logoUrl }).catch((e) =>
               console.error("Stripe order email failed:", e)

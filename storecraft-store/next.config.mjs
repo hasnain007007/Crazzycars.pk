@@ -1,7 +1,18 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Workspace is the parent repo (home.pk); keep Tailwind/PostCSS resolving in this app.
+  turbopack: {
+    root: __dirname,
+  },
   async redirects() {
     return [
+      { source: "/cars", destination: "/", permanent: false },
+      { source: "/cars/:slug", destination: "/", permanent: false },
       {
         source: "/posts",
         destination: "/blogs",
@@ -126,7 +137,7 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
   experimental: {
-    optimizeCss: true,
+    optimizeCss: process.env.NODE_ENV === "production",
   },
   async headers() {
     return [

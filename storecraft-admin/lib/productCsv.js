@@ -63,12 +63,12 @@ export const PRODUCT_CSV_SAMPLE_ROWS = [
     imageUrls:
       "https://cdn.example.com/splitter-1.webp|https://cdn.example.com/splitter-2.webp",
     tags: "splitter|exterior|universal",
-    vendor: "CrazzyCars",
+    vendor: "Homefy",
     productType: "Accessory",
     condition: "new",
     partNumber: "SPL-UNI-4P",
     ean: "",
-    metaTitle: "Buy Universal Front Bumper Splitter in Pakistan | CrazzyCars.pk",
+    metaTitle: "Buy Universal Front Bumper Splitter in Pakistan | Homefy.pk",
     metaDescription:
       "Shop universal ABS front bumper splitter 4PCS online in Pakistan. Cash on Delivery. Fast shipping.",
     metaKeywords: "front bumper splitter|car splitter pakistan|ABS body kit",
@@ -97,14 +97,14 @@ export const PRODUCT_CSV_SAMPLE_ROWS = [
     weightUnit: "kg",
     imageUrls: "https://cdn.example.com/mirror-cover.webp",
     tags: "carbon|mirror|exterior",
-    vendor: "CrazzyCars",
+    vendor: "Homefy",
     productType: "Accessory",
     condition: "new",
     partNumber: "MC-CF-PAIR",
     ean: "",
-    metaTitle: "Carbon Fiber Side Mirror Covers Pakistan | CrazzyCars.pk",
+    metaTitle: "Carbon Fiber Side Mirror Covers Pakistan | Homefy.pk",
     metaDescription:
-      "Buy carbon fiber look side mirror cover pair online in Pakistan at CrazzyCars.pk.",
+      "Buy carbon fiber look side mirror cover pair online in Pakistan at Homefy.pk.",
     metaKeywords: "side mirror cover|carbon mirror cover pakistan",
   },
 ];

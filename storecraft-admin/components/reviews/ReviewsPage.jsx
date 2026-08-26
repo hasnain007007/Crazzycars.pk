@@ -636,7 +636,7 @@ export function ReviewsPage() {
               <input
                 style={inputStyle}
                 type="email"
-                placeholder="info@crazzycars.pk"
+                placeholder="info@homefy.pk"
                 value={form.reviewer.email}
                 onChange={(e) => setForm((f) => ({ ...f, reviewer: { ...f.reviewer, email: e.target.value } }))}
               />
@@ -656,7 +656,7 @@ export function ReviewsPage() {
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 8 }}>Review Title</label>
               <input
                 style={inputStyle}
-                placeholder="e.g. Perfect fit for my Corolla seat covers!"
+                placeholder="e.g. Love this makeup pouch — perfect size!"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               />

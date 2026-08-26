@@ -466,7 +466,7 @@ export default function ProductReviews({ productId, productSlug, onReviewCountCh
                 </label>
                 <input
                   type="email"
-                  placeholder="info@crazzycars.pk"
+                  placeholder="info@homefy.pk"
                   value={formData.email}
                   onChange={(e) => setFormData((f) => ({ ...f, email: e.target.value }))}
                   style={{

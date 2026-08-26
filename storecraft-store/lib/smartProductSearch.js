@@ -42,7 +42,7 @@ const STOPWORDS = new Set([
   "universal",
   "pakistan",
   "pk",
-  "crazzycars",
+  "homefy",
   "present",
 ]);
 

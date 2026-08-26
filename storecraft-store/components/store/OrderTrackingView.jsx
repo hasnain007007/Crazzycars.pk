@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-const WAREHOUSE_LABEL = "CrazzyCars.pk Warehouse";
+const WAREHOUSE_LABEL = "Homefy.pk Warehouse";
 
 const PIPELINE = [
   { id: "warehouse", label: "Warehouse", match: (s) => /warehouse|unbook|booked|created|pickup/i.test(s) },

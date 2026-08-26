@@ -57,12 +57,12 @@ const FOOTER_SECTION_TITLE = {
 };
 
 const FOOTER_CONTENT_DEFAULTS = {
-  companyName: "Crazzycars.pk",
-  tagline: "Fitment-first car accessories from Gujranwala",
-  copyrightText: `© ${new Date().getFullYear()} Crazzycars.pk. All Rights Reserved.`,
-  contactEmail: "info@crazzycars.pk",
-  phone: "+92 324 422 0007",
-  registeredAddress: "Gujranwala, Punjab, Pakistan",
+  companyName: "Homefy.pk",
+  tagline: "Kitchen, beauty bags and ladies bags for Pakistani homes",
+  copyrightText: `© ${new Date().getFullYear()} Homefy.pk. All Rights Reserved.`,
+  contactEmail: "support@homefy.pk",
+  phone: "[FILL IN]",
+  registeredAddress: "[FILL IN — city, Pakistan]",
 };
 
 function LinkManager({ title, links, setLinks }) {
@@ -461,7 +461,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
             type="text"
             value={storeNameDisplay}
             onChange={(e) => setGeneral({ storeName: e.target.value })}
-            placeholder="Crazzycars.pk"
+            placeholder="Homefy.pk"
             style={FOOTER_INPUT_STYLE}
           />
           <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
@@ -563,7 +563,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
             type="email"
             value={f.contactEmail || f.email || FOOTER_CONTENT_DEFAULTS.contactEmail}
             onChange={(e) => setFooter({ contactEmail: e.target.value, email: e.target.value })}
-            placeholder="info@crazzycars.pk"
+            placeholder="info@homefy.pk"
             style={FOOTER_INPUT_STYLE}
           />
           <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>Shown in footer contact section</p>
@@ -585,7 +585,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
           <textarea
             value={f.tagline || FOOTER_CONTENT_DEFAULTS.tagline}
             onChange={(e) => setFooter({ tagline: e.target.value })}
-            placeholder="Fitment-first car accessories from Gujranwala"
+            placeholder="Kitchen, beauty bags and ladies bags for Pakistani homes"
             rows={3}
             style={{ ...FOOTER_INPUT_STYLE, resize: "vertical" }}
           />
@@ -609,7 +609,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
             type="text"
             value={f.companyName || FOOTER_CONTENT_DEFAULTS.companyName}
             onChange={(e) => setFooter({ companyName: e.target.value })}
-            placeholder="Crazzycars.pk"
+            placeholder="Homefy.pk"
             style={FOOTER_INPUT_STYLE}
           />
         </div>
@@ -646,7 +646,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
             type="text"
             value={f.trustpilotUrl || ""}
             onChange={(e) => setFooter({ trustpilotUrl: e.target.value })}
-            placeholder="https://www.trustpilot.com/review/crazzycars.pk"
+            placeholder="https://www.trustpilot.com/review/homefy.pk"
             style={{
               width: "100%",
               padding: "10px 12px",
@@ -677,7 +677,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
           type="text"
           value={f.copyrightText || FOOTER_CONTENT_DEFAULTS.copyrightText}
           onChange={(e) => setFooter({ copyrightText: e.target.value })}
-          placeholder={`© ${new Date().getFullYear()} Crazzycars.pk. All Rights Reserved.`}
+          placeholder={`© ${new Date().getFullYear()} Homefy.pk. All Rights Reserved.`}
           style={{
             width: "100%",
             padding: "10px 12px",
@@ -697,7 +697,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
             marginTop: 4,
           }}
         >
-          Use {"{year}"} to auto-insert current year. Example: © {"{year}"} {g.storeName || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`}. All rights
+          Use {"{year}"} to auto-insert current year. Example: © {"{year}"} {g.storeName || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`}. All rights
           reserved.
         </p>
       </div>
@@ -714,7 +714,7 @@ export function FooterSettings({ settings, setSettings, onSave }) {
                 const next = { ...social, [key]: key === "whatsapp" && /^\d+$/.test(v.trim()) ? `https://wa.me/${v.trim()}` : v };
                 setFooter({ social: next });
               }}
-              placeholder={key === "whatsapp" ? "923244220007 or https://wa.me/..." : "https://facebook.com/crazzycars"}
+              placeholder={key === "whatsapp" ? "923244220007 or https://wa.me/..." : "https://facebook.com/homefy"}
             />
           ))}
         </div>

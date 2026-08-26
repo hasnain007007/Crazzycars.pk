@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ContactForm from "@/components/store/ContactForm";
 
-const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
 
 const DEFAULT_HERO = {
   badge: "Get In Touch",
@@ -106,7 +106,7 @@ export default function ContactPageView({ contactPage, general = {} }) {
             <h2 className="font-heading text-[24px] font-bold" style={{ color: "#111111", margin: 0 }}>
               Contact details
             </h2>
-            <div style={{ width: 40, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 24 }} />
+            <div style={{ width: 40, height: 3, background: "#C6633B", marginTop: 10, marginBottom: 24 }} />
 
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {email ? (
@@ -114,7 +114,7 @@ export default function ContactPageView({ contactPage, general = {} }) {
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
                     Email
                   </p>
-                  <a href={`mailto:${email}`} style={{ color: "#C41E1E", fontSize: 15, textDecoration: "none" }}>
+                  <a href={`mailto:${email}`} style={{ color: "#C6633B", fontSize: 15, textDecoration: "none" }}>
                     {email}
                   </a>
                 </div>
@@ -189,7 +189,7 @@ export default function ContactPageView({ contactPage, general = {} }) {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ fontSize: 14, color: "#C41E1E", textDecoration: "none", fontWeight: 600 }}
+                        style={{ fontSize: 14, color: "#C6633B", textDecoration: "none", fontWeight: 600 }}
                       >
                         {label}
                       </a>
@@ -218,7 +218,7 @@ export default function ContactPageView({ contactPage, general = {} }) {
             <h2 className="font-heading text-xl font-bold md:text-[28px]" style={{ color: "#111111", margin: 0 }}>
               Common questions
             </h2>
-            <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 28 }} />
+            <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 10, marginBottom: 28 }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {faq.map((item, i) => (
                 <details key={`${item.question}-${i}`} style={{ borderBottom: "1px solid #E5E5E5", paddingBottom: 12 }}>
@@ -236,7 +236,7 @@ export default function ContactPageView({ contactPage, general = {} }) {
             </div>
             <p style={{ marginTop: 24, fontSize: 14, color: "#6B7280" }}>
               Looking for shipping or returns info?{" "}
-              <Link href="/about" style={{ color: "#C41E1E", fontWeight: 600, textDecoration: "none" }}>
+              <Link href="/about" style={{ color: "#C6633B", fontWeight: 600, textDecoration: "none" }}>
                 Visit our About page
               </Link>
               .

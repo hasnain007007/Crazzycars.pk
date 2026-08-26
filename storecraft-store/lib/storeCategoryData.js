@@ -143,14 +143,22 @@ export function buildCategoryTree(categories) {
   return roots;
 }
 
+function isMediaUrl(value) {
+  return /^(https?:\/\/|\/)/i.test(String(value || "").trim());
+}
+
 /** Slim tree payload for mega-menu / GET /api/categories/tree */
 export function serializeCategoryTreeNode(node) {
+  const image = typeof node.image === "string" ? node.image : node.image?.url || "";
+  const icon = isMediaUrl(node.icon) ? String(node.icon) : "";
+  const homepageIcon = String(node.homepageIcon || "").trim();
   return {
-    _id: node._id,
+    _id: String(node._id || ""),
     name: node.name,
     slug: node.slug,
-    image: typeof node.image === "string" ? node.image : node.image?.url || "",
-    icon: node.icon || node.homepageIcon || "",
+    image: isMediaUrl(image) ? image : "",
+    icon,
+    homepageIcon: isMediaUrl(homepageIcon) ? "" : homepageIcon,
     sortOrder: node.sortOrder || 0,
     isFeatured: Boolean(node.isFeatured || node.featured),
     children: Array.isArray(node.children) ? node.children.map(serializeCategoryTreeNode) : [],

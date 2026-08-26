@@ -17,15 +17,15 @@ import mongoose from "mongoose";
 import Product from "../lib/models/Product.model.js";
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
-const BRAND_SUFFIX = " | CrazzyCars.pk";
+const BRAND_SUFFIX = " | Homefy.pk";
 const DRY_RUN = process.argv.includes("--dry-run");
 const FORCE = process.argv.includes("--force");
 const BATCH = 50;
 
 const BRAND_TAG_SKIP = new Set([
-  "crazzycars",
+  "homefy",
   "crazzy cars",
-  "crazzycars.pk",
+  "homefy.pk",
   "crazzy cars pk",
   "cash on delivery",
   "cod",
@@ -85,8 +85,8 @@ function stripHtml(html) {
 
 function cleanBaseTitle(raw) {
   return String(raw || "")
-    .replace(/\|\s*CrazzyCars\.pk/gi, "")
-    .replace(/\|\s*Crazzycars\.pk/gi, "")
+    .replace(/\|\s*Homefy\.pk/gi, "")
+    .replace(/\|\s*Homefy\.pk/gi, "")
     .replace(/\bPakistan\b/gi, "")
     .replace(/\bEid Deal\b/gi, "")
     .replace(/\s*\|\s*/g, " ")

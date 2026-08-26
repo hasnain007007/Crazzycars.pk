@@ -4,12 +4,11 @@ import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import HomeHero from "@/components/home/HomeHero";
 import StatsBar from "@/components/home/StatsBar";
+import CategoryHighlights from "@/components/home/CategoryHighlights";
+import NewsletterSignup from "@/components/home/NewsletterSignup";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
-const ShopByCar = dynamic(() => import("@/components/home/ShopByCar"), {
-  loading: () => <SectionSkeleton height={280} />,
-});
 const CategoryGrid = dynamic(() => import("@/components/home/CategoryGrid"), {
   loading: () => <SectionSkeleton height={220} />,
 });
@@ -18,12 +17,6 @@ const HotDeals = dynamic(() => import("@/components/home/HotDeals"), {
 });
 const BestSellers = dynamic(() => import("@/components/home/BestSellers"), {
   loading: () => <SectionSkeleton height={360} />,
-});
-const ShopByVehicle = dynamic(() => import("@/components/home/ShopByVehicle"), {
-  loading: () => <SectionSkeleton height={240} />,
-});
-const BrandCarousel = dynamic(() => import("@/components/home/BrandCarousel"), {
-  loading: () => <SectionSkeleton height={120} />,
 });
 const WhyChooseUs = dynamic(() => import("@/components/home/WhyChooseUs"), {
   loading: () => <SectionSkeleton height={280} />,
@@ -52,13 +45,12 @@ function mergeHomepageSettings(raw) {
 }
 
 /**
- * Homepage — hero SSR-first; below-fold sections load as separate chunks.
+ * Homefy homepage — kitchen, beauty bags, ladies bags. No car/fitment modules.
  */
 export function HomePage({
   initialBestSellers = [],
   initialHotDeals = null,
   initialHeroSlides = null,
-  initialCarCatalog = null,
   activeProductCount = null,
 }) {
   const ctx = useStoreSettings();
@@ -84,32 +76,24 @@ export function HomePage({
         settings={{ brandStory, stats: homepageSettings?.stats }}
         activeProductCount={activeProductCount}
       />
-      {sectionEnabled("shopByCar") && homepageSettings.sections?.showShopByCar !== false ? (
-        <ShopByCar
-          title={homepageSettings.sectionTitles?.shopByCar}
-          initialCatalog={initialCarCatalog}
-        />
-      ) : null}
-      <ShopByVehicle initialCatalog={initialCarCatalog} />
+      <CategoryHighlights />
       {sectionEnabled("categories") && homepageSettings.sections?.showCategories !== false ? (
         <CategoryGrid
           title={homepageSettings.categories?.title || homepageSettings.sectionTitles?.categories}
           viewAllText={homepageSettings.categories?.viewAllText}
         />
       ) : null}
-      {sectionEnabled("hotDeals") && homepageSettings.sections?.showHotDeals !== false ? (
-        <HotDeals settings={homepageSettings} initialProducts={initialHotDeals} />
-      ) : null}
       {sectionEnabled("bestSellers") && homepageSettings.sections?.showBestSellers !== false ? (
         <BestSellers initialProducts={initialBestSellers} settings={homepageSettings} />
       ) : null}
-      {sectionEnabled("brands") && homepageSettings.sections?.showBrands !== false ? (
-        <BrandCarousel settings={homepageSettings} />
+      {sectionEnabled("hotDeals") && homepageSettings.sections?.showHotDeals !== false ? (
+        <HotDeals settings={homepageSettings} initialProducts={initialHotDeals} />
       ) : null}
       {sectionEnabled("whyChooseUs") && homepageSettings.sections?.showWhyChooseUs !== false ? (
         <WhyChooseUs settings={homepageSettings} />
       ) : null}
       <BrandStory story={brandStory} activeProductCount={activeProductCount} />
+      <NewsletterSignup />
     </div>
   );
 }

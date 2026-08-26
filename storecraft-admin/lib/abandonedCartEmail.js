@@ -12,7 +12,7 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-export function buildAbandonedCartEmailHtml(cart, { storeName = "Crazzycars.pk", storePhone = "" } = {}) {
+export function buildAbandonedCartEmailHtml(cart, { storeName = "Homefy.pk", storePhone = "" } = {}) {
   const name = String(cart?.customer?.name || "").trim() || "there";
   const recoverUrl = recoveryCheckoutUrl(cart?.recoveryToken);
   const itemsHtml = (cart?.items || [])
@@ -44,7 +44,7 @@ export function buildAbandonedCartEmailHtml(cart, { storeName = "Crazzycars.pk",
       </p>
       <table style="width:100%;border-collapse:collapse;margin:8px 0 20px">${itemsHtml}</table>
       <div style="text-align:center;margin:24px 0">
-        <a href="${recoverUrl}" style="display:inline-block;background:#C41E1E;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 28px;border-radius:8px">
+        <a href="${recoverUrl}" style="display:inline-block;background:#C6633B;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 28px;border-radius:8px">
           Complete checkout
         </a>
       </div>

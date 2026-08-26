@@ -13,7 +13,7 @@ export default function ContactPageSettings() {
       title: "We Would Love to Hear From You",
       subtitle: "Questions about an order, product advice, or just want to say hello? We are always happy to help.",
     },
-    email: "info@crazzycars.pk",
+    email: "info@homefy.pk",
     phone: "+92 324 422 0007",
     whatsapp: "923244220007",
     address: {
@@ -235,7 +235,7 @@ export default function ContactPageSettings() {
             <input
               style={input}
               type="email"
-              placeholder="support@crazzycars.pk"
+              placeholder="support@homefy.pk"
               value={form.email || ""}
               onChange={(e) => setForm((f) => ({
                 ...f,
@@ -437,10 +437,10 @@ export default function ContactPageSettings() {
           }}
         >
           {[
-            { key: "instagram", label: "📸 Instagram", placeholder: "https://instagram.com/crazzycars" },
-            { key: "facebook", label: "👥 Facebook", placeholder: "https://facebook.com/crazzycars" },
-            { key: "tiktok", label: "🎵 TikTok", placeholder: "https://tiktok.com/@crazzycars" },
-            { key: "twitter", label: "𝕏 Twitter / X", placeholder: "https://twitter.com/crazzycars" },
+            { key: "instagram", label: "📸 Instagram", placeholder: "https://instagram.com/homefy" },
+            { key: "facebook", label: "👥 Facebook", placeholder: "https://facebook.com/homefy" },
+            { key: "tiktok", label: "🎵 TikTok", placeholder: "https://tiktok.com/@homefy" },
+            { key: "twitter", label: "𝕏 Twitter / X", placeholder: "https://twitter.com/homefy" },
           ].map((s) => (
             <div key={s.key}>
               <label style={label}>{s.label}</label>

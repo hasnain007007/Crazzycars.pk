@@ -311,8 +311,8 @@ export default function ProductsPage() {
       {!loading && rows.length === 0 ? (
         <div className="rounded-xl border border-[#e5e7eb] bg-white px-6 py-16 text-center shadow-sm">
           <EmptyIllustration />
-          <h3 className="mt-4 text-lg font-semibold text-[#111827]">No car accessories yet.</h3>
-          <p className="mt-2 text-sm text-[#6b7280]">Add your first car accessory product.</p>
+          <h3 className="mt-4 text-lg font-semibold text-[#111827]">No products yet.</h3>
+          <p className="mt-2 text-sm text-[#6b7280]">Add your first kitchen, beauty bag or ladies bag product.</p>
           <Link
             href="/catalog/products/new"
             className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#1d6fb8] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#185f9e]"

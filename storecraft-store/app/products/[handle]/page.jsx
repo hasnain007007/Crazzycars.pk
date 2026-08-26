@@ -3,7 +3,7 @@ import { canonicalProductPathForSlug } from "@/lib/resolveProductSlug";
 
 /**
  * Shopify-era PDP route used by Meta carousel ads (`/products/[handle]`).
- * Resolve the handle to the canonical Mongo slug (incl. `-crazzycars-pk`
+ * Resolve the handle to the canonical Mongo slug (incl. `-homefy-pk`
  * suffix migration / shortened handles) and 308 there.
  * Unknown handles go to /shop so Google stops seeing soft/hard 404s.
  */

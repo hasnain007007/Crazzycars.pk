@@ -30,7 +30,7 @@ export const DEFAULT_BRAND_STORY = {
   heading: "Built for Pakistani Car Enthusiasts",
   subheading: "Fitment-first car accessories from Gujranwala",
   description:
-    "Crazzycars.pk is based in Gujranwala and ships car accessories nationwide — splitters, LED lighting, body kits, carbon fiber parts, and more. We focus on clear year compatibility, practical installs, and Cash on Delivery.",
+    "Homefy.pk is based in Gujranwala and ships car accessories nationwide — splitters, LED lighting, body kits, carbon fiber parts, and more. We focus on clear year compatibility, practical installs, and Cash on Delivery.",
   buttonText: "About Us",
   buttonLink: "/about",
   image1: "",
@@ -42,9 +42,9 @@ export const DEFAULT_BRAND_STORY = {
 };
 
 export const DEFAULT_APPEARANCE = {
-  primaryColor: "#C41E1E",
-  secondaryColor: "#111111",
-  accentColor: "#C41E1E",
+  primaryColor: "#C6633B",
+  secondaryColor: "#D98BA0",
+  accentColor: "#D98BA0",
   fontFamily: "var(--font-inter), system-ui, sans-serif",
   buttonStyle: "rounded",
   borderRadius: "8px",
@@ -79,7 +79,7 @@ export function sanitizeCssFontFamily(value, fallback) {
 
 export const DEFAULT_CHECKOUT_MESSAGES = {
   orderSuccessMessage: "Order Placed! We will deliver to your doorstep.",
-  orderSuccessSubtext: "Thank you for shopping with Crazzycars.pk",
+  orderSuccessSubtext: "Thank you for shopping with Homefy.pk",
   codInstructions: "Pay cash when your order arrives.",
   shippingNote: standardDeliveryFeeStatement(),
   cartEmptyMessage: "Your cart is empty",
@@ -116,7 +116,7 @@ export const DEFAULT_PRODUCT_BADGE_UI = {
   showCodBadge: false,
   saleBadgeText: "Sale",
   newBadgeText: "New",
-  saleBadgeColor: "#C41E1E",
+  saleBadgeColor: "#C6633B",
   newBadgeColor: "#111111",
   codBadgeText: "Cash on delivery",
   codBadgeColor: "#6B7280",
@@ -433,7 +433,7 @@ export function buildStoreSettingsPayload(settings = {}) {
     contactPage: settings?.contactPage || {},
     storefront: settings?.storefront || {},
     checkout,
-    storeName: g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
+    storeName: g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk",
     logoUrl: logoString,
     phone: g.phone || "",
     email: g.email || "",

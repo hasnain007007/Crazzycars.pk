@@ -166,23 +166,14 @@ const DEFAULT_FORM = {
     { icon: "🔄", title: "No Hassle Returns", description: "Changed your mind? 7 days, no questions asked", isActive: true },
     { icon: "✅", title: "Real Products, Real Quality", description: "Every item tested before it reaches you", isActive: true },
   ],
-  brands: [
-    { name: "Honda", isActive: true, order: 0 },
-    { name: "Toyota", isActive: true, order: 1 },
-    { name: "Suzuki", isActive: true, order: 2 },
-    { name: "KIA", isActive: true, order: 3 },
-    { name: "Hyundai", isActive: true, order: 4 },
-    { name: "MG", isActive: true, order: 5 },
-    { name: "Changan", isActive: true, order: 6 },
-    { name: "Haval", isActive: true, order: 7 },
-  ],
-  flashSaleEnabled: true,
+  brands: [],
+  flashSaleEnabled: false,
   flashSaleTitle: "Up to 50% Off",
   flashSaleEndTime: "",
   sections: {
-    showShopByCar: true,
-    showFlashSale: true,
-    showBrands: true,
+    showShopByCar: false,
+    showFlashSale: false,
+    showBrands: false,
     showWhyChooseUs: true,
     showCategories: true,
     showBestSellers: true,
@@ -210,12 +201,12 @@ const DEFAULT_FORM = {
   },
   sectionOrder: [
     { id: "hero", label: "Hero Banner", enabled: true, order: 1 },
-    { id: "shopByCar", label: "Shop by Car", enabled: true, order: 2 },
+    { id: "shopByCar", label: "Shop by Car", enabled: false, order: 2 },
     { id: "categories", label: "Categories", enabled: true, order: 3 },
     { id: "bestSellers", label: "Best Sellers", enabled: true, order: 4 },
     { id: "hotDeals", label: "Hot Deals", enabled: true, order: 5 },
-    { id: "flashSale", label: "Flash Sale", enabled: true, order: 6 },
-    { id: "brands", label: "Brand Carousel", enabled: true, order: 7 },
+    { id: "flashSale", label: "Flash Sale", enabled: false, order: 6 },
+    { id: "brands", label: "Brand Carousel", enabled: false, order: 7 },
     { id: "whyChooseUs", label: "Why Choose Us", enabled: true, order: 8 },
   ],
   sectionTitles: {
@@ -225,7 +216,7 @@ const DEFAULT_FORM = {
     flashSale: "Flash Sale",
     brands: "Trusted Brands",
     whyChooseUs: "Why Choose Us",
-    shopByCar: "Find Parts For Your Car",
+    shopByCar: "",
   },
 };
 
@@ -739,7 +730,7 @@ export default function HomepageSettings() {
         type="button"
         onClick={save}
         disabled={saving}
-        className="rounded-lg bg-[#C41E1E] px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+        className="rounded-lg bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
       >
         {saving ? "Saving…" : "Save Homepage Settings"}
       </button>

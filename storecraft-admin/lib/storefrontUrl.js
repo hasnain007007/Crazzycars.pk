@@ -4,7 +4,7 @@
  */
 
 const DEFAULT_STOREFRONT_URL =
-  process.env.NEXT_PUBLIC_STORE_URL_FALLBACK || "https://crazzycars.pk";
+  process.env.NEXT_PUBLIC_STORE_URL_FALLBACK || "https://homefy.pk";
 
 function normalizeBase(url) {
   return String(url || "")

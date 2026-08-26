@@ -1,7 +1,15 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const storefrontOrigin = process.env.STOREFRONT_ORIGIN || process.env.NEXT_PUBLIC_STORE_URL || "";
 
 const nextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
   // Required for Docker/Coolify (output: .next/standalone)
   output: "standalone",
   poweredByHeader: false,
@@ -70,6 +78,12 @@ const nextConfig = {
       });
     }
     return [...security, ...base];
+  },
+  async redirects() {
+    return [
+      { source: "/car-catalog", destination: "/catalog/products", permanent: false },
+      { source: "/car-catalog/:path*", destination: "/catalog/products", permanent: false },
+    ];
   },
 };
 

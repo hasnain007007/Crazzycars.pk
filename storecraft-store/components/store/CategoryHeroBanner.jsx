@@ -23,7 +23,7 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
   const title = String(category?.name || "").toUpperCase();
   const imageAlt = category?.image?.altText || category?.name || "";
   const imageTitle = category?.image?.title || category?.name || "";
-  const storeName = brand?.name || "CrazzyCars.pk";
+  const storeName = brand?.name || "Homefy.pk";
   const logoUrl = logoImageUrl(trimmedLogoUrl(brand?.logo || "")) || trimmedLogoUrl(brand?.logo || "");
 
   const bannerSlots = (Array.isArray(category?.bannerImages) ? category.bannerImages : [])
@@ -71,19 +71,19 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
               <img src={logoUrl} alt="" className="cat-hero__brand-logo" />
             ) : (
               <span className="cat-hero__brand-mark" aria-hidden>
-                CC
+                HF
               </span>
             )}
             <div className="cat-hero__brand-text">
               <span className="cat-hero__brand-name">{storeName}</span>
-              <span className="cat-hero__brand-tag">Premium Car Accessories · Pakistan</span>
+              <span className="cat-hero__brand-tag">Kitchen · Beauty bags · Ladies bags</span>
             </div>
           </div>
 
           <p className="cat-hero__eyebrow">Shop Collection</p>
           <h1 className="cat-hero__title">{title}</h1>
           <p className="cat-hero__sub">
-            Built for real roads — fitment-ready parts from {storeName}
+            Everyday pieces for Pakistani homes from {storeName}
           </p>
         </div>
 

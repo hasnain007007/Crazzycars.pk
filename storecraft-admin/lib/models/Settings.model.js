@@ -25,10 +25,10 @@ const settingsSchema = new mongoose.Schema(
       showLoginPrompt: { type: Boolean, default: true },
     },
     general: {
-      storeName: { type: String, default: 'Crazzycars.pk' },
+      storeName: { type: String, default: 'Homefy.pk' },
       showStoreName: { type: Boolean, default: true },
-      phone: { type: String, default: "+92 324 422 0007" },
-      email: { type: String, default: "info@crazzycars.pk" },
+      phone: { type: String, default: "" },
+      email: { type: String, default: "info@homefy.pk" },
       website: { type: String, default: "" },
       logo: imageSchema,
       logoUrl: { type: String, default: "" },
@@ -44,16 +44,16 @@ const settingsSchema = new mongoose.Schema(
       address: { type: String, default: "" },
     },
     appearance: {
-      primaryColor: { type: String, default: "#C41E1E" },
-      secondaryColor: { type: String, default: "#111111" },
-      accentColor: { type: String, default: "#C41E1E" },
+      primaryColor: { type: String, default: "#C6633B" },
+      secondaryColor: { type: String, default: "#D98BA0" },
+      accentColor: { type: String, default: "#D98BA0" },
       fontFamily: { type: String, default: "var(--font-inter), system-ui, sans-serif" },
       buttonStyle: { type: String, default: "rounded" },
       borderRadius: { type: String, default: "8px" },
     },
     checkoutMessages: {
       orderSuccessMessage: { type: String, default: "Order Placed! We will deliver to your doorstep." },
-      orderSuccessSubtext: { type: String, default: "Thank you for shopping with Crazzycars.pk" },
+      orderSuccessSubtext: { type: String, default: "Thank you for shopping with Homefy.pk" },
       codInstructions: { type: String, default: "Pay cash when your order arrives." },
       shippingNote: { type: String, default: "Free delivery on orders over Rs. 2,999" },
       cartEmptyMessage: { type: String, default: "Your cart is empty" },
@@ -239,30 +239,30 @@ const settingsSchema = new mongoose.Schema(
     aboutPage: {
       hero: {
         badge: { type: String, default: "Our Story" },
-        title: { type: String, default: "Fitment-first car accessories from Gujranwala" },
+        title: { type: String, default: "Kitchen, beauty bags and ladies bags for Pakistani homes" },
         subtitle: {
           type: String,
           default:
-            `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
+            `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"}, we bring kitchen accessories, girls' beauty bags and ladies handbags to homes across Pakistan — with Cash on Delivery nationwide.`,
         },
       },
       story: {
         badge: { type: String, default: "Who We Are" },
-        title: { type: String, default: "Built for Pakistani Car Enthusiasts" },
+        title: { type: String, default: "Built for Pakistani Homes" },
         paragraph1: {
           type: String,
           default:
-            `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
+            `${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} is a home and lifestyle store for kitchen accessories, beauty bags and ladies bags — quality pieces at fair prices.`,
         },
         paragraph2: {
           type: String,
           default:
-            "From bumper splitters and spoilers to LED lights and body kits, every product is chosen for real-world use in Pakistani conditions — heat, dust, and daily driving.",
+            "From cookware and storage to makeup pouches, totes and clutches, every product is chosen for everyday use in Pakistani homes.",
         },
         paragraph3: {
           type: String,
           default:
-            "Today we serve customers from Lahore to Karachi and beyond, with Cash on Delivery, responsive support, and accessories that make every drive more comfortable and stylish.",
+            "Today we serve customers from Lahore to Karachi and beyond, with Cash on Delivery, responsive support, and pieces that make home and everyday style easier.",
         },
       },
       stats: [
@@ -272,16 +272,16 @@ const settingsSchema = new mongoose.Schema(
         },
       ],
       promise: {
-        title: { type: String, default: `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} Promise` },
+        title: { type: String, default: `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'} Promise` },
         paragraph1: {
           type: String,
           default:
-            "We promise honest product descriptions, fair pricing, and accessories we would use on our own vehicles. Every item is checked before it ships.",
+            "We promise honest product descriptions, fair pricing, and pieces we would use in our own homes. Every item is checked before it ships.",
         },
         paragraph2: {
           type: String,
           default:
-            `Your safety, satisfaction and style are at the heart of everything we do. That is not just a promise — that is the ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} way.`,
+            `Your safety, satisfaction and style are at the heart of everything we do. That is not just a promise — that is the ${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'} way.`,
         },
       },
       faq: [
@@ -363,7 +363,7 @@ const settingsSchema = new mongoose.Schema(
       number: { type: String, default: "" },
       message: {
         type: String,
-        default: "Hi! I have a question about car accessories from Crazzycars.pk.",
+        default: "Hi! I have a question about Homefy.pk.",
       },
       showInNav: { type: Boolean, default: false },
       showInFooter: { type: Boolean, default: true },
@@ -380,9 +380,9 @@ const settingsSchema = new mongoose.Schema(
         enabled: { type: Boolean, default: true },
         template: {
           type: String,
-          default: `Assalam o Alaikum {customerName}! 🚗
+          default: `Assalam o Alaikum {customerName}!
 
-*Crazzycars.pk* — please confirm your order:
+*Homefy.pk* — please confirm your order:
 
 ❓ *Is your order confirmed?*
 Tap one option below:
@@ -421,7 +421,7 @@ Or reply with:
 1️⃣ CONFIRM
 2️⃣ CANCEL
 
-Shukriya — Crazzycars.pk 🚗✨`,
+Shukriya — Homefy.pk ✨`,
         },
       },
       adminNewOrder: {
@@ -464,7 +464,7 @@ Or reply here:
 
 Assalam o Alaikum {customerName}!
 
-Your Crazzycars.pk order #{orderNumber} has been shipped via *{courier}*!
+Your Homefy.pk order #{orderNumber} has been shipped via *{courier}*!
 
 🔍 *Tracking Number:* {trackingNumber}
 🔗 Track here: {trackingUrl}
@@ -474,16 +474,16 @@ Your Crazzycars.pk order #{orderNumber} has been shipped via *{courier}*!
 
 Questions? Call: 📞 {storePhone}
 
-Thank you! 🚗✨`,
+Thank you! ✨`,
         },
       },
       abandonedCart: {
         enabled: { type: Boolean, default: true },
         template: {
           type: String,
-          default: `Assalam o Alaikum {customerName}! 🚗
+          default: `Assalam o Alaikum {customerName}!
 
-You left items in your *Crazzycars.pk* cart:
+You left items in your *Homefy.pk* cart:
 
 🛍️ *Items:*
 {itemsList}
@@ -495,7 +495,7 @@ Complete your order here:
 
 Need help? Call {storePhone}
 
-Shukriya — Crazzycars.pk ✨`,
+Shukriya — Homefy.pk ✨`,
         },
       },
     },
@@ -524,7 +524,7 @@ Shukriya — Crazzycars.pk ✨`,
     },
     productImageWatermark: {
       enabled: { type: Boolean, default: true },
-      text: { type: String, default: "Crazzycars.pk" },
+      text: { type: String, default: "Homefy.pk" },
       position: { type: String, default: "bottom-right" },
       opacity: { type: Number, default: 0.25 },
       fontSize: { type: Number, default: 13 },
@@ -537,7 +537,7 @@ Shukriya — Crazzycars.pk ✨`,
       showCodBadge: { type: Boolean, default: true },
       saleBadgeText: { type: String, default: "Sale" },
       newBadgeText: { type: String, default: "New" },
-      saleBadgeColor: { type: String, default: "#C41E1E" },
+      saleBadgeColor: { type: String, default: "#C6633B" },
       newBadgeColor: { type: String, default: "#111111" },
       codBadgeText: { type: String, default: "Cash on delivery" },
       codBadgeColor: { type: String, default: "#6B7280" },
@@ -546,7 +546,7 @@ Shukriya — Crazzycars.pk ✨`,
         title: { type: String, default: "Fast Nationwide Delivery" },
         description: {
           type: String,
-          default: "We deliver car accessories across Pakistan with tracking where available.",
+          default: "We deliver kitchen accessories, beauty bags and ladies bags across Pakistan with tracking where available.",
         },
       },
       trustBadges: [
@@ -569,21 +569,21 @@ Shukriya — Crazzycars.pk ✨`,
         description: {
           type: String,
           default:
-            "We source premium car accessories from trusted manufacturers. Every product is quality-checked before it ships.",
+            "We source kitchen, beauty and bag products from trusted suppliers. Every item is quality-checked before it ships.",
         },
       },
     },
     brandStory: {
       enabled: { type: Boolean, default: true },
       badge: { type: String, default: "Our Story" },
-      heading: { type: String, default: "Built for Pakistani Car Enthusiasts" },
-      subheading: { type: String, default: "Fitment-first car accessories from Gujranwala" },
+      heading: { type: String, default: "Built for Pakistani Homes" },
+      subheading: { type: String, default: "Kitchen, beauty bags and ladies bags" },
       description: {
         type: String,
         default:
-          "Crazzycars.pk was founded in Gujranwala to bring splitters, LED lighting, body kits, and carbon fiber accessories to drivers across Pakistan — with COD nationwide.",
+          "Homefy.pk brings cookware, makeup pouches and ladies handbags to homes across Pakistan — with COD nationwide.",
       },
-      buttonText: { type: String, default: "Shop Car Accessories" },
+      buttonText: { type: String, default: "Shop Homefy" },
       buttonLink: { type: String, default: "/about" },
       image1: { type: String, default: "" },
       image2: { type: String, default: "" },
@@ -632,10 +632,10 @@ Shukriya — Crazzycars.pk ✨`,
         },
       ],
       announcementBgColor: { type: String, default: "#111111" },
-      heroHeadline: { type: String, default: "UPGRADE YOUR RIDE." },
+      heroHeadline: { type: String, default: "Kitchen, beauty bags & ladies bags" },
       heroSubtext: {
         type: String,
-        default: "Premium car accessories delivered across Pakistan. Quality products for every make and model.",
+        default: "Cookware, makeup pouches and handbags for Pakistani homes — Cash on Delivery nationwide.",
       },
       heroCtaText: { type: String, default: "Shop Now" },
       heroCtaUrl: { type: String, default: "/shop" },
@@ -658,9 +658,9 @@ Shukriya — Crazzycars.pk ✨`,
       flashSaleTitle: { type: String, default: "Up to 50% Off" },
       flashSaleEndTime: { type: Date, default: null },
       sections: {
-        showShopByCar: { type: Boolean, default: true },
-        showFlashSale: { type: Boolean, default: true },
-        showBrands: { type: Boolean, default: true },
+        showShopByCar: { type: Boolean, default: false },
+        showFlashSale: { type: Boolean, default: false },
+        showBrands: { type: Boolean, default: false },
         showWhyChooseUs: { type: Boolean, default: true },
         showCategories: { type: Boolean, default: true },
         showBestSellers: { type: Boolean, default: true },
@@ -708,7 +708,7 @@ Shukriya — Crazzycars.pk ✨`,
         flashSale: { type: String, default: "Flash Sale" },
         brands: { type: String, default: "Trusted Brands" },
         whyChooseUs: { type: String, default: "Why Choose Us" },
-        shopByCar: { type: String, default: "Find Parts For Your Car" },
+        shopByCar: { type: String, default: "" },
       },
       categories: {
         title: { type: String, default: "Shop by Category" },
@@ -716,7 +716,7 @@ Shukriya — Crazzycars.pk ✨`,
       },
     },
     footer: {
-      tagline: { type: String, default: "Fitment-first car accessories from Gujranwala" },
+      tagline: { type: String, default: "Kitchen, beauty bags and ladies bags for Pakistani homes" },
       social: {
         facebook: { type: String, default: "" },
         instagram: { type: String, default: "" },
@@ -742,9 +742,9 @@ Shukriya — Crazzycars.pk ✨`,
         email: { type: String, default: "" },
         phone: { type: String, default: "" },
       },
-      copyrightText: { type: String, default: "© 2025 Crazzycars.pk. All Rights Reserved." },
+      copyrightText: { type: String, default: "© 2025 Homefy.pk. All Rights Reserved." },
       showLogoInFooter: { type: Boolean, default: true },
-      companyName: { type: String, default: "Crazzycars.pk" },
+      companyName: { type: String, default: "Homefy.pk" },
       companyNumber: { type: String, default: "" },
       vatNumber: { type: String, default: "" },
       registeredAddress: { type: String, default: "Gujranwala, Punjab, Pakistan" },
@@ -783,7 +783,7 @@ Shukriya — Crazzycars.pk ✨`,
       ],
       newsletter: {
         enabled: { type: Boolean, default: true },
-        heading: { type: String, default: "Get Exclusive Car Accessories Deals" },
+        heading: { type: String, default: "Join the Homefy list" },
         subtext: { type: String, default: "Get the Latest Deals" },
         buttonText: { type: String, default: "Subscribe" },
       },

@@ -3,9 +3,9 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getFaqItems } from "@/lib/storePolicyCopy";
 
 export const metadata = buildPageMetadata({
-  title: "FAQ — Shipping, COD & Fitment | Crazzycars.pk",
+  title: "FAQ — Shipping, COD & Orders | Homefy.pk",
   description:
-    "Answers about Cash on Delivery, delivery charges, order tracking, product fitment, returns, and payments for car accessories in Pakistan.",
+    "Answers about Cash on Delivery, delivery charges, order tracking, returns, and payments for kitchen accessories, beauty bags and ladies bags in Pakistan.",
   path: "/faq",
   absoluteTitle: true,
 });
@@ -26,7 +26,7 @@ export default function FaqPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <h1 className="text-2xl font-bold md:text-3xl">Frequently Asked Questions</h1>
       <p className="mt-3 text-gray-600">
-        Quick answers about shopping car accessories on Crazzycars.pk — COD, payments, fitment, and
+        Quick answers about shopping kitchen accessories, beauty bags and ladies bags on Homefy.pk — COD, payments, and
         delivery across Pakistan.
       </p>
       <div className="mt-8 space-y-6">

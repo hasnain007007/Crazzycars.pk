@@ -59,7 +59,7 @@ export function ShopListingLayout({
           </p>
           <Link
             href="/"
-            className="mt-6 inline-block rounded bg-[#C41E1E] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#a01818]"
+            className="mt-6 inline-block rounded bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#a01818]"
           >
             Back to home
           </Link>

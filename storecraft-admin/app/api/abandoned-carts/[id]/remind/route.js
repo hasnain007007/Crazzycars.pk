@@ -38,7 +38,7 @@ export async function POST(request, context) {
       (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY })
         .select("general")
         .lean()) || {};
-    const storeName = settings?.general?.storeName || "Crazzycars.pk";
+    const storeName = settings?.general?.storeName || "Homefy.pk";
     const storePhone = settings?.general?.phone || "";
 
     const { subject, html } = buildAbandonedCartEmailHtml(doc, { storeName, storePhone });

@@ -360,7 +360,7 @@ export default function CheckoutSuccessView() {
             letterSpacing: "0.04em",
           }}
         >
-          {messages.orderSuccessMessage || "Order Confirmed — Crazzycars.pk"}
+          {messages.orderSuccessMessage || "Order Confirmed — Homefy.pk"}
         </h1>
 
         <p
@@ -372,7 +372,7 @@ export default function CheckoutSuccessView() {
           }}
         >
           {messages.orderSuccessSubtext ||
-            "Thank you for shopping with Crazzycars.pk. We will deliver to your doorstep."}
+            "Thank you for shopping with Homefy.pk. We will deliver to your doorstep."}
         </p>
 
         <div

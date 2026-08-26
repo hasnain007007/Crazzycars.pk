@@ -2,7 +2,7 @@ import ContactPageView from "@/components/store/ContactPageView";
 import { getServerStoreSettings } from "@/lib/serverSettings";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
-const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
 
 export async function generateMetadata() {
   const settings = await getServerStoreSettings();

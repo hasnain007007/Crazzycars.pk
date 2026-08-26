@@ -140,7 +140,7 @@ export function DashboardView() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">Dashboard</h1>
-          <p className="text-xs text-[var(--text-muted)]">CrazzyCars ops overview · {rangeLabel}</p>
+          <p className="text-xs text-[var(--text-muted)]">Homefy ops overview · {rangeLabel}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <LiveUsersCard variant="badge" />
@@ -191,7 +191,7 @@ export function DashboardView() {
         </div>
 
         <p className="mt-8 text-center text-[11px] font-medium tracking-wide text-slate-400">
-          CrazzyCars Admin · Live · Fast · Reliable
+          Homefy Admin · Live · Fast · Reliable
         </p>
       </div>
     </div>

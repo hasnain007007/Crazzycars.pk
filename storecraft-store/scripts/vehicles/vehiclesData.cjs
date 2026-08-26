@@ -1,5 +1,5 @@
 /**
- * CRAZZYCARS.PK — Vehicles (Shop by Car)
+ * HOMEFY.PK — Vehicles (Shop by Car)
  * --------------------------------------
  * Built from LIVE Shopify data — all 17 car collections.
  * Clean names + SEO meta written for Pakistan car-accessory searches
@@ -26,7 +26,7 @@ const vehicles = [
     yearTo: 2014,
     slug: "toyota-corolla-e140-2009-2014",
     image: `${CDN}/e140.webp?v=1773855360`,
-    metaTitle: "Toyota Corolla 2009–2014 Accessories & Body Kits in Pakistan | CrazzyCars.pk",
+    metaTitle: "Toyota Corolla 2009–2014 Accessories & Body Kits in Pakistan | Homefy.pk",
     metaDescription:
       "Shop Toyota Corolla E140 2009-2014 accessories in Pakistan — body kits, splitters, LED lights, carbon fiber trims & more. Cash on Delivery nationwide.",
     shopifyHandle: "toyota-corolla-2009-2014-accessories",
@@ -42,7 +42,7 @@ const vehicles = [
     yearTo: null,
     slug: "toyota-corolla-e170-2014-2026",
     image: `${CDN}/1.8-white-scaled.jpg?v=1773852593`,
-    metaTitle: "Toyota Corolla 2014–2026 Accessories & Body Kits in Pakistan | CrazzyCars.pk",
+    metaTitle: "Toyota Corolla 2014–2026 Accessories & Body Kits in Pakistan | Homefy.pk",
     metaDescription:
       "Premium Toyota Corolla E170/E210 2014-2026 accessories in Pakistan — Grande body kits, side mirror covers, window louvers, LED upgrades. COD available.",
     shopifyHandle: "toyota-corolla-e170-2014-2020-accessories",
@@ -58,10 +58,10 @@ const vehicles = [
     yearTo: null,
     slug: "toyota-yaris-2020-present",
     image: `${CDN}/Totota_corolla_yaris.jpg?v=1780170187`,
-    metaTitle: "Toyota Yaris Accessories in Pakistan | Body Kits & LED | CrazzyCars.pk",
+    metaTitle: "Toyota Yaris Accessories in Pakistan | Body Kits & LED | Homefy.pk",
     metaDescription:
       "Shop Toyota Yaris accessories in Pakistan — splitters, spoilers, chrome trims, LED lights & interior upgrades. Cash on Delivery all over Pakistan.",
-    shopifyHandle: "toyota-yaris-accessories-shop-online-crazzycars-pk",
+    shopifyHandle: "toyota-yaris-accessories-shop-online-homefy-pk",
     shopifyId: "gid://shopify/Collection/310666133563",
     sortOrder: 3,
   },
@@ -74,10 +74,10 @@ const vehicles = [
     yearTo: null,
     slug: "toyota-aqua-2012-present",
     image: `${CDN}/Toyota-Aqua_2012.jpg?v=1780170774`,
-    metaTitle: "Toyota Aqua Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Toyota Aqua Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Upgrade your Toyota Aqua with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber trims. COD nationwide.",
-    shopifyHandle: "toyota-aqua-accessories-shop-online-crazzycars-pk",
+    shopifyHandle: "toyota-aqua-accessories-shop-online-homefy-pk",
     shopifyId: "gid://shopify/Collection/310666199099",
     sortOrder: 4,
   },
@@ -90,10 +90,10 @@ const vehicles = [
     yearTo: null,
     slug: "toyota-vitz-2012-present",
     image: `${CDN}/Toyota_Vitz_420x_crop_center_faea2e4c-1412-49f7-beb0-e02b89195526.webp?v=1780170638`,
-    metaTitle: "Toyota Vitz Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Toyota Vitz Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Shop Toyota Vitz accessories online in Pakistan — exterior styling, LED lights & interior upgrades with Cash on Delivery.",
-    shopifyHandle: "toyota-vitz-accessories-shop-online-crazzycars-pk",
+    shopifyHandle: "toyota-vitz-accessories-shop-online-homefy-pk",
     shopifyId: "gid://shopify/Collection/310666231867",
     sortOrder: 5,
   },
@@ -108,7 +108,7 @@ const vehicles = [
     yearTo: 2012,
     slug: "honda-civic-reborn-2006-2012",
     image: `${CDN}/reborn.jpg?v=1771878076`,
-    metaTitle: "Honda Civic Reborn 2006–2012 Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda Civic Reborn 2006–2012 Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Shop Honda Civic Reborn 2006-2012 accessories in Pakistan — body kits, spoilers, LED lights, interior trims & more. Cash on Delivery nationwide.",
     shopifyHandle: "honda-civic-reborn-2006-2012-accessories",
@@ -124,7 +124,7 @@ const vehicles = [
     yearTo: 2016,
     slug: "honda-civic-rebirth-2012-2016",
     image: `${CDN}/rebirth.jpg?v=1771878231`,
-    metaTitle: "Honda Civic Rebirth 2012–2016 Accessories & Body Kits | CrazzyCars.pk",
+    metaTitle: "Honda Civic Rebirth 2012–2016 Accessories & Body Kits | Homefy.pk",
     metaDescription:
       "Premium Honda Civic Rebirth 2012-2016 accessories in Pakistan — body kits, splitters, side skirts, LED upgrades. COD all over Pakistan.",
     shopifyHandle: "honda-civic-rebirth-2012-2016-accessories-body-kits",
@@ -140,7 +140,7 @@ const vehicles = [
     yearTo: 2021,
     slug: "honda-civic-x-2016-2021",
     image: `${CDN}/2020-honda-civic-sport-manual-angular-front-exterior-view_100751892_l_9ea4bb02-a752-48b4-8be7-1e7dbbce139a.jpg?v=1773854472`,
-    metaTitle: "Honda Civic X 2016–2021 Accessories & Body Kits in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda Civic X 2016–2021 Accessories & Body Kits in Pakistan | Homefy.pk",
     metaDescription:
       "Shop Honda Civic X 2016-2021 accessories in Pakistan — body kits, splitters, spoilers, quarter window louvers & LED lights. Cash on Delivery.",
     shopifyHandle: "honda-civic-x-2016-2021-accessories-body-kits",
@@ -156,7 +156,7 @@ const vehicles = [
     yearTo: null,
     slug: "honda-civic-11th-gen-2022-present",
     image: `${CDN}/civic-11th-cover.jpg?v=1773685986`,
-    metaTitle: "Honda Civic 11th Gen 2022+ Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda Civic 11th Gen 2022+ Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Upgrade your Honda Civic 11th Gen 2022-Present — body kits, carbon fiber trims, LED upgrades & interior accessories. COD nationwide in Pakistan.",
     shopifyHandle: "honda-civic-11th-gen-2022-present-accessories",
@@ -172,7 +172,7 @@ const vehicles = [
     yearTo: 2020,
     slug: "honda-city-classic-2009-2020",
     image: `${CDN}/City-old_ccc718e9-54ae-4f1b-b239-7bbb03fd9bbb.jpg?v=1773853476`,
-    metaTitle: "Honda City 2009–2020 Accessories & Body Kits in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda City 2009–2020 Accessories & Body Kits in Pakistan | Homefy.pk",
     metaDescription:
       "Shop Honda City Classic accessories in Pakistan — body kits, front splitters, side skirts, LED upgrades & chrome trims. Cash on Delivery.",
     shopifyHandle: "honda-city-2016-accessories-body-kits",
@@ -188,9 +188,9 @@ const vehicles = [
     yearTo: null,
     slug: "honda-city-2021-present",
     image: `${CDN}/honda_city.webp?v=1773853788`,
-    metaTitle: "Honda City 2021–Present Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda City 2021–Present Accessories in Pakistan | Homefy.pk",
     metaDescription:
-      "Premium Honda City 2021-Present accessories in Pakistan — interior, exterior & LED upgrades from CrazzyCars.pk. COD all over Pakistan.",
+      "Premium Honda City 2021-Present accessories in Pakistan — interior, exterior & LED upgrades from Homefy.pk. COD all over Pakistan.",
     shopifyHandle: "honda-city",
     shopifyId: "gid://shopify/Collection/305270816827",
     sortOrder: 15,
@@ -205,7 +205,7 @@ const vehicles = [
     yearTo: 2018,
     slug: "honda-vezel-2013-2018",
     image: "",
-    metaTitle: "Honda Vezel 2013–2018 Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Honda Vezel 2013–2018 Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Shop Honda Vezel 2013-2018 accessories in Pakistan — body kits & styling upgrades. Cash on Delivery nationwide.",
     shopifyHandle: "",
@@ -223,7 +223,7 @@ const vehicles = [
     yearTo: 2024,
     slug: "hyundai-elantra-2020-2024",
     image: `${CDN}/Hyundai_Elantra_Limited.jpg?v=1775826465`,
-    metaTitle: "Hyundai Elantra 2020–2024 Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Hyundai Elantra 2020–2024 Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Shop Hyundai Elantra 2020-2024 accessories in Pakistan — carbon fiber interior trims & styling upgrades. Cash on Delivery nationwide.",
     shopifyHandle: "hyundai-elantra-2020-2024-accessories",
@@ -239,7 +239,7 @@ const vehicles = [
     yearTo: null,
     slug: "hyundai-elantra-hybrid-2025-present",
     image: `${CDN}/Hyundai_Elantra_2026_50fcc4dd-9fe7-4a84-bb79-69acf6951825.jpg?v=1775849463`,
-    metaTitle: "Hyundai Elantra Hybrid 2025+ Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Hyundai Elantra Hybrid 2025+ Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Premium Hyundai Elantra Hybrid 2025-Present accessories in Pakistan — interior trims, exterior styling & more. COD available.",
     shopifyHandle: "hyundai-elantra-hybrid-2025-present-accessories",
@@ -255,7 +255,7 @@ const vehicles = [
     yearTo: 2024,
     slug: "hyundai-sonata-2020-2024",
     image: `${CDN}/Hyuandi_Conata.webp?v=1775849207`,
-    metaTitle: "Hyundai Sonata 2020–2024 Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Hyundai Sonata 2020–2024 Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Shop Hyundai Sonata DN8 2020-2024 accessories in Pakistan — carbon fiber trims, styling & interior upgrades. Cash on Delivery.",
     shopifyHandle: "hyundai-sonata-2020-2024-accessories",
@@ -273,10 +273,10 @@ const vehicles = [
     yearTo: null,
     slug: "haval-h6-2021-present",
     image: `${CDN}/haval-H6.png?v=1773854230`,
-    metaTitle: "Haval H6 Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Haval H6 Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Upgrade your Haval H6 with premium accessories in Pakistan — exterior styling, interior trims & LED upgrades. COD nationwide.",
-    shopifyHandle: "haval-h6-accessories-crazzycars-pk",
+    shopifyHandle: "haval-h6-accessories-homefy-pk",
     shopifyId: "gid://shopify/Collection/307087245371",
     sortOrder: 30,
   },
@@ -291,7 +291,7 @@ const vehicles = [
     yearTo: null,
     slug: "suzuki-alto-2020-present",
     image: `${CDN}/Alto-Solid-White-720x466.webp?v=1773855226`,
-    metaTitle: "Suzuki Alto 2020+ Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Suzuki Alto 2020+ Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Shop Suzuki Alto 2020-Present accessories in Pakistan — Audi-style indicators, LED lights, interior & exterior upgrades. Cash on Delivery.",
     shopifyHandle: "suzuki-alto-2020-accessories",
@@ -307,7 +307,7 @@ const vehicles = [
     yearTo: null,
     slug: "suzuki-swift-2025-present",
     image: `${CDN}/Suzuki-Swift-new-shape.jpg?v=1775827594`,
-    metaTitle: "Suzuki Swift 2025+ Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Suzuki Swift 2025+ Accessories in Pakistan | Homefy.pk",
     metaDescription:
       "Premium Suzuki Swift 2025-Present (4th Gen) accessories in Pakistan — styling, LED & interior upgrades. COD all over Pakistan.",
     shopifyHandle: "suzuki-swift-2025-present-accessories",
@@ -326,39 +326,39 @@ const makes = [
     name: "Toyota",
     slug: "toyota",
     image: `${CDN}/corolla_d9ee3dcd-7b82-4f1b-88e3-9030b83fa12d.webp?v=1780039694`,
-    metaTitle: "Toyota Car Accessories in Pakistan — Shop by Model | CrazzyCars.pk",
-    shopifyHandle: "toyota-accessories-shop-by-model-crazzycars-pk",
+    metaTitle: "Toyota Car Accessories in Pakistan — Shop by Model | Homefy.pk",
+    shopifyHandle: "toyota-accessories-shop-by-model-homefy-pk",
     sortOrder: 1,
   },
   {
     name: "Honda",
     slug: "honda",
     image: `${CDN}/civic_b0c60c3e-60ac-426b-bb2c-ea3e5ee523d9.png?v=1780039702`,
-    metaTitle: "Honda Car Accessories in Pakistan — Shop by Model | CrazzyCars.pk",
-    shopifyHandle: "honda-accessories-shop-by-model-crazzycars-pk",
+    metaTitle: "Honda Car Accessories in Pakistan — Shop by Model | Homefy.pk",
+    shopifyHandle: "honda-accessories-shop-by-model-homefy-pk",
     sortOrder: 2,
   },
   {
     name: "Hyundai",
     slug: "hyundai",
     image: `${CDN}/Hyundai_Elantra_Limited_0fdaec77-23e6-422f-acb7-7eafc5b57786.jpg?v=1780039710`,
-    metaTitle: "Hyundai Car Accessories in Pakistan — Shop by Model | CrazzyCars.pk",
-    shopifyHandle: "hyundai-accessories-shop-by-model-crazzycars-pk",
+    metaTitle: "Hyundai Car Accessories in Pakistan — Shop by Model | Homefy.pk",
+    shopifyHandle: "hyundai-accessories-shop-by-model-homefy-pk",
     sortOrder: 3,
   },
   {
     name: "Suzuki",
     slug: "suzuki",
     image: `${CDN}/Alto-Solid-White-720x466_03c6dcd5-017e-4510-bd13-1f42819717e0.webp?v=1780039717`,
-    metaTitle: "Suzuki Car Accessories in Pakistan — Shop by Model | CrazzyCars.pk",
-    shopifyHandle: "suzuki-accessories-shop-by-model-crazzycars-pk",
+    metaTitle: "Suzuki Car Accessories in Pakistan — Shop by Model | Homefy.pk",
+    shopifyHandle: "suzuki-accessories-shop-by-model-homefy-pk",
     sortOrder: 4,
   },
   {
     name: "Haval",
     slug: "haval",
     image: `${CDN}/haval-H6.png?v=1773854230`,
-    metaTitle: "Haval Car Accessories in Pakistan | CrazzyCars.pk",
+    metaTitle: "Haval Car Accessories in Pakistan | Homefy.pk",
     shopifyHandle: "",
     sortOrder: 5,
   },

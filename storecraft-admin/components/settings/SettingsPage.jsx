@@ -70,8 +70,8 @@ const GENERAL_REGIONAL_DEFAULTS = {
 };
 
 const GENERAL_CONTENT_DEFAULTS = {
-  storeName: "Crazzycars.pk",
-  email: "info@crazzycars.pk",
+  storeName: "Homefy.pk",
+  email: "info@homefy.pk",
   phone: "+92 324 422 0007",
 };
 

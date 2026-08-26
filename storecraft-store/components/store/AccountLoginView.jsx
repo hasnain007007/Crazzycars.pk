@@ -39,7 +39,7 @@ export function AccountLoginView() {
   return (
     <div className="mx-auto max-w-md px-4 py-16" style={{ color: "#E8E8E8" }}>
       <h1 className="text-2xl font-bold text-[#E8E8E8]">Sign in</h1>
-      <p className="mt-1 text-sm text-[#707070]">Access your ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} orders and saved profile.</p>
+      <p className="mt-1 text-sm text-[#707070]">Access your ${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'} orders and saved profile.</p>
       <form onSubmit={submit} className="mt-8 space-y-4 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#111111] p-5">
         <input
           type="email"

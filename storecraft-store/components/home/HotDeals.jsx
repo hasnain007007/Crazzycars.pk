@@ -73,14 +73,14 @@ export default function HotDeals({ settings, initialProducts = null }) {
       className="homepage-section py-6 md:py-20"
       style={{
         background: "#FFF8F0",
-        borderLeft: "4px solid #C41E1E",
+        borderLeft: "4px solid #C6633B",
       }}
     >
       <div className="store-container">
         <h2 className="font-heading text-[20px] font-bold md:text-[32px]" style={{ color: "#111111" }}>
           {title}
         </h2>
-        <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8 }} />
+        <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 8 }} />
         <p className="mt-1.5 text-xs md:mt-2 md:text-sm" style={{ color: "#6B7280" }}>
           {subtitle}
         </p>
@@ -106,9 +106,9 @@ export default function HotDeals({ settings, initialProducts = null }) {
                 className="shrink-0 border px-3 py-1.5 text-xs font-semibold transition duration-200 md:px-4 md:py-2 md:text-sm"
                 style={{
                   borderRadius: 99,
-                  background: isActive ? "#C41E1E" : "#FFFFFF",
+                  background: isActive ? "#C6633B" : "#FFFFFF",
                   color: isActive ? "#FFFFFF" : "#374151",
-                  borderColor: isActive ? "#C41E1E" : "#E5E7EB",
+                  borderColor: isActive ? "#C6633B" : "#E5E7EB",
                 }}
               >
                 {t.label}

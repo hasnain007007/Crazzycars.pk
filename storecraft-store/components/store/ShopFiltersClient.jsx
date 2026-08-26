@@ -92,7 +92,7 @@ export function ShopFiltersClient({ pathname = "/shop", urlState = {}, highest =
             placeholder="To"
             className="rounded border border-[rgba(0,0,0,0.12)] bg-[#FFFFFF] px-2 py-1.5 text-sm text-[#111111] placeholder:text-[#777777]"
           />
-          <button type="submit" className="col-span-2 text-left text-xs font-semibold text-[#C41E1E]">
+          <button type="submit" className="col-span-2 text-left text-xs font-semibold text-[var(--color-primary)]">
             Apply price
           </button>
         </form>

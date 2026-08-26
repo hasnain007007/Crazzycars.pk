@@ -10,7 +10,7 @@ import { loadShopByCarIndex } from "@/lib/vehiclePageData";
 export const revalidate = 300;
 
 export const metadata = buildPageMetadata({
-  title: "Shop by Car | Crazzycars.pk",
+  title: "Shop by Car | Homefy.pk",
   description:
     "Browse car accessories by make and model — Honda Civic, Toyota Corolla, Suzuki Alto, and more. Fitment-first parts with Cash on Delivery across Pakistan.",
   path: "/cars",
@@ -89,7 +89,7 @@ export default async function CarsIndexPage() {
         {groups.length === 0 ? (
           <p className="text-sm text-[#6B7280]">
             Vehicle pages will appear here once products are assigned in admin.{" "}
-            <Link href="/shop" className="font-semibold text-[#C41E1E] hover:underline">
+            <Link href="/shop" className="font-semibold text-[var(--color-primary)] hover:underline">
               Browse the shop →
             </Link>
           </p>
@@ -102,7 +102,7 @@ export default async function CarsIndexPage() {
                   <Link
                     key={v.slug}
                     href={`/cars/${v.slug}`}
-                    className="group overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md"
+                    className="group overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[var(--color-primary)]/45 hover:shadow-md"
                   >
                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3F4F6] md:aspect-square">
                       {v.image ? (
@@ -128,7 +128,7 @@ export default async function CarsIndexPage() {
                       )}
                     </div>
                     <div className="px-2 py-2 md:px-2.5">
-                      <p className="truncate text-[10px] font-bold uppercase tracking-wider text-[#C41E1E]">
+                      <p className="truncate text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary)]">
                         {v.make}
                       </p>
                       <p className="font-heading truncate text-[13px] font-bold leading-tight text-[#111111]">

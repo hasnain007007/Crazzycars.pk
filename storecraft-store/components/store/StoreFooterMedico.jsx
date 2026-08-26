@@ -7,10 +7,12 @@ import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
 
 const DEFAULT_SHOP_LINKS = [
   { label: "Home", href: "/" },
-  { label: "Shop All", href: "/shop" },
-  { label: "Shop by Car", href: "/cars" },
-  { label: "Categories", href: "/categories" },
-  { label: "Blog", href: "/blogs" },
+  { label: "Kitchen Accessories", href: "/categories/kitchen-accessories" },
+  { label: "Beauty Bags", href: "/categories/beauty-bags" },
+  { label: "Ladies Bags", href: "/categories/ladies-bags" },
+  { label: "New Arrivals", href: "/shop?sort=newest" },
+  { label: "Sale", href: "/sale" },
+  { label: "Contact", href: "/contact" },
 ]
 const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "My Account", href: "/account" },
@@ -291,29 +293,33 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   const footer = settings?.footer || {}
   const footerEmail = normalizeStoreEmail(
     footer.contactEmail || footer.email || footer.contact?.email || settings?.general?.email || settings?.email
-  )
-  const footerPhone = footer.phone || footer.contact?.phone || settings?.phone
+  ) || "support@homefy.pk"
+  const footerPhone = footer.phone || footer.contact?.phone || settings?.phone || "[FILL IN]"
+  const footerAddress = footer.address || footer.contact?.address || "[FILL IN — city, Pakistan]"
   const socialLinks = Array.isArray(footer.socialLinks) && footer.socialLinks.length > 0
     ? footer.socialLinks.filter((s) => s?.url)
-    : Object.entries(footer.social || {})
-        .filter(([, url]) => url)
-        .map(([platform, url]) => ({
-          platform,
-          url,
-        }))
+    : Object.entries(footer.social || {}).filter(([, url]) => url).length
+      ? Object.entries(footer.social || {})
+          .filter(([, url]) => url)
+          .map(([platform, url]) => ({ platform, url }))
+      : [
+          { platform: "instagram", url: "#" },
+          { platform: "facebook", url: "#" },
+          { platform: "tiktok", url: "#" },
+        ]
 
   const paymentMethods = (
     footer.showPaymentIcons === false ? [] : footer.paymentMethods || []
   ).filter((m) => m && m.enabled !== false)
 
   const storeName = settings?.general?.storeName
-    || 'Crazzycars.pk'
+    || 'Homefy.pk'
 
   const logoUrl = trimmedLogoUrl(resolveStoreLogoUrl(settings))
   const showLogoInFooter = footer.showLogoInFooter !== false
 
   const tagline = footer.tagline
-    || "Fitment-first car accessories from Gujranwala"
+    || "Kitchen accessories, beauty bags and ladies handbags — Homefy.pk"
 
   const shopLinks = (settings?.footer?.shopLinks || []).filter(
     (l) => l.enabled !== false
@@ -468,6 +474,10 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
                 ✉ {footerEmail}
               </a>
             ) : null}
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 8 }}>
+              {/* TODO: replace with real business info */}
+              {footerAddress}
+            </p>
             {footerPhone ? (
               <a
                 href={`tel:${footerPhone}`}
@@ -495,9 +505,9 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
                 {socialLinks.map((s, i) => (
                   <a
                     key={i}
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={s.url === "#" ? "#" : s.url}
+                    target={s.url === "#" ? undefined : "_blank"}
+                    rel={s.url === "#" ? undefined : "noopener noreferrer"}
                     aria-label={s.platform || "Social media"}
                     title={s.platform || "Social media"}
                     style={{

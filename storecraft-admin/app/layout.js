@@ -59,7 +59,7 @@ async function getBranding() {
 export async function generateMetadata() {
   const general = await getBranding();
   const storeName =
-    general.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+    general.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
 
   return {
     title: { default: `${storeName} Admin`, template: `%s · ${storeName} Admin` },

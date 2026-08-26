@@ -63,7 +63,7 @@ function SEOFields({ form, updateFormData, previewUrl, metaWords }) {
         title={form.seo.metaTitle?.trim() || form.name || "Product title"}
         description={form.seo.metaDescription?.trim() || richTextPlainPreview(form.shortDescription, 180) || "Description preview…"}
         slug={previewUrl?.replace(/^https?:\/\/[^/]+\/?/, "")}
-        baseUrl={previewUrl?.match(/^https?:\/\/[^/]+/)?.[0] || "crazzycars.pk"}
+        baseUrl={previewUrl?.match(/^https?:\/\/[^/]+/)?.[0] || "homefy.pk"}
       />
       {metaWords > GOOGLE_RECOMMENDED_META_WORDS ? (
         <p className="text-xs font-medium text-amber-600">

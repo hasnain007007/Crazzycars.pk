@@ -16,8 +16,8 @@ const NAV = [
 ];
 
 function NavIcon({ name, active }) {
-  const color = active ? "#C41E1E" : "#9CA3AF";
-  const stroke = active ? "#C41E1E" : "#9CA3AF";
+  const color = active ? "#C6633B" : "#9CA3AF";
+  const stroke = active ? "#C6633B" : "#9CA3AF";
 
   if (name === "home") {
     return (
@@ -104,7 +104,7 @@ export default function MobileBottomNav() {
               {item.key === "cart" && badgeCart > 0 ? (
                 <span
                   className="absolute -right-2 -top-1.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full px-0.5 text-[8px] font-bold text-white"
-                  style={{ background: "#C41E1E" }}
+                  style={{ background: "#C6633B" }}
                 >
                   {badgeCart > 9 ? "9+" : badgeCart}
                 </span>
@@ -112,14 +112,14 @@ export default function MobileBottomNav() {
               {item.key === "wishlist" && badgeWish > 0 ? (
                 <span
                   className="absolute -right-2 -top-1.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full px-0.5 text-[8px] font-bold text-white"
-                  style={{ background: "#C41E1E" }}
+                  style={{ background: "#C6633B" }}
                 >
                   {badgeWish > 9 ? "9+" : badgeWish}
                 </span>
               ) : null}
             </span>
             {active ? (
-              <span className="text-[10px] font-medium" style={{ color: "#C41E1E" }}>
+              <span className="text-[10px] font-medium" style={{ color: "#C6633B" }}>
                 {item.label}
               </span>
             ) : null}

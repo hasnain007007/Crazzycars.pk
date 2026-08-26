@@ -200,7 +200,7 @@ export function BlogForm({ postId }) {
               <SeoField type="title" label="Meta Title" value={metaTitle} onChange={setMetaTitle} />
               <SeoField type="description" label="Meta Description" value={metaDescription} onChange={setMetaDescription} />
               <SeoField type="keywords" label="Meta Keywords" keywordValue={metaKeywords} onKeywordChange={setMetaKeywords} />
-              <SeoPreview title={metaTitle || title} description={metaDescription} slug={`blog/${slug}`} baseUrl="crazzycars.pk" />
+              <SeoPreview title={metaTitle || title} description={metaDescription} slug={`blog/${slug}`} baseUrl="homefy.pk" />
             </div>
           </details>
           <button type="submit" disabled={saving} className="w-full rounded-lg bg-[#1d6fb8] py-2 text-sm font-semibold text-white">

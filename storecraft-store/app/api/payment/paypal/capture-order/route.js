@@ -73,7 +73,7 @@ export async function POST(req) {
         const fullOrder = await Order.findById(orderId).lean();
         if (fullOrder) {
           const siteSettings = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean();
-          const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+          const storeName = siteSettings?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
           const logoUrl = siteSettings?.general?.logo?.url || "";
           sendCustomerOrderConfirmation(fullOrder, { storeName, logoUrl }).catch((e) =>
             console.error("PayPal order email failed:", e)

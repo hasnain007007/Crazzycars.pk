@@ -20,7 +20,7 @@ export const revalidate = 120;
 export const dynamicParams = true;
 
 const BASE_URL = getSiteUrl();
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Crazzycars.pk";
+const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Homefy.pk";
 
 export async function generateStaticParams() {
   try {
@@ -81,7 +81,7 @@ const getCachedBrand = cache(async () =>
           settings?.storeName ||
           process.env.NEXT_PUBLIC_STORE_NAME ||
           process.env.NEXT_PUBLIC_APP_NAME ||
-          "CrazzyCars.pk",
+          "Homefy.pk",
         logo:
           settings?.logoUrl ||
           resolveStoreLogoUrl(settings) ||

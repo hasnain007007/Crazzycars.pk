@@ -147,7 +147,7 @@ export default function TabMedia({
         maxImageWidth={maxImageWidth}
         uploadFolder={uploadFolder}
         enableWatermark={enableWatermark}
-        defaultWatermarkText={defaultWatermarkText ?? process.env.NEXT_PUBLIC_APP_NAME ?? `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`}
+        defaultWatermarkText={defaultWatermarkText ?? process.env.NEXT_PUBLIC_APP_NAME ?? `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`}
         showControls={showControls}
         watermarkEnabled={watermarkEnabled}
         onWatermarkEnabledChange={onWatermarkEnabledChange}
@@ -190,7 +190,7 @@ export default function TabMedia({
             type="url"
             value={videoUrl}
             onChange={(e) => handleVideoUrlChange(e.target.value)}
-            placeholder="https://www.youtube.com/watch?v=... or https://crazzycars.pk/video.mp4"
+            placeholder="https://www.youtube.com/watch?v=... or https://homefy.pk/video.mp4"
             className="mt-3 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] outline-none ring-[#1d6fb8]/25 focus:ring-2"
           />
           {videoUrl ? (

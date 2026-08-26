@@ -5,12 +5,15 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
+  --color-primary: #C6633B;   /* kitchen accent */
+  --color-secondary: #D98BA0; /* beauty accent */
+  --color-neutral-bg: #FAF7F2;
+  --background: var(--color-neutral-bg);
   --foreground: #111827;
   --surface: #f9fafb;
   --border: #e5e7eb;
-  --primary: #1d6fb8;
-  --primary-dark: #1e40af;
+  --primary: var(--color-primary);
+  --primary-dark: #A85230;
 
   /*
    * Ops dashboard — instrument panel (D1)
@@ -18,7 +21,7 @@
    * Money amber darkened vs brief #A9781F → #9A6A18 for WCAG AA on white
    * (4.72:1 normal text; proposed #A9781F was 3.89:1).
    */
-  --bg-base: #f7f5f1;
+  --bg-base: var(--color-neutral-bg);
   --bg-panel: #ffffff;
   --text-primary: #1c1e22;
   --text-muted: #6b7078;

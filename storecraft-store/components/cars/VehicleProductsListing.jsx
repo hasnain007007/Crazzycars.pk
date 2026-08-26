@@ -99,7 +99,7 @@ function VehicleProductsListingInner({
           {subtitle ||
             "Products for this car will show once you assign them in admin (compatible vehicles / car catalog). Universal products are not listed here unless you add them to this car."}
         </p>
-        <Link href="/shop" className="mt-4 inline-block text-sm font-bold text-[#C41E1E] hover:underline">
+        <Link href="/shop" className="mt-4 inline-block text-sm font-bold text-[var(--color-primary)] hover:underline">
           Browse the shop →
         </Link>
       </div>

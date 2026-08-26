@@ -139,7 +139,7 @@ function RegisterPageContent() {
               margin: 0,
             }}
           >
-            Join {process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} today
+            Join {process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} today
           </p>
         </div>
 
@@ -212,7 +212,7 @@ function RegisterPageContent() {
               type="email"
               required
               style={inputStyle}
-              placeholder="info@crazzycars.pk"
+              placeholder="info@homefy.pk"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />

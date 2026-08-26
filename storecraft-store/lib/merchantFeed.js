@@ -99,7 +99,7 @@ export function productToMerchantItem(product, opts = {}) {
   const title = String(product.name || "").trim().slice(0, 150);
   const link = `${site}/${product.slug}`;
   const imageLink = primaryImage(product, site);
-  const brand = String(product.vendor || "CrazzyCars.pk").trim() || "CrazzyCars.pk";
+  const brand = String(product.vendor || "Homefy.pk").trim() || "Homefy.pk";
   const gtin = String(product.ean || "").replace(/\D/g, "");
   const mpn = String(product.partNumber || product.articleNo || "").trim();
   const cats = Array.isArray(product.categories)
@@ -131,11 +131,11 @@ export function productToMerchantItem(product, opts = {}) {
 
 export function buildMerchantRssXml(items, { title, link, description } = {}) {
   const site = getSiteUrl();
-  const channelTitle = title || "CrazzyCars.pk Product Feed";
+  const channelTitle = title || "Homefy.pk Product Feed";
   const channelLink = link || site;
   const channelDesc =
     description ||
-    "Premium car accessories and auto parts from CrazzyCars.pk — Pakistan COD nationwide.";
+    "Premium car accessories and auto parts from Homefy.pk — Pakistan COD nationwide.";
 
   const itemXml = (items || [])
     .filter((it) => it.id && it.title && it.link && it.image_link && it.price)

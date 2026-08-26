@@ -93,10 +93,10 @@ export async function POST(req) {
         orderNumber: String(order.orderNumber || ""),
         customerEmail: email || "",
         customerName: name || "",
-        source: "crazzycars_store",
+        source: "homefy_store",
       },
       receipt_email: email,
-      description: `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} Order ${order.orderNumber || oid}`,
+      description: `${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} Order ${order.orderNumber || oid}`,
     });
 
     return NextResponse.json({

@@ -40,7 +40,7 @@ export async function POST(request, context) {
 
     const order = orderDoc.toObject ? orderDoc.toObject() : orderDoc;
     const storeMeta = storeMetaFromSettings(settingsDoc);
-    const storeName = storeMeta.storeName || "Crazzycars.pk";
+    const storeName = storeMeta.storeName || "Homefy.pk";
 
     const to = String(body.email || resolveOrderInvoiceEmail(order) || "").trim().toLowerCase();
     if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {

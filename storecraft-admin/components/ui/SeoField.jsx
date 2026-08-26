@@ -26,7 +26,7 @@ export function SeoField({ type, value, onChange, label, keywordValue = [], onKe
     return (
       <div>
         <label className="mb-2 block text-sm font-medium text-[#374151]">{label}</label>
-        <TagInput value={keywordValue} onChange={onKeywordChange} placeholder="e.g. car accessories, seat covers, floor mats" />
+        <TagInput value={keywordValue} onChange={onKeywordChange} placeholder="e.g. kitchen accessories, beauty bags, ladies bags" />
         <p className={`mt-2 text-xs font-medium ${color}`}>{count} keywords added</p>
         <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-[#1e3a8a]">
           <p className="font-semibold">ℹ️ SEO Tips:</p>
@@ -55,14 +55,14 @@ export function SeoField({ type, value, onChange, label, keywordValue = [], onKe
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="e.g. Premium Leather Seat Covers | Crazzycars.pk"
+          placeholder="e.g. Premium Leather Seat Covers | Homefy.pk"
           className="w-full rounded-lg border border-[#e5e7eb] px-3 py-2 text-sm"
         />
       ) : (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="e.g. Buy premium car accessories online in Pakistan. COD available nationwide."
+          placeholder="e.g. Buy kitchen accessories, beauty bags and ladies bags online in Pakistan. COD available nationwide."
           rows={4}
           className="w-full resize-y rounded-lg border border-[#e5e7eb] px-3 py-2 text-sm"
         />

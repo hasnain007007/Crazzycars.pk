@@ -14,7 +14,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # Public env baked at build time when provided by Coolify/build args
-ARG NEXT_PUBLIC_APP_NAME=Crazzycars.pk
+ARG NEXT_PUBLIC_APP_NAME=Homefy.pk
 ARG NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_STORE_URL

@@ -1,9 +1,9 @@
 const DEFAULT_BRAND =
   process.env.NEXT_PUBLIC_STORE_NAME ||
   process.env.NEXT_PUBLIC_APP_NAME ||
-  "CrazzyCars.pk";
+  "Homefy.pk";
 
-/** Strip a trailing `| CrazzyCars(.pk)` / dash-brand suffix (any casing). */
+/** Strip a trailing `| Homefy(.pk)` / dash-brand suffix (any casing). */
 export function stripTrailingBrand(raw) {
   return String(raw || "")
     .trim()

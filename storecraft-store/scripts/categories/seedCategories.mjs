@@ -1,5 +1,5 @@
 /**
- * Seed CrazzyCars category tree (StoreCraft schema).
+ * Seed Homefy category tree (StoreCraft schema).
  * Source: crazzycars-categories/data/categories.js
  *
  * Usage: node --env-file=.env.local scripts/categories/seedCategories.mjs

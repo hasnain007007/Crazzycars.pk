@@ -4,7 +4,7 @@ import { OrderTrackingChrome } from "@/components/store/OrderTrackingChrome";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const metadata = buildPageMetadata({
-  title: "Track Your Order | Crazzycars.pk",
+  title: "Track Your Order | Homefy.pk",
   description: "Track your Postex shipment with your tracking number.",
   path: "/track-order",
   absoluteTitle: true,

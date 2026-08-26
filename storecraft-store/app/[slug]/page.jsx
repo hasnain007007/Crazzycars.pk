@@ -24,8 +24,8 @@ import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 export const revalidate = 120;
 
 const BASE_URL = getSiteUrl();
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Crazzycars.pk";
-const PRODUCT_TITLE_BRAND = "CrazzyCars";
+const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Homefy.pk";
+const PRODUCT_TITLE_BRAND = "Homefy";
 const PRODUCT_TITLE_SUFFIX = ` | ${PRODUCT_TITLE_BRAND}`;
 const PRODUCT_TITLE_MAX_LENGTH = 60;
 
@@ -36,7 +36,7 @@ function stripHtml(s) {
 function stripTrailingProductTitleBrand(value) {
   let title = String(value || "").trim();
   const trailingBrand =
-    /\s*[|\u2013\u2014-]\s*(?:CrazzyCars(?:\.pk)?|Crazzycars\.pk)\s*$/i;
+    /\s*[|\u2013\u2014-]\s*(?:Homefy(?:\.pk)?|Homefy\.pk)\s*$/i;
 
   for (let i = 0; i < 3; i += 1) {
     const stripped = title
@@ -150,7 +150,7 @@ const loadContent = cache(async (slug) => {
     .populate("categories", "name slug")
     .lean();
 
-  // Meta / Shopify-era handles often omit the `-crazzycars-pk` suffix.
+  // Meta / Shopify-era handles often omit the `-homefy-pk` suffix.
   if (!product) {
     const legacy = await findActiveProductBySlugParam(slugStr);
     if (legacy?.slug && legacy.slug !== slugStr) {
@@ -244,7 +244,7 @@ export async function generateMetadata({ params, searchParams }) {
           (p.metaDescription || p.seo?.metaDescription || "").trim() ||
           stripHtml(p.shortDescription || "").slice(0, 200) ||
           `Buy ${p.name} at ${BRAND}`,
-        type: "product",
+        type: "website",
         url: canonical,
         images: mainImg ? [{ url: mainImg, width: 800, height: 800, alt: p.name }] : [],
       },

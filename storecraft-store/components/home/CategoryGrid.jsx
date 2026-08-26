@@ -23,7 +23,7 @@ function CategoryCard({ c }) {
         />
       ) : (
         <span className="home-category-card__icon" aria-hidden>
-          {c.homepageIcon || "🚗"}
+          {c.homepageIcon || "🏠"}
         </span>
       )}
 
@@ -47,7 +47,7 @@ function mapCat(c) {
     name: c.name,
     slug: c.slug,
     href: categoryHref(c.slug),
-    homepageIcon: c.homepageIcon || "🚗",
+    homepageIcon: c.homepageIcon || "🏠",
     imageUrl,
     imageAlt: c.image?.altText || c.imageAlt || c.name,
     imageTitle: c.image?.title || c.imageTitle || c.name,
@@ -135,7 +135,7 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
       <div className="store-container">
         <div className="mb-3">
           <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">{title}</h2>
-          <div style={{ width: 40, height: 3, background: "#C41E1E", marginTop: 8, borderRadius: 2 }} />
+          <div style={{ width: 40, height: 3, background: "#C6633B", marginTop: 8, borderRadius: 2 }} />
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-6 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {categories.map((c) => (
@@ -151,7 +151,7 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
         <div className="mt-6 flex justify-center">
           <Link
             href="/categories"
-            className="inline-flex items-center gap-2 rounded-full border border-[#111111] bg-[#111111] px-4 py-2 text-xs font-semibold transition hover:bg-[#C41E1E] hover:border-[#C41E1E] md:px-6 md:py-3 md:text-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-[#111111] bg-[#111111] px-4 py-2 text-xs font-semibold transition hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] md:px-6 md:py-3 md:text-sm"
             // Inline: the unlayered `a { color: inherit }` in globals.css outranks Tailwind's layered text-white.
             style={{ color: "#FFFFFF" }}
           >

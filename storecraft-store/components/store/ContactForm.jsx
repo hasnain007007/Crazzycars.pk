@@ -179,7 +179,7 @@ export default function ContactForm() {
         type="submit"
         disabled={status === "sending"}
         className="inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-        style={{ background: "#C41E1E", border: "none", cursor: status === "sending" ? "default" : "pointer" }}
+        style={{ background: "#C6633B", border: "none", cursor: status === "sending" ? "default" : "pointer" }}
       >
         {status === "sending" ? "Sending…" : "Send Message"}
       </button>

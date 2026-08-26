@@ -38,7 +38,7 @@ const rajdhani = Rajdhani({
 });
 
 const FALLBACK_DESCRIPTION =
-  "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide. CrazzyCars.pk";
+  "Shop kitchen accessories, girls' beauty bags and ladies handbags online in Pakistan — cookware, makeup pouches, totes and more. Cash on Delivery nationwide. Homefy.pk";
 
 export const viewport = {
   width: "device-width",
@@ -74,13 +74,13 @@ export async function generateMetadata() {
       general.storeName ||
       process.env.NEXT_PUBLIC_STORE_NAME ||
       process.env.NEXT_PUBLIC_APP_NAME ||
-      "CrazzyCars.pk";
+      "Homefy.pk";
 
     const title =
       seo.metaTitle?.trim() ||
       seo.defaultMetaTitle?.trim() ||
       storeName ||
-      "CrazzyCars.pk";
+      "Homefy.pk";
     const description =
       seo.metaDescription?.trim() ||
       seo.defaultMetaDescription?.trim() ||
@@ -156,12 +156,12 @@ export async function generateMetadata() {
     console.error("generateMetadata error:", e);
     return {
       metadataBase: new URL(getSiteUrl()),
-      title: "CrazzyCars.pk | Car Accessories Pakistan",
+      title: "Homefy.pk | Kitchen Accessories & Beauty Bags",
       description: FALLBACK_DESCRIPTION,
       icons: buildFaviconMetadata(),
       robots: isIndexableEnvironment() ? undefined : { index: false, follow: false },
       openGraph: {
-        images: [{ url: absoluteUrl("/og-image.jpg"), width: 1200, height: 630, alt: "CrazzyCars.pk" }],
+        images: [{ url: absoluteUrl("/og-image.jpg"), width: 1200, height: 630, alt: "Homefy.pk" }],
       },
       twitter: {
         card: "summary_large_image",
@@ -181,7 +181,7 @@ export default async function RootLayout({ children }) {
       footer: {
         ...footerRaw,
         copyrightText: footerRaw.copyrightText || settings?.footerMeta?.copyrightText || "",
-        tagline: footerRaw.tagline || settings?.footerMeta?.tagline || "Fitment-first car accessories from Gujranwala",
+        tagline: footerRaw.tagline || settings?.footerMeta?.tagline || "Kitchen, beauty bags and ladies bags for Pakistani homes",
         paymentMethods: footerRaw.paymentMethods || settings?.footerMeta?.paymentMethods || [],
         shopLinks: footerRaw.shopLinks || [],
         customerCareLinks: footerRaw.customerCareLinks || [],
@@ -202,7 +202,7 @@ export default async function RootLayout({ children }) {
     general.storeName ||
     process.env.NEXT_PUBLIC_APP_NAME ||
     process.env.NEXT_PUBLIC_STORE_NAME ||
-    "Crazzycars.pk";
+    "Homefy.pk";
   const baseUrl = getSiteUrl();
   const description =
     seo.metaDescription?.trim() || seo.defaultMetaDescription?.trim() || FALLBACK_DESCRIPTION;

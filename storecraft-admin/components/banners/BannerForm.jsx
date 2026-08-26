@@ -35,7 +35,7 @@ const DEFAULT_BACKGROUND = {
   mobileImage: { url: "", publicId: "" },
   color: "#111111",
   gradientFrom: "#1A1A1A",
-  gradientTo: "#C41E1E",
+  gradientTo: "#C6633B",
   gradientDirection: "to right",
 };
 const DEFAULT_CONTENT = {
@@ -108,7 +108,7 @@ const initForm = (data = {}) => ({
     },
     color: data.background?.color || "#111111",
     gradientFrom: data.background?.gradientFrom || "#1A1A1A",
-    gradientTo: data.background?.gradientTo || "#C41E1E",
+    gradientTo: data.background?.gradientTo || "#C6633B",
     gradientDirection: data.background?.gradientDirection || "to right",
   },
   content: {
@@ -633,7 +633,7 @@ export function BannerForm({ bannerId }) {
                     </label>
                     <input
                       style={inputStyle}
-                      placeholder="e.g. Premium car accessories collection banner"
+                      placeholder="e.g. Homefy kitchen and bags collection banner"
                       value={form.background?.image?.altText || ""}
                       onChange={(e) =>
                         setForm((f) => ({
@@ -717,7 +717,7 @@ export function BannerForm({ bannerId }) {
                         type="button"
                         onClick={async () => {
                           if (!form.background?.image?.url) return;
-                          const text = window.prompt("Watermark text:", process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`);
+                          const text = window.prompt("Watermark text:", process.env.NEXT_PUBLIC_APP_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`);
                           if (!text) return;
                           const t = toast.loading("Adding watermark...");
                           try {
@@ -931,7 +931,7 @@ export function BannerForm({ bannerId }) {
                 placeholder="#111111"
               />
               <div style={{ display: "flex", gap: 6 }}>
-                {["#FFFFFF", "#111111", "#C41E1E", "#9CA3AF"].map((color) => (
+                {["#FFFFFF", "#111111", "#C6633B", "#9CA3AF"].map((color) => (
                   <button
                     key={color}
                     type="button"
@@ -1124,7 +1124,7 @@ export function BannerForm({ bannerId }) {
                 placeholder="#555555"
               />
               <div style={{ display: "flex", gap: 6 }}>
-                {["#FFFFFF", "#111111", "#C41E1E", "#9CA3AF"].map((color) => (
+                {["#FFFFFF", "#111111", "#C6633B", "#9CA3AF"].map((color) => (
                   <button
                     key={color}
                     type="button"
@@ -1437,7 +1437,7 @@ export function BannerForm({ bannerId }) {
                       try {
                         if (/^https?:\/\//i.test(url)) {
                           const parsed = new URL(url);
-                          if (/(^|\.)crazzycars\.pk$/i.test(parsed.hostname)) {
+                          if (/(^|\.)homefy\.pk$/i.test(parsed.hostname)) {
                             url = `${parsed.pathname || "/"}${parsed.search || ""}${parsed.hash || ""}` || "/";
                           }
                         }
@@ -1455,7 +1455,7 @@ export function BannerForm({ bannerId }) {
                         { url: "/", label: "Home" },
                         { url: "/shop", label: "Shop" },
                         { url: "/categories", label: "Categories" },
-                        { url: "/#shop-by-car", label: "Shop by Car" },
+                        { url: "/categories/kitchen-accessories", label: "Kitchen" },
                         { url: "/products?sort=newest", label: "New" },
                         { url: "/products?sale=true", label: "Sale" },
                         { url: "/about", label: "About" },

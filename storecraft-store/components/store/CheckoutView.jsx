@@ -1248,7 +1248,7 @@ export function CheckoutView() {
                 padding: 0,
                 border: "none",
                 background: "none",
-                color: "#C41E1E",
+                color: "#C6633B",
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: "pointer",
@@ -1314,7 +1314,7 @@ export function CheckoutView() {
                       minHeight: 52,
                       padding: "10px 12px",
                       border: "1px solid",
-                      borderColor: selected ? "#C41E1E" : "#E5E7EB",
+                      borderColor: selected ? "#C6633B" : "#E5E7EB",
                       borderRadius: 8,
                       cursor: "pointer",
                       marginBottom: 6,
@@ -1327,7 +1327,7 @@ export function CheckoutView() {
                       value={m.key}
                       checked={selected}
                       onChange={() => setPaymentMethod(m.key)}
-                      style={{ accentColor: "#C41E1E", margin: 0, flexShrink: 0, width: 16, height: 16 }}
+                      style={{ accentColor: "#C6633B", margin: 0, flexShrink: 0, width: 16, height: 16 }}
                     />
                     <span
                       style={{
@@ -1472,7 +1472,7 @@ export function CheckoutView() {
             type="button"
             onClick={handleProceedToPayment}
             disabled={submitting}
-            className="w-full rounded-lg bg-[#C41E1E] py-3 text-sm font-bold text-white hover:bg-[#b91c1c] disabled:opacity-50 lg:hidden"
+            className="w-full rounded-lg bg-[var(--color-primary)] py-3 text-sm font-bold text-white hover:bg-[#b91c1c] disabled:opacity-50 lg:hidden"
           >
             {placeOrderLabel}
           </button>
@@ -1579,7 +1579,7 @@ export function CheckoutView() {
               type="button"
               onClick={handleProceedToPayment}
               disabled={submitting}
-              className="hidden w-full rounded-lg bg-[#C41E1E] py-3 text-sm font-bold text-white hover:bg-[#b91c1c] disabled:opacity-50 lg:block"
+              className="hidden w-full rounded-lg bg-[var(--color-primary)] py-3 text-sm font-bold text-white hover:bg-[#b91c1c] disabled:opacity-50 lg:block"
             >
               {placeOrderLabel}
             </button>

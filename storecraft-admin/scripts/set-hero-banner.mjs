@@ -87,7 +87,7 @@ banner.background.image = {
   width: result.width,
   height: result.height,
   imageName: path.basename(abs, ext),
-  altText: banner.background.image?.altText || "Crazzycars.pk premium car accessories",
+  altText: banner.background.image?.altText || "Homefy.pk premium car accessories",
 };
 // Designed artwork — no HTML text overlays
 if (banner.content) {
@@ -106,4 +106,4 @@ banner.imageDisplay = {
 await banner.save();
 console.log("Updated banner", banner._id.toString());
 await mongoose.disconnect();
-console.log("Done. Hard-refresh https://crazzycars.pk/");
+console.log("Done. Hard-refresh https://homefy.pk/");

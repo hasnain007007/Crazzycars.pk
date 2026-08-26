@@ -43,7 +43,7 @@ export function TabOrganisation({ form, setForm, fieldClass }) {
         <TagInput
           value={Array.isArray(form.tags) ? form.tags : []}
           onChange={(tags) => setForm((f) => ({ ...f, tags: tags }))}
-          placeholder="e.g. car accessories, seat covers, floor mats, Crazzycars.pk"
+          placeholder="e.g. kitchen accessories, beauty bags, ladies bags, Homefy.pk"
         />
         <p className="mt-1 text-xs text-gray-500">Add tags for search and filtering</p>
       </div>

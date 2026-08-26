@@ -188,7 +188,7 @@ export default function SeoSettings() {
           </label>
           <input
             style={inputStyle}
-            placeholder="Crazzycars.pk | Car Accessories Pakistan"
+            placeholder="Homefy.pk | Kitchen, Beauty Bags & Ladies Bags"
             value={form.metaTitle}
             onChange={(e) => setForm((f) => ({ ...f, metaTitle: e.target.value }))}
           />
@@ -208,7 +208,7 @@ export default function SeoSettings() {
           <textarea
             rows={3}
             style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
-            placeholder="Buy premium car accessories online in Pakistan. COD available nationwide."
+            placeholder="Buy kitchen accessories, beauty bags and ladies bags online in Pakistan. COD available nationwide."
             value={form.metaDescription}
             onChange={(e) => setForm((f) => ({ ...f, metaDescription: e.target.value }))}
           />
@@ -231,7 +231,7 @@ export default function SeoSettings() {
           </label>
           <input
             style={inputStyle}
-            placeholder="car accessories pakistan, seat covers, floor mats, Crazzycars.pk"
+            placeholder="kitchen accessories, beauty bags, ladies bags, Homefy.pk"
             value={form.metaKeywords}
             onChange={(e) => setForm((f) => ({ ...f, metaKeywords: e.target.value }))}
           />
@@ -267,7 +267,7 @@ export default function SeoSettings() {
           <label style={labelStyle}>OG Title</label>
           <input
             style={inputStyle}
-            placeholder="Crazzycars.pk | Car Accessories Pakistan"
+            placeholder="Homefy.pk | Kitchen, Beauty Bags & Ladies Bags"
             value={form.ogTitle}
             onChange={(e) => setForm((f) => ({ ...f, ogTitle: e.target.value }))}
           />
@@ -278,7 +278,7 @@ export default function SeoSettings() {
           <textarea
             rows={2}
             style={{ ...inputStyle, resize: "vertical" }}
-            placeholder="Buy premium car accessories online in Pakistan. COD available nationwide."
+            placeholder="Buy kitchen accessories, beauty bags and ladies bags online in Pakistan. COD available nationwide."
             value={form.ogDescription}
             onChange={(e) => setForm((f) => ({ ...f, ogDescription: e.target.value }))}
           />
@@ -392,7 +392,7 @@ export default function SeoSettings() {
           </label>
           <input
             style={inputStyle}
-            placeholder={process.env.NEXT_PUBLIC_APP_URL || "https://crazzycars.pk"}
+            placeholder={process.env.NEXT_PUBLIC_APP_URL || "https://homefy.pk"}
             value={form.canonicalUrl}
             onChange={(e) => setForm((f) => ({ ...f, canonicalUrl: e.target.value }))}
           />

@@ -1,5 +1,5 @@
 /**
- * Sync CrazzyCars vehicle generations into admin Car Catalog (Makes → Models).
+ * Sync Homefy vehicle generations into admin Car Catalog (Makes → Models).
  * Does NOT touch product Categories.
  *
  * Usage (from storecraft-store):

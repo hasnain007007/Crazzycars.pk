@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 const MUTED = "#9CA3AF";
-const BRAND_RED = "#C41E1E";
+const BRAND_RED = "#C6633B";
 const BRAND_DARK = "#111111";
 
 function previewBackground(form) {

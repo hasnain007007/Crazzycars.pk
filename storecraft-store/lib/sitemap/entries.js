@@ -1,7 +1,6 @@
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Category from "@/lib/models/Category.model";
-import Vehicle from "@/lib/models/Vehicle.model";
 import Page from "@/lib/models/Page.model";
 import BlogPost from "@/lib/models/BlogPost.model";
 import { absoluteUrl } from "@/lib/siteUrl";
@@ -12,7 +11,6 @@ const STATIC_PAGE_PATHS = [
   "/",
   "/shop",
   "/categories",
-  "/cars",
   "/sale",
   "/blogs",
   "/faq",
@@ -117,20 +115,6 @@ async function categoryIdsWithProducts() {
   return include;
 }
 
-async function vehicleIdsWithProducts() {
-  const rows = await Product.aggregate([
-    {
-      $match: {
-        status: "active",
-        compatibleVehicles: { $exists: true, $type: "array", $ne: [] },
-      },
-    },
-    { $unwind: "$compatibleVehicles" },
-    { $group: { _id: "$compatibleVehicles" } },
-  ]);
-  return new Set(rows.map((r) => String(r._id)));
-}
-
 function toEntry(headers, path, lastmod, changefreq, priority) {
   return {
     loc: absoluteUrl(path, { headers }),
@@ -152,13 +136,11 @@ export async function fetchSitemapContext(headers) {
 
   await dbConnect();
 
-  const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts] =
+  const [products, categories, withProducts, cmsPages, blogPosts] =
     await Promise.all([
       Product.find({ status: "active" }).select("slug updatedAt").lean(),
       Category.find({ status: "active" }).select("slug updatedAt _id").lean(),
-      Vehicle.find({ isActive: true }).select("slug updatedAt _id").lean(),
       categoryIdsWithProducts(),
-      vehicleIdsWithProducts(),
       Page.find({ status: "published" }).select("slug updatedAt").lean(),
       BlogPost.find({ status: "published" }).select("slug updatedAt publishedAt").lean(),
     ]);
@@ -175,9 +157,7 @@ export async function fetchSitemapContext(headers) {
     .filter((c) => c.slug && withProducts.has(String(c._id)))
     .map((c) => toEntry(headers, `/categories/${c.slug}`, c.updatedAt, "weekly", 0.8));
 
-  const carEntries = vehicles
-    .filter((v) => v.slug && vehiclesWithProducts.has(String(v._id)))
-    .map((v) => toEntry(headers, `/cars/${v.slug}`, v.updatedAt, "weekly", 0.8));
+  const carEntries = [];
 
   const staticPageEntries = STATIC_PAGE_PATHS.map((path) =>
     toEntry(headers, path, null, path === "/" ? "daily" : "weekly", path === "/" ? 1 : 0.8)
@@ -242,7 +222,6 @@ export async function getSitemapIndexEntries(headers) {
   const childSpecs = [
     { id: "products", entries: entries.products },
     { id: "categories", entries: entries.categories },
-    { id: "cars", entries: entries.cars },
     { id: "pages", entries: entries.pages },
     { id: "blog", entries: entries.blog },
   ];

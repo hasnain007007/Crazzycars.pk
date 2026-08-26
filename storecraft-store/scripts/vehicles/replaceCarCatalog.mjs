@@ -1,5 +1,5 @@
 /**
- * REPLACE Car Catalog with real CrazzyCars data (5 makes, 18 models incl. Honda Vezel).
+ * REPLACE Car Catalog with real Homefy data (5 makes, 18 models incl. Honda Vezel).
  * Wipes all CarCatalog documents first.
  *
  * Actual schema: CarCatalog (Make) with embedded models[] — no separate Make/CarModel.

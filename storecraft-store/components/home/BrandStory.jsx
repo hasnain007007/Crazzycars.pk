@@ -130,7 +130,7 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
               <div className="mt-5 flex flex-wrap gap-5 md:mt-8 md:gap-8">
                 {stats.map((stat, i) => (
                   <div key={`${stat.value}-${stat.label}-${i}`}>
-                    <p className="font-heading text-xl font-bold md:text-2xl" style={{ color: "#C41E1E" }}>
+                    <p className="font-heading text-xl font-bold md:text-2xl" style={{ color: "#C6633B" }}>
                       {stat.value}
                     </p>
                     <p className="mt-1 text-xs" style={{ color: "#6B7280" }}>
@@ -145,7 +145,7 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
               <Link
                 href={story.buttonLink || "/about"}
                 className="mt-6 inline-flex items-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 md:mt-8 md:px-6 md:py-3"
-                style={{ background: "#C41E1E" }}
+                style={{ background: "#C6633B" }}
               >
                 {story.buttonText.includes("→") ? story.buttonText : `${story.buttonText} →`}
               </Link>

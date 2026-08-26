@@ -49,7 +49,7 @@ function normalizeLoadedTrustBadges(arr) {
 
 const DEFAULT_QUALITY_BADGES = [
   { text: "Premium Quality", enabled: true },
-  { text: "Fitment Checked", enabled: true },
+  { text: "Quality Checked", enabled: true },
   { text: "COD Available", enabled: true },
 ];
 
@@ -57,7 +57,7 @@ const DEFAULT_ASIAN_IMPORTS_BADGE = {
   enabled: true,
   title: "Quality Assured",
   description:
-    "We source premium car accessories from trusted manufacturers. Every product is quality-checked before it ships.",
+    "We source kitchen, beauty and bag products from trusted suppliers. Every item is quality-checked before it ships.",
 };
 
 export default function ProductBadgeSettings() {
@@ -67,7 +67,7 @@ export default function ProductBadgeSettings() {
     discreteShipping: {
       enabled: true,
       title: "Fast Nationwide Delivery",
-      description: "We deliver car accessories across Pakistan with tracking where available.",
+      description: "We deliver kitchen accessories, beauty bags and ladies bags across Pakistan with tracking where available.",
     },
     trustBadges: DEFAULT_TRUST_BADGES,
     qualityBadges: DEFAULT_QUALITY_BADGES,
@@ -658,7 +658,7 @@ export default function ProductBadgeSettings() {
                 },
               }))
             }
-            placeholder="We deliver car accessories across Pakistan with tracking where available."
+            placeholder="We deliver kitchen accessories, beauty bags and ladies bags across Pakistan with tracking where available."
           />
         </div>
       </div>
@@ -761,7 +761,7 @@ export default function ProductBadgeSettings() {
                 },
               }))
             }
-            placeholder="We source premium car accessories from trusted manufacturers. Quality-checked before shipping."
+            placeholder="We source kitchen, beauty and bag products from trusted suppliers. Quality-checked before shipping."
           />
         </div>
       </div>

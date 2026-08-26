@@ -144,7 +144,7 @@ function LoginPageContent() {
               type="email"
               required
               style={inputStyle}
-              placeholder="info@crazzycars.pk"
+              placeholder="info@homefy.pk"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />

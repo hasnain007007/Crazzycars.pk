@@ -2,7 +2,7 @@ import AboutPageView from "@/components/store/AboutPageView";
 import { getServerStoreSettings } from "@/lib/serverSettings";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
-const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
 
 export async function generateMetadata() {
   const settings = await getServerStoreSettings();
@@ -10,7 +10,7 @@ export async function generateMetadata() {
   const title = hero.title ? `${hero.title} | ${STORE}` : `About Us | ${STORE}`;
   const description =
     hero.subtitle ||
-    `Learn about ${STORE} — premium car accessories delivered across Pakistan.`;
+    `Learn about ${STORE} — kitchen accessories, beauty bags and ladies bags delivered across Pakistan.`;
 
   return buildPageMetadata({
     title,

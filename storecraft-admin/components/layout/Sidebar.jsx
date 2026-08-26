@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { getAdminSettings } from "@/lib/adminSettingsCache";
+import HomefyTextLogo from "@/components/brand/HomefyTextLogo";
 
 const NAV = [
   {
@@ -17,7 +18,6 @@ const NAV = [
     label: "CATALOG",
     items: [
       { href: "/catalog/categories", label: "Categories", icon: "folder" },
-      { href: "/car-catalog", label: "Car Catalog", icon: "car" },
       { href: "/catalog/products", label: "Products", icon: "cube" },
       { href: "/product-options", label: "Product Options", icon: "sliders" },
       { href: "/reviews", label: "Reviews", icon: "star" },
@@ -332,7 +332,7 @@ export function Sidebar({ mobileOpen, onClose }) {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     window.location.href = "/login";
   }, []);
-  const storeName = storeSettings?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk';
+  const storeName = storeSettings?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk';
   const logoUrl = storeSettings?.logoUrl || "";
 
   return (
@@ -358,9 +358,8 @@ export function Sidebar({ mobileOpen, onClose }) {
             style={{ maxHeight: 36, maxWidth: 36, width: "auto", height: "auto", objectFit: "contain" }}
           />
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1d6fb8] text-xs font-bold text-white">
-            SC
-          </div>
+          /* TODO: replace logo */
+          <HomefyTextLogo compact />
         )}
         {settingsLoading && !storeSettings ? null : (
           <div className="min-w-0">
@@ -387,7 +386,7 @@ export function Sidebar({ mobileOpen, onClose }) {
                       className={[
                         "flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition",
                         active
-                          ? "bg-[#eff6ff] text-[#1d4ed8] dark:bg-blue-500/15 dark:text-blue-400"
+                          ? "bg-[color-mix(in_srgb,var(--color-primary)_12%,white)] text-[var(--color-primary)] dark:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] dark:text-[var(--color-secondary)]"
                           : "text-[#374151] hover:bg-[#f9fafb] dark:text-slate-300 dark:hover:bg-slate-800",
                       ].join(" ")}
                     >

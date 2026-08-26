@@ -250,7 +250,7 @@ export function TabOptions({
             type="checkbox"
             checked={Boolean(form.isDeal)}
             onChange={(e) => setForm((f) => ({ ...f, isDeal: e.target.checked }))}
-            className="h-4 w-4 rounded border-[#d1d5db] text-[#C41E1E] focus:ring-[#C41E1E]"
+            className="h-4 w-4 rounded border-[#d1d5db] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
           />
           <span className="text-sm font-medium text-[#374151]">Hot Deal</span>
         </label>

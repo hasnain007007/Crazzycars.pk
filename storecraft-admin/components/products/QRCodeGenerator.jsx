@@ -21,7 +21,7 @@ const PRESETS = [
 ];
 
 export function defaultProductQrUrl(storeUrl, slug) {
-  const base = (storeUrl || "https://crazzycars.pk").replace(/\/$/, "");
+  const base = (storeUrl || "https://homefy.pk").replace(/\/$/, "");
   const s = (slug || "product").trim() || "product";
   return `${base}/${s}`;
 }

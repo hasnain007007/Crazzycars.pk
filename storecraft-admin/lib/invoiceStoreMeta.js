@@ -25,7 +25,7 @@ export async function getInvoiceStoreMeta() {
       g.logo?.url ||
       "";
     return {
-      storeName: String(g.storeName || "").trim() || "Crazzycars.pk",
+      storeName: String(g.storeName || "").trim() || "Homefy.pk",
       logoUrl: String(logoUrl || "").trim(),
       phone: String(g.phone || "").trim(),
       email: String(g.email || "").trim(),
@@ -50,7 +50,7 @@ export async function getInvoiceStoreMeta() {
 
 function defaultMeta() {
   return {
-    storeName: process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
+    storeName: process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk",
     logoUrl: "",
     phone: "",
     email: "",
@@ -82,7 +82,7 @@ export function storeMetaFromSettings(settingsDoc) {
     g.logo?.url ||
     "";
   return {
-    storeName: String(g.storeName || "").trim() || "Crazzycars.pk",
+    storeName: String(g.storeName || "").trim() || "Homefy.pk",
     logoUrl: String(logoUrl || "").trim(),
     phone: String(g.phone || "").trim(),
     email: String(g.email || "").trim(),

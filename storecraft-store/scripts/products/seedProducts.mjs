@@ -1,5 +1,5 @@
 /**
- * Seed 234 CrazzyCars products into StoreCraft Product schema.
+ * Seed 234 Homefy products into StoreCraft Product schema.
  * Requires categories + vehicles seeded first (links by slug → ObjectId).
  *
  * Field mapping (pack → StoreCraft):
@@ -145,7 +145,7 @@ function toStoreProduct(p, categoryIds, vehicleDocs) {
     variationCombinations,
     variations: [],
     tags: Array.isArray(p.tags) ? p.tags : [],
-    vendor: p.vendor || "CrazzyCars.pk",
+    vendor: p.vendor || "Homefy.pk",
     categories: categoryIds,
     compatibleVehicles: vehicleIds,
     isUniversal,

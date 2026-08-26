@@ -42,7 +42,7 @@ export function VehicleCompatibilitySection({ product }) {
               <button
                 type="button"
                 onClick={() => setExpanded((v) => !v)}
-                className="mt-2 text-sm font-medium text-[#C41E1E]"
+                className="mt-2 text-sm font-medium text-[var(--color-primary)]"
               >
                 {expanded ? "Show less ▲" : `Show all ${vc.vehicles.length} exceptions ▼`}
               </button>
@@ -73,7 +73,7 @@ export function VehicleCompatibilitySection({ product }) {
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="mt-2 text-sm font-medium text-[#C41E1E]"
+          className="mt-2 text-sm font-medium text-[var(--color-primary)]"
         >
           {expanded ? "Show less ▲" : `Show all ${vc.vehicles.length} vehicles ▼`}
         </button>

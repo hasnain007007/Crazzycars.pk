@@ -6,7 +6,7 @@ import { clearAdminSettingsCache } from '@/lib/adminSettingsCache'
 
 const DEFAULT_ITEMS = [
   { text: 'Free Delivery on Orders Over Rs. 2,999', link: '', enabled: true },
-  { text: 'Welcome to Crazzycars.pk', link: '/shop', enabled: true },
+  { text: 'Welcome to Homefy.pk', link: '/shop', enabled: true },
   { text: 'Cash on Delivery Available', link: '', enabled: true }
 ]
 

@@ -81,7 +81,7 @@ export function storefrontBaseUrl() {
   return (
     String(process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "") ||
     String(process.env.NEXT_PUBLIC_STORE_URL || "").replace(/\/$/, "") ||
-    "https://crazzycars.pk"
+    "https://homefy.pk"
   );
 }
 
@@ -99,7 +99,7 @@ export function itemsListText(items) {
     .join("\n");
 }
 
-export function buildAbandonedCartEmail({ cart, storeName = "Crazzycars.pk", storePhone = "" }) {
+export function buildAbandonedCartEmail({ cart, storeName = "Homefy.pk", storePhone = "" }) {
   const name = String(cart?.customer?.name || "").trim() || "there";
   const token = cart?.recoveryToken || "";
   const recoverUrl = recoveryCheckoutUrl(token);
@@ -132,13 +132,13 @@ export function buildAbandonedCartEmail({ cart, storeName = "Crazzycars.pk", sto
       </p>
       <table style="width:100%;border-collapse:collapse;margin:8px 0 20px">${itemsHtml}</table>
       <div style="text-align:center;margin:24px 0">
-        <a href="${recoverUrl}" style="display:inline-block;background:#C41E1E;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 28px;border-radius:8px">
+        <a href="${recoverUrl}" style="display:inline-block;background:#C6633B;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 28px;border-radius:8px">
           Complete checkout
         </a>
       </div>
       <p style="margin:0;font-size:12px;color:#888;line-height:1.5">
         Or copy this link:<br/>
-        <a href="${recoverUrl}" style="color:#C41E1E;word-break:break-all">${recoverUrl}</a>
+        <a href="${recoverUrl}" style="color:#C6633B;word-break:break-all">${recoverUrl}</a>
       </p>
       ${storePhone ? `<p style="margin:16px 0 0;font-size:12px;color:#666">Need help? Call ${escapeHtml(storePhone)}</p>` : ""}
     </div>
@@ -168,14 +168,14 @@ export async function resolveAbandonedCartSettings(Settings, SETTINGS_SINGLETON_
     } else {
       cfg.emailEnabled = true;
     }
-    cfg.storeName = String(doc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk");
+    cfg.storeName = String(doc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk");
     cfg.storePhone = String(doc?.general?.phone || process.env.NEXT_PUBLIC_STORE_PHONE || "");
     return cfg;
   } catch {
     return {
       ...DEFAULT_ABANDONED_CART_SETTINGS,
       emailEnabled: true,
-      storeName: process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
+      storeName: process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk",
       storePhone: "",
     };
   }

@@ -69,7 +69,7 @@ const DEFAULT_FAQ = [
   {
     question: "What is your return policy?",
     answer:
-      "We accept returns on unused items in original packaging within 30 days. If you receive a damaged or incorrect item, contact support@crazzycars.pk and we will make it right.",
+      "We accept returns on unused items in original packaging within 30 days. If you receive a damaged or incorrect item, contact support@homefy.pk and we will make it right.",
   },
   {
     question: "How can I track my order?",
@@ -80,28 +80,28 @@ const DEFAULT_FAQ = [
 
 const HERO_DEFAULT = {
   badge: "Our Story",
-  title: "Fitment-first car accessories from Gujranwala",
+  title: "Kitchen, beauty bags and ladies bags for Pakistani homes",
   subtitle:
-    `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
+    `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"}, we bring kitchen accessories, girls' beauty bags and ladies handbags to homes across Pakistan — with Cash on Delivery nationwide.`,
 };
 
 const STORY_DEFAULT = {
   badge: "Who We Are",
-  title: "Built for Pakistani Car Enthusiasts",
+  title: "Built for Pakistani Homes",
   paragraph1:
-    `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
+    `${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} is a home and lifestyle store for kitchen accessories, beauty bags and ladies bags — quality pieces at fair prices.`,
   paragraph2:
-    "From bumper splitters and spoilers to LED lights and body kits, every product is chosen for real-world use in Pakistani conditions — heat, dust, and daily driving.",
+    "From cookware and storage to makeup pouches, totes and clutches, every product is chosen for everyday use in Pakistani homes.",
   paragraph3:
-    "Today we serve customers from Lahore to Karachi and beyond, with Cash on Delivery, responsive support, and accessories that make every drive more comfortable and stylish.",
+    "Today we serve customers from Lahore to Karachi and beyond, with Cash on Delivery, responsive support, and pieces that make home and everyday style easier.",
 };
 
 const PROMISE_DEFAULT = {
-  title: `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} Promise`,
+  title: `${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} Promise`,
   paragraph1:
-    "We promise honest product descriptions, fair pricing, and accessories we would use on our own vehicles. Every item is checked before it ships.",
+    "We promise honest product descriptions, fair pricing, and pieces we would use in our own homes. Every item is checked before it ships.",
   paragraph2:
-    `Your satisfaction and your car's comfort come first. That is the ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} way.`,
+    `Your satisfaction and everyday style come first. That is the ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} way.`,
 };
 
 export default function AboutPageSettings() {
@@ -300,7 +300,7 @@ export default function AboutPageSettings() {
             <label style={labelStyle}>Main Headline *</label>
             <input
               style={inputStyle}
-              placeholder="e.g. Fitment-first car accessories from Gujranwala"
+              placeholder="e.g. Kitchen, beauty bags and ladies bags for Pakistani homes"
               value={hero.title || ""}
               onChange={(e) => setHero((h) => ({ ...h, title: e.target.value }))}
             />
@@ -595,7 +595,7 @@ export default function AboutPageSettings() {
             <label style={labelStyle}>Section Title</label>
             <input
               style={inputStyle}
-              placeholder={`e.g. ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} Promise`}
+              placeholder={`e.g. ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} Promise`}
               value={promise.title || ""}
               onChange={(e) => setPromise((p) => ({ ...p, title: e.target.value }))}
             />

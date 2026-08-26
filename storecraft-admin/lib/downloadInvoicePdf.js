@@ -64,7 +64,7 @@ export function openInvoiceDocumentWindow(invoice, storeMeta = {}) {
   const html = printDocumentShell(`Invoice ${number}`, body);
   const w = window.open("", "_blank", "noopener,noreferrer,width=920,height=1000");
   if (!w) {
-    throw new Error("Popup blocked. Allow popups for admin.crazzycars.pk, then try again.");
+    throw new Error("Popup blocked. Allow popups for admin.homefy.pk, then try again.");
   }
   w.document.open();
   w.document.write(html);

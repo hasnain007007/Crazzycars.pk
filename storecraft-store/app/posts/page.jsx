@@ -4,9 +4,9 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildPageMetadata({
-  title: `Blog | ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} — car care tips & accessories Guides`,
+  title: `Blog | ${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'} — kitchen, beauty bags & ladies bags`,
   description:
-    `Expert car accessories advice, aftercare guides, accessories care tips and style inspiration from ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} automotive specialists — read our blog.`,
+    `Tips for the home and everyday style from ${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'} — kitchen accessories, beauty bags and ladies handbags.`,
   path: "/posts",
   absoluteTitle: true,
 });

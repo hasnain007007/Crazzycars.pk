@@ -130,7 +130,7 @@ function BrandLogoItem({ name }) {
 
   return (
     <span
-      className="inline-flex shrink-0 items-center text-[#6B7280] transition-colors duration-200 hover:text-[#C41E1E]"
+      className="inline-flex shrink-0 items-center text-[#6B7280] transition-colors duration-200 hover:text-[var(--color-primary)]"
       style={{ padding: "0 28px", borderRight: "1px solid #E5E7EB" }}
       aria-label={name}
     >
@@ -177,7 +177,7 @@ export default function BrandCarousel({ settings }) {
     >
       <div className="store-container">
         <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">{settings?.sectionTitles?.brands || "Trusted Brands"}</h2>
-        <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8, marginBottom: 24 }} />
+        <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 8, marginBottom: 24 }} />
       </div>
       <div className="brand-marquee-wrap group" style={{ height: 62 }} aria-label="Trusted brands">
         <div className="brand-marquee items-center">

@@ -31,7 +31,7 @@ export async function getAdminSettings() {
       if (!json.success) return memory;
       const data = json.settings || json.data || {};
       const next = {
-        storeName: data.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk',
+        storeName: data.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk',
         logoUrl:
           (typeof data.general?.logoUrl === "string" && data.general.logoUrl) ||
           (typeof data.general?.logo === "string" && data.general.logo) ||

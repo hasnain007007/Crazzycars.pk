@@ -8,9 +8,9 @@ export async function generateMetadata({ searchParams }) {
   const sp = (await searchParams) || {};
   const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
   const base = buildPageMetadata({
-    title: "Car Accessories Blog | Guides & Tips | CrazzyCars.pk",
+    title: "Homefy Blog | Kitchen, Beauty & Bags | Homefy.pk",
     description:
-      "Expert car accessories guides, fitment tips and aftercare advice from CrazzyCars.pk — body kits, LED lights, carbon fiber and more for Pakistan.",
+      "Guides and tips from Homefy.pk — kitchen accessories, beauty bags and ladies handbags for Pakistani homes.",
     path: "/blogs",
     absoluteTitle: true,
     noIndex: page > 1,

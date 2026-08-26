@@ -109,7 +109,7 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
               color: "#666",
             }}
           >
-            <span>{post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`}</span>
+            <span>{post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`}</span>
             <span>·</span>
             <span>{formatDate(post.publishedAt || post.createdAt)}</span>
             <span>·</span>

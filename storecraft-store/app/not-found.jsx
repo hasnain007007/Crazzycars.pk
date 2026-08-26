@@ -6,7 +6,7 @@ import { ROBOTS_NOINDEX_FOLLOW } from "@/lib/seo/robotsMeta";
 
 export const metadata = {
   title: "Page not found",
-  description: "This page does not exist on CrazzyCars.pk.",
+  description: "This page does not exist on Homefy.pk.",
   robots: ROBOTS_NOINDEX_FOLLOW,
   alternates: { canonical: null },
 };
@@ -30,7 +30,7 @@ function whatsappUrl() {
       "923284010007"
   ).replace(/\D/g, "");
   const text = encodeURIComponent(
-    "Hi CrazzyCars.pk — I landed on a missing page. Can you help me find the right product?"
+    "Hi Homefy.pk — I landed on a missing page. Can you help me find the right product?"
   );
   return `https://wa.me/${digits}?text=${text}`;
 }
@@ -50,7 +50,7 @@ export default async function NotFound() {
       <p className="text-sm font-semibold uppercase tracking-widest text-red-700">404</p>
       <h1 className="mt-2 text-2xl font-bold md:mt-3 md:text-4xl">This page has driven away.</h1>
       <p className="mt-4 text-gray-600">
-        This URL is not on CrazzyCars.pk. Search for the product or category you need — we do not
+        This URL is not on Homefy.pk. Search for the product or category you need — we do not
         send missing pages to the homepage.
       </p>
 

@@ -54,12 +54,12 @@ export async function generateMetadata({ params }) {
   if (!post) return { title: "Blog Not Found" };
   const metaTitle =
     post.seo?.metaTitle ||
-    `${post.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} Blog`;
+    `${post.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"} Blog`;
   return {
     // Absolute so the root layout does not append the store name a second time.
     title: { absolute: metaTitle },
     description: post.seo?.metaDescription || post.excerpt || post.title,
-    authors: [{ name: post.author?.name || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk" }],
+    authors: [{ name: post.author?.name || process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk" }],
     publishedTime: post.createdAt,
     modifiedTime: post.updatedAt,
     alternates: {
@@ -71,7 +71,7 @@ export async function generateMetadata({ params }) {
       type: "article",
       publishedTime: post.createdAt,
       modifiedTime: post.updatedAt,
-      authors: [post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`],
+      authors: [post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`],
       images: post.featuredImage?.url ? [{ url: post.featuredImage.url }] : [],
       url: `${BASE_URL}/blogs/${slug}`,
     },
@@ -115,11 +115,11 @@ export default async function BlogPostPage({ params }) {
       dateModified: post.updatedAt,
       author: {
         "@type": "Person",
-        name: post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+        name: post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`,
       },
       publisher: {
         "@type": "Organization",
-        name: `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+        name: `${process.env.NEXT_PUBLIC_STORE_NAME || 'Homefy.pk'}`,
         logo: {
           "@type": "ImageObject",
           url: `${BASE_URL}/logo.png`,

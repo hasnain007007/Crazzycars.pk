@@ -100,7 +100,7 @@ export function returnsHeroTrustChip() {
 
 export function returnsPolicyMetaDescription() {
   const days = STORE_POLICY.returns.windowDays;
-  return `Within ${days} days: full refund for defective or wrong-item orders; exchange-only for change-of-mind returns at Crazzycars.pk.`;
+  return `Within ${days} days: full refund for defective or wrong-item orders; exchange-only for change-of-mind returns at Homefy.pk.`;
 }
 
 export function returnsFaqAnswer() {
@@ -138,7 +138,7 @@ export function getFaqItems() {
     },
     {
       question: "How much are delivery charges?",
-      answer: `${standardDeliveryFeeStatement()} Roof or trunk spoilers and Express (Daewoo) use a different courier rate shown at checkout.`,
+      answer: `${standardDeliveryFeeStatement()} Express courier options use a different rate shown at checkout.`,
     },
     {
       question: "How do I pay with JazzCash or bank transfer?",
@@ -151,9 +151,9 @@ export function getFaqItems() {
         "When your order ships we share a Postex tracking number by WhatsApp/email. Track it on our Track Order page or the courier tracking link.",
     },
     {
-      question: "How do I know if a part fits my car?",
+      question: "How do I choose the right size or colour?",
       answer:
-        "Open the product page and check vehicle fitment (make/model/years). You can also shop by car under Shop by Vehicle. If you are unsure, message us on WhatsApp with your car year and model.",
+        "Open the product page for sizes, colours and details. If you are unsure, message us on WhatsApp with the item name and we will help you pick.",
     },
     {
       question: "What is your return or exchange policy?",
@@ -244,6 +244,6 @@ export function getShippingPolicySections() {
 }
 
 export const SHIPPING_POLICY_INTRO =
-  "We deliver car accessories nationwide from Gujranwala (Crazzycars.pk). Checkout shows the delivery option and fee before you place the order.";
+  "We deliver kitchen accessories, beauty bags and ladies bags nationwide (Homefy.pk). Checkout shows the delivery option and fee before you place the order.";
 
 export const SHIPPING_POLICY_SECTIONS = getShippingPolicySections();

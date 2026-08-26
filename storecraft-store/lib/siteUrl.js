@@ -7,11 +7,11 @@
  * 3. VERCEL_PROJECT_PRODUCTION_URL / VERCEL_URL
  * 4. Aspirational default (custom domain) — only if nothing else is available
  *
- * When crazzycars.pk is attached to this Vercel project, request Host becomes that domain
- * automatically — no code change. Optionally set NEXT_PUBLIC_SITE_URL=https://crazzycars.pk
+ * When homefy.pk is attached to this Vercel project, request Host becomes that domain
+ * automatically — no code change. Optionally set NEXT_PUBLIC_SITE_URL=https://homefy.pk
  * for client-side absolute URLs / canonicals.
  */
-const DEFAULT_SITE_URL = "https://crazzycars.pk";
+const DEFAULT_SITE_URL = "https://homefy.pk";
 
 function cleanUrl(value) {
   return String(value || "")

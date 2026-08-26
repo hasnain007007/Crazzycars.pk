@@ -1,5 +1,5 @@
 /**
- * CrazzyCars AutoJin import — vehicles → categories → product batches.
+ * Homefy AutoJin import — vehicles → categories → product batches.
  *
  * Usage (from storecraft-store):
  *   node --env-file=.env.local ../crazzycars-import/runImport.mjs vehicles
@@ -195,8 +195,8 @@ async function importVehicles() {
       yearTo,
       displayName: displayName(make, model, generation, yearFrom, yearTo),
       isActive: true,
-      metaTitle: `${make} ${model}${generation ? ` ${generation}` : ""} ${yearFrom}–${yearTo || "present"} Accessories | CrazzyCars.pk`,
-      metaDescription: `Shop ${make} ${model} accessories in Pakistan at CrazzyCars.pk — Cash on Delivery nationwide.`,
+      metaTitle: `${make} ${model}${generation ? ` ${generation}` : ""} ${yearFrom}–${yearTo || "present"} Accessories | Homefy.pk`,
+      metaDescription: `Shop ${make} ${model} accessories in Pakistan at Homefy.pk — Cash on Delivery nationwide.`,
     };
 
     const existing = await Vehicle.findOne({ slug }).select("_id").lean();
@@ -298,8 +298,8 @@ async function ensureCategories() {
         showOnHomepage: false,
         sortOrder: 40,
         seo: {
-          metaTitle: meta.metaTitle || `${name} | CrazzyCars.pk`,
-          metaDescription: meta.metaDescription || `Shop ${name} in Pakistan at CrazzyCars.pk.`,
+          metaTitle: meta.metaTitle || `${name} | Homefy.pk`,
+          metaDescription: meta.metaDescription || `Shop ${name} in Pakistan at Homefy.pk.`,
           metaKeywords: meta.metaKeywords || [name.toLowerCase()],
         },
         image: { url: "", publicId: "", altText: "", title: "" },
@@ -311,15 +311,15 @@ async function ensureCategories() {
 
   await ensureChild("wind-deflectors", "Wind Deflectors", exterior, {
     description: "Window wind deflectors / air press for cars.",
-    metaTitle: "Car Wind Deflectors in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Wind Deflectors in Pakistan | Homefy.pk",
   });
   await ensureChild("dashboard-mats", "Dashboard Mats", interior, {
     description: "Dashboard mats and covers.",
-    metaTitle: "Dashboard Mats in Pakistan | CrazzyCars.pk",
+    metaTitle: "Dashboard Mats in Pakistan | Homefy.pk",
   });
   await ensureChild("floor-mats", "Floor Mats", interior, {
     description: "Car floor mats.",
-    metaTitle: "Car Floor Mats in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Floor Mats in Pakistan | Homefy.pk",
   });
 
   for (const slug of ACTIVATE_SLUGS) {
