@@ -5,7 +5,7 @@
 #   docker compose -f docker-compose.homefy.yml up -d
 #
 # Connection string (no auth):
-#   mongodb://127.0.0.1:27017/homefy
+#   mongodb://127.0.0.1:27017/homefy_pk
 
 services:
   mongo:
@@ -14,7 +14,7 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_DATABASE: homefy
+      MONGO_INITDB_DATABASE: homefy_pk
     volumes:
       - homefy-mongo-data:/data/db
     restart: unless-stopped
