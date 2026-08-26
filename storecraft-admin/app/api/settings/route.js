@@ -6,6 +6,7 @@ import { denyUnlessCapability } from "@/lib/denyCapability";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { requestIp } from "@/lib/requestIp";
 import { revalidateStorefront } from "@/lib/revalidateStorefront";
+import { sanitizeSettingsDocument } from "@/lib/sanitizeForeignBrand";
 
 function mergeNested(target, patch) {
   if (!patch || typeof patch !== "object") return;
@@ -45,7 +46,7 @@ export async function GET(request) {
     if (!doc) {
       doc = await Settings.create({ singletonKey: SETTINGS_SINGLETON_KEY });
     }
-    const settings = doc.toObject();
+    const settings = sanitizeSettingsDocument(doc.toObject());
     return NextResponse.json({
       success: true,
       settings,
@@ -198,6 +199,13 @@ export async function PUT(request) {
     if (body.whatsappTemplates !== undefined) {
       doc.markModified("whatsappTemplates");
     }
+    const healed = sanitizeSettingsDocument(doc.toObject());
+    for (const key of Object.keys(healed)) {
+      if (key === "_id" || key === "__v" || key === "id") continue;
+      doc.set(key, healed[key]);
+      doc.markModified(key);
+    }
+
     await doc.save();
 
     await logActivity({
@@ -213,7 +221,7 @@ export async function PUT(request) {
     // Storefront caches settings for 60s; purge now so edits show immediately.
     const revalidated = await revalidateStorefront(["/", "/api/settings"]);
 
-    return NextResponse.json({ success: true, settings: doc.toObject(), revalidated });
+    return NextResponse.json({ success: true, settings: sanitizeSettingsDocument(doc.toObject()), revalidated });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Update failed." },

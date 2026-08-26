@@ -2,6 +2,7 @@ import { normalizeHomepageSettings } from "@/lib/defaultHomepageSettings";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { STORE_POLICY } from "@/config/store-policy";
+import { sanitizeSettingsDocument, sanitizeStoreName } from "@/lib/sanitizeForeignBrand";
 import {
   sanitizeAnnouncementItems,
   sanitizeCustomerShippingNote,
@@ -329,7 +330,8 @@ export function normalizeTrustBadges(raw) {
 }
 
 /** Build full storefront settings payload from raw Mongo document. */
-export function buildStoreSettingsPayload(settings = {}) {
+export function buildStoreSettingsPayload(rawSettings = {}) {
+  const settings = sanitizeSettingsDocument(rawSettings) || rawSettings;
   const g = settings.general || {};
   const logoString =
     (typeof g.logoUrl === "string" ? g.logoUrl.trim() : "") ||
@@ -433,7 +435,7 @@ export function buildStoreSettingsPayload(settings = {}) {
     contactPage: settings?.contactPage || {},
     storefront: settings?.storefront || {},
     checkout,
-    storeName: g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
+    storeName: sanitizeStoreName(g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"),
     logoUrl: logoString,
     phone: g.phone || "",
     email: g.email || "",

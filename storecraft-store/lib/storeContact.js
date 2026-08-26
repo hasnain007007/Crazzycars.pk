@@ -9,12 +9,15 @@ const LEGACY_EMAILS = new Set([
   // Pre-rebrand store emails still stored on footer.contactEmail in some Settings docs
   "sialkotmotorssports@gmail.com",
   "sialkotmotorsports@gmail.com",
+  "support@homefy.pk",
+  "info@homefy.pk",
+  "info@homefy.pk.pk",
 ]);
 
 /** Normalize legacy support addresses to the single public contact email. */
 export function normalizeStoreEmail(email) {
   const trimmed = String(email || "").trim();
-  if (!trimmed || LEGACY_EMAILS.has(trimmed.toLowerCase())) {
+  if (!trimmed || LEGACY_EMAILS.has(trimmed.toLowerCase()) || /homefy/i.test(trimmed)) {
     return STORE_CONTACT_EMAIL;
   }
   return trimmed;

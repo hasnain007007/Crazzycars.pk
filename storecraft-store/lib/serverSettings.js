@@ -26,7 +26,7 @@ export const getServerStoreSettings = cache(async () => {
           {};
         return toPlain(buildStoreSettingsPayload(doc));
       },
-      ["server-store-settings-v1"],
+      ["server-store-settings-v2"],
       { revalidate: 60, tags: ["store-settings"] }
     )();
   } catch (e) {

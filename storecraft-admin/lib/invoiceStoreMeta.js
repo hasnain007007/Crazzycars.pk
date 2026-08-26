@@ -1,6 +1,8 @@
 /**
  * Full store brand details for invoices / print documents.
  */
+import { sanitizeStoreName } from "@/lib/sanitizeForeignBrand";
+
 export async function getInvoiceStoreMeta() {
   if (typeof window === "undefined") {
     return defaultMeta();
@@ -25,7 +27,7 @@ export async function getInvoiceStoreMeta() {
       g.logo?.url ||
       "";
     return {
-      storeName: String(g.storeName || "").trim() || "Crazzycars.pk",
+      storeName: sanitizeStoreName(g.storeName),
       logoUrl: String(logoUrl || "").trim(),
       phone: String(g.phone || "").trim(),
       email: String(g.email || "").trim(),
@@ -82,7 +84,7 @@ export function storeMetaFromSettings(settingsDoc) {
     g.logo?.url ||
     "";
   return {
-    storeName: String(g.storeName || "").trim() || "Crazzycars.pk",
+    storeName: sanitizeStoreName(g.storeName),
     logoUrl: String(logoUrl || "").trim(),
     phone: String(g.phone || "").trim(),
     email: String(g.email || "").trim(),

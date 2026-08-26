@@ -7,6 +7,7 @@ import { Toaster } from "react-hot-toast";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { buildFaviconMetadata } from "@/lib/faviconUrl";
+import { sanitizeSettingsDocument, sanitizeStoreName } from "@/lib/sanitizeForeignBrand";
 import "./globals.css";
 
 const inter = Inter({
@@ -47,7 +48,7 @@ async function getBranding() {
     const doc = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY })
       .select("general.storeName general.favicon general.faviconUrl")
       .lean();
-    general = doc?.general || {};
+    general = sanitizeSettingsDocument({ general: doc?.general || {} }).general || {};
   } catch (e) {
     console.error("admin branding metadata error:", e);
   }
@@ -58,8 +59,9 @@ async function getBranding() {
 
 export async function generateMetadata() {
   const general = await getBranding();
-  const storeName =
-    general.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const storeName = sanitizeStoreName(
+    general.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"
+  );
 
   return {
     title: { default: `${storeName} Admin`, template: `%s · ${storeName} Admin` },

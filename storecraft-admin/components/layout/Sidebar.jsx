@@ -359,7 +359,7 @@ export function Sidebar({ mobileOpen, onClose }) {
           />
         ) : (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1d6fb8] text-xs font-bold text-white">
-            SC
+            CC
           </div>
         )}
         {settingsLoading && !storeSettings ? null : (
