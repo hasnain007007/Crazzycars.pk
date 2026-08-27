@@ -14,6 +14,8 @@ const TABS = [
 
 const SHIP_TYPES = ["Normal", "Reversed", "Replacement", "Overland"];
 const HANDLING_OPTS = ["Normal", "Fragile"];
+const CELL_INPUT =
+  "h-8 w-full min-w-[8rem] rounded border border-slate-300 bg-white px-2 text-xs dark:border-slate-600 dark:bg-slate-900";
 
 function downloadLabel(url) {
   if (!url) return;
@@ -359,6 +361,9 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
           type: courier.defaultShipperType || "Normal",
           cod: o.cod ?? 0,
           pieces: o.pieces || 1,
+          name: o.name || "",
+          phone: o.phone || "",
+          street: o.street || "",
         };
       }
       setRows(next);
@@ -379,9 +384,10 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
   async function bookOne(order, extra = {}) {
     const row = rows[order.id] || {};
     const mappedCity = extra.city || row.city || order.suggestedCity || order.city;
-    const street = String(extra.street ?? order.street ?? "").trim();
-    const area = String(extra.area ?? order.area ?? "").trim();
-    const phone = String(extra.phone ?? order.phone ?? "").trim();
+    const street = String(extra.street ?? row.street ?? order.street ?? "").trim();
+    const area = String(extra.area ?? row.area ?? order.area ?? "").trim();
+    const phone = String(extra.phone ?? row.phone ?? order.phone ?? "").trim();
+    const name = String(extra.name ?? row.name ?? order.name ?? "").trim();
     const deliveryAddress = String(
       extra.deliveryAddress ||
         [street, area].filter(Boolean).join(", ") ||
@@ -414,8 +420,10 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
         remarks: extra.remarks || courier.shipperRemarks || "",
         paymentMethod: extra.paymentMethod || order.paymentMethod || "manual",
         cityName: mappedCity || "",
+        customerName: name,
         deliveryAddress,
         shippingAddress: {
+          name,
           street,
           area,
           phone,
@@ -450,7 +458,7 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
       }
     }
     const okConfirm = window.confirm(
-      `Book ${ids.length} orders with PostEx?\n\nOpen each order's Details (eye icon) to recheck phone/address before booking.\nContinue bulk book with auto-cleaned addresses?`
+      `Book ${ids.length} orders with PostEx?\n\nName, phone, and address from the table are sent as you edited them.\nContinue?`
     );
     if (!okConfirm) return;
     setBooking(true);
@@ -483,7 +491,16 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
     if (!detail) return;
     setBooking(true);
     try {
-      patchRow(detail.id, { city: form.city, weight: form.weight, pieces: form.pieces, cod: form.cod, type: form.type });
+      patchRow(detail.id, {
+        city: form.city,
+        weight: form.weight,
+        pieces: form.pieces,
+        cod: form.cod,
+        type: form.type,
+        name: form.name,
+        phone: form.phone,
+        street: form.street,
+      });
       const json = await bookOne(detail, form);
       onToast(`Booked ${detail.orderNumber} — ${json.trackingNumber}. Slip downloading…`);
       setDetail(null);
@@ -503,7 +520,7 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
         <div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create Booking with PostEx</h2>
           <p className="text-sm text-slate-500">
-            Open Details to recheck phone/address, then Confirm &amp; book. Slip PDF downloads automatically.
+            Edit name, phone, and address in the table, then book. Slip PDF downloads automatically.
           </p>
         </div>
         <button
@@ -626,10 +643,30 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
                         #{o.orderNumber}
                       </Link>
                     </td>
-                    <td className="px-2 py-2 whitespace-nowrap">{o.name}</td>
-                    <td className="px-2 py-2 whitespace-nowrap">{o.phone}</td>
-                    <td className="max-w-[180px] truncate px-2 py-2" title={o.address}>
-                      {o.address}
+                    <td className="px-2 py-2">
+                      <input
+                        className={CELL_INPUT}
+                        value={row.name ?? o.name ?? ""}
+                        onChange={(e) => patchRow(o.id, { name: e.target.value })}
+                        aria-label={`Name for ${o.orderNumber}`}
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        className={`${CELL_INPUT} min-w-[9rem] font-mono`}
+                        value={row.phone ?? o.phone ?? ""}
+                        onChange={(e) => patchRow(o.id, { phone: e.target.value })}
+                        aria-label={`Phone for ${o.orderNumber}`}
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        className={`${CELL_INPUT} min-w-[14rem]`}
+                        value={row.street ?? o.street ?? ""}
+                        onChange={(e) => patchRow(o.id, { street: e.target.value })}
+                        title={row.street ?? o.address ?? ""}
+                        aria-label={`Address for ${o.orderNumber}`}
+                      />
                     </td>
                     <td className="px-2 py-2">
                       <div className="text-xs">{o.city || "—"}</div>
@@ -693,6 +730,9 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
                         onClick={() =>
                           setDetail({
                             ...o,
+                            name: row.name ?? o.name,
+                            phone: row.phone ?? o.phone,
+                            street: row.street ?? o.street,
                             suggestedCity: row.city || o.suggestedCity || o.city,
                             weight: row.weight || 0.5,
                             pieces: row.pieces || 1,
@@ -705,7 +745,7 @@ function BookingTab({ cities, courier, onToast, onDownload }) {
                       </button>
                     </td>
                     <td className="px-2 py-2 text-center text-lg">
-                      {cityOk && o.phone ? (
+                      {cityOk && String(row.phone ?? o.phone ?? "").trim() ? (
                         <span className="text-emerald-500" title="Ready">
                           ●
                         </span>

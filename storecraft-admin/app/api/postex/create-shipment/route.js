@@ -126,6 +126,7 @@ export async function POST(request) {
       paymentMethod: body.paymentMethod,
       cityName: body.cityName || body.city || "",
       deliveryAddress: body.deliveryAddress || "",
+      customerName: body.customerName || "",
       codAmount: body.codAmount,
     };
 
@@ -140,7 +141,22 @@ export async function POST(request) {
         order.shippingAddress.address = street;
       }
       if (sa.area != null) order.shippingAddress.area = String(sa.area || "").trim();
-      if (sa.phone != null) order.shippingAddress.phone = String(sa.phone || "").trim();
+      if (sa.phone != null) {
+        const phone = String(sa.phone || "").trim();
+        order.shippingAddress.phone = phone;
+        if (!order.customer) order.customer = {};
+        order.customer.phone = phone;
+        order.markModified("customer");
+      }
+      if (sa.name != null) {
+        const name = String(sa.name || "").trim();
+        if (name) {
+          order.shippingAddress.name = name;
+          if (!order.customer) order.customer = {};
+          order.customer.name = name;
+          order.markModified("customer");
+        }
+      }
       if (sa.city != null) order.shippingAddress.city = String(sa.city || "").trim();
       order.markModified("shippingAddress");
     }

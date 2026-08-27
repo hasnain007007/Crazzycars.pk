@@ -518,6 +518,7 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
   const invoiceDivision = Math.max(1, Math.round(Number(opts.invoiceDivision) || 1));
 
   const customerName =
+    String(opts.customerName || "").trim() ||
     String(addr.name || "").trim() ||
     [customer.firstName, customer.lastName].filter(Boolean).join(" ").trim() ||
     String(customer.name || "").trim() ||
