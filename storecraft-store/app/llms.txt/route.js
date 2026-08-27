@@ -31,9 +31,9 @@ export async function GET() {
 
   const body = `# Homefy.pk
 
-> Pakistan's online store for kitchen accessories, girls' beauty bags and ladies bags. Cash on Delivery nationwide.
+> Pakistan's online store for kitchen accessories, beauty & travel bags (makeup pouches, toiletry kits) and ladies bags. Cash on Delivery nationwide.
 
-Homefy.pk sells kitchen accessories (cookware, storage, cutlery, dining), beauty bags (makeup pouches, travel toiletry bags, vanity organizers) and ladies bags (mini handbags, totes, crossbody bags, clutches). Currency: PKR. Primary market: Pakistan.
+Homefy.pk sells kitchen accessories (cookware, storage, cutlery, dining), beauty & travel bags (makeup pouches, travel toiletry bags, vanity organizers) and ladies bags (mini handbags, totes, crossbody bags, clutches). Currency: PKR. Primary market: Pakistan.
 
 ## Discoverability
 

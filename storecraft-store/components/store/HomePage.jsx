@@ -8,7 +8,7 @@ import CategoryHighlights from "@/components/home/CategoryHighlights";
 import LookbookStrip from "@/components/home/LookbookStrip";
 import NewsletterSignup from "@/components/home/NewsletterSignup";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
-import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
+import { DEFAULT_HOMEPAGE_SETTINGS, normalizeHomepageSettings } from "@/lib/defaultHomepageSettings";
 
 const HotDeals = dynamic(() => import("@/components/home/HotDeals"), {
   loading: () => <SectionSkeleton height={360} />,
@@ -34,12 +34,7 @@ function SectionSkeleton({ height = 240 }) {
 }
 
 function mergeHomepageSettings(raw) {
-  if (!raw || typeof raw !== "object") return DEFAULT_HOMEPAGE_SETTINGS;
-  return {
-    ...DEFAULT_HOMEPAGE_SETTINGS,
-    ...raw,
-    sections: { ...DEFAULT_HOMEPAGE_SETTINGS.sections, ...(raw.sections || {}) },
-  };
+  return normalizeHomepageSettings(raw);
 }
 
 /**

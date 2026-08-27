@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
 import { cardImageUrl } from "@/lib/cloudinaryImage";
+import { isPlaceholderProductImage } from "@/lib/homefyBrand";
+import { ProductImagePlaceholder } from "@/components/store/ProductImagePlaceholder";
 
 function pctOff(regular, sale, onSale) {
   if (!onSale || regular <= 0) return 0;
@@ -66,7 +68,7 @@ export function HomeProductCard({ product }) {
         onMouseEnter={() => hoverImageUrl && setHoverLoaded(true)}
         onFocus={() => hoverImageUrl && setHoverLoaded(true)}
       >
-        {imageUrl ? (
+        {imageUrl && !isPlaceholderProductImage(images[0]) ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -89,10 +91,10 @@ export function HomeProductCard({ product }) {
             ) : null}
           </>
         ) : (
-          <div className="flex h-full items-center justify-center text-4xl text-[#d1d5db]">💎</div>
+          <ProductImagePlaceholder name={product.name} />
         )}
         {onSale ? (
-          <span className="absolute top-2 left-2 rounded-full bg-[#D72323] px-2 py-0.5 text-xs font-semibold text-[#111111]">SALE</span>
+          <span className="absolute top-2 left-2 rounded-full bg-[#C6633B] px-2 py-0.5 text-xs font-semibold text-white">SALE</span>
         ) : null}
         {product.newArrival ? (
           <span className="absolute top-2 right-2 rounded-full bg-[#111827] px-2 py-0.5 text-xs font-semibold text-white">NEW</span>

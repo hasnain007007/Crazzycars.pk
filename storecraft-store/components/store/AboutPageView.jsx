@@ -1,21 +1,22 @@
 import Link from "next/link";
+import { LIVE_STORY } from "@/lib/homefyBrand";
 
 const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
 
 const DEFAULT_HERO = {
   badge: "Our Story",
-  title: "Kitchen, beauty bags and ladies bags for Pakistani homes",
-  subtitle: `At ${STORE}, we bring cookware, makeup pouches and ladies handbags to homes across Pakistan — with Cash on Delivery nationwide.`,
+  title: LIVE_STORY.heading,
+  subtitle: LIVE_STORY.description,
 };
 
 const DEFAULT_STORY = {
   badge: "Who We Are",
-  title: "Built for Pakistani Homes",
-  paragraph1: `${STORE} is a home and lifestyle store for kitchen accessories, girls’ beauty bags and ladies bags — quality pieces at fair prices.`,
+  title: "Why kitchen and bags share one name",
+  paragraph1: LIVE_STORY.description,
   paragraph2:
-    "From pans and storage to makeup pouches, totes and clutches, every product is chosen for everyday use in Pakistani kitchens and wardrobes.",
+    "Cookware and storage stay in the house. Makeup pouches, toiletry kits and handbags go out with you. Same cart, same Cash on Delivery.",
   paragraph3:
-    "We serve customers nationwide with Cash on Delivery, clear product details, and support when you need help choosing the right piece.",
+    "We list materials and sizes on each product so you can order without guessing. Founding year, team size and customer counts are not published until they are confirmed — [NEEDS INPUT].",
 };
 
 const DEFAULT_STATS = [];
@@ -23,34 +24,34 @@ const DEFAULT_STATS = [];
 const DEFAULT_VALUES = [
   {
     icon: "🏡",
-    title: "Everyday Quality",
+    title: "Pieces you will actually use",
     description:
-      "Every product is selected for durability and finish — pieces we would use in our own kitchens and wardrobes.",
+      "We pick cookware, pouches and handbags for ordinary Pakistani days — not display-shelf theatrics.",
   },
   {
     icon: "✨",
-    title: "Clear Product Details",
+    title: "Clear product details",
     description:
-      "Materials, care notes and sizes are listed so you can order with confidence.",
+      "Materials, care notes and sizes are listed so you can order without a follow-up message — unless you want one.",
   },
   {
     icon: "💳",
     title: "Cash on Delivery",
-    description: "Order with confidence and pay when your package arrives at your doorstep, anywhere in Pakistan.",
+    description: "Pay when the parcel is in your hands, anywhere we deliver in Pakistan.",
   },
   {
     icon: "🚚",
-    title: "Nationwide Delivery",
+    title: "Nationwide delivery",
     description:
-      "Fast delivery to Lahore, Karachi, Islamabad and cities across Pakistan with tracking where available.",
+      "We send orders to cities and towns across Pakistan. Tracking is shared when the courier provides it.",
   },
 ];
 
 const DEFAULT_PROMISE = {
   title: `${STORE} Promise`,
   paragraph1:
-    "We promise honest product descriptions, fair pricing, and pieces we would use at home. Every item is checked before it ships.",
-  paragraph2: `Your satisfaction and your home come first. That is the ${STORE} way.`,
+    "Honest listings, fair prices, and pieces we would keep in our own kitchens and bags. If something arrives wrong or damaged, send photos — we sort it.",
+  paragraph2: `Your home and your order come first. That is the ${STORE} way.`,
 };
 
 const DEFAULT_FAQ = [

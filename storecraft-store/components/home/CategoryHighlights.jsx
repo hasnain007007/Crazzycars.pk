@@ -12,12 +12,12 @@ const HIGHLIGHTS = [
     cta: "Shop kitchen",
   },
   {
-    title: "Beauty Bags",
-    text: "Makeup pouches, travel kits and organizers.",
+    title: "Beauty & Travel Bags",
+    text: "Makeup pouches, travel kits and vanity organizers — bags, not cosmetics.",
     href: "/categories/beauty-bags",
     image: "/images/catalog/beauty-bags.svg",
     accent: "var(--color-secondary)",
-    cta: "Shop beauty bags",
+    cta: "Shop beauty & travel bags",
   },
   {
     title: "Ladies Bags",
@@ -33,13 +33,13 @@ export default function CategoryHighlights() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-5 md:py-6">
       <h2 className="mb-1 font-heading text-lg font-bold text-[#111] md:text-xl">Shop Homefy</h2>
-      <p className="mb-3 text-sm text-[#6B7280]">Kitchen, beauty bags and ladies bags — COD nationwide.</p>
+      <p className="mb-3 text-sm text-[#6B7280]">Three departments — kitchen, bags for beauty on the go, and ladies handbags.</p>
       <div className="grid gap-2 md:grid-cols-3">
         {HIGHLIGHTS.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center gap-3 rounded-xl border border-[#E8D9CC] bg-white p-2.5 transition hover:border-[var(--color-primary)]"
+            className="flex min-h-[44px] items-center gap-3 rounded-xl border border-[#E8D9CC] bg-white p-2.5 transition hover:border-[var(--color-primary)] hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

@@ -38,7 +38,7 @@ const rajdhani = Rajdhani({
 });
 
 const FALLBACK_DESCRIPTION =
-  "Shop kitchen accessories, girls' beauty bags and ladies handbags online in Pakistan — cookware, makeup pouches, totes and more. Cash on Delivery nationwide. Homefy.pk";
+  "Shop kitchen accessories, beauty & travel bags (makeup pouches, toiletry kits) and ladies handbags online in Pakistan. Cash on Delivery nationwide. Homefy.pk";
 
 export const viewport = {
   width: "device-width",
@@ -156,7 +156,7 @@ export async function generateMetadata() {
     console.error("generateMetadata error:", e);
     return {
       metadataBase: new URL(getSiteUrl()),
-      title: "Homefy.pk | Kitchen Accessories & Beauty Bags",
+      title: "Homefy.pk | Kitchen Accessories, Beauty & Travel Bags, Ladies Bags",
       description: FALLBACK_DESCRIPTION,
       icons: buildFaviconMetadata(),
       robots: isIndexableEnvironment() ? undefined : { index: false, follow: false },

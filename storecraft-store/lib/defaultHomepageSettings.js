@@ -1,4 +1,5 @@
 import { looksLikeFreeDeliveryCopy, standardDeliveryFeeShort } from "./storePolicyCopy.js";
+import { replaceStaleHomefyCopy } from "./homefyBrand.js";
 
 export const DEFAULT_HOMEPAGE_SETTINGS = {
   announcementMessages: [
@@ -6,16 +7,36 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
     { text: "Cash on delivery available at checkout", isActive: true },
   ],
   announcementBgColor: "#111111",
-  heroHeadline: "Kitchen, beauty bags & ladies bags",
+  heroHeadline: "Kitchen, beauty & travel bags, ladies bags",
   heroSubtext:
-    "Cookware, makeup pouches and handbags for Pakistani homes — Cash on Delivery nationwide.",
+    "Cookware for the stove, pouches for travel, handbags for going out — Cash on Delivery nationwide.",
   heroCtaText: "Shop Now",
   heroCtaUrl: "/shop",
   whyChooseUs: [
-    { icon: "🚚", title: "Nationwide Delivery", description: "We ship across Pakistan", isActive: true },
-    { icon: "💰", title: "Cash on Delivery", description: "Pay when your order arrives", isActive: true },
-    { icon: "🔄", title: "Easy Returns", description: "Hassle-free returns on eligible items", isActive: true },
-    { icon: "✅", title: "Quality Checked", description: "Products checked before dispatch", isActive: true },
+    {
+      icon: "🚚",
+      title: "Nationwide delivery",
+      description: "We send orders across Pakistan. Tracking is shared when the courier provides it.",
+      isActive: true,
+    },
+    {
+      icon: "💰",
+      title: "Cash on Delivery",
+      description: "Pay in cash when the parcel is at your door — you see it before you pay.",
+      isActive: true,
+    },
+    {
+      icon: "🔄",
+      title: "Exchange if unused",
+      description: "Unused items in original packaging can be exchanged. Defective or wrong items are refunded after we check photos.",
+      isActive: true,
+    },
+    {
+      icon: "✅",
+      title: "Checked before it leaves",
+      description: "We look over each piece so the box matches the listing — not a factory audit, a real check.",
+      isActive: true,
+    },
   ],
   brands: [],
   flashSaleEnabled: false,
@@ -40,15 +61,12 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
     productIds: [],
     tabs: [
       { label: "All", categorySlug: "all", enabled: true, order: 1 },
-      { label: "Kitchen", categorySlug: "kitchen-accessories", enabled: true, order: 2 },
-      { label: "Beauty", categorySlug: "beauty-bags", enabled: true, order: 3 },
-      { label: "Ladies", categorySlug: "ladies-bags", enabled: true, order: 4 },
     ],
   },
   hotDeals: {
     enabled: true,
     title: "On Sale",
-    subtitle: "Limited-time offers from Homefy.pk",
+    subtitle: "Sale prices on kitchen pieces and bags — while stock lasts.",
     tabs: [
       { label: "All Deals", filter: "all", maxPrice: null, enabled: true, order: 1 },
       { label: "Under Rs.1,000", filter: "under1000", maxPrice: 1000, enabled: true, order: 2 },
@@ -57,7 +75,7 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
   },
   sectionOrder: [
     { id: "hero", label: "Hero Banner", enabled: true, order: 1 },
-    { id: "shopByCar", label: "Shop by Car", enabled: false, order: 2 },
+    { id: "shopByCar", label: "", enabled: false, order: 2 },
     { id: "categories", label: "Categories", enabled: true, order: 3 },
     { id: "bestSellers", label: "Featured Products", enabled: true, order: 4 },
     { id: "hotDeals", label: "On Sale", enabled: true, order: 5 },
@@ -92,18 +110,30 @@ export function normalizeHomepageSettings(raw) {
           })
         : d.announcementMessages,
     announcementBgColor: raw.announcementBgColor || d.announcementBgColor,
-    heroHeadline: raw.heroHeadline || d.heroHeadline,
-    heroSubtext: raw.heroSubtext || d.heroSubtext,
+    heroHeadline: replaceStaleHomefyCopy(raw.heroHeadline, d.heroHeadline),
+    heroSubtext: replaceStaleHomefyCopy(raw.heroSubtext, d.heroSubtext),
     heroCtaText: raw.heroCtaText || d.heroCtaText,
     heroCtaUrl: raw.heroCtaUrl || d.heroCtaUrl,
     whyChooseUs:
       Array.isArray(raw.whyChooseUs) && raw.whyChooseUs.length
-        ? raw.whyChooseUs.map((item) => ({
-            icon: String(item?.icon ?? ""),
-            title: String(item?.title ?? ""),
-            description: String(item?.description ?? ""),
-            isActive: item?.isActive !== false,
-          }))
+        ? raw.whyChooseUs.map((item) => {
+            const title = String(item?.title ?? "");
+            let description = String(item?.description ?? "");
+            if (/hassle-free/i.test(description)) {
+              description =
+                "Unused items in original packaging can be exchanged. Defective or wrong items are refunded after we check photos.";
+            }
+            if (/quality checked|checked before dispatch/i.test(description) || /^quality checked$/i.test(title)) {
+              description =
+                "We look over each piece so the box matches the listing — not a factory audit, a real check.";
+            }
+            return {
+              icon: String(item?.icon ?? ""),
+              title,
+              description,
+              isActive: item?.isActive !== false,
+            };
+          })
         : d.whyChooseUs,
     brands:
       Array.isArray(raw.brands) && raw.brands.length
@@ -137,20 +167,29 @@ export function normalizeHomepageSettings(raw) {
       productIds: Array.isArray(raw.bestSellers?.productIds)
         ? raw.bestSellers.productIds.map((id) => String(id)).filter(Boolean)
         : [],
-      tabs:
-        Array.isArray(raw.bestSellers?.tabs) && raw.bestSellers.tabs.length
-          ? raw.bestSellers.tabs.map((t, i) => ({
-              label: String(t?.label || ""),
-              categorySlug: String(t?.categorySlug || "all"),
-              enabled: t?.enabled !== false,
-              order: Number.isFinite(Number(t?.order)) ? Number(t.order) : i + 1,
-            }))
-          : d.bestSellers.tabs,
+      tabs: (() => {
+        const mapped =
+          Array.isArray(raw.bestSellers?.tabs) && raw.bestSellers.tabs.length
+            ? raw.bestSellers.tabs
+                .map((t, i) => ({
+                  label: String(t?.label || ""),
+                  categorySlug: String(t?.categorySlug || "all"),
+                  enabled: t?.enabled !== false,
+                  order: Number.isFinite(Number(t?.order)) ? Number(t.order) : i + 1,
+                }))
+                .filter((t) => {
+                  const slug = String(t.categorySlug || "").toLowerCase();
+                  if (slug === "all") return true;
+                  return !["kitchen-accessories", "beauty-bags", "ladies-bags"].includes(slug);
+                })
+            : [];
+        return mapped.length ? mapped : d.bestSellers.tabs;
+      })(),
     },
     hotDeals: {
       enabled: raw.hotDeals?.enabled !== false,
       title: raw.hotDeals?.title || raw.sectionTitles?.hotDeals || d.hotDeals.title,
-      subtitle: raw.hotDeals?.subtitle || d.hotDeals.subtitle,
+      subtitle: replaceStaleHomefyCopy(raw.hotDeals?.subtitle, d.hotDeals.subtitle),
       tabs:
         Array.isArray(raw.hotDeals?.tabs) && raw.hotDeals.tabs.length
           ? raw.hotDeals.tabs.map((t, i) => {
@@ -179,12 +218,15 @@ export function normalizeHomepageSettings(raw) {
       Array.isArray(raw.sectionOrder) && raw.sectionOrder.length
         ? raw.sectionOrder
             .filter((s) => s?.id && s.id !== "trust")
-            .map((s, i) => ({
-              id: String(s?.id || ""),
-              label: String(s?.label || ""),
-              enabled: s?.enabled !== false,
-              order: Number.isFinite(Number(s?.order)) ? Number(s.order) : i + 1,
-            }))
+            .map((s, i) => {
+              const id = String(s?.id || "");
+              return {
+                id,
+                label: id === "shopByCar" ? "" : String(s?.label || ""),
+                enabled: id === "shopByCar" ? false : s?.enabled !== false,
+                order: Number.isFinite(Number(s?.order)) ? Number(s.order) : i + 1,
+              };
+            })
         : d.sectionOrder,
     sectionTitles: {
       categories: raw.sectionTitles?.categories || d.sectionTitles.categories,

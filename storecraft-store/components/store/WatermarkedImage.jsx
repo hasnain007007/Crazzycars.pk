@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getWatermarkOverlayStyle } from "@/lib/productImageWatermark";
+import { getWatermarkLabelStyle, getWatermarkOverlayStyle } from "@/lib/productImageWatermark";
 import { cardImageUrl, cloudinarySrcSet } from "@/lib/cloudinaryImage";
 
 export function WatermarkedImage({
@@ -54,7 +54,9 @@ export function WatermarkedImage({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img {...imgProps} style={{ width: "100%", height: "100%", display: "block", ...imgStyle }} />
-      <div style={getWatermarkOverlayStyle(watermark)} aria-hidden />
+      <div style={getWatermarkOverlayStyle(watermark)} aria-hidden>
+        <span style={getWatermarkLabelStyle(watermark)}>{watermark.text}</span>
+      </div>
     </div>
   );
 }

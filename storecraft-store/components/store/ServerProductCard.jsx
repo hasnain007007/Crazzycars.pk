@@ -8,14 +8,12 @@ import {
   normalizeProductForCard,
   productCardAlt,
 } from "@/lib/productCardShape";
+import { isPlaceholderProductImage } from "@/lib/homefyBrand";
+import { ProductImagePlaceholder } from "@/components/store/ProductImagePlaceholder";
 
-function CardImage({ src, alt, priority, sizes, className }) {
-  if (!src) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-1 px-3 text-center">
-        <span className="text-2xl text-[#D1D5DB]">—</span>
-      </div>
-    );
+function CardImage({ src, alt, priority, sizes, className, name }) {
+  if (!src || isPlaceholderProductImage(src)) {
+    return <ProductImagePlaceholder name={name || alt} />;
   }
   if (isAllowedNextImageSrc(src)) {
     return (
@@ -89,6 +87,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
               <CardImage
                 src={imageUrl}
                 alt={alt}
+                name={card.name}
                 priority={priority}
                 sizes="120px"
                 className="object-cover"
@@ -127,6 +126,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
           <CardImage
             src={imageUrl}
             alt={alt}
+            name={card.name}
             priority={priority}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
           />

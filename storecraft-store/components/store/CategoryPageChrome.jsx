@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CategoryHeroBanner } from "@/components/store/CategoryHeroBanner";
 import { categoryHref } from "@/lib/categories";
+import { categoryBlurb, displayCategoryName } from "@/lib/homefyBrand";
 
 function plainText(htmlOrText) {
   return String(htmlOrText || "")
@@ -72,8 +73,12 @@ export function CategoryPageChrome({
 }) {
   if (!category) return null;
 
+  const displayName = displayCategoryName(category.slug, category.name);
   const description =
-    plainText(category?.shortDescription) || plainText(category?.description) || "";
+    plainText(category?.shortDescription) ||
+    plainText(category?.description) ||
+    categoryBlurb(category.slug) ||
+    "";
 
   const trail =
     Array.isArray(crumbs) && crumbs.length
@@ -81,7 +86,7 @@ export function CategoryPageChrome({
       : [
           { name: "Home", url: "/" },
           { name: "Categories", url: "/categories" },
-          { name: category.name, url: `/categories/${category.slug}` },
+          { name: displayName, url: `/categories/${category.slug}` },
         ];
   const current = trail[trail.length - 1];
   const parents = trail.slice(0, -1);
@@ -96,7 +101,7 @@ export function CategoryPageChrome({
           </span>
         ))}
         <span className="cat-breadcrumb__sep">/</span>
-        <span className="cat-breadcrumb__current">{current?.name || category.name}</span>
+        <span className="cat-breadcrumb__current">{current?.name || displayName}</span>
       </nav>
 
       <CategoryHeroBanner

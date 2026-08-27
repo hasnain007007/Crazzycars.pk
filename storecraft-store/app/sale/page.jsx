@@ -15,7 +15,7 @@ export const revalidate = 120;
 export const metadata = buildPageMetadata({
   title: `Hot Deals & Sale — ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"}`,
   description:
-    "Shop sale deals on car accessories — splitters, LED lights, body kits, and more from Homefy.pk.",
+    "Sale on kitchen accessories, beauty & travel bags and ladies bags from Homefy.pk. Cash on Delivery nationwide.",
   path: "/sale",
   absoluteTitle: true,
 });

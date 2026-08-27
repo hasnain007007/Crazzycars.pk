@@ -10,6 +10,7 @@ import {
   normalizeListingView,
 } from "@/lib/productListing";
 import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW } from "@/lib/seo/robotsMeta";
+import { categoryBlurb, displayCategoryName } from "@/lib/homefyBrand";
 
 /** Query keys that make a listing a filtered/facet variant (noindex). `page` is allowed. */
 export const LISTING_FACET_KEYS = [
@@ -178,9 +179,20 @@ export function listingPageHref(pathname, urlState, pageNum) {
 export function shopListingTitle(listing) {
   if (listing?.q) return `Results for “${listing.q}”`;
   if (listing?.sale || listing?.deals) return "On Sale";
-  if (listing?.category === "kitchen-accessories") return "Kitchen Accessories";
-  if (listing?.category === "beauty-bags") return "Beauty Bags";
-  if (listing?.category === "ladies-bags") return "Ladies Bags";
+  if (listing?.category) {
+    const slug = String(listing.category);
+    const human = slug
+      .split("-")
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+    return displayCategoryName(slug, human);
+  }
   if (listing?.brand) return `${listing.brand} bags`;
   return "Shop Homefy";
+}
+
+export function shopListingIntro(listing) {
+  if (listing?.q || listing?.sale || listing?.deals) return "";
+  return categoryBlurb(listing?.category);
 }

@@ -901,7 +901,7 @@ export function SettingsPage() {
           <div className="border-t border-slate-200 pt-6 dark:border-slate-700">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Product Image Watermark</h2>
             <p className="mt-1 text-sm text-slate-500">
-              CSS overlay on storefront product images (not burned into uploaded files).
+              Single corner or bottom-strip overlay on real product photos. Catalog placeholders use a separate “photo coming soon” tile. Not tiled across the image.
             </p>
 
             <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">

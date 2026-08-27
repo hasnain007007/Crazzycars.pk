@@ -138,7 +138,7 @@ export function CartDrawer() {
                             else updateQuantity(itemId, qty - 1);
                           }}
                           style={{
-                            width: 28, height: 28,
+                            width: 44, height: 44,
                             border: "1px solid #E5E5E5",
                             borderRadius: 6,
                             background: "#FFFFFF",
@@ -158,7 +158,7 @@ export function CartDrawer() {
                           type="button"
                           onClick={() => updateQuantity(itemId, qty + 1)}
                           style={{
-                            width: 28, height: 28,
+                            width: 44, height: 44,
                             border: "1px solid #E5E5E5",
                             borderRadius: 6,
                             background: "#FFFFFF",
@@ -205,10 +205,6 @@ export function CartDrawer() {
           ) : null}
         </div>
         <div className="border-t border-[var(--border)] p-5">
-          <div className="mb-3 flex gap-2">
-            <input type="text" placeholder="Enter promo code" className="h-10 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm" />
-            <button type="button" className="rounded-lg border border-[var(--border)] px-3 text-sm font-medium">Apply</button>
-          </div>
           <div className="flex justify-between text-sm">
             <span className="text-zinc-600">Subtotal ({items.length} items)</span>
             <span className="price font-semibold text-zinc-900">{formatPrice(subtotal)}</span>

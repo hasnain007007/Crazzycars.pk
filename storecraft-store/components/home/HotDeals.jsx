@@ -65,8 +65,8 @@ export default function HotDeals({ settings, initialProducts = null }) {
 
   if (section.enabled === false) return null;
 
-  const title = section.title || "🔥 Hot Deals";
-  const subtitle = section.subtitle || "Limited time offers — grab them before they're gone!";
+  const title = section.title || "On Sale";
+  const subtitle = section.subtitle || "Sale prices on kitchen pieces and bags — while stock lasts.";
 
   return (
     <section
@@ -103,7 +103,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
                 key={`${t.filter}-${t.label}`}
                 type="button"
                 onClick={() => setActive(t.filter)}
-                className="shrink-0 border px-3 py-1.5 text-xs font-semibold transition duration-200 md:px-4 md:py-2 md:text-sm"
+                className="shrink-0 min-h-[44px] border px-3 py-1.5 text-xs font-semibold transition duration-200 hover:border-[#C6633B] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C6633B] md:px-4 md:py-2 md:text-sm"
                 style={{
                   borderRadius: 99,
                   background: isActive ? "#C6633B" : "#FFFFFF",
@@ -135,7 +135,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
         ) : (
           <div className="mt-8 rounded-xl border border-[#E5E7EB] bg-white px-6 py-10 text-center">
             <p className="text-sm font-medium" style={{ color: "#374151" }}>
-              No Hot Deal products yet — turn on Hot Deal for products in admin.
+              Nothing in this price band right now. Try “All Deals” — thin filters are a catalog-size issue, not a site bug.
             </p>
           </div>
         )}

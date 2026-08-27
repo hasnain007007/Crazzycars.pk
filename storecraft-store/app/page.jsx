@@ -12,9 +12,9 @@ import { pgCountActiveProducts } from "@/lib/pg/catalog";
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Homefy.pk | Kitchen, Beauty Bags & Ladies Bags",
+  title: "Homefy.pk | Kitchen Accessories, Beauty & Travel Bags, Ladies Bags",
   description:
-    "Shop kitchen accessories, girls' beauty bags and ladies handbags online in Pakistan. Cookware, makeup pouches, totes and more. Cash on Delivery nationwide. Homefy.pk",
+    "Shop kitchen accessories, beauty & travel bags (makeup pouches, toiletry kits) and ladies handbags online in Pakistan. Cash on Delivery nationwide.",
   path: "/",
 });
 

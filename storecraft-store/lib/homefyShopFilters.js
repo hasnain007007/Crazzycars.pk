@@ -2,7 +2,7 @@
 
 export const SHOP_DEPARTMENTS = [
   { slug: "kitchen-accessories", label: "Kitchen Accessories" },
-  { slug: "beauty-bags", label: "Beauty Bags" },
+  { slug: "beauty-bags", label: "Beauty & Travel Bags" },
   { slug: "ladies-bags", label: "Ladies Bags" },
 ];
 

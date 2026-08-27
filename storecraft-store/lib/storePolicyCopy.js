@@ -188,7 +188,7 @@ export function getReturnsPage() {
       {
         heading: "Change of mind",
         paragraphs: [
-          `Within ${days} days of delivery, you may request an exchange for a different product or size if the item is unused, uninstalled, and in original packaging. Change-of-mind returns are not eligible for a cash refund.`,
+          `Within ${days} days of delivery, you may request an exchange for a different product or size if the item is unused and in original packaging. Change-of-mind returns are not eligible for a cash refund.`,
         ],
       },
       {
@@ -223,15 +223,15 @@ export function getShippingPolicySections() {
       paragraphs: [`${standardDeliveryFeeStatement()} ${deliveryEtaSummary()}`],
     },
     {
-      heading: "Spoilers and body kits",
+      heading: "Larger cookware",
       paragraphs: [
-        "Roof and trunk spoilers use a special courier fee shown at checkout. Body kits cannot use Daewoo Express and stay on standard delivery.",
+        "Oversized pots or sets may use a higher courier fee, shown at checkout before you confirm.",
       ],
     },
     {
       heading: "Express Delivery (Daewoo)",
       paragraphs: [
-        "Where available you can choose Express Delivery (Daewoo) at checkout. This option is hidden for body kits. The fee is shown before you confirm the order.",
+        "Where available you can choose Express Delivery (Daewoo) at checkout. The fee is shown before you confirm the order.",
       ],
     },
     {

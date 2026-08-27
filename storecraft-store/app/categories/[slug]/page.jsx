@@ -15,6 +15,7 @@ import { getServerStoreSettings } from "@/lib/serverSettings";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
+import { categoryBlurb, displayCategoryName } from "@/lib/homefyBrand";
 import { sortProductsClient } from "@/lib/productListing";
 
 /** ISR: prerender active categories at build; refresh every 2 minutes. */
@@ -135,13 +136,13 @@ export async function generateMetadata({ params, searchParams }) {
 
     if (category) {
       const titleMeta = buildBrandedAbsoluteTitle(
-        (category.seo?.metaTitle || "").trim() || category.name,
+        (category.seo?.metaTitle || "").trim() || displayCategoryName(category.slug, category.name),
         { brand: BRAND }
       );
       const title = titleMeta.absolute;
       const description =
         (category.seo?.metaDescription || "").trim() ||
-        `Shop ${category.name} at ${BRAND}. Premium car accessories with Cash on Delivery nationwide.`;
+        `Shop ${displayCategoryName(category.slug, category.name)} at ${BRAND}. Kitchen accessories, beauty & travel bags and ladies bags with Cash on Delivery nationwide.`;
       const keywords = Array.isArray(category.seo?.metaKeywords)
         ? category.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
         : [];
@@ -223,8 +224,16 @@ export default async function CategoryPage({ params, searchParams }) {
       { name: "Home", url: "/" },
       { name: "Categories", url: "/categories" },
       ...(Array.isArray(data.breadcrumbs)
-        ? data.breadcrumbs.map((b) => ({ name: b.name, url: `/categories/${b.slug}` }))
-        : [{ name: data.category.name, url: `/categories/${data.category.slug}` }]),
+        ? data.breadcrumbs.map((b) => ({
+            name: displayCategoryName(b.slug, b.name),
+            url: `/categories/${b.slug}`,
+          }))
+        : [
+            {
+              name: displayCategoryName(data.category.slug, data.category.name),
+              url: `/categories/${data.category.slug}`,
+            },
+          ]),
     ];
     const seen = new Set();
     const uniqueCrumbs = crumbItems.filter((c) => {
@@ -240,8 +249,8 @@ export default async function CategoryPage({ params, searchParams }) {
       String(data.category?.shortDescription || "").trim() ||
       undefined;
     const collectionLd = collectionPageJsonLd({
-      name: data.category?.name,
-      description: categoryDescription,
+      name: displayCategoryName(data.category?.slug, data.category?.name),
+      description: categoryDescription || categoryBlurb(data.category?.slug) || undefined,
       url: `/categories/${data.category?.slug || slugStr}`,
       products: data.products,
       numberOfItems: data.productCount,

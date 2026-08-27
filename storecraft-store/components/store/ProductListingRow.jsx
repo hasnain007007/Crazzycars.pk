@@ -5,7 +5,9 @@ import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
+import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
+import { isPlaceholderProductImage } from "@/lib/homefyBrand";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
 
@@ -128,19 +130,25 @@ export function ProductListingRow({ product, mode = "list" }) {
         {thumbs.length ? (
           thumbs.map((src, i) => (
             <Link key={`${src}-${i}`} href={href} className="pl-row-thumb">
-              <WatermarkedImage
-                src={src}
-                alt={product.name || "Product"}
-                watermark={watermark}
-                className="h-full w-full"
-                imgClassName="h-full w-full object-cover"
-                width={detailed ? 120 : 96}
-                sizes="120px"
-              />
+              {isPlaceholderProductImage(src) ? (
+                <ProductImagePlaceholder name={product.name} compact />
+              ) : (
+                <WatermarkedImage
+                  src={src}
+                  alt={product.name || "Product"}
+                  watermark={watermark}
+                  className="h-full w-full"
+                  imgClassName="h-full w-full object-cover"
+                  width={detailed ? 120 : 96}
+                  sizes="120px"
+                />
+              )}
             </Link>
           ))
         ) : (
-          <div className="pl-row-thumb pl-row-thumb--empty">—</div>
+          <div className="pl-row-thumb pl-row-thumb--empty">
+            <ProductImagePlaceholder name={product.name} compact />
+          </div>
         )}
       </div>
 

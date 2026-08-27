@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ContactForm from "@/components/store/ContactForm";
+import { NEEDS_INPUT } from "@/lib/homefyBrand";
 
 const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk";
 
@@ -27,15 +28,16 @@ export default function ContactPageView({ contactPage, general = {} }) {
   const contact = contactPage && typeof contactPage === "object" ? contactPage : {};
   const hero = pick(contact.hero, DEFAULT_HERO);
 
-  const email = String(contact.email || general.email || "").trim();
-  const phone = String(contact.phone || general.phone || "").trim();
+  const email = String(contact.email || general.email || "support@homefy.pk").trim();
+  const rawPhone = String(contact.phone || general.phone || "").trim();
+  const phone = /fill in/i.test(rawPhone) ? "" : rawPhone;
   const whatsapp = digitsOnly(contact.whatsapp || phone);
   const responseTime = String(contact.responseTime || "We reply to all emails within 24 hours").trim();
 
   const address = contact.address && typeof contact.address === "object" ? contact.address : {};
   const addressLines = [address.line1, address.line2, [address.city, address.country].filter(Boolean).join(", ")]
     .map((l) => String(l || "").trim())
-    .filter(Boolean);
+    .filter((l) => l && !/fill in/i.test(l));
 
   const hours = contact.hours && typeof contact.hours === "object" ? contact.hours : {};
   const hourLines = [hours.weekdays, hours.weekend, hours.closed]
@@ -44,11 +46,10 @@ export default function ContactPageView({ contactPage, general = {} }) {
 
   const social = contact.socialLinks && typeof contact.socialLinks === "object" ? contact.socialLinks : {};
   const socialEntries = [
-    ["Instagram", social.instagram],
-    ["Facebook", social.facebook],
-    ["TikTok", social.tiktok],
-    ["Twitter / X", social.twitter],
-  ].filter(([, url]) => String(url || "").trim());
+    ["Instagram", social.instagram || ""],
+    ["Facebook", social.facebook || ""],
+    ["TikTok", social.tiktok || ""],
+  ].map(([label, url]) => [label, String(url || "").trim()]);
 
   const faq = Array.isArray(contact.faq) ? contact.faq.filter((f) => f?.question) : [];
 
@@ -129,7 +130,14 @@ export default function ContactPageView({ contactPage, general = {} }) {
                     {phone}
                   </a>
                 </div>
-              ) : null}
+              ) : (
+                <div>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
+                    Phone
+                  </p>
+                  <p style={{ margin: "4px 0 0", fontSize: 14, color: "#6B7280" }}>{NEEDS_INPUT.phone}</p>
+                </div>
+              )}
 
               {whatsapp ? (
                 <div>
@@ -158,7 +166,14 @@ export default function ContactPageView({ contactPage, general = {} }) {
                     </p>
                   ))}
                 </div>
-              ) : null}
+              ) : (
+                <div>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
+                    Address
+                  </p>
+                  <p style={{ margin: "4px 0 0", fontSize: 14, color: "#6B7280" }}>{NEEDS_INPUT.address}</p>
+                </div>
+              )}
 
               {hourLines.length > 0 ? (
                 <div>
@@ -177,26 +192,30 @@ export default function ContactPageView({ contactPage, general = {} }) {
                 <p style={{ margin: 0, fontSize: 13, color: "#6B7280", lineHeight: 1.5 }}>{responseTime}</p>
               ) : null}
 
-              {socialEntries.length > 0 ? (
-                <div>
+              <div>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
                     Follow {STORE}
                   </p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 8 }}>
-                    {socialEntries.map(([label, url]) => (
-                      <a
-                        key={label}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: 14, color: "#C6633B", textDecoration: "none", fontWeight: 600 }}
-                      >
-                        {label}
-                      </a>
-                    ))}
+                    {socialEntries.map(([label, url]) =>
+                      url ? (
+                        <a
+                          key={label}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ fontSize: 14, color: "#C6633B", textDecoration: "none", fontWeight: 600 }}
+                        >
+                          {label}
+                        </a>
+                      ) : (
+                        <span key={label} style={{ fontSize: 13, color: "#6B7280" }}>
+                          {label}: {label === "Instagram" ? NEEDS_INPUT.instagram : `[NEEDS INPUT — ${label} URL]`}
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
-              ) : null}
             </div>
           </aside>
 

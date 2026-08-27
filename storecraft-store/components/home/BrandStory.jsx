@@ -7,7 +7,7 @@ import { resolveHomepageStats } from "@/lib/homepageStats";
 
 const STORY_TILES = [
   { src: "/images/catalog/kitchen-accessories.svg", label: "Kitchen" },
-  { src: "/images/catalog/beauty-bags.svg", label: "Beauty bags" },
+  { src: "/images/catalog/beauty-bags.svg", label: "Beauty & travel" },
   { src: "/images/catalog/ladies-bags.svg", label: "Ladies bags" },
 ];
 

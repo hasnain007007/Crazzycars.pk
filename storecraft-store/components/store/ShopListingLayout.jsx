@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listingHasFacets, listingToUrlState, shopListingTitle } from "@/lib/listingQuery";
+import { listingHasFacets, listingToUrlState, shopListingIntro, shopListingTitle } from "@/lib/listingQuery";
 import { getProductCardPrices } from "@/lib/productCardShape";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
 import { ShopFiltersClient } from "@/components/store/ShopFiltersClient";
@@ -17,6 +17,7 @@ export function ShopListingLayout({
 }) {
   const urlState = listingToUrlState(listing);
   const title = shopListingTitle(listing);
+  const autoIntro = intro || shopListingIntro(listing);
   const highest = products.reduce((max, p) => {
     const { sale, regular } = getProductCardPrices(p);
     return Math.max(max, sale || 0, regular || 0);
@@ -47,19 +48,19 @@ export function ShopListingLayout({
         </div>
       </div>
 
-      {intro ? (
-        <p className="shop-listing-intro mx-auto max-w-7xl px-4 pt-3 text-[13px] leading-relaxed text-[#333333] md:pt-6 md:text-[15px]">{intro}</p>
+      {autoIntro ? (
+        <p className="shop-listing-intro mx-auto max-w-7xl px-4 pt-3 text-[13px] leading-relaxed text-[#333333] md:pt-6 md:text-[15px]">{autoIntro}</p>
       ) : null}
 
       {catalogEmpty ? (
         <div className="mx-auto max-w-7xl px-4 py-8 text-center md:py-16">
           <h2 className="font-heading text-xl font-bold text-[#111111]">Products coming soon</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-[#555555]">
-            We&apos;re stocking the shelves with premium car accessories for Pakistan. Check back shortly.
+            We&apos;re stocking kitchen accessories, beauty &amp; travel bags and ladies bags. Check back shortly.
           </p>
           <Link
             href="/"
-            className="mt-6 inline-block rounded bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#a01818]"
+            className="mt-6 inline-block rounded bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
           >
             Back to home
           </Link>
@@ -77,7 +78,7 @@ export function ShopListingLayout({
               total={total}
               totalPages={totalPages}
               title={title}
-              categoryName="car accessories"
+              categoryName={title}
               emptyMessage={
                 listing.q
                   ? `No products match “${listing.q}”. Try another keyword or browse the shop.`
@@ -87,7 +88,7 @@ export function ShopListingLayout({
               <div className="mt-6">
                 <Link
                   href={pathname}
-                  className="text-sm text-[#D72323] underline underline-offset-2 hover:text-[#a01818]"
+                  className="text-sm text-[var(--color-primary)] underline underline-offset-2 hover:opacity-80"
                 >
                   Reset filters
                 </Link>

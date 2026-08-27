@@ -2,6 +2,7 @@ import { normalizeHomepageSettings } from "@/lib/defaultHomepageSettings";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { STORE_POLICY } from "@/config/store-policy";
+import { LIVE_STORY, isStaleBrandStoryText, replaceStaleHomefyCopy } from "@/lib/homefyBrand";
 import {
   sanitizeAnnouncementItems,
   sanitizeCustomerShippingNote,
@@ -27,10 +28,9 @@ export const DEFAULT_TRUST_BADGES = {
 export const DEFAULT_BRAND_STORY = {
   enabled: true,
   badge: "Our Story",
-  heading: "Built for Pakistani Homes",
-  subheading: "Kitchen, beauty bags and ladies bags",
-  description:
-    "Homefy.pk brings cookware, makeup pouches and ladies handbags to homes across Pakistan — with Cash on Delivery nationwide.",
+  heading: LIVE_STORY.heading,
+  subheading: LIVE_STORY.subheading,
+  description: LIVE_STORY.description,
   buttonText: "About Us",
   buttonLink: "/about",
   image1: "",
@@ -157,6 +157,13 @@ export function normalizeBrandStory(raw) {
     ...DEFAULT_BRAND_STORY,
     ...raw,
     enabled: raw.enabled !== false,
+    heading: isStaleBrandStoryText(raw.heading) ? LIVE_STORY.heading : raw.heading || DEFAULT_BRAND_STORY.heading,
+    subheading: isStaleBrandStoryText(raw.subheading)
+      ? LIVE_STORY.subheading
+      : raw.subheading || DEFAULT_BRAND_STORY.subheading,
+    description: isStaleBrandStoryText(raw.description)
+      ? LIVE_STORY.description
+      : raw.description || DEFAULT_BRAND_STORY.description,
     image1: imageUrlFromField(raw.image1),
     image2: imageUrlFromField(raw.image2),
     stats,
@@ -402,7 +409,10 @@ export function buildStoreSettingsPayload(settings = {}) {
     footer: {
       ...(typeof settings?.footer === "object" && settings.footer ? settings.footer : {}),
       copyrightText: f.copyrightText || "",
-      tagline: f.tagline || "",
+      tagline: replaceStaleHomefyCopy(
+        f.tagline,
+        "Kitchen accessories, beauty & travel bags, and ladies handbags — Homefy.pk"
+      ),
       contactEmail: f.contactEmail || f.email || f.contact?.email || "",
       phone: f.phone || f.contact?.phone || "",
       paymentMethods: Array.isArray(f.paymentMethods) ? f.paymentMethods : [],
@@ -441,15 +451,18 @@ export function buildStoreSettingsPayload(settings = {}) {
     website: g.website || "",
     currency: g.currency || "PKR",
     footerMeta: {
-      tagline: f.tagline || "",
+      tagline: replaceStaleHomefyCopy(
+        f.tagline,
+        "Kitchen accessories, beauty & travel bags, and ladies handbags — Homefy.pk"
+      ),
       social: f.social || {},
       columns: Array.isArray(f.columns) ? f.columns : [],
       contact: f.contact || {},
       copyrightText: f.copyrightText || "",
-      newsletter: f.newsletter || {
+        newsletter: f.newsletter || {
         enabled: true,
-        heading: "Get Exclusive Car Accessories Deals",
-        subtext: "Get the Latest Deals",
+        heading: "New kitchen finds and bags",
+        subtext: "Sale notes and restocks — no spam.",
         buttonText: "Subscribe",
       },
       paymentMethods: Array.isArray(f.paymentMethods) ? f.paymentMethods : [],

@@ -6,7 +6,9 @@ import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { useProductBadgeConfig, useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
+import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
+import { isPlaceholderProductImage } from "@/lib/homefyBrand";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
 import { COLOR_SWATCH } from "@/lib/homefyShopFilters";
@@ -76,6 +78,7 @@ export function ProductCard({ product, compact = false }) {
   const productImageWatermark = normalizeProductImageWatermark(rawWatermark);
   const [wish, setWish] = useState(false);
   const [hoverReady, setHoverReady] = useState(false);
+  const [showNew, setShowNew] = useState(false);
   const inStock = canSell(product);
   const qtyLeft = Number(product?.inventory?.quantity ?? product?.stock ?? 0);
   const onBackorder = inStock && product?.inventory?.trackInventory !== false && qtyLeft <= 0;
@@ -87,10 +90,13 @@ export function ProductCard({ product, compact = false }) {
   const href = productPath(product);
   const reviewCount = Number(product.reviewCount || product.reviews_count || 0);
   const rating = Number(product.rating || 0);
-  const showNew = !onSale && isNewProduct(product);
   const colorTags =
     (product?.simpleVariations || []).find((v) => /color/i.test(String(v?.name || "")) && v.enabled)?.tags ||
     [];
+
+  useEffect(() => {
+    setShowNew(!onSale && isNewProduct(product));
+  }, [onSale, product]);
 
   useEffect(() => {
     try {
@@ -175,11 +181,13 @@ export function ProductCard({ product, compact = false }) {
         className="cc-card-media relative block aspect-square overflow-hidden bg-[#F9FAFB]"
         onTouchStart={() => hoverImageUrl && setHoverReady(true)}
       >
-        {imageUrl ? (
+        {imageUrl && !isPlaceholderProductImage(imageUrl) ? (
           <div className="relative h-full w-full">
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
-                hoverImageUrl && hoverReady ? "group-hover:opacity-0" : ""
+                hoverImageUrl && hoverReady && !isPlaceholderProductImage(hoverImageUrl)
+                  ? "group-hover:opacity-0"
+                  : ""
               }`}
             >
               <WatermarkedImage
@@ -195,7 +203,7 @@ export function ProductCard({ product, compact = false }) {
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
             </div>
-            {hoverImageUrl && hoverReady ? (
+            {hoverImageUrl && hoverReady && !isPlaceholderProductImage(hoverImageUrl) ? (
               <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 <WatermarkedImage
                   src={hoverImageUrl}
@@ -211,12 +219,7 @@ export function ProductCard({ product, compact = false }) {
             ) : null}
           </div>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-1 px-3 text-center">
-            <span className="text-2xl text-[#D1D5DB]">—</span>
-            <span className="line-clamp-2 text-[11px] font-medium text-[#9CA3AF]">
-              {product.name || "No image"}
-            </span>
-          </div>
+          <ProductImagePlaceholder name={product.name} />
         )}
 
         {onSale && badgeConfig.showSaleBadge ? (

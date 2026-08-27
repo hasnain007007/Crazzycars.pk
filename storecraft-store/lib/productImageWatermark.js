@@ -1,10 +1,10 @@
 export const DEFAULT_PRODUCT_IMAGE_WATERMARK = {
   enabled: true,
   text: "Homefy.pk",
-  position: "bottom-right",
-  opacity: 0.25,
-  fontSize: 13,
-  color: "#8A8A8A",
+  position: "bottom-center",
+  opacity: 0.85,
+  fontSize: 11,
+  color: "#FAF7F2",
 };
 
 const POSITIONS = ["bottom-right", "bottom-left", "bottom-center", "top-right", "top-left"];
@@ -21,44 +21,72 @@ export function normalizeProductImageWatermark(raw) {
   };
 }
 
-function escapeXml(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
 const WHITE_RE = /^(#fff(fff)?|white)$/i;
 
 /**
- * Tiled diagonal watermark (gulautos.pk style): the text repeats across the
- * whole image, rotated, in a subtle gray. Returns a style for a full-cover
- * overlay div (no text content needed).
+ * Flexbox container for a single corner or bottom-strip watermark.
+ * Tiled diagonal repetition is intentionally not used — it reads as unfinished seed data.
  */
 export function getWatermarkOverlayStyle(watermark) {
-  const label = escapeXml(String(watermark?.text || "").toUpperCase());
-  // Font size and opacity come straight from admin settings (Settings → Product Image Watermark).
-  const fontSize = Math.max(8, Math.min(60, Number(watermark?.fontSize) || DEFAULT_PRODUCT_IMAGE_WATERMARK.fontSize));
-  const rawColor = String(watermark?.color || "#8A8A8A").trim();
-  // Tiled white-on-white is invisible; fall back to the reference gray.
-  const fill = WHITE_RE.test(rawColor) ? "#8A8A8A" : rawColor;
-  const fillOpacity = Math.min(1, Math.max(0, Number(watermark?.opacity ?? DEFAULT_PRODUCT_IMAGE_WATERMARK.opacity)));
-
-  const tileW = Math.max(140, Math.round(label.length * fontSize * 0.72) + fontSize * 3);
-  const tileH = Math.round(tileW * 0.72);
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${tileW}" height="${tileH}">` +
-    `<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" ` +
-    `transform="rotate(-30 ${tileW / 2} ${tileH / 2})" ` +
-    `font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="600" ` +
-    `letter-spacing="${Math.round(fontSize * 0.3)}" fill="${fill}" fill-opacity="${fillOpacity}">` +
-    `${label}</text></svg>`;
+  const position = POSITIONS.includes(watermark?.position)
+    ? watermark.position
+    : DEFAULT_PRODUCT_IMAGE_WATERMARK.position;
+  const isTop = position.startsWith("top");
+  const justify = position.endsWith("left") ? "flex-start" : position.endsWith("right") ? "flex-end" : "center";
+  const isStrip = position === "bottom-center";
 
   return {
     position: "absolute",
     inset: 0,
-    backgroundImage: `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`,
-    backgroundRepeat: "repeat",
-    backgroundSize: `${tileW}px ${tileH}px`,
+    display: "flex",
+    alignItems: isTop ? "flex-start" : "flex-end",
+    justifyContent: isStrip ? "stretch" : justify,
+    padding: isStrip ? 0 : "8px 10px",
     pointerEvents: "none",
     userSelect: "none",
     zIndex: 2,
+  };
+}
+
+export function getWatermarkLabelStyle(watermark) {
+  const position = POSITIONS.includes(watermark?.position)
+    ? watermark.position
+    : DEFAULT_PRODUCT_IMAGE_WATERMARK.position;
+  const isStrip = position === "bottom-center";
+  const fontSize = Math.max(8, Math.min(16, Number(watermark?.fontSize) || DEFAULT_PRODUCT_IMAGE_WATERMARK.fontSize));
+  const rawColor = String(watermark?.color || DEFAULT_PRODUCT_IMAGE_WATERMARK.color).trim();
+  const color = WHITE_RE.test(rawColor) ? "#FAF7F2" : rawColor;
+  const opacity = Math.min(1, Math.max(0, Number(watermark?.opacity ?? DEFAULT_PRODUCT_IMAGE_WATERMARK.opacity)));
+
+  if (isStrip) {
+    return {
+      display: "block",
+      width: "100%",
+      textAlign: "center",
+      padding: "5px 10px",
+      background: "rgba(17, 17, 17, 0.42)",
+      color,
+      opacity,
+      fontSize,
+      fontWeight: 600,
+      letterSpacing: "0.08em",
+      lineHeight: 1.2,
+      fontFamily: "Georgia, 'Times New Roman', serif",
+    };
+  }
+
+  return {
+    display: "inline-block",
+    padding: "3px 8px",
+    borderRadius: 4,
+    background: "rgba(17, 17, 17, 0.45)",
+    color,
+    opacity,
+    fontSize,
+    fontWeight: 600,
+    letterSpacing: "0.06em",
+    lineHeight: 1.2,
+    fontFamily: "Georgia, 'Times New Roman', serif",
+    whiteSpace: "nowrap",
   };
 }

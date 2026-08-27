@@ -80,9 +80,9 @@ const DEFAULT_FAQ = [
 
 const HERO_DEFAULT = {
   badge: "Our Story",
-  title: "Kitchen, beauty bags and ladies bags for Pakistani homes",
+  title: "Packed for home — and for leaving it",
   subtitle:
-    `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"}, we bring kitchen accessories, girls' beauty bags and ladies handbags to homes across Pakistan — with Cash on Delivery nationwide.`,
+    "Homefy.pk is for the pieces you actually reach for: a pan on the stove, a makeup pouch in a tote, a bag you take out of the house. Cash on Delivery nationwide.",
 };
 
 const STORY_DEFAULT = {

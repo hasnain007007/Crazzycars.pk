@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { categoryHref } from "@/lib/categories";
+import { displayCategoryName } from "@/lib/homefyBrand";
 
 const colHeading = {
   fontSize: 13,
@@ -64,7 +65,7 @@ export function FooterCategoriesColumn({ initialCategoryTree = null }) {
                 className="block text-[13px] font-bold leading-[1.6] transition-opacity hover:opacity-60"
                 style={{ color: "#FFFFFF", textDecoration: "none" }}
               >
-                {p.name}
+                {displayCategoryName(p.slug, p.name)}
               </Link>
               {(p.children || []).slice(0, 4).map((ch) => (
                 <Link

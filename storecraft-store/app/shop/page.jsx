@@ -12,9 +12,9 @@ export async function generateMetadata({ searchParams }) {
     ? `Results for “${listing.q}”`
     : listing.sale || listing.deals
       ? "Hot Deals"
-      : "Shop Kitchen, Beauty Bags & Ladies Bags";
+      : "Shop Kitchen, Beauty & Travel Bags & Ladies Bags";
   const description =
-    "Browse kitchen accessories, beauty bags and ladies handbags in Pakistan. Cash on delivery available nationwide from Homefy.pk.";
+    "Browse kitchen accessories, beauty & travel bags and ladies handbags in Pakistan. Cash on delivery available nationwide from Homefy.pk.";
   const listingSeo = listingMetadata("/shop", listing);
   const base = buildPageMetadata({
     title,
@@ -46,9 +46,9 @@ export default async function ShopPage({ searchParams }) {
       ? `Search: ${listing.q}`
       : listing.sale || listing.deals
         ? "Hot Deals"
-        : "Shop Kitchen, Beauty Bags & Ladies Bags",
+        : "Shop Kitchen, Beauty & Travel Bags & Ladies Bags",
     description:
-      "Browse kitchen accessories, beauty bags and ladies handbags in Pakistan. Cash on delivery available nationwide from Homefy.pk.",
+      "Browse kitchen accessories, beauty & travel bags and ladies handbags in Pakistan. Cash on delivery available nationwide from Homefy.pk.",
     url: listingCanonicalPath("/shop", listing),
     products,
     numberOfItems: total,

@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { normalizeStoreEmail } from '@/lib/storeContact'
 import { resolveStoreLogoUrl, trimmedLogoUrl } from '@/lib/storeLogo'
 import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
+import { displayCategoryName, NEEDS_INPUT, slugFromHref } from "@/lib/homefyBrand"
 
 const DEFAULT_SHOP_LINKS = [
   { label: "Home", href: "/" },
   { label: "Kitchen Accessories", href: "/categories/kitchen-accessories" },
-  { label: "Beauty Bags", href: "/categories/beauty-bags" },
+  { label: "Beauty & Travel Bags", href: "/categories/beauty-bags" },
   { label: "Ladies Bags", href: "/categories/ladies-bags" },
   { label: "New Arrivals", href: "/shop?sort=newest" },
   { label: "Sale", href: "/sale" },
@@ -299,17 +300,45 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   const registeredAddress = /gujranwala/i.test(String(footer.registeredAddress || ""))
     ? ""
     : String(footer.registeredAddress || "").trim()
-  const socialLinks = Array.isArray(footer.socialLinks) && footer.socialLinks.length > 0
-    ? footer.socialLinks.filter((s) => s?.url)
-    : Object.entries(footer.social || {}).filter(([, url]) => url).length
-      ? Object.entries(footer.social || {})
-          .filter(([, url]) => url)
-          .map(([platform, url]) => ({ platform, url }))
+  const socialLinks = (() => {
+    const fromSettings = Array.isArray(footer.socialLinks) && footer.socialLinks.length > 0
+      ? footer.socialLinks.filter((s) => s?.url || s?.platform)
+      : Object.entries(footer.social || {}).filter(([, url]) => url).length
+        ? Object.entries(footer.social || {})
+            .filter(([, url]) => url)
+            .map(([platform, url]) => ({ platform, url }))
+        : [];
+    const list = fromSettings.length
+      ? fromSettings
       : [
           { platform: "instagram", url: "#" },
           { platform: "facebook", url: "#" },
           { platform: "tiktok", url: "#" },
-        ]
+        ];
+    const hasIg = list.some((s) => /instagram|ig|insta/i.test(String(s.platform || "")));
+    if (!hasIg) {
+      list.unshift({ platform: "instagram", url: "#" });
+    }
+    return list.map((s) => {
+      const key = String(s.platform || "").toLowerCase();
+      const url = String(s.url || "").trim();
+      const placeholder = !url || url === "#";
+      return {
+        ...s,
+        url: placeholder ? "#" : url,
+        pending: placeholder,
+        title: placeholder
+          ? key === "instagram"
+            ? NEEDS_INPUT.instagram
+            : key === "facebook"
+              ? NEEDS_INPUT.facebook
+              : key === "tiktok"
+                ? NEEDS_INPUT.tiktok
+                : "[NEEDS INPUT — social URL]"
+          : s.platform,
+      };
+    });
+  })()
 
   const paymentMethods = (
     footer.showPaymentIcons === false ? [] : footer.paymentMethods || []
@@ -322,7 +351,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   const showLogoInFooter = footer.showLogoInFooter !== false
 
   const tagline = footer.tagline
-    || "Kitchen accessories, beauty bags and ladies handbags — Homefy.pk"
+    || "Kitchen accessories, beauty & travel bags, and ladies handbags — Homefy.pk"
 
   const shopLinks = (settings?.footer?.shopLinks || []).filter(
     (l) => l.enabled !== false
@@ -334,7 +363,9 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
 
   const normalizeFooterLink = (l, fallbackHref = "/") => {
     const href = String(l.href || l.url || "").trim()
-    const label = String(l.label || "").trim()
+    let label = String(l.label || "").trim()
+    const mapped = displayCategoryName(slugFromHref(href || fallbackHref))
+    if (mapped) label = mapped
     if (!href || href === "#") {
       return label ? { label, href: fallbackHref } : null
     }
@@ -508,11 +539,12 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
                 {socialLinks.map((s, i) => (
                   <a
                     key={i}
-                    href={s.url === "#" ? "#" : s.url}
-                    target={s.url === "#" ? undefined : "_blank"}
-                    rel={s.url === "#" ? undefined : "noopener noreferrer"}
-                    aria-label={s.platform || "Social media"}
-                    title={s.platform || "Social media"}
+                    href={s.pending ? "#" : s.url}
+                    target={s.pending ? undefined : "_blank"}
+                    rel={s.pending ? undefined : "noopener noreferrer"}
+                    aria-label={s.pending ? `${s.platform} (link coming soon)` : s.platform || "Social media"}
+                    title={s.title || s.platform || "Social media"}
+                    onClick={s.pending ? (e) => e.preventDefault() : undefined}
                     style={{
                       width: 34,
                       height: 34,
@@ -578,35 +610,57 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
           <div style={colStyle}>
             <h4 style={colHeading}>Company Information</h4>
 
-            {footer.companyName ? (
-              <p
-                style={{
-                  fontSize: 13,
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  margin: '0 0 8px',
-                  lineHeight: 1.5,
-                }}
-              >
-                {footer.companyName}
-              </p>
-            ) : null}
+            <p
+              style={{
+                fontSize: 13,
+                color: '#FFFFFF',
+                fontWeight: 700,
+                margin: '0 0 8px',
+                lineHeight: 1.5,
+              }}
+            >
+              {footer.companyName || storeName}
+            </p>
 
-            {footer.companyNumber ? (
-              <p
-                style={{
-                  fontSize: 12,
-                  color: '#FFFFFF',
-                  margin: '0 0 4px',
-                  lineHeight: 1.6,
-                }}
-              >
-                <span style={{ fontWeight: 700 }}>Company No:</span>
-                {' '}
-                {footer.companyNumber}
-              </p>
-            ) : null}
+            <Link
+              href="/about"
+              style={colLink}
+              onMouseEnter={(e) => { e.target.style.opacity = '0.6' }}
+              onMouseLeave={(e) => { e.target.style.opacity = '1' }}
+            >
+              About Homefy
+            </Link>
+            <Link
+              href="/contact"
+              style={colLink}
+              onMouseEnter={(e) => { e.target.style.opacity = '0.6' }}
+              onMouseLeave={(e) => { e.target.style.opacity = '1' }}
+            >
+              Contact
+            </Link>
 
+            <p
+              style={{
+                fontSize: 12,
+                color: 'rgba(255,255,255,0.75)',
+                margin: '12px 0 4px',
+                lineHeight: 1.6,
+              }}
+            >
+              {footer.registeredAddress || registeredAddress || NEEDS_INPUT.address}
+            </p>
+            <p
+              style={{
+                fontSize: 12,
+                color: 'rgba(255,255,255,0.75)',
+                margin: '0 0 4px',
+                lineHeight: 1.6,
+              }}
+            >
+              <span style={{ fontWeight: 700 }}>NTN / Company No:</span>
+              {' '}
+              {footer.companyNumber || NEEDS_INPUT.companyNumber}
+            </p>
             {footer.vatNumber ? (
               <p
                 style={{
@@ -620,39 +674,6 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
                 {' '}
                 {footer.vatNumber}
               </p>
-            ) : null}
-
-            {registeredAddress ? (
-              <div style={{ marginBottom: 16 }}>
-                <p
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: '#FFFFFF',
-                    margin: '0 0 6px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  Registered Address:
-                </p>
-                {registeredAddress
-                  .split('\n')
-                  .filter((line) => line.trim())
-                  .map((line, i) => (
-                    <p
-                      key={i}
-                      style={{
-                        fontSize: 12,
-                        color: '#FFFFFF',
-                        margin: '0 0 2px',
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {line}
-                    </p>
-                  ))}
-              </div>
             ) : null}
 
             {footer.trustpilotUrl ? (

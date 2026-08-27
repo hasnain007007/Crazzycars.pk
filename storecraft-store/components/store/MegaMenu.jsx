@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { categoryHref } from "@/lib/categories";
+import { categoryBlurb, displayCategoryName } from "@/lib/homefyBrand";
 
 /** Category display picture (main image → icon URL). Emoji homepageIcon is not an image. */
 function isMediaUrl(value) {
@@ -108,7 +109,7 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
   const focusCat = hoveredSub || activeParent || null;
   const focusImage = catImage(focusCat) || catImage(activeParent);
   const focusHref = focusCat?.slug ? categoryHref(focusCat.slug) : "/categories";
-  const focusLabel = focusCat?.name || "Shop";
+  const focusLabel = displayCategoryName(focusCat?.slug, focusCat?.name || "Shop");
 
   if (!isOpen) return null;
   if (!loading && menuCategories.length === 0) return null;
@@ -140,7 +141,7 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
                   setHoveredSubId(null);
                 }}
               >
-                <span>{cat.name}</span>
+                <span>{displayCategoryName(cat.slug, cat.name)}</span>
                 {cat.children?.length > 0 ? <span className="mega-menu__chevron">›</span> : null}
               </button>
             );
@@ -156,7 +157,12 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
           {activeParent ? (
             <>
               <div className="mega-menu__subs-head">
-                <p className="mega-menu__subs-title">{activeParent.name}</p>
+                <div>
+                  <p className="mega-menu__subs-title">{displayCategoryName(activeParent.slug, activeParent.name)}</p>
+                  {categoryBlurb(activeParent.slug) ? (
+                    <p className="mega-menu__subs-blurb">{categoryBlurb(activeParent.slug)}</p>
+                  ) : null}
+                </div>
                 <Link
                   href={categoryHref(activeParent.slug)}
                   onClick={() => onClose?.()}
@@ -194,13 +200,16 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
                 </div>
               ) : (
                 <div className="mega-menu__empty">
-                  <p>Browse all {activeParent.name} products.</p>
+                  <p>Browse all {displayCategoryName(activeParent.slug, activeParent.name)} products.</p>
+                  {categoryBlurb(activeParent.slug) ? (
+                    <p className="mega-menu__empty-blurb">{categoryBlurb(activeParent.slug)}</p>
+                  ) : null}
                   <Link
                     href={categoryHref(activeParent.slug)}
                     onClick={() => onClose?.()}
                     className="mega-menu__shop-btn"
                   >
-                    Shop {activeParent.name}
+                    Shop {displayCategoryName(activeParent.slug, activeParent.name)}
                   </Link>
                 </div>
               )}

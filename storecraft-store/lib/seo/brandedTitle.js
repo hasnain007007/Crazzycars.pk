@@ -24,7 +24,8 @@ export function buildBrandedAbsoluteTitle(
   { max = 60, brand = DEFAULT_BRAND } = {}
 ) {
   const brandStr = String(brand || DEFAULT_BRAND).trim() || DEFAULT_BRAND;
-  const base = stripTrailingBrand(raw);
+  const base = stripTrailingBrand(raw)
+    .replace(/\bBeauty Bags\b/gi, "Beauty & Travel Bags");
 
   if (!base) {
     return { absolute: brandStr };

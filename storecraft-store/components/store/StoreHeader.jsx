@@ -15,6 +15,7 @@ import { useCustomer } from "@/lib/customerAuth";
 import MegaMenu from "@/components/store/MegaMenu";
 import { SearchSuggest } from "@/components/store/SearchSuggest";
 import HomefyTextLogo from "@/components/brand/HomefyTextLogo";
+import { displayCategoryName, slugFromHref } from "@/lib/homefyBrand";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -34,7 +35,7 @@ function useDocumentSearchParams() {
 const DEFAULT_NAV = [
   { label: "Home", href: "/" },
   { label: "Kitchen Accessories", href: "/categories/kitchen-accessories", mega: true },
-  { label: "Beauty Bags", href: "/categories/beauty-bags", mega: true },
+  { label: "Beauty & Travel Bags", href: "/categories/beauty-bags", mega: true },
   { label: "Ladies Bags", href: "/categories/ladies-bags", mega: true },
   { label: "New Arrivals", href: "/shop?sort=newest" },
   { label: "Sale", href: "/sale", deals: true },
@@ -66,6 +67,8 @@ function normalizeNavHref(label, href) {
 }
 
 function humanizeNavLabel(label, href) {
+  const mapped = displayCategoryName(slugFromHref(href));
+  if (mapped) return mapped;
   const cleaned = String(label || "").trim();
   if (cleaned && cleaned !== href && !cleaned.startsWith("/")) return cleaned;
   const path = String(href || "").split("?")[0].replace(/\/+$/, "") || "/";

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
+import { replaceStaleHomefyCopy } from "@/lib/homefyBrand";
 import { standardDeliveryFeeShort, returnsHeroTrustChip } from "@/lib/storePolicyCopy";
 import {
   heroHeightStyle,
@@ -87,8 +88,8 @@ function resolveCopy(slide, settings) {
       ];
 
   return {
-    headline: rawTitle,
-    sub: rawSub,
+    headline: replaceStaleHomefyCopy(rawTitle, hp.heroHeadline || ""),
+    sub: replaceStaleHomefyCopy(rawSub, hp.heroSubtext || ""),
     buttons: resolvedButtons,
     hasText,
     hasButtons,
@@ -278,10 +279,10 @@ function HeroSlidePanel({
           {/* eslint-disable-next-line @next/next/no-img-element -- LCP hero; Cloudinary-optimized src */}
           <img
             src={bgImage}
-            alt={
-              String(slide.altText || slide.title || "").trim() ||
-              `${BRAND} — Kitchen, beauty bags & ladies bags`
-            }
+            alt={replaceStaleHomefyCopy(
+              slide.altText || slide.title,
+              `${BRAND} — Kitchen accessories, beauty & travel bags, ladies bags`
+            )}
             fetchPriority={isLcp ? "high" : "low"}
             loading={isLcp ? "eager" : "lazy"}
             decoding="async"

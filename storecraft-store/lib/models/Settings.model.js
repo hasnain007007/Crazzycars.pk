@@ -208,7 +208,7 @@ const settingsSchema = new mongoose.Schema(
         subtitle: {
           type: String,
           default:
-            `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"}, we bring kitchen accessories, girls' beauty bags and ladies handbags to homes across Pakistan — with Cash on Delivery nationwide.`,
+            `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Homefy.pk"}, we sell kitchen accessories, beauty & travel bags (makeup pouches and toiletry kits) and ladies handbags — with Cash on Delivery nationwide.`,
         },
       },
       story: {
@@ -485,10 +485,10 @@ Shukriya — Homefy.pk ✨`,
     productImageWatermark: {
       enabled: { type: Boolean, default: true },
       text: { type: String, default: "Homefy.pk" },
-      position: { type: String, default: "bottom-right" },
-      opacity: { type: Number, default: 0.25 },
-      fontSize: { type: Number, default: 13 },
-      color: { type: String, default: "#8A8A8A" },
+      position: { type: String, default: "bottom-center" },
+      opacity: { type: Number, default: 0.85 },
+      fontSize: { type: Number, default: 11 },
+      color: { type: String, default: "#FAF7F2" },
     },
     productBadges: {
       enabled: { type: Boolean, default: true },
@@ -536,12 +536,12 @@ Shukriya — Homefy.pk ✨`,
     brandStory: {
       enabled: { type: Boolean, default: true },
       badge: { type: String, default: "Our Story" },
-      heading: { type: String, default: "Built for Pakistani Homes" },
-      subheading: { type: String, default: "Kitchen, beauty bags and ladies bags" },
+      heading: { type: String, default: "Packed for home — and for leaving it" },
+      subheading: { type: String, default: "Kitchen tools, travel pouches, and handbags in one checkout." },
       description: {
         type: String,
         default:
-          "Homefy.pk brings cookware, makeup pouches and ladies handbags to homes across Pakistan — with COD nationwide.",
+          "Homefy.pk is for the pieces you actually reach for: a pan on the stove, a makeup pouch in a tote, a bag you take out of the house. Kitchen accessories and bags belong together here because Pakistani days do not split into “home shop” and “going-out shop.” Cash on Delivery nationwide.",
       },
       buttonText: { type: String, default: "Shop Homefy" },
       buttonLink: { type: String, default: "/about" },

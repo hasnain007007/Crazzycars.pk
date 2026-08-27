@@ -7,28 +7,17 @@ const WEBP_QUALITY_MIN = 0.45;
 
 function drawWatermark(ctx, width, height, text) {
   if (!text?.trim()) return;
-  // Tiled diagonal watermark (gulautos.pk style): repeat the label across the
-  // whole image, rotated -30deg, in a subtle gray.
-  const label = text.trim().toUpperCase();
-  const fontSize = Math.max(11, Math.round(width * 0.02));
+  const label = text.trim();
+  const fontSize = Math.max(11, Math.round(width * 0.018));
+  const barH = Math.round(fontSize * 2.2);
   ctx.save();
-  ctx.font = `600 ${fontSize}px Arial`;
-  ctx.fillStyle = "rgba(120, 120, 120, 0.22)";
-  const spaced = label.split("").join("\u200a\u200a");
-  const textWidth = ctx.measureText(spaced).width;
-  const stepX = textWidth + fontSize * 4;
-  const stepY = fontSize * 7;
-  ctx.translate(width / 2, height / 2);
-  ctx.rotate((-30 * Math.PI) / 180);
-  const reach = Math.ceil(Math.hypot(width, height) / 2);
-  let row = 0;
-  for (let y = -reach; y <= reach; y += stepY, row++) {
-    // Offset every other row for a brick-like pattern like the reference.
-    const offset = row % 2 ? stepX / 2 : 0;
-    for (let x = -reach - offset; x <= reach; x += stepX) {
-      ctx.fillText(spaced, x, y);
-    }
-  }
+  ctx.fillStyle = "rgba(17, 17, 17, 0.42)";
+  ctx.fillRect(0, height - barH, width, barH);
+  ctx.font = `600 ${fontSize}px Georgia, serif`;
+  ctx.fillStyle = "rgba(250, 247, 242, 0.92)";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, width / 2, height - barH / 2);
   ctx.restore();
 }
 

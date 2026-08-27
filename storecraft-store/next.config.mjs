@@ -68,11 +68,6 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: "/cart",
-        destination: "/shop",
-        permanent: true,
-      },
-      {
         source: "/search",
         destination: "/shop",
         permanent: true,

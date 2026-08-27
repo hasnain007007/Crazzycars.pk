@@ -13,7 +13,9 @@ import ProductReviews, { StarDisplay } from "./ProductReviews";
 import { formatPrice } from "@/lib/currency";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
+import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
+import { isPlaceholderProductImage } from "@/lib/homefyBrand";
 import {
   lahoreEtaStatement,
   nonLahoreEtaStatement,
@@ -879,6 +881,8 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                     background: "#000",
                   }}
                 />
+              ) : isPlaceholderProductImage(selectedItem.url) ? (
+                <ProductImagePlaceholder name={product.name} />
               ) : (
                 <WatermarkedImage
                   src={selectedItem.url}
@@ -917,19 +921,23 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   }}
                 >
                   {item.type === "image" ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={item.url}
-                      alt={item.altText || `${product.name} ${index + 1}`}
-                      loading="lazy"
-                      decoding="async"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        display: "block",
-                      }}
-                    />
+                    isPlaceholderProductImage(item.url) ? (
+                      <ProductImagePlaceholder name={product.name} compact />
+                    ) : (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={item.url}
+                        alt={item.altText || `${product.name} ${index + 1}`}
+                        loading="lazy"
+                        decoding="async"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    )
                   ) : (
                     <>
                       {item.thumbnail ? (

@@ -1,5 +1,6 @@
 import { categoryBannerUrl, logoImageUrl } from "@/lib/cloudinaryImage";
 import { trimmedLogoUrl } from "@/lib/storeLogo";
+import { displayCategoryName } from "@/lib/homefyBrand";
 
 function productImageUrls(products) {
   const urls = [];
@@ -20,7 +21,7 @@ function productImageUrls(products) {
  * Server-safe (no hooks) so the page H1 can SSR outside any useSearchParams island.
  */
 export function CategoryHeroBanner({ category, subcategories, products, brand }) {
-  const title = String(category?.name || "").toUpperCase();
+  const title = String(displayCategoryName(category?.slug, category?.name) || "").toUpperCase();
   const imageAlt = category?.image?.altText || category?.name || "";
   const imageTitle = category?.image?.title || category?.name || "";
   const storeName = brand?.name || "Homefy.pk";

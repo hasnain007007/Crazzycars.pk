@@ -39,7 +39,7 @@ export default function NewsletterSignup() {
       >
         <h2 className="font-heading text-xl font-bold text-[#111] md:text-2xl">Join the Homefy list</h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-[#6B7280]">
-          New kitchen finds, beauty bags and ladies bags — plus COD offers. No spam.
+          Restocks and sale notes on kitchen pieces and bags. We will not fill your inbox.
         </p>
         {done ? (
           <p className="mt-6 text-sm font-semibold" style={{ color: "var(--color-primary)" }}>

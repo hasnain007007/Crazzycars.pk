@@ -77,7 +77,7 @@ export default function LookbookStrip() {
       <div className="mb-1 flex items-end justify-between gap-3">
         <div>
           <h2 className="font-heading text-xl font-bold text-[#111] md:text-2xl">Shop by collection</h2>
-          <p className="mt-0.5 text-sm text-[#6B7280]">Picks from kitchen and bags.</p>
+          <p className="mt-0.5 text-sm text-[#6B7280]">The shelves inside each department — cookware through clutches.</p>
         </div>
         <Link href="/shop" className="text-sm font-semibold text-[var(--color-primary)] hover:underline">
           Shop all →

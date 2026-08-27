@@ -4,6 +4,7 @@
  */
 import { getSiteUrl } from "@/lib/siteUrl";
 import { toPlainText } from "@/lib/sanitizeHtml";
+import { googleProductCategoryId } from "@/lib/homefyBrand";
 
 function escapeXml(value) {
   return String(value ?? "")
@@ -124,7 +125,7 @@ export function productToMerchantItem(product, opts = {}) {
     gtin: gtin.length >= 8 ? gtin : "",
     mpn: mpn || "",
     product_type: cats.join(" > "),
-    google_product_category: "5613", // Vehicle Parts & Accessories (Google taxonomy)
+    google_product_category: googleProductCategoryId(product),
     identifier_exists: identifierExists,
   };
 }
@@ -135,7 +136,7 @@ export function buildMerchantRssXml(items, { title, link, description } = {}) {
   const channelLink = link || site;
   const channelDesc =
     description ||
-    "Premium car accessories and auto parts from Homefy.pk — Pakistan COD nationwide.";
+    "Kitchen accessories, beauty & travel bags and ladies bags from Homefy.pk — Pakistan COD nationwide.";
 
   const itemXml = (items || [])
     .filter((it) => it.id && it.title && it.link && it.image_link && it.price)
