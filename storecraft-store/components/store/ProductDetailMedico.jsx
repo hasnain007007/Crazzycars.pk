@@ -9,6 +9,7 @@ import { resolveProductContentId, trackViewContent } from "@/lib/metaPixel";
 import { ProductCard } from "./ProductCard";
 import { CountdownTimer } from "./CountdownTimer";
 import { RecommendedProductsQuickAdd } from "./RecommendedProductsQuickAdd";
+import ProductVariations from "./ProductVariations";
 import ProductReviews, { StarDisplay } from "./ProductReviews";
 import { formatPrice } from "@/lib/currency";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
