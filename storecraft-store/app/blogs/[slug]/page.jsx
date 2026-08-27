@@ -6,6 +6,7 @@ import BlogPostView from "@/components/store/BlogPostView";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { withSafeMetadata, isNextNavigationError } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
+import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
 const BASE_URL = getSiteUrl();
 
 function withClientId(doc) {
@@ -25,7 +26,7 @@ async function loadBlogPost(slug) {
       .lean();
     if (!post) return null;
     const plain = JSON.parse(JSON.stringify(post));
-    return withClientId(plain);
+    return withClientId({ ...plain, content: sanitizeBlogHtml(plain.content) });
   } catch (e) {
     console.error("Blog post load error:", e);
     return null;
