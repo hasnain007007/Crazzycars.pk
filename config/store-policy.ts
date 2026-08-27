@@ -5,15 +5,15 @@
  * Keep both files aligned when values change.
  */
 
-/** CONFIRMED by business owner 2026-08-21 — do not hardcode elsewhere. */
+/** Homefy.pk — keep aligned with `storecraft-store/config/store-policy.js`. */
 export const STORE_CONTACT = {
-  phone: "03284010007",
-  phoneE164: "+923284010007",
-  whatsapp: "03284010007",
-  email: "info@crazzycars.pk",
+  phone: "[FILL IN]",
+  phoneE164: "",
+  whatsapp: "",
+  email: "support@homefy.pk",
   address: {
-    city: "Gujranwala",
-    region: "Punjab",
+    city: "[FILL IN — city, Pakistan]",
+    region: "Pakistan",
     country: "PK",
   },
 } as const;

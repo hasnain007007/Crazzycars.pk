@@ -3,6 +3,8 @@ import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import { buildStoreSettingsPayload, toPublicClientSettings } from "@/lib/normalizeStoreSettings";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgGetSettings } from "@/lib/pg/catalog";
 
 /**
  * Deep-convert Mongo-specific values (ObjectId, Date, Buffer) into plain
@@ -19,6 +21,10 @@ export const getServerStoreSettings = cache(async () => {
   try {
     return await unstable_cache(
       async () => {
+        if (isPostgresCatalog()) {
+          const doc = await pgGetSettings();
+          return toPlain(buildStoreSettingsPayload(doc));
+        }
         await dbConnect();
         const doc =
           (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||

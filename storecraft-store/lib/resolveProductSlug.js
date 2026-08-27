@@ -1,5 +1,7 @@
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgResolveProductSlug } from "@/lib/pg/catalog";
 
 function escapeRegex(value) {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -21,6 +23,10 @@ export async function findActiveProductBySlugParam(rawSlug) {
     .trim()
     .replace(/^\/+|\/+$/g, "");
   if (!slug) return null;
+
+  if (isPostgresCatalog()) {
+    return pgResolveProductSlug(slug);
+  }
 
   await dbConnect();
 

@@ -5,6 +5,10 @@ import Product from "@/lib/models/Product.model";
 import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { queryProductsWithSearch } from "@/lib/productSearch";
+import { listingMongoSortSpec } from "@/lib/productListing";
+import { parseListingSearchParams } from "@/lib/listingQuery";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgFetchProductListing } from "@/lib/pg/catalog";
 
 function escapeRegex(s) {
   return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -60,6 +64,29 @@ export async function GET(request) {
       searchParams.get("new") === "1";
     const saleParam = searchParams.get("sale") === "true" || searchParams.get("deals") === "true";
 
+    if (isPostgresCatalog()) {
+      const listing = parseListingSearchParams(searchParams);
+      const sortSpec = listingMongoSortSpec(listing.sort || sort);
+      const result = await pgFetchProductListing({ listing, limit, page, q, sortSpec });
+      if (countOnly) {
+        return NextResponse.json(
+          { success: true, count: result.total },
+          { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+        );
+      }
+      return NextResponse.json(
+        {
+          success: true,
+          products: result.products,
+          total: result.total,
+          page: result.page,
+          totalPages: result.totalPages,
+        },
+        { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+      );
+    }
+
+    await dbConnect();
     const filter = { status: "active" };
     const andParts = [];
 

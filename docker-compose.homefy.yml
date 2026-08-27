@@ -1,11 +1,15 @@
-# Homefy.pk local MongoDB only.
-# Never point CrazzyCars (vps-test / Coolify) at this database.
+# Homefy.pk local MongoDB + Postgres.
+# Never point CrazzyCars (vps-test / Coolify) at these databases.
 #
 # Usage:
 #   docker compose -f docker-compose.homefy.yml up -d
 #
-# Connection string (no auth):
+# Mongo:
 #   mongodb://127.0.0.1:27017/homefy_pk
+# Postgres (same schema as future Supabase / app):
+#   postgresql://postgres:postgres@127.0.0.1:55322/postgres
+#
+# Port 55322 avoids Mobile_mart local Supabase on 54322.
 
 services:
   mongo:
@@ -19,5 +23,24 @@ services:
       - homefy-mongo-data:/data/db
     restart: unless-stopped
 
+  postgres:
+    image: postgres:17
+    container_name: homefy-postgres
+    ports:
+      - "55322:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - homefy-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
 volumes:
   homefy-mongo-data:
+  homefy-postgres-data:

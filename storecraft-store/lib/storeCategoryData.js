@@ -5,6 +5,8 @@
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
 import { listingMongoSortSpec } from "@/lib/productListing";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgLoadCategories, pgLoadCategoryDetail } from "@/lib/pg/catalog";
 
 /** Canonical storefront status — prefer equality over case-insensitive regex (index-friendly). */
 export const ACTIVE_STATUS = "active";
@@ -170,6 +172,10 @@ export function serializeCategoryTreeNode(node) {
  * Skips product counting and parent populates (not needed for navigation UI).
  */
 export async function loadStoreCategoriesTreeSlim() {
+  if (isPostgresCatalog()) {
+    const rows = await pgLoadCategories({ includeProductCounts: false });
+    return buildCategoryTree(rows);
+  }
   const rows = await Category.find({ status: ACTIVE })
     .select(
       "name slug image icon homepageIcon sortOrder isFeatured featured level parents parentCategory parentId"
@@ -187,6 +193,14 @@ export async function loadStoreCategoriesTreeSlim() {
 
 /** Active categories with product counts (self + all active subcategories); returns tree when wantTree. */
 export async function loadStoreCategoriesTree(wantTree, opts = {}) {
+  if (isPostgresCatalog()) {
+    const categories = await pgLoadCategories({
+      featuredOnly: Boolean(opts.featuredOnly),
+      showOnHomepageOnly: Boolean(opts.showOnHomepageOnly),
+      includeProductCounts: opts.includeProductCounts !== false,
+    });
+    return wantTree ? buildCategoryTree(categories) : categories;
+  }
   const featuredOnly = Boolean(opts.featuredOnly);
   const showInFooterOnly = Boolean(opts.showInFooterOnly);
   const showOnHomepageOnly = Boolean(opts.showOnHomepageOnly);
@@ -248,6 +262,9 @@ export async function loadStoreCategoriesTree(wantTree, opts = {}) {
 const CATEGORY_PAGE_PRODUCT_LIMIT = 40;
 
 export async function loadStoreCategoryDetail(slugStr, opts = {}) {
+  if (isPostgresCatalog()) {
+    return pgLoadCategoryDetail(slugStr, opts);
+  }
   const limit = Math.min(
     48,
     Math.max(1, Number(opts.limit) || CATEGORY_PAGE_PRODUCT_LIMIT)

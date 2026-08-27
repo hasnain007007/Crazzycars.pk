@@ -9,6 +9,8 @@ import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { findActiveProductBySlugParam } from "@/lib/resolveProductSlug";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgLoadSlugContent } from "@/lib/pg/catalog";
 import {
   productJsonLd as buildProductJsonLd,
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
@@ -136,8 +138,11 @@ async function loadRelatedProducts(product) {
  * One Mongo load per request — shared by generateMetadata + page via React.cache.
  */
 const loadContent = cache(async (slug) => {
-  await dbConnect();
   const slugStr = String(slug || "").trim();
+  if (isPostgresCatalog()) {
+    return pgLoadSlugContent(slugStr);
+  }
+  await dbConnect();
 
   // Exact slug first (fast path).
   let product = await Product.findOne({

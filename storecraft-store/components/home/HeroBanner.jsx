@@ -8,17 +8,17 @@ import { heroImageUrl, heroImageUrlMobile } from '@/lib/cloudinaryImage'
 const getSplitMinHeight = (height) => {
   switch (height) {
     case 'small':
-      return '300px'
+      return '280px'
     case 'medium':
-      return '450px'
+      return '380px'
     case 'large':
-      return '600px'
+      return '420px'
     case 'full':
       return '100vh'
     case 'auto':
       return 'auto'
     default:
-      return '600px'
+      return '380px'
   }
 }
 

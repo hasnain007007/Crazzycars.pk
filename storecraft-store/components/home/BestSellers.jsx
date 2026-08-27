@@ -55,11 +55,11 @@ export default function BestSellers({ initialProducts = [], settings }) {
   if (!loading && products.length === 0) return null;
 
   return (
-    <section className="homepage-section bg-white py-6 md:py-20">
+    <section className="homepage-section bg-white py-6 md:py-8">
       <div className="store-container">
-        <div className="mb-4 flex items-end justify-between gap-3">
+        <div className="mb-3 flex items-end justify-between gap-3">
           <div>
-            <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">
+            <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[24px]">
               {settings?.bestSellers?.title || "Best Sellers"}
             </h2>
             <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 8 }} />

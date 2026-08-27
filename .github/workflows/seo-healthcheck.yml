@@ -35,6 +35,6 @@ jobs:
           node-version: "22"
       - name: Crawl live storefront (warnings only)
         env:
-          SEO_HEALTHCHECK_URL: "https://crazzycars.pk"
+          SEO_HEALTHCHECK_URL: "https://homefy.pk"
           SEO_HEALTHCHECK_MAX_PAGES: "80"
         run: node --experimental-strip-types scripts/seo-healthcheck.ts

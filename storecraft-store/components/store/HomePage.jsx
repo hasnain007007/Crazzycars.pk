@@ -10,9 +10,6 @@ import NewsletterSignup from "@/components/home/NewsletterSignup";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
-const CategoryGrid = dynamic(() => import("@/components/home/CategoryGrid"), {
-  loading: () => <SectionSkeleton height={220} />,
-});
 const HotDeals = dynamic(() => import("@/components/home/HotDeals"), {
   loading: () => <SectionSkeleton height={360} />,
 });
@@ -79,12 +76,6 @@ export function HomePage({
       />
       <CategoryHighlights />
       <LookbookStrip />
-      {sectionEnabled("categories") && homepageSettings.sections?.showCategories !== false ? (
-        <CategoryGrid
-          title={homepageSettings.categories?.title || homepageSettings.sectionTitles?.categories}
-          viewAllText={homepageSettings.categories?.viewAllText}
-        />
-      ) : null}
       {sectionEnabled("bestSellers") && homepageSettings.sections?.showBestSellers !== false ? (
         <BestSellers initialProducts={initialBestSellers} settings={homepageSettings} />
       ) : null}

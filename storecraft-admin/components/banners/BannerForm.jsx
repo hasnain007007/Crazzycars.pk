@@ -385,9 +385,9 @@ export function BannerForm({ bannerId }) {
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10 }}>Banner Height</label>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
                 {[
-                  { value: "small", label: "Small", desc: "300px", icon: "▬" },
-                  { value: "medium", label: "Medium", desc: "450px", icon: "▬" },
-                  { value: "large", label: "Large", desc: "600px", icon: "▬" },
+                  { value: "small", label: "Small", desc: "280px", icon: "▬" },
+                  { value: "medium", label: "Medium", desc: "380px", icon: "▬" },
+                  { value: "large", label: "Large", desc: "420px", icon: "▬" },
                   { value: "full", label: "Full Screen", desc: "100vh", icon: "⬛" },
                   { value: "auto", label: "Auto", desc: "Natural", icon: "↕" },
                 ].map((h) => (

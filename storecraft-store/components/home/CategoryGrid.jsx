@@ -131,10 +131,10 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
   const viewAllLabel = String(viewAllText || "View all →").replace(/\s*→\s*$/, "").trim() || "View all";
 
   return (
-    <section className="homepage-section bg-white py-6 md:py-20">
+    <section className="homepage-section bg-white py-6 md:py-8">
       <div className="store-container">
         <div className="mb-3">
-          <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">{title}</h2>
+          <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[24px]">{title}</h2>
           <div style={{ width: 40, height: 3, background: "#C6633B", marginTop: 8, borderRadius: 2 }} />
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-6 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">

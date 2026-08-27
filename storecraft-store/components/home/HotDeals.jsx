@@ -70,14 +70,14 @@ export default function HotDeals({ settings, initialProducts = null }) {
 
   return (
     <section
-      className="homepage-section py-6 md:py-20"
+      className="homepage-section py-6 md:py-8"
       style={{
         background: "#FFF8F0",
         borderLeft: "4px solid #C6633B",
       }}
     >
       <div className="store-container">
-        <h2 className="font-heading text-[20px] font-bold md:text-[32px]" style={{ color: "#111111" }}>
+        <h2 className="font-heading text-[20px] font-bold md:text-[24px]" style={{ color: "#111111" }}>
           {title}
         </h2>
         <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 8 }} />

@@ -20,7 +20,7 @@ export function normalizeImageDisplay(raw, { imageOnly = false } = {}) {
   const d = raw && typeof raw === "object" ? raw : {};
   let height = ["small", "medium", "large", "full", "auto"].includes(d.height)
     ? d.height
-    : "large";
+    : "medium";
   let objectFit = ["cover", "contain", "fill", "none", "scale-down"].includes(d.objectFit)
     ? d.objectFit
     : "cover";
@@ -55,17 +55,17 @@ export function normalizeImageDisplay(raw, { imageOnly = false } = {}) {
 export function heroHeightStyle(height) {
   switch (height) {
     case "small":
-      return { height: "300px", minHeight: "300px" };
+      return { height: "280px", minHeight: "280px" };
     case "medium":
-      return { height: "450px", minHeight: "450px" };
+      return { height: "380px", minHeight: "380px" };
     case "large":
-      return { height: "600px", minHeight: "600px" };
+      return { height: "420px", minHeight: "420px" };
     case "full":
       return { height: "100vh", minHeight: "100vh" };
     case "auto":
       return { height: "auto", minHeight: 0 };
     default:
-      return { height: "600px", minHeight: "600px" };
+      return { height: "380px", minHeight: "380px" };
   }
 }
 

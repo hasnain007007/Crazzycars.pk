@@ -6,6 +6,8 @@ import { getHeroSlides } from "@/lib/heroBanners";
 import { getBestSellingProducts, getHotDealProducts, isShopifyEnabled } from "@/lib/shopify";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgCountActiveProducts } from "@/lib/pg/catalog";
 
 export const revalidate = 60;
 
@@ -30,6 +32,7 @@ export default async function Page() {
       getHeroSlides(),
       (async () => {
         try {
+          if (isPostgresCatalog()) return await pgCountActiveProducts();
           await dbConnect();
           return await Product.countDocuments({ status: { $regex: /^active$/i } });
         } catch {

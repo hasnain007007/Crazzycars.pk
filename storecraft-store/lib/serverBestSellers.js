@@ -5,6 +5,8 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { PRODUCT_CARD_SELECT } from "@/lib/serverProductFetch";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgFetchFeatured } from "@/lib/pg/catalog";
 
 /**
  * @param {{ limit?: number }} opts
@@ -12,6 +14,9 @@ import { PRODUCT_CARD_SELECT } from "@/lib/serverProductFetch";
 export async function fetchBestSellersServer({ limit = 100 } = {}) {
   const lim = Math.min(100, Math.max(1, Number(limit) || 100));
   try {
+    if (isPostgresCatalog()) {
+      return JSON.parse(JSON.stringify(await pgFetchFeatured(lim)));
+    }
     await dbConnect();
     const rows = await Product.find({
       status: { $regex: /^active$/i },

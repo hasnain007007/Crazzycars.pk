@@ -21,15 +21,15 @@ describe("sitemap XML", () => {
   test("urlset uses real lastmod and omits missing timestamps", () => {
     const xml = buildUrlSetXml([
       {
-        loc: "https://crazzycars.pk/shop",
+        loc: "https://homefy.pk/shop",
         lastmod: new Date("2026-01-15T00:00:00.000Z"),
         changefreq: "daily",
         priority: 0.9,
       },
-      { loc: "https://crazzycars.pk/faq", changefreq: "weekly", priority: 0.5 },
+      { loc: "https://homefy.pk/faq", changefreq: "weekly", priority: 0.5 },
     ]);
     assert.match(xml, /<urlset xmlns="http:\/\/www.sitemaps.org\/schemas\/sitemap\/0.9">/);
-    assert.match(xml, /<loc>https:\/\/crazzycars.pk\/shop<\/loc>/);
+    assert.match(xml, /<loc>https:\/\/homefy.pk\/shop<\/loc>/);
     assert.match(xml, /<lastmod>2026-01-15T00:00:00.000Z<\/lastmod>/);
     assert.equal((xml.match(/<lastmod>/g) || []).length, 1);
     assert.doesNotMatch(xml, /\?sort=/);
@@ -37,12 +37,12 @@ describe("sitemap XML", () => {
 
   test("sitemap index lists child sitemaps", () => {
     const xml = buildSitemapIndexXml([
-      { loc: "https://crazzycars.pk/sitemap-products.xml", lastmod: "2026-02-01T12:00:00.000Z" },
-      { loc: "https://crazzycars.pk/sitemap-categories.xml" },
+      { loc: "https://homefy.pk/sitemap-products.xml", lastmod: "2026-02-01T12:00:00.000Z" },
+      { loc: "https://homefy.pk/sitemap-categories.xml" },
     ]);
     assert.match(xml, /<sitemapindex /);
-    assert.match(xml, /<loc>https:\/\/crazzycars.pk\/sitemap-products.xml<\/loc>/);
-    assert.match(xml, /<loc>https:\/\/crazzycars.pk\/sitemap-categories.xml<\/loc>/);
+    assert.match(xml, /<loc>https:\/\/homefy.pk\/sitemap-products.xml<\/loc>/);
+    assert.match(xml, /<loc>https:\/\/homefy.pk\/sitemap-categories.xml<\/loc>/);
     assert.equal(formatLastMod("not-a-date"), "");
     assert.equal(MAX_SITEMAP_URLS, 50000);
   });

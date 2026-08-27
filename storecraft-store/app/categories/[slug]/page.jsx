@@ -4,6 +4,8 @@ import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgFindCategoryMeta, pgListActiveCategorySlugs } from "@/lib/pg/catalog";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 import { CategoryPageChrome } from "@/components/store/CategoryPageChrome";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
@@ -24,6 +26,10 @@ const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_
 
 export async function generateStaticParams() {
   try {
+    if (isPostgresCatalog()) {
+      const slugs = await pgListActiveCategorySlugs();
+      return slugs.filter(Boolean).map((slug) => ({ slug }));
+    }
     await dbConnect();
     const rows = await Category.find({ status: "active" }).select("slug").lean();
     return rows
@@ -38,7 +44,7 @@ export async function generateStaticParams() {
 const loadCachedCategoryDetail = (slugStr, page, pageSize, sort) =>
   unstable_cache(
     async () => {
-      await dbConnect();
+      if (!isPostgresCatalog()) await dbConnect();
       const detail = await loadStoreCategoryDetail(slugStr, {
         page,
         limit: pageSize,
@@ -58,6 +64,10 @@ const getCategoryDetail = cache(async (slugStr, page, pageSize, sort) =>
 const getCategoryMeta = cache(async (slugStr) =>
   unstable_cache(
     async () => {
+      if (isPostgresCatalog()) {
+        const doc = await pgFindCategoryMeta(slugStr);
+        return doc ? JSON.parse(JSON.stringify(doc)) : null;
+      }
       await dbConnect();
       return Category.findOne({
         slug: slugStr,

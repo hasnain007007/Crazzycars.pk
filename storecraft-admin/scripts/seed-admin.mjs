@@ -22,7 +22,7 @@ const ADMIN_USER = {
   status: "active",
 };
 
-const LEGACY_EMAILS = ["admin@example.com", "homefy.pk"];
+const LEGACY_EMAILS = ["admin@example.com", "admin@crazzycars.pk", "homefy.pk"];
 
 async function seedAdmin() {
   const { MONGODB_URI } = process.env;

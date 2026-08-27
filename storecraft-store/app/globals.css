@@ -38,8 +38,8 @@ body {
   --color-success: #059669;
   --color-error: #DC2626;
 
-  --section-gap: 80px;
-  --section-gap-sm: 28px;
+  --section-gap: 40px;
+  --section-gap-sm: 24px;
 
   /* Legacy aliases */
   --red: var(--color-primary);

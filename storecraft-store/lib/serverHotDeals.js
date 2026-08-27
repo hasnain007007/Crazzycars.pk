@@ -5,6 +5,8 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { buildDealsMongoFilter } from "@/lib/dealsFilter";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgFetchDeals } from "@/lib/pg/catalog";
 
 /**
  * @param {{ filter?: string, limit?: number }} opts
@@ -12,9 +14,12 @@ import { buildDealsMongoFilter } from "@/lib/dealsFilter";
  */
 export async function fetchHotDealsServer({ filter = "all", limit = 12 } = {}) {
   try {
-    await dbConnect();
     const lim = Math.min(48, Math.max(1, Number(limit) || 24));
     const f = String(filter || "all").toLowerCase();
+    if (isPostgresCatalog()) {
+      return JSON.parse(JSON.stringify(await pgFetchDeals({ filter: f, limit: lim })));
+    }
+    await dbConnect();
     const query = {
       status: { $regex: /^active$/i },
       pricing: { $exists: true },

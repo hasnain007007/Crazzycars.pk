@@ -5,6 +5,8 @@ import Page from "@/lib/models/Page.model";
 import BlogPost from "@/lib/models/BlogPost.model";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { MAX_SITEMAP_URLS } from "@/lib/sitemap/xml";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgSitemapCatalog } from "@/lib/pg/catalog";
 
 /** Static storefront routes (no query strings, no redirect aliases). */
 const STATIC_PAGE_PATHS = [
@@ -134,16 +136,40 @@ export async function fetchSitemapContext(headers) {
   // `${siteUrl}/sitemap-*.xml` does not become `https://host//sitemap-*.xml`.
   const siteUrl = absoluteUrl("/", { headers }).replace(/\/+$/, "");
 
-  await dbConnect();
+  let products;
+  let categories;
+  let cmsPages;
+  let withProducts;
+  let blogPosts = [];
 
-  const [products, categories, withProducts, cmsPages, blogPosts] =
-    await Promise.all([
+  if (isPostgresCatalog()) {
+    const pg = await pgSitemapCatalog();
+    products = pg.products.map((p) => ({ slug: p.slug, updatedAt: p.updated_at }));
+    categories = pg.categories.map((c) => ({
+      slug: c.slug,
+      updatedAt: c.updated_at,
+      _id: c.slug,
+    }));
+    cmsPages = pg.pages.map((p) => ({ slug: p.slug, updatedAt: p.updated_at }));
+    withProducts = new Set(categories.map((c) => String(c._id)));
+    try {
+      await dbConnect();
+      blogPosts = await BlogPost.find({ status: "published" })
+        .select("slug updatedAt publishedAt")
+        .lean();
+    } catch {
+      blogPosts = [];
+    }
+  } else {
+    await dbConnect();
+    [products, categories, withProducts, cmsPages, blogPosts] = await Promise.all([
       Product.find({ status: "active" }).select("slug updatedAt").lean(),
       Category.find({ status: "active" }).select("slug updatedAt _id").lean(),
       categoryIdsWithProducts(),
       Page.find({ status: "published" }).select("slug updatedAt").lean(),
       BlogPost.find({ status: "published" }).select("slug updatedAt publishedAt").lean(),
     ]);
+  }
 
   const productSlugSet = new Set(
     products.map((p) => String(p.slug || "").toLowerCase()).filter(Boolean)

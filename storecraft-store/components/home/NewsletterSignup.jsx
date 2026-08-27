@@ -32,12 +32,12 @@ export default function NewsletterSignup() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-10 md:py-14">
+    <section className="mx-auto max-w-7xl px-4 py-8 md:py-10">
       <div
-        className="rounded-2xl px-6 py-10 text-center md:px-12"
+        className="rounded-2xl px-6 py-8 text-center md:px-12"
         style={{ background: "var(--color-neutral-bg)", border: "1px solid #E8D9CC" }}
       >
-        <h2 className="font-heading text-2xl font-bold text-[#111] md:text-3xl">Join the Homefy list</h2>
+        <h2 className="font-heading text-xl font-bold text-[#111] md:text-2xl">Join the Homefy list</h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-[#6B7280]">
           New kitchen finds, beauty bags and ladies bags — plus COD offers. No spam.
         </p>

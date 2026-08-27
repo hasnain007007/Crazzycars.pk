@@ -1,37 +1,99 @@
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
+const ACCENTS = ["var(--color-primary)", "var(--color-secondary)", "#8C6D4D", "var(--color-primary)"];
+
+function iconKind(item, index) {
+  const t = String(item?.title || "").toLowerCase();
+  if (t.includes("deliver") || t.includes("ship")) return "truck";
+  if (t.includes("cash") || t.includes("cod") || t.includes("pay")) return "cod";
+  if (t.includes("return") || t.includes("exchange")) return "returns";
+  if (t.includes("quality") || t.includes("check")) return "check";
+  return ["truck", "cod", "returns", "check"][index % 4];
+}
+
+function TrustIcon({ kind }) {
+  const props = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.7",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": true,
+    className: "h-4 w-4",
+  };
+  if (kind === "truck") {
+    return (
+      <svg {...props}>
+        <path d="M3 7h11v10H3z" />
+        <path d="M14 10h4l3 3v4h-7" />
+        <circle cx="7" cy="18" r="1.6" />
+        <circle cx="18" cy="18" r="1.6" />
+      </svg>
+    );
+  }
+  if (kind === "cod") {
+    return (
+      <svg {...props}>
+        <rect x="3" y="6" width="18" height="12" rx="2" />
+        <path d="M3 10h18" />
+        <path d="M8 15h3" />
+      </svg>
+    );
+  }
+  if (kind === "returns") {
+    return (
+      <svg {...props}>
+        <path d="M3 12a9 9 0 1 0 3-6.7" />
+        <path d="M3 4v5h5" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.5 11 15.5 16.5 9.5" />
+    </svg>
+  );
+}
+
 export default function WhyChooseUs({ settings }) {
   const raw = settings?.whyChooseUs;
   const items = (Array.isArray(raw) && raw.length ? raw : DEFAULT_HOMEPAGE_SETTINGS.whyChooseUs)
     .filter((item) => item.isActive !== false && (item.title || item.description))
-    .slice(0, 8);
+    .slice(0, 4);
 
   if (!items.length) return null;
 
   return (
-    <section className="homepage-section hidden py-12 md:block md:py-20" style={{ background: "#111111" }}>
+    <section className="py-5 md:py-6">
       <div className="store-container">
-        <h2 className="font-heading text-[32px] font-bold" style={{ color: "#FFFFFF" }}>
-          {settings?.sectionTitles?.whyChooseUs || "Why Choose Us"}
+        <h2 className="mb-3 font-heading text-lg font-bold text-[#111] md:text-xl">
+          {settings?.sectionTitles?.whyChooseUs || "Why Choose Homefy"}
         </h2>
-        <div style={{ width: 48, height: 3, background: "#C6633B", marginTop: 8, marginBottom: 24 }} />
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 lg:gap-10">
-          {items.slice(0, 4).map((item, i) => (
-            <div
-              key={`${item.title}-${i}`}
-              className="group relative flex flex-col items-center rounded-xl border border-[#2a2a2a] bg-[#151515] p-4 text-center transition duration-200 hover:shadow-[0_0_20px_rgba(196,30,30,0.25)] sm:p-6"
-            >
-              <span className="text-[36px] leading-none sm:text-[48px]" style={{ color: "#F5A623" }} aria-hidden>
-                {item.icon}
-              </span>
-              <h3 className="mt-3 text-sm font-bold sm:mt-4 sm:text-base" style={{ color: "#FFFFFF" }}>
-                {item.title}
-              </h3>
-              <p className="mx-auto mt-2 max-w-[220px] text-xs leading-relaxed sm:text-[13px]" style={{ color: "#D1D5DB" }}>
-                {item.description}
-              </p>
-            </div>
-          ))}
+        <div
+          className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[#E8D9CC] bg-[#E8D9CC] md:grid-cols-4"
+        >
+          {items.map((item, i) => {
+            const kind = iconKind(item, i);
+            const accent = ACCENTS[i % ACCENTS.length];
+            return (
+              <div key={`${item.title}-${i}`} className="flex items-start gap-3 bg-[#FAF7F2] px-3 py-3.5 md:px-4">
+                <span
+                  className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                  style={{ background: "white", color: accent, border: `1px solid ${accent}` }}
+                >
+                  <TrustIcon kind={kind} />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-[13px] font-semibold leading-snug text-[#111]">{item.title}</h3>
+                  {item.description ? (
+                    <p className="mt-0.5 text-[11px] leading-snug text-[#6B7280]">{item.description}</p>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

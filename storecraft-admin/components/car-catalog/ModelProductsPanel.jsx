@@ -290,7 +290,7 @@ export function ModelProductsPanel({ makeId, modelId, makeName, modelName, onClo
                 <>
                   {" · "}
                   <a
-                    href={`${process.env.NEXT_PUBLIC_STORE_URL || "https://storecraft-store-iota.vercel.app"}/cars/${vehicle.slug}`}
+                    href={`${process.env.NEXT_PUBLIC_STORE_URL || "https://homefy.pk"}/cars/${vehicle.slug}`}
                     target="_blank"
                     rel="noreferrer"
                     className="font-medium text-[var(--color-primary)] hover:underline"

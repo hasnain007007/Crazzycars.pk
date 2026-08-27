@@ -3,7 +3,7 @@
  *
  * Usage:
  *   node --experimental-strip-types --env-file=storecraft-store/.env.local scripts/seo-healthcheck.ts
- *   SEO_HEALTHCHECK_URL=https://crazzycars.pk node --experimental-strip-types scripts/seo-healthcheck.ts
+ *   SEO_HEALTHCHECK_URL=https://homefy.pk node --experimental-strip-types scripts/seo-healthcheck.ts
  *
  * Exits 0 with warnings printed (CI should use continue-on-error). Exits 1 only on fatal errors.
  */

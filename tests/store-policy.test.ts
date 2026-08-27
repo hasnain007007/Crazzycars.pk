@@ -15,7 +15,7 @@ import {
 } from "../storecraft-store/lib/storePolicyCopy.js";
 
 describe("STORE_POLICY", () => {
-  it("has confirmed Gujranwala shipping values", () => {
+  it("has confirmed shipping values", () => {
     assert.equal(STORE_POLICY.shipping.freeDeliveryExists, false);
     assert.equal(STORE_POLICY.shipping.freeShippingThresholdPKR, null);
     assert.equal(STORE_POLICY.shipping.standardFeePKR, 250);
@@ -34,7 +34,7 @@ describe("STORE_POLICY", () => {
   });
 
   it("emits two-path MerchantReturnPolicy", () => {
-    const policies = buildMerchantReturnPolicies("https://gujranwalamotorsports.com");
+    const policies = buildMerchantReturnPolicies("https://homefy.pk");
     assert.equal(policies.length, 2);
     assert.match(policies[0].refundType, /FullRefund$/);
     assert.match(policies[1].refundType, /ExchangeRefund$/);

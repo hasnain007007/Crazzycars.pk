@@ -1,9 +1,10 @@
-# Crazzycars.pk — Ecommerce Platform
+# Homefy.pk — Ecommerce Platform
 
-Car accessories store for the Pakistan market. A two-app Next.js ecommerce platform: a customer-facing **storefront** (`storecraft-store`) and an **admin panel** (`storecraft-admin`). Both apps share MongoDB and integrate with Cloudinary, Stripe, PayPal, and Resend.
+Kitchen accessories, beauty bags and ladies bags for the Pakistan market. A two-app Next.js ecommerce platform: a customer-facing **storefront** (`storecraft-store`) and an **admin panel** (`storecraft-admin`).
 
-- **Live store:** https://crazzycars.pk
-- **Admin panel:** https://admin.crazzycars.pk
+- **Store:** https://homefy.pk
+- **Admin:** https://admin.homefy.pk
+- **Local:** http://localhost:3000 and http://localhost:3001
 
 ## Project overview
 
@@ -122,7 +123,7 @@ Committed templates: `storecraft-store/.env.local.example` and `storecraft-admin
 
 After seeding:
 
-- **Email:** `admin@crazzycars.pk`
+- **Email:** `admin@homefy.pk`
 - **Password:** `@Hasnain0007`
 
 Change this password immediately in production.

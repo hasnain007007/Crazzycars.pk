@@ -5,6 +5,12 @@ import { useEffect, useState } from "react";
 import { storyImageUrlOptimized } from "@/lib/cloudinaryImage";
 import { resolveHomepageStats } from "@/lib/homepageStats";
 
+const STORY_TILES = [
+  { src: "/images/catalog/kitchen-accessories.svg", label: "Kitchen" },
+  { src: "/images/catalog/beauty-bags.svg", label: "Beauty bags" },
+  { src: "/images/catalog/ladies-bags.svg", label: "Ladies bags" },
+];
+
 function storyImageUrl(field) {
   if (field == null) return "";
   if (typeof field === "string") return field.trim();
@@ -21,10 +27,48 @@ function hasBrandStoryContent(story) {
     (s) => String(s || "").trim()
   );
   const hasImages = storyImageUrl(story.image1) || storyImageUrl(story.image2);
-  const hasStats =
-    Array.isArray(story.stats) && story.stats.some((s) => String(s?.value || "").trim() || String(s?.label || "").trim());
   const hasButton = String(story.buttonText || "").trim();
-  return hasText || hasImages || hasStats || hasButton;
+  return hasText || hasImages || hasButton;
+}
+
+function StoryMosaic({ image1Url, image2Url, heading }) {
+  if (image1Url) {
+    return (
+      <div className="relative overflow-hidden rounded-xl">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={image1Url}
+          alt={heading || "Our story"}
+          loading="lazy"
+          decoding="async"
+          className="h-40 w-full object-cover md:h-52"
+        />
+        {image2Url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image2Url}
+            alt=""
+            loading="lazy"
+            className="absolute bottom-2 left-2 h-16 w-16 rounded-lg border-2 border-white object-cover md:h-20 md:w-20"
+          />
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {STORY_TILES.map((tile) => (
+        <div key={tile.label} className="overflow-hidden rounded-xl bg-[#FAF7F2]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={tile.src} alt="" className="aspect-square w-full object-cover" />
+          <p className="px-1.5 py-1.5 text-center text-[10px] font-semibold text-[#6B7280] md:text-[11px]">
+            {tile.label}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function BrandStory({ story: storyProp, activeProductCount = null }) {
@@ -53,103 +97,57 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
   const image2Url = storyImageUrlOptimized(storyImageUrl(story.image2)) || storyImageUrl(story.image2);
   const stats = resolveHomepageStats(Array.isArray(story.stats) ? story.stats : [], {
     activeProductCount,
-  });
+  }).filter((s) => s.value && s.label);
 
   return (
-    <section className="homepage-section bg-white py-8 md:py-20">
+    <section className="homefy-brand-story py-5 md:py-6">
       <div className="store-container">
-        <div className="grid items-center gap-6 lg:grid-cols-[2fr_3fr] lg:gap-10">
-          <div className="relative min-h-[160px] lg:min-h-[360px]">
-            {image1Url || image2Url ? (
-              <div className="relative h-full min-h-[160px] md:min-h-[280px]">
-                {image1Url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={image1Url}
-                    alt={story.heading || "Our story"}
-                    loading="lazy"
-                    fetchPriority="low"
-                    decoding="async"
-                    className="h-full min-h-[160px] w-full rounded-xl object-cover shadow-md md:min-h-[280px]"
-                  />
-                ) : null}
-                {image2Url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={image2Url}
-                    alt={story.heading ? `${story.heading} — detail` : "Our story — detail"}
-                    loading="lazy"
-                    className="absolute bottom-4 left-4 z-10 w-[45%] rounded-lg border-4 border-white object-cover shadow-lg"
-                    style={{ height: 140 }}
-                  />
-                ) : null}
-              </div>
-            ) : (
-              <div
-                className="flex min-h-[160px] items-center justify-center rounded-xl md:min-h-[280px] lg:min-h-[360px]"
-                style={{
-                  background: "linear-gradient(135deg, #1a1a1a 0%, #2a0f0f 100%)",
-                }}
-              >
-                <span className="text-4xl opacity-80 md:text-6xl" aria-hidden>
-                  🚗
+        <div className="overflow-hidden rounded-xl border border-[#E8D9CC] bg-white">
+          <div className="grid items-center gap-4 p-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] md:gap-8 md:p-5">
+            <StoryMosaic image1Url={image1Url} image2Url={image2Url} heading={story.heading} />
+
+            <div>
+              {story.badge ? (
+                <span className="mb-2 inline-block rounded-full bg-[#FAF7F2] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">
+                  {story.badge}
                 </span>
-              </div>
-            )}
-          </div>
+              ) : null}
 
-          <div>
-            {story.badge ? (
-              <span
-                className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-                style={{ background: "#FFF8E6", color: "#B45309" }}
-              >
-                {story.badge}
-              </span>
-            ) : null}
+              {story.heading ? (
+                <h2 className="font-heading text-xl font-bold leading-tight text-[#111] md:text-2xl">
+                  {story.heading}
+                </h2>
+              ) : null}
 
-            {story.heading ? (
-              <h2 className="font-heading text-[22px] font-bold leading-tight md:text-[36px]" style={{ color: "#111111" }}>
-                {story.heading}
-              </h2>
-            ) : null}
+              {story.subheading ? (
+                <p className="mt-1 text-sm font-medium text-[#6B7280]">{story.subheading}</p>
+              ) : null}
 
-            {story.subheading ? (
-              <p className="mt-3 text-base font-medium" style={{ color: "#6B7280" }}>
-                {story.subheading}
-              </p>
-            ) : null}
+              {story.description ? (
+                <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-[#374151]">{story.description}</p>
+              ) : null}
 
-            {story.description ? (
-              <p className="mt-4 text-[15px] leading-[1.7]" style={{ color: "#374151" }}>
-                {story.description}
-              </p>
-            ) : null}
+              {stats.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-5">
+                  {stats.map((stat, i) => (
+                    <div key={`${stat.value}-${stat.label}-${i}`}>
+                      <p className="font-heading text-lg font-bold text-[var(--color-primary)]">{stat.value}</p>
+                      <p className="text-[11px] text-[#6B7280]">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
-            {stats.length > 0 ? (
-              <div className="mt-5 flex flex-wrap gap-5 md:mt-8 md:gap-8">
-                {stats.map((stat, i) => (
-                  <div key={`${stat.value}-${stat.label}-${i}`}>
-                    <p className="font-heading text-xl font-bold md:text-2xl" style={{ color: "#C6633B" }}>
-                      {stat.value}
-                    </p>
-                    <p className="mt-1 text-xs" style={{ color: "#6B7280" }}>
-                      {stat.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            {story.buttonText ? (
-              <Link
-                href={story.buttonLink || "/about"}
-                className="mt-6 inline-flex items-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 md:mt-8 md:px-6 md:py-3"
-                style={{ background: "#C6633B" }}
-              >
-                {story.buttonText.includes("→") ? story.buttonText : `${story.buttonText} →`}
-              </Link>
-            ) : null}
+              {story.buttonText ? (
+                <Link
+                  href={story.buttonLink || "/shop"}
+                  className="mt-3 inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold transition hover:opacity-90"
+                  style={{ background: "var(--color-primary)", color: "#FFFFFF" }}
+                >
+                  {story.buttonText.includes("→") ? story.buttonText : `${story.buttonText} →`}
+                </Link>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

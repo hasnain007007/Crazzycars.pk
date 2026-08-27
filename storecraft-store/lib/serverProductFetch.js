@@ -7,6 +7,8 @@ import { listingMongoSortSpec, listingSortToApi } from "@/lib/productListing";
 import { parseListingSearchParams } from "@/lib/listingQuery";
 import { getActiveDescendantCategoryIds } from "@/lib/storeCategoryData";
 import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgFetchProductListing } from "@/lib/pg/catalog";
 
 /** Fields needed for product cards / homepage grids. */
 export const PRODUCT_CARD_SELECT =
@@ -120,7 +122,6 @@ async function applyShopListingFilters(filter, listing) {
  */
 export async function fetchProductsServer(params = {}) {
   try {
-    await dbConnect();
     const listing =
       params.listing ||
       (params.searchParams ? parseListingSearchParams(params.searchParams) : null);
@@ -130,11 +131,6 @@ export async function fetchProductsServer(params = {}) {
     const page = listing ? listing.page : Math.max(1, Number(params.page) || 1);
     const skip = (page - 1) * limit;
     const q = listing ? listing.q : String(params.q || "").trim();
-
-    const filter = { status: "active" };
-    if (listing) {
-      await applyShopListingFilters(filter, listing);
-    }
 
     let sortSpec = { createdAt: -1 };
     if (listing) {
@@ -150,6 +146,17 @@ export async function fetchProductsServer(params = {}) {
       } else if (sort === listingSortToApi("rating")) {
         sortSpec = listingMongoSortSpec("rating");
       }
+    }
+
+    if (isPostgresCatalog()) {
+      return await pgFetchProductListing({ listing, limit, page, q, sortSpec });
+    }
+
+    await dbConnect();
+
+    const filter = { status: "active" };
+    if (listing) {
+      await applyShopListingFilters(filter, listing);
     }
 
     const { rows, total } = await queryProductsWithSearch(Product, filter, q, {
