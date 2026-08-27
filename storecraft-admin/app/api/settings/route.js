@@ -7,6 +7,7 @@ import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { requestIp } from "@/lib/requestIp";
 import { revalidateStorefront } from "@/lib/revalidateStorefront";
 import { sanitizeSettingsDocument } from "@/lib/sanitizeForeignBrand";
+import { omitBlankPaymentSecrets, redactSettingsSecrets } from "@/lib/redactSettingsSecrets";
 
 function mergeNested(target, patch) {
   if (!patch || typeof patch !== "object") return;
@@ -46,7 +47,7 @@ export async function GET(request) {
     if (!doc) {
       doc = await Settings.create({ singletonKey: SETTINGS_SINGLETON_KEY });
     }
-    const settings = sanitizeSettingsDocument(doc.toObject());
+    const settings = redactSettingsSecrets(sanitizeSettingsDocument(doc.toObject()));
     return NextResponse.json({
       success: true,
       settings,
@@ -84,7 +85,7 @@ export async function PUT(request) {
     }
     if (body.payment !== undefined) {
       if (!doc.payment) doc.payment = {};
-      mergeNested(doc.payment, body.payment);
+      mergeNested(doc.payment, omitBlankPaymentSecrets(body.payment));
       doc.markModified("payment");
     }
     if (body.pakistaniPaymentMethods !== undefined) {
@@ -221,7 +222,11 @@ export async function PUT(request) {
     // Storefront caches settings for 60s; purge now so edits show immediately.
     const revalidated = await revalidateStorefront(["/", "/api/settings"]);
 
-    return NextResponse.json({ success: true, settings: sanitizeSettingsDocument(doc.toObject()), revalidated });
+    return NextResponse.json({
+      success: true,
+      settings: redactSettingsSecrets(sanitizeSettingsDocument(doc.toObject())),
+      revalidated,
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Update failed." },

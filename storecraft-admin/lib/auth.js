@@ -3,6 +3,7 @@
  */
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { ADMIN_JWT_TYPE } from "./constants";
 import { dbConnect } from "./db";
 import ActivityLog from "./models/ActivityLog.model";
 
@@ -22,7 +23,7 @@ export function signToken(payload) {
   if (!JWT_SECRET) {
     throw new Error("Please define the JWT_SECRET environment variable.");
   }
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+  return jwt.sign({ ...payload, type: ADMIN_JWT_TYPE }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
 }
 
 export function verifyToken(input) {
@@ -40,7 +41,9 @@ export function verifyToken(input) {
       token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
     }
     if (!token) return null;
-    return jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (!payload || payload.type !== ADMIN_JWT_TYPE) return null;
+    return payload;
   } catch (_error) {
     return null;
   }

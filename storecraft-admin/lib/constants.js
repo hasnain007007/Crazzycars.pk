@@ -1,4 +1,6 @@
 export const JWT_COOKIE_NAME = "admin_token";
+/** Admin JWTs must carry this claim. Storefront tokens use type "store_customer". */
+export const ADMIN_JWT_TYPE = "admin";
 export const STORE_JWT_COOKIE_NAME = "store_token";
 /** Canonical roles for new user writes. Legacy aliases still normalize via permissions.js. */
 export const USER_ROLES = ["owner", "manager", "staff", "viewer"];

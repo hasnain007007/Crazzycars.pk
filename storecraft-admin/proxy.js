@@ -5,7 +5,7 @@
  */
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { JWT_COOKIE_NAME } from "@/lib/constants";
+import { ADMIN_JWT_TYPE, JWT_COOKIE_NAME } from "@/lib/constants";
 
 /** Prevent proxies from serving stale HTML that references deleted CSS chunks. */
 function noStore(response) {
@@ -39,6 +39,9 @@ export async function proxy(request) {
       throw new Error("JWT_SECRET missing");
     }
     const { payload } = await jwtVerify(token, secret);
+    if (payload?.type !== ADMIN_JWT_TYPE) {
+      throw new Error("wrong token type");
+    }
 
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-user-role", String(payload.role || "viewer"));

@@ -11,7 +11,7 @@ import {
   JWT_SESSION_MAX_AGE_SEC,
   logActivity,
 } from "@/lib/auth";
-import { JWT_COOKIE_NAME } from "@/lib/constants";
+import { ADMIN_JWT_TYPE, JWT_COOKIE_NAME } from "@/lib/constants";
 import { dbConnect } from "@/lib/db";
 import {
   checkLoginRateLimit,
@@ -95,6 +95,7 @@ export async function POST(request) {
         name: user.name,
         email: user.email,
         role,
+        type: ADMIN_JWT_TYPE,
       },
       JWT_SECRET,
       { expiresIn: tokenExpiry }
