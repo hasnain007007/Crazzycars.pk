@@ -32,7 +32,9 @@ export function MissingProductView({
     heading ||
     (unavailable ? "This product is no longer available." : "This page has driven away.");
   const blurb = unavailable
-    ? `${productName || "This item"} is not in the live catalog. Here are current products in the same category.`
+    ? suggestions.length
+      ? `${productName || "This item"} is not in the live catalog. Here are current products that match this vehicle.`
+      : `${productName || "This item"} is not in the live catalog. Search below or browse a category — we will not guess a random replacement.`
     : suggestions.length
       ? "This URL is not on CrazzyCars.pk. These look like a close match — we did not send you to a random product."
       : "This URL is not on CrazzyCars.pk. Search for the product or category you need — we do not send missing pages to the homepage.";
