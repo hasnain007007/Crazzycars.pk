@@ -3,7 +3,7 @@
  */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { productSlugCandidates } from "../storecraft-store/lib/productSlugParam.js";
+import { productSlugCandidates, stripBrandSuffix } from "../storecraft-store/lib/productSlugParam.js";
 import { detectPaidSocialSource } from "../storecraft-store/lib/paidTraffic.js";
 import { parseSearchQuery, scoreSearchCandidate } from "../storecraft-store/lib/smartProductSearch.js";
 import {
@@ -12,6 +12,19 @@ import {
   slugFromPathname,
   slugParamToSearchQuery,
 } from "../storecraft-store/lib/missingProductHelpers.js";
+
+describe("stripBrandSuffix", () => {
+  it("drops -crazzycars-pk so /products/ prefix+suffix can 308 in one hop", () => {
+    assert.equal(
+      stripBrandSuffix("bright-led-indicator-bulbs-2-pcs-crazzycars-pk"),
+      "bright-led-indicator-bulbs-2-pcs"
+    );
+    assert.equal(
+      stripBrandSuffix("honda-civic-x-batman-style-side-mirror-cover"),
+      "honda-civic-x-batman-style-side-mirror-cover"
+    );
+  });
+});
 
 describe("productSlugCandidates", () => {
   it("strips Meta/seed -crazzycars-pk suffix", () => {

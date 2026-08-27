@@ -13,6 +13,7 @@ import {
   detectPaidSocialSource,
 } from "@/lib/paidTraffic";
 import { looksLikeProductSlug, slugFromPathname } from "@/lib/missingProductHelpers";
+import { stripBrandSuffix } from "@/lib/productSlugParam";
 
 function redirectPath(request, pathname, status = 308) {
   // Prefer `new URL` over NextURL.clone() so Location never inherits stale search.
@@ -142,11 +143,14 @@ export async function middleware(request) {
   }
 
   // Shopify-era product URLs (+ variant/country/currency) → clean /[slug] in one hop.
+  // Prefix strip and `-crazzycars-pk` suffix strip happen together so Meta
+  // `/products/{handle}-crazzycars-pk?utm_…` does not 308 twice.
   // Cookie captures fbclid/utm before redirectPath strips them.
   if (lower.startsWith("/products/")) {
     const rest = lower.slice("/products/".length).replace(/\/+$/, "");
     if (rest && !rest.includes("/")) {
-      return withPaidCookie(request, redirectPath(request, `/${rest}`, 308));
+      const dest = stripBrandSuffix(rest) || rest;
+      return withPaidCookie(request, redirectPath(request, `/${dest}`, 308));
     }
   }
 
