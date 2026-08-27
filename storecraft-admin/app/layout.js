@@ -46,7 +46,7 @@ async function getBranding() {
   try {
     await dbConnect();
     const doc = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY })
-      .select("general.storeName general.favicon general.faviconUrl")
+      .select("general.storeName general.favicon general.faviconUrl general.logo general.logoUrl")
       .lean();
     general = sanitizeSettingsDocument({ general: doc?.general || {} }).general || {};
   } catch (e) {
