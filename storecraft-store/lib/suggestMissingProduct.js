@@ -78,21 +78,51 @@ export async function loadSimilarActiveProducts(product, { limit = 6 } = {}) {
       })
       .filter(Boolean);
 
-    const filter = {
-      status: "active",
-      _id: { $ne: product._id },
+    let rows = [];
+    if (categoryIds.length) {
+      rows = await Product.find({
+        status: "active",
+        _id: { $ne: product._id },
+        categories: { $in: categoryIds },
+      })
+        .select(SELECT)
+        .populate("categories", "name slug")
+        .sort({ createdAt: -1 })
+        .limit(24)
+        .maxTimeMS(2000)
+        .lean();
+    }
+
+    const parsed = parseSearchQuery(
+      `${product.name || ""} ${slugParamToSearchQuery(product.slug || "")}`
+    );
+    const vehicleOk = (doc) => {
+      const hay = `${doc?.name || ""} ${String(doc?.slug || "").replace(/-/g, " ")}`.toLowerCase();
+      if (parsed.modelTokens?.length && !parsed.modelTokens.some((m) => hay.includes(m))) {
+        return false;
+      }
+      if (parsed.makeTokens?.length && !parsed.makeTokens.some((m) => hay.includes(m))) {
+        return false;
+      }
+      return true;
     };
-    if (categoryIds.length) filter.categories = { $in: categoryIds };
 
-    const rows = await Product.find(filter)
-      .select(SELECT)
-      .populate("categories", "name slug")
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .maxTimeMS(2000)
-      .lean();
+    let serialized = JSON.parse(
+      JSON.stringify(rows.filter(vehicleOk).map((doc) => serializeStoreProductSummary(doc)))
+    );
 
-    return JSON.parse(JSON.stringify(rows.map(serializeStoreProductSummary)));
+    if (serialized.length < Math.min(2, limit)) {
+      const extra = await suggestProductsForMissingSlug(product.slug || "", { limit });
+      const seen = new Set(serialized.map((p) => p.slug));
+      for (const item of extra) {
+        if (item?.slug && !seen.has(item.slug)) {
+          serialized.push(item);
+          seen.add(item.slug);
+        }
+      }
+    }
+
+    return serialized.slice(0, limit);
   } catch (err) {
     console.error("[loadSimilarActiveProducts]", err?.message || err);
     return [];
