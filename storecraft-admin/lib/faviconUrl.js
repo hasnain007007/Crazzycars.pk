@@ -3,9 +3,9 @@
  * WebP (Safari won't render WebP favicons) and often not square, so Cloudinary
  * assets are re-served as padded square PNGs.
  *
- * Store logos are wide wordmarks. Padding those to a square leaves a few-pixel
- * strip that looks blank in a tab — crop the left mark (the “C”) instead.
- * Dedicated /favicon/ uploads still pad after trim.
+ * Only a dedicated favicon upload overrides the bundled CrazzyCars mark.
+ * The store logo is a wide wordmark and must not become the tab icon.
+ * If a logo URL is used as the favicon, crop the left mark instead of padding.
  *
  * Keep in sync with storecraft-store/lib/faviconUrl.js.
  */
@@ -35,25 +35,22 @@ function firstUrl(...values) {
   return "";
 }
 
-/** Dedicated favicon, else the store logo (cropped for tabs). */
+/** Dedicated favicon upload only — do not use the store logo as the tab icon. */
 export function configuredFaviconUrl(general = {}) {
   const g = general || {};
-  return (
-    firstUrl(g.faviconUrl, g.favicon) ||
-    firstUrl(g.logoUrl, g.logo)
-  );
+  return firstUrl(g.faviconUrl, g.favicon);
 }
 
 const LOCAL_ICONS = {
   icon: [
-    { url: "/favicon.ico?v=2", sizes: "any" },
-    { url: "/icon.png?v=2", type: "image/png", sizes: "32x32" },
+    { url: "/favicon.ico?v=3", sizes: "any" },
+    { url: "/icon.png?v=3", type: "image/png", sizes: "32x32" },
   ],
-  shortcut: [{ url: "/favicon.ico?v=2" }],
-  apple: [{ url: "/apple-touch-icon.png?v=2", sizes: "180x180" }],
+  shortcut: [{ url: "/favicon.ico?v=3" }],
+  apple: [{ url: "/apple-touch-icon.png?v=3", sizes: "180x180" }],
 };
 
-/** Next.js `metadata.icons` — Cloudinary when set, else bundled CrazzyCars mark. */
+/** Next.js `metadata.icons` — Cloudinary when a favicon is set, else bundled mark. */
 export function buildFaviconMetadata(general = {}) {
   const configured = configuredFaviconUrl(general);
   if (!configured) return LOCAL_ICONS;
@@ -62,12 +59,12 @@ export function buildFaviconMetadata(general = {}) {
     icon: [
       { url: faviconVariant(configured, 32), type: "image/png", sizes: "32x32" },
       { url: faviconVariant(configured, 192), type: "image/png", sizes: "192x192" },
-      { url: "/favicon.ico?v=2", sizes: "any" },
+      { url: "/favicon.ico?v=3", sizes: "any" },
     ],
     shortcut: [{ url: faviconVariant(configured, 32) }],
     apple: [
       { url: faviconVariant(configured, 180), sizes: "180x180" },
-      { url: "/apple-touch-icon.png?v=2", sizes: "180x180" },
+      { url: "/apple-touch-icon.png?v=3", sizes: "180x180" },
     ],
   };
 }

@@ -26,14 +26,20 @@ describe("faviconUrl", () => {
     assert.match(out, /e_trim\/f_png,c_pad,b_white,w_32,h_32/);
   });
 
-  it("falls back to the store logo when no favicon is set", () => {
-    assert.equal(configuredFaviconUrl({ logoUrl: LOGO }), LOGO);
+  it("uses a dedicated favicon, not the store logo", () => {
+    assert.equal(configuredFaviconUrl({ logoUrl: LOGO }), "");
     assert.equal(configuredFaviconUrl({ faviconUrl: ICON, logoUrl: LOGO }), ICON);
   });
 
-  it("emits local ico/png when settings have no image", () => {
-    const icons = buildFaviconMetadata({});
+  it("emits local ico/png when no dedicated favicon is set", () => {
+    const icons = buildFaviconMetadata({ logoUrl: LOGO });
+    assert.ok(icons.icon.every((i) => !String(i.url).includes("cloudinary")));
     assert.ok(icons.icon.some((i) => String(i.url).includes("/favicon.ico")));
     assert.ok(icons.icon.some((i) => String(i.url).includes("/icon.png")));
+  });
+
+  it("uses Cloudinary variants when a dedicated favicon is set", () => {
+    const icons = buildFaviconMetadata({ faviconUrl: ICON, logoUrl: LOGO });
+    assert.ok(icons.icon.some((i) => String(i.url).includes("e_trim")));
   });
 });

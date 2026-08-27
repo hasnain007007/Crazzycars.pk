@@ -33,10 +33,10 @@ export const FALLBACK_METADATA = {
     "Car accessories in Pakistan — Cash on Delivery nationwide. Crazzycars.pk",
   icons: {
     icon: [
-      { url: "/favicon.ico?v=2", sizes: "any" },
-      { url: "/icon.png?v=2", type: "image/png", sizes: "32x32" },
+      { url: "/favicon.ico?v=3", sizes: "any" },
+      { url: "/icon.png?v=3", type: "image/png", sizes: "32x32" },
     ],
-    apple: [{ url: "/apple-touch-icon.png?v=2", sizes: "180x180" }],
+    apple: [{ url: "/apple-touch-icon.png?v=3", sizes: "180x180" }],
   },
   openGraph: { type: "website" },
   twitter: { card: "summary_large_image" },
