@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { getCloudinaryCloudName } from "@/lib/cloudinaryConfig";
 import { getRequestUser } from "@/lib/getRequestUser";
+import { denyUnlessAnyCapability } from "@/lib/denyCapability";
 
 cloudinary.config({
   cloud_name: getCloudinaryCloudName(),
@@ -17,9 +18,9 @@ const FOLDER_MAP = {
 
 export async function GET(req) {
   try {
-    if (!getRequestUser(req)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(req);
+    const denied = denyUnlessAnyCapability(user, ["canManageCatalog", "canManageContent"]);
+    if (denied) return denied;
     const timestamp = Math.round(Date.now() / 1000);
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type") || "blog";

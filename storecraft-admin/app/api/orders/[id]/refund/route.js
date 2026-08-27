@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
@@ -33,14 +32,6 @@ export async function POST(request, context) {
       return NextResponse.json({
         success: false,
         error: "Order already refunded",
-      });
-    }
-
-    const sk = process.env.STRIPE_SECRET_KEY || "";
-    if (order.payment?.stripePaymentIntentId && sk && !sk.includes("placeholder")) {
-      const stripe = new Stripe(sk);
-      await stripe.refunds.create({
-        payment_intent: order.payment.stripePaymentIntentId,
       });
     }
 

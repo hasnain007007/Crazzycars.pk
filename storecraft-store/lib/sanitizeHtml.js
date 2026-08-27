@@ -109,3 +109,8 @@ export function sanitizePageHtml(dirty) {
     },
   });
 }
+
+/** Blog posts — same allowlist as CMS pages. */
+export function sanitizeBlogHtml(dirty) {
+  return sanitizePageHtml(dirty);
+}

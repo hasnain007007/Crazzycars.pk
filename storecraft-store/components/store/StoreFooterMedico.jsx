@@ -127,40 +127,6 @@ const PaymentLogo = ({ method }) => {
         }}/>
       </div>
     ),
-    paypal: (
-      <div
-        style={{
-          background: '#FFFFFF',
-          borderRadius: 4,
-          padding: '4px 10px',
-          height: 28,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0,
-        }}
-      >
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 900,
-            color: '#003087',
-            letterSpacing: '-0.02em',
-          }}
-        >
-          Pay
-        </span>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 900,
-            color: '#009cde',
-            letterSpacing: '-0.02em',
-          }}
-        >
-          Pal
-        </span>
-      </div>
-    ),
     amex: (
       <div style={{
         background: '#2E77BC',
@@ -234,22 +200,6 @@ const PaymentLogo = ({ method }) => {
         }}>G Pay</span>
       </div>
     ),
-    stripe: (
-      <div style={{
-        background: '#635BFF',
-        borderRadius: 4,
-        padding: '4px 10px',
-        height: 28,
-        display: 'flex',
-        alignItems: 'center'
-      }}>
-        <span style={{
-          fontSize: 10,
-          fontWeight: 700,
-          color: '#FFFFFF'
-        }}>Stripe</span>
-      </div>
-    ),
     klarna: (
       <div style={{
         background: '#FFB3C7',
@@ -305,7 +255,11 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
 
   const paymentMethods = (
     footer.showPaymentIcons === false ? [] : footer.paymentMethods || []
-  ).filter((m) => m && m.enabled !== false)
+  ).filter((m) => {
+    if (!m || m.enabled === false) return false;
+    const t = String(m.type || m.name || m).toLowerCase();
+    return t !== "stripe" && t !== "paypal";
+  })
 
   const storeName = settings?.general?.storeName
     || 'Crazzycars.pk'

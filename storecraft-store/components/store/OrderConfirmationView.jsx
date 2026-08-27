@@ -43,13 +43,12 @@ export function OrderConfirmationView() {
       <p className="mt-6 tabular-nums text-lg font-semibold text-[#E8E8E8]">{data.orderNumber}</p>
       <p className="price mt-1 text-2xl font-bold text-[#D4AF37]">{formatPrice(data.total)}</p>
       <p className="mt-2 text-sm text-[#B0B0B0]">
-        {data.paymentMethod === "paypal" ? "🅿️ PayPal" : "💳 Card Payment (Stripe)"}
+        {data.paymentMethod === "cod" || !data.paymentMethod
+          ? "Cash on Delivery"
+          : String(data.paymentMethod)}
       </p>
-      {data.paymentStatus === "unpaid" && data.paymentMethod === "paypal" ? (
-        <p className="mt-2 text-sm text-[#22D3EE]">Your order is confirmed. Complete payment via PayPal to process your order.</p>
-      ) : null}
-      {data.paymentStatus === "unpaid" && data.paymentMethod !== "paypal" ? (
-        <p className="mt-2 text-sm text-[#22D3EE]">Your order is confirmed. Payment will be processed via Stripe.</p>
+      {data.paymentStatus === "unpaid" ? (
+        <p className="mt-2 text-sm text-[#22D3EE]">Your order is confirmed. Pay cash on delivery, or complete any requested bank-transfer advance.</p>
       ) : null}
       {data.items?.length ? (
         <ul className="mt-8 space-y-2 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#111111] p-4 text-left text-sm text-[#B0B0B0]">

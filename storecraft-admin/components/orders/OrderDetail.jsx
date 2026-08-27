@@ -777,7 +777,7 @@ function PaymentInformationSection({ order, orderId, onRefunded, orderTotal }) {
         ) : null}
       </div>
 
-      {order.paymentStatus === "paid" && order.payment?.stripePaymentIntentId ? (
+      {order.paymentStatus === "paid" ? (
         <div style={{ marginTop: 16 }}>
           <button
             type="button"
@@ -793,7 +793,7 @@ function PaymentInformationSection({ order, orderId, onRefunded, orderTotal }) {
               cursor: "pointer",
             }}
           >
-            Issue refund (Stripe)
+            Issue refund
           </button>
         </div>
       ) : null}

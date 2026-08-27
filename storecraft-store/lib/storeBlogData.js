@@ -1,5 +1,6 @@
 import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
+import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
 
 function mapListPost(p) {
   return {
@@ -89,7 +90,7 @@ export async function loadBlogPostPageData(slugStr) {
     title: post.title,
     slug: post.slug,
     excerpt: post.excerpt || "",
-    content: post.content || "",
+    content: sanitizeBlogHtml(post.content),
     featuredImage: post.featuredImage || { url: "", altText: "" },
     publishedAt: post.publishedAt || post.createdAt,
     categories: post.categories || [],

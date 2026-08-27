@@ -113,19 +113,7 @@ const settingsSchema = new mongoose.Schema(
       maxEmailReminders: { type: Number, default: 2 },
       reminderIntervalHours: { type: Number, default: 24 },
     },
-    payment: {
-      stripe: {
-        publishableKey: { type: String, default: "" },
-        secretKey: { type: String, default: "" },
-        mode: { type: String, enum: ["sandbox", "live"], default: "sandbox" },
-        webhookSecret: { type: String, default: "" },
-      },
-      paypal: {
-        clientId: { type: String, default: "" },
-        clientSecret: { type: String, default: "" },
-        mode: { type: String, enum: ["sandbox", "live"], default: "sandbox" },
-      },
-    },
+    payment: {},
     pakistaniPaymentMethods: {
       cod: {
         enabled: { type: Boolean, default: true },

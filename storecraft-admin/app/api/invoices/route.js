@@ -27,8 +27,6 @@ const PAYMENT_METHODS = new Set([
   "hbl",
   "meezan",
   "ubl",
-  "stripe",
-  "paypal",
   "cash",
   "other",
 ]);

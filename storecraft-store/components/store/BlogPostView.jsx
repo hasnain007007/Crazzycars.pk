@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import Link from "next/link";
+import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
 
 function rowId(p) {
   if (!p || typeof p !== "object") return "";
@@ -142,7 +143,7 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
       </div>
 
       <div style={{ maxWidth: 820, margin: "0 auto", padding: "44px 20px", background: "#FFFFFF", color: "#222", fontSize: 18, lineHeight: 1.9 }}>
-        <div className="article-content" dangerouslySetInnerHTML={{ __html: post.content || "" }} />
+        <div className="article-content" dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(post.content) }} />
 
         {post.tags?.length > 0 ? (
           <div style={{ marginTop: 36, paddingTop: 22, borderTop: "1px solid #EDEDED", fontSize: 14, color: "#888" }}>

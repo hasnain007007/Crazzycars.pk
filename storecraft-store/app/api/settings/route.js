@@ -13,7 +13,7 @@ export async function GET() {
       (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
       (await Settings.findOne({}).lean()) ||
       {};
-    // Never expose Stripe/PayPal secrets on this public endpoint.
+    // Never expose payment-provider secrets on this public endpoint.
     const data = toPublicClientSettings(buildStoreSettingsPayload(settings));
     return NextResponse.json(
       {

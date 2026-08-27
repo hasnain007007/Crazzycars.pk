@@ -1,6 +1,6 @@
 # Crazzycars.pk — Ecommerce Platform
 
-Car accessories store for the Pakistan market. A two-app Next.js ecommerce platform: a customer-facing **storefront** (`storecraft-store`) and an **admin panel** (`storecraft-admin`). Both apps share MongoDB and integrate with Cloudinary, Stripe, PayPal, and Resend.
+Car accessories store for the Pakistan market. A two-app Next.js ecommerce platform: a customer-facing **storefront** (`storecraft-store`) and an **admin panel** (`storecraft-admin`). Both apps share MongoDB and integrate with Cloudinary and Resend. Checkout is Cash on Delivery plus manual bank-transfer / JazzCash advance confirmation — there is no Stripe or PayPal.
 
 - **Live store:** https://crazzycars.pk
 - **Admin panel:** https://admin.crazzycars.pk
@@ -17,8 +17,6 @@ Car accessories store for the Pakistan market. A two-app Next.js ecommerce platf
 - **Node.js 20** (LTS recommended)
 - **MongoDB Atlas** (or compatible MongoDB URI)
 - **Cloudinary** account (image/video uploads)
-- **Stripe** account (card payments + webhooks)
-- **PayPal** developer app (PayPal checkout)
 - **Resend** account (transactional email)
 - **TinyMCE** API key (rich text in admin; optional until you add your key)
 
@@ -69,15 +67,10 @@ Car accessories store for the Pakistan market. A two-app Next.js ecommerce platf
 | `FROM_EMAIL` | Sender email (verified in Resend) |
 | `FROM_NAME` | Sender display name |
 | `ADMIN_EMAIL` | Address for admin notifications |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
-| `STRIPE_SECRET_KEY` | Stripe secret key |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
 | `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | Cloudinary API secret |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name (client) |
-| `PAYPAL_CLIENT_ID` | PayPal REST client ID |
-| `PAYPAL_CLIENT_SECRET` | PayPal REST client secret |
 
 ### storecraft-admin (`storecraft-admin/.env.local`)
 
@@ -105,8 +98,7 @@ Committed templates: `storecraft-store/.env.local.example` and `storecraft-admin
 2. Set the root directory to `storecraft-store` or `storecraft-admin`.
 3. Add all environment variables from the tables above in the Vercel dashboard.
 4. Point `NEXT_PUBLIC_*_URL` values to your production domains.
-5. Configure Stripe webhooks to `https://<store-domain>/api/payment/stripe/webhook`.
-6. Run `node scripts/seed-admin.mjs` once against production MongoDB (locally with production `MONGODB_URI`).
+5. Run `node scripts/seed-admin.mjs` once against production MongoDB (locally with production `MONGODB_URI`).
 
 ### VPS (PM2 + Nginx)
 
@@ -126,9 +118,7 @@ Set `ADMIN_SEED_PASSWORD` in `storecraft-admin/.env.local` (min 12 characters), 
 
 1. **MongoDB Atlas** — database
 2. **Cloudinary** — media CDN and uploads
-3. **Stripe** — card payments and webhooks
-4. **PayPal** — PayPal checkout
-5. **Resend** — transactional email
-6. **TinyMCE** — rich text editor in admin ([tiny.cloud](https://www.tiny.cloud/)); replace the placeholder API key in `storecraft-admin/components/ui/TinyEditor.jsx`
+3. **Resend** — transactional email
+4. **TinyMCE** — rich text editor in admin ([tiny.cloud](https://www.tiny.cloud/)); replace the placeholder API key in `storecraft-admin/components/ui/TinyEditor.jsx`
 
 Optional: domain registrar, Vercel or VPS host, and WhatsApp Business for the floating chat button.

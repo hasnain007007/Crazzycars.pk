@@ -12,9 +12,9 @@ cloudinary.config({
 
 export async function GET(req) {
   try {
-    if (!getRequestUser(req)) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const user = getRequestUser(req);
+    const denied = denyUnlessAnyCapability(user, ["canManageCatalog", "canManageContent"]);
+    if (denied) return denied;
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type") || "video";
     const timestamp = Math.round(Date.now() / 1000);

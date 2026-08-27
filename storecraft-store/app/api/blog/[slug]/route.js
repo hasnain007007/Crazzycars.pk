@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
+import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
 
 /**
  * Public blog post by slug (no auth). Increments views for published posts only.
@@ -39,7 +40,7 @@ export async function GET(_request, context) {
           title: post.title,
           slug: post.slug,
           excerpt: post.excerpt || "",
-          content: post.content || "",
+          content: sanitizeBlogHtml(post.content),
           featuredImage: post.featuredImage || { url: "", altText: "" },
           publishedAt: post.publishedAt || post.createdAt,
           categories: post.categories || [],

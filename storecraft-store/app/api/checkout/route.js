@@ -454,12 +454,14 @@ export async function POST(request) {
     }
 
     const requestedPaymentMethod = String(body.paymentMethod || "cod").trim();
+    if (/^(stripe|paypal)$/i.test(requestedPaymentMethod)) {
+      return NextResponse.json(
+        { success: false, error: "Card and PayPal checkout are not available. Use Cash on Delivery or bank transfer." },
+        { status: 400 }
+      );
+    }
     let paymentMethod = "cod";
-    if (requestedPaymentMethod.toLowerCase() === "stripe") {
-      paymentMethod = "stripe";
-    } else if (requestedPaymentMethod.toLowerCase() === "paypal") {
-      paymentMethod = "paypal";
-    } else if (isOfflinePakistaniPayment(requestedPaymentMethod)) {
+    if (isOfflinePakistaniPayment(requestedPaymentMethod)) {
       paymentMethod = requestedPaymentMethod;
     }
     const paymentStatus = "unpaid";

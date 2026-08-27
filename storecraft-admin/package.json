@@ -51,8 +51,7 @@
     "react-dropzone": "^15.0.0",
     "react-hot-toast": "^2.6.0",
     "recharts": "^3.8.1",
-    "resend": "^6.12.3",
-    "stripe": "^22.1.0"
+    "resend": "^6.12.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",

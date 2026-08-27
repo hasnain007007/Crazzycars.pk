@@ -14,8 +14,6 @@ import { allocateOrderNumber } from "@/lib/orderNumber";
 
 const ORDER_PAYMENT_METHODS = new Set([
   "cod",
-  "stripe",
-  "paypal",
   "jazzcash",
   "easypaisa",
   "bankTransfer",

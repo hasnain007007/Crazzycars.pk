@@ -17,8 +17,6 @@ import { syncStockAlertForProduct } from "@/lib/productMutations";
 
 const PAYMENT_METHODS = new Set([
   "cod",
-  "stripe",
-  "paypal",
   "jazzcash",
   "easypaisa",
   "bankTransfer",

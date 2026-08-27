@@ -406,7 +406,7 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
     productImageWatermark,
     megaMenu,
     general,
-    payment: settings?.payment || {},
+    payment: {},
     pakistaniPaymentMethods: normalizePakistaniPaymentMethods(settings?.pakistaniPaymentMethods),
     seo: settings?.seo && typeof settings.seo === "object" ? settings.seo : {},
     emailTemplates: settings?.emailTemplates || {},
@@ -417,7 +417,10 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
       tagline: f.tagline || "",
       contactEmail: f.contactEmail || f.email || f.contact?.email || "",
       phone: f.phone || f.contact?.phone || "",
-      paymentMethods: Array.isArray(f.paymentMethods) ? f.paymentMethods : [],
+      paymentMethods: (Array.isArray(f.paymentMethods) ? f.paymentMethods : []).filter((m) => {
+        const t = String(m?.type || m?.name || m || "").toLowerCase();
+        return t !== "stripe" && t !== "paypal";
+      }),
       shopLinks: rewriteFooterLinks(f.shopLinks),
       customerCareLinks: rewriteFooterLinks(f.customerCareLinks),
       categoriesLinks: rewriteFooterLinks(f.categoriesLinks),
@@ -464,7 +467,10 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
         subtext: "Get the Latest Deals",
         buttonText: "Subscribe",
       },
-      paymentMethods: Array.isArray(f.paymentMethods) ? f.paymentMethods : [],
+      paymentMethods: (Array.isArray(f.paymentMethods) ? f.paymentMethods : []).filter((m) => {
+        const t = String(m?.type || m?.name || m || "").toLowerCase();
+        return t !== "stripe" && t !== "paypal";
+      }),
       appLinks: f.appLinks || {},
       showPaymentIcons: f.showPaymentIcons !== false,
     },
@@ -488,10 +494,6 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
  * Keeps only what storefront UI needs.
  */
 export function toPublicClientSettings(full = {}) {
-  const payment = full.payment && typeof full.payment === "object" ? full.payment : {};
-  const stripe = payment.stripe && typeof payment.stripe === "object" ? payment.stripe : {};
-  const paypal = payment.paypal && typeof payment.paypal === "object" ? payment.paypal : {};
-
   return {
     announcementBar: full.announcementBar,
     homepageSettings: full.homepageSettings,
@@ -517,17 +519,7 @@ export function toPublicClientSettings(full = {}) {
       currency: full.general?.currency || full.currency || "PKR",
       website: full.general?.website || full.website || "",
     },
-    payment: {
-      stripe: {
-        enabled: stripe.enabled === true,
-        publishableKey: String(stripe.publishableKey || "").trim(),
-      },
-      paypal: {
-        enabled: paypal.enabled === true,
-        clientId: String(paypal.clientId || "").trim(),
-        mode: paypal.mode || "sandbox",
-      },
-    },
+    payment: {},
     pakistaniPaymentMethods: full.pakistaniPaymentMethods,
     seo: {
       googleAnalyticsId: full.seo?.googleAnalyticsId || "",
