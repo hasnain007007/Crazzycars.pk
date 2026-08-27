@@ -14,6 +14,7 @@ import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
 import { syncStockAlertForProduct } from "@/lib/productMutations";
+import { isCustomerWaCancelled } from "@/lib/orderUi";
 
 const PAYMENT_METHODS = new Set([
   "cod",
@@ -137,6 +138,19 @@ export async function GET(request) {
       filter.createdAt = { ...(filter.createdAt || {}), $lte: attentionCutoff };
     } else if (view === "today") {
       filter.createdAt = { $gte: dayStartView, $lte: dayEndView };
+    } else if (view === "awaitingCustomer") {
+      filter.codConfirmed = { $ne: true };
+      filter.orderStatus = "pending";
+    }
+
+    const customerConfirm = (searchParams.get("customerConfirm") || "").trim().toLowerCase();
+    if (customerConfirm === "yes") {
+      filter.codConfirmed = true;
+    } else if (customerConfirm === "waiting") {
+      filter.codConfirmed = { $ne: true };
+      if (!filter.orderStatus) {
+        filter.orderStatus = { $nin: ["cancelled", "refunded"] };
+      }
     }
 
     const skip = (page - 1) * limit;
@@ -166,6 +180,7 @@ export async function GET(request) {
       viewUnpaid,
       viewNeedsAttention,
       viewToday,
+      viewAwaitingCustomer,
     ] = await Promise.all([
       Order.find(filter)
         .sort(sortSpec)
@@ -199,6 +214,10 @@ export async function GET(request) {
         createdAt: { $lte: attentionCutoff },
       }),
       Order.countDocuments({ createdAt: { $gte: dayStart, $lte: dayEnd } }),
+      Order.countDocuments({
+        orderStatus: "pending",
+        codConfirmed: { $ne: true },
+      }),
     ]);
 
     let todayRevenue = 0;
@@ -264,6 +283,9 @@ export async function GET(request) {
         total: orderGrandTotal(o),
         orderStatus: o.orderStatus,
         paymentStatus: o.paymentStatus,
+        codConfirmed: Boolean(o.codConfirmed),
+        whatsappNotified: Boolean(o.whatsappNotified),
+        customerCancelled: isCustomerWaCancelled(o),
         trackingNumber: o.trackingNumber || o.tracking?.number || "",
         liveStatus: o.tracking?.lastStatus || "",
         liveLocation: o.tracking?.currentLocation || "",
@@ -301,6 +323,7 @@ export async function GET(request) {
         unpaid: viewUnpaid,
         needsAttention: viewNeedsAttention,
         today: viewToday,
+        awaitingCustomer: viewAwaitingCustomer,
       },
     });
   } catch (error) {

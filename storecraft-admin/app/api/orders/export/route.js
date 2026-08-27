@@ -7,6 +7,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
+import { customerConfirmKind, customerConfirmLabel } from "@/lib/orderUi";
 
 function utcStartOfDay(d) {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
@@ -80,6 +81,21 @@ export async function GET(request) {
       filter.$or = or;
     }
 
+    const view = (searchParams.get("view") || "").trim();
+    if (view === "awaitingCustomer") {
+      filter.codConfirmed = { $ne: true };
+      if (!filter.orderStatus) filter.orderStatus = "pending";
+    }
+    const customerConfirm = (searchParams.get("customerConfirm") || "").trim().toLowerCase();
+    if (customerConfirm === "yes") {
+      filter.codConfirmed = true;
+    } else if (customerConfirm === "waiting") {
+      filter.codConfirmed = { $ne: true };
+      if (!filter.orderStatus) {
+        filter.orderStatus = { $nin: ["cancelled", "refunded"] };
+      }
+    }
+
     const rows = await Order.find(filter).sort({ createdAt: -1 }).limit(5000).lean();
 
     const header = [
@@ -90,6 +106,7 @@ export async function GET(request) {
       "Total",
       "Status",
       "Payment",
+      "Customer confirm",
       "Shipping Address",
     ];
     const lines = [header.join(",")];
@@ -107,6 +124,7 @@ export async function GET(request) {
           csvCell(orderGrandTotal(o)),
           csvCell(o.orderStatus),
           csvCell(o.paymentStatus),
+          csvCell(customerConfirmLabel(customerConfirmKind(o))),
           csvCell(formatAddress(o.shippingAddress)),
         ].join(",")
       );

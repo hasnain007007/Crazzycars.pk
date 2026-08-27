@@ -204,6 +204,10 @@ const orderSchema = new mongoose.Schema(
     /** Freeform ops labels (e.g. needs-callback, wrong-address) — not a fixed enum. */
     tags: { type: [String], default: [], index: true },
     whatsappNotified: { type: Boolean, default: false },
+    /**
+     * True when the customer tapped Yes on the signed WhatsApp confirm link.
+     * Independent of warehouse orderStatus (staff can mark confirmed without this).
+     */
     codConfirmed: { type: Boolean, default: false },
     /**
      * Optional first-touch AI referrer attribution (14-day cookie window).

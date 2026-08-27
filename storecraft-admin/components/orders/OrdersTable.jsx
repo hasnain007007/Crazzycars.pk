@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { isStaleOrder, pendingAgeBadge } from "@/lib/orderUi";
 import { formatCustomerListMeta, formatPhoneDisplay } from "@/lib/guestCustomerDisplay";
 import { DualStatusBadges } from "./DualStatusBadges";
+import { CustomerConfirmBadge } from "./CustomerConfirmBadge";
 import { BulkActionBar } from "./BulkActionBar";
 import { formatAdminPrice } from "@/lib/currency";
 
@@ -187,7 +188,7 @@ export function OrdersTable({
         style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
       >
         <div className="max-h-[min(70vh,720px)] overflow-auto">
-          <table className="min-w-[1140px] w-full text-left text-sm">
+          <table className="min-w-[1260px] w-full text-left text-sm">
             <thead
               className="sticky top-0 z-20 border-b text-xs font-semibold uppercase tracking-wide"
               style={{
@@ -232,6 +233,7 @@ export function OrdersTable({
                   />
                 </th>
                 <th className={CELL}>Status</th>
+                <th className={CELL}>Customer confirm</th>
                 <th className={CELL}>Courier</th>
                 <th className={`${CELL} text-right`}>Actions</th>
               </tr>
@@ -240,7 +242,7 @@ export function OrdersTable({
               {loading
                 ? Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={11} className={CELL}>
+                      <td colSpan={12} className={CELL}>
                         <div
                           className="h-3.5 animate-pulse rounded"
                           style={{ background: "var(--border-hairline)" }}
@@ -432,6 +434,9 @@ export function OrdersTable({
                             orderStatus={o.orderStatus}
                             paymentStatus={o.paymentStatus}
                           />
+                        </td>
+                        <td className={`${CELL} whitespace-nowrap`}>
+                          <CustomerConfirmBadge order={o} compact />
                         </td>
                         <td className={`${CELL} max-w-[7rem]`}>
                           <span

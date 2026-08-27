@@ -15,6 +15,7 @@ import {
 } from "./printOrderDocuments";
 import { formatCustomerListMeta } from "@/lib/guestCustomerDisplay";
 import { DualStatusBadges } from "./DualStatusBadges";
+import { CustomerConfirmBadge } from "./CustomerConfirmBadge";
 import { InternalNotes } from "./InternalNotes";
 import { OrderActivityFeed } from "./OrderActivityFeed";
 import { OrderTagsEditor } from "./OrderTagsEditor";
@@ -1603,6 +1604,7 @@ export function OrderDetail({ orderId }) {
                   orderStatus={order.orderStatus || order.status}
                   paymentStatus={order.paymentStatus}
                 />
+                <CustomerConfirmBadge order={order} />
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
                   {formatCurrencyAmount(order, effectiveTotal)}
                 </span>

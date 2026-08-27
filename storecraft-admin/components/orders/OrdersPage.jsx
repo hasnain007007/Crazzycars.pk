@@ -16,6 +16,7 @@ function formatMoney(n) {
 // Needs Attention is the stale bucket (OR8): pending + unpaid + age >= 10d — not a broader 3d triage.
 const SAVED_VIEWS = [
   { key: "all", label: "All" },
+  { key: "awaitingCustomer", label: "Awaiting customer" },
   { key: "unfulfilled", label: "Unfulfilled" },
   { key: "unpaid", label: "Unpaid" },
   { key: "needsAttention", label: "Needs Attention" },
@@ -31,6 +32,7 @@ export function OrdersPage() {
   const [dateTo, setDateTo] = useState("");
   const [tag, setTag] = useState("");
   const [debouncedTag, setDebouncedTag] = useState("");
+  const [customerConfirm, setCustomerConfirm] = useState("all");
   const [view, setView] = useState("all");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
@@ -52,6 +54,7 @@ export function OrdersPage() {
     unpaid: 0,
     needsAttention: 0,
     today: 0,
+    awaitingCustomer: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +70,7 @@ export function OrdersPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, view, limit]);
+  }, [debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, customerConfirm, view, limit]);
 
   const queryString = useMemo(() => {
     const p = new URLSearchParams();
@@ -81,9 +84,10 @@ export function OrdersPage() {
     if (dateFrom) p.set("from", dateFrom);
     if (dateTo) p.set("to", dateTo);
     if (debouncedTag) p.set("tag", debouncedTag);
+    if (customerConfirm !== "all") p.set("customerConfirm", customerConfirm);
     if (view && view !== "all") p.set("view", view);
     return p.toString();
-  }, [page, limit, sortKey, sortDir, debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, view]);
+  }, [page, limit, sortKey, sortDir, debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, customerConfirm, view]);
 
   function onSortChange(key) {
     if (sortKey === key) {
@@ -129,6 +133,7 @@ export function OrdersPage() {
     if (key !== "all") {
       setStatus("all");
       setPaymentStatus("all");
+      setCustomerConfirm("all");
     }
     if (key === "today" || key === "needsAttention") {
       setDateFrom("");
@@ -146,6 +151,11 @@ export function OrdersPage() {
     if (next !== "all") setView("all");
   }
 
+  function onCustomerConfirmChange(next) {
+    setCustomerConfirm(next);
+    if (next !== "all") setView("all");
+  }
+
   function exportCsv() {
     const p = new URLSearchParams();
     if (debouncedSearch) p.set("search", debouncedSearch);
@@ -154,6 +164,7 @@ export function OrdersPage() {
     if (dateFrom) p.set("from", dateFrom);
     if (dateTo) p.set("to", dateTo);
     if (debouncedTag) p.set("tag", debouncedTag);
+    if (customerConfirm !== "all") p.set("customerConfirm", customerConfirm);
     if (view && view !== "all") p.set("view", view);
     const qs = p.toString();
     window.open(`/api/orders/export${qs ? `?${qs}` : ""}`, "_blank", "noopener,noreferrer");
@@ -254,6 +265,8 @@ export function OrdersPage() {
         onDateToChange={setDateTo}
         tag={tag}
         onTagChange={setTag}
+        customerConfirm={customerConfirm}
+        onCustomerConfirmChange={onCustomerConfirmChange}
       />
 
       <OrdersTable

@@ -165,3 +165,59 @@ export function pendingAgeBadge(createdAt, orderStatus, paymentStatus, now = new
   const label = days === 0 ? "Today" : days === 1 ? "1 day" : `${days} days`;
   return { label, className, style, bracket, days };
 }
+
+/** Customer tapped the signed WhatsApp cancel link (not staff cancel). */
+export function isCustomerWaCancelled(order) {
+  return (Array.isArray(order?.statusHistory) ? order.statusHistory : []).some(
+    (h) =>
+      String(h?.status || "").toLowerCase() === "cancelled" &&
+      /whatsapp action link/i.test(String(h?.changedBy || ""))
+  );
+}
+
+/**
+ * Customer Yes/No from the WhatsApp confirm link — independent of warehouse
+ * orderStatus ("Confirmed" there can be staff-only).
+ */
+export function customerConfirmKind(order) {
+  if (order?.codConfirmed) return "confirmed";
+  if (order?.customerCancelled || isCustomerWaCancelled(order)) return "cancelled";
+  const st = String(order?.orderStatus || "").toLowerCase();
+  if (["cancelled", "refunded"].includes(st)) return "na";
+  return "waiting";
+}
+
+export function customerConfirmLabel(kind) {
+  const map = {
+    confirmed: "Yes",
+    waiting: "Waiting",
+    cancelled: "No",
+    na: "—",
+  };
+  return map[kind] || "—";
+}
+
+export function customerConfirmBadgeStyle(kind) {
+  if (kind === "confirmed") {
+    return {
+      background: "color-mix(in srgb, var(--accent-line) 16%, transparent)",
+      color: "var(--accent-line)",
+    };
+  }
+  if (kind === "waiting") {
+    return {
+      background: "color-mix(in srgb, var(--accent-money) 16%, transparent)",
+      color: "var(--accent-money)",
+    };
+  }
+  if (kind === "cancelled") {
+    return {
+      background: "color-mix(in srgb, var(--accent-attention) 16%, transparent)",
+      color: "var(--accent-attention)",
+    };
+  }
+  return {
+    background: "color-mix(in srgb, var(--text-muted) 12%, transparent)",
+    color: "var(--text-muted)",
+  };
+}

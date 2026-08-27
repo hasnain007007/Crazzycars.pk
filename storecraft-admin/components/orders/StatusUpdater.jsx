@@ -62,6 +62,9 @@ export function OrderStatusCard({ order, onUpdated }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Order status</h2>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+        Warehouse progress. Customer WhatsApp Yes/No is the badge next to the order number.
+      </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="text-xs text-slate-500 dark:text-slate-400">Current</span>
         <span

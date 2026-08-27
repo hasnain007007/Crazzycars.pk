@@ -22,13 +22,15 @@ export function OrderFilters({
   onDateToChange,
   tag = "",
   onTagChange,
+  customerConfirm = "all",
+  onCustomerConfirmChange,
 }) {
   return (
     <div
       className="flex flex-col gap-3 rounded-xl border p-4 shadow-none"
       style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
     >
-      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-6">
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="block text-xs font-medium" style={{ color: "var(--text-muted)" }}>
@@ -93,6 +95,21 @@ export function OrderFilters({
             <option value="paid">Paid</option>
             <option value="partial">Partial</option>
             <option value="refunded">Refunded</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+            Customer confirm
+          </label>
+          <select
+            value={customerConfirm}
+            onChange={(e) => onCustomerConfirmChange?.(e.target.value)}
+            className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none"
+            style={inputStyle}
+          >
+            <option value="all">All</option>
+            <option value="yes">Customer said yes</option>
+            <option value="waiting">Waiting for customer</option>
           </select>
         </div>
         <div>

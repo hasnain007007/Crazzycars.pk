@@ -10,6 +10,7 @@ import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
 import { orderGrandTotal, orderPricing } from "@/lib/orderFormat";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
+import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
 
 function requestIp(request) {
@@ -121,6 +122,9 @@ function serializeOrder(doc) {
       addedAt: n.addedAt,
     })),
     tags: Array.isArray(o.tags) ? o.tags.map((t) => String(t)) : [],
+    whatsappNotified: Boolean(o.whatsappNotified),
+    codConfirmed: Boolean(o.codConfirmed),
+    customerCancelled: isCustomerWaCancelled(o),
     timeline: (o.timeline || []).map((t) => ({
       status: t.status,
       title: t.title,
