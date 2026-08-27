@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { productSlugCandidates } from "../storecraft-store/lib/productSlugParam.js";
 import { detectPaidSocialSource } from "../storecraft-store/lib/paidTraffic.js";
+import { parseSearchQuery, scoreSearchCandidate } from "../storecraft-store/lib/smartProductSearch.js";
 import {
   isConfidentMissingSuggestion,
   looksLikeProductSlug,
@@ -122,5 +123,32 @@ describe("isConfidentMissingSuggestion", () => {
       ),
       true
     );
+  });
+
+  it("refuses a same-vehicle body kit for a splitter 404 (part-type gate)", () => {
+    const parsed = parseSearchQuery(
+      slugParamToSearchQuery("suzuki-swift-front-splitter-crazzycars-pk")
+    );
+    assert.deepEqual(parsed.typeTokens, ["splitter"]);
+    assert.ok(parsed.makeTokens.includes("suzuki"));
+    assert.ok(parsed.makeTokens.includes("swift"));
+
+    const rsKit = {
+      name: "Suzuki Swift 2022-2024 RS Style Body Kit Fibreglass",
+      slug: "suzuki-swift-2022-2024-rs-style-body-kit-fibreglass",
+    };
+    const swiftSplitter = {
+      name: "Suzuki Swift Front Splitter Gloss Black",
+      slug: "suzuki-swift-front-splitter-gloss-black",
+    };
+
+    assert.equal(
+      isConfidentMissingSuggestion(rsKit, parsed, scoreSearchCandidate(rsKit, parsed, 0)),
+      false
+    );
+    // Type gate alone is enough — even if leftover words like "front" are ignored.
+    const typeOnly = { ...parsed, modelTokens: [] };
+    assert.equal(isConfidentMissingSuggestion(rsKit, typeOnly, 900), false);
+    assert.equal(isConfidentMissingSuggestion(swiftSplitter, parsed, 900), true);
   });
 });
