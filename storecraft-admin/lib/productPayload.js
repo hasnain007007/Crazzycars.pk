@@ -82,6 +82,27 @@ export function normalizeAddOns(raw) {
   }));
 }
 
+const MAX_RECOMMENDED_PRODUCTS = 6;
+
+/**
+ * Catalog product ObjectIds for PDP quick-add. Drops self, invalid ids, dupes.
+ */
+export function normalizeRecommendedProductIds(raw, { excludeId = null, max = MAX_RECOMMENDED_PRODUCTS } = {}) {
+  const skip = excludeId ? String(excludeId) : "";
+  const seen = new Set();
+  const ids = [];
+  for (const item of Array.isArray(raw) ? raw : []) {
+    const id = String(item?._id || item?.id || item || "").trim();
+    if (!mongoose.Types.ObjectId.isValid(id)) continue;
+    if (skip && id === skip) continue;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+    if (ids.length >= max) break;
+  }
+  return ids;
+}
+
 const WEIGHT_UNITS = new Set(["kg", "g", "lb", "oz"]);
 
 function parseSubDocumentId(row) {

@@ -192,6 +192,12 @@ const productSchema = new mongoose.Schema(
     simpleVariations: { type: [simpleVariationSchema], default: [] },
     variationCombinations: { type: [variationCombinationSchema], default: [] },
     addOns: { type: [addOnSchema], default: [] },
+    /**
+     * Other catalog products shown as quick-add recommendations on the PDP
+     * (cross-sell accessories). Order is display order. Not the same as addOns
+     * (named extra fees on this line item).
+     */
+    recommendedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     customSizing: { type: customSizingSchema, default: () => ({}) },
     features: [{ type: String, trim: true }],
     specifications: [

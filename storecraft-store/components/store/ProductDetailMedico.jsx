@@ -8,7 +8,7 @@ import { useCart } from "@/context/CartContext";
 import { resolveProductContentId, trackViewContent } from "@/lib/metaPixel";
 import { ProductCard } from "./ProductCard";
 import { CountdownTimer } from "./CountdownTimer";
-import ProductVariations from "./ProductVariations";
+import { RecommendedProductsQuickAdd } from "./RecommendedProductsQuickAdd";
 import ProductReviews, { StarDisplay } from "./ProductReviews";
 import { formatPrice } from "@/lib/currency";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
@@ -1137,6 +1137,8 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                 </p>
               </div>
             ) : null}
+
+            <RecommendedProductsQuickAdd products={product?.recommendedProducts || []} />
 
             {Number(product?.advancePercentRequired) > 0 ? (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">

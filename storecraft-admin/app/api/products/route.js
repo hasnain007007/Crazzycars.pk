@@ -13,6 +13,7 @@ import { slugify } from "@/lib/slugify";
 import Product from "@/lib/models/Product.model";
 import {
   normalizeAddOns,
+  normalizeRecommendedProductIds,
   normalizeCustomSizing,
   normalizeMediaVideos,
   normalizeVariations,
@@ -95,7 +96,7 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
     const selectFields = lite
-      ? "name status media.images pricing.regularPrice pricing.salePrice pricing.saleSchedule inventory.quantity inventory.sku articleNo"
+      ? "name slug status media.images pricing.regularPrice pricing.salePrice pricing.saleSchedule inventory.quantity inventory.sku articleNo"
       : "name slug status media pricing inventory featured isDeal newArrival createdAt updatedAt categories articleNo vehicleCompatibility isUniversal compatibleCars shortDescription tags";
 
     const listQuery = Product.find(filter)
@@ -253,6 +254,7 @@ export async function POST(request) {
       variationCombinations: Array.isArray(body.variationCombinations) ? body.variationCombinations : [],
       customSizing: normalizeCustomSizing(body.customSizing),
       addOns: normalizeAddOns(body.addOns),
+      recommendedProducts: normalizeRecommendedProductIds(body.recommendedProducts),
       features: Array.isArray(body.features) ? body.features.map((s) => String(s || "").trim()).filter(Boolean) : [],
       specifications: Array.isArray(body.specifications)
         ? body.specifications.filter((s) => s && (s.label || s.value)).map((s) => ({ label: String(s.label || "").trim(), value: String(s.value || "").trim() }))
@@ -295,7 +297,10 @@ export async function POST(request) {
       ip: requestIp(request),
     });
 
-    const populated = await Product.findById(doc._id).populate("categories", "name slug").lean();
+    const populated = await Product.findById(doc._id)
+      .populate("categories", "name slug")
+      .populate("recommendedProducts", "name slug status media.images")
+      .lean();
     return NextResponse.json({ success: true, data: withProductSaleComputed(populated) }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

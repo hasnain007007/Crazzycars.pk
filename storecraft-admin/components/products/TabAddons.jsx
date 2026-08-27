@@ -3,9 +3,18 @@
  */
 "use client";
 
-export function TabAddons({ form, setForm, fieldClass }) {
+import { RecommendedProductPicker } from "./RecommendedProductPicker";
+
+export function TabAddons({ form, setForm, fieldClass, excludeProductId = "" }) {
   return (
     <div className="space-y-8">
+      <RecommendedProductPicker
+        value={form.recommendedProducts || []}
+        excludeId={excludeProductId}
+        fieldClass={fieldClass}
+        onChange={(next) => setForm((f) => ({ ...f, recommendedProducts: next }))}
+      />
+
       <div>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-semibold text-[#111827]">Add-ons</p>

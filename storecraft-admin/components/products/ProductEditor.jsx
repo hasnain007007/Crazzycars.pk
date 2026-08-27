@@ -159,6 +159,7 @@ function emptyForm() {
       fields: [],
     },
     addOns: [],
+    recommendedProducts: [],
     features: [],
     specifications: [],
     seo: { metaTitle: "", metaDescription: "", metaKeywords: [] },
@@ -284,6 +285,23 @@ function productToForm(p) {
       price: a.price ?? 0,
       required: Boolean(a.required),
     })),
+    recommendedProducts: (p.recommendedProducts || [])
+      .map((rp) => {
+        if (rp && typeof rp === "object" && (rp.name || rp.slug)) {
+          const imgs = rp.media?.images || [];
+          const main = imgs.find((i) => i?.isMain) || imgs[0];
+          return {
+            _id: String(rp._id || rp.id),
+            name: rp.name || "",
+            slug: rp.slug || "",
+            image: main?.url || "",
+            status: rp.status || "",
+          };
+        }
+        const id = String(rp?._id || rp || "").trim();
+        return id ? { _id: id, name: "", slug: "", image: "", status: "" } : null;
+      })
+      .filter(Boolean),
     features: p.features?.length ? [...p.features] : [],
     specifications: Array.isArray(p.specifications) ? p.specifications.map((s) => ({ label: s.label || "", value: s.value || "" })) : [],
     seo: {
@@ -392,6 +410,9 @@ function buildApiPayload(form) {
         : [],
     },
     addOns: form.addOns.filter((a) => a.name?.trim()),
+    recommendedProducts: (form.recommendedProducts || [])
+      .map((p) => String(p?._id || p?.id || p || "").trim())
+      .filter(Boolean),
     features: form.features.map((f) => f.trim()).filter(Boolean),
     specifications: (form.specifications || []).filter((s) => s.label?.trim() && s.value?.trim()),
     seo: form.seo,
@@ -766,9 +787,14 @@ export function ProductEditor({ mode, productId }) {
           </section>
 
           <section id="product-section-addons" className={cardClass}>
-            <h2 className="mb-4 text-base font-semibold text-gray-900">Add-ons &amp; Features</h2>
+            <h2 className="mb-4 text-base font-semibold text-gray-900">Recommended products &amp; add-ons</h2>
             <div className="space-y-4">
-              <TabAddons form={form} setForm={setForm} fieldClass={fieldClass} />
+              <TabAddons
+                form={form}
+                setForm={setForm}
+                fieldClass={fieldClass}
+                excludeProductId={isEdit ? productId : ""}
+              />
             </div>
           </section>
 

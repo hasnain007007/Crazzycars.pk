@@ -140,6 +140,17 @@ export function serializeStoreProductSummary(p) {
   };
 }
 
+/** Active catalog products for PDP quick-add. Empty when nothing was linked. */
+export function serializeRecommendedProducts(docs, { excludeId = "" } = {}) {
+  const skip = String(excludeId || "");
+  return (Array.isArray(docs) ? docs : [])
+    .filter((row) => row && typeof row === "object" && row.slug)
+    .filter((row) => String(row.status || "active").toLowerCase() === "active")
+    .filter((row) => !skip || productDocId(row) !== skip)
+    .slice(0, 6)
+    .map((row) => serializeStoreProductSummary(row));
+}
+
 function serializeVariantForStore(v) {
   if (!v) return null;
   const comb = Array.isArray(v.combination) ? v.combination.map((x) => String(x ?? "").trim()) : [];
@@ -274,6 +285,9 @@ export function serializeStoreProductDetail(p) {
           required: Boolean(a?.required),
         }))
       : [],
+    recommendedProducts: serializeRecommendedProducts(p.recommendedProducts, {
+      excludeId: productDocId(p),
+    }),
     customSizing: {
       enabled: Boolean(p.customSizing?.enabled),
       title: p.customSizing?.title || "Enter Your Measurements",

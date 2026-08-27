@@ -16,6 +16,7 @@ import StockAlert from "@/lib/models/StockAlert.model";
 import "@/lib/models/Vehicle.model";
 import {
   normalizeAddOns,
+  normalizeRecommendedProductIds,
   normalizeCustomSizing,
   normalizeMediaVideos,
   normalizeVariations,
@@ -60,6 +61,7 @@ export async function GET(request, context) {
     await dbConnect();
     const doc = await Product.findById(id)
       .populate("categories", "name slug")
+      .populate("recommendedProducts", "name slug status media.images")
       .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
       .lean();
     if (!doc) {
@@ -265,6 +267,11 @@ export async function PUT(request, context) {
     if (body.addOns !== undefined) {
       existing.addOns = normalizeAddOns(body.addOns);
     }
+    if (body.recommendedProducts !== undefined) {
+      existing.recommendedProducts = normalizeRecommendedProductIds(body.recommendedProducts, {
+        excludeId: id,
+      });
+    }
     if (body.features !== undefined) {
       existing.features = Array.isArray(body.features)
         ? body.features.map((s) => String(s || "").trim()).filter(Boolean)
@@ -346,6 +353,7 @@ export async function PUT(request, context) {
     existing.markModified("variationCombinations");
     existing.markModified("customSizing");
     existing.markModified("addOns");
+    existing.markModified("recommendedProducts");
     existing.markModified("specifications");
     existing.markModified("seo");
 
@@ -372,6 +380,7 @@ export async function PUT(request, context) {
 
     const populated = await Product.findById(id)
       .populate("categories", "name slug")
+      .populate("recommendedProducts", "name slug status media.images")
       .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
       .lean();
     return NextResponse.json({ success: true, data: withProductSaleComputed(populated) });

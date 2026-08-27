@@ -12,9 +12,15 @@ export async function GET(_request, context) {
     await dbConnect();
     const p = await Product.findOne({ slug: String(slug), status: { $regex: /^active$/i } })
       .select(
-        "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns customSizing specifications isUniversal compatibleCars vehicleCompatibility rating averageRating ratingAverage reviewCount totalReviews numReviews"
+        "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications isUniversal compatibleCars vehicleCompatibility rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
       .populate("categories", "name slug")
+      .populate({
+        path: "recommendedProducts",
+        match: { status: "active" },
+        select:
+          "name slug status media pricing inventory featured newArrival categories articleNo simpleVariations variationCombinations tags shortDescription",
+      })
       .lean();
     if (!p) {
       return NextResponse.json({ success: false, error: "Not found." }, { status: 404 });
