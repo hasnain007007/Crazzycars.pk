@@ -1,67 +1,37 @@
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
+import { productSlugCandidates } from "@/lib/productSlugParam";
 
 function escapeRegex(value) {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/**
- * Resolve a URL slug/handle to an active product.
- *
- * Handles Shopify / Meta leftovers:
- * - exact slug
- * - `-crazzycars-pk` suffix added on migration
- * - shortened handles that are a prefix of the current slug
- * - year-range drift (2021-2024 → 2021-2026) with same stem
- *
- * @returns {Promise<{ _id: unknown, slug: string } | null>}
- */
-export async function findActiveProductBySlugParam(rawSlug) {
-  const slug = String(rawSlug || "")
-    .trim()
-    .replace(/^\/+|\/+$/g, "");
-  if (!slug) return null;
+function statusFilter(statuses) {
+  const list = Array.isArray(statuses) && statuses.length ? statuses : ["active"];
+  return list.length === 1 ? list[0] : { $in: list };
+}
 
-  await dbConnect();
-
-  const select = "_id slug";
-  const exact = await Product.findOne({ slug, status: "active" }).select(select).lean();
+async function findExactOrCi(key, statuses, select) {
+  const status = statusFilter(statuses);
+  const exact = await Product.findOne({ slug: key, status }).select(select).lean();
   if (exact) return exact;
-
-  if (!/-crazzycars-pk$/i.test(slug)) {
-    const withBrand = await Product.findOne({
-      slug: `${slug}-crazzycars-pk`,
-      status: "active",
-    })
-      .select(select)
-      .lean();
-    if (withBrand) return withBrand;
-  }
-
-  const ci = await Product.findOne({
-    slug: { $regex: `^${escapeRegex(slug)}$`, $options: "i" },
-    status: "active",
+  return Product.findOne({
+    slug: { $regex: `^${escapeRegex(key)}$`, $options: "i" },
+    status,
   })
     .select(select)
     .lean();
-  if (ci) return ci;
+}
 
-  if (!/-crazzycars-pk$/i.test(slug)) {
-    const ciBrand = await Product.findOne({
-      slug: { $regex: `^${escapeRegex(slug)}-crazzycars-pk$`, $options: "i" },
-      status: "active",
-    })
-      .select(select)
-      .lean();
-    if (ciBrand) return ciBrand;
-  }
+async function findPrefixOrYear(key, statuses, select) {
+  const status = statusFilter(statuses);
 
   // Short Shopify handles that grew longer after migration
   // e.g. deal-5-complete-body-kit → deal-5-complete-body-kit-deal-front-...
-  if (slug.length >= 8) {
+  if (key.length >= 8) {
     const prefixHits = await Product.find({
-      status: "active",
-      slug: { $regex: `^${escapeRegex(slug)}(-|$)`, $options: "i" },
+      status,
+      slug: { $regex: `^${escapeRegex(key)}(-|$)`, $options: "i" },
     })
       .select(select)
       .limit(8)
@@ -73,12 +43,12 @@ export async function findActiveProductBySlugParam(rawSlug) {
     }
   }
 
-  // Year-range drift: honda-city-2021-2024-carbon-fiber-steering-wheel
-  // → honda-city-2021-2026-carbon-fiber-steering-wheel-...
-  if (/\d{4}-\d{4}/.test(slug)) {
-    const flex = escapeRegex(slug).replace(/\d{4}-\d{4}/g, "\\d{4}-\\d{4}");
+  // Year-range drift: honda-city-2021-2024-... → honda-city-2021-2026-...
+  // Run on each candidate so `-crazzycars-pk` leftovers still resolve.
+  if (/\d{4}-\d{4}/.test(key)) {
+    const flex = escapeRegex(key).replace(/\d{4}-\d{4}/g, "\\d{4}-\\d{4}");
     const yearHits = await Product.find({
-      status: "active",
+      status,
       slug: { $regex: `^${flex}`, $options: "i" },
     })
       .select(select)
@@ -94,7 +64,47 @@ export async function findActiveProductBySlugParam(rawSlug) {
   return null;
 }
 
-/** Canonical PDP path for a slug param, or null if no product matches. */
+/**
+ * Resolve a URL slug/handle to a product in the given statuses.
+ *
+ * Handles Shopify / Meta leftovers:
+ * - exact slug
+ * - `-crazzycars-pk` suffix added or removed after migration
+ * - shortened handles that are a prefix of the current slug
+ * - year-range drift (2021-2024 → 2021-2026) with same stem
+ *
+ * @returns {Promise<{ _id: unknown, slug: string, status?: string } | null>}
+ */
+export async function findProductBySlugParam(rawSlug, opts = {}) {
+  const candidates = productSlugCandidates(rawSlug);
+  if (!candidates.length) return null;
+
+  await dbConnect();
+  const select = opts.select || "_id slug status";
+  const statuses = opts.statuses || ["active"];
+
+  for (const key of candidates) {
+    const hit = await findExactOrCi(key, statuses, select);
+    if (hit) return hit;
+  }
+  for (const key of candidates) {
+    const hit = await findPrefixOrYear(key, statuses, select);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/** Resolve a URL slug/handle to an active product. */
+export async function findActiveProductBySlugParam(rawSlug) {
+  return findProductBySlugParam(rawSlug, { statuses: ["active"] });
+}
+
+/** Inactive catalog row — discontinued, not a draft/test SKU. */
+export async function findUnavailableProductBySlugParam(rawSlug) {
+  return findProductBySlugParam(rawSlug, { statuses: ["inactive"] });
+}
+
+/** Canonical PDP path for a slug param, or null if no active product matches. */
 export async function canonicalProductPathForSlug(rawSlug) {
   const product = await findActiveProductBySlugParam(rawSlug);
   if (!product?.slug) return null;

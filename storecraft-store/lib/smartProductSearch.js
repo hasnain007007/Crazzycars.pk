@@ -442,17 +442,19 @@ export async function queryProductsSmart(Product, baseFilter, q, opts = {}) {
     candidateLimit = Math.max(80, limit * 6),
     sortSpec = null,
     countTotal = false,
+    maxTimeMS = 4500,
   } = opts;
 
   const term = String(q || "").trim();
   const parsed = parseSearchQuery(term);
+  const queryTimeout = Math.max(400, Number(maxTimeMS) || 4500);
 
   async function findLean(filter, projection, sort, lim) {
     let query = Product.find(filter, projection);
     if (select) query = query.select(select);
     if (populate) query = query.populate(populate, "name slug");
     if (sort) query = query.sort(sort);
-    return query.limit(lim).maxTimeMS(4500).lean();
+    return query.limit(lim).maxTimeMS(queryTimeout).lean();
   }
 
   if (!term) {

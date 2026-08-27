@@ -7,6 +7,12 @@ import {
 import { classifyAiTraffic, shouldSkipAiVisitPath } from "@/lib/aiAgentTraffic";
 import { applyAiAttributionCookies } from "@/lib/aiAttribution";
 import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
+import {
+  PAID_TRAFFIC_COOKIE,
+  PAID_TRAFFIC_MAX_AGE,
+  detectPaidSocialSource,
+} from "@/lib/paidTraffic";
+import { looksLikeProductSlug, slugFromPathname } from "@/lib/missingProductHelpers";
 
 function redirectPath(request, pathname, status = 308) {
   // Prefer `new URL` over NextURL.clone() so Location never inherits stale search.
@@ -49,6 +55,30 @@ const STRIP_QUERY_KEYS = new Set([
  * - Tag first-touch AI-referrer attribution cookies (14-day window).
  * - Protect storefront account pages (login/register excluded via path checks).
  */
+function paidSourceFromRequest(request) {
+  return detectPaidSocialSource({
+    searchParams: request.nextUrl.searchParams,
+    referer: request.headers.get("referer") || "",
+    cookieValue: request.cookies.get(PAID_TRAFFIC_COOKIE)?.value || "",
+  });
+}
+
+function setPaidTrafficCookie(request, response, source) {
+  if (!source) return;
+  response.cookies.set(PAID_TRAFFIC_COOKIE, source, {
+    path: "/",
+    maxAge: PAID_TRAFFIC_MAX_AGE,
+    sameSite: "lax",
+    secure: request.nextUrl.protocol === "https:",
+    httpOnly: true,
+  });
+}
+
+function withPaidCookie(request, response) {
+  setPaidTrafficCookie(request, response, paidSourceFromRequest(request));
+  return response;
+}
+
 function wwwToApexRedirect(request) {
   const raw = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "")
     .split(",")[0]
@@ -58,7 +88,7 @@ function wwwToApexRedirect(request) {
   const apex = raw.slice(4).split(":")[0];
   if (!apex || apex.startsWith("localhost") || apex.startsWith("127.")) return null;
   const dest = new URL(`https://${apex}${request.nextUrl.pathname}${request.nextUrl.search}`);
-  return NextResponse.redirect(dest, 308);
+  return withPaidCookie(request, NextResponse.redirect(dest, 308));
 }
 
 export async function middleware(request) {
@@ -89,31 +119,34 @@ export async function middleware(request) {
       "/track-order",
     ];
     if (caseSensitivePrefixes.some((p) => lower === p || lower.startsWith(`${p}/`))) {
-      return redirectPath(request, lower, 308);
+      return withPaidCookie(request, redirectPath(request, lower, 308));
     }
   }
 
   // Shopify singular /collection/:handle
   if (lower.startsWith("/collection/") && !lower.startsWith("/collections/")) {
-    return redirectPath(request, `/collections/${lower.slice("/collection/".length)}`, 308);
+    return withPaidCookie(
+      request,
+      redirectPath(request, `/collections/${lower.slice("/collection/".length)}`, 308)
+    );
   }
 
   // Shopify blog home
   if (lower === "/blogs/news" || lower === "/blog/news") {
-    return redirectPath(request, "/blogs", 308);
+    return withPaidCookie(request, redirectPath(request, "/blogs", 308));
   }
 
   // Duplicate catalog index — /shop is canonical. /products/:handle still 308s below.
   if (lower.replace(/\/+$/, "") === "/products") {
-    return redirectPath(request, "/shop", 308);
+    return withPaidCookie(request, redirectPath(request, "/shop", 308));
   }
 
   // Shopify-era product URLs (+ variant/country/currency) → clean /[slug] in one hop.
-  // Use `new URL` — NextURL.clone() + search="" often keeps the old query string.
+  // Cookie captures fbclid/utm before redirectPath strips them.
   if (lower.startsWith("/products/")) {
     const rest = lower.slice("/products/".length).replace(/\/+$/, "");
     if (rest && !rest.includes("/")) {
-      return NextResponse.redirect(new URL(`/${rest}`, request.nextUrl.origin), 308);
+      return withPaidCookie(request, redirectPath(request, `/${rest}`, 308));
     }
   }
 
@@ -133,7 +166,7 @@ export async function middleware(request) {
       const dest = new URL(request.nextUrl.pathname, request.nextUrl.origin);
       const qs = kept.toString();
       if (qs) dest.search = qs;
-      return NextResponse.redirect(dest, 308);
+      return withPaidCookie(request, NextResponse.redirect(dest, 308));
     }
   }
 
@@ -144,7 +177,25 @@ export async function middleware(request) {
     !pathname.startsWith("/account/forgot-password") &&
     !pathname.startsWith("/account/reset-password");
 
-  let response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-cc-pathname", pathname);
+  const paidSource = paidSourceFromRequest(request);
+  if (paidSource) requestHeaders.set("x-cc-paid", paidSource);
+  const inboundReferer = request.headers.get("referer") || "";
+  if (inboundReferer) requestHeaders.set("x-cc-referer", inboundReferer);
+
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
+  setPaidTrafficCookie(request, response, paidSource);
+  const pathSlug = slugFromPathname(pathname);
+  if (paidSource || looksLikeProductSlug(pathSlug)) {
+    response.cookies.set("cc_path", pathname, {
+      path: "/",
+      maxAge: 120,
+      sameSite: "lax",
+      secure: request.nextUrl.protocol === "https:",
+      httpOnly: true,
+    });
+  }
   let aiHit = null;
 
   if (!shouldSkipAiVisitPath(pathname)) {
