@@ -244,12 +244,26 @@ export async function PUT(request, context) {
       sku: body.inventory?.sku !== undefined ? String(body.inventory.sku || "").trim() : existing.inventory?.sku || "",
     };
 
+    const mediaOwner = {
+      name: existing.name,
+      slug: existing.slug,
+      isUniversal: Boolean(existing.isUniversal),
+    };
     if (body.media !== undefined) {
       existing.media = {
-        images: sanitizeMediaImages(body.media?.images),
+        images: sanitizeMediaImages(body.media?.images, mediaOwner),
         videos: normalizeMediaVideos(body.media?.videos),
         videoUrl: String(body.media?.videoUrl || "").trim(),
         videoType: ["youtube", "mp4"].includes(body.media?.videoType) ? body.media.videoType : "",
+      };
+    } else {
+      existing.media = {
+        images: sanitizeMediaImages(existing.media?.images, mediaOwner),
+        videos: normalizeMediaVideos(existing.media?.videos),
+        videoUrl: String(existing.media?.videoUrl || "").trim(),
+        videoType: ["youtube", "mp4"].includes(existing.media?.videoType)
+          ? existing.media.videoType
+          : "",
       };
     }
     if (body.variations !== undefined) {

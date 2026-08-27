@@ -37,8 +37,12 @@ export async function syncStockAlertForProduct(product) {
 }
 
 import { normalizeMediaImages } from "@/lib/productPayload";
+import { imageBelongsToProduct } from "@/lib/mediaAltGuard";
 
-/** Persist-safe image rows (drops client-only keys like _localId). */
-export function sanitizeMediaImages(images) {
-  return normalizeMediaImages(images);
+/**
+ * Persist-safe image rows (drops client-only keys like _localId).
+ * Also drops photos whose alt or Cloudinary filename belong to another SKU.
+ */
+export function sanitizeMediaImages(images, product = {}) {
+  return normalizeMediaImages(images).filter((img) => imageBelongsToProduct(img, product));
 }

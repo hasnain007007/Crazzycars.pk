@@ -9,6 +9,7 @@ import { WatermarkedImage } from "./WatermarkedImage";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
+import { imageBelongsToProduct } from "@/lib/productCardShape";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -38,11 +39,12 @@ function productNeedsOptions(product) {
 function getProductImages(product) {
   const list = [];
   const push = (u) => {
+    if (!imageBelongsToProduct(u, product)) return;
     const url = typeof u === "string" ? u.trim() : String(u?.url || "").trim();
     if (url && !list.includes(url)) list.push(url);
   };
   if (typeof product?.image === "string") push(product.image);
-  else if (product?.image?.url) push(product.image.url);
+  else if (product?.image?.url) push(product.image);
   for (const img of product?.images || []) push(img);
   for (const img of product?.media?.images || []) push(img);
   return list;

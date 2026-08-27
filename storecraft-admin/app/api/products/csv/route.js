@@ -22,6 +22,7 @@ import {
   num,
 } from "@/lib/csv";
 import { PRODUCT_CSV_HEADERS, PRODUCT_CSV_SAMPLE_ROWS } from "@/lib/productCsv";
+import { sanitizeMediaImages } from "@/lib/productMutations";
 
 async function uniqueProductSlug(base, excludeId) {
   const root = slugify(base || "product") || "product";
@@ -177,19 +178,22 @@ export async function POST(request) {
         }
 
         const imageUrls = splitList(row.imageUrls);
-        const mediaImages = imageUrls.map((url, i) => ({
-          url,
-          publicId: "",
-          isMain: i === 0,
-          altText: name,
-          imageName: "",
-        }));
+        const requestedSlug = String(row.slug || "").trim() || slugify(name);
+        const mediaImages = sanitizeMediaImages(
+          imageUrls.map((url, i) => ({
+            url,
+            publicId: "",
+            isMain: i === 0,
+            altText: name,
+            imageName: "",
+          })),
+          { name, slug: requestedSlug, isUniversal: truthy(row.isUniversal, false) }
+        );
 
         const saleRaw = String(row.salePrice ?? "").trim();
         const salePrice = saleRaw === "" ? undefined : num(saleRaw, undefined);
         const keywords = normalizeMetaKeywords(splitList(row.metaKeywords));
         const featured = truthy(row.featured, false);
-        const requestedSlug = String(row.slug || "").trim() || slugify(name);
 
         const fields = {
           name,
@@ -247,9 +251,16 @@ export async function POST(request) {
 
         if (existing) {
           const slug = await uniqueProductSlug(requestedSlug, existing._id);
-          // Merge images: if CSV provided images, replace; else keep existing
+          // Merge images: if CSV provided images, replace; else keep existing (still filtered)
           if (!imageUrls.length && existing.media?.images?.length) {
-            fields.media = existing.media;
+            fields.media = {
+              ...(typeof existing.media.toObject === "function" ? existing.media.toObject() : existing.media),
+              images: sanitizeMediaImages(existing.media.images, {
+                name,
+                slug: requestedSlug,
+                isUniversal: truthy(row.isUniversal, false),
+              }),
+            };
           }
           Object.assign(existing, fields, { slug });
           await existing.save();

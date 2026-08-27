@@ -244,7 +244,11 @@ export async function POST(request) {
         sku: (body.inventory?.sku || "").trim(),
       },
       media: {
-        images: sanitizeMediaImages(body.media?.images),
+        images: sanitizeMediaImages(body.media?.images, {
+          name,
+          slug,
+          isUniversal: Boolean(fitPayload.isUniversal),
+        }),
         videos: normalizeMediaVideos(body.media?.videos),
         videoUrl: String(body.media?.videoUrl || "").trim(),
         videoType: ["youtube", "mp4"].includes(body.media?.videoType) ? body.media.videoType : "",

@@ -12,6 +12,7 @@ import { RecommendedProductsQuickAdd } from "./RecommendedProductsQuickAdd";
 import ProductVariations from "./ProductVariations";
 import ProductReviews, { StarDisplay } from "./ProductReviews";
 import { formatPrice } from "@/lib/currency";
+import { altBelongsToProduct, imageBelongsToProduct } from "@/lib/productCardShape";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
@@ -384,8 +385,13 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
           ? product.media.images
           : []
   )
-    .map((im) => (typeof im === "string" ? { url: im } : { url: im?.url || "" }))
-    .filter((im) => im.url);
+    .map((im) => {
+      const url = typeof im === "string" ? im : im?.url || "";
+      const rawAlt = typeof im === "string" ? "" : String(im?.altText || im?.alt || "").trim();
+      const altText = rawAlt && altBelongsToProduct(rawAlt, product) ? rawAlt : String(product?.name || "");
+      return { url, altText };
+    })
+    .filter((im) => im.url && imageBelongsToProduct(im, product));
 
   const productVideoUrl =
     String(product?.videoUrl || product?.media?.videoUrl || "").trim();
@@ -834,7 +840,16 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
               style={{ width: "100%" }}
             >
               {!selectedItem ? (
-                <div className="grid h-full place-items-center text-sm text-[#707070]">No media available</div>
+                <div
+                  className="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 px-6 text-center"
+                  role="img"
+                  aria-label={`${product?.name || "Product"} — photo not available yet`}
+                >
+                  <span className="text-sm font-medium text-[#555555]">Photo coming soon</span>
+                  <span className="max-w-[16rem] text-xs leading-snug text-[#888888]">
+                    No photo on file for this item yet. Other products below are not this part.
+                  </span>
+                </div>
               ) : selectedItem.type === "youtube" && selectedItem.youTubeId ? (
                 <div className="relative h-full w-full overflow-hidden rounded bg-black">
                   <iframe
