@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { storyImageUrlOptimized } from "@/lib/cloudinaryImage";
-import { resolveHomepageStats } from "@/lib/homepageStats";
 
 function storyImageUrl(field) {
   if (field == null) return "";
@@ -27,7 +26,7 @@ function hasBrandStoryContent(story) {
   return hasText || hasImages || hasStats || hasButton;
 }
 
-export default function BrandStory({ story: storyProp, activeProductCount = null }) {
+export default function BrandStory({ story: storyProp }) {
   const [story, setStory] = useState(storyProp || null);
   const [loading, setLoading] = useState(!storyProp);
 
@@ -51,9 +50,6 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
 
   const image1Url = storyImageUrlOptimized(storyImageUrl(story.image1)) || storyImageUrl(story.image1);
   const image2Url = storyImageUrlOptimized(storyImageUrl(story.image2)) || storyImageUrl(story.image2);
-  const stats = resolveHomepageStats(Array.isArray(story.stats) ? story.stats : [], {
-    activeProductCount,
-  });
 
   return (
     <section className="homepage-section bg-white py-8 md:py-20">
@@ -124,21 +120,6 @@ export default function BrandStory({ story: storyProp, activeProductCount = null
               <p className="mt-4 text-[15px] leading-[1.7]" style={{ color: "#374151" }}>
                 {story.description}
               </p>
-            ) : null}
-
-            {stats.length > 0 ? (
-              <div className="mt-5 flex flex-wrap gap-5 md:mt-8 md:gap-8">
-                {stats.map((stat, i) => (
-                  <div key={`${stat.value}-${stat.label}-${i}`}>
-                    <p className="font-heading text-xl font-bold md:text-2xl" style={{ color: "#C41E1E" }}>
-                      {stat.value}
-                    </p>
-                    <p className="mt-1 text-xs" style={{ color: "#6B7280" }}>
-                      {stat.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
             ) : null}
 
             {story.buttonText ? (

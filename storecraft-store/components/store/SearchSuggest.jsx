@@ -366,14 +366,14 @@ export function SearchSuggest({
                       <li key={p.id || p._id || p.slug || idx} role="option" aria-selected={active}>
                         <button
                           type="button"
-                          className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition ${
+                          className={`search-suggest-row flex w-full items-center gap-3 px-3 py-2 text-left transition ${
                             active ? "bg-[#FEF2F2]" : "hover:bg-[#F9FAFB]"
                           }`}
                           onMouseEnter={() => setActiveIndex(idx)}
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => goToProduct(p)}
                         >
-                          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F3F4F6]">
+                          <span className="search-suggest-thumb flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F3F4F6]">
                             {img ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={img} alt="" className="h-full w-full object-cover" loading="lazy" />
@@ -382,10 +382,10 @@ export function SearchSuggest({
                             )}
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="line-clamp-2 text-sm font-medium text-[#111111]">
+                            <span className="search-suggest-name line-clamp-2">
                               {p.name}
                             </span>
-                            <span className="mt-0.5 block text-sm font-semibold text-[#C41E1E]">
+                            <span className="search-suggest-price mt-0.5 block">
                               {formatPrice(p.price ?? p.salePrice ?? p.regularPrice ?? 0)}
                             </span>
                           </span>

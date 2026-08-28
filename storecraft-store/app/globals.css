@@ -770,9 +770,34 @@ a {
   line-height: 1.25 !important;
 }
 
+.search-suggest-row {
+  min-height: 0 !important;
+}
+
+.search-suggest-name {
+  font-family: var(--font-body), Inter, Arial, Helvetica, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+  color: #111111;
+}
+
+.search-suggest-price {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #c41e1e;
+}
+
 .product-main-viewer {
   aspect-ratio: 1 / 1;
   width: 100%;
+  max-width: 420px;
+}
+
+@media (min-width: 1024px) {
+  .product-main-viewer {
+    max-height: 420px;
+  }
 }
 
 /* ============================================
@@ -3890,17 +3915,17 @@ textarea::placeholder {
   max-width: 420px;
   margin: 0 auto;
   background: #ffffff;
-  border-radius: 28px;
-  padding: 28px 28px 40px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 20px 20px 32px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
   border: 1px solid #eeeeee;
 }
 
 .filter-by-car-title {
-  margin: 0 0 22px;
+  margin: 0 0 16px;
   text-align: center;
   font-family: var(--font-heading), Rajdhani, sans-serif;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: #111111 !important;
   letter-spacing: -0.01em;

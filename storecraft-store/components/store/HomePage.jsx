@@ -103,7 +103,7 @@ export function HomePage({
       {sectionEnabled("whyChooseUs") && homepageSettings.sections?.showWhyChooseUs !== false ? (
         <WhyChooseUs settings={homepageSettings} />
       ) : null}
-      <BrandStory story={brandStory} activeProductCount={activeProductCount} />
+      <BrandStory story={brandStory} />
     </div>
   );
 }

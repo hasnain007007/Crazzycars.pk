@@ -840,7 +840,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
 
       <div className="mx-auto mt-3 max-w-7xl px-4 md:mt-8">
         <div
-          className="product-detail-grid grid items-start gap-5 md:gap-10 lg:grid-cols-2 lg:gap-12"
+          className="product-detail-grid grid items-start gap-5 md:gap-8 lg:grid-cols-[minmax(260px,420px)_minmax(0,1fr)] lg:gap-10"
           style={{ alignItems: "flex-start" }}
         >
           <div className="product-images-col min-w-0">
