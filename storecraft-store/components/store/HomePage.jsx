@@ -22,9 +22,6 @@ const BestSellers = dynamic(() => import("@/components/home/BestSellers"), {
 const ShopByVehicle = dynamic(() => import("@/components/home/ShopByVehicle"), {
   loading: () => <SectionSkeleton height={240} />,
 });
-const BrandCarousel = dynamic(() => import("@/components/home/BrandCarousel"), {
-  loading: () => <SectionSkeleton height={120} />,
-});
 const WhyChooseUs = dynamic(() => import("@/components/home/WhyChooseUs"), {
   loading: () => <SectionSkeleton height={280} />,
 });
@@ -102,9 +99,6 @@ export function HomePage({
       ) : null}
       {sectionEnabled("bestSellers") && homepageSettings.sections?.showBestSellers !== false ? (
         <BestSellers initialProducts={initialBestSellers} settings={homepageSettings} />
-      ) : null}
-      {sectionEnabled("brands") && homepageSettings.sections?.showBrands !== false ? (
-        <BrandCarousel settings={homepageSettings} />
       ) : null}
       {sectionEnabled("whyChooseUs") && homepageSettings.sections?.showWhyChooseUs !== false ? (
         <WhyChooseUs settings={homepageSettings} />
