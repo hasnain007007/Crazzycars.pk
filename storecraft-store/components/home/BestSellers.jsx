@@ -90,7 +90,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
         ) : null}
 
         {loading ? (
-          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-5">
+          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -98,7 +98,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
         ) : filtered.length === 0 ? (
           <p className="mt-8 text-sm text-[#6B7280]">No products in this tab yet.</p>
         ) : (
-          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-5">
+          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-5 xl:grid-cols-6">
             {filtered.map((p) => (
               <ProductCard key={p.id || p.slug} product={p} />
             ))}

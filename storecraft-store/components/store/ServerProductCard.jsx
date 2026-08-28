@@ -128,13 +128,13 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             src={imageUrl}
             alt={alt}
             priority={priority}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 16vw"
           />
         </div>
-        <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-4">
-          <h3 className="cc-card-title m-0 line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] md:text-sm">{card.name}</h3>
+        <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-2">
+          <h3 className="cc-card-title m-0 line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] md:text-[13px]">{card.name}</h3>
           {reviews ? (
-            <p className="cc-card-stars mt-0.5 text-[9px] text-[#9CA3AF] md:mt-1.5 md:text-[11px]">
+            <p className="cc-card-stars mt-0.5 text-[9px] text-[#9CA3AF] md:mt-1 md:text-[11px]">
               {reviews.rating != null ? `${reviews.rating.toFixed(1)} ★ ` : null}(
               {reviews.reviewCount} {reviews.reviewCount === 1 ? "review" : "reviews"})
             </p>
@@ -143,8 +143,8 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             sale={sale}
             regular={regular}
             onSale={onSale}
-            nowClass="cc-card-price text-[13px] font-bold text-[#111111] md:text-lg"
-            wasClass="text-[10px] line-through text-[#9CA3AF] md:text-[13px]"
+            nowClass="cc-card-price text-[13px] font-bold text-[#111111] md:text-[15px]"
+            wasClass="text-[10px] line-through text-[#9CA3AF] md:text-[12px]"
           />
         </div>
       </a>

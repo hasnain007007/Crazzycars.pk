@@ -118,7 +118,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
         </div>
 
         {loading ? (
-          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-5">
+          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
@@ -127,7 +127,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
             ))}
           </div>
         ) : hasDeals ? (
-          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-5">
+          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-5 xl:grid-cols-6">
             {products.map((p) => (
               <ProductCard key={p.id || p.slug} product={p} />
             ))}

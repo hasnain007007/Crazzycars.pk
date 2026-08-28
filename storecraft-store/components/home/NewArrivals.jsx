@@ -42,7 +42,7 @@ export default function NewArrivals() {
           </Link>
         </div>
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="aspect-square animate-pulse rounded bg-[var(--color-border)]" />
             ))}
@@ -52,7 +52,7 @@ export default function NewArrivals() {
             New products coming soon.
           </p>
         ) : (
-          <div className="product-grid grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="product-grid grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
             {products.map((p) => (
               <PremiumProductCard key={p.id || p.slug} product={{ ...p, isNew: true, newArrival: true }} />
             ))}

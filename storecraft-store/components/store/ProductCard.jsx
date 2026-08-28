@@ -70,7 +70,7 @@ function isNewProduct(product) {
   return age < 30 * 24 * 60 * 60 * 1000;
 }
 
-export function ProductCard({ product, compact = false }) {
+export function ProductCard({ product }) {
   const { addItem } = useCart();
   const badgeConfig = useProductBadgeConfig();
   const { productImageWatermark: rawWatermark } = useStoreSettings();
@@ -190,7 +190,7 @@ export function ProductCard({ product, compact = false }) {
                 }`}
                 imgStyle={{ height: "100%", width: "100%", objectFit: "cover" }}
                 width={480}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 16vw"
               />
             </div>
             {hoverImageUrl && hoverReady ? (
@@ -250,7 +250,7 @@ export function ProductCard({ product, compact = false }) {
           <button
             type="button"
             onClick={addToCart}
-            className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-[15px] font-semibold leading-none text-white shadow-sm md:bottom-0 md:left-0 md:right-0 md:h-auto md:w-auto md:translate-y-full md:rounded-none md:py-3 md:text-sm md:opacity-0 md:shadow-none md:group-hover:translate-y-0 md:group-hover:opacity-100"
+            className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-[15px] font-semibold leading-none text-white shadow-sm md:bottom-0 md:left-0 md:right-0 md:h-auto md:w-auto md:translate-y-full md:rounded-none md:py-2 md:text-xs md:opacity-0 md:shadow-none md:group-hover:translate-y-0 md:group-hover:opacity-100"
             style={{ background: "#C41E1E" }}
           >
             {onBackorder ? "Order" : <span className="md:hidden">+</span>}
@@ -259,17 +259,17 @@ export function ProductCard({ product, compact = false }) {
         )}
       </Link>
 
-      <div className={`cc-card-body flex flex-1 flex-col ${compact ? "p-1.5 md:p-3" : "p-1.5 md:p-4"}`}>
-        <Link href={href} className="cc-card-title line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E] md:text-sm">
+      <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-2">
+        <Link href={href} className="cc-card-title line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E] md:text-[13px]">
           {product.name}
         </Link>
 
         {reviewCount > 0 ? (
-          <div className="cc-card-stars mt-0.5 flex items-center gap-px md:mt-1.5 md:gap-1">
+          <div className="cc-card-stars mt-0.5 flex items-center gap-px md:mt-1 md:gap-1">
             {[1, 2, 3, 4, 5].map((s) => (
               <span
                 key={s}
-                className="text-[9px] leading-none md:text-[12px]"
+                className="text-[9px] leading-none md:text-[11px]"
                 style={{ color: s <= Math.round(rating) ? "#E8941A" : "#E5E7EB" }}
               >
                 ★
@@ -281,15 +281,15 @@ export function ProductCard({ product, compact = false }) {
           </div>
         ) : null}
 
-        <div className="cc-card-price-row mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 md:mt-2 md:gap-2">
-          <span className="cc-card-price text-[13px] font-bold text-[#111111] md:text-lg">{formatPrice(sale)}</span>
+        <div className="cc-card-price-row mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 md:mt-1.5 md:gap-1.5">
+          <span className="cc-card-price text-[13px] font-bold text-[#111111] md:text-[15px]">{formatPrice(sale)}</span>
           {onSale ? (
             <>
-              <span className="text-[10px] line-through md:text-[13px]" style={{ color: "#9CA3AF" }}>
+              <span className="text-[10px] line-through md:text-[12px]" style={{ color: "#9CA3AF" }}>
                 {formatPrice(regular)}
               </span>
               {pct > 0 && badgeConfig.showSaleBadge ? (
-                <span className="text-[10px] font-medium md:text-xs" style={{ color: badgeConfig.saleBadgeColor }}>
+                <span className="text-[10px] font-medium md:text-[11px]" style={{ color: badgeConfig.saleBadgeColor }}>
                   {pct}% off
                 </span>
               ) : null}

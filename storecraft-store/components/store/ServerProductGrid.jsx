@@ -42,7 +42,7 @@ export function ServerProductGrid({
           ))}
         </div>
       ) : (
-        <div className={`grid product-grid gap-2 md:gap-4 ${viewMeta.cols}`}>
+        <div className={`grid product-grid gap-2 md:gap-2.5 ${viewMeta.cols}`}>
           {rows.map((product, idx) => (
             <Fragment key={String(product?.id || product?._id || product?.slug || idx)}>
               {"\n"}

@@ -160,7 +160,7 @@ export default function SaleSection() {
 
         {/* Products */}
         {loading ? (
-          <div className="hidden gap-6 md:grid md:grid-cols-4">
+          <div className="hidden gap-3 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -179,7 +179,7 @@ export default function SaleSection() {
             </div>
 
             {/* Desktop grid */}
-            <div className="hidden gap-6 md:grid md:grid-cols-4">
+            <div className="hidden gap-3 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {products.slice(0, 8).map((p) => (
                 <PremiumProductCard key={p.id || p.slug} product={p} />
               ))}

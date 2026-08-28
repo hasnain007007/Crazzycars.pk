@@ -5,8 +5,8 @@ export const DEFAULT_LISTING_PAGE_SIZE = 40;
 export const LISTING_PAGE_SIZES = [16, 24, 32, 40, 48];
 
 export const LISTING_VIEWS = [
-  { id: "grid", label: "Large grid", cols: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" },
-  { id: "grid-dense", label: "Dense grid", cols: "grid-cols-2 md:grid-cols-4 lg:grid-cols-5" },
+  { id: "grid", label: "Large grid", cols: "grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6" },
+  { id: "grid-dense", label: "Dense grid", cols: "grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7" },
   { id: "list", label: "List", cols: "grid-cols-1" },
   { id: "detail", label: "Detailed list", cols: "grid-cols-1" },
 ];
