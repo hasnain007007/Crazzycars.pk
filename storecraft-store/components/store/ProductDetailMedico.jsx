@@ -639,7 +639,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     setMatchedCombo(combo || null);
   }, []);
 
-  function addToCart() {
+  function addToCart({ openCart = true } = {}) {
     if (!product) return false;
     if (!canAddToCart) {
       if (hasProductVariations && !allVariationsSelected) {
@@ -717,6 +717,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
         100,
         Math.max(0, Number(product.advancePercentRequired) || 0)
       ),
+      openCart,
     });
     return true;
   }
@@ -726,7 +727,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
 
   function handleBuyNow() {
     if (!canAddToCart) return;
-    const added = addToCart();
+    const added = addToCart({ openCart: false });
     if (!added) return;
     router.push("/checkout");
   }

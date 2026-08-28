@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
 
 /**
- * Compact cross-sell row above Add to Cart — + Add puts a separate catalog
- * item in the cart without leaving this PDP.
+ * Compact cross-sell row above Add to Cart — + Add puts the item in the cart
+ * and goes to checkout (same as Buy Now), instead of only opening the drawer.
  */
 export function RecommendedProductsQuickAdd({ products = [] }) {
+  const router = useRouter();
   const { addItem } = useCart();
   const list = Array.isArray(products) ? products.filter((p) => p?.slug && p?.name) : [];
   if (!list.length) return null;
@@ -40,8 +42,9 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
         .filter(Boolean),
       codEnabled: rec.codEnabled !== false,
       advancePercentRequired: Math.min(100, Math.max(0, Number(rec.advancePercentRequired) || 0)),
+      openCart: false,
     });
-    toast.success(`${rec.name} added to cart`);
+    router.push("/checkout");
   }
 
   return (

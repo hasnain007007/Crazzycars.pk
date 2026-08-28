@@ -126,6 +126,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
     const normalizedQty = Math.max(1, Math.min(99, Number(row.quantity ?? quantityArg) || 1));
     const unit = Number(row.unitPrice ?? row.price) || 0;
     const contentId = resolveProductContentId(row);
+    const openCart = row.openCart !== false;
 
     const fireAddToCart = () => {
       if (!contentId) return;
@@ -142,7 +143,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
         setItems(cart.lines);
         setCheckoutUrl(cart.checkoutUrl || "");
         setShopifyActive(true);
-        setOpen(true);
+        if (openCart) setOpen(true);
         fireAddToCart();
         return;
       } catch {
@@ -210,7 +211,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
       }
       return next;
     });
-    setOpen(true);
+    if (openCart) setOpen(true);
     fireAddToCart();
   }, []);
 
