@@ -1,10 +1,14 @@
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
 function iconKind(item) {
-  const blob = `${item?.title || ""} ${item?.description || ""} ${item?.icon || ""}`.toLowerCase();
-  if (/return|refund|exchange|🔄/.test(blob)) return "returns";
-  if (/pay|cash|cod|money|bag|💰/.test(blob)) return "cod";
-  if (/deliver|ship|truck|nationwide|🚚/.test(blob)) return "delivery";
+  const title = String(item?.title || "").toLowerCase();
+  const blob = `${title} ${item?.description || ""} ${item?.icon || ""}`.toLowerCase();
+  if (/return|refund|exchange|🔄/.test(title) || /return|refund|exchange|🔄/.test(blob)) return "returns";
+  if (/pay|cash|cod|💰/.test(title)) return "cod";
+  if (/deliver|ship|truck|nationwide|🚚/.test(title)) return "delivery";
+  if (/quality|real product|checked|✅/.test(title)) return "quality";
+  if (/pay|cash|cod|💰/.test(blob) && !/deliver|ship|truck/.test(title)) return "cod";
+  if (/deliver|ship|truck|🚚/.test(blob)) return "delivery";
   return "quality";
 }
 
@@ -33,9 +37,9 @@ function TrustGlyph({ kind }) {
   if (kind === "cod") {
     return (
       <svg {...common}>
-        <rect x="3" y="6" width="18" height="12" rx="2" />
-        <path d="M3 10h18" />
-        <path d="M7 15h3" />
+        <rect x="2.5" y="7" width="19" height="12" rx="1.5" />
+        <circle cx="12" cy="13" r="2.4" />
+        <path d="M6 7V5.8A1.8 1.8 0 0 1 7.8 4h8.4A1.8 1.8 0 0 1 18 5.8V7" />
       </svg>
     );
   }
