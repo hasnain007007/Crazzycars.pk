@@ -39,11 +39,33 @@ export function significantAltTokens(value) {
   );
 }
 
+function productOwnBlob(product) {
+  return `${product?.name || ""} ${product?.slug || ""} ${product?.shortDescription || ""}`.toLowerCase();
+}
+
 function ownTokens(product) {
   return new Set([
     ...significantAltTokens(product?.name),
     ...significantAltTokens(product?.slug),
+    ...significantAltTokens(product?.shortDescription),
   ]);
+}
+
+/** Store listing name is "RGB Side Style"; files/copy still say dragon-style. */
+function ownsDragonStyle(product) {
+  const own = productOwnBlob(product);
+  return own.includes("dragon") || own.includes("rgb-side-style") || /\brgb side style\b/.test(own);
+}
+
+function ownsDynamicBumper(product) {
+  const own = productOwnBlob(product);
+  return (
+    own.includes("dynamic") ||
+    own.includes("x-dynamic") ||
+    own.includes("xdynamic") ||
+    (own.includes("side-style") && own.includes("bumper")) ||
+    (own.includes("side style") && own.includes("bumper"))
+  );
 }
 
 function ownHasToken(own, t) {
@@ -61,9 +83,8 @@ function isUniversalProduct(product) {
 
 function leftoverSkuMarker(text, product) {
   const s = String(text || "").toLowerCase();
-  const own = `${product?.name || ""} ${product?.slug || ""}`.toLowerCase();
-  if (s.includes("dragon") && !own.includes("dragon")) return true;
-  if ((s.includes("x-dynamic") || s.includes("xdynamic")) && !own.includes("dynamic")) return true;
+  if (s.includes("dragon") && !ownsDragonStyle(product)) return true;
+  if ((s.includes("x-dynamic") || s.includes("xdynamic")) && !ownsDynamicBumper(product)) return true;
   return false;
 }
 
@@ -79,7 +100,9 @@ function vehicleConflict(tok, own) {
 function looksLikeForeignProduct(tok, product) {
   const own = ownTokens(product);
   if (!tok.size || !own.size) return false;
+  const allowDragon = ownsDragonStyle(product);
   for (const t of tok) {
+    if (t === "dragon" && allowDragon) continue;
     if (!ownHasToken(own, t) && FOREIGN_SIGNAL.has(t)) return true;
   }
   if (isUniversalProduct(product)) return false;
