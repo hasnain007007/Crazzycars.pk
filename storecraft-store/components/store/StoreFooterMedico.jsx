@@ -297,6 +297,13 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
     .filter(Boolean)
   if (!resolvedCustomerCareLinks.length) resolvedCustomerCareLinks = [...DEFAULT_CUSTOMER_CARE_LINKS]
 
+  const isLegalLink = (link) => {
+    const blob = `${link.href || ""} ${link.label || ""}`.toLowerCase()
+    return /privacy|terms|shipping|returns|refund/.test(blob)
+  }
+  const helpLinks = resolvedCustomerCareLinks.filter((l) => l.href && !isLegalLink(l))
+  const legalLinks = resolvedCustomerCareLinks.filter((l) => l.href && isLegalLink(l))
+
   return (
     <footer className="store-footer">
       <div className="store-footer-inner">
@@ -390,7 +397,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
           <div>
             <h4 className="footer-heading">Help</h4>
             <nav>
-              {resolvedCustomerCareLinks.filter((link) => link.href || link.url).map((link, i) => (
+              {helpLinks.map((link, i) => (
                 <Link
                   key={i}
                   href={link.href}
@@ -441,13 +448,27 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
               : `© ${year} ${storeName}. All rights reserved.`
 
             return (
-              <p style={{
-                fontSize: 12,
-                color: 'rgba(255,255,255,0.4)',
-                margin: 0
-              }}>
-                {text}
-              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 14px" }}>
+                <p
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(255,255,255,0.4)",
+                    margin: 0,
+                  }}
+                >
+                  {text}
+                </p>
+                {legalLinks.map((link, i) => (
+                  <Link
+                    key={i}
+                    href={link.href}
+                    className="footer-link"
+                    style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", display: "inline" }}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             )
           })()}
           {paymentMethods.length > 0 && (
