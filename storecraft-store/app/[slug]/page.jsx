@@ -111,8 +111,24 @@ function redirectWithQuery(to, searchParams) {
   permanentRedirect(suffix && !String(to).includes("?") ? `${to}${suffix}` : to);
 }
 
+function relatedFromRecommended(product) {
+  const self = String(product?._id || product?.id || "");
+  const recs = Array.isArray(product?.recommendedProducts) ? product.recommendedProducts : [];
+  return recs.filter((row) => {
+    if (!row || typeof row !== "object" || !row.slug) return false;
+    if (String(row.status || "active").toLowerCase() !== "active") return false;
+    const id = String(row._id || row.id || "");
+    return !self || id !== self;
+  });
+}
+
 async function loadRelatedProducts(product) {
   try {
+    const curated = relatedFromRecommended(product);
+    if (curated.length) {
+      return JSON.parse(JSON.stringify(curated.map(serializeStoreProductSummary)));
+    }
+
     const categoryIds = (product?.categories || [])
       .map((c) => {
         if (c == null) return null;

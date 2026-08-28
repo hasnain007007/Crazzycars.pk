@@ -321,6 +321,14 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
         return;
       }
 
+      const curated = Array.isArray(product?.recommendedProducts) ? product.recommendedProducts : [];
+      if (curated.length) {
+        if (!cancelled) {
+          setRelated(curated.filter((p) => p.slug && p.slug !== product.slug).slice(0, 6));
+        }
+        return;
+      }
+
       const catSlug = product?.categories?.[0]?.slug;
       try {
         const url = catSlug
