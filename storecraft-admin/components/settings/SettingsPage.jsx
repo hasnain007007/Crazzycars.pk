@@ -14,10 +14,10 @@ import MegaMenuSettings from "@/components/settings/MegaMenuSettings";
 import ProductBadgeSettings from "@/components/settings/ProductBadgeSettings";
 import SeoSettings from "@/components/settings/SeoSettings";
 import HomepageSettings from "@/components/settings/HomepageSettings";
+import { EmailTemplatesSettings } from "@/components/settings/EmailTemplatesSettings";
 import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
 import WhatsAppTemplateSettings from "@/components/settings/WhatsAppTemplateSettings";
 import PakistaniPaymentSettings from "@/components/settings/PakistaniPaymentSettings";
-import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import {
   deliveryChargesShort,
   formatPkrAmount,
@@ -52,14 +52,6 @@ const TABS = [
   "Homepage",
   "Courier",
 ];
-
-const TEMPLATE_KEYS = [
-  { id: "orderConfirmation", label: "Order confirmation" },
-  { id: "orderShipped", label: "Order shipped" },
-  { id: "passwordReset", label: "Password reset" },
-];
-
-const VAR_CHIPS = ["{customer_name}", "{order_id}", "{total}", "{store_name}", "{tracking_link}", "{reset_link}"];
 
 function deepClone(o) {
   return JSON.parse(JSON.stringify(o || {}));
@@ -133,7 +125,6 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [s, setS] = useState(null);
-  const [tplKey, setTplKey] = useState("orderConfirmation");
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError("");
@@ -283,7 +274,6 @@ export function SettingsPage() {
       storePayment: { ...sp, [field]: value },
     });
   }
-  const em = s.emailTemplates || {};
   const sf = s.storefront || { checkoutSuccess: {} };
   const cx = sf.checkoutSuccess || {};
 
@@ -605,7 +595,13 @@ export function SettingsPage() {
 
       {tab === 1 ? (
         <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <Toggle label="Email on new order" checked={!!n.emailOnNewOrder} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnNewOrder: v } })} />
+          <Toggle label="Email on new order (admin inbox)" checked={n.emailOnNewOrder !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnNewOrder: v } })} />
+          <Toggle label="Email customer when payment is received" checked={n.emailOnPaymentReceived !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnPaymentReceived: v } })} />
+          <Toggle label="Email customer when tracking ID is added" checked={n.emailOnTrackingAdded !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnTrackingAdded: v } })} />
+          <Toggle label="Email customer when order is delivered" checked={n.emailOnDelivered !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnDelivered: v } })} />
+          <Toggle label="Email customer when order is cancelled" checked={n.emailOnCancelled !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnCancelled: v } })} />
+          <Toggle label="Email customer on other status changes (confirmed / processing / packed)" checked={!!n.emailOnStatusUpdate} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnStatusUpdate: v } })} />
+          <Toggle label="Welcome email on new customer signup" checked={n.emailOnCustomerWelcome !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnCustomerWelcome: v } })} />
           <Toggle label="Email on low stock" checked={!!n.emailOnLowStock} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnLowStock: v } })} />
           <Toggle label="Email on new review" checked={!!n.emailOnNewReview} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnNewReview: v } })} />
           <Field
@@ -1030,70 +1026,7 @@ export function SettingsPage() {
       ) : null}
 
       {tab === 5 ? (
-        <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <div>
-            <label className="text-xs font-medium text-slate-600">Template</label>
-            <select
-              value={tplKey}
-              onChange={(e) => setTplKey(e.target.value)}
-              className="mt-1 w-full rounded-lg border px-2 py-2 text-sm dark:bg-slate-800"
-            >
-              {TEMPLATE_KEYS.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {VAR_CHIPS.map((v) => (
-              <button
-                key={v}
-                type="button"
-                className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-xs dark:border-slate-600 dark:bg-slate-800"
-                onClick={() => toast(`Insert ${v} in the editor manually (chip: copied concept).`)}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-          <Field
-            label="Subject"
-            value={em[tplKey]?.subject || ""}
-            onChange={(v) =>
-              setS({
-                ...s,
-                emailTemplates: { ...em, [tplKey]: { ...em[tplKey], subject: v, body: em[tplKey]?.body || "" } },
-              })
-            }
-          />
-          <div>
-            <label className="text-xs font-medium text-slate-600">Body</label>
-            <div className="mt-2 min-h-[200px] rounded-lg border dark:border-slate-600">
-              <RichTextEditor
-                key={tplKey}
-                variant="lite"
-                content={em[tplKey]?.body || ""}
-                onChange={(html) =>
-                  setS({
-                    ...s,
-                    emailTemplates: {
-                      ...em,
-                      [tplKey]: { ...em[tplKey], subject: em[tplKey]?.subject || "", body: html },
-                    },
-                  })
-                }
-              />
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => save({ emailTemplates: s.emailTemplates })}
-            className="rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white"
-          >
-            Save templates
-          </button>
-        </div>
+        <EmailTemplatesSettings settings={s} setSettings={setS} onSave={save} />
       ) : null}
 
       {tab === 6 ? <FooterSettings settings={s} setSettings={setS} onSave={save} /> : null}

@@ -8,6 +8,7 @@ import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { orderGrandTotal } from "@/lib/orderFormat";
+import { dispatchOrderLifecycleEmails } from "@/lib/customerLifecycleEmail";
 import {
   createPostexShipment,
   fetchPostexLabel,
@@ -98,6 +99,7 @@ export async function POST(request) {
     }
 
     const existingTracking = String(order.trackingNumber || order.tracking?.number || "").trim();
+    const prevStatus = order.orderStatus;
     if (existingTracking && !rebook) {
       return NextResponse.json(
         {
@@ -215,6 +217,15 @@ export async function POST(request) {
     });
 
     await order.save();
+
+    dispatchOrderLifecycleEmails(order, {
+      prevStatus,
+      nextStatus: order.orderStatus,
+      prevPayment: order.paymentStatus,
+      nextPayment: order.paymentStatus,
+      prevTracking: existingTracking,
+      nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+    }).catch((e) => console.error("[email] postex book:", e?.message || e));
 
     await logActivity({
       user: user.userId,

@@ -10,6 +10,7 @@ import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { requestIp } from "@/lib/requestIp";
+import { dispatchOrderLifecycleEmails } from "@/lib/customerLifecycleEmail";
 
 const MAX_IDS = 100;
 
@@ -67,6 +68,9 @@ export async function PUT(request) {
         const order = await Order.findById(id);
         if (!order) continue;
         if (order.orderStatus === value) continue;
+        const prevStatus = order.orderStatus;
+        const prevPayment = order.paymentStatus;
+        const prevTracking = String(order.trackingNumber || order.tracking?.number || "").trim();
         order.orderStatus = value;
         order.statusHistory.push({
           status: value,
@@ -85,6 +89,14 @@ export async function PUT(request) {
         });
         order.markModified("timeline");
         await order.save();
+        dispatchOrderLifecycleEmails(order, {
+          prevStatus,
+          nextStatus: order.orderStatus,
+          prevPayment,
+          nextPayment: order.paymentStatus,
+          prevTracking,
+          nextTracking: prevTracking,
+        }).catch((e) => console.error("[email] bulk status:", e?.message || e));
         updated += 1;
       }
     } else if (action === "addTags") {
@@ -122,8 +134,17 @@ export async function PUT(request) {
         const order = await Order.findById(id);
         if (!order) continue;
         if (order.paymentStatus === value) continue;
+        const prevPayment = order.paymentStatus;
         order.paymentStatus = value;
         await order.save();
+        dispatchOrderLifecycleEmails(order, {
+          prevStatus: order.orderStatus,
+          nextStatus: order.orderStatus,
+          prevPayment,
+          nextPayment: order.paymentStatus,
+          prevTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+          nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+        }).catch((e) => console.error("[email] bulk payment:", e?.message || e));
         updated += 1;
       }
     }

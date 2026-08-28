@@ -387,6 +387,13 @@ export async function sendCustomerOrderConfirmation(order, { storeName, logoUrl 
   if (orderHasEmailType(order, "order_confirmation")) {
     return { success: true, skipped: true, error: "Confirmation already sent" };
   }
+  const templates = await loadEmailTemplates();
+  if (String(templates?.orderConfirmation?.body || "").trim()) {
+    const { loadEmailRuntimeSettings, sendTemplatedCustomerEmail } = await import(
+      "@/lib/customerLifecycleEmail"
+    );
+    return sendTemplatedCustomerEmail(order, "orderConfirmation", await loadEmailRuntimeSettings());
+  }
   const name =
     storeName || process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
   const { subject, html } = await resolveOrderConfirmationEmail(order, name, logoUrl || "");

@@ -18,6 +18,7 @@ import {
   parsePostexWebhookPayload,
   verifyPostexWebhookSecret,
 } from "@/lib/postexWebhook";
+import { dispatchOrderLifecycleEmails } from "@/lib/customerLifecycleEmail";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -123,14 +124,26 @@ export async function POST(request) {
       });
     }
 
+    const prevStatus = order.orderStatus;
+    const prevPayment = order.paymentStatus;
+    const prevTracking = String(order.trackingNumber || order.tracking?.number || "").trim();
+
     const settingsDoc =
-      (await Settings.findOne({ key: SETTINGS_SINGLETON_KEY }).lean()) ||
+      (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
       (await Settings.findOne({}).lean()) ||
       {};
 
     const applied = applyPostexStatusToOrder(order, parsed);
     if (applied.changed) {
       await order.save();
+      dispatchOrderLifecycleEmails(order, {
+        prevStatus,
+        nextStatus: order.orderStatus,
+        prevPayment,
+        nextPayment: order.paymentStatus,
+        prevTracking,
+        nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+      }).catch((e) => console.error("[email] postex webhook:", e?.message || e));
     }
 
     const wa = buildWhatsAppWouldNotify(order, settingsDoc, parsed.orderStatus);

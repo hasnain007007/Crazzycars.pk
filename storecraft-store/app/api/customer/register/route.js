@@ -3,6 +3,7 @@ import { dbConnect } from "@/lib/db";
 import Customer from "@/lib/models/Customer.model";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { sendCustomerWelcomeEmail } from "@/lib/customerLifecycleEmail";
 
 export async function POST(req) {
   try {
@@ -101,6 +102,13 @@ export async function POST(req) {
       maxAge: 30 * 24 * 60 * 60,
       path: "/",
     });
+
+    sendCustomerWelcomeEmail({
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      name: customer.name,
+      email: customer.email,
+    }).catch((e) => console.error("[register] welcome email:", e?.message || e));
 
     return response;
   } catch (e) {

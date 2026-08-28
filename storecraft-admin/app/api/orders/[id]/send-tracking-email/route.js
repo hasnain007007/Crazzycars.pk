@@ -4,7 +4,7 @@ import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
-import { buildShippingEmail, recordEmailSent, sendEmail } from "@/lib/email";
+import { sendTemplatedCustomerEmail } from "@/lib/customerLifecycleEmail";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { requestIp } from "@/lib/requestIp";
@@ -20,8 +20,6 @@ export async function POST(request, context) {
     }
     await dbConnect();
     const settingsDoc = await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean();
-    const storeName = settingsDoc?.general?.storeName || "Store";
-    const logoUrl = settingsDoc?.general?.logo?.url || "";
     const order = await Order.findById(id).lean();
     if (!order) {
       return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
@@ -32,20 +30,13 @@ export async function POST(request, context) {
 
     const carrier = order.tracking?.carrier || "Carrier";
     const trackingNumber = order.tracking?.number || "";
-    const emailHtml = buildShippingEmail(order, storeName, logoUrl);
-    const subject = `Your order ${order.orderNumber} has shipped! 🚚`;
-    const sent = await sendEmail({
-      to: order.customer.email,
-      subject,
-      html: emailHtml,
-    });
+    const sent = await sendTemplatedCustomerEmail(order, "orderShipped", settingsDoc, { force: true });
     if (!sent?.success) {
       return NextResponse.json(
         { success: false, error: sent?.error || "Failed to send email." },
         { status: 502 }
       );
     }
-    await recordEmailSent(id, "shipping_notification", subject, order.customer.email);
 
     await Order.updateOne({ _id: id }, { $set: { "tracking.notifiedAt": new Date() } });
 

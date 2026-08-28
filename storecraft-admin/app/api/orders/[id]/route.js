@@ -12,6 +12,7 @@ import { orderGrandTotal, orderPricing } from "@/lib/orderFormat";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
+import { dispatchOrderLifecycleEmails } from "@/lib/customerLifecycleEmail";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
@@ -223,6 +224,9 @@ export async function PUT(request, context) {
     const body = await request.json().catch(() => ({}));
     const adminName = user.name || "Admin";
     const updates = [];
+    const prevStatus = order.orderStatus;
+    const prevPayment = order.paymentStatus;
+    const prevTracking = String(order.trackingNumber || order.tracking?.number || "").trim();
 
     if (body.orderStatus !== undefined && body.orderStatus !== order.orderStatus) {
       const allowed = [
@@ -675,6 +679,15 @@ export async function PUT(request, context) {
     }
 
     await order.save();
+
+    dispatchOrderLifecycleEmails(order, {
+      prevStatus,
+      nextStatus: order.orderStatus,
+      prevPayment,
+      nextPayment: order.paymentStatus,
+      prevTracking,
+      nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+    }).catch((e) => console.error("[email] order lifecycle:", e?.message || e));
 
     await logActivity({
       user: user.userId,
