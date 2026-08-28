@@ -297,156 +297,69 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
     .filter(Boolean)
   if (!resolvedCustomerCareLinks.length) resolvedCustomerCareLinks = [...DEFAULT_CUSTOMER_CARE_LINKS]
 
-  const colHeading = {
-    fontSize: 13,
-    fontWeight: 700,
-    color: '#FFFFFF',
-    textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    margin: '0 0 20px',
-    paddingBottom: 12,
-    borderBottom: '1px solid rgba(255,255,255,0.15)',
-    whiteSpace: 'nowrap',
-  }
-
-  const colLink = {
-    display: 'block',
-    fontSize: 13,
-    color: '#FFFFFF',
-    textDecoration: 'none',
-    lineHeight: '2.0',
-    fontWeight: 600,
-    transition: 'opacity 0.15s'
-  }
-
-  const colStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 0,
-  }
-
   return (
-    <footer className="store-footer" style={{
-      background: '#000000',
-      color: '#FFFFFF',
-      marginTop: 48
-    }}>
-      {/* Main content */}
-      <div className="store-footer-inner" style={{
-        maxWidth: '100%',
-        margin: '0 auto',
-        padding: '36px 48px 28px',
-      }}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1.8fr 1.1fr 1.3fr 1.1fr 1.5fr',
-            gap: 80,
-            paddingBottom: 24,
-          }}
-          className="footer-grid"
-        >
-
-          {/* COL 1: Brand Info */}
-          <div style={colStyle}>
+    <footer className="store-footer">
+      <div className="store-footer-inner">
+        <div className="footer-grid">
+          <div>
             {showLogoInFooter && logoUrl ? (
-              <Link
-                href="/"
-                style={{
-                  display: 'inline-block',
-                  marginBottom: 16,
-                }}
-              >
+              <Link href="/" style={{ display: "inline-block", marginBottom: 8 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={logoUrl}
-                  alt={storeName}
-                  className="store-footer-logo"
-                  style={{
-                    width: 220,
-                    height: 72,
-                    objectFit: 'contain',
-                    display: 'block',
-                  }}
-                />
+                <img src={logoUrl} alt={storeName} className="store-footer-logo" />
               </Link>
             ) : (
-              <Link
-                href="/"
-                style={{
-                  display: 'inline-block',
-                  marginBottom: 16,
-                  textDecoration: 'none',
-                }}
-              >
-                <div>
-                  <h3
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 800,
-                      color: '#FFFFFF',
-                      margin: '0 0 4px',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      fontFamily: 'var(--font-heading)',
-                    }}
-                  >
-                    {storeName}
-                  </h3>
-                </div>
+              <Link href="/" style={{ textDecoration: "none" }}>
+                <h3 className="footer-brand-name">{storeName}</h3>
               </Link>
             )}
-            <p
-              style={{
-                fontSize: 13,
-                color: '#FFFFFF',
-                lineHeight: 1.9,
-                margin: '0 0 20px',
-                fontWeight: 500,
-                maxWidth: 240,
-              }}
-            >
-              {tagline}
-            </p>
-            {footerEmail ? (
-              <a
-                href={`mailto:${footerEmail}`}
-                style={{
-                  display: 'block',
-                  fontSize: 13,
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  lineHeight: 2,
-                }}
-              >
-                ✉ {footerEmail}
-              </a>
+            <p className="footer-brand-tag">{tagline}</p>
+            <div className="footer-contact">
+              {footerEmail ? <a href={`mailto:${footerEmail}`}>✉ {footerEmail}</a> : null}
+              {footerPhone ? <a href={`tel:${footerPhone}`}>☎ {footerPhone}</a> : null}
+            </div>
+            {footer.companyName ? (
+              <p className="footer-meta" style={{ marginTop: 10, fontWeight: 600 }}>
+                {footer.companyName}
+              </p>
             ) : null}
-            {footerPhone ? (
+            {footer.companyNumber ? (
+              <p className="footer-meta">Company No: {footer.companyNumber}</p>
+            ) : null}
+            {footer.vatNumber ? <p className="footer-meta">VAT No: {footer.vatNumber}</p> : null}
+            {footer.registeredAddress ? (
+              <div style={{ marginTop: 8 }}>
+                {footer.registeredAddress
+                  .split("\n")
+                  .filter((line) => line.trim())
+                  .map((line, i) => (
+                    <p key={i} className="footer-meta">
+                      {line}
+                    </p>
+                  ))}
+              </div>
+            ) : null}
+            {footer.trustpilotUrl ? (
               <a
-                href={`tel:${footerPhone}`}
+                href={footer.trustpilotUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
-                  display: 'block',
-                  fontSize: 13,
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  lineHeight: 2,
+                  display: "inline-flex",
+                  marginTop: 8,
+                  padding: "4px 10px",
+                  background: "#00B67A",
+                  color: "#fff",
+                  textDecoration: "none",
+                  borderRadius: 4,
+                  fontSize: 11,
+                  fontWeight: 700,
                 }}
               >
-                ☎ {footerPhone}
+                ★ Trustpilot
               </a>
             ) : null}
             {socialLinks.length > 0 ? (
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 10,
-                  flexWrap: 'wrap',
-                  marginTop: 16,
-                }}
-              >
+              <div className="footer-social">
                 {socialLinks.map((s, i) => (
                   <a
                     key={i}
@@ -455,55 +368,38 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
                     rel="noopener noreferrer"
                     aria-label={s.platform || "Social media"}
                     title={s.platform || "Social media"}
-                    style={{
-                      width: 34,
-                      height: 34,
-                      background: 'rgba(255,255,255,0.1)',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#FFFFFF',
-                      textDecoration: 'none',
-                    }}
                   >
-                    <SocialIcon platform={s.platform || s.icon} size={16} />
+                    <SocialIcon platform={s.platform || s.icon} size={14} />
                   </a>
                 ))}
               </div>
             ) : null}
           </div>
 
-          {/* COL 2: Shop */}
-          <div style={colStyle}>
-            <h4 style={colHeading}>Shop</h4>
+          <div>
+            <h4 className="footer-heading">Shop</h4>
             <nav>
               {resolvedShopLinks.filter((link) => link.href || link.url).map((link, i) => (
-                <Link
-                  key={i}
-                  href={link.href}
-                  style={colLink}
-                  onMouseEnter={(e) => { e.target.style.opacity = '0.6' }}
-                  onMouseLeave={(e) => { e.target.style.opacity = '1' }}
-                >
+                <Link key={i} href={link.href} className="footer-link">
                   {link.label}
                 </Link>
               ))}
             </nav>
           </div>
 
-          {/* COL 3: Customer Care */}
-          <div style={colStyle}>
-            <h4 style={colHeading}>Customer Care</h4>
+          <div>
+            <h4 className="footer-heading">Help</h4>
             <nav>
               {resolvedCustomerCareLinks.filter((link) => link.href || link.url).map((link, i) => (
                 <Link
                   key={i}
                   href={link.href}
-                  prefetch={link.href === "/account" || String(link.href || "").startsWith("/account") ? false : undefined}
-                  style={colLink}
-                  onMouseEnter={(e) => { e.target.style.opacity = '0.6' }}
-                  onMouseLeave={(e) => { e.target.style.opacity = '1' }}
+                  prefetch={
+                    link.href === "/account" || String(link.href || "").startsWith("/account")
+                      ? false
+                      : undefined
+                  }
+                  className="footer-link"
                 >
                   {link.label}
                 </Link>
@@ -511,134 +407,23 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
             </nav>
           </div>
 
-          {/* COL 4: Categories */}
-          <div style={colStyle}>
+          <div>
             <FooterCategoriesColumn initialCategoryTree={initialCategoryTree} />
           </div>
-
-          {/* COL 5: Company Information */}
-          <div style={colStyle}>
-            <h4 style={colHeading}>Company Information</h4>
-
-            {footer.companyName ? (
-              <p
-                style={{
-                  fontSize: 13,
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  margin: '0 0 8px',
-                  lineHeight: 1.5,
-                }}
-              >
-                {footer.companyName}
-              </p>
-            ) : null}
-
-            {footer.companyNumber ? (
-              <p
-                style={{
-                  fontSize: 12,
-                  color: '#FFFFFF',
-                  margin: '0 0 4px',
-                  lineHeight: 1.6,
-                }}
-              >
-                <span style={{ fontWeight: 700 }}>Company No:</span>
-                {' '}
-                {footer.companyNumber}
-              </p>
-            ) : null}
-
-            {footer.vatNumber ? (
-              <p
-                style={{
-                  fontSize: 12,
-                  color: '#FFFFFF',
-                  margin: '0 0 12px',
-                  lineHeight: 1.6,
-                }}
-              >
-                <span style={{ fontWeight: 700 }}>VAT No:</span>
-                {' '}
-                {footer.vatNumber}
-              </p>
-            ) : null}
-
-            {footer.registeredAddress ? (
-              <div style={{ marginBottom: 16 }}>
-                <p
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: '#FFFFFF',
-                    margin: '0 0 6px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  Registered Address:
-                </p>
-                {footer.registeredAddress
-                  .split('\n')
-                  .filter((line) => line.trim())
-                  .map((line, i) => (
-                    <p
-                      key={i}
-                      style={{
-                        fontSize: 12,
-                        color: '#FFFFFF',
-                        margin: '0 0 2px',
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {line}
-                    </p>
-                  ))}
-              </div>
-            ) : null}
-
-            {footer.trustpilotUrl ? (
-              <a
-                href={footer.trustpilotUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '6px 14px',
-                  background: '#00B67A',
-                  color: '#FFFFFF',
-                  textDecoration: 'none',
-                  borderRadius: 4,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  marginTop: 4,
-                }}
-              >
-                ★ Trustpilot
-              </a>
-            ) : null}
-          </div>
-
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div style={{
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        background: '#000000'
-      }}>
-        <div className="store-footer-bar" style={{
-          maxWidth: '100%',
-          margin: '0 auto',
-          padding: '16px 48px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 12
-        }}>
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", background: "#000" }}>
+        <div
+          className="store-footer-bar"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 10,
+          }}
+        >
           {(() => {
             const year = new Date().getFullYear()
 
