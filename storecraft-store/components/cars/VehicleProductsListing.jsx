@@ -154,7 +154,7 @@ export function VehicleProductsListing(props) {
   return (
     <Suspense
       fallback={
-        <div className="product-grid grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-2.5 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="product-grid grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-2.5 lg:grid-cols-4 xl:grid-cols-5">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-[#E5E7EB]" />
           ))}

@@ -43,12 +43,12 @@ function CardImage({ src, alt, priority, sizes, className }) {
 
 function PriceBlock({ sale, regular, onSale, nowClass, wasClass }) {
   return (
-    <p className="cc-card-price-row mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 md:mt-2 md:gap-2">
+    <div className="cc-card-price-row mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 md:mt-1.5 md:gap-1.5">
       <span className={nowClass}>{formatPrice(sale)}</span>
       {onSale && regular > sale ? (
         <span className={wasClass}>{formatPrice(regular)}</span>
       ) : null}
-    </p>
+    </div>
   );
 }
 
@@ -128,22 +128,24 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             src={imageUrl}
             alt={alt}
             priority={priority}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 16vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         </div>
-        <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-2">
-          <h3 className="cc-card-title m-0 line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] md:text-[13px]">{card.name}</h3>
+        <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-2.5">
+          <h3 className="cc-card-title m-0 line-clamp-3 text-[12px] font-medium leading-snug text-[#111111]">
+            {card.name}
+          </h3>
           {reviews ? (
-            <p className="cc-card-stars mt-0.5 text-[9px] text-[#9CA3AF] md:mt-1 md:text-[11px]">
+            <div className="cc-card-stars mt-0.5 text-[11px] text-[#9CA3AF] md:mt-1">
               {reviews.rating != null ? `${reviews.rating.toFixed(1)} ★ ` : null}(
               {reviews.reviewCount} {reviews.reviewCount === 1 ? "review" : "reviews"})
-            </p>
+            </div>
           ) : null}
           <PriceBlock
             sale={sale}
             regular={regular}
             onSale={onSale}
-            nowClass="cc-card-price text-[13px] font-bold text-[#111111] md:text-[15px]"
+            nowClass="cc-card-price text-[14px] font-bold text-[#111111]"
             wasClass="text-[10px] line-through text-[#9CA3AF] md:text-[12px]"
           />
         </div>

@@ -189,8 +189,8 @@ export function ProductCard({ product }) {
                   hoverImageUrl ? "" : "group-hover:scale-[1.02]"
                 }`}
                 imgStyle={{ height: "100%", width: "100%", objectFit: "cover" }}
-                width={480}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 16vw"
+                width={640}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
             </div>
             {hoverImageUrl && hoverReady ? (
@@ -202,7 +202,7 @@ export function ProductCard({ product }) {
                   className="h-full w-full"
                   imgClassName="h-full w-full object-cover"
                   imgStyle={{ height: "100%", width: "100%", objectFit: "cover" }}
-                  width={480}
+                  width={640}
                   loading="eager"
                 />
               </div>
@@ -259,8 +259,8 @@ export function ProductCard({ product }) {
         )}
       </Link>
 
-      <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-2">
-        <Link href={href} className="cc-card-title line-clamp-2 text-[11px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E] md:text-[13px]">
+      <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-2.5">
+        <Link href={href} className="cc-card-title line-clamp-3 text-[12px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E]">
           {product.name}
         </Link>
 
@@ -282,7 +282,7 @@ export function ProductCard({ product }) {
         ) : null}
 
         <div className="cc-card-price-row mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 md:mt-1.5 md:gap-1.5">
-          <span className="cc-card-price text-[13px] font-bold text-[#111111] md:text-[15px]">{formatPrice(sale)}</span>
+          <span className="cc-card-price text-[14px] font-bold text-[#111111]">{formatPrice(sale)}</span>
           {onSale ? (
             <>
               <span className="text-[10px] line-through md:text-[12px]" style={{ color: "#9CA3AF" }}>
