@@ -36,7 +36,8 @@ const rajdhani = Rajdhani({
   variable: "--font-rajdhani",
   display: "swap",
   weight: ["600", "700"],
-  preload: true,
+  // Body Inter is the LCP font; heading font can swap after first paint.
+  preload: false,
 });
 
 const FALLBACK_DESCRIPTION =

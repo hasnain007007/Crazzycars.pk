@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { getWatermarkOverlayStyle } from "@/lib/productImageWatermark";
-import { cardImageUrl, cloudinarySrcSet } from "@/lib/cloudinaryImage";
+import { cardImageUrl, cloudinarySrcSet, cloudinaryUrl } from "@/lib/cloudinaryImage";
 
 export function WatermarkedImage({
   src,
@@ -16,6 +16,8 @@ export function WatermarkedImage({
   fetchPriority,
   optimize = true,
   width = 480,
+  crop = "fill",
+  widths,
   sizes = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw",
   responsive = true,
 }) {
@@ -23,10 +25,13 @@ export function WatermarkedImage({
     return null;
   }
 
-  const resolved = optimize ? cardImageUrl(src, width) || src : src;
+  const resolved = optimize
+    ? (crop === "fill" ? cardImageUrl(src, width) : cloudinaryUrl(src, { width, crop })) || src
+    : src;
+  const srcSetWidths = widths || [Math.round(width * 0.75), width, Math.round(width * 1.5)];
   const srcSet =
     optimize && responsive && String(src).includes("res.cloudinary.com")
-      ? cloudinarySrcSet(src, [Math.round(width * 0.75), width, Math.round(width * 1.5)])
+      ? cloudinarySrcSet(src, srcSetWidths, { crop })
       : undefined;
 
   const imgProps = {

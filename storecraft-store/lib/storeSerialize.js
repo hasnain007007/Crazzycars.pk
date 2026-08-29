@@ -70,7 +70,7 @@ function serializeMediaVideos(videos) {
     .filter((video) => video.url);
 }
 
-export function serializeStoreProductSummary(p) {
+export function serializeStoreProductSummary(p, opts = {}) {
   const regularPrice = Number(p.pricing?.regularPrice) || 0;
   const salePrice = Number(p.pricing?.salePrice) || 0;
   const schedule = p.pricing?.saleSchedule || null;
@@ -78,13 +78,22 @@ export function serializeStoreProductSummary(p) {
   const price = isOnSale ? salePrice : effectiveUnitPrice(p) || regularPrice;
   const stock = getStock(p);
   const inStock = isInStock(p);
+  const rawImgs = Array.isArray(p?.media?.images) ? p.media.images : [];
+  const maxImages = Number.isFinite(Number(opts.maxImages))
+    ? Math.max(1, Number(opts.maxImages))
+    : rawImgs.length;
+  const mainFirst = [
+    rawImgs.find((i) => i?.isMain),
+    ...rawImgs.filter((i) => !i?.isMain),
+  ].filter(Boolean);
+  const mediaImages = mainFirst.slice(0, maxImages || rawImgs.length);
   const summaryImage =
-    p?.media?.images?.find((i) => i?.isMain)?.url ||
-    p?.media?.images?.[0]?.url ||
+    mediaImages.find((i) => i?.isMain)?.url ||
+    mediaImages[0]?.url ||
+    rawImgs.find((i) => i?.isMain)?.url ||
+    rawImgs[0]?.url ||
     null;
-  const summaryImages = Array.isArray(p?.media?.images)
-    ? p.media.images.map((i) => i?.url).filter(Boolean)
-    : [];
+  const summaryImages = mediaImages.map((i) => i?.url).filter(Boolean);
   return {
     id: productDocId(p),
     name: p.name,
@@ -94,9 +103,7 @@ export function serializeStoreProductSummary(p) {
     image: summaryImage,
     images: summaryImages,
     media: {
-      images: Array.isArray(p?.media?.images)
-        ? p.media.images.map((i) => ({ url: i?.url || "", isMain: !!i?.isMain, altText: i?.altText || "" }))
-        : [],
+      images: mediaImages.map((i) => ({ url: i?.url || "", isMain: !!i?.isMain, altText: i?.altText || "" })),
     },
     price,
     regularPrice,

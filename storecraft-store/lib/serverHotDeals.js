@@ -29,7 +29,9 @@ export async function fetchHotDealsServer({ filter = "all", limit = 12 } = {}) {
       .populate("categories", "name slug")
       .lean();
 
-    return JSON.parse(JSON.stringify(rows.map(serializeStoreProductSummary)));
+    return JSON.parse(
+      JSON.stringify(rows.map((row) => serializeStoreProductSummary(row, { maxImages: 2 })))
+    );
   } catch (err) {
     console.error("[fetchHotDealsServer]", err?.message || err);
     return [];

@@ -1,7 +1,11 @@
 /**
  * SEO helpers — JSON-LD structured data for Google / AI shopping citation.
  */
-import { getSiteUrl } from "@/lib/siteUrl";
+import { getSiteUrl } from "../siteUrl.js";
+import {
+  buildMerchantReturnPolicies,
+  buildOfferShippingDetails,
+} from "../schema/merchantReturnPolicy.mjs";
 
 function site() {
   return getSiteUrl();
@@ -11,6 +15,22 @@ function absoluteProductUrl(path) {
   const SITE = site();
   const p = path?.startsWith("/") ? path : `/${path || ""}`;
   return `${SITE}${p}`;
+}
+
+function absoluteImageUrls(images, siteUrl) {
+  const SITE = siteUrl || site();
+  const list = Array.isArray(images) ? images : [];
+  const out = [];
+  for (const item of list) {
+    const raw = String(typeof item === "string" ? item : item?.url || "").trim();
+    if (!raw) continue;
+    let href = raw;
+    if (href.startsWith("//")) href = `https:${href}`;
+    else if (href.startsWith("/")) href = `${SITE}${href}`;
+    else if (!/^https?:\/\//i.test(href)) continue;
+    if (!out.includes(href)) out.push(href);
+  }
+  return out;
 }
 
 function conditionUrl(condition) {
@@ -51,10 +71,19 @@ function resolveOfferPrice(p) {
   return null;
 }
 
+/** True when Google Product / merchant listing rich results can accept this node. */
+export function isCompleteProductJsonLd(ld) {
+  if (!ld || ld["@type"] !== "Product") return false;
+  const name = String(ld.name || "").trim();
+  const images = Array.isArray(ld.image) ? ld.image.filter(Boolean) : ld.image ? [ld.image] : [];
+  const price = Number(ld.offers?.price);
+  return Boolean(name && images.length && Number.isFinite(price) && price > 0);
+}
+
 /** Product schema — every product page */
 export function productJsonLd(p) {
   const SITE = site();
-  const price = resolveOfferPrice(p) ?? 0;
+  const price = resolveOfferPrice(p);
   const combos = Array.isArray(p.variationCombinations) ? p.variationCombinations : [];
   const hasComboStock = combos.some(
     (c) => c?.stock !== undefined && c?.stock !== null && Number.isFinite(Number(c.stock))
@@ -66,9 +95,10 @@ export function productJsonLd(p) {
     ? combos.reduce((sum, c) => sum + Math.max(0, Number(c.stock) || 0), 0)
     : Number(p.stock ?? p.inventory?.quantity ?? 0);
 
-  const images = Array.isArray(p.images)
+  const rawImages = Array.isArray(p.images)
     ? p.images
     : p.media?.images?.map((i) => i.url).filter(Boolean) || [];
+  const images = absoluteImageUrls(rawImages, SITE);
   const path = p.urlPath || `/${p.slug}`;
   const url = absoluteProductUrl(path);
   const sku = p.sku || p.articleNo || p.inventory?.sku || undefined;
@@ -79,7 +109,6 @@ export function productJsonLd(p) {
     (Array.isArray(p.categories) ? p.categories.map((c) => c?.name).filter(Boolean).join(" > ") : "") ||
     undefined;
 
-  const priceNum = Number(price);
   const priceValidUntil = (() => {
     if (p.priceValidUntil) return String(p.priceValidUntil).slice(0, 10);
     const d = new Date();
@@ -93,15 +122,19 @@ export function productJsonLd(p) {
     "@id": `${url}#product`,
     name: p.name,
     url,
-    image: images,
     description: p.metaDescription || p.seo?.metaDescription || p.shortDescription || "",
     sku: sku || undefined,
     brand: { "@type": "Brand", name: p.brand || "CrazzyCars.pk" },
-    offers: {
+  };
+
+  if (images.length) ld.image = images;
+
+  if (price != null) {
+    ld.offers = {
       "@type": "Offer",
       url,
       priceCurrency: "PKR",
-      price: Number.isFinite(priceNum) ? priceNum.toFixed(2) : String(price),
+      price: price.toFixed(2),
       priceValidUntil,
       availability: availabilityUrl({
         stock,
@@ -116,8 +149,10 @@ export function productJsonLd(p) {
         name: "CrazzyCars.pk",
         url: SITE,
       },
-    },
-  };
+      shippingDetails: buildOfferShippingDetails(),
+      hasMerchantReturnPolicy: buildMerchantReturnPolicies(SITE),
+    };
+  }
 
   if (gtin.length >= 8) {
     if (gtin.length === 13) ld.gtin13 = gtin;

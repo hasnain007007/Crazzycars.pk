@@ -45,23 +45,32 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
 }
 
 /** Responsive srcset for Cloudinary images (raw <img> when next/image is not used). */
-export function cloudinarySrcSet(src, widths = [320, 480, 640]) {
+export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill" } = {}) {
   const unique = [...new Set(widths.map((w) => Math.round(w)).filter((w) => w > 0))].sort((a, b) => a - b);
   return unique
-    .map((w) => `${cloudinaryUrl(src, { width: w, height: w, crop: "fill" })} ${w}w`)
+    .map((w) => {
+      const opts = crop === "fill" ? { width: w, height: w, crop: "fill" } : { width: w, crop };
+      return `${cloudinaryUrl(src, opts)} ${w}w`;
+    })
     .join(", ");
 }
 
 /**
- * Homepage hero — designed banners include sharp text; avoid lossy auto-quality.
- * c_limit never upscales, so upload a 1920px+ source for crisp desktop display.
+ * Homepage hero — slot-sized, not 2560@q100 (that blew mobile LCP past 2.5s).
+ * `auto:good` keeps designed-banner text sharp without a lossless multi-megabyte file.
+ * c_limit never upscales.
  */
 export function heroImageUrl(src) {
-  return cloudinaryUrl(src, { width: 2560, crop: "limit", quality: 100, format: "auto" });
+  return cloudinaryUrl(src, { width: 1920, crop: "limit", quality: "auto:good", format: "auto" });
 }
 
 export function heroImageUrlMobile(src) {
-  return cloudinaryUrl(src, { width: 1280, crop: "limit", quality: 100, format: "auto" });
+  return cloudinaryUrl(src, { width: 828, crop: "limit", quality: "auto:good", format: "auto" });
+}
+
+/** PDP main viewer — contain-fit, no square crop. 720 is 2× a ~360px mobile column. */
+export function pdpImageUrl(src, width = 720) {
+  return cloudinaryUrl(src, { width, crop: "limit" });
 }
 
 /** Product / card thumbnails — default 480px (2× for ~240px slots). */

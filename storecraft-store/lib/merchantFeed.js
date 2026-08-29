@@ -60,7 +60,8 @@ function feedPrice(product) {
       if (now >= start && now <= end) amount = sale;
     }
   }
-  return `${Math.max(0, amount).toFixed(2)} PKR`;
+  if (!(amount > 0)) return "";
+  return `${amount.toFixed(2)} PKR`;
 }
 
 function primaryImage(product, siteUrl) {

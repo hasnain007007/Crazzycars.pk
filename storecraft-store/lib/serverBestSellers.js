@@ -23,7 +23,9 @@ export async function fetchBestSellersServer({ limit = 100 } = {}) {
       .limit(lim)
       .lean();
 
-    return JSON.parse(JSON.stringify(rows.map(serializeStoreProductSummary)));
+    return JSON.parse(
+      JSON.stringify(rows.map((row) => serializeStoreProductSummary(row, { maxImages: 2 })))
+    );
   } catch (err) {
     console.error("[fetchBestSellersServer]", err?.message || err);
     return [];

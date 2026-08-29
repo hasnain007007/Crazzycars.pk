@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { formatPrice } from "@/lib/currency";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 import {
   getProductCardImage,
   getProductCardPrices,
@@ -60,7 +61,8 @@ export function ServerProductCard({ product, categoryName, priority = false, var
   const card = normalizeProductForCard(product);
   if (!card) return null;
 
-  const imageUrl = getProductCardImage(card);
+  const rawImageUrl = getProductCardImage(card);
+  const imageUrl = cardImageUrl(rawImageUrl, 480) || rawImageUrl;
   const { regular, sale, onSale } = getProductCardPrices(card);
   const reviews = getProductCardReviews(card);
   const alt = productCardAlt(card, categoryName);

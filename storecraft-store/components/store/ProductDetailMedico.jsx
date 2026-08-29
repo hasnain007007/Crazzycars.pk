@@ -14,6 +14,7 @@ import ProductReviews, { StarDisplay } from "./ProductReviews";
 import { formatPrice } from "@/lib/currency";
 import { altBelongsToProduct, imageBelongsToProduct } from "@/lib/productCardShape";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
@@ -906,6 +907,12 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   alt={selectedItem.altText || product.name}
                   watermark={productImageWatermark}
                   className="h-full w-full"
+                  width={720}
+                  crop="limit"
+                  widths={[480, 720, 900]}
+                  sizes="(max-width: 768px) 100vw, 420px"
+                  loading={selectedIndex === 0 ? "eager" : "lazy"}
+                  fetchPriority={selectedIndex === 0 ? "high" : "low"}
                   imgStyle={{
                     width: "100%",
                     height: "100%",
@@ -940,7 +947,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   {item.type === "image" ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
-                      src={item.url}
+                      src={cardImageUrl(item.url, 112) || item.url}
                       alt={item.altText || `${product.name} ${index + 1}`}
                       loading="lazy"
                       decoding="async"

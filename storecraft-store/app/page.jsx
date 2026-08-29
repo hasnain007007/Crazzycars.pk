@@ -29,8 +29,8 @@ export default async function Page() {
   // (client components can still fall back to their own fetches if needed).
   try {
     [bestSellers, hotDeals, heroSlides, carCatalog, activeProductCount] = await Promise.all([
-      shopify ? getBestSellingProducts(100) : fetchBestSellersServer({ limit: 100 }),
-      shopify ? getHotDealProducts(24) : fetchHotDealsServer({ filter: "all", limit: 24 }),
+      shopify ? getBestSellingProducts(20) : fetchBestSellersServer({ limit: 20 }),
+      shopify ? getHotDealProducts(12) : fetchHotDealsServer({ filter: "all", limit: 12 }),
       getHeroSlides(),
       fetchCarCatalogServer(),
       (async () => {
@@ -46,13 +46,30 @@ export default async function Page() {
     console.error("[homepage] SSR data load failed:", err?.message || err);
   }
 
-  const preloadUrl = heroSlides[0]?.imageUrl || "";
+  const desktopPreload = heroSlides[0]?.imageUrl || "";
+  const mobilePreload = heroSlides[0]?.imageUrlMobile || desktopPreload;
 
   return (
     <>
-      {preloadUrl ? (
+      {mobilePreload ? (
         // eslint-disable-next-line @next/next/no-head-element -- preload LCP hero into document head via React hoist
-        <link rel="preload" as="image" href={preloadUrl} fetchPriority="high" />
+        <link
+          rel="preload"
+          as="image"
+          href={mobilePreload}
+          media="(max-width: 768px)"
+          fetchPriority="high"
+        />
+      ) : null}
+      {desktopPreload ? (
+        // eslint-disable-next-line @next/next/no-head-element -- preload matching desktop hero
+        <link
+          rel="preload"
+          as="image"
+          href={desktopPreload}
+          media="(min-width: 769px)"
+          fetchPriority="high"
+        />
       ) : null}
       <HomePage
         initialBestSellers={bestSellers}

@@ -20,9 +20,11 @@ import { loadSimilarActiveProducts } from "@/lib/suggestMissingProduct";
 import { cookies, headers } from "next/headers";
 import { logPaidMissingPage, PAID_TRAFFIC_COOKIE } from "@/lib/paidTraffic";
 import { ROBOTS_NOINDEX_FOLLOW } from "@/lib/seo/robotsMeta";
+import { cloudinarySrcSet, pdpImageUrl } from "@/lib/cloudinaryImage";
 import {
   productJsonLd as buildProductJsonLd,
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
+  isCompleteProductJsonLd,
 } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { withSafeMetadata } from "@/lib/safeMetadata";
@@ -438,21 +440,44 @@ export default async function ProductPage({ params, searchParams }) {
   }
 
   if (content.type === "product") {
+    const productLd = (() => {
+      try {
+        return toProductLd(content.data);
+      } catch (e) {
+        console.error("product json-ld:", e);
+        return null;
+      }
+    })();
+    const lcpRaw =
+      content.data?.media?.images?.find((i) => i?.isMain)?.url ||
+      content.data?.media?.images?.[0]?.url ||
+      (Array.isArray(content.data?.images) ? content.data.images[0] : "") ||
+      "";
+    const lcpSrc = typeof lcpRaw === "string" ? lcpRaw : lcpRaw?.url || "";
+    const lcpUrl = lcpSrc ? pdpImageUrl(lcpSrc, 720) : "";
+    const lcpSrcSet = lcpSrc ? cloudinarySrcSet(lcpSrc, [480, 720, 900], { crop: "limit" }) : "";
+
     return (
       <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: (() => {
-              try {
-                return safeJsonLd(toProductLd(content.data));
-              } catch (e) {
-                console.error("product json-ld:", e);
-                return "{}";
-              }
-            })(),
-          }}
-        />
+        {lcpUrl ? (
+          // eslint-disable-next-line @next/next/no-head-element -- preload PDP LCP image
+          <link
+            rel="preload"
+            as="image"
+            href={lcpUrl}
+            imageSrcSet={lcpSrcSet || undefined}
+            imageSizes="(max-width: 768px) 100vw, 420px"
+            fetchPriority="high"
+          />
+        ) : null}
+        {isCompleteProductJsonLd(productLd) ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: safeJsonLd(productLd),
+            }}
+          />
+        ) : null}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

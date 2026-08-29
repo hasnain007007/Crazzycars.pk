@@ -282,6 +282,7 @@ function HeroSlidePanel({
             fetchPriority={isLcp ? "high" : "low"}
             loading={isLcp ? "eager" : "lazy"}
             decoding="async"
+            sizes="100vw"
             className="home-hero__img"
             draggable={false}
           />

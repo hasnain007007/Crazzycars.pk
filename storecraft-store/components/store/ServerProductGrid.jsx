@@ -35,7 +35,7 @@ export function ServerProductGrid({
               <ServerProductCard
                 product={product}
                 categoryName={categoryName}
-                priority={idx < 4}
+                priority={idx < 2}
                 variant={view}
               />
             </Fragment>
@@ -49,7 +49,7 @@ export function ServerProductGrid({
               <ServerProductCard
                 product={product}
                 categoryName={categoryName}
-                priority={idx < 4}
+                priority={idx < 2}
                 variant="grid"
               />
             </Fragment>
