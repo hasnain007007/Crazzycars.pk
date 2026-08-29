@@ -1950,7 +1950,7 @@ textarea::placeholder {
 
   /* Touch targets — skip absolute icon buttons (search submit, etc.),
      hero CTAs, hero slider dots, and line-clamped text links. */
-  button:not(.absolute):not([class*="absolute"]):not(.home-hero__btn):not(.home-hero__dot),
+  button:not(.absolute):not([class*="absolute"]):not(.home-hero__btn):not(.home-hero__dot):not(.pdp-swatch),
   a:not([class*="line-clamp"]):not(.absolute):not([class*="absolute"]):not(.home-hero__btn) {
     min-height: 44px;
   }
