@@ -840,9 +840,7 @@ a {
 }
 
 .shop-band__grade {
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.55)),
-    radial-gradient(80% 90% at 30% 40%, transparent 30%, rgba(0, 0, 0, 0.45) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.22));
 }
 
 .shop-band__fade {
@@ -999,7 +997,7 @@ a {
   }
 
   .shop-band__fade {
-    background: linear-gradient(90deg, transparent 38%, rgba(7, 7, 8, 0.55) 68%, #070708 94%);
+    background: linear-gradient(90deg, transparent 58%, rgba(7, 7, 8, 0.42) 78%, #070708 96%);
   }
 
   .shop-band__inset {

@@ -38,7 +38,7 @@ describe("hero / PDP Cloudinary transforms", () => {
     const url = editorialCoverUrl(SRC);
     assert.match(url, /w_1600/);
     assert.match(url, /c_fill/);
-    assert.match(url, /e_saturation:-30/);
+    assert.match(url, /e_saturation:-18/);
     assert.match(url, /q_auto:good/);
   });
 });

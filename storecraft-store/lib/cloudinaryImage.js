@@ -110,7 +110,7 @@ export function editorialCoverUrl(src) {
     quality: "auto:good",
     format: "auto",
     gravity: "auto",
-    effects: ["e_saturation:-30", "e_brightness:-12", "e_contrast:15"],
+    effects: ["e_saturation:-18", "e_brightness:-4", "e_contrast:8"],
   });
 }
 
