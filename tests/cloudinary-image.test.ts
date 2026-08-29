@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import {
   cloudinarySrcSet,
+  editorialCoverUrl,
   heroImageUrl,
   heroImageUrlMobile,
   pdpImageUrl,
@@ -31,5 +32,13 @@ describe("hero / PDP Cloudinary transforms", () => {
     assert.match(set, /w_480/);
     assert.match(set, /720w/);
     assert.doesNotMatch(set, /h_480/);
+  });
+
+  test("editorial cover is a graded fill crop", () => {
+    const url = editorialCoverUrl(SRC);
+    assert.match(url, /w_1600/);
+    assert.match(url, /c_fill/);
+    assert.match(url, /e_saturation:-30/);
+    assert.match(url, /q_auto:good/);
   });
 });

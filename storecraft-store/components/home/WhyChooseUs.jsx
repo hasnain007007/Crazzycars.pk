@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { STORE_CONTACT } from "@/config/store-policy";
-import { editorialCoverUrl } from "@/lib/cloudinaryImage";
+import { editorialCoverUrl, editorialInsetUrl } from "@/lib/cloudinaryImage";
 
 function mediaUrl(field) {
   if (field == null) return "";
@@ -14,8 +14,10 @@ function mediaUrl(field) {
 
 export default function WhyChooseUs({ story = null, heroImage = "" }) {
   const city = STORE_CONTACT.address.city;
-  const raw = mediaUrl(story?.image1) || String(heroImage || "").trim();
-  const visual = raw ? editorialCoverUrl(raw) || raw : "";
+  const coverRaw = mediaUrl(story?.image1) || String(heroImage || "").trim();
+  const insetRaw = mediaUrl(story?.image2);
+  const visual = coverRaw ? editorialCoverUrl(coverRaw) || coverRaw : "";
+  const inset = insetRaw && insetRaw !== coverRaw ? editorialInsetUrl(insetRaw) || insetRaw : "";
 
   return (
     <section className="shop-band" aria-label="About Crazzycars.pk">
@@ -31,19 +33,28 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
         ) : (
           <div className="shop-band__fallback" aria-hidden />
         )}
+        <div className="shop-band__grade" aria-hidden />
         <div className="shop-band__fade" aria-hidden />
+        {inset ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="shop-band__inset" src={inset} alt="" loading="lazy" decoding="async" />
+        ) : null}
       </div>
 
       <div className="shop-band__copy">
+        <p className="shop-band__kicker">{city} · Pakistan</p>
         <h2 className="shop-band__title">
-          <span className="shop-band__title-line">Crazzycars.pk</span>
+          <span className="shop-band__brand">Crazzycars.pk</span>
           <span className="shop-band__rule" aria-hidden />
-          <span className="shop-band__title-line">Fitment-first accessories</span>
-          <span className="shop-band__title-line">for Pakistani cars</span>
+          <span className="shop-band__headline">
+            Fitment-first accessories
+            <br />
+            for Pakistani cars
+          </span>
         </h2>
         <p className="shop-band__lead">
-          A Gujranwala shop for splitters, LED lighting, body kits, and carbon. Clear year
-          compatibility, practical installs, and Cash on Delivery nationwide.
+          Splitters, LED lighting, body kits, and carbon from a Gujranwala shop. Year
+          compatibility on the listing. Cash on Delivery nationwide.
         </p>
         <div className="shop-band__actions">
           <Link href="/shop" className="shop-band__btn shop-band__btn--primary">

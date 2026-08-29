@@ -23,7 +23,7 @@ function stripTransforms(remainder) {
   return path;
 }
 
-export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto" } = {}) {
+export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto", gravity, effects = [] } = {}) {
   const url = String(src || "").trim();
   if (!url) return url;
 
@@ -39,6 +39,10 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   if (width) parts.push(`w_${Math.round(width)}`);
   if (height) parts.push(`h_${Math.round(height)}`);
   if (width || height) parts.push(`c_${crop}`);
+  if (gravity) parts.push(`g_${gravity}`);
+  for (const effect of Array.isArray(effects) ? effects : []) {
+    if (effect) parts.push(String(effect));
+  }
   const transform = parts.join(",");
 
   return `${prefix}${transform}/${remainder}`;
@@ -97,9 +101,30 @@ export function storyImageUrlOptimized(src) {
   return cloudinaryUrl(src, { width: 720, height: 560, crop: "fill" });
 }
 
-/** Wide cover crop for the homepage editorial band. */
+/** Wide cinematic cover for the homepage editorial band. */
 export function editorialCoverUrl(src) {
-  return cloudinaryUrl(src, { width: 1400, height: 900, crop: "fill", quality: "auto:good", format: "auto" });
+  return cloudinaryUrl(src, {
+    width: 1600,
+    height: 1000,
+    crop: "fill",
+    quality: "auto:good",
+    format: "auto",
+    gravity: "auto",
+    effects: ["e_saturation:-30", "e_brightness:-12", "e_contrast:15"],
+  });
+}
+
+/** Small parts-detail plate on the editorial band. */
+export function editorialInsetUrl(src) {
+  return cloudinaryUrl(src, {
+    width: 360,
+    height: 240,
+    crop: "fill",
+    quality: "auto:good",
+    format: "auto",
+    gravity: "auto",
+    effects: ["e_saturation:-15", "e_brightness:-8"],
+  });
 }
 
 /** Small logo / brand chip. */
