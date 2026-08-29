@@ -2,10 +2,14 @@ import { cookies, headers } from "next/headers";
 import { ROBOTS_NOINDEX_FOLLOW } from "@/lib/seo/robotsMeta";
 import { MissingProductView } from "@/components/store/MissingProductView";
 import { logPaidMissingPage, PAID_TRAFFIC_COOKIE } from "@/lib/paidTraffic";
+import { dbConnect } from "@/lib/db";
+import Product from "@/lib/models/Product.model";
+import { findUnavailableProductBySlugParam } from "@/lib/resolveProductSlug";
 import {
   looksLikeProductSlug,
   slugFromPathname,
   suggestProductsForMissingSlug,
+  loadSimilarActiveProducts,
 } from "@/lib/suggestMissingProduct";
 
 export const metadata = {
@@ -35,9 +39,35 @@ export default async function NotFound() {
 
   const slug = slugFromPathname(pathname);
   let suggestions = [];
+  let unavailableName = "";
+
   if (looksLikeProductSlug(slug)) {
-    suggestions = await suggestProductsForMissingSlug(slug);
+    try {
+      const gone = await findUnavailableProductBySlugParam(slug);
+      if (gone?._id) {
+        await dbConnect();
+        const full = await Product.findOne({ _id: gone._id, status: "inactive" })
+          .select("name slug categories")
+          .populate("categories", "name slug")
+          .lean();
+        unavailableName = String(full?.name || gone.name || "").trim();
+        if (full) {
+          suggestions = await loadSimilarActiveProducts(full, { limit: 6 });
+        }
+      }
+    } catch (err) {
+      console.error("[not-found] unavailable lookup:", err?.message || err);
+    }
+    if (!suggestions.length) {
+      suggestions = await suggestProductsForMissingSlug(slug);
+    }
   }
 
-  return <MissingProductView kind="missing" suggestions={suggestions} />;
+  return (
+    <MissingProductView
+      kind={unavailableName ? "unavailable" : "missing"}
+      productName={unavailableName || undefined}
+      suggestions={suggestions}
+    />
+  );
 }

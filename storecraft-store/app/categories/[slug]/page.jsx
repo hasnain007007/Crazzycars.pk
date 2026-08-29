@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
+import { isEmptyLeafCategory } from "@/lib/emptyLeafCategory";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 import { CategoryPageChrome } from "@/components/store/CategoryPageChrome";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
@@ -145,6 +146,8 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
       getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort),
     ]);
 
+    if (isEmptyLeafCategory(detail)) notFound();
+
     if (category) {
       const titleMeta = buildBrandedAbsoluteTitle(
         (category.seo?.metaTitle || "").trim() || category.name,
@@ -228,6 +231,7 @@ export default async function CategoryPage({ params, searchParams }) {
   // Prefer Mongo catalog (seeded categories) so /categories/[slug] never 404s
   // when Shopify is enabled but collections use different handles.
   const detail = await getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort);
+  if (isEmptyLeafCategory(detail)) notFound();
   if (detail) {
     const brand = await getCachedBrand();
     const data = detail;

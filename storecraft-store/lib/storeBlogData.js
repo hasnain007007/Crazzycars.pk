@@ -23,15 +23,17 @@ function mapListPost(p) {
   };
 }
 
-export async function loadBlogIndexBootstrap() {
-  const limit = 9;
+export async function loadBlogIndexBootstrap({ page = 1, limit = 12 } = {}) {
+  const safeLimit = Math.min(24, Math.max(1, Number(limit) || 12));
+  const safePage = Math.max(1, Number(page) || 1);
+  const skip = (safePage - 1) * safeLimit;
   const listFilter = { status: "published" };
   const [rows, total, recentRows, allRows] = await Promise.all([
     BlogPost.find(listFilter)
       .select("title slug excerpt content featuredImage publishedAt createdAt categories tags readTime views isFeatured author")
       .sort({ publishedAt: -1, createdAt: -1 })
-      .skip(0)
-      .limit(limit)
+      .skip(skip)
+      .limit(safeLimit)
       .lean(),
     BlogPost.countDocuments(listFilter),
     BlogPost.find({ status: "published" })
@@ -52,7 +54,8 @@ export async function loadBlogIndexBootstrap() {
 
   return {
     posts,
-    pages: Math.ceil(total / limit) || 1,
+    pages: Math.ceil(total / safeLimit) || 1,
+    total,
     recent,
     allPosts,
   };

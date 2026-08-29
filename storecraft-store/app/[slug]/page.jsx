@@ -11,15 +11,7 @@ import { resolveLegacyDestination } from "@/lib/categoryHandleAliases";
 import { findExistingVehicleSlug } from "@/lib/vehiclePageData";
 import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
-import {
-  findActiveProductBySlugParam,
-  findUnavailableProductBySlugParam,
-} from "@/lib/resolveProductSlug";
-import { MissingProductView } from "@/components/store/MissingProductView";
-import { loadSimilarActiveProducts } from "@/lib/suggestMissingProduct";
-import { cookies, headers } from "next/headers";
-import { logPaidMissingPage, PAID_TRAFFIC_COOKIE } from "@/lib/paidTraffic";
-import { ROBOTS_NOINDEX_FOLLOW } from "@/lib/seo/robotsMeta";
+import { findActiveProductBySlugParam } from "@/lib/resolveProductSlug";
 import { cloudinarySrcSet, pdpImageUrl } from "@/lib/cloudinaryImage";
 import {
   productJsonLd as buildProductJsonLd,
@@ -257,30 +249,6 @@ const loadContent = cache(async (slug) => {
     return { type: "redirect", to: legacy };
   }
 
-  const unavailableHit = await findUnavailableProductBySlugParam(slugStr);
-  if (unavailableHit?._id) {
-    if (unavailableHit.slug && unavailableHit.slug !== slugStr) {
-      return { type: "redirect", to: `/${unavailableHit.slug}` };
-    }
-    const full = await Product.findOne({
-      _id: unavailableHit._id,
-      status: "inactive",
-    })
-      .select(
-        "name slug media pricing inventory featured newArrival categories shortDescription articleNo createdAt tags rating averageRating ratingAverage reviewCount totalReviews numReviews"
-      )
-      .populate("categories", "name slug")
-      .lean();
-    if (full) {
-      const relatedProducts = await loadSimilarActiveProducts(full, { limit: 6 });
-      return {
-        type: "unavailable",
-        data: serializeStoreProductSummary(full),
-        relatedProducts,
-      };
-    }
-  }
-
   return null;
 });
 
@@ -291,25 +259,9 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const content = await loadContent(slugStr);
-  if (!content) {
-    return {
-      title: "Page not found",
-      robots: { index: false, follow: true },
-    };
-  }
+  if (!content) notFound();
   if (content.type === "redirect") {
     redirectWithQuery(content.to, await searchParams);
-  }
-  if (content.type === "unavailable") {
-    const name = String(content.data?.name || "").trim();
-    return {
-      title: name ? `${name} is no longer available` : "Product unavailable",
-      description: name
-        ? `${name} is no longer sold on CrazzyCars.pk. See similar products in the same category.`
-        : "This product is no longer sold on CrazzyCars.pk.",
-      robots: ROBOTS_NOINDEX_FOLLOW,
-      alternates: { canonical: null },
-    };
   }
   const canonical = `${BASE_URL}/${content.type === "product" ? content.data.slug : slugStr}`;
 
@@ -493,28 +445,6 @@ export default async function ProductPage({ params, searchParams }) {
         />
         <ProductDetailMedico product={content.data} relatedProducts={content.relatedProducts || []} />
       </>
-    );
-  }
-
-  if (content.type === "unavailable") {
-    const h = await headers();
-    const cookieStore = await cookies();
-    const source =
-      h.get("x-cc-paid") || cookieStore.get(PAID_TRAFFIC_COOKIE)?.value || "";
-    if (source) {
-      logPaidMissingPage({
-        path: `/${slugStr}`,
-        kind: "unavailable",
-        source,
-        referer: h.get("x-cc-referer") || h.get("referer") || "",
-      });
-    }
-    return (
-      <MissingProductView
-        kind="unavailable"
-        productName={content.data?.name}
-        suggestions={content.relatedProducts || []}
-      />
     );
   }
 

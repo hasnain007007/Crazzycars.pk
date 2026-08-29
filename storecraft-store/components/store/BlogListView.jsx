@@ -18,17 +18,38 @@ function formatLongDate(value) {
   });
 }
 
-export default function BlogListView({ page = 1, limit = 12 }) {
-  const [posts, setPosts] = useState([]);
-  const [recentPosts, setRecentPosts] = useState([]);
-  const [categories, setCategories] = useState(["All"]);
+export default function BlogListView({
+  page = 1,
+  limit = 12,
+  initialPosts = null,
+  initialRecent = null,
+  initialTotal = null,
+  initialTotalPages = null,
+  initialCategories = null,
+}) {
+  const hasInitial = Array.isArray(initialPosts);
+  const [posts, setPosts] = useState(hasInitial ? initialPosts : []);
+  const [recentPosts, setRecentPosts] = useState(Array.isArray(initialRecent) ? initialRecent : []);
+  const [categories, setCategories] = useState(
+    Array.isArray(initialCategories) && initialCategories.length
+      ? ["All", ...initialCategories]
+      : ["All"]
+  );
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(initialTotalPages || 1);
+  const [total, setTotal] = useState(initialTotal || 0);
+  const [loading, setLoading] = useState(!hasInitial);
 
   useEffect(() => {
+    if (hasInitial && activeCategory === "All" && !search.trim()) {
+      setPosts(initialPosts);
+      setRecentPosts(Array.isArray(initialRecent) ? initialRecent : []);
+      setTotal(Number(initialTotal) || 0);
+      setTotalPages(Number(initialTotalPages) || 1);
+      setLoading(false);
+      return undefined;
+    }
     let cancelled = false;
     const fetchPosts = async () => {
       setLoading(true);
@@ -69,7 +90,17 @@ export default function BlogListView({ page = 1, limit = 12 }) {
     return () => {
       cancelled = true;
     };
-  }, [activeCategory, limit, page, search]);
+  }, [
+    hasInitial,
+    initialPosts,
+    initialRecent,
+    initialTotal,
+    initialTotalPages,
+    activeCategory,
+    limit,
+    page,
+    search,
+  ]);
 
   const categoryList = useMemo(() => {
     const dynamic = [...new Set((categories || []).filter(Boolean))];
