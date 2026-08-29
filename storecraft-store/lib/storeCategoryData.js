@@ -312,7 +312,7 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
 
   const catId = category._id;
 
-  const [subcategories, descendantIds] = await Promise.all([
+  const [subcategories, descendantIds, withProducts] = await Promise.all([
     Category.find({
       status: ACTIVE,
       $or: [{ parentCategory: catId }, { parents: catId }],
@@ -321,7 +321,11 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
       .sort({ sortOrder: 1, name: 1 })
       .lean(),
     getActiveDescendantCategoryIds(catId),
+    getCategoryIdsWithProducts(),
   ]);
+  const liveSubcategories = (subcategories || []).filter((s) =>
+    withProducts.has(String(s._id))
+  );
 
   const allCategoryIds = [catId, ...descendantIds];
   const productQuery = {
@@ -361,7 +365,7 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
 
   return {
     category,
-    subcategories,
+    subcategories: liveSubcategories,
     products,
     breadcrumbs,
     /** Alias for clients expecting `breadcrumb` */
