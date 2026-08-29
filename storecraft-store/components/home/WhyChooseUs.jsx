@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
+import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
+import { formatPkrAmount } from "@/lib/storePolicyCopy";
 
 function iconKind(item) {
   const title = String(item?.title || "").toLowerCase();
@@ -14,8 +17,8 @@ function iconKind(item) {
 
 function TrustGlyph({ kind }) {
   const common = {
-    width: 18,
-    height: 18,
+    width: 20,
+    height: 20,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
@@ -69,19 +72,35 @@ export default function WhyChooseUs({ settings }) {
 
   if (!items.length) return null;
 
+  const city = STORE_CONTACT.address.city;
+  const fee = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
+  const days = STORE_POLICY.returns.windowDays;
+
   return (
-    <section className="wcu" aria-label={settings?.sectionTitles?.whyChooseUs || "Why Choose Us"}>
-      <div className="wcu-inner">
-        <p className="wcu-kicker">{settings?.sectionTitles?.whyChooseUs || "Why Choose Us"}</p>
-        <ul className="wcu-row">
+    <section className="shop-close" aria-label="About the shop">
+      <div className="shop-close__inner">
+        <div className="shop-close__intro">
+          <p className="shop-close__kicker">Based in {city}</p>
+          <h2 className="shop-close__title">Built in {city}. Shipped nationwide.</h2>
+          <p className="shop-close__lead">
+            Year-fitment splitters, kits, carbon, and LED — Cash on Delivery, flat {fee} courier,
+            and a {days}-day window if the part is defective or wrong.
+          </p>
+          <Link href="/about" className="shop-close__about">
+            About the shop
+            <span aria-hidden="true"> →</span>
+          </Link>
+        </div>
+
+        <ul className="shop-close__grid">
           {items.map((item, i) => (
-            <li key={`${item.title}-${i}`} className="wcu-item">
-              <span className="wcu-icon">
+            <li key={`${item.title}-${i}`} className="shop-close__card">
+              <span className="shop-close__icon">
                 <TrustGlyph kind={iconKind(item)} />
               </span>
-              <div className="wcu-copy">
-                <p className="wcu-title">{item.title}</p>
-                <p className="wcu-desc">{item.description}</p>
+              <div className="shop-close__copy">
+                <p className="shop-close__card-title">{item.title}</p>
+                <p className="shop-close__card-desc">{item.description}</p>
               </div>
             </li>
           ))}

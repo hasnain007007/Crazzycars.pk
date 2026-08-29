@@ -23,10 +23,7 @@ const ShopByVehicle = dynamic(() => import("@/components/home/ShopByVehicle"), {
   loading: () => <SectionSkeleton height={240} />,
 });
 const WhyChooseUs = dynamic(() => import("@/components/home/WhyChooseUs"), {
-  loading: () => <SectionSkeleton height={280} />,
-});
-const BrandStory = dynamic(() => import("@/components/home/BrandStory"), {
-  loading: () => <SectionSkeleton height={320} />,
+  loading: () => <SectionSkeleton height={220} />,
 });
 
 function SectionSkeleton({ height = 240 }) {
@@ -103,7 +100,6 @@ export function HomePage({
       {sectionEnabled("whyChooseUs") && homepageSettings.sections?.showWhyChooseUs !== false ? (
         <WhyChooseUs settings={homepageSettings} />
       ) : null}
-      <BrandStory story={brandStory} />
     </div>
   );
 }
