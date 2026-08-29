@@ -1,6 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  isColorVariationName,
+  resolveSwatchHex,
+  swatchNeedsRing,
+  variationTagLabel,
+} from "@/lib/colorSwatch";
 
 export default function ProductVariations({
   simpleVariations = [],
@@ -11,6 +17,7 @@ export default function ProductVariations({
   const [selected, setSelected] = useState({});
   const [currentPrice, setCurrentPrice] = useState(basePrice);
   const onChangeRef = useRef(onVariationChange);
+  const didAutoColor = useRef(false);
   useEffect(() => {
     onChangeRef.current = onVariationChange;
   }, [onVariationChange]);
@@ -50,6 +57,18 @@ export default function ProductVariations({
   };
 
   useEffect(() => {
+    if (didAutoColor.current) return;
+    const colorVar = enabledVariations.find((v) => isColorVariationName(v.name));
+    if (!colorVar) return;
+    const first = (colorVar.tags || [])
+      .map(variationTagLabel)
+      .find((tag) => tag && !checkIfOutOfStock(colorVar.name, tag));
+    if (!first) return;
+    didAutoColor.current = true;
+    setSelected((prev) => (prev[colorVar.name] ? prev : { ...prev, [colorVar.name]: first }));
+  }, [enabledVariations, checkIfOutOfStock]);
+
+  useEffect(() => {
     const allSelected =
       enabledVariations.length > 0 && enabledVariations.every((v) => selected[v.name]);
     if (allSelected && variationCombinations.length > 0) {
@@ -68,73 +87,66 @@ export default function ProductVariations({
   if (enabledVariations.length === 0) return null;
 
   return (
-    <div style={{ margin: "16px 0" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: "12px 16px",
-          marginBottom: 8,
-        }}
-      >
-        {enabledVariations.map((variation) => (
-          <div key={variation.name}>
-            <label
-              style={{
-                display: "block",
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#111111",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                marginBottom: 8,
-              }}
-            >
-              {variation.name}
-            </label>
+    <div className="pdp-vars">
+      {enabledVariations.map((variation) => {
+        const tags = (variation.tags || []).map(variationTagLabel).filter(Boolean);
+        const current = selected[variation.name] || "";
+        const isColor = isColorVariationName(variation.name);
 
-            <select
-              value={selected[variation.name] || ""}
-              onChange={(e) => handleVariationChange(variation.name, e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                border: "1.5px solid #E5E5E5",
-                borderRadius: 6,
-                fontSize: 14,
-                color: "#111111",
-                background: "#FFFFFF",
-                cursor: "pointer",
-                outline: "none",
-                appearance: "none",
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 12px center",
-                paddingRight: 36,
-                fontFamily: "inherit",
-                transition: "border-color 0.15s",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#111111";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E5E5E5";
-              }}
-            >
-              <option value="">Select {variation.name}</option>
-              {variation.tags.map((tag) => {
-                const isOutOfStock = checkIfOutOfStock(variation.name, tag);
-                return (
-                  <option key={tag} value={tag} disabled={isOutOfStock}>
-                    {tag}
-                    {isOutOfStock ? " - Out of Stock" : ""}
-                  </option>
-                );
-              })}
-            </select>
+        return (
+          <div key={variation.name} className="pdp-var">
+            <p className="pdp-var__label">
+              {variation.name}: {current || "Select"}
+            </p>
+            {isColor ? (
+              <div className="pdp-swatches" role="listbox" aria-label={variation.name}>
+                {tags.map((tag) => {
+                  const hex = resolveSwatchHex(tag);
+                  const on = current === tag;
+                  const oos = checkIfOutOfStock(variation.name, tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      role="option"
+                      aria-selected={on}
+                      aria-label={tag}
+                      disabled={oos}
+                      title={oos ? `${tag} — out of stock` : tag}
+                      className={`pdp-swatch${on ? " is-on" : ""}${oos ? " is-oos" : ""}${
+                        swatchNeedsRing(hex) ? " is-light" : ""
+                      }`}
+                      style={{ background: hex }}
+                      onClick={() => handleVariationChange(variation.name, tag)}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="pdp-pills" role="listbox" aria-label={variation.name}>
+                {tags.map((tag) => {
+                  const on = current === tag;
+                  const oos = checkIfOutOfStock(variation.name, tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      role="option"
+                      aria-selected={on}
+                      disabled={oos}
+                      className={`pdp-pill${on ? " is-on" : ""}${oos ? " is-oos" : ""}`}
+                      onClick={() => handleVariationChange(variation.name, tag)}
+                    >
+                      {tag}
+                      {oos ? " — Out of stock" : ""}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+        );
+      })}
       <input type="hidden" value={currentPrice || basePrice || 0} readOnly />
     </div>
   );

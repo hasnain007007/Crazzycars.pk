@@ -1131,6 +1131,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
 
 
             <ProductVariations
+              key={String(product?.id || product?._id || product?.slug || "pdp")}
               simpleVariations={simpleVariations}
               variationCombinations={variationCombinations}
               basePrice={basePrice}
