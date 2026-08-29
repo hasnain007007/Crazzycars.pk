@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  isColorVariationName,
+  formatVariationName,
+  isSwatchVariation,
   resolveSwatchHex,
   swatchNeedsRing,
   variationTagLabel,
@@ -17,7 +18,7 @@ export default function ProductVariations({
   const [selected, setSelected] = useState({});
   const [currentPrice, setCurrentPrice] = useState(basePrice);
   const onChangeRef = useRef(onVariationChange);
-  const didAutoColor = useRef(false);
+  const didAutoPick = useRef(false);
   useEffect(() => {
     onChangeRef.current = onVariationChange;
   }, [onVariationChange]);
@@ -57,16 +58,25 @@ export default function ProductVariations({
   };
 
   useEffect(() => {
-    if (didAutoColor.current) return;
-    const colorVar = enabledVariations.find((v) => isColorVariationName(v.name));
-    if (!colorVar) return;
-    const first = (colorVar.tags || [])
-      .map(variationTagLabel)
-      .find((tag) => tag && !checkIfOutOfStock(colorVar.name, tag));
-    if (!first) return;
-    didAutoColor.current = true;
-    setSelected((prev) => (prev[colorVar.name] ? prev : { ...prev, [colorVar.name]: first }));
-  }, [enabledVariations, checkIfOutOfStock]);
+    if (didAutoPick.current || enabledVariations.length === 0) return;
+    const fromStock = (variationCombinations || []).find((combo) => Number(combo.stock) > 0);
+    const next = {};
+    if (fromStock) {
+      for (const opt of fromStock.options || []) {
+        if (enabledVariations.some((v) => v.name === opt.name) && opt.value) {
+          next[opt.name] = opt.value;
+        }
+      }
+    }
+    for (const v of enabledVariations) {
+      if (next[v.name]) continue;
+      const first = (v.tags || []).map(variationTagLabel).find((tag) => tag && !checkIfOutOfStock(v.name, tag));
+      if (first) next[v.name] = first;
+    }
+    if (Object.keys(next).length === 0) return;
+    didAutoPick.current = true;
+    setSelected((prev) => ({ ...next, ...prev }));
+  }, [enabledVariations, variationCombinations, checkIfOutOfStock]);
 
   useEffect(() => {
     const allSelected =
@@ -91,14 +101,14 @@ export default function ProductVariations({
       {enabledVariations.map((variation) => {
         const tags = (variation.tags || []).map(variationTagLabel).filter(Boolean);
         const current = selected[variation.name] || "";
-        const isColor = isColorVariationName(variation.name);
+        const isSwatch = isSwatchVariation(variation.name, variation.tags);
 
         return (
           <div key={variation.name} className="pdp-var">
             <p className="pdp-var__label">
-              {variation.name}: {current || "Select"}
+              {formatVariationName(variation.name)}: {current || "Select"}
             </p>
-            {isColor ? (
+            {isSwatch ? (
               <div className="pdp-swatches" role="listbox" aria-label={variation.name}>
                 {tags.map((tag) => {
                   const hex = resolveSwatchHex(tag);

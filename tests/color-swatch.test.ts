@@ -1,18 +1,34 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import {
+  formatVariationName,
   isColorVariationName,
+  isSwatchVariation,
   resolveSwatchHex,
   swatchNeedsRing,
   variationTagLabel,
 } from "../storecraft-store/lib/colorSwatch.js";
 
 describe("color swatch mapping", () => {
-  test("treats Color / Colour / Finish as swatch axes", () => {
+  test("treats Color / Colour / Finish / Design as swatch axes", () => {
     assert.equal(isColorVariationName("Color"), true);
     assert.equal(isColorVariationName("colour"), true);
     assert.equal(isColorVariationName("Finish"), true);
+    assert.equal(isColorVariationName("Design"), true);
     assert.equal(isColorVariationName("Size"), false);
+  });
+
+  test("uses circles when every tag is a colour, pills otherwise", () => {
+    assert.equal(isSwatchVariation("colour", ["red", "silver", "Yellow"]), true);
+    assert.equal(isSwatchVariation("Style", ["Gloss Black"]), true);
+    assert.equal(isSwatchVariation("Side Skirts", ["Gloss Black", "Red Line"]), true);
+    assert.equal(isSwatchVariation("size", ["small", "Medium", "Large"]), false);
+    assert.equal(isSwatchVariation("Style", ["a"]), false);
+  });
+
+  test("pretty-prints axis names", () => {
+    assert.equal(formatVariationName("colour"), "Color");
+    assert.equal(formatVariationName("size"), "Size");
   });
 
   test("maps common car-shop names to hex", () => {

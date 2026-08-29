@@ -48,7 +48,41 @@ const NAMED = {
 };
 
 export function isColorVariationName(name) {
-  return /colou?r|shade|finish/i.test(String(name || "").trim());
+  return /colou?r|shade|finish|design/i.test(String(name || "").trim());
+}
+
+function normalizedTag(label) {
+  return String(label || "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function isKnownColorLabel(label) {
+  const raw = String(label || "").trim();
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw)) return true;
+  const s = normalizedTag(raw);
+  if (!s) return false;
+  if (NAMED[s]) return true;
+  return Object.keys(NAMED)
+    .sort((a, b) => b.length - a.length)
+    .some((key) => s.includes(key));
+}
+
+/** Circles when the axis is Color, or every value is a colour name (Brembo colour, Design, gloss Style). */
+export function isSwatchVariation(name, tags) {
+  if (isColorVariationName(name)) return true;
+  const labels = (tags || []).map(variationTagLabel).filter(Boolean);
+  if (!labels.length) return false;
+  return labels.every(isKnownColorLabel);
+}
+
+export function formatVariationName(name) {
+  const raw = String(name || "").trim();
+  if (!raw) return raw;
+  if (/^colou?r$/i.test(raw)) return "Color";
+  return raw.replace(/[_-]+/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
 export function variationTagLabel(tag) {
@@ -67,7 +101,7 @@ function fallbackHex(label) {
 export function resolveSwatchHex(label) {
   const raw = String(label || "").trim();
   if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw)) return raw;
-  const s = raw.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  const s = normalizedTag(raw);
   if (!s) return fallbackHex("color");
   if (NAMED[s]) return NAMED[s];
   const keys = Object.keys(NAMED).sort((a, b) => b.length - a.length);
@@ -79,5 +113,12 @@ export function resolveSwatchHex(label) {
 
 export function swatchNeedsRing(hex) {
   const h = String(hex || "").toLowerCase();
-  return h === "#ffffff" || h === "#fffff0" || h === "#f3f4f6" || h === "#f3e6c9";
+  return (
+    h === "#ffffff" ||
+    h === "#fffff0" ||
+    h === "#f3f4f6" ||
+    h === "#f3e6c9" ||
+    h === "#c5c7cb" ||
+    h === "#d4d4d8"
+  );
 }
