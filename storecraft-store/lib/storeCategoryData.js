@@ -5,6 +5,9 @@
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
 import { listingMongoSortSpec } from "@/lib/productListing";
+import { pruneCategoryTreeWithoutProducts } from "@/lib/emptyLeafCategory";
+
+export { pruneCategoryTreeWithoutProducts };
 
 /** Canonical storefront status — prefer equality over case-insensitive regex (index-friendly). */
 export const ACTIVE_STATUS = "active";
@@ -175,6 +178,55 @@ export async function loadStoreCategoriesTreeSlim() {
   }));
 
   return buildCategoryTree(categories);
+}
+
+/**
+ * Category ids that have at least one active product, plus every ancestor.
+ * Used by sitemap + nav so empty shelves are not crawlable Soft 404s.
+ */
+export async function getCategoryIdsWithProducts() {
+  const [directRows, cats] = await Promise.all([
+    Product.aggregate([
+      { $match: { status: ACTIVE } },
+      {
+        $project: {
+          ids: {
+            $setUnion: [
+              { $cond: [{ $isArray: "$categories" }, "$categories", []] },
+              {
+                $cond: [
+                  { $and: [{ $ne: ["$category", null] }, { $ne: [{ $type: "$category" }, "missing"] }] },
+                  ["$category"],
+                  [],
+                ],
+              },
+            ],
+          },
+        },
+      },
+      { $unwind: "$ids" },
+      { $group: { _id: "$ids" } },
+    ]),
+    Category.find({ status: ACTIVE }).select("_id parents parentCategory parentId").lean(),
+  ]);
+
+  const include = new Set(directRows.map((r) => String(r._id)));
+  const byId = new Map(cats.map((c) => [String(c._id), c]));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const id of [...include]) {
+      const cat = byId.get(id);
+      if (!cat) continue;
+      for (const pid of resolveParentIds(cat)) {
+        if (pid && byId.has(pid) && !include.has(pid)) {
+          include.add(pid);
+          changed = true;
+        }
+      }
+    }
+  }
+  return include;
 }
 
 /** Active categories with product counts (self + all active subcategories); returns tree when wantTree. */

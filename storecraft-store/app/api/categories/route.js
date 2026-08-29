@@ -54,7 +54,9 @@ export async function GET(request) {
 
     const categories = await loadStoreCategoriesTree(wantTree, { featuredOnly, showInFooterOnly, showOnHomepageOnly });
     const flat = wantTree ? flattenCategories(categories) : categories;
-    const serialized = (Array.isArray(flat) ? flat : []).map(serializeCategory);
+    const serialized = (Array.isArray(flat) ? flat : [])
+      .map(serializeCategory)
+      .filter((c) => Number(c.productCount || 0) > 0);
 
     return NextResponse.json(
       {

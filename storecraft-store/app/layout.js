@@ -13,6 +13,7 @@ import { CustomerProvider } from "@/lib/customerAuth";
 import { getPublicStoreSettings } from "@/lib/serverSettings";
 import { isShopifyEnabled } from "@/lib/shopify";
 import { fetchCategoryTreeServer } from "@/lib/serverCategoryTree";
+import { collectCategorySlugs, filterLinksToLiveCategories } from "@/lib/emptyLeafCategory";
 import { getSiteUrl, isIndexableEnvironment, absoluteUrl } from "@/lib/siteUrl";
 import { buildFaviconMetadata } from "@/lib/faviconUrl";
 import { sanitizeMetadata, withSafeMetadata } from "@/lib/safeMetadata";
@@ -210,6 +211,17 @@ export default async function RootLayout({ children }) {
   }
 
   const categoryTree = await fetchCategoryTreeServer();
+  const liveCategorySlugs = collectCategorySlugs(categoryTree);
+  if (settings?.footer) {
+    settings = {
+      ...settings,
+      footer: {
+        ...settings.footer,
+        categoriesLinks: filterLinksToLiveCategories(settings.footer.categoriesLinks, liveCategorySlugs),
+        shopLinks: filterLinksToLiveCategories(settings.footer.shopLinks, liveCategorySlugs),
+      },
+    };
+  }
 
   const appearance = settings?.appearance || {};
   const general = settings?.general || {};

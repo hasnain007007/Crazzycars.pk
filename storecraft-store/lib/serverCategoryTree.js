@@ -5,7 +5,9 @@
 import { cache } from "react";
 import { dbConnect } from "@/lib/db";
 import {
+  getCategoryIdsWithProducts,
   loadStoreCategoriesTreeSlim,
+  pruneCategoryTreeWithoutProducts,
   serializeCategoryTreeNode,
 } from "@/lib/storeCategoryData";
 import {
@@ -19,8 +21,14 @@ export const fetchCategoryTreeServer = cache(async () => {
     if (cached) return cached;
 
     await dbConnect();
-    const tree = await loadStoreCategoriesTreeSlim();
-    const payload = (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode);
+    const [tree, withProducts] = await Promise.all([
+      loadStoreCategoriesTreeSlim(),
+      getCategoryIdsWithProducts(),
+    ]);
+    const payload = pruneCategoryTreeWithoutProducts(
+      (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode),
+      withProducts
+    );
     setCachedCategoryTreePayload(payload);
     return payload;
   } catch (err) {

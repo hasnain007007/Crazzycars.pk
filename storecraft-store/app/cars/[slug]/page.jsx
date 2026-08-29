@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { dbConnect } from "@/lib/db";
+import Product from "@/lib/models/Product.model";
+import { buildVehiclePageProductFilter } from "@/lib/productVehicleQuery";
 import {
   loadProductsForVehicle,
   loadVehicleBySlug,
@@ -30,6 +32,8 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
     if (vehicle.slug && String(vehicle.slug) !== slugStr) {
       permanentRedirect(listingHref(`/cars/${vehicle.slug}`, listing));
     }
+    const assigned = await Product.countDocuments(buildVehiclePageProductFilter(vehicle));
+    if (assigned === 0) notFound();
 
     const titleMeta = buildBrandedAbsoluteTitle(
       (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
@@ -60,7 +64,7 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
       },
     };
   } catch (err) {
-    if (String(err?.digest || "").startsWith("NEXT_REDIRECT")) throw err;
+    if (String(err?.digest || "").startsWith("NEXT_")) throw err;
     return { title: "Car Accessories" };
   }
 });
@@ -106,6 +110,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const page = Math.min(listing.page, totalPages);
   const products = sorted.slice((page - 1) * listing.pageSize, page * listing.pageSize);
   const listingForUi = { ...listing, page };
+  if (total === 0) notFound();
 
   const yearLabel =
     vehicle.yearTo == null || Number(vehicle.yearTo) >= new Date().getFullYear()

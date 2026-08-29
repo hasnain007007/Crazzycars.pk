@@ -5,7 +5,9 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import {
+  getCategoryIdsWithProducts,
   loadStoreCategoriesTreeSlim,
+  pruneCategoryTreeWithoutProducts,
   serializeCategoryTreeNode,
 } from "@/lib/storeCategoryData";
 import {
@@ -29,8 +31,14 @@ export async function GET() {
     }
 
     await dbConnect();
-    const tree = await loadStoreCategoriesTreeSlim();
-    const payload = (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode);
+    const [tree, withProducts] = await Promise.all([
+      loadStoreCategoriesTreeSlim(),
+      getCategoryIdsWithProducts(),
+    ]);
+    const payload = pruneCategoryTreeWithoutProducts(
+      (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode),
+      withProducts
+    );
     setCachedCategoryTreePayload(payload);
 
     return NextResponse.json(

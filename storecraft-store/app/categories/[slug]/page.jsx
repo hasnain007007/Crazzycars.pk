@@ -3,8 +3,8 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
-import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
-import { isEmptyLeafCategory } from "@/lib/emptyLeafCategory";
+import { getCategoryIdsWithProducts, loadStoreCategoryDetail } from "@/lib/storeCategoryData";
+import { isEmptyCategoryTree } from "@/lib/emptyLeafCategory";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 import { CategoryPageChrome } from "@/components/store/CategoryPageChrome";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
@@ -30,8 +30,12 @@ const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_
 export async function generateStaticParams() {
   try {
     await dbConnect();
-    const rows = await Category.find({ status: "active" }).select("slug").lean();
+    const [rows, withProducts] = await Promise.all([
+      Category.find({ status: "active" }).select("slug _id").lean(),
+      getCategoryIdsWithProducts(),
+    ]);
     return rows
+      .filter((c) => withProducts.has(String(c._id)))
       .map((c) => String(c.slug || "").trim())
       .filter(Boolean)
       .map((slug) => ({ slug }));
@@ -146,7 +150,7 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
       getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort),
     ]);
 
-    if (isEmptyLeafCategory(detail)) notFound();
+    if (isEmptyCategoryTree(detail)) notFound();
 
     if (category) {
       const titleMeta = buildBrandedAbsoluteTitle(
@@ -192,13 +196,16 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
         alternates: listingSeo.alternates,
       };
     }
-  } catch {
+  } catch (err) {
+    if (String(err?.digest || "").startsWith("NEXT_")) throw err;
     /* fall through */
   }
 
   if (isShopifyEnabled()) {
     const collection = await getCollectionByHandle(slugStr).catch(() => null);
-    if (!collection) return { title: "Category Not Found", robots: { index: false, follow: false } };
+    if (!collection || !(collection.products || []).length) {
+      return { title: "Category Not Found", robots: { index: false, follow: false } };
+    }
     const titleMeta = buildBrandedAbsoluteTitle(collection.title, { brand: BRAND });
     const listingSeo = listingMetadata(listingPath, listing, {
       thin: !(collection.products || []).length,
@@ -231,7 +238,7 @@ export default async function CategoryPage({ params, searchParams }) {
   // Prefer Mongo catalog (seeded categories) so /categories/[slug] never 404s
   // when Shopify is enabled but collections use different handles.
   const detail = await getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort);
-  if (isEmptyLeafCategory(detail)) notFound();
+  if (isEmptyCategoryTree(detail)) notFound();
   if (detail) {
     const brand = await getCachedBrand();
     const data = detail;
@@ -301,6 +308,7 @@ export default async function CategoryPage({ params, searchParams }) {
   if (isShopifyEnabled()) {
     const collection = await getCollectionByHandle(slugStr).catch(() => null);
     if (!collection) notFound();
+    if (!(collection.products || []).length) notFound();
     const brand = await getCachedBrand();
     const paged = paginateRows(collection.products || [], listing);
     const category = {

@@ -6,6 +6,7 @@ import Page from "@/lib/models/Page.model";
 import BlogPost from "@/lib/models/BlogPost.model";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { MAX_SITEMAP_URLS } from "@/lib/sitemap/xml";
+import { getCategoryIdsWithProducts } from "@/lib/storeCategoryData";
 
 /** Static storefront routes (no query strings, no redirect aliases). */
 const STATIC_PAGE_PATHS = [
@@ -51,70 +52,8 @@ const RESERVED_PAGE_SLUGS = new Set([
   "returns-policy",
 ]);
 
-function parentIdsOf(cat) {
-  const ids = [];
-  const seen = new Set();
-  if (Array.isArray(cat.parents)) {
-    for (const p of cat.parents) {
-      const id = String(p?._id || p || "");
-      if (id && !seen.has(id)) {
-        seen.add(id);
-        ids.push(id);
-      }
-    }
-  }
-  const legacy = cat.parentCategory?._id
-    ? String(cat.parentCategory._id)
-    : cat.parentCategory
-      ? String(cat.parentCategory)
-      : "";
-  if (legacy && !seen.has(legacy)) ids.push(legacy);
-  return ids;
-}
-
 async function categoryIdsWithProducts() {
-  const [directRows, cats] = await Promise.all([
-    Product.aggregate([
-      { $match: { status: "active" } },
-      {
-        $project: {
-          ids: {
-            $setUnion: [
-              { $cond: [{ $isArray: "$categories" }, "$categories", []] },
-              {
-                $cond: [
-                  { $and: [{ $ne: ["$category", null] }, { $ne: [{ $type: "$category" }, "missing"] }] },
-                  ["$category"],
-                  [],
-                ],
-              },
-            ],
-          },
-        },
-      },
-      { $unwind: "$ids" },
-      { $group: { _id: "$ids" } },
-    ]),
-    Category.find({ status: "active" }).select("_id parents parentCategory").lean(),
-  ]);
-
-  const include = new Set(directRows.map((r) => String(r._id)));
-  const byId = new Map(cats.map((c) => [String(c._id), c]));
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const id of [...include]) {
-      const cat = byId.get(id);
-      if (!cat) continue;
-      for (const pid of parentIdsOf(cat)) {
-        if (pid && byId.has(pid) && !include.has(pid)) {
-          include.add(pid);
-          changed = true;
-        }
-      }
-    }
-  }
-  return include;
+  return getCategoryIdsWithProducts();
 }
 
 async function vehicleIdsWithProducts() {

@@ -18,7 +18,9 @@ export default async function CategoriesPage() {
   try {
     await dbConnect();
     const categories = await loadStoreCategoriesTree(true);
-    const roots = Array.isArray(categories) ? categories : [];
+    const roots = (Array.isArray(categories) ? categories : []).filter(
+      (c) => Number(c.productCount || 0) > 0
+    );
     serialized = roots.map((c, i) => ({
       _id: String(c._id),
       name: c.name,
@@ -28,14 +30,16 @@ export default async function CategoriesPage() {
       productCount: Number(c.productCount || 0),
       image: c.image || null,
       children: Array.isArray(c.children)
-        ? c.children.map((ch) => ({
-            _id: String(ch._id),
-            name: ch.name,
-            slug: ch.slug,
-            href: categoryHref(ch.slug),
-            productCount: Number(ch.productCount || 0),
-            image: ch.image || null,
-          }))
+        ? c.children
+            .filter((ch) => Number(ch.productCount || 0) > 0)
+            .map((ch) => ({
+              _id: String(ch._id),
+              name: ch.name,
+              slug: ch.slug,
+              href: categoryHref(ch.slug),
+              productCount: Number(ch.productCount || 0),
+              image: ch.image || null,
+            }))
         : [],
       homepageOrder: Number(c.homepageOrder || i),
     }));
