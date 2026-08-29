@@ -97,6 +97,11 @@ export function storyImageUrlOptimized(src) {
   return cloudinaryUrl(src, { width: 720, height: 560, crop: "fill" });
 }
 
+/** Wide cover crop for the homepage editorial band. */
+export function editorialCoverUrl(src) {
+  return cloudinaryUrl(src, { width: 1400, height: 900, crop: "fill", quality: "auto:good", format: "auto" });
+}
+
 /** Small logo / brand chip. */
 export function logoImageUrl(src, width = 120) {
   return cloudinaryUrl(src, { width, crop: "limit" });

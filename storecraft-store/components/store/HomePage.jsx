@@ -23,7 +23,7 @@ const ShopByVehicle = dynamic(() => import("@/components/home/ShopByVehicle"), {
   loading: () => <SectionSkeleton height={240} />,
 });
 const WhyChooseUs = dynamic(() => import("@/components/home/WhyChooseUs"), {
-  loading: () => <SectionSkeleton height={220} />,
+  loading: () => <SectionSkeleton height={380} />,
 });
 
 function SectionSkeleton({ height = 240 }) {
@@ -98,7 +98,14 @@ export function HomePage({
         <BestSellers initialProducts={initialBestSellers} settings={homepageSettings} />
       ) : null}
       {sectionEnabled("whyChooseUs") && homepageSettings.sections?.showWhyChooseUs !== false ? (
-        <WhyChooseUs settings={homepageSettings} />
+        <WhyChooseUs
+          story={brandStory}
+          heroImage={
+            Array.isArray(initialHeroSlides) && initialHeroSlides[0]?.imageUrl
+              ? initialHeroSlides[0].imageUrl
+              : ""
+          }
+        />
       ) : null}
     </div>
   );
