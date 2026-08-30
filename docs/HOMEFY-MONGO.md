@@ -48,6 +48,16 @@ Login: `admin@homefy.pk` (password from seed script / your reset).
    - `CLOUDINARY_*` for image uploads
 5. Run `seed-admin.mjs` once against that URI (one-off job or local with prod URI).
 
-## Atlas (optional cloud)
+## Atlas (Homefy cloud — ready)
 
-Create a **new** free cluster → database name **`homefy_pk`** → user with readWrite → paste URI into Coolify/Vercel Homefy apps only.
+Homefy Atlas cluster: **`cluster0.g8tmzmx.mongodb.net`**  
+Database: **`homefy_pk`**  
+User: **`homefypk1_db_user`**
+
+Local apps already point at this URI via `.env.local` (gitignored).  
+Deploy/Coolify: paste the same `MONGODB_URI` + `CATALOG_BACKEND=mongo`.
+
+**Network access:** Atlas currently allows your IP (`39.37.196.71`). For Coolify/Vercel, add the server IP or temporarily `0.0.0.0/0` under Network Access.
+
+**Security:** Password was shared in chat/screenshots — rotate it in Atlas → Database Access after workers are set up if this chat is shared.
+
