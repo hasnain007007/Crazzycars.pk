@@ -1,0 +1,45 @@
+# Homefy.pk — dedicated MongoDB (never share with CrazzyCars).
+#
+# Local:
+#   docker compose -f docker-compose.homefy-mongo.yml --env-file .env.homefy.mongo up -d
+#
+# Connection (apps):
+#   mongodb://homefy:PASSWORD@127.0.0.1:27027/homefy_pk?authSource=admin
+#
+# Coolify: add this file as a Docker Compose resource, set HOMEFY_MONGO_PASSWORD,
+# expose port 27027 only on the private network (or map for debugging).
+
+services:
+  homefy-mongo:
+    image: mongo:7
+    container_name: homefy-mongo-isolated
+    ports:
+      - "27027:27017"
+    environment:
+      MONGO_INITDB_DATABASE: homefy_pk
+      MONGO_INITDB_ROOT_USERNAME: ${HOMEFY_MONGO_USER:-homefy}
+      MONGO_INITDB_ROOT_PASSWORD: ${HOMEFY_MONGO_PASSWORD:?Set HOMEFY_MONGO_PASSWORD}
+    volumes:
+      - homefy-mongo-isolated-data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "-u",
+          "${HOMEFY_MONGO_USER:-homefy}",
+          "-p",
+          "${HOMEFY_MONGO_PASSWORD}",
+          "--authenticationDatabase",
+          "admin",
+          "--eval",
+          "db.adminCommand('ping').ok",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+volumes:
+  homefy-mongo-isolated-data:

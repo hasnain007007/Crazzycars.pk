@@ -19,3 +19,7 @@ out/
 **/*.sst
 **/*.pack
 **/*.pack.gz
+
+# Homefy isolated Mongo credentials
+.env.homefy.mongo
+

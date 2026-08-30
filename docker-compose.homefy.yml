@@ -1,12 +1,19 @@
 # Homefy.pk local MongoDB + Postgres.
 # Never point CrazzyCars (vps-test / Coolify) at these databases.
 #
-# Usage:
+# Preferred Homefy Mongo (auth + dedicated port):
+#   docker compose -f docker-compose.homefy-mongo.yml --env-file .env.homefy.mongo up -d
+#   mongodb://homefy:PASSWORD@127.0.0.1:27027/homefy_pk?authSource=admin
+#   See docs/HOMEFY-MONGO.md
+#
+# Legacy unauthenticated local Mongo (port 27017) — prefer the isolated compose above.
+#
+# Usage (Postgres + legacy mongo):
 #   docker compose -f docker-compose.homefy.yml up -d
 #
 # Mongo:
 #   mongodb://127.0.0.1:27017/homefy_pk
-# Postgres (same schema as future Supabase / app):
+# Postgres (optional; store should use CATALOG_BACKEND=mongo for admin product writes):
 #   postgresql://postgres:postgres@127.0.0.1:55322/postgres
 #
 # Port 55322 avoids Mobile_mart local Supabase on 54322.
