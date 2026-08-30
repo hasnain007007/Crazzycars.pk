@@ -25,6 +25,22 @@ export function isSaleCurrentlyActive(pricing, now = new Date()) {
 }
 
 /**
+ * Variant / combo `price` of 0 or missing means "same as the parent product",
+ * not free. Seeded Homefy color rows all store 0.00 for that reason.
+ */
+export function inheritOverridePrice(override, fallback) {
+  const n = Number(override);
+  if (Number.isFinite(n) && n > 0) return n;
+  const base = Number(fallback);
+  return Number.isFinite(base) && base > 0 ? base : 0;
+}
+
+/** Persisted cart line: never treat a leftover 0 as the charge when the other field has a price. */
+export function cartLineUnitPrice(item) {
+  return inheritOverridePrice(item?.unitPrice, item?.price);
+}
+
+/**
  * Effective storefront price (sale when active / unscheduled = unlimited).
  */
 export function effectiveUnitPrice(product) {

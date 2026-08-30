@@ -25,7 +25,7 @@ import {
 } from "@/lib/pakistaniPaymentMethods";
 import { quoteShipping } from "@/lib/shippingZoneWeight";
 import { toKg } from "@/lib/shippingEstimate";
-import { effectiveUnitPrice } from "@/lib/storePricing";
+import { effectiveUnitPrice, inheritOverridePrice } from "@/lib/storePricing";
 import { allowsBackorder } from "@/lib/inventoryPolicy";
 import { readAiAttributionFromRequest } from "@/lib/aiAttribution";
 import CartSession from "@/lib/models/CartSession.model";
@@ -288,7 +288,7 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
     if (v) {
       const baseWeightKg = toKg(p.inventory?.weight, p.inventory?.weightUnit || "kg");
       const addKg = toKg(v.additionalShippingWeight, v.weightUnit || "kg");
-      const unitPrice = Math.max(0, Number(v.price) || 0);
+      const unitPrice = inheritOverridePrice(v.price, effectiveUnitPrice(p));
       return {
         unitPrice: Math.round(unitPrice * 100) / 100,
         perUnitWeightKg: Math.max(0, baseWeightKg + addKg),
@@ -303,8 +303,7 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
   const resolvedCombo = resolveCombinationFromCart(p, raw);
   if (resolvedCombo) {
     const base = effectiveUnitPrice(p);
-    const comboPrice = Number(resolvedCombo.price);
-    const unitPrice = Number.isFinite(comboPrice) && comboPrice >= 0 ? comboPrice : base;
+    const unitPrice = inheritOverridePrice(resolvedCombo.price, base);
     const baseWeightKg = toKg(p.inventory?.weight, p.inventory?.weightUnit || "kg");
     const comboWeightRaw = Number(resolvedCombo.weight);
     const perUnitWeightKg =

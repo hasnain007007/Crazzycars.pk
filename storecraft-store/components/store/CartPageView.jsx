@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
 import { isPlaceholderProductImage } from "@/lib/homefyBrand";
+import { cartLineUnitPrice } from "@/lib/storePricing";
 import { ProductImagePlaceholder } from "@/components/store/ProductImagePlaceholder";
 
 export function CartPageView() {
@@ -35,7 +36,7 @@ export function CartPageView() {
             <ul className="mt-6 space-y-4">
               {items.map((item, index) => {
                 const itemId = item._id || item.id || index;
-                const price = Number(item.price ?? item.unitPrice ?? 0) || 0;
+                const price = cartLineUnitPrice(item);
                 const imageUrl =
                   item.image ||
                   (Array.isArray(item.images) ? item.images[0] : null) ||

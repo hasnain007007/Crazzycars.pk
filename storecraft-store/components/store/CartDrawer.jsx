@@ -8,6 +8,7 @@ import { FreeDeliveryProgress } from "@/components/store/FreeDeliveryProgress";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
 import { getProgressBarThreshold } from "@/lib/freeDelivery";
+import { cartLineUnitPrice } from "@/lib/storePricing";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -83,7 +84,7 @@ export function CartDrawer() {
             <ul className="space-y-4">
               {(items || []).map((item, index) => {
                 const itemId = item._id || item.id || index;
-                const price = Number(item.price ?? item.pricing?.regularPrice ?? 0) || 0;
+                const price = cartLineUnitPrice(item);
                 const imageUrl =
                   item.image ||
                   (Array.isArray(item.images) ? item.images[0] : null) ||

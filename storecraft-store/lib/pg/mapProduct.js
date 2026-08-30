@@ -118,7 +118,10 @@ export function mapProductRow(row, extras = {}) {
     numReviews: num(row.review_count),
     pricing: {
       regularPrice: num(row.regular_price),
-      salePrice: row.sale_price != null ? num(row.sale_price) : 0,
+      // null / 0 = no sale. Do not coerce to 0 — callers that use `salePrice ?? price`
+      // would otherwise charge Rs.0 on the 55 products with no sale_price.
+      salePrice:
+        row.sale_price != null && Number(row.sale_price) > 0 ? num(row.sale_price) : null,
     },
     inventory: {
       sku: row.sku || row.article_no || "",

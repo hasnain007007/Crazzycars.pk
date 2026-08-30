@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { cartLinesAdd, cartLinesRemove, cartLinesUpdate, getCart } from "@/lib/shopifyCartClient";
 import { resolveProductContentId, trackAddToCart } from "@/lib/metaPixel";
 import { syncCartToServer } from "@/lib/cartSyncClient";
+import { cartLineUnitPrice, inheritOverridePrice } from "@/lib/storePricing";
 
 const STORAGE_KEY = "cart_items";
 const LEGACY_STORAGE_KEY = "sialkot_store_cart_v1";
@@ -104,6 +105,47 @@ export function CartProvider({ children, shopifyEnabled = false }) {
     saveCart(items);
   }, [items]);
 
+  const repricedKeys = useRef(new Set());
+  useEffect(() => {
+    if (!cartReady) return;
+    const broken = items.filter((item) => {
+      const key = lineKey(item);
+      return cartLineUnitPrice(item) <= 0 && item.slug && !repricedKeys.current.has(key);
+    });
+    if (!broken.length) return;
+    broken.forEach((item) => repricedKeys.current.add(lineKey(item)));
+    let cancelled = false;
+    (async () => {
+      const updates = new Map();
+      await Promise.all(
+        broken.map(async (item) => {
+          try {
+            const res = await fetch(`/api/products/${encodeURIComponent(item.slug)}`);
+            const data = await res.json().catch(() => ({}));
+            const product = data?.product;
+            if (!product) return;
+            const base = inheritOverridePrice(product.price, product.regularPrice);
+            const next = inheritOverridePrice(item.matchedCombination?.price, base);
+            if (next > 0) updates.set(lineKey(item), next);
+          } catch {
+            /* keep leftover 0 until the next add */
+          }
+        })
+      );
+      if (cancelled || !updates.size) return;
+      setItems((prev) =>
+        prev.map((item) => {
+          const next = updates.get(lineKey(item));
+          if (!next) return item;
+          return { ...item, price: next, unitPrice: next };
+        })
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [cartReady, items]);
+
   // Debounced server sync for abandoned-cart recovery
   const syncTimer = useRef(null);
   useEffect(() => {
@@ -124,7 +166,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
   const addItem = useCallback(async (productOrRow, quantityArg = 1) => {
     const row = productOrRow || {};
     const normalizedQty = Math.max(1, Math.min(99, Number(row.quantity ?? quantityArg) || 1));
-    const unit = Number(row.unitPrice ?? row.price) || 0;
+    const unit = inheritOverridePrice(row.unitPrice, row.price);
     const contentId = resolveProductContentId(row);
 
     const fireAddToCart = () => {
@@ -159,8 +201,8 @@ export function CartProvider({ children, shopifyEnabled = false }) {
         next[i] = {
           ...next[i],
           quantity: Math.min(99, (next[i].quantity || 0) + normalizedQty),
-          unitPrice: Number(next[i].unitPrice ?? next[i].price) || 0,
-          price: Number(next[i].price) || 0,
+          unitPrice: inheritOverridePrice(unit, next[i].unitPrice ?? next[i].price),
+          price: inheritOverridePrice(unit, next[i].price),
         };
       } else {
         next = [
@@ -173,8 +215,8 @@ export function CartProvider({ children, shopifyEnabled = false }) {
             slug: row.slug,
             name: row.name,
             image: row.image || "",
-            price: Number(row.price) || 0,
-            unitPrice: Number(row.unitPrice ?? row.price) || 0,
+            price: unit,
+            unitPrice: unit,
             variantId: String(row.variantId || "").trim(),
             quantity: normalizedQty,
             variationLabel: row.variationLabel || "",
@@ -292,7 +334,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
   const cartTotal = useMemo(() => {
     return Math.round(
       items.reduce((total, item) => {
-        const price = Number(item.price ?? item.pricing?.regularPrice ?? 0) || 0;
+        const price = cartLineUnitPrice(item);
         const qty = Number(item.quantity) || 1;
         return total + price * qty;
       }, 0) * 100

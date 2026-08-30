@@ -31,6 +31,7 @@ import {
 import { FreeDeliveryProgress } from "@/components/store/FreeDeliveryProgress";
 import { PakistaniPaymentIcon } from "./PakistaniPaymentIcons";
 import { formatPrice } from "@/lib/currency";
+import { cartLineUnitPrice } from "@/lib/storePricing";
 import { useCustomer } from "@/lib/customerAuth";
 import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
 import { resolveProductContentId, trackInitiateCheckout } from "@/lib/metaPixel";
@@ -765,7 +766,7 @@ export function CheckoutView() {
             selectedOptions: x.selectedOptions || null,
             matchedCombination: x.matchedCombination || null,
             calculatedWeight: x.calculatedWeight || 0,
-            unitPrice: x.unitPrice ?? x.price,
+            unitPrice: cartLineUnitPrice(x),
             shippingPriceSurcharge: x.shippingPriceSurcharge || 0,
             estimatedShipping: x.estimatedShipping || 0,
             customMeasurements: x.customMeasurements || {},
@@ -1499,7 +1500,7 @@ export function CheckoutView() {
                       </span>
                     ) : null}
                   </span>
-                  <span className="price shrink-0 tabular-nums">{formatPrice(x.price * x.quantity, addr.country)}</span>
+                  <span className="price shrink-0 tabular-nums">{formatPrice(cartLineUnitPrice(x) * x.quantity, addr.country)}</span>
                 </li>
               ))}
             </ul>
