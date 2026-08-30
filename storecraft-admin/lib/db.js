@@ -13,7 +13,7 @@ if (!MONGODB_URI) {
 
 if (/yg8dcwr|sialkot_motorsports|crazzycars/i.test(MONGODB_URI)) {
   throw new Error(
-    "Refusing CrazzyCars production Mongo. Homefy local uses mongodb://127.0.0.1:27017/homefy_pk"
+    "Refusing CrazzyCars production Mongo. Homefy uses homefy_pk (Atlas g8tmzmx or local :27027)."
   );
 }
 

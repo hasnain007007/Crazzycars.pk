@@ -1,16 +1,32 @@
 ---
-description: Ship storefront/admin work via git + Coolify without asking
+description: Ship Homefy vs CrazzyCars to the correct Coolify/Vercel targets
 alwaysApply: true
 ---
 
-# Ship without asking
+# Ship without mixing brands
 
-Do not ask whether to commit, push, or deploy to Coolify. After storefront or admin work that should go live, ship it.
+Homefy and CrazzyCars share one GitHub repo but **must never share deploy targets**.
 
-1. Commit on `vps-test` (no secrets, no `--no-verify`, no force-push).
-2. If behind origin, rebase then push `vps-test` to GitHub (`origin`).
-3. Coolify auto-deploys that branch for `crazzycars.pk` / `admin.crazzycars.pk`. Confirm the deploy finished; trigger only if the webhook did not start.
+## Which branch am I on?
 
-Do not pause at the end of a task waiting for permission to git or Coolify. Report the commit and live result after shipping.
+### `homefy-dev` (Homefy.pk)
+
+1. Commit on **`homefy-dev`** only (no secrets, no `--no-verify`, no force-push).
+2. Push `homefy-dev` to `origin`.
+3. Deploy targets (independent):
+   - **Vercel:** `homefy-pk-store` + `homefy-pk-admin` (not `storecraft-*`)
+   - **Coolify:** separate apps on branch `homefy-dev` / base dirs `storecraft-*` — **never** the CrazzyCars Coolify UUIDs on `vps-test`
+4. Mongo must be Homefy Atlas `g8tmzmx` / DB `homefy_pk` (or local `:27027`). Refuse `yg8dcwr` / `sialkot_motorsports`.
+5. See `docs/HOMEFY-DEPLOY.md`.
+
+**Never** merge or push Homefy work to `vps-test`. That Coolify auto-deploys **crazzycars.pk**.
+
+### `vps-test` (CrazzyCars.pk)
+
+1. Commit on **`vps-test`**.
+2. Push `vps-test` → Coolify auto-deploys `crazzycars.pk` / `admin.crazzycars.pk`.
+3. Do not change Homefy Vercel projects or Homefy Mongo from this branch.
+
+Do not pause waiting for permission to git/deploy after storefront or admin work that should go live. Report commit + live result.
 
 Still never: force-push to main/master, skip hooks, commit `.env` / credentials, or rotate production passwords.

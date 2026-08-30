@@ -36,17 +36,15 @@ cd storecraft-admin && node scripts/seed-admin.mjs --force
 
 Login: `admin@homefy.pk` (password from seed script / your reset).
 
-## Coolify / VPS (for workers)
+## Coolify / Vercel (for workers)
 
-1. Create a **new** Mongo service from `docker-compose.homefy-mongo.yml` (or Coolify “MongoDB” resource).
-2. Set `HOMEFY_MONGO_PASSWORD` in Coolify env.
-3. Create **new** Homefy store + admin apps on branch **`homefy-dev`** (do not use CrazzyCars apps).
-4. Set both apps:
-   - `MONGODB_URI` → Homefy Mongo URI above
-   - Store: `CATALOG_BACKEND=mongo`
-   - Cross-link `NEXT_PUBLIC_STORE_URL` / `NEXT_PUBLIC_ADMIN_URL`
-   - `CLOUDINARY_*` for image uploads
-5. Run `seed-admin.mjs` once against that URI (one-off job or local with prod URI).
+Full independence checklist: **`docs/HOMEFY-DEPLOY.md`**.
+
+- Branch: **`homefy-dev`** only (never `vps-test` / crazzycars Coolify apps).
+- Vercel projects (already created): `homefy-pk-store` + `homefy-pk-admin`.
+- Coolify: create **new** apps on `homefy-dev` — do not reuse CrazzyCars UUIDs.
+- Env: Homefy Atlas `MONGODB_URI` + store `CATALOG_BACKEND=mongo`.
+- Seed: `seed-admin.mjs` once against that URI.
 
 ## Atlas (Homefy cloud — ready)
 

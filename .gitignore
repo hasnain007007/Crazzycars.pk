@@ -3,6 +3,8 @@ node_modules/
 .next/
 .turbo/
 .vercel
+.vercel.crazzycars-backup/
+.vercel.crazzycars-backup
 .cache/
 coverage/
 dist/
@@ -24,3 +26,5 @@ out/
 .env.homefy.mongo
 
 .env.homefy.atlas
+.vercel.crazzycars-backup
+.vercel.crazzycars-backup/

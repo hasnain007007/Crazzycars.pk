@@ -7,7 +7,8 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { loadShopByCarIndex } from "@/lib/vehiclePageData";
 
-export const revalidate = 300;
+// Runtime fetch — avoid build-time Atlas IP whitelist failures on Vercel/Coolify.
+export const dynamic = "force-dynamic";
 
 export const metadata = buildPageMetadata({
   title: "Shop by Car | Homefy.pk",

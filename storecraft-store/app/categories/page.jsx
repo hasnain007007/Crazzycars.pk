@@ -6,7 +6,7 @@ import { dbConnect } from "@/lib/db";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { loadStoreCategoriesTree } from "@/lib/storeCategoryData";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 export const metadata = buildPageMetadata({
   title: "Shop Car Accessory Categories",
   description: "Browse product categories on Homefy.pk.",

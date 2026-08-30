@@ -100,24 +100,32 @@ Committed templates: `storecraft-store/.env.local.example` and `storecraft-admin
 
 ## Deployment
 
-### Vercel (recommended for Next.js)
+Homefy must stay independent from CrazzyCars Coolify/`vps-test`. See **`docs/HOMEFY-DEPLOY.md`**.
 
-1. Create two Vercel projects (store + admin) or one monorepo with two apps.
-2. Set the root directory to `storecraft-store` or `storecraft-admin`.
-3. Add all environment variables from the tables above in the Vercel dashboard.
-4. Point `NEXT_PUBLIC_*_URL` values to your production domains.
-5. Configure Stripe webhooks to `https://<store-domain>/api/payment/stripe/webhook`.
-6. Run `node scripts/seed-admin.mjs` once against production MongoDB (locally with production `MONGODB_URI`).
+### Vercel (Homefy projects)
 
-### VPS (PM2 + Nginx)
+| App | Vercel project | Staging |
+|--|--|--|
+| Store | `homefy-pk-store` | https://homefy-pk-store.vercel.app |
+| Admin | `homefy-pk-admin` | https://homefy-pk-admin.vercel.app |
 
-1. Build both apps: `npm run build` in each directory.
-2. Use existing **PM2** config (`pm2.config.js` / `ecosystem.config.js`) to run Node processes on ports 3000 and 3001.
-3. **Nginx** reverse proxy (outline):
-   - `store.example.com` → `proxy_pass http://127.0.0.1:3000`
-   - `admin.example.com` → `proxy_pass http://127.0.0.1:3001`
-   - SSL via Let's Encrypt (`certbot`).
-4. Set production env vars on the server (never commit secrets).
+Do **not** deploy Homefy to legacy `storecraft-store` / `storecraft-admin` (those are CrazzyCars-era).
+
+For CLI deploys, leave Vercel Root Directory empty and run from each app folder. After connecting Git for monorepo builds, set Root Directory to `storecraft-store` / `storecraft-admin` and Production Branch to **`homefy-dev`**.
+
+```bash
+cd storecraft-store && vercel --prod --yes --scope hasnain-s-projects3
+cd ../storecraft-admin && vercel --prod --yes --scope hasnain-s-projects3
+node scripts/homefy/verify-deploy-independence.mjs
+```
+
+Connect Git → production branch **`homefy-dev`**, then attach `homefy.pk` / `admin.homefy.pk`.
+
+Hobby plan: store crons are daily only (`vercel.json`) — hourly crons require Vercel Pro (or run on Coolify).
+
+### Coolify (Homefy apps only)
+
+Create **new** apps on branch `homefy-dev` with Dockerfiles under `storecraft-*`. Never retarget the live CrazzyCars apps on `vps-test`.
 
 ## First login
 

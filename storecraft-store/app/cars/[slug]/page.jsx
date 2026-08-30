@@ -13,7 +13,7 @@ import { ProductListingSection } from "@/components/store/ProductListingSection"
 import { listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
 import { sortProductsClient } from "@/lib/productListing";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Homefy.pk";
 
