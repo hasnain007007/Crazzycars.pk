@@ -1,6 +1,7 @@
 /**
  * Seed Homefy.pk Kitchen + Beauty Bags + Ladies Bags catalog.
- * Uses the EXISTING Category / Product schema. Car-specific product fields are omitted.
+ * MOCK / DEMO DATA ONLY — not real inventory. Prefer Admin → Products for live SKUs.
+ * To wipe seed products: npm run clear:homefy:products
  *
  * Usage (from storecraft-store):
  *   npm run seed:homefy

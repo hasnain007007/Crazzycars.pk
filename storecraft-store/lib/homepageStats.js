@@ -8,7 +8,7 @@ export function formatActiveProductStat(count) {
   // Number(null) === 0 — treat missing counts as "unknown", not zero products.
   if (count == null || count === "") return null;
   const n = Number(count);
-  if (!Number.isFinite(n) || n < 0) return null;
+  if (!Number.isFinite(n) || n <= 0) return null;
   const rounded = Math.floor(n);
   return `${rounded.toLocaleString("en-US")}+`;
 }
@@ -36,9 +36,13 @@ export function resolveHomepageStats(stats, opts = {}) {
       const label = String(s?.label || "").trim();
       if (!value && !label) return null;
       if (isUnverifiableStat(value, label)) return null;
+      // Seed mock "66+ Active products" — never show once the catalog is cleared.
+      if (/^66\+?$/i.test(value) && /product/i.test(label)) return null;
       if (liveProducts && /product/i.test(label)) {
         return { value: liveProducts, label };
       }
+      // Hide product-count rows until real SKUs exist (avoid "0+").
+      if (/product/i.test(label) && !liveProducts) return null;
       return { value, label };
     })
     .filter(Boolean);

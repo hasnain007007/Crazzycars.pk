@@ -1,5 +1,7 @@
 /**
  * Copy Homefy catalog from local Mongo (homefy_pk) into Supabase Postgres.
+ * MOCK / DEMO DATA ONLY when sourced from seedHomefyCatalog.
+ * To wipe products (keep categories): npm run clear:homefy:products
  *
  *   supabase start
  *   cd storecraft-store && npm run seed:homefy:postgres

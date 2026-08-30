@@ -11,6 +11,7 @@
     "seo:healthcheck": "node --experimental-strip-types ../scripts/seo-healthcheck.ts",
     "seed:homefy": "node --env-file=.env.local scripts/homefy/seedHomefyCatalog.mjs",
     "seed:homefy:postgres": "node --env-file=.env.local scripts/homefy/seedHomefyToPostgres.mjs",
+    "clear:homefy:products": "node --env-file=.env.local scripts/homefy/clearHomefyProducts.mjs",
     "db:homefy:schema": "node --env-file=.env.local scripts/homefy/applyPostgresSchema.mjs"
   },
   "dependencies": {

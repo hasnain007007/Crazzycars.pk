@@ -36,7 +36,7 @@ export const DEFAULT_BRAND_STORY = {
   image1: "",
   image2: "",
   stats: [
-    { value: "66+", label: "Active products" },
+    // Product count is filled live from the DB when > 0 — never hardcode mock inventory.
     { value: "COD", label: "Nationwide" },
   ],
 };
@@ -148,10 +148,13 @@ export function normalizeBrandStory(raw) {
   if (!raw || typeof raw !== "object") return { ...DEFAULT_BRAND_STORY };
   const stats =
     Array.isArray(raw.stats) && raw.stats.length > 0
-      ? raw.stats.map((s) => ({
-          value: String(s?.value ?? ""),
-          label: String(s?.label ?? ""),
-        }))
+      ? raw.stats
+          .map((s) => ({
+            value: String(s?.value ?? ""),
+            label: String(s?.label ?? ""),
+          }))
+          // Drop leftover mock inventory claims from seed settings.
+          .filter((s) => !(/^66\+?$/i.test(s.value) && /product/i.test(s.label)))
       : DEFAULT_BRAND_STORY.stats;
   return {
     ...DEFAULT_BRAND_STORY,
