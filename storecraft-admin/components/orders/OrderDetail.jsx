@@ -1727,7 +1727,7 @@ export function OrderDetail({ orderId }) {
             <OrderItemsEditor
               order={order}
               onUpdated={(updated) => {
-                setOrder(updated);
+                if (updated) setOrder(updated);
                 setDraftPricing(null);
               }}
               onDraftPricingChange={setDraftPricing}

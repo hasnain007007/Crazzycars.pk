@@ -114,29 +114,81 @@ function parseSelectedOptionsFromVariation(variation) {
   return out;
 }
 
-function normalizeLines(items) {
+/** Checkout stores `{ choices: [{ variationName, optionValue }] }`; editor uses selectedOptions. */
+function selectedOptionsFromItem(item) {
+  const sv = item?.selectedVariation;
+  if (sv && typeof sv === "object") {
+    const direct = sv.selectedOptions;
+    if (direct && typeof direct === "object" && !Array.isArray(direct)) {
+      const out = {};
+      for (const [k, v] of Object.entries(direct)) {
+        const key = String(k || "").trim();
+        const val = String(v || "").trim();
+        if (key && val) out[key] = val;
+      }
+      if (Object.keys(out).length) return out;
+    }
+    const choices = Array.isArray(sv.choices) ? sv.choices : [];
+    if (choices.length) {
+      const out = {};
+      for (const c of choices) {
+        const key = String(c?.variationName || c?.name || "").trim();
+        const val = String(c?.optionValue || c?.value || "").trim();
+        if (key && val) out[key] = val;
+      }
+      if (Object.keys(out).length) return out;
+    }
+    if (sv.label) return parseSelectedOptionsFromVariation(sv.label);
+  }
+  return parseSelectedOptionsFromVariation(item?.variation);
+}
+
+function itemsFingerprint(items) {
+  return JSON.stringify(
+    (items || []).map((i) => ({
+      productId: i?.productId || null,
+      name: i?.name || "",
+      image: i?.image || "",
+      variation: i?.variation || "",
+      selectedVariation: i?.selectedVariation || null,
+      selectedAddOns: i?.selectedAddOns || [],
+      quantity: i?.quantity,
+      unitPrice: i?.unitPrice,
+      total: i?.total,
+    }))
+  );
+}
+
+function normalizeLines(items, prevLines = []) {
+  const prevByKey = new Map();
+  for (const line of prevLines) {
+    if (line?.key) prevByKey.set(line.key, line);
+  }
   return (items || []).map((item, idx) => {
     const selectedAddOns = Array.isArray(item.selectedAddOns)
       ? item.selectedAddOns
           .map((a) => ({ name: String(a?.name || "").trim(), price: Math.max(0, Number(a?.price) || 0) }))
           .filter((a) => a.name)
       : [];
-    const selectedOptions =
-      item.selectedVariation && typeof item.selectedVariation === "object" && item.selectedVariation.selectedOptions
-        ? item.selectedVariation.selectedOptions
-        : parseSelectedOptionsFromVariation(item.variation);
+    const selectedOptions = selectedOptionsFromItem(item);
+    const key = `${item.productId || "custom"}-${idx}-${item.name || ""}`;
+    const prev = prevByKey.get(key);
+    const sameProduct = prev && String(prev.productId || "") === String(item.productId || "");
     return {
-      key: `${item.productId || "custom"}-${idx}-${item.name || ""}`,
+      key,
       productId: item.productId || null,
       name: item.name || "",
       image: item.image || "",
-      variation: item.variation || "",
+      variation: item.variation || buildVariationLabel(selectedOptions, selectedAddOns),
       selectedOptions,
       selectedAddOns,
       quantity: Math.max(1, Number(item.quantity) || 1),
       unitPrice: Math.max(0, Number(item.unitPrice) || 0),
       basePrice: Math.max(0, Number(item.unitPrice) || 0),
-      catalog: null,
+      // Keep catalog across parent re-fetches so variation dropdowns do not flash "No variations".
+      catalog: sameProduct && prev?.catalog ? prev.catalog : null,
+      articleNo: item.articleNo || prev?.articleNo || "",
+      unitCost: Number(item.unitCost) || prev?.unitCost || 0,
     };
   });
 }
@@ -180,15 +232,21 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
   const [searching, setSearching] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [loadingMeta, setLoadingMeta] = useState({});
+  const [failedMeta, setFailedMeta] = useState({});
+  const [dirty, setDirty] = useState(false);
+
+  const orderItemsFp = useMemo(() => itemsFingerprint(order.items), [order.items]);
 
   useEffect(() => {
-    setLines(normalizeLines(order.items));
+    setLines((prev) => normalizeLines(order.items, prev));
     const ship = Number(order?.pricing?.shippingCost) || 0;
     setDeliveryOn(ship > 0);
     if (ship > 0) setShippingCost(String(ship));
     const disc = Number(order?.pricing?.discount) || 0;
     setDiscountAmount(disc > 0 ? String(disc) : "");
-  }, [order.id, order.items, order?.pricing?.shippingCost, order?.pricing?.discount]);
+    setDirty(false);
+    setFailedMeta({});
+  }, [order.id, orderItemsFp, order?.pricing?.shippingCost, order?.pricing?.discount]);
 
   const loadProductMeta = useCallback(async (productId) => {
     if (!productId) return null;
@@ -227,6 +285,7 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
     next.selectedVariation = {
       selectedOptions,
       combinationId: combo?._id ? String(combo._id) : null,
+      label: next.variation,
     };
     if (combo?.image) {
       next.image =
@@ -235,27 +294,47 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
     return next;
   }, []);
 
-  // Hydrate catalog options for existing lines and reprice from combo when Style is known
+  const missingCatalogKey = useMemo(
+    () =>
+      lines
+        .filter((l) => l.productId && !l.catalog && !failedMeta[l.productId])
+        .map((l) => String(l.productId))
+        .sort()
+        .join(","),
+    [lines, failedMeta]
+  );
+
+  // Hydrate catalog options whenever any line is missing product meta
   useEffect(() => {
     let cancelled = false;
-    const ids = [...new Set(lines.map((l) => l.productId).filter(Boolean))];
-    if (!ids.length) return undefined;
+    if (!missingCatalogKey) return undefined;
+    const ids = [...new Set(missingCatalogKey.split(",").filter(Boolean))];
     (async () => {
       for (const id of ids) {
         if (cancelled) return;
-        const already = lines.find((l) => l.productId === id && l.catalog);
-        if (already) continue;
         const catalog = await loadProductMeta(id);
-        if (!catalog || cancelled) continue;
+        if (cancelled) return;
+        if (!catalog) {
+          setFailedMeta((m) => ({ ...m, [id]: true }));
+          continue;
+        }
         setLines((prev) =>
           prev.map((line) => {
-            if (line.productId !== id || line.catalog) return line;
-            const base = catalog.basePrice || line.basePrice || line.unitPrice;
-            const next = { ...line, catalog, basePrice: base };
-            if (Object.keys(line.selectedOptions || {}).length > 0) {
-              return repriceLine(next);
-            }
-            return next;
+            if (String(line.productId) !== id || line.catalog) return line;
+            const combo = findMatchedCombo(catalog, line.selectedOptions || {});
+            return {
+              ...line,
+              catalog,
+              basePrice: line.basePrice || catalog.basePrice || line.unitPrice,
+              variation:
+                line.variation || buildVariationLabel(line.selectedOptions, line.selectedAddOns),
+              selectedVariation: {
+                selectedOptions: line.selectedOptions || {},
+                combinationId: combo?._id ? String(combo._id) : null,
+                label:
+                  line.variation || buildVariationLabel(line.selectedOptions, line.selectedAddOns),
+              },
+            };
           })
         );
       }
@@ -263,8 +342,7 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once per order item set
-  }, [order.id, loadProductMeta, repriceLine]);
+  }, [missingCatalogKey, loadProductMeta]);
 
   const subtotal = useMemo(
     () => lines.reduce((sum, line) => sum + lineTotal(line.quantity, line.unitPrice), 0),
@@ -286,6 +364,7 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
 
   const updateLine = useCallback(
     (index, patch) => {
+      setDirty(true);
       setLines((prev) =>
         prev.map((line, i) => {
           if (i !== index) return line;
@@ -310,6 +389,7 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
 
   const setOption = useCallback(
     (index, optionName, value) => {
+      setDirty(true);
       setLines((prev) =>
         prev.map((line, i) => {
           if (i !== index) return line;
@@ -323,6 +403,7 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
 
   const toggleAddOn = useCallback(
     (index, addon, checked) => {
+      setDirty(true);
       setLines((prev) =>
         prev.map((line, i) => {
           if (i !== index) return line;
@@ -342,6 +423,7 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
         toast.error("Order must keep at least one product.");
         return prev;
       }
+      setDirty(true);
       return prev.filter((_, i) => i !== index);
     });
   }, []);
@@ -368,8 +450,11 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
         unitPrice: base,
         basePrice: base,
         catalog,
+        articleNo: productLite.articleNo || productLite.sku || "",
+        unitCost: Number(productLite?.pricing?.costPerItem) || 0,
       };
       line = repriceLine(line);
+      setDirty(true);
       setLines((prev) => [...prev, line]);
       setShowAdd(false);
       setSearch("");
@@ -406,19 +491,32 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
     }
     setSaving(true);
     try {
-      const items = lines.map((line) => ({
-        productId: line.productId,
-        name: line.name,
-        image: line.image,
-        variation: line.variation || buildVariationLabel(line.selectedOptions, line.selectedAddOns),
-        selectedVariation: line.selectedVariation || {
-          selectedOptions: line.selectedOptions || {},
-        },
-        selectedAddOns: line.selectedAddOns || [],
-        quantity: line.quantity,
-        unitPrice: line.unitPrice,
-        total: lineTotal(line.quantity, line.unitPrice),
-      }));
+      const items = lines.map((line) => {
+        const selectedOptions = line.selectedOptions || {};
+        const selectedAddOns = line.selectedAddOns || [];
+        const variation =
+          line.variation || buildVariationLabel(selectedOptions, selectedAddOns);
+        return {
+          productId: line.productId,
+          name: line.name,
+          image: line.image,
+          variation,
+          selectedVariation: {
+            selectedOptions,
+            combinationId: line.selectedVariation?.combinationId || null,
+            label: variation,
+            ...(Array.isArray(line.selectedVariation?.choices)
+              ? { choices: line.selectedVariation.choices }
+              : {}),
+          },
+          selectedAddOns,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+          total: lineTotal(line.quantity, line.unitPrice),
+          articleNo: line.articleNo || "",
+          unitCost: Number(line.unitCost) || 0,
+        };
+      });
       const res = await fetch(`/api/orders/${order.id}`, {
         method: "PUT",
         credentials: "include",
@@ -430,15 +528,26 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
           discount: discountNum,
         }),
       });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        toast.error(json.error || "Could not save order items.");
+      let json = null;
+      try {
+        json = await res.json();
+      } catch {
+        toast.error(`Save failed (HTTP ${res.status}).`);
         return;
       }
-      toast.success("Order items updated.");
+      if (!res.ok || !json.success) {
+        toast.error(json?.error || "Could not save order items.");
+        return;
+      }
+      if (json.changed === false) {
+        toast.error("Server did not apply item changes. Try again.");
+        return;
+      }
+      toast.success("Order items saved.");
+      setDirty(false);
       onUpdated(json.order);
     } catch {
-      toast.error("Network error.");
+      toast.error("Network error — changes were not saved.");
     } finally {
       setSaving(false);
     }
@@ -522,6 +631,15 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
               const legacyVars = !simpleVars.length ? catalog?.legacyVariations || [] : [];
               const addOns = catalog?.addOns || [];
               const metaLoading = item.productId && loadingMeta[item.productId] && !catalog;
+              // Fallback: when catalog meta failed, still allow editing known option values.
+              const fallbackVars =
+                !simpleVars.length && !legacyVars.length && Object.keys(item.selectedOptions || {}).length
+                  ? Object.entries(item.selectedOptions).map(([name, value]) => ({
+                      name,
+                      options: [value],
+                      additionalPrice: 0,
+                    }))
+                  : [];
 
               return (
                 <tr key={item.key} className="align-top">
@@ -566,9 +684,9 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
                           </label>
                         ))}
                       </div>
-                    ) : legacyVars.length ? (
+                    ) : legacyVars.length || fallbackVars.length ? (
                       <div className="space-y-1.5">
-                        {legacyVars.map((v) => (
+                        {(legacyVars.length ? legacyVars : fallbackVars).map((v) => (
                           <label key={v.name} className="block">
                             <span className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                               {v.name}
@@ -590,7 +708,13 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
                         ))}
                       </div>
                     ) : item.productId ? (
-                      <span className="text-xs text-slate-400">No variations</span>
+                      <input
+                        type="text"
+                        value={item.variation}
+                        onChange={(e) => updateLine(idx, { variation: e.target.value })}
+                        placeholder="size: Large, colour: silver"
+                        className="w-full max-w-[160px] rounded border border-slate-200 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
+                      />
                     ) : (
                       <input
                         type="text"
@@ -715,7 +839,10 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
               step="1"
               aria-label="Discount amount"
               value={discountAmount}
-              onChange={(e) => setDiscountAmount(e.target.value)}
+              onChange={(e) => {
+                setDirty(true);
+                setDiscountAmount(e.target.value);
+              }}
               placeholder="0"
               className="w-28 rounded-lg border border-slate-200 px-2 py-1 text-sm tabular-nums dark:border-slate-600 dark:bg-slate-900"
             />
@@ -735,7 +862,10 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
               type="button"
               role="switch"
               aria-checked={deliveryOn}
-              onClick={() => setDeliveryOn((v) => !v)}
+              onClick={() => {
+                setDirty(true);
+                setDeliveryOn((v) => !v);
+              }}
               className={[
                 "relative h-6 w-10 shrink-0 rounded-full transition",
                 deliveryOn ? "bg-[#1d6fb8]" : "bg-slate-300 dark:bg-slate-600",
@@ -759,7 +889,10 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
               step="1"
               aria-label="Shipping amount"
               value={shippingCost}
-              onChange={(e) => setShippingCost(e.target.value)}
+              onChange={(e) => {
+                setDirty(true);
+                setShippingCost(e.target.value);
+              }}
               className="w-28 rounded-lg border border-slate-200 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900"
             />
           ) : null}
@@ -774,13 +907,19 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
           <span className="tabular-nums">{formatMoney(total)}</span>
         </div>
 
+        {dirty ? (
+          <p className="mt-2 text-center text-xs font-medium text-amber-700 dark:text-amber-400">
+            Unsaved changes — click Save or they will be lost on refresh.
+          </p>
+        ) : null}
+
         <button
           type="button"
           onClick={save}
           disabled={saving}
           className="mt-3 w-full rounded-lg bg-[#1d6fb8] py-2 text-sm font-semibold text-white hover:bg-[#185d9c] disabled:opacity-50"
         >
-          {saving ? "Saving…" : "Save order changes"}
+          {saving ? "Saving…" : dirty ? "Save order changes" : "Save order changes"}
         </button>
       </div>
     </div>

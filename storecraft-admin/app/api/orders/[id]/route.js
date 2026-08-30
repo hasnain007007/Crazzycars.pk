@@ -50,6 +50,7 @@ function serializeOrder(doc) {
     shippingCost: pricing.shippingCost,
     items: (o.items || []).map((i) => ({
       productId: i.productId ? String(i.productId) : null,
+      articleNo: i.articleNo || "",
       name: i.name,
       image: i.image || "",
       variation: i.variation || "",
@@ -62,6 +63,7 @@ function serializeOrder(doc) {
         : [],
       quantity: i.quantity,
       unitPrice: i.unitPrice,
+      unitCost: Number(i.unitCost) || 0,
       total: i.total,
     })),
     pricing,
@@ -367,7 +369,9 @@ export async function PUT(request, context) {
         );
       }
       const normalizedItems = [];
-      for (const raw of body.items) {
+      const previousItems = Array.isArray(order.items) ? order.items : [];
+      for (let itemIdx = 0; itemIdx < body.items.length; itemIdx += 1) {
+        const raw = body.items[itemIdx];
         const name = String(raw?.name || "").trim();
         const quantity = Math.max(1, Math.min(999, Math.round(Number(raw?.quantity) || 1)));
         const unitPrice = Math.max(0, Number(raw?.unitPrice) || 0);
@@ -397,12 +401,47 @@ export async function PUT(request, context) {
               .filter((a) => a.name)
               .slice(0, 20)
           : [];
-        const selectedVariation =
+        let selectedVariation =
           raw?.selectedVariation && typeof raw.selectedVariation === "object"
-            ? raw.selectedVariation
+            ? { ...raw.selectedVariation }
             : null;
+        if (selectedVariation) {
+          const opts = selectedVariation.selectedOptions;
+          if (!opts || typeof opts !== "object" || Array.isArray(opts)) {
+            const choices = Array.isArray(selectedVariation.choices)
+              ? selectedVariation.choices
+              : [];
+            if (choices.length) {
+              const selectedOptions = {};
+              for (const c of choices) {
+                const key = String(c?.variationName || c?.name || "").trim();
+                const val = String(c?.optionValue || c?.value || "").trim();
+                if (key && val) selectedOptions[key] = val;
+              }
+              selectedVariation.selectedOptions = selectedOptions;
+            }
+          }
+          if (!selectedVariation.label && raw?.variation) {
+            selectedVariation.label = String(raw.variation).trim().slice(0, 200);
+          }
+        }
+        const prev =
+          previousItems.find(
+            (p, idx) =>
+              idx === itemIdx &&
+              String(p?.productId || "") === String(productId || "")
+          ) ||
+          previousItems.find((p) => String(p?.productId || "") === String(productId || "")) ||
+          null;
+        const articleNo =
+          String(raw?.articleNo || prev?.articleNo || "").trim().slice(0, 120);
+        const unitCost = Math.max(
+          0,
+          Number(raw?.unitCost ?? prev?.unitCost) || 0
+        );
         normalizedItems.push({
           productId,
+          articleNo,
           name: name.slice(0, 300),
           image: String(raw?.image || "").trim().slice(0, 1000),
           variation: String(raw?.variation || "").trim().slice(0, 200),
@@ -410,6 +449,7 @@ export async function PUT(request, context) {
           selectedAddOns,
           quantity,
           unitPrice,
+          unitCost,
           total: lineTotal,
         });
       }
