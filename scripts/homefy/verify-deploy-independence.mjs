@@ -6,6 +6,7 @@
 import { readFileSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const fails = [];
@@ -72,9 +73,24 @@ if (pack?.MONGODB_URI) {
 }
 
 check(
-  "branch docs say homefy-dev",
+  "deploy docs exist",
   existsSync(resolve(root, "docs/HOMEFY-DEPLOY.md"))
 );
+
+try {
+  const remotes = require("child_process")
+    .execSync("git remote -v", { cwd: root, encoding: "utf8" });
+  check(
+    "homefy remote → private homefy.pk",
+    /homefy\s+https:\/\/github\.com\/hasnain007007\/homefy\.pk\.git/.test(remotes)
+  );
+  check(
+    "origin still CrazzyCars (not overwritten)",
+    /origin\s+https:\/\/github\.com\/hasnain007007\/Crazzycars\.pk\.git/.test(remotes)
+  );
+} catch {
+  fails.push("could not read git remotes");
+}
 
 console.log("OK:");
 for (const x of ok) console.log("  ✓", x);

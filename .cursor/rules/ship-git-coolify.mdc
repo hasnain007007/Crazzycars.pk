@@ -1,32 +1,36 @@
 ---
-description: Ship Homefy vs CrazzyCars to the correct Coolify/Vercel targets
+description: Ship Homefy vs CrazzyCars to the correct remotes and hosts
 alwaysApply: true
 ---
 
 # Ship without mixing brands
 
-Homefy and CrazzyCars share one GitHub repo but **must never share deploy targets**.
+Homefy and CrazzyCars are **separate products**. Homefy has its own **private** GitHub repo.
+
+## Remotes
+
+| Remote | Repo | Use |
+|--|--|--|
+| **`homefy`** | `hasnain007007/homefy.pk` (**private**) | Homefy source of truth → branch **`main`** |
+| **`origin`** | `hasnain007007/Crazzycars.pk` | CrazzyCars only → **`vps-test`** |
 
 ## Which branch am I on?
 
 ### `homefy-dev` (Homefy.pk)
 
-1. Commit on **`homefy-dev`** only (no secrets, no `--no-verify`, no force-push).
-2. Push `homefy-dev` to `origin`.
-3. Deploy targets (independent):
-   - **Vercel:** `homefy-pk-store` + `homefy-pk-admin` (not `storecraft-*`)
-   - **Coolify:** separate apps on branch `homefy-dev` / base dirs `storecraft-*` — **never** the CrazzyCars Coolify UUIDs on `vps-test`
-4. Mongo must be Homefy Atlas `g8tmzmx` / DB `homefy_pk` (or local `:27027`). Refuse `yg8dcwr` / `sialkot_motorsports`.
-5. See `docs/HOMEFY-DEPLOY.md`.
+1. Commit on **`homefy-dev`** (no secrets, no `--no-verify`, no force-push).
+2. Push Homefy SoT: `git push homefy homefy-dev:main`
+3. Deploy targets:
+   - **Vercel:** `homefy-pk-store` + `homefy-pk-admin`
+   - **Coolify:** new apps from private `homefy.pk` / `main` — never CrazzyCars Coolify UUIDs
+4. Mongo: Homefy Atlas `g8tmzmx` / `homefy_pk` only
+5. See `docs/HOMEFY-DEPLOY.md`
 
-**Never** merge or push Homefy work to `vps-test`. That Coolify auto-deploys **crazzycars.pk**.
+Do **not** treat CrazzyCars `vps-test` as Homefy’s production branch.
 
 ### `vps-test` (CrazzyCars.pk)
 
-1. Commit on **`vps-test`**.
-2. Push `vps-test` → Coolify auto-deploys `crazzycars.pk` / `admin.crazzycars.pk`.
-3. Do not change Homefy Vercel projects or Homefy Mongo from this branch.
+1. Commit on **`vps-test`**, push **`origin`**.
+2. Coolify auto-deploys crazzycars.pk — leave Homefy Vercel/Mongo alone.
 
-Do not pause waiting for permission to git/deploy after storefront or admin work that should go live. Report commit + live result.
-
-Still never: force-push to main/master, skip hooks, commit `.env` / credentials, or rotate production passwords.
+Report commit + live result after shipping. Never force-push main/master, skip hooks, or commit `.env` / credentials.

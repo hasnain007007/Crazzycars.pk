@@ -1,5 +1,8 @@
 # Homefy.pk — Ecommerce Platform
 
+**Private repo:** [github.com/hasnain007007/homefy.pk](https://github.com/hasnain007007/homefy.pk)  
+**Remote:** `homefy` → `main` (independent from CrazzyCars `Crazzycars.pk` / `vps-test`)
+
 Kitchen accessories, beauty bags and ladies bags for the Pakistan market. A two-app Next.js ecommerce platform: a customer-facing **storefront** (`storecraft-store`) and an **admin panel** (`storecraft-admin`).
 
 - **Store:** https://homefy.pk
