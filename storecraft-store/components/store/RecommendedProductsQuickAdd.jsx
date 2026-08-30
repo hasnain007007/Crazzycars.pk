@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
+import { productAllowsCod } from "@/lib/codEligibility";
 
 /**
  * Compact cross-sell row above Add to Cart — + Add puts the item in the cart
@@ -40,7 +41,7 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
       categoryIds: (rec.categories || [])
         .map((c) => String(c?.id || c?._id || c || "").trim())
         .filter(Boolean),
-      codEnabled: rec.codEnabled !== false,
+      codEnabled: productAllowsCod(rec),
       advancePercentRequired: Math.min(100, Math.max(0, Number(rec.advancePercentRequired) || 0)),
       openCart: false,
     });

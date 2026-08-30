@@ -22,6 +22,7 @@ import {
   shouldShowAdvancePaymentMessage,
   storePolicyWhatsApp,
 } from "@/lib/freeDelivery";
+import { productAllowsCod } from "@/lib/codEligibility";
 import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import {
   getEnabledPakistaniMethods,
@@ -266,7 +267,7 @@ export function CheckoutView() {
   const shippingRules = useMemo(() => normalizeShippingRules(storePayment), [storePayment]);
   const pakistaniPaymentRaw = usePakistaniPaymentMethods();
   const cartAllowsCod = useMemo(
-    () => items.every((x) => x?.codEnabled !== false),
+    () => items.every((x) => productAllowsCod(x)),
     [items]
   );
   const pakistaniMethods = useMemo(() => {
@@ -286,7 +287,7 @@ export function CheckoutView() {
   const codBlockedNames = useMemo(
     () =>
       items
-        .filter((x) => x?.codEnabled === false)
+        .filter((x) => !productAllowsCod(x))
         .map((x) => x.name)
         .filter(Boolean),
     [items]
@@ -1274,13 +1275,13 @@ export function CheckoutView() {
           <p className="mb-2 text-xs text-zinc-600">{freeDeliveryNote}</p>
           {!cartAllowsCod ? (
             <p className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-              Cash on Delivery is not available for{" "}
+              Cash on Delivery is not available for
               {codBlockedNames.length
-                ? `: ${codBlockedNames.slice(0, 3).join(", ")}${
+                ? ` ${codBlockedNames.slice(0, 3).join(", ")}${
                     codBlockedNames.length > 3 ? ` (+${codBlockedNames.length - 3} more)` : ""
                   }.`
                 : " one or more items in your cart."}{" "}
-              Please use JazzCash, Meezan, or Bank Transfer.
+              Body kits need JazzCash, Meezan, or bank transfer.
             </p>
           ) : null}
           <div

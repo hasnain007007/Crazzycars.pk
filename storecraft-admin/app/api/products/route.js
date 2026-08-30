@@ -8,6 +8,7 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import { hasCapability, stripProductCostFields } from "@/lib/permissions";
+import { isBodyKitProduct } from "@/lib/codEligibility";
 import { normalizeMetaKeywords } from "@/lib/seoKeywords";
 import { slugify } from "@/lib/slugify";
 import Product from "@/lib/models/Product.model";
@@ -273,7 +274,9 @@ export async function POST(request) {
       isFeatured: Boolean(body.featured),
       isDeal: Boolean(body.isDeal),
       newArrival: Boolean(body.newArrival),
-      codEnabled: body.codEnabled !== false,
+      codEnabled: isBodyKitProduct({ name: body.name, slug: body.slug })
+        ? false
+        : body.codEnabled !== false,
       advancePercentRequired: (() => {
         const pct = Number(body.advancePercentRequired);
         return Number.isFinite(pct) ? Math.min(100, Math.max(0, Math.round(pct))) : 0;

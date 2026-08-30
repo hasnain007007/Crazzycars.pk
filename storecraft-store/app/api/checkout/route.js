@@ -18,6 +18,7 @@ import {
   normalizeShippingRules,
   storePolicyWhatsApp,
 } from "@/lib/freeDelivery";
+import { productAllowsCod } from "@/lib/codEligibility";
 import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import {
   isOfflinePakistaniPayment,
@@ -482,7 +483,7 @@ export async function POST(request) {
     const byId = new Map(products.map((p) => [p._id.toString(), p]));
 
     if (paymentMethod === "cod") {
-      const blocked = products.filter((p) => p.codEnabled === false);
+      const blocked = products.filter((p) => !productAllowsCod(p));
       if (blocked.length) {
         const names = blocked
           .slice(0, 3)

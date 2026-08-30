@@ -246,7 +246,7 @@ export function getShippingPolicySections() {
     {
       heading: "Cash on Delivery",
       paragraphs: [
-        "COD is available on eligible products. Delivery charges may need to be paid in advance, with the product amount collected on delivery. Follow the checkout instructions and send your payment screenshot on WhatsApp.",
+        "COD is available on eligible products. Body kits cannot be ordered on Cash on Delivery — use JazzCash, Meezan, or bank transfer. Delivery charges may need to be paid in advance, with the product amount collected on delivery. Follow the checkout instructions and send your payment screenshot on WhatsApp.",
       ],
     },
   ];

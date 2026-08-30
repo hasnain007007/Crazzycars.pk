@@ -12,6 +12,7 @@ import { normalizeMetaKeywords } from "@/lib/seoKeywords";
 import { richTextPlainLength } from "@/lib/richTextPlain";
 import { generateSlugFromProductName } from "@/lib/slugify";
 import { toDatetimeLocalValue } from "@/lib/datetimeLocal";
+import { isBodyKitProduct } from "@/lib/codEligibility";
 import { getStorefrontBaseUrl } from "@/lib/storefrontUrl";
 import { TabBasicInfo, CategoryPicker } from "./TabBasicInfo";
 import { TabPricing } from "./TabPricing";
@@ -1089,14 +1090,17 @@ export function ProductEditor({ mode, productId }) {
               <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <input
                   type="checkbox"
-                  checked={form.codEnabled !== false}
+                  checked={isBodyKitProduct(form) ? false : form.codEnabled !== false}
+                  disabled={isBodyKitProduct(form)}
                   onChange={(e) => setForm((f) => ({ ...f, codEnabled: e.target.checked }))}
                   className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#1d6fb8] focus:ring-[#1d6fb8]"
                 />
                 <span>
                   <span className="block text-sm font-semibold text-gray-900">Cash on Delivery (COD)</span>
                   <span className="text-xs text-gray-500">
-                    Allow COD at checkout when this product is in the cart. Turn off for prepaid-only items.
+                    {isBodyKitProduct(form)
+                      ? "Body kits cannot be sold on COD. Checkout will only offer JazzCash, Meezan, or bank transfer."
+                      : "Allow COD at checkout when this product is in the cart. Turn off for prepaid-only items."}
                   </span>
                 </span>
               </label>

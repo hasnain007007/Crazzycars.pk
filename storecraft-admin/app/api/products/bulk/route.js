@@ -8,6 +8,7 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import Product from "@/lib/models/Product.model";
+import { isBodyKitProduct } from "@/lib/codEligibility";
 import { normalizeAddOns } from "@/lib/productPayload";
 
 const BULK_LIMIT = 200;
@@ -64,7 +65,7 @@ function serializeBulkRow(doc) {
     slug: doc.slug || "",
     status: doc.status || "draft",
     featured: Boolean(doc.featured),
-    codEnabled: doc.codEnabled !== false,
+    codEnabled: isBodyKitProduct(doc) ? false : doc.codEnabled !== false,
     advancePercentRequired: Math.min(100, Math.max(0, Number(doc.advancePercentRequired) || 0)),
     media: doc.media || { images: [] },
     pricing: {
@@ -214,6 +215,9 @@ async function handleSaveRows({ user, body, request }) {
 
     if (row.codEnabled != null) {
       $set.codEnabled = row.codEnabled !== false;
+    }
+    if (isBodyKitProduct({ name: row.name, slug: row.slug })) {
+      $set.codEnabled = false;
     }
 
     if (row.advancePercentRequired != null) {

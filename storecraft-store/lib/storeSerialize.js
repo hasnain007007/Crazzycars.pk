@@ -1,3 +1,4 @@
+import { productAllowsCod } from "@/lib/codEligibility";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 import { serializeStoreOption } from "@/lib/variationOptions";
 import { combinationSignature } from "@/lib/variantMatrix";
@@ -113,7 +114,7 @@ export function serializeStoreProductSummary(p, opts = {}) {
     isOnSale,
     featured: !!p.featured,
     newArrival: !!p.newArrival,
-    codEnabled: p.codEnabled !== false,
+    codEnabled: productAllowsCod(p),
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     createdAt: p.createdAt || null,
     categories: Array.isArray(p.categories)
@@ -283,7 +284,7 @@ export function serializeStoreProductDetail(p) {
     reviewCount: Number(p.reviewCount) || Number(p.totalReviews) || Number(p.numReviews) || 0,
     features: p.features || [],
     specifications: Array.isArray(p.specifications) ? p.specifications.filter((s) => s.label && s.value) : [],
-    codEnabled: p.codEnabled !== false,
+    codEnabled: productAllowsCod(p),
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     addOns: Array.isArray(p.addOns)
       ? p.addOns.map((a) => ({

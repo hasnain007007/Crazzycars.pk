@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { cartLinesAdd, cartLinesRemove, cartLinesUpdate, getCart } from "@/lib/shopifyCartClient";
+import { productAllowsCod } from "@/lib/codEligibility";
 import { resolveProductContentId, trackAddToCart } from "@/lib/metaPixel";
 import { syncCartToServer } from "@/lib/cartSyncClient";
 
@@ -199,7 +200,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
                 : [],
             articleNo: row.articleNo || "",
             sku: row.sku || "",
-            codEnabled: row.codEnabled !== false,
+            codEnabled: productAllowsCod(row),
           },
         ];
       }

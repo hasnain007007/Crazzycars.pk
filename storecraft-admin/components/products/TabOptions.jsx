@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { computeProductSaleState } from "@/lib/productSale";
 import { computeShippingForZone, pickShippingZone } from "@/lib/shippingZoneWeight";
+import { isBodyKitProduct } from "@/lib/codEligibility";
 import { formatAdminPrice } from "@/lib/currency";
 
 const WEIGHT_UNIT_OPTIONS = [
@@ -301,15 +302,22 @@ export function TabOptions({
         </label>
         <label
           className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 md:min-h-[2.5rem] md:self-end"
-          title="When off, checkout will not offer Cash on Delivery for carts that include this product"
+          title={
+            isBodyKitProduct(form)
+              ? "Body kits cannot be sold on Cash on Delivery"
+              : "When off, checkout will not offer Cash on Delivery for carts that include this product"
+          }
         >
           <input
             type="checkbox"
-            checked={form.codEnabled !== false}
+            checked={isBodyKitProduct(form) ? false : form.codEnabled !== false}
+            disabled={isBodyKitProduct(form)}
             onChange={(e) => setForm((f) => ({ ...f, codEnabled: e.target.checked }))}
             className="h-4 w-4 rounded border-[#d1d5db] text-[#1d6fb8] focus:ring-[#1d6fb8]"
           />
-          <span className="text-sm font-medium text-[#374151]">COD available</span>
+          <span className="text-sm font-medium text-[#374151]">
+            {isBodyKitProduct(form) ? "COD off (body kit)" : "COD available"}
+          </span>
         </label>
         <div className="md:col-span-2">
           <label className="mb-1 block text-sm font-medium text-[#374151]">Advance payment</label>

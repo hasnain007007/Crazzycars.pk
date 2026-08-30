@@ -10,6 +10,7 @@ import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
 import { imageBelongsToProduct } from "@/lib/productCardShape";
+import { productAllowsCod } from "@/lib/codEligibility";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -152,7 +153,7 @@ export function ProductCard({ product }) {
       variantId: variant?.id || "",
       merchandiseId: variant?.id || "",
       source: product.source,
-      codEnabled: product.codEnabled !== false,
+      codEnabled: productAllowsCod(product),
       advancePercentRequired: Math.min(
         100,
         Math.max(0, Number(product.advancePercentRequired) || 0)

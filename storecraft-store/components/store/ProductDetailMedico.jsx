@@ -18,6 +18,7 @@ import { cardImageUrl } from "@/lib/cloudinaryImage";
 import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
+import { productAllowsCod } from "@/lib/codEligibility";
 import {
   lahoreEtaStatement,
   nonLahoreEtaStatement,
@@ -713,7 +714,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
         : null,
       simpleVariations: product.simpleVariations || [],
       variationCombinations: product.variationCombinations || [],
-      codEnabled: product.codEnabled !== false,
+      codEnabled: productAllowsCod(product),
       advancePercentRequired: Math.min(
         100,
         Math.max(0, Number(product.advancePercentRequired) || 0)
@@ -1173,7 +1174,12 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
 
             <RecommendedProductsQuickAdd products={product?.recommendedProducts || []} />
 
-            {Number(product?.advancePercentRequired) > 0 ? (
+            {!productAllowsCod(product) ? (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                Cash on Delivery is not available for body kits. Pay with JazzCash, Meezan, or bank transfer
+                at checkout.
+              </p>
+            ) : Number(product?.advancePercentRequired) > 0 ? (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                 Pay at least <strong>{Math.round(Number(product.advancePercentRequired))}%</strong> advance
                 required for this product (remaining on delivery with COD).
@@ -1641,7 +1647,11 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                       <li>{lahoreEtaLine}</li>
                       <li>{otherCitiesEtaLine}</li>
                       <li>{standardDeliveryFeeStatement()}</li>
-                      <li>Cash on Delivery available nationwide</li>
+                      <li>
+                        {productAllowsCod(product)
+                          ? "Cash on Delivery available nationwide"
+                          : "Cash on Delivery is not available for body kits"}
+                      </li>
                     </ul>
                   </div>
 

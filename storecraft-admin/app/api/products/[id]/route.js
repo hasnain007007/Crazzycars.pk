@@ -8,6 +8,7 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import { hasCapability, stripProductCostFields } from "@/lib/permissions";
+import { isBodyKitProduct } from "@/lib/codEligibility";
 import { normalizeMetaKeywords } from "@/lib/seoKeywords";
 import { slugify } from "@/lib/slugify";
 import Product from "@/lib/models/Product.model";
@@ -315,6 +316,9 @@ export async function PUT(request, context) {
     if (body.isDeal !== undefined) existing.isDeal = Boolean(body.isDeal);
     if (body.newArrival !== undefined) existing.newArrival = Boolean(body.newArrival);
     if (body.codEnabled !== undefined) existing.codEnabled = body.codEnabled !== false;
+    if (isBodyKitProduct({ name: body.name ?? existing.name, slug: body.slug ?? existing.slug })) {
+      existing.codEnabled = false;
+    }
     if (body.advancePercentRequired !== undefined) {
       const pct = Number(body.advancePercentRequired);
       existing.advancePercentRequired = Number.isFinite(pct)
