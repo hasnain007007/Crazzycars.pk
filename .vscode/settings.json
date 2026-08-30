@@ -1,0 +1,37 @@
+{
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/.turbo/**": true,
+    "**/.vercel/**": true,
+    "**/.cache/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/out/**": true,
+    "**/*.sst": true,
+    "**/*.pack": true,
+    "**/*.pack.gz": true,
+    "**/.local/**": true,
+    "**/data/**": true
+  },
+  "files.exclude": {
+    "**/.next": true,
+    "**/.turbo": true,
+    "**/*.sst": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.turbo": true,
+    "**/package-lock.json": true,
+    "**/*.sst": true,
+    "**/*.pack": true,
+    "**/*.pack.gz": true,
+    "**/.local": true,
+    "**/data": true
+  },
+  "files.maxMemoryForLargeFilesMB": 64
+}

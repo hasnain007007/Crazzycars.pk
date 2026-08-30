@@ -1,9 +1,21 @@
 .DS_Store
 node_modules/
 .next/
+.turbo/
 .vercel
+.cache/
+coverage/
+dist/
+build/
+out/
 .env
 .env.local
 .env*.local
 
 .local/
+
+# Next / Turbopack binary caches (can be multi-GB; never commit)
+**/.next/
+**/*.sst
+**/*.pack
+**/*.pack.gz

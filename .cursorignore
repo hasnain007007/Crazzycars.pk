@@ -1,0 +1,52 @@
+# Cursor: do not index / read these — they balloon RAM (Turbopack .sst files alone were ~2.7GB).
+# See also .vscode/settings.json watcher excludes.
+
+# Dependencies
+**/node_modules/
+node_modules/
+
+# Next.js / build caches (primary cause of 100GB+ Cursor memory)
+**/.next/
+.next/
+**/out/
+**/dist/
+**/build/
+**/.turbo/
+**/.vercel/
+**/.cache/
+**/coverage/
+
+# Turbopack / webpack binary packs
+**/*.sst
+**/*.pack
+**/*.pack.gz
+**/*.meta
+**/*.d.ts.map
+**/*.js.map
+**/*.css.map
+
+# Env / secrets
+.env
+.env.*
+!**/.env.example
+!**/.env.local.example
+
+# Locks
+package-lock.json
+**/package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Large / irrelevant local data
+.local/
+data/
+**/*.log
+**/*.dump
+**/*.sql.gz
+**/public/uploads/
+**/tmp/
+**/temp/
+
+# OS / IDE
+.DS_Store
+**/.DS_Store

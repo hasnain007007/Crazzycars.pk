@@ -1,0 +1,20 @@
+# Indexing-only excludes (AI can still @-mention if needed).
+# Hard-block heavy paths via .cursorignore; this reinforces indexing.
+
+**/node_modules/
+**/.next/
+**/.turbo/
+**/.vercel/
+**/.cache/
+**/coverage/
+**/dist/
+**/build/
+**/out/
+**/*.sst
+**/*.pack
+**/*.pack.gz
+**/*.map
+package-lock.json
+**/package-lock.json
+.local/
+data/
