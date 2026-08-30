@@ -102,8 +102,10 @@ export function CartProvider({ children, shopifyEnabled = false }) {
   }, [shopifyEnabled]);
 
   useEffect(() => {
+    // Do not persist until hydrate finishes — otherwise the initial [] wipes a real cart.
+    if (!cartReady) return;
     saveCart(items);
-  }, [items]);
+  }, [items, cartReady]);
 
   const repricedKeys = useRef(new Set());
   useEffect(() => {
@@ -146,10 +148,11 @@ export function CartProvider({ children, shopifyEnabled = false }) {
     };
   }, [cartReady, items]);
 
-  // Debounced server sync for abandoned-cart recovery
+  // Debounced server sync for abandoned-cart recovery (skip empty carts).
   const syncTimer = useRef(null);
   useEffect(() => {
     if (!cartReady) return;
+    if (!items.length) return;
     if (syncTimer.current) clearTimeout(syncTimer.current);
     syncTimer.current = setTimeout(() => {
       syncCartToServer({ items });

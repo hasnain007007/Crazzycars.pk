@@ -29,12 +29,13 @@ export default function HotDeals({ settings, initialProducts = null }) {
   }, [defaultFilter]);
 
   const hasDeals = products.length > 0;
+  const showFlashTimer = hasDeals && settings?.flashSaleEnabled === true;
 
   useEffect(() => {
-    if (!hasDeals) return undefined;
+    if (!showFlashTimer) return undefined;
     const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(t);
-  }, [hasDeals]);
+  }, [showFlashTimer]);
 
   useEffect(() => {
     const seed = ssrSeedRef.current;
@@ -84,7 +85,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
         <p className="mt-1.5 text-xs md:mt-2 md:text-sm" style={{ color: "#6B7280" }}>
           {subtitle}
         </p>
-        {!loading && hasDeals && settings?.flashSaleEnabled === true ? (
+        {!loading && showFlashTimer ? (
           <p
             className="mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold"
             style={{ borderColor: "#E5E7EB", color: "#374151", background: "#FFFFFF" }}

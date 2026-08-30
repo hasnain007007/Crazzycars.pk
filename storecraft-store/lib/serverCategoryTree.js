@@ -4,6 +4,7 @@
  */
 import { cache } from "react";
 import { dbConnect } from "@/lib/db";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
 import {
   loadStoreCategoriesTreeSlim,
   serializeCategoryTreeNode,
@@ -18,7 +19,8 @@ export const fetchCategoryTreeServer = cache(async () => {
     const cached = getCachedCategoryTreePayload();
     if (cached) return cached;
 
-    await dbConnect();
+    // Postgres catalog does not need a Mongo connection for the category tree.
+    if (!isPostgresCatalog()) await dbConnect();
     const tree = await loadStoreCategoriesTreeSlim();
     const payload = (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode);
     setCachedCategoryTreePayload(payload);

@@ -384,10 +384,11 @@ export default function HomeHero({ settings, initialSlides = null }) {
           : [homefyFallbackSlide(settings)]
       );
       setLoading(false);
+      // SSR already gave us slides — skip the extra /api/banners round-trip.
+      // Admin banner changes land within homepage revalidate=60.
+      return undefined;
     }
     let cancelled = false;
-    // Always refresh active hero slides so enabling a 2nd banner becomes a slider
-    // without waiting for homepage ISR (revalidate=60).
     fetch("/api/banners", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
@@ -397,7 +398,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
         setSlides(mapped.length ? mapped : [homefyFallbackSlide(settings)]);
       })
       .catch(() => {
-        if (!cancelled && !hasInitial) setSlides([]);
+        if (!cancelled) setSlides([homefyFallbackSlide(settings)]);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -405,7 +406,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
     return () => {
       cancelled = true;
     };
-  }, [hasInitial, initialSlides]);
+  }, [hasInitial, initialSlides, settings]);
 
   useEffect(() => {
     setIndex((i) => {

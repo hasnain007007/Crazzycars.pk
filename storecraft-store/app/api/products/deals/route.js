@@ -3,13 +3,28 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { buildDealsMongoFilter } from "@/lib/dealsFilter";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
+import { pgFetchDeals } from "@/lib/pg/catalog";
 
 export async function GET(request) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const filter = String(searchParams.get("filter") || "all").toLowerCase();
     const limit = Math.min(48, Math.max(1, Number(searchParams.get("limit") || 24)));
+
+    if (isPostgresCatalog()) {
+      const products = await pgFetchDeals({ filter, limit });
+      return NextResponse.json(
+        { success: true, products },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+          },
+        }
+      );
+    }
+
+    await dbConnect();
     const query = {
       status: { $regex: /^active$/i },
       pricing: { $exists: true },

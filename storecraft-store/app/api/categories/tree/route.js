@@ -4,6 +4,7 @@
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
+import { isPostgresCatalog } from "@/lib/pg/enabled";
 import {
   loadStoreCategoriesTreeSlim,
   serializeCategoryTreeNode,
@@ -28,7 +29,7 @@ export async function GET() {
       );
     }
 
-    await dbConnect();
+    if (!isPostgresCatalog()) await dbConnect();
     const tree = await loadStoreCategoriesTreeSlim();
     const payload = (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode);
     setCachedCategoryTreePayload(payload);

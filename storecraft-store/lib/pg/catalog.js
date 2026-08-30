@@ -320,6 +320,24 @@ export async function pgFindPublishedPage(slug) {
   return mapPageRow(rows[0]);
 }
 
+/** CMS sidebar links — Postgres has no show_in_info_bar; reuse footer-flagged pages. */
+export async function pgListInfoBarPages() {
+  const { rows } = await pgQuery(
+    `select id, title, slug, sort_order
+     from public.pages
+     where status = 'published' and show_in_footer = true
+     order by sort_order asc, title asc
+     limit 24`
+  );
+  return rows.map((row) => ({
+    _id: row.id,
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    sortOrder: Number(row.sort_order) || 0,
+  }));
+}
+
 export async function pgListActiveCategorySlugs() {
   const { rows } = await pgQuery(
     `select slug from public.categories where status = 'active' and slug <> ''`

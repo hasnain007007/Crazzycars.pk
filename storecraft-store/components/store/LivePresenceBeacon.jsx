@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 const STORAGE_KEY = "cc_presence_sid";
-const HEARTBEAT_MS = 60_000;
+/** Homefy: 5 min — CrazzyCars used 60s and flooded Mongo with writes. */
+const HEARTBEAT_MS = 5 * 60_000;
+const MIN_GAP_MS = 30_000;
 
 function getOrCreateSessionId() {
   try {
@@ -50,24 +52,28 @@ function whenIdle(fn) {
  */
 export function LivePresenceBeacon() {
   const pathname = usePathname();
+  const lastPingAt = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
     let interval = null;
 
-    const send = () => {
+    const send = (force = false) => {
       if (cancelled || document.visibilityState === "hidden") return;
+      const now = Date.now();
+      if (!force && now - lastPingAt.current < MIN_GAP_MS) return;
+      lastPingAt.current = now;
       ping(pathname || window.location.pathname || "/");
     };
 
     const cancelIdle = whenIdle(() => {
       if (cancelled) return;
-      send();
-      interval = setInterval(send, HEARTBEAT_MS);
+      send(true);
+      interval = setInterval(() => send(true), HEARTBEAT_MS);
     });
 
     const onVis = () => {
-      if (document.visibilityState === "visible") send();
+      if (document.visibilityState === "visible") send(false);
     };
     document.addEventListener("visibilitychange", onVis);
 

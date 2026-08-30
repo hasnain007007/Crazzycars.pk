@@ -34,7 +34,6 @@ function effectivePriceExpr() {
 
 export async function GET(request) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const q = (searchParams.get("q") || "").trim();
     const categorySlug = (searchParams.get("category") || "").trim().toLowerCase();
