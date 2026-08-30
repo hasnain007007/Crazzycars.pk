@@ -221,16 +221,46 @@ const nextConfig = {
           },
         ],
       },
+      // Private / customer / write APIs — never shared-cache
       {
-        source: "/api/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            // Private by default — customer/auth routes must never hit a shared CDN cache.
-            // Public catalog routes above set their own short s-maxage.
-            value: "private, no-store",
-          },
-        ],
+        source: "/api/customer/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/api/account/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/api/checkout/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/api/analytics/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/api/orders/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/api/payment/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/api/auth/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/api/coupons/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/api/revalidate",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/api/contact",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
       // Long-lived caching for static chunks is production-only: in dev it makes
       // browsers serve stale code after edits.
