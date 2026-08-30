@@ -1,6 +1,4 @@
 /** @type {import('next').NextConfig} */
-const storefrontOrigin = process.env.STOREFRONT_ORIGIN || process.env.NEXT_PUBLIC_STORE_URL || "";
-
 const nextConfig = {
   // Required for Docker/Coolify (output: .next/standalone)
   output: "standalone",
@@ -57,19 +55,10 @@ const nextConfig = {
         ],
       },
     ];
-    const base = [];
-    if (storefrontOrigin) {
-      base.push({
-        source: "/api/:path*",
-        headers: [
-          { key: "Access-Control-Allow-Origin", value: storefrontOrigin },
-          { key: "Access-Control-Allow-Methods", value: "GET,POST,PUT,PATCH,DELETE,OPTIONS" },
-          { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
-          { key: "Access-Control-Allow-Credentials", value: "true" },
-        ],
-      });
-    }
-    return [...security, ...base];
+    // Do not enable credentialed CORS from the storefront. Admin cookies are
+    // host-only; allowing crazzycars.pk JS to call admin APIs with credentials
+    // would create a CSRF surface. Storefront never needs cross-origin admin APIs.
+    return security;
   },
 };
 

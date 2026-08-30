@@ -5,6 +5,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import BlogPost from "@/lib/models/BlogPost.model";
 import { slugify } from "@/lib/slugify";
+import { sanitizeBlogHtml } from "@/lib/sanitizeBlogHtml";
 
 async function uniqueSlugExcluding(base, excludeId) {
   const root = slugify(base) || "post";
@@ -63,7 +64,7 @@ export async function PUT(request, context) {
     }
     if (body.excerpt !== undefined) doc.excerpt = String(body.excerpt || "");
     if (body.content !== undefined) {
-      doc.content = String(body.content || "");
+      doc.content = sanitizeBlogHtml(String(body.content || ""));
       const wordCount = doc.content.replace(/<[^>]*>/g, "").split(/\s+/).filter(Boolean).length;
       doc.readTime = Math.max(1, Math.ceil(wordCount / 200));
     }

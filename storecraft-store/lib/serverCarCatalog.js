@@ -95,8 +95,11 @@ function buildAllModelsList(activeMakes) {
   return [...popular, ...rest];
 }
 
-/** Full catalog payload matching GET /api/car-catalog (for SSR props). */
-export async function fetchCarCatalogServer() {
+/** Full catalog payload matching GET /api/car-catalog (for SSR props).
+ *  @param {{ lean?: boolean }} [opts] lean=true strips long text fields for homepage HTML weight.
+ */
+export async function fetchCarCatalogServer(opts = {}) {
+  const lean = Boolean(opts.lean);
   try {
     await dbConnect();
     const docs = await CarCatalog.find({ isActive: true }).sort({ order: 1, name: 1 }).lean();
@@ -126,16 +129,50 @@ export async function fetchCarCatalogServer() {
       if (carData[make]?.some((m) => m.model === model)) quickPills.push({ make, model });
     }
 
+    let vehicles = buildAllModelsList(activeMakes);
+    let popular = buildPopularList(activeMakes);
+    let slimCarData = carData;
+    if (lean) {
+      const slimVehicle = (v) => ({
+        make: v.make,
+        model: v.model,
+        slug: v.slug,
+        years: Array.isArray(v.years) ? v.years.slice(0, 12) : [],
+        yearFrom: v.yearFrom,
+        yearTo: v.yearTo,
+        bodyStyle: v.bodyStyle || "",
+        image: v.image || "",
+        isPopular: Boolean(v.isPopular),
+        popularOrder: Number(v.popularOrder) || 9999,
+      });
+      vehicles = vehicles.map(slimVehicle);
+      popular = popular.map(slimVehicle);
+      slimCarData = {};
+      for (const [make, models] of Object.entries(carData || {})) {
+        slimCarData[make] = (models || []).map((m) => ({
+          model: m.model,
+          slug: m.slug,
+          years: Array.isArray(m.years) ? m.years.slice(0, 12) : [],
+          yearFrom: m.yearFrom,
+          yearTo: m.yearTo,
+          image: m.image || "",
+          isPopular: Boolean(m.isPopular),
+          popularOrder: Number(m.popularOrder) || 9999,
+          bodyStyle: m.bodyStyle || "",
+        }));
+      }
+    }
+
     return JSON.parse(
       JSON.stringify({
         success: true,
         source: "database",
         makes,
-        carData,
-        makesMeta: makesMeta || {},
+        carData: slimCarData,
+        makesMeta: lean ? {} : makesMeta || {},
         quickPills: quickPills.length ? quickPills : QUICK_CAR_PILLS,
-        popular: buildPopularList(activeMakes),
-        vehicles: buildAllModelsList(activeMakes),
+        popular,
+        vehicles,
       })
     );
   } catch (err) {

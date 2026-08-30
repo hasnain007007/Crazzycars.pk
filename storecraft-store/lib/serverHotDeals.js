@@ -30,7 +30,7 @@ export async function fetchHotDealsServer({ filter = "all", limit = 12 } = {}) {
       .lean();
 
     return JSON.parse(
-      JSON.stringify(rows.map((row) => serializeStoreProductSummary(row, { maxImages: 2 })))
+      JSON.stringify(rows.map((row) => serializeStoreProductSummary(row, { maxImages: 1 })))
     );
   } catch (err) {
     console.error("[fetchHotDealsServer]", err?.message || err);

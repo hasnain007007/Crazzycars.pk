@@ -226,7 +226,9 @@ const nextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, s-maxage=30, stale-while-revalidate=60",
+            // Private by default — customer/auth routes must never hit a shared CDN cache.
+            // Public catalog routes above set their own short s-maxage.
+            value: "private, no-store",
           },
         ],
       },

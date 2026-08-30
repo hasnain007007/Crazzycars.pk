@@ -1113,7 +1113,16 @@ export async function POST(request) {
 
     if (couponId) {
       try {
-        await Coupon.updateOne({ _id: couponId }, { $inc: { usedCount: 1 } });
+        const couponDoc = await Coupon.findById(couponId).select("usageLimit usedCount").lean();
+        const limit = Number(couponDoc?.usageLimit) || 0;
+        const filter =
+          limit > 0
+            ? { _id: couponId, usedCount: { $lt: limit } }
+            : { _id: couponId };
+        const inc = await Coupon.updateOne(filter, { $inc: { usedCount: 1 } });
+        if (limit > 0 && !inc.modifiedCount) {
+          console.error("Coupon usageLimit race — increment skipped for", String(couponId));
+        }
       } catch (couponErr) {
         console.error("Coupon usedCount increment failed:", couponErr?.message || couponErr);
       }

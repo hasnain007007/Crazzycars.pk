@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
 
+function escapeRegex(s) {
+  return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function GET(request) {
   try {
     await dbConnect();
@@ -10,10 +14,10 @@ export async function GET(request) {
     const limit = Math.min(30, Math.max(1, parseInt(searchParams.get("limit"), 10) || 9));
     const skip = (page - 1) * limit;
     const category = (searchParams.get("category") || "").trim();
-    const search = (searchParams.get("search") || "").trim();
+    const search = String(searchParams.get("search") || "").trim().slice(0, 120);
     const filter = { status: "published" };
     if (category) filter.categories = category;
-    if (search) filter.title = { $regex: search, $options: "i" };
+    if (search) filter.title = { $regex: escapeRegex(search), $options: "i" };
     const [rows, total] = await Promise.all([
       BlogPost.find(filter)
         .select(

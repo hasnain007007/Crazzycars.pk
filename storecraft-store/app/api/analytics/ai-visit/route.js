@@ -18,13 +18,23 @@ export function resolveAiVisitIngestSecret() {
   ).trim();
 }
 
+function isLoopbackIngest(request) {
+  const host = String(request.headers.get("host") || "").toLowerCase();
+  if (host.startsWith("127.0.0.1") || host.startsWith("localhost")) return true;
+  const fwd = String(request.headers.get("x-forwarded-for") || "")
+    .split(",")[0]
+    .trim();
+  return fwd === "127.0.0.1" || fwd === "::1";
+}
+
 function isAuthorizedIngest(request) {
   const secret = resolveAiVisitIngestSecret();
   const gotSecret = String(request.headers.get("x-ai-visit-secret") || "").trim();
   if (secret && gotSecret && gotSecret === secret) return true;
 
+  // Hardcoded edge→node marker is only valid on loopback (middleware fire-and-forget).
   const internal = String(request.headers.get("x-internal-ai-ingest") || "").trim();
-  return internal === AI_INGEST_INTERNAL_TOKEN;
+  return Boolean(internal) && internal === AI_INGEST_INTERNAL_TOKEN && isLoopbackIngest(request);
 }
 
 /**

@@ -4,6 +4,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import BlogPost from "@/lib/models/BlogPost.model";
 import { slugify } from "@/lib/slugify";
+import { sanitizeBlogHtml } from "@/lib/sanitizeBlogHtml";
 
 async function uniqueSlug(base, excludeId) {
   const root = slugify(base) || "post";
@@ -75,7 +76,7 @@ export async function POST(request) {
     const exists = await BlogPost.findOne({ slug }).select("_id").lean();
     if (exists) slug = `${slug}-${Date.now()}`;
 
-    const content = String(body.content || "");
+    const content = sanitizeBlogHtml(String(body.content || ""));
     const wordCount = content.replace(/<[^>]*>/g, "").split(/\s+/).filter(Boolean).length;
     const readTime = Math.max(1, Math.ceil(wordCount / 200));
 

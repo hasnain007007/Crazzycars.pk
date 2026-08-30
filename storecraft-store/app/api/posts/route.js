@@ -2,19 +2,22 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
 
+function escapeRegex(s) {
+  return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function GET(req) {
   try {
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page"), 10) || 1;
-    const limit = parseInt(searchParams.get("limit"), 10) || 12;
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit"), 10) || 12));
     const category = searchParams.get("category") || "";
-    const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") || "published";
+    const search = String(searchParams.get("search") || "").trim().slice(0, 120);
     const skip = (page - 1) * limit;
 
-    const query = {};
-    if (status !== "all") query.status = status;
+    // Public API: never expose drafts / scheduled posts.
+    const query = { status: "published" };
     if (category && category.toLowerCase() !== "all") {
       query.$or = [
         { categories: { $in: [category] } },
@@ -22,10 +25,11 @@ export async function GET(req) {
       ];
     }
     if (search) {
+      const rx = escapeRegex(search);
       const searchOr = [
-        { title: { $regex: search, $options: "i" } },
-        { excerpt: { $regex: search, $options: "i" } },
-        { tags: { $in: [new RegExp(search, "i")] } },
+        { title: { $regex: rx, $options: "i" } },
+        { excerpt: { $regex: rx, $options: "i" } },
+        { tags: { $in: [new RegExp(rx, "i")] } },
       ];
       if (query.$or) {
         query.$and = [{ $or: query.$or }, { $or: searchOr }];
