@@ -734,7 +734,7 @@ a {
 .product-card h3,
 .product-card .cc-card-title {
   font-family: var(--font-body), Inter, Arial, Helvetica, sans-serif !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
   line-height: 1.35 !important;
   letter-spacing: 0 !important;
@@ -746,7 +746,7 @@ a {
 }
 
 .product-card .cc-card-body {
-  padding: 8px 10px 10px;
+  padding: 10px 10px 12px;
 }
 
 .product-card .cc-card-body p,
@@ -759,15 +759,19 @@ a {
 }
 
 .product-card .cc-card-price-row {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .product-card .cc-card-price,
 .product-card .cc-card-price-row .cc-card-price {
   font-family: var(--font-price), Inter, Arial, Helvetica, sans-serif !important;
-  font-size: 14px !important;
+  font-size: 15px !important;
   font-weight: 700 !important;
   line-height: 1.25 !important;
+}
+
+.product-card .cc-card-price-row span:not(.cc-card-price) {
+  font-size: 12px !important;
 }
 
 .search-suggest-row {
@@ -5219,31 +5223,40 @@ textarea::placeholder {
   }
 
   .product-card {
-    border-radius: 8px;
+    border-radius: 10px;
   }
 
   .product-card .cc-card-body {
-    padding: 6px 7px !important;
+    padding: 10px 10px 12px !important;
   }
 
   .product-card h3,
   .product-card .cc-card-title {
-    font-size: 11px !important;
-    line-height: 1.25 !important;
+    font-size: 13.5px !important;
+    line-height: 1.35 !important;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     overflow: hidden;
   }
 
   .product-card .cc-card-price,
   .product-card .text-lg {
-    font-size: 13px !important;
+    font-size: 16px !important;
     line-height: 1.2 !important;
   }
 
   .product-card .cc-card-stars {
-    margin-top: 2px !important;
+    margin-top: 4px !important;
+  }
+
+  .product-card .cc-card-stars,
+  .product-card .cc-card-stars span {
+    font-size: 11px !important;
+  }
+
+  .product-card .cc-card-price-row span:not(.cc-card-price) {
+    font-size: 12px !important;
   }
 
   .product-main-viewer {
@@ -5355,11 +5368,11 @@ textarea::placeholder {
 
   .product-card .cc-card-media,
   .product-card .aspect-square {
-    aspect-ratio: 4 / 3 !important;
+    aspect-ratio: 1 / 1 !important;
   }
 
   .product-grid {
-    gap: 8px !important;
+    gap: 10px !important;
   }
 
   .shop-by-vehicle-pills {

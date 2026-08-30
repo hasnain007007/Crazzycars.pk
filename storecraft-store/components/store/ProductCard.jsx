@@ -220,14 +220,14 @@ export function ProductCard({ product }) {
 
         {onSale && badgeConfig.showSaleBadge ? (
           <span
-            className="absolute left-1.5 top-1.5 rounded-full px-1.5 py-px text-[9px] font-semibold text-white md:left-2 md:top-2 md:px-2 md:py-0.5 md:text-[11px]"
+            className="absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white md:text-[11px]"
             style={{ background: badgeConfig.saleBadgeColor }}
           >
             {badgeConfig.saleBadgeText}
           </span>
         ) : showNew && badgeConfig.showNewBadge ? (
           <span
-            className="absolute left-1.5 top-1.5 rounded-full px-1.5 py-px text-[9px] font-semibold text-white md:left-2 md:top-2 md:px-2 md:py-0.5 md:text-[11px]"
+            className="absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white md:text-[11px]"
             style={{ background: badgeConfig.newBadgeColor || "#111111" }}
           >
             {badgeConfig.newBadgeText}
@@ -237,7 +237,7 @@ export function ProductCard({ product }) {
         <button
           type="button"
           onClick={toggleWish}
-          className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 opacity-100 shadow-sm transition md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100"
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 opacity-100 shadow-sm transition md:opacity-0 md:group-hover:opacity-100"
           aria-label="Save to wishlist"
         >
           <span style={{ color: wish ? "#C41E1E" : "#6B7280", fontSize: 16 }}>{wish ? "♥" : "♡"}</span>
@@ -251,7 +251,7 @@ export function ProductCard({ product }) {
           <button
             type="button"
             onClick={addToCart}
-            className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-[15px] font-semibold leading-none text-white shadow-sm md:bottom-0 md:left-0 md:right-0 md:h-auto md:w-auto md:translate-y-full md:rounded-none md:py-2 md:text-xs md:opacity-0 md:shadow-none md:group-hover:translate-y-0 md:group-hover:opacity-100"
+            className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full text-[16px] font-semibold leading-none text-white shadow-sm md:bottom-0 md:left-0 md:right-0 md:h-auto md:w-auto md:translate-y-full md:rounded-none md:py-2 md:text-xs md:opacity-0 md:shadow-none md:group-hover:translate-y-0 md:group-hover:opacity-100"
             style={{ background: "#C41E1E" }}
           >
             {onBackorder ? "Order" : <span className="md:hidden">+</span>}
@@ -260,37 +260,37 @@ export function ProductCard({ product }) {
         )}
       </Link>
 
-      <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-2.5">
-        <Link href={href} className="cc-card-title line-clamp-3 text-[12px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E]">
+      <div className="cc-card-body flex flex-1 flex-col p-2.5">
+        <Link href={href} className="cc-card-title line-clamp-3 text-[13px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E]">
           {product.name}
         </Link>
 
         {reviewCount > 0 ? (
-          <div className="cc-card-stars mt-0.5 flex items-center gap-px md:mt-1 md:gap-1">
+          <div className="cc-card-stars mt-1 flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((s) => (
               <span
                 key={s}
-                className="text-[9px] leading-none md:text-[11px]"
+                className="text-[11px] leading-none"
                 style={{ color: s <= Math.round(rating) ? "#E8941A" : "#E5E7EB" }}
               >
                 ★
               </span>
             ))}
-            <span className="ml-0.5 text-[9px] md:text-[11px]" style={{ color: "#9CA3AF" }}>
+            <span className="ml-0.5 text-[11px]" style={{ color: "#9CA3AF" }}>
               ({reviewCount})
             </span>
           </div>
         ) : null}
 
-        <div className="cc-card-price-row mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 md:mt-1.5 md:gap-1.5">
-          <span className="cc-card-price text-[14px] font-bold text-[#111111]">{formatPrice(sale)}</span>
+        <div className="cc-card-price-row mt-1.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
+          <span className="cc-card-price text-[16px] font-bold text-[#111111] md:text-[15px]">{formatPrice(sale)}</span>
           {onSale ? (
             <>
-              <span className="text-[10px] line-through md:text-[12px]" style={{ color: "#9CA3AF" }}>
+              <span className="text-[12px] line-through" style={{ color: "#9CA3AF" }}>
                 {formatPrice(regular)}
               </span>
               {pct > 0 && badgeConfig.showSaleBadge ? (
-                <span className="text-[10px] font-medium md:text-[11px]" style={{ color: badgeConfig.saleBadgeColor }}>
+                <span className="text-[12px] font-medium" style={{ color: badgeConfig.saleBadgeColor }}>
                   {pct}% off
                 </span>
               ) : null}

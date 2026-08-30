@@ -133,12 +133,12 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         </div>
-        <div className="cc-card-body flex flex-1 flex-col p-1.5 md:p-2.5">
-          <h3 className="cc-card-title m-0 line-clamp-3 text-[12px] font-medium leading-snug text-[#111111]">
+        <div className="cc-card-body flex flex-1 flex-col p-2.5">
+          <h3 className="cc-card-title m-0 line-clamp-3 text-[13px] font-medium leading-snug text-[#111111]">
             {card.name}
           </h3>
           {reviews ? (
-            <div className="cc-card-stars mt-0.5 text-[11px] text-[#9CA3AF] md:mt-1">
+            <div className="cc-card-stars mt-1 text-[11px] text-[#9CA3AF]">
               {reviews.rating != null ? `${reviews.rating.toFixed(1)} ★ ` : null}(
               {reviews.reviewCount} {reviews.reviewCount === 1 ? "review" : "reviews"})
             </div>
@@ -147,8 +147,8 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             sale={sale}
             regular={regular}
             onSale={onSale}
-            nowClass="cc-card-price text-[14px] font-bold text-[#111111]"
-            wasClass="text-[10px] line-through text-[#9CA3AF] md:text-[12px]"
+            nowClass="cc-card-price text-[16px] font-bold text-[#111111] md:text-[15px]"
+            wasClass="text-[12px] line-through text-[#9CA3AF]"
           />
         </div>
       </a>
