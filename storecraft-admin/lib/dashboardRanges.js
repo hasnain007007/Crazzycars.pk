@@ -6,6 +6,7 @@ import { karachiDayBounds, karachiDayKey, shiftDayKey } from "@/lib/karachiDay";
 
 export const DASHBOARD_RANGES = [
   { id: "today", label: "Today" },
+  { id: "yesterday", label: "Yesterday" },
   { id: "last7", label: "Last 7 days" },
   { id: "last30", label: "Last 30 days" },
   { id: "lastMonth", label: "Last month" },
@@ -42,6 +43,12 @@ export function resolveDashboardRange(rangeId, customFrom, customTo, now = new D
 
   if (id === "today") {
     return { id: "today", label: "Today", from: todayStart, to: todayEnd };
+  }
+
+  if (id === "yesterday") {
+    const yKey = shiftDayKey(todayKey, -1);
+    const { start: from, end: to } = karachiDayBounds(yKey);
+    return { id: "yesterday", label: "Yesterday", from, to };
   }
 
   if (id === "last7") {
