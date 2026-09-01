@@ -1,22 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
 import { productAllowsCod } from "@/lib/codEligibility";
 
+function lineProductId(item) {
+  return String(item?._id || item?.id || item?.productId || "");
+}
+
 /**
  * Compact cross-sell row above Add to Cart — + Add puts the item in the cart
- * and goes to checkout (same as Buy Now), instead of only opening the drawer.
+ * and updates the running total; checkout stays the visitor's choice.
  */
 export function RecommendedProductsQuickAdd({ products = [] }) {
-  const router = useRouter();
-  const { addItem } = useCart();
+  const { addItem, subtotal, items, cartCount } = useCart();
   const list = Array.isArray(products) ? products.filter((p) => p?.slug && p?.name) : [];
   if (!list.length) return null;
+
+  const addedFromHere = list.some((rec) => {
+    const id = String(rec.id || rec._id || "");
+    return id && items.some((line) => lineProductId(line) === id);
+  });
+
+  function qtyInCart(rec) {
+    const id = String(rec.id || rec._id || "");
+    if (!id) return 0;
+    return items
+      .filter((line) => lineProductId(line) === id && !line.variationLabel)
+      .reduce((sum, line) => sum + (Number(line.quantity) || 1), 0);
+  }
 
   function handleAdd(rec) {
     if (rec.requiresOptions) {
@@ -27,14 +42,15 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
       toast.error("That item is out of stock.");
       return;
     }
+    const unitPrice = Number(rec.price) || 0;
     addItem({
       productId: rec.id || rec._id,
       _id: rec.id || rec._id,
       slug: rec.slug,
       name: rec.name,
       image: rec.image || rec.images?.[0] || "",
-      unitPrice: Number(rec.price) || 0,
-      price: Number(rec.price) || 0,
+      unitPrice,
+      price: unitPrice,
       quantity: 1,
       articleNo: rec.articleNo || "",
       sku: rec.articleNo || "",
@@ -45,7 +61,12 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
       advancePercentRequired: Math.min(100, Math.max(0, Number(rec.advancePercentRequired) || 0)),
       openCart: false,
     });
-    router.push("/checkout");
+
+    const nextSubtotal = Math.round((subtotal + unitPrice) * 100) / 100;
+    toast.success(
+      `Added ${rec.name}. Cart total ${formatPrice(nextSubtotal)} — checkout when you're ready.`,
+      { duration: 4500 }
+    );
   }
 
   return (
@@ -66,6 +87,7 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
           const href = productPath(rec);
           const needsOptions = Boolean(rec.requiresOptions);
           const oos = rec.inStock === false;
+          const inCart = qtyInCart(rec);
           return (
             <li
               key={rec.id || rec.slug}
@@ -76,7 +98,7 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
                 padding: "8px 10px",
                 border: "1px solid #E5E5E5",
                 borderRadius: 8,
-                background: "#fff",
+                background: inCart ? "#F0FDF4" : "#fff",
               }}
             >
               <Link href={href} style={{ flexShrink: 0 }}>
@@ -130,6 +152,11 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
                     </span>
                   ) : null}
                 </p>
+                {inCart > 0 ? (
+                  <p style={{ margin: "2px 0 0", fontSize: 11, fontWeight: 600, color: "#15803d" }}>
+                    In cart · qty {inCart}
+                  </p>
+                ) : null}
               </div>
               {needsOptions ? (
                 <Link
@@ -157,20 +184,56 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
                     padding: "6px 12px",
                     borderRadius: 6,
                     border: "none",
-                    background: oos ? "#E5E5E5" : "#DBEAFE",
-                    color: oos ? "#6b7280" : "#1D4ED8",
+                    background: oos ? "#E5E5E5" : inCart ? "#DCFCE7" : "#DBEAFE",
+                    color: oos ? "#6b7280" : inCart ? "#166534" : "#1D4ED8",
                     fontSize: 13,
                     fontWeight: 700,
                     cursor: oos ? "not-allowed" : "pointer",
                   }}
                 >
-                  {oos ? "Sold out" : "+ Add"}
+                  {oos ? "Sold out" : inCart ? "+ Add again" : "+ Add"}
                 </button>
               )}
             </li>
           );
         })}
       </ul>
+
+      {addedFromHere || cartCount > 0 ? (
+        <div
+          style={{
+            marginTop: 10,
+            padding: "10px 12px",
+            borderRadius: 8,
+            border: "1px solid #BFDBFE",
+            background: "#EFF6FF",
+          }}
+        >
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#1e3a8a" }}>
+            Cart total: {formatPrice(subtotal)}
+            {cartCount > 0 ? (
+              <span style={{ fontWeight: 500, color: "#475569" }}> · {cartCount} item{cartCount === 1 ? "" : "s"}</span>
+            ) : null}
+          </p>
+          <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: 1.4, color: "#475569" }}>
+            Items stay in your cart — add more or use <strong>Add to cart</strong> below, then checkout when
+            you&apos;re ready.
+          </p>
+          <Link
+            href="/checkout"
+            style={{
+              display: "inline-block",
+              marginTop: 8,
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#1D4ED8",
+              textDecoration: "underline",
+            }}
+          >
+            Go to checkout
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }
