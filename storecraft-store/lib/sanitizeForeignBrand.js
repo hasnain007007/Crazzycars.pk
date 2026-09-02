@@ -13,7 +13,8 @@ export const CANONICAL_INSTAGRAM = "https://www.instagram.com/crazzycars.pk";
 export const CANONICAL_TIKTOK = "https://www.tiktok.com/@crazzycars.pk";
 export const CANONICAL_TAGLINE = "The original performance-parts shop in Gujranwala";
 export const CANONICAL_BRAND_SUBHEADING = "Splitters, kits, and carbon accents for Pakistani builds";
-const STALE_TEMPLATE_TAGLINE = /fitment-first car accessories from/i;
+/** Blocks any CMS/seed reintroduction of the shared sibling-store template opener. */
+const STALE_TEMPLATE_TAGLINE = /fitment[- ]?first/i;
 
 const FOREIGN_BRAND = /homefy/i;
 const PLACEHOLDER = /\[FILL IN/i;
@@ -141,6 +142,18 @@ function applyCanonicalFieldFixes(settings) {
       if (looksLikeForeignBrand(footer.social.tiktok) || !String(footer.social.tiktok || "").trim()) {
         footer.social.tiktok = CANONICAL_TIKTOK;
       }
+    }
+  }
+
+  const footerMeta = settings.footerMeta && typeof settings.footerMeta === "object" ? settings.footerMeta : null;
+  if (footerMeta) {
+    if (
+      !footerMeta.tagline ||
+      KITCHEN_TAGLINE.test(footerMeta.tagline) ||
+      looksLikeForeignBrand(footerMeta.tagline) ||
+      STALE_TEMPLATE_TAGLINE.test(footerMeta.tagline)
+    ) {
+      footerMeta.tagline = CANONICAL_TAGLINE;
     }
   }
 

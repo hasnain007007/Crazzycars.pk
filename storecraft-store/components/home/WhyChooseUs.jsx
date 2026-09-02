@@ -47,14 +47,14 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
           <span className="shop-band__brand">Crazzycars.pk</span>
           <span className="shop-band__rule" aria-hidden />
           <span className="shop-band__headline">
-            Fitment-first accessories
+            Exterior performance styling
             <br />
             for Pakistani cars
           </span>
         </h2>
         <p className="shop-band__lead">
-          Splitters, LED lighting, body kits, and carbon from a Gujranwala shop. Year
-          compatibility on the listing. Cash on Delivery nationwide.
+          Splitters, LED lighting, body kits, and carbon from our Gujranwala flagship —
+          395+ accessories with year fitment on every listing. Cash on Delivery nationwide.
         </p>
         <div className="shop-band__actions">
           <Link href="/shop" className="shop-band__btn shop-band__btn--primary">

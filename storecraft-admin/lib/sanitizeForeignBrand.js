@@ -11,6 +11,8 @@ export const CANONICAL_ADDRESS = "Gujranwala, Punjab, Pakistan";
 export const CANONICAL_INSTAGRAM = "https://www.instagram.com/crazzycars.pk";
 export const CANONICAL_TIKTOK = "https://www.tiktok.com/@crazzycars.pk";
 export const CANONICAL_TAGLINE = "The original performance-parts shop in Gujranwala";
+/** Blocks any CMS/seed reintroduction of the shared sibling-store template opener. */
+const STALE_TEMPLATE_TAGLINE = /fitment[- ]?first/i;
 
 const FOREIGN_BRAND = /homefy/i;
 const PLACEHOLDER = /\[FILL IN/i;
@@ -33,7 +35,7 @@ function isForeignBrandAssetUrl(value) {
 export function replaceForeignBrandString(value) {
   if (typeof value !== "string") return value;
   if (isForeignBrandAssetUrl(value)) return "";
-  if (KITCHEN_TAGLINE.test(value)) return CANONICAL_TAGLINE;
+  if (KITCHEN_TAGLINE.test(value) || STALE_TEMPLATE_TAGLINE.test(value)) return CANONICAL_TAGLINE;
 
   let s = value;
   s = s.replace(/https?:\/\/(?:www\.)?homefy\.pk(?:\.pk)?/gi, CANONICAL_WEBSITE);
@@ -118,7 +120,12 @@ function applyCanonicalFieldFixes(settings) {
     if (!footer.companyName || looksLikeForeignBrand(footer.companyName)) {
       footer.companyName = CANONICAL_STORE_NAME;
     }
-    if (!footer.tagline || KITCHEN_TAGLINE.test(footer.tagline) || looksLikeForeignBrand(footer.tagline)) {
+    if (
+      !footer.tagline ||
+      KITCHEN_TAGLINE.test(footer.tagline) ||
+      looksLikeForeignBrand(footer.tagline) ||
+      STALE_TEMPLATE_TAGLINE.test(footer.tagline)
+    ) {
       footer.tagline = CANONICAL_TAGLINE;
     }
     footer.contactEmail = sanitizeStoreEmail(footer.contactEmail);
@@ -133,6 +140,18 @@ function applyCanonicalFieldFixes(settings) {
       if (looksLikeForeignBrand(footer.social.tiktok) || !String(footer.social.tiktok || "").trim()) {
         footer.social.tiktok = CANONICAL_TIKTOK;
       }
+    }
+  }
+
+  const footerMeta = settings.footerMeta && typeof settings.footerMeta === "object" ? settings.footerMeta : null;
+  if (footerMeta) {
+    if (
+      !footerMeta.tagline ||
+      KITCHEN_TAGLINE.test(footerMeta.tagline) ||
+      looksLikeForeignBrand(footerMeta.tagline) ||
+      STALE_TEMPLATE_TAGLINE.test(footerMeta.tagline)
+    ) {
+      footerMeta.tagline = CANONICAL_TAGLINE;
     }
   }
 
