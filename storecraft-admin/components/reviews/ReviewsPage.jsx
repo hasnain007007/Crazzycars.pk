@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { CsvImportExportBar } from "@/components/ui/CsvImportExportBar";
 
 function StarDisplay({ rating, size = 16 }) {
   const r = Number(rating) || 0;
@@ -491,6 +492,30 @@ export function ReviewsPage() {
             + Add Review
           </button>
         </div>
+      </div>
+
+      <div
+        style={{
+          marginBottom: 20,
+          padding: "14px 16px",
+          borderRadius: 10,
+          border: "1px solid #bfdbfe",
+          background: "#eff6ff",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 12,
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ minWidth: 200, flex: "1 1 240px" }}>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#1e3a8a" }}>CSV Import / Export</p>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#475569", lineHeight: 1.4 }}>
+            Download a template, export reviews, or import a CSV. Match each row to a product with{" "}
+            <strong>productSlug</strong>, <strong>productId</strong>, or <strong>articleNo</strong>.
+          </p>
+        </div>
+        <CsvImportExportBar endpoint="/api/reviews/csv" label="Reviews" onImported={fetchReviews} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
