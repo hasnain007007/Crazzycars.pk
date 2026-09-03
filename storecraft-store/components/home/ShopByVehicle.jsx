@@ -281,9 +281,9 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                           src={v.image}
                           alt={`${v.make} ${v.model}`}
                           fill
-                          unoptimized={/crazzycars\.pk\/media\//i.test(v.image)}
                           className="object-contain object-center p-2 transition duration-300 group-hover:scale-105 sm:p-3"
-                          sizes="(max-width: 640px) 46vw, 18vw"
+                          sizes="(max-width: 640px) 31vw, 18vw"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-3xl text-[#9CA3AF]">🚗</div>

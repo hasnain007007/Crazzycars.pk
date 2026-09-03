@@ -242,8 +242,13 @@ export function getProductCardReviews(product) {
 }
 
 export function isAllowedNextImageSrc(url) {
+  const raw = String(url || "").trim();
+  if (!raw || raw.startsWith("/_next/image")) return false;
+  if (raw.startsWith("/media/")) return true;
   try {
-    const host = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+    const u = new URL(raw, "https://crazzycars.pk");
+    const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "crazzycars.pk" && u.pathname.startsWith("/media/")) return true;
     return (
       host === "res.cloudinary.com" ||
       host === "cdn.shopify.com" ||

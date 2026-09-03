@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, statSync } from "fs";
+import { createReadStream, existsSync, statSync } from "fs";
+import { Readable } from "stream";
 import { NextResponse } from "next/server";
 import { contentTypeForExt, resolveMediaFilePath } from "@/lib/mediaStorage";
 
@@ -14,6 +15,17 @@ function notFound() {
   });
 }
 
+function mediaHeaders(abs, size) {
+  return {
+    "Content-Type": contentTypeForExt(abs),
+    "Content-Length": String(size),
+    "Cache-Control": CACHE,
+    "X-Content-Type-Options": "nosniff",
+    // Hint browsers/CDNs this is immutable hashed media.
+    "Accept-Ranges": "bytes",
+  };
+}
+
 async function serveMedia(params) {
   const parts = params?.path;
   const rel = Array.isArray(parts) ? parts.join("/") : String(parts || "");
@@ -23,16 +35,12 @@ async function serveMedia(params) {
   try {
     const st = statSync(abs);
     if (!st.isFile()) return notFound();
-    // Buffer response — more reliable than streams in Next standalone
-    const buf = readFileSync(abs);
-    return new NextResponse(buf, {
+    // Stream instead of readFileSync — keeps memory flat under concurrent image loads.
+    const nodeStream = createReadStream(abs);
+    const webStream = Readable.toWeb(nodeStream);
+    return new NextResponse(webStream, {
       status: 200,
-      headers: {
-        "Content-Type": contentTypeForExt(abs),
-        "Content-Length": String(buf.length),
-        "Cache-Control": CACHE,
-        "X-Content-Type-Options": "nosniff",
-      },
+      headers: mediaHeaders(abs, st.size),
     });
   } catch (err) {
     console.error("[media]", rel, err?.message || err);
@@ -56,11 +64,7 @@ export async function HEAD(_request, context) {
     if (!st.isFile()) return new NextResponse(null, { status: 404 });
     return new NextResponse(null, {
       status: 200,
-      headers: {
-        "Content-Type": contentTypeForExt(abs),
-        "Content-Length": String(st.size),
-        "Cache-Control": CACHE,
-      },
+      headers: mediaHeaders(abs, st.size),
     });
   } catch {
     return new NextResponse(null, { status: 404 });

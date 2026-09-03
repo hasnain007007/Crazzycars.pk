@@ -1,11 +1,17 @@
 /**
  * Optimize Cloudinary delivery URLs (f_auto, q_auto, width).
  * Re-applies transforms so callers can request slot-appropriate sizes.
- * Leaves non-Cloudinary URLs unchanged.
+ * Local /media URLs go through Next `/_next/image` at the nearest allowed width
+ * so product/category cards stop downloading full-size WebPs.
  */
 
 const UPLOAD_RE =
   /^(https?:\/\/res\.cloudinary\.com\/[^/]+\/(?:image|video|raw)\/upload\/)(.+)$/i;
+
+/** Must match next.config.mjs images.deviceSizes + imageSizes. */
+const NEXT_IMAGE_WIDTHS = [
+  16, 32, 48, 64, 96, 128, 256, 360, 400, 480, 640, 750, 828, 1080, 1200, 1920,
+];
 
 function isTransformSegment(segment) {
   if (!segment) return false;
@@ -28,13 +34,58 @@ export function isLocalMedia(src) {
   return /crazzycars\.pk\/media\/|^\/media\//i.test(u);
 }
 
+/** Absolute or relative /media/... path for the Next image optimizer. */
+export function localMediaPath(src) {
+  const raw = String(src || "").trim();
+  if (!raw) return "";
+  try {
+    const u = new URL(raw, "https://crazzycars.pk");
+    if (!u.pathname.startsWith("/media/")) return "";
+    return u.pathname;
+  } catch {
+    return raw.startsWith("/media/") ? raw.split("?")[0] : "";
+  }
+}
+
+function nearestNextWidth(width) {
+  const n = Math.round(Number(width) || 0);
+  if (n <= 0) return null;
+  let best = NEXT_IMAGE_WIDTHS[0];
+  for (const w of NEXT_IMAGE_WIDTHS) {
+    if (w < n) {
+      best = w;
+      continue;
+    }
+    // Prefer the smallest allowed width that is >= request (no soft upscale).
+    return Math.abs(w - n) <= Math.abs(best - n) ? w : best;
+  }
+  return best;
+}
+
+function localMediaOptimizedUrl(src, width, quality = 75) {
+  const path = localMediaPath(src);
+  if (!path) return String(src || "").trim();
+  const w = nearestNextWidth(width);
+  if (!w) return path;
+  const q = Math.min(90, Math.max(40, Math.round(Number(quality) || 75)));
+  return `/_next/image?url=${encodeURIComponent(path)}&w=${w}&q=${q}`;
+}
+
 export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto", gravity, effects = [] } = {}) {
   const url = String(src || "").trim();
   if (!url) return url;
 
-  // Local /media is already compressed WebP on the VPS. Do not wrap in
-  // /_next/image — Next only allows specific `w` values (480/360 → 400).
-  if (isLocalMedia(url)) return url;
+  // Slot-sized local media via Next optimizer (cards/thumbs). Full URLs when no width.
+  if (isLocalMedia(url)) {
+    if (!width) return localMediaPath(url) || url;
+    const q =
+      quality === "auto" || quality === "auto:good" || quality === "auto:eco"
+        ? 75
+        : quality === "auto:best"
+          ? 82
+          : Number(quality) || 75;
+    return localMediaOptimizedUrl(url, width, q);
+  }
 
   const match = url.match(UPLOAD_RE);
   if (!match) return url;
@@ -70,14 +121,16 @@ export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill" 
 
 /**
  * Homepage hero — slot-sized, not 2560@q100 (that blew mobile LCP past 2.5s).
- * `auto:good` keeps designed-banner text sharp without a lossless multi-megabyte file.
- * c_limit never upscales.
+ * Local banners are already compressed WebP (~100–160KB); serve directly for LCP
+ * (avoid /_next/image cold-generate on the first paint). Mobile still gets a smaller w.
  */
 export function heroImageUrl(src) {
+  if (isLocalMedia(src)) return localMediaPath(src) || String(src || "").trim();
   return cloudinaryUrl(src, { width: 1920, crop: "limit", quality: "auto:good", format: "auto" });
 }
 
 export function heroImageUrlMobile(src) {
+  if (isLocalMedia(src)) return localMediaOptimizedUrl(src, 828, 78);
   return cloudinaryUrl(src, { width: 828, crop: "limit", quality: "auto:good", format: "auto" });
 }
 

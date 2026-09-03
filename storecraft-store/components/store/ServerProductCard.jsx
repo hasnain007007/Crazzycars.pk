@@ -62,7 +62,10 @@ export function ServerProductCard({ product, categoryName, priority = false, var
   if (!card) return null;
 
   const rawImageUrl = getProductCardImage(card);
-  const imageUrl = cardImageUrl(rawImageUrl, 480) || rawImageUrl;
+  // Prefer next/image on /media (slot resize). Fall back to /_next/image URL for <img>.
+  const imageUrl = isAllowedNextImageSrc(rawImageUrl)
+    ? rawImageUrl
+    : cardImageUrl(rawImageUrl, 480) || rawImageUrl;
   const { regular, sale, onSale } = getProductCardPrices(card);
   const reviews = getProductCardReviews(card);
   const alt = productCardAlt(card, categoryName);

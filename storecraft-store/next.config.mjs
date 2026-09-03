@@ -121,8 +121,9 @@ const nextConfig = {
       },
     ],
     formats: ["image/webp", "image/avif"],
-    minimumCacheTTL: 60 * 60 * 24 * 7,
-    deviceSizes: [640, 750, 828, 1080, 1200],
+    // Optimized derivatives stay warm — first hit is slow, repeat views stay cheap.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 360, 400, 480],
   },
   experimental: {
