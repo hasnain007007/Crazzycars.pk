@@ -7,7 +7,7 @@ import { getHeroSlides } from "@/lib/heroBanners";
 import { getBestSellingProducts, getHotDealProducts, isShopifyEnabled } from "@/lib/shopify";
 import { dbConnect } from "@/lib/db";
 import { fetchCategoryTreeServer } from "@/lib/serverCategoryTree";
-import { pickHomepageCategories } from "@/lib/homepageCategories";
+import { pickHomepageCategories, serializeHomepageCategory } from "@/lib/homepageCategories";
 import Product from "@/lib/models/Product.model";
 
 export const revalidate = 300;
@@ -44,7 +44,9 @@ export default async function Page() {
           return null;
         }
       })(),
-      fetchCategoryTreeServer().then((tree) => pickHomepageCategories(tree)),
+      fetchCategoryTreeServer().then((tree) =>
+        pickHomepageCategories(tree).map(serializeHomepageCategory).filter(Boolean)
+      ),
     ]);
   } catch (err) {
     console.error("[homepage] SSR data load failed:", err?.message || err);

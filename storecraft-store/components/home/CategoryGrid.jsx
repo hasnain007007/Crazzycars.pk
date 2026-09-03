@@ -111,7 +111,7 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
 
   const categories =
     Array.isArray(injected) && injected.length
-      ? pickHomepageCategories(injected).map((c) => ({
+      ? injected.map((c) => ({
           ...mapCat(c),
           href: c.href || categoryHref(c.slug),
         }))

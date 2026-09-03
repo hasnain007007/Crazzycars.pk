@@ -29,3 +29,22 @@ export function pickHomepageCategories(input, limit = HOMEPAGE_CATEGORY_LIMIT) {
 
   return byDepth.flatMap((group) => group || []).slice(0, limit);
 }
+
+/** Flat props for homepage tiles — no nested children (keeps HTML small and serializable). */
+export function serializeHomepageCategory(node) {
+  if (!node) return null;
+  const image =
+    typeof node.image === "string"
+      ? node.image
+      : node.image?.url || node.imageUrl || "";
+  return {
+    _id: String(node._id || node.slug || ""),
+    name: node.name,
+    slug: node.slug,
+    image,
+    imageUrl: image,
+    icon: node.icon || node.homepageIcon || "",
+    homepageIcon: node.homepageIcon || node.icon || "",
+    isFeatured: true,
+  };
+}
