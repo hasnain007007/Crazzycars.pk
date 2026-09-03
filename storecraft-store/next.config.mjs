@@ -96,8 +96,8 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   images: {
-    // Allow any Cloudinary cloud path. Catalog historically spans dquier8fv + djmqim946;
-    // prefer ONE active cloud for all new uploads (see admin Cloudinary status banner).
+    // Legacy Cloudinary + Shopify still appear in Mongo until rehost finishes.
+    // New uploads use same-origin /media (raw <img>, not next/image optimizer).
     remotePatterns: [
       {
         protocol: "https",

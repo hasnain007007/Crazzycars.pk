@@ -78,21 +78,10 @@ export default function VideoUploader({ videos = [], onChange, maxVideos = 3 }) 
         ["heic", "heif"].includes(ext) || file.type.includes("heic") || file.type.includes("heif");
       const resourceType = isHeic ? "image" : "video";
 
-      const sigRes = await fetch(`/api/upload-video?type=${resourceType}`, { credentials: "include" });
-      const sigData = await sigRes.json();
-
-      if (!sigData.success) {
-        throw new Error(sigData.error || "Signature failed");
-      }
-
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("api_key", sigData.apiKey);
-      formData.append("timestamp", String(sigData.timestamp));
-      formData.append("signature", sigData.signature);
-      formData.append("folder", sigData.folder);
-
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/${resourceType}/upload`;
+      formData.append("folder", "products/videos");
+      formData.append("imageName", file.name.replace(/\.[^/.]+$/, ""));
 
       const result = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -110,13 +99,13 @@ export default function VideoUploader({ videos = [], onChange, maxVideos = 3 }) 
         xhr.addEventListener("load", () => {
           try {
             const data = JSON.parse(xhr.responseText);
-            if (xhr.status === 200) {
-              resolve(data);
+            if (xhr.status >= 200 && xhr.status < 300 && data.success && data.data?.url) {
+              resolve(data.data);
             } else {
-              reject(new Error(data.error?.message || `Upload failed (${xhr.status})`));
+              reject(new Error(data.error || `Upload failed (${xhr.status})`));
             }
           } catch {
-            reject(new Error("Bad response from Cloudinary"));
+            reject(new Error("Bad response from upload API"));
           }
         });
 
@@ -124,38 +113,22 @@ export default function VideoUploader({ videos = [], onChange, maxVideos = 3 }) 
           reject(new Error("Network error"));
         });
 
-        xhr.open("POST", uploadUrl);
+        xhr.open("POST", "/api/upload");
+        xhr.withCredentials = true;
         xhr.send(formData);
       });
 
-      let thumbnailUrl = result.secure_url;
-      if (resourceType === "video") {
-        try {
-          const thumbRes = await fetch("/api/upload-video", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ publicId: result.public_id }),
-          });
-          const thumbData = await thumbRes.json();
-          if (thumbData.success && thumbData.thumbnail) {
-            thumbnailUrl = thumbData.thumbnail;
-          }
-        } catch (e) {
-          console.error("Thumbnail error:", e);
-        }
-      }
-
+      const mediaUrl = result.url;
       const newVideo = {
-        url: result.secure_url,
-        originalUrl: result.secure_url,
-        publicId: result.public_id,
-        thumbnail: thumbnailUrl,
-        format: result.format || ext,
-        duration: result.duration || 0,
-        size: result.bytes || file.size,
-        width: result.width || 0,
-        height: result.height || 0,
+        url: mediaUrl,
+        originalUrl: mediaUrl,
+        publicId: result.publicId,
+        thumbnail: resourceType === "image" ? mediaUrl : mediaUrl,
+        format: ext,
+        duration: 0,
+        size: result.finalSize || file.size,
+        width: 0,
+        height: 0,
         title: file.name.replace(/\.[^/.]+$/, ""),
         isPrimary: videos.length === 0,
         resourceType,
@@ -251,7 +224,7 @@ export default function VideoUploader({ videos = [], onChange, maxVideos = 3 }) 
           {uploading ? (
             <div>
               <p style={{ fontSize: 14, fontWeight: 600, color: "#009688", margin: "0 0 12px" }}>
-                Uploading to Cloudinary…
+                Uploading…
               </p>
               <div
                 style={{
@@ -464,8 +437,8 @@ export default function VideoUploader({ videos = [], onChange, maxVideos = 3 }) 
         }}
       >
         <p style={{ margin: 0, lineHeight: 1.5 }}>
-          Supports MP4, MOV, HEIC, WebM, and AVI. Files upload directly to Cloudinary (signed upload uses folder and
-          timestamp only so the signature always matches). HEIC is stored as an image. Maximum file size: 500MB.
+          Supports MP4, MOV, HEIC, WebM, and AVI. Files upload to the VPS media volume via /api/upload (same as
+          product photos). HEIC is stored as an image. Maximum file size: 500MB.
         </p>
       </div>
     </div>

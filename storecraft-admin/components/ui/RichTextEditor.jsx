@@ -277,29 +277,20 @@ export function RichTextEditor({
       const toastId = toast.loading("Uploading image...");
 
       try {
-        const sigRes = await fetch("/api/upload-signature", {
-          credentials: "include",
-        });
-        const sigData = await sigRes.json();
-
-        if (!sigData.success) {
-          throw new Error(sigData.error || "Failed to get upload signature");
-        }
-
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("api_key", sigData.apiKey);
-        formData.append("timestamp", String(sigData.timestamp));
-        formData.append("signature", sigData.signature);
-        formData.append("folder", sigData.folder);
+        formData.append("folder", "blog");
+        formData.append("imageName", file.name.replace(/\.[^/.]+$/, ""));
 
-        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`, {
+        const uploadRes = await fetch("/api/upload", {
           method: "POST",
           body: formData,
+          credentials: "include",
         });
         const uploadData = await uploadRes.json();
+        const url = uploadData?.data?.url;
 
-        if (uploadData.secure_url) {
+        if (uploadRes.ok && url) {
           toast.success("Image uploaded!", { id: toastId });
           setSelectedSize("100%");
           const cleanAlt = file.name
@@ -308,12 +299,12 @@ export function RichTextEditor({
             .replace(/[^a-zA-Z0-9 ]/g, "")
             .trim();
           setImageToInsert({
-            url: uploadData.secure_url,
+            url,
             alt: cleanAlt || "Product image",
           });
           setShowSizePicker(true);
         } else {
-          const msg = uploadData.error?.message || uploadData.error || "Upload failed";
+          const msg = uploadData.error || "Upload failed";
           throw new Error(typeof msg === "string" ? msg : "Upload failed");
         }
       } catch (err) {

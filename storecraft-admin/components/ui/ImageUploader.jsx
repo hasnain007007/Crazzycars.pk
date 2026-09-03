@@ -77,14 +77,17 @@ function Spinner() {
 function uploadErrorMessage(error) {
   const status = error?.status;
   const msg = String(error?.message || "").trim();
+  if (/media_not_writable|MEDIA_ROOT|not writable/i.test(msg)) {
+    return msg;
+  }
   if (/disabled customer|cloud is disabled|cloudinary_disabled|reactivate/i.test(msg)) {
     return msg;
   }
   if (status >= 500) {
-    return msg || "Upload failed. Please configure Cloudinary for production image uploads.";
+    return msg || "Upload failed. Check MEDIA_ROOT volume (docs/MEDIA-HOSTING.md).";
   }
   if (/cloudinary credentials required in production/i.test(msg)) {
-    return "Upload failed. Please configure Cloudinary for production image uploads.";
+    return "Upload failed. Configure MEDIA_ROOT for local VPS media (docs/MEDIA-HOSTING.md).";
   }
   return msg || "Upload failed";
 }

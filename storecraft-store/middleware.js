@@ -274,6 +274,6 @@ export const config = {
      * Match all paths except static assets / Next internals / liveness probe.
      * Includes public pages (for AI logging) and /account/* (for auth).
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/health|media/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)$).*)",
   ],
 };

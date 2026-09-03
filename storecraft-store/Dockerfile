@@ -41,15 +41,22 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV MEDIA_ROOT=/app/media
 # Coolify HTTP checks call curl (not in bookworm-slim). Probe with Node fetch instead.
 RUN groupadd --system --gid 1001 nodejs \
-  && useradd --system --uid 1001 nextjs
+  && useradd --system --uid 1001 nextjs \
+  && mkdir -p /app/media \
+  && chown -R nextjs:nodejs /app/media
 COPY --chown=nextjs:nodejs healthcheck.js ./healthcheck.js
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
+VOLUME ["/app/media"]
 HEALTHCHECK --interval=30s --timeout=8s --start-period=60s --retries=5 \
   CMD node /app/healthcheck.js
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "server.js"]
