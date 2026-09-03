@@ -1,0 +1,61 @@
+# Coolify Traefik dynamic config — copy to
+# /data/coolify/proxy/dynamic/crazzycars-media-static.yaml
+#
+# Do not gzip already-compressed WebP (stalls on mobile).
+# Clear Alt-Svc so phones are not upgraded to HTTP/3 against an HTTP/1 Caddy backend.
+
+http:
+  routers:
+    crazzycars-media:
+      rule: "Host(`crazzycars.pk`) && PathPrefix(`/media/`)"
+      entryPoints:
+        - https
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - media-cache-headers
+        - media-strip-prefix
+        - media-no-h3
+      service: crazzycars-media-files
+      priority: 9999
+    crazzycars-media-http:
+      rule: "Host(`crazzycars.pk`) && PathPrefix(`/media/`)"
+      entryPoints:
+        - http
+      middlewares:
+        - redirect-to-https
+      service: crazzycars-media-files
+      priority: 9999
+    crazzycars-media-www:
+      rule: "Host(`www.crazzycars.pk`) && PathPrefix(`/media/`)"
+      entryPoints:
+        - https
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - media-cache-headers
+        - media-strip-prefix
+        - media-no-h3
+      service: crazzycars-media-files
+      priority: 9999
+
+  middlewares:
+    media-cache-headers:
+      headers:
+        customResponseHeaders:
+          Cache-Control: "public, max-age=31536000, immutable"
+          X-Content-Type-Options: "nosniff"
+    media-no-h3:
+      headers:
+        customResponseHeaders:
+          Alt-Svc: ""
+    media-strip-prefix:
+      stripPrefix:
+        prefixes:
+          - "/media"
+
+  services:
+    crazzycars-media-files:
+      loadBalancer:
+        servers:
+          - url: "http://crazzycars-media-server:8080"

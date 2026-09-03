@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
-import { cardImageUrl, cloudinarySrcSet } from "@/lib/cloudinaryImage";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 
 function pctOff(regular, sale, onSale) {
   if (!onSale || regular <= 0) return 0;
@@ -23,9 +23,6 @@ export function HomeProductCard({ product }) {
   for (const img of product.media?.images || []) push(img);
   const imageUrl = cardImageUrl(images[0] || "", 400) || images[0] || "";
   const hoverImageUrl = cardImageUrl(images[1] || "", 400) || images[1] || "";
-  const imageSrcSet = images[0]
-    ? cloudinarySrcSet(images[0], [256, 400, 480], { crop: "fill" })
-    : "";
   const [hoverLoaded, setHoverLoaded] = useState(false);
   const regular = Number(product.regularPrice ?? product.compareAt ?? 0);
   const saleVal = Number(product.salePrice ?? 0);
@@ -74,8 +71,6 @@ export function HomeProductCard({ product }) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
-              srcSet={imageSrcSet || undefined}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               alt={product.name || "Product"}
               className={`absolute inset-0 h-full w-full object-cover transition duration-300 ${
                 hoverImageUrl ? "group-hover:opacity-0" : "group-hover:scale-[1.03]"

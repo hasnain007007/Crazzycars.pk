@@ -242,7 +242,6 @@ function HeroSlidePanel({
   const meta = slideMeta(slide, settings);
   const {
     bgImage,
-    bgImageMobile,
     designedArtwork,
     clickThroughOnly,
     display,
@@ -269,10 +268,7 @@ function HeroSlidePanel({
     >
       {bgImage ? (
         <picture className="home-hero__media">
-          {bgImageMobile && bgImageMobile !== bgImage ? (
-            <source media="(max-width: 768px)" srcSet={bgImageMobile} />
-          ) : null}
-          {/* eslint-disable-next-line @next/next/no-img-element -- LCP hero; Cloudinary-optimized src */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- LCP hero; direct /media WebP */}
           <img
             src={bgImage}
             alt={
@@ -281,10 +277,13 @@ function HeroSlidePanel({
             }
             fetchPriority={isLcp ? "high" : "low"}
             loading={isLcp ? "eager" : "lazy"}
-            decoding="async"
-            sizes="100vw"
+            decoding={isLcp ? "sync" : "async"}
             className="home-hero__img"
             draggable={false}
+            onLoad={(e) => e.currentTarget.classList.add("is-loaded")}
+            ref={(el) => {
+              if (el?.complete && el.naturalWidth > 0) el.classList.add("is-loaded");
+            }}
           />
         </picture>
       ) : (

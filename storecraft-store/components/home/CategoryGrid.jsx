@@ -3,13 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { categoryHref } from "@/lib/categories";
-import { categoryImageUrl, cloudinarySrcSet } from "@/lib/cloudinaryImage";
+import { categoryImageUrl } from "@/lib/cloudinaryImage";
 
 function CategoryCard({ c }) {
   const imageUrl = c.imageUrl ? categoryImageUrl(c.imageUrl, 360) : "";
-  const imageSrcSet = c.imageUrl
-    ? cloudinarySrcSet(c.imageUrl, [256, 360, 480], { crop: "fill" })
-    : "";
   const imageAlt = c.imageAlt || c.name;
   const imageTitle = c.imageTitle || c.name;
   return (
@@ -18,13 +15,14 @@ function CategoryCard({ c }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={imageUrl}
-          srcSet={imageSrcSet || undefined}
-          sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 20vw"
           alt={imageAlt}
           title={imageTitle}
           loading="lazy"
           decoding="async"
           className="home-category-card__img"
+          onError={(e) => {
+            e.currentTarget.style.visibility = "hidden";
+          }}
         />
       ) : (
         <span className="home-category-card__icon" aria-hidden>

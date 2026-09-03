@@ -2295,6 +2295,27 @@ textarea::placeholder {
   background: #0b0b0b;
 }
 
+.home-hero--image-only.home-hero--h-auto .home-hero__media {
+  aspect-ratio: 10 / 3;
+  width: 100%;
+  height: auto;
+  background: #111;
+}
+
+.home-hero--image-only.home-hero--h-auto .home-hero__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
+  opacity: 0;
+}
+
+.home-hero--image-only.home-hero--h-auto .home-hero__img.is-loaded {
+  opacity: 1;
+}
+
 .home-hero__slide--image-only .home-hero__veil:not(.home-hero__veil--admin) {
   display: none;
 }
@@ -2702,12 +2723,12 @@ textarea::placeholder {
     inset: auto;
     flex: 0 0 auto;
     width: 100%;
-    /* Tall enough to feel premium, short enough that left-side designed
-       copy ("Upgrade Your Ride") still fits in the cover crop. */
-    height: min(36vh, 240px);
-    min-height: 188px;
-    max-height: 260px;
+    aspect-ratio: 10 / 3;
+    height: auto;
+    min-height: 0;
+    max-height: none;
     line-height: normal;
+    background: #111;
   }
 
   .home-hero--image-only.home-hero--h-auto .home-hero__img {
@@ -2716,7 +2737,6 @@ textarea::placeholder {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Flush left so baked-in "CRAZZYCARS.PK" / headline aren't clipped */
     object-position: left center;
   }
 

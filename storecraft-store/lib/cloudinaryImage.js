@@ -26,14 +26,29 @@ function stripTransforms(remainder) {
   return path;
 }
 
+/** If a stale client still has `/_next/image?url=/media/...`, unwrap it. */
+export function unwrapNextImageUrl(src) {
+  const raw = String(src || "").trim();
+  if (!raw) return "";
+  if (!raw.includes("/_next/image")) return raw;
+  try {
+    const u = new URL(raw, "https://crazzycars.pk");
+    const inner = u.searchParams.get("url");
+    if (inner) return unwrapNextImageUrl(decodeURIComponent(inner));
+  } catch {
+    /* keep raw */
+  }
+  return raw;
+}
+
 export function isLocalMedia(src) {
-  const u = String(src || "").trim();
+  const u = unwrapNextImageUrl(src);
   return /crazzycars\.pk\/media\/|^\/media\//i.test(u);
 }
 
 /** Absolute or relative /media/... path (query stripped). */
 export function localMediaPath(src) {
-  const raw = String(src || "").trim();
+  const raw = unwrapNextImageUrl(src);
   if (!raw) return "";
   try {
     const u = new URL(raw, "https://crazzycars.pk");
@@ -44,23 +59,9 @@ export function localMediaPath(src) {
   }
 }
 
-/**
- * Prefer prebuilt -400.webp category thumbs for small slots (homepage grid).
- * Falls back to the master file path.
- */
-function localMediaForWidth(src, width) {
-  const path = localMediaPath(src);
-  if (!path) return String(src || "").trim();
-  const w = Number(width) || 0;
-  if (
-    w > 0 &&
-    w <= 480 &&
-    /\/media\/categories\/[^/]+\.webp$/i.test(path) &&
-    !/-400\.webp$/i.test(path)
-  ) {
-    return path.replace(/\.webp$/i, "-400.webp");
-  }
-  return path;
+/** Direct /media file — never a -400 rewrite (missing thumbs 404 on phones). */
+function localMediaForWidth(src) {
+  return localMediaPath(src) || unwrapNextImageUrl(src) || String(src || "").trim();
 }
 
 export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto", gravity, effects = [] } = {}) {
@@ -68,8 +69,8 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   if (!url) return url;
 
   // Local masters are already compressed. Serve them directly — never /_next/image.
-  if (isLocalMedia(url)) {
-    return localMediaForWidth(url, width);
+  if (isLocalMedia(url) || unwrapNextImageUrl(url).includes("/media/")) {
+    return localMediaForWidth(url);
   }
 
   const match = url.match(UPLOAD_RE);
@@ -95,11 +96,8 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
 
 /** Responsive srcset — Cloudinary only. Local media uses a single pre-sized file. */
 export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill" } = {}) {
-  if (isLocalMedia(src)) {
-    // One URL (thumb or master). Fake multi-width srcsets of /_next/image broke the site.
-    const maxW = Math.max(...widths.map((w) => Math.round(w)).filter((w) => w > 0), 0);
-    const url = cloudinaryUrl(src, { width: maxW || 480, crop });
-    return url ? `${url} ${maxW || 480}w` : "";
+  if (isLocalMedia(src) || unwrapNextImageUrl(src).includes("/media/")) {
+    return "";
   }
   const unique = [...new Set(widths.map((w) => Math.round(w)).filter((w) => w > 0))].sort((a, b) => a - b);
   return unique

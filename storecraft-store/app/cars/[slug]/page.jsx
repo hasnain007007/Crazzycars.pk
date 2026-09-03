@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { dbConnect } from "@/lib/db";
@@ -273,13 +272,11 @@ export default async function VehicleSlugPage({ params, searchParams }) {
               }}
             >
               {vehicle.image ? (
-                <Image
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
                   src={vehicle.image}
                   alt={`${vehicle.displayName} accessories in Pakistan`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 440px"
-                  priority
+                  className="h-full w-full object-cover"
                 />
               ) : (
                 <div

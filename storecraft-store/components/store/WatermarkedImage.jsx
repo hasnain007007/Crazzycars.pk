@@ -22,6 +22,11 @@ export function WatermarkedImage({
   responsive = true,
 }) {
   const [failed, setFailed] = useState(false);
+  const [retrySrc, setRetrySrc] = useState(null);
+
+  const resolved = optimize
+    ? (crop === "fill" ? cardImageUrl(retrySrc || src, width) : cloudinaryUrl(retrySrc || src, { width, crop })) || retrySrc || src
+    : retrySrc || src;
 
   if (!src || failed) {
     if (!src) return null;
@@ -48,12 +53,12 @@ export function WatermarkedImage({
     );
   }
 
-  const resolved = optimize
-    ? (crop === "fill" ? cardImageUrl(src, width) : cloudinaryUrl(src, { width, crop })) || src
-    : src;
   const srcSetWidths = widths || [Math.round(width * 0.75), width, Math.round(width * 1.5)];
   const srcSet =
-    optimize && responsive && String(src).includes("res.cloudinary.com")
+    optimize &&
+    responsive &&
+    String(src).includes("res.cloudinary.com") &&
+    !/crazzycars\.pk\/media\/|^\/media\//i.test(String(resolved))
       ? cloudinarySrcSet(src, srcSetWidths, { crop })
       : undefined;
 
@@ -65,7 +70,14 @@ export function WatermarkedImage({
     loading,
     decoding: "async",
     fetchPriority,
-    onError: () => setFailed(true),
+    onError: () => {
+      const fallback = cardImageUrl(src, width) || String(src || "").split("?")[0];
+      if (!retrySrc && fallback && fallback !== resolved) {
+        setRetrySrc(fallback);
+        return;
+      }
+      setFailed(true);
+    },
     ...(srcSet ? { srcSet, sizes } : {}),
   };
 

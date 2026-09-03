@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCarCatalogClient, seedCarCatalogClient } from "@/lib/fetchCarCatalogClient";
@@ -277,14 +276,13 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                   >
                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3F4F6] sm:aspect-square">
                       {v.image ? (
-                        <Image
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                           src={v.image}
                           alt={`${v.make} ${v.model}`}
-                          fill
-                          unoptimized
-                          className="object-contain object-center p-2 transition duration-300 group-hover:scale-105 sm:p-3"
-                          sizes="(max-width: 640px) 31vw, 18vw"
+                          className="h-full w-full object-contain object-center p-2 transition duration-300 group-hover:scale-105 sm:p-3"
                           loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-3xl text-[#9CA3AF]">🚗</div>

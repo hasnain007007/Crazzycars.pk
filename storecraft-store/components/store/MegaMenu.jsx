@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { categoryHref } from "@/lib/categories";
 
@@ -178,7 +177,8 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
                         <span className="mega-menu__sub-name">{sub.name}</span>
                         <span className="mega-menu__sub-thumb">
                           {img ? (
-                            <Image src={img} alt="" fill className="object-cover" sizes="44px" />
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={img} alt="" className="h-full w-full object-cover" loading="lazy" />
                           ) : (
                             <span className="mega-menu__sub-thumb-empty">·</span>
                           )}
@@ -207,14 +207,14 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
         <div className="mega-menu__promo">
           <Link href={focusHref} onClick={() => onClose?.()} className="mega-menu__promo-card">
             {focusImage ? (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 key={focusImage}
                 src={focusImage}
                 alt={focusLabel}
-                fill
-                className="object-cover"
-                sizes="248px"
-                priority
+                className="h-full w-full object-cover"
+                loading="eager"
+                decoding="async"
               />
             ) : (
               <span className="mega-menu__promo-fallback" />

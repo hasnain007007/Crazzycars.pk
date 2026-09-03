@@ -244,11 +244,10 @@ export function getProductCardReviews(product) {
 export function isAllowedNextImageSrc(url) {
   const raw = String(url || "").trim();
   if (!raw || raw.startsWith("/_next/image")) return false;
-  if (raw.startsWith("/media/")) return true;
+  // Local /media must never hit /_next/image (invalid q/w → 400, self-fetch timeouts).
+  if (/crazzycars\.pk\/media\/|^\/media\//i.test(raw)) return false;
   try {
-    const u = new URL(raw, "https://crazzycars.pk");
-    const host = u.hostname.replace(/^www\./, "").toLowerCase();
-    if (host === "crazzycars.pk" && u.pathname.startsWith("/media/")) return true;
+    const host = new URL(raw).hostname.replace(/^www\./, "").toLowerCase();
     return (
       host === "res.cloudinary.com" ||
       host === "cdn.shopify.com" ||

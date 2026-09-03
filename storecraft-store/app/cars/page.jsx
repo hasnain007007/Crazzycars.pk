@@ -1,7 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
 import { dbConnect } from "@/lib/db";
-import { isAllowedNextImageSrc } from "@/lib/productCardShape";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getSiteUrl } from "@/lib/siteUrl";
@@ -112,23 +110,14 @@ export default async function CarsIndexPage() {
                   >
                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3F4F6] md:aspect-square">
                       {v.image ? (
-                        isAllowedNextImageSrc(v.image) ? (
-                          <Image
-                            src={v.image}
-                            alt={v.displayName}
-                            fill
-                            className="object-contain object-center p-2 transition duration-300 group-hover:scale-105"
-                            sizes="(max-width: 640px) 46vw, 20vw"
-                          />
-                        ) : (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={v.image}
-                            alt={v.displayName}
-                            className="h-full w-full object-contain object-center p-2"
-                            loading="lazy"
-                          />
-                        )
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={v.image}
+                          alt={v.displayName}
+                          className="h-full w-full object-contain object-center p-2 transition duration-300 group-hover:scale-105"
+                          loading="lazy"
+                          decoding="async"
+                        />
                       ) : (
                         <div className="flex h-full items-center justify-center text-2xl text-[#9CA3AF]">🚗</div>
                       )}
