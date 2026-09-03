@@ -24,8 +24,12 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const CSV_PATH = path.join(ROOT, "data", "shopify-image-migration.csv");
-const REPORT_PATH = path.join(ROOT, "data", "media-rehost-report.json");
+const REPORT_PATH = fs.existsSync(path.join(ROOT, "data"))
+  ? path.join(ROOT, "data", "media-rehost-report.json")
+  : path.join("/tmp", "media-rehost-report.json");
+const CSV_PATH = fs.existsSync(path.join(ROOT, "data", "shopify-image-migration.csv"))
+  ? path.join(ROOT, "data", "shopify-image-migration.csv")
+  : path.join(ROOT, "shopify-image-migration.csv");
 const UA = "CrazzyCarsMediaRehost/1.0";
 
 const require = createRequire(
