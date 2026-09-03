@@ -23,9 +23,23 @@ function stripTransforms(remainder) {
   return path;
 }
 
+export function isLocalMedia(src) {
+  const u = String(src || "").trim();
+  return /crazzycars\.pk\/media\/|^\/media\//i.test(u);
+}
+
 export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto", gravity, effects = [] } = {}) {
   const url = String(src || "").trim();
   if (!url) return url;
+
+  // Local /media/ images — use Next.js image optimizer
+  if (isLocalMedia(url)) {
+    const w = width || 480;
+    const q = typeof quality === "number" ? quality : 75;
+    // Normalize to absolute URL for next/image loader
+    const abs = url.startsWith("/media/") ? `https://crazzycars.pk${url}` : url;
+    return `/_next/image?url=${encodeURIComponent(abs)}&w=${w}&q=${q}`;
+  }
 
   const match = url.match(UPLOAD_RE);
   if (!match) return url;
@@ -48,7 +62,7 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   return `${prefix}${transform}/${remainder}`;
 }
 
-/** Responsive srcset for Cloudinary images (raw <img> when next/image is not used). */
+/** Responsive srcset for Cloudinary or local media images. */
 export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill" } = {}) {
   const unique = [...new Set(widths.map((w) => Math.round(w)).filter((w) => w > 0))].sort((a, b) => a - b);
   return unique

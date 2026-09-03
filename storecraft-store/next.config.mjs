@@ -101,6 +101,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "crazzycars.pk",
+        pathname: "/media/**",
+      },
+      {
+        protocol: "https",
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
