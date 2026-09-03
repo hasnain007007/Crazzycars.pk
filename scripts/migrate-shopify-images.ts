@@ -402,6 +402,37 @@ async function main() {
     process.exit(1);
   }
 
+  // Hard stop if the target account is disabled — uploading would fail and
+  // rewriting Mongo to dead URLs would make the outage worse.
+  {
+    const require = createRequire(path.join(ROOT, "storecraft-admin", "package.json"));
+    const { v2: cloudinarySdk } = require("cloudinary") as {
+      v2: { config: (c: object) => void; api: { ping: () => Promise<unknown> } };
+    };
+    cloudinarySdk.config({
+      cloud_name: cloud,
+      api_key: apiKey,
+      api_secret: apiSecret,
+      secure: true,
+    });
+    try {
+      await cloudinarySdk.api.ping();
+    } catch (err: unknown) {
+      const msg = String(
+        (err as { error?: { message?: string }; message?: string })?.error?.message ||
+          (err as { message?: string })?.message ||
+          err
+      );
+      console.error(`Cloudinary Admin ping failed for ${TARGET_CLOUD}: ${msg}`);
+      if (/disabled/i.test(msg)) {
+        console.error(
+          "Account/cloud is DISABLED. Reactivate in Cloudinary console before migrating."
+        );
+      }
+      process.exit(1);
+    }
+  }
+
   const known = new Map<string, string>();
   for (const file of PRIOR_MAPS) {
     for (const [k, v] of loadJsonMap(file)) known.set(k, v);

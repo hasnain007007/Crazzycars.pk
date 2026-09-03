@@ -21,8 +21,31 @@ export function WatermarkedImage({
   sizes = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw",
   responsive = true,
 }) {
-  if (!src) {
-    return null;
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    if (!src) return null;
+    return (
+      <div
+        className={className || imgClassName}
+        style={{
+          display: "flex",
+          height: "100%",
+          width: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#F3F4F6",
+          color: "#9CA3AF",
+          fontSize: 12,
+          ...style,
+          ...imgStyle,
+        }}
+        role="img"
+        aria-label={alt || "Image unavailable"}
+      >
+        Image unavailable
+      </div>
+    );
   }
 
   const resolved = optimize
@@ -42,6 +65,7 @@ export function WatermarkedImage({
     loading,
     decoding: "async",
     fetchPriority,
+    onError: () => setFailed(true),
     ...(srcSet ? { srcSet, sizes } : {}),
   };
 

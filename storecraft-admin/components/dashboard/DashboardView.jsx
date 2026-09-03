@@ -17,6 +17,7 @@ import { RecentOrdersTable } from "./RecentOrdersTable";
 import { RevenueCostBarChart } from "./RevenueCostBarChart";
 import { SalesTrendChart } from "./SalesTrendChart";
 import { StockAlertBanner } from "@/components/stock-alerts/StockAlertBanner";
+import { CloudinaryAlertBanner } from "./CloudinaryAlertBanner";
 
 const emptyData = {
   todaySales: 0,
@@ -134,6 +135,7 @@ export function DashboardView() {
         </div>
       ) : null}
 
+      <CloudinaryAlertBanner />
       <StockAlertBanner lowStockProducts={data.lowStockProducts} />
 
       {/* Header toolbar */}

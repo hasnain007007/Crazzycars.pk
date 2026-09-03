@@ -96,18 +96,9 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   images: {
-    // TODO: consolidate to one Cloudinary account (currently products≈djmqim946, logo≈dquier8fv)
+    // Allow any Cloudinary cloud path. Catalog historically spans dquier8fv + djmqim946;
+    // prefer ONE active cloud for all new uploads (see admin Cloudinary status banner).
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        pathname: "/djmqim946/**",
-      },
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        pathname: "/dquier8fv/**",
-      },
       {
         protocol: "https",
         hostname: "res.cloudinary.com",

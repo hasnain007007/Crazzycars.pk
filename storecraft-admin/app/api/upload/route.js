@@ -1,6 +1,7 @@
 /**
  * Authenticated upload:
  * - Cloudinary whenever credentials are configured
+ * - Refuses upload when Cloudinary cloud is disabled / auth fails
  * - Local disk fallback only in non-production environments
  */
 import { randomBytes } from "crypto";
@@ -11,6 +12,11 @@ import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessAnyCapability } from "@/lib/denyCapability";
 import { getCloudinaryCloudName } from "@/lib/cloudinaryConfig";
+import {
+  checkCloudinaryHealth,
+  classifyCloudinaryError,
+  hasCloudinaryCredentials,
+} from "@/lib/cloudinaryHealth";
 
 function sanitizeFolder(raw) {
   const s = String(raw || "categories")
@@ -19,14 +25,6 @@ function sanitizeFolder(raw) {
     .replace(/^\/+|\/+$/g, "")
     .replace(/\/{2,}/g, "/");
   return s || "categories";
-}
-
-function hasCloudinary() {
-  return Boolean(
-    getCloudinaryCloudName() &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
-  );
 }
 
 function configureCloudinary() {
@@ -63,7 +61,7 @@ export async function POST(request) {
     const mime = typeof file.type === "string" && file.type ? file.type : "image/webp";
 
     const isProduction = process.env.NODE_ENV === "production";
-    const cloudinaryReady = hasCloudinary();
+    const cloudinaryReady = hasCloudinaryCredentials();
 
     if (isProduction && !cloudinaryReady) {
       return NextResponse.json(
@@ -77,6 +75,19 @@ export async function POST(request) {
     }
 
     if (cloudinaryReady) {
+      const health = await checkCloudinaryHealth();
+      if (!health.ok && (health.code === "disabled" || health.code === "auth")) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: health.message,
+            code: `cloudinary_${health.code}`,
+            cloudName: health.cloudName,
+          },
+          { status: 503 }
+        );
+      }
+
       configureCloudinary();
       const dataUri = `data:${mime};base64,${buffer.toString("base64")}`;
       const rawItemName = String(formData.get("itemName") || "").trim();
@@ -99,19 +110,32 @@ export async function POST(request) {
         uploadOpts.unique_filename = false;
         uploadOpts.overwrite = true;
       }
-      const result = await cloudinary.uploader.upload(dataUri, uploadOpts);
-      return NextResponse.json({
-        success: true,
-        data: {
-          url: result.secure_url,
-          publicId: result.public_id,
-          originalSize: reportedOriginal,
-          finalSize: reportedFinal,
-        },
-      });
+      try {
+        const result = await cloudinary.uploader.upload(dataUri, uploadOpts);
+        return NextResponse.json({
+          success: true,
+          data: {
+            url: result.secure_url,
+            publicId: result.public_id,
+            originalSize: reportedOriginal,
+            finalSize: reportedFinal,
+            cloudName: getCloudinaryCloudName(),
+          },
+        });
+      } catch (uploadErr) {
+        const classified = classifyCloudinaryError(uploadErr);
+        return NextResponse.json(
+          {
+            success: false,
+            error: classified.message,
+            code: `cloudinary_${classified.code}`,
+            cloudName: getCloudinaryCloudName(),
+          },
+          { status: classified.code === "disabled" || classified.code === "auth" ? 503 : 500 }
+        );
+      }
     }
 
-    // Vercel production is read-only; local fallback is development-only.
     if (isProduction) {
       return NextResponse.json(
         {
