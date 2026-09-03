@@ -1,17 +1,14 @@
 /**
  * Optimize Cloudinary delivery URLs (f_auto, q_auto, width).
  * Re-applies transforms so callers can request slot-appropriate sizes.
- * Local /media URLs go through Next `/_next/image` at the nearest allowed width
- * so product/category cards stop downloading full-size WebPs.
+ *
+ * Local /media is served directly (already compressed WebP on the VPS).
+ * Do NOT wrap local media in `/_next/image?q=…` — Next only allows a small
+ * set of quality values, and invalid `q` returns HTTP 400 (blank site images).
  */
 
 const UPLOAD_RE =
   /^(https?:\/\/res\.cloudinary\.com\/[^/]+\/(?:image|video|raw)\/upload\/)(.+)$/i;
-
-/** Must match next.config.mjs images.deviceSizes + imageSizes. */
-const NEXT_IMAGE_WIDTHS = [
-  16, 32, 48, 64, 96, 128, 256, 360, 400, 480, 640, 750, 828, 1080, 1200, 1920,
-];
 
 function isTransformSegment(segment) {
   if (!segment) return false;
@@ -34,7 +31,7 @@ export function isLocalMedia(src) {
   return /crazzycars\.pk\/media\/|^\/media\//i.test(u);
 }
 
-/** Absolute or relative /media/... path for the Next image optimizer. */
+/** Absolute or relative /media/... path (query stripped). */
 export function localMediaPath(src) {
   const raw = String(src || "").trim();
   if (!raw) return "";
@@ -47,46 +44,32 @@ export function localMediaPath(src) {
   }
 }
 
-function nearestNextWidth(width) {
-  const n = Math.round(Number(width) || 0);
-  if (n <= 0) return null;
-  let best = NEXT_IMAGE_WIDTHS[0];
-  for (const w of NEXT_IMAGE_WIDTHS) {
-    if (w < n) {
-      best = w;
-      continue;
-    }
-    // Prefer the smallest allowed width that is >= request (no soft upscale).
-    return Math.abs(w - n) <= Math.abs(best - n) ? w : best;
-  }
-  return best;
-}
-
-function localMediaOptimizedUrl(src, width, quality = 82) {
+/**
+ * Prefer prebuilt -400.webp category thumbs for small slots (homepage grid).
+ * Falls back to the master file path.
+ */
+function localMediaForWidth(src, width) {
   const path = localMediaPath(src);
   if (!path) return String(src || "").trim();
-  const w = nearestNextWidth(width);
-  if (!w) return path;
-  const q = Math.min(90, Math.max(50, Math.round(Number(quality) || 82)));
-  return `/_next/image?url=${encodeURIComponent(path)}&w=${w}&q=${q}`;
+  const w = Number(width) || 0;
+  if (
+    w > 0 &&
+    w <= 480 &&
+    /\/media\/categories\/[^/]+\.webp$/i.test(path) &&
+    !/-400\.webp$/i.test(path)
+  ) {
+    return path.replace(/\.webp$/i, "-400.webp");
+  }
+  return path;
 }
 
 export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto", gravity, effects = [] } = {}) {
   const url = String(src || "").trim();
   if (!url) return url;
 
-  // Slot-sized local media via Next optimizer (cards/thumbs). Full URLs when no width.
+  // Local masters are already compressed. Serve them directly — never /_next/image.
   if (isLocalMedia(url)) {
-    if (!width) return localMediaPath(url) || url;
-    const q =
-      quality === "auto" || quality === "auto:good"
-        ? 82
-        : quality === "auto:eco"
-          ? 75
-          : quality === "auto:best"
-            ? 86
-            : Number(quality) || 82;
-    return localMediaOptimizedUrl(url, width, q);
+    return localMediaForWidth(url, width);
   }
 
   const match = url.match(UPLOAD_RE);
@@ -110,8 +93,14 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   return `${prefix}${transform}/${remainder}`;
 }
 
-/** Responsive srcset for Cloudinary or local media images. */
+/** Responsive srcset — Cloudinary only. Local media uses a single pre-sized file. */
 export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill" } = {}) {
+  if (isLocalMedia(src)) {
+    // One URL (thumb or master). Fake multi-width srcsets of /_next/image broke the site.
+    const maxW = Math.max(...widths.map((w) => Math.round(w)).filter((w) => w > 0), 0);
+    const url = cloudinaryUrl(src, { width: maxW || 480, crop });
+    return url ? `${url} ${maxW || 480}w` : "";
+  }
   const unique = [...new Set(widths.map((w) => Math.round(w)).filter((w) => w > 0))].sort((a, b) => a - b);
   return unique
     .map((w) => {
@@ -122,9 +111,9 @@ export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill" 
 }
 
 /**
- * Homepage hero — slot-sized, not 2560@q100 (that blew mobile LCP past 2.5s).
- * Local banners are already compressed WebP (~100–160KB); serve directly for LCP
- * (avoid /_next/image cold-generate on the first paint). Mobile still gets a smaller w.
+ * Homepage hero — local banners are HQ-compressed WebP on /media.
+ * Desktop: master. Mobile: dedicated *-mobile.webp when present in Mongo,
+ * otherwise the same master (heroImageUrlMobile still returns a path).
  */
 export function heroImageUrl(src) {
   if (isLocalMedia(src)) return localMediaPath(src) || String(src || "").trim();
@@ -132,7 +121,7 @@ export function heroImageUrl(src) {
 }
 
 export function heroImageUrlMobile(src) {
-  if (isLocalMedia(src)) return localMediaOptimizedUrl(src, 828, 78);
+  if (isLocalMedia(src)) return localMediaPath(src) || String(src || "").trim();
   return cloudinaryUrl(src, { width: 828, crop: "limit", quality: "auto:good", format: "auto" });
 }
 

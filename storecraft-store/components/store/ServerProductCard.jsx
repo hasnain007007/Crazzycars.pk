@@ -18,7 +18,10 @@ function CardImage({ src, alt, priority, sizes, className }) {
       </div>
     );
   }
-  if (isAllowedNextImageSrc(src)) {
+  // Local /media is already compressed WebP — use plain <img> so we never depend on
+  // /_next/image quality allowlists (invalid q → HTTP 400 → blank cards).
+  const localMedia = /crazzycars\.pk\/media\/|^\/media\//i.test(String(src));
+  if (!localMedia && isAllowedNextImageSrc(src)) {
     return (
       <Image
         src={src}
@@ -38,6 +41,7 @@ function CardImage({ src, alt, priority, sizes, className }) {
       alt={alt}
       className={`h-full w-full object-cover ${className || ""}`}
       loading={priority ? "eager" : "lazy"}
+      decoding="async"
     />
   );
 }
@@ -62,10 +66,8 @@ export function ServerProductCard({ product, categoryName, priority = false, var
   if (!card) return null;
 
   const rawImageUrl = getProductCardImage(card);
-  // Prefer next/image on /media (slot resize). Fall back to /_next/image URL for <img>.
-  const imageUrl = isAllowedNextImageSrc(rawImageUrl)
-    ? rawImageUrl
-    : cardImageUrl(rawImageUrl, 480) || rawImageUrl;
+  // Always use direct /media (or Cloudinary) URLs — never /_next/image wrappers.
+  const imageUrl = cardImageUrl(rawImageUrl, 480) || rawImageUrl;
   const { regular, sale, onSale } = getProductCardPrices(card);
   const reviews = getProductCardReviews(card);
   const alt = productCardAlt(card, categoryName);

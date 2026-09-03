@@ -281,6 +281,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                           src={v.image}
                           alt={`${v.make} ${v.model}`}
                           fill
+                          unoptimized
                           className="object-contain object-center p-2 transition duration-300 group-hover:scale-105 sm:p-3"
                           sizes="(max-width: 640px) 31vw, 18vw"
                           loading="lazy"
