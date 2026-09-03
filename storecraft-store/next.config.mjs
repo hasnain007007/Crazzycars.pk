@@ -288,6 +288,10 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    // Public CDN-style URLs → API route (reliable under Coolify standalone)
+    return [{ source: "/media/:path*", destination: "/api/media/:path*" }];
+  },
 };
 
 export default nextConfig;
