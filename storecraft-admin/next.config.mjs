@@ -60,6 +60,9 @@ const nextConfig = {
     // would create a CSRF surface. Storefront never needs cross-origin admin APIs.
     return security;
   },
+  async rewrites() {
+    return [{ source: "/media/:path*", destination: "/api/media/:path*" }];
+  },
 };
 
 export default nextConfig;
