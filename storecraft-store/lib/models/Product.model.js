@@ -147,6 +147,8 @@ const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, trim: true },
+    /** Former URL handles after a rename (e.g. 8pcs → 4pcs). */
+    previousSlugs: { type: [String], default: [] },
     articleNo: { type: String, default: "" },
     ean: { type: String, default: "" },
     partNumber: { type: String, default: "", trim: true },

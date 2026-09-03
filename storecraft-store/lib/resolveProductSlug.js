@@ -15,8 +15,16 @@ async function findExactOrCi(key, statuses, select) {
   const status = statusFilter(statuses);
   const exact = await Product.findOne({ slug: key, status }).select(select).lean();
   if (exact) return exact;
-  return Product.findOne({
+  const ci = await Product.findOne({
     slug: { $regex: `^${escapeRegex(key)}$`, $options: "i" },
+    status,
+  })
+    .select(select)
+    .lean();
+  if (ci) return ci;
+  // Renamed SKUs (e.g. 8pcs → 4pcs) keep old handles in previousSlugs
+  return Product.findOne({
+    previousSlugs: key,
     status,
   })
     .select(select)
