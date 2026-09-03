@@ -32,14 +32,9 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   const url = String(src || "").trim();
   if (!url) return url;
 
-  // Local /media/ images — use Next.js image optimizer
-  if (isLocalMedia(url)) {
-    const w = width || 480;
-    const q = typeof quality === "number" ? quality : 75;
-    // Normalize to absolute URL for next/image loader
-    const abs = url.startsWith("/media/") ? `https://crazzycars.pk${url}` : url;
-    return `/_next/image?url=${encodeURIComponent(abs)}&w=${w}&q=${q}`;
-  }
+  // Local /media is already compressed WebP on the VPS. Do not wrap in
+  // /_next/image — Next only allows specific `w` values (480/360 → 400).
+  if (isLocalMedia(url)) return url;
 
   const match = url.match(UPLOAD_RE);
   if (!match) return url;
