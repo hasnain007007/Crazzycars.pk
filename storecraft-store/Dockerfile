@@ -47,9 +47,10 @@ RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 nextjs \
   && mkdir -p /app/media \
   && chown -R nextjs:nodejs /app/media
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod 755 /app/docker-entrypoint.sh \
+  && chown nextjs:nodejs /app/docker-entrypoint.sh
 COPY --chown=nextjs:nodejs healthcheck.js ./healthcheck.js
-COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
@@ -58,5 +59,5 @@ EXPOSE 3000
 VOLUME ["/app/media"]
 HEALTHCHECK --interval=30s --timeout=8s --start-period=60s --retries=5 \
   CMD node /app/healthcheck.js
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/app/docker-entrypoint.sh"]
 CMD ["node", "server.js"]
