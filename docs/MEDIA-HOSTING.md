@@ -5,7 +5,7 @@ Host product images on the VPS forever — no Cloudinary credits.
 
 ## Coolify setup (one-time)
 
-1. Create a **persistent volume** (or host path), e.g. `/data/crazzycars/media`.
+1. Create a **persistent volume** (or host path), e.g. `/data/crazzycars/media` (already mounted on store+admin for crazzycars.pk).
 2. Mount it on **both** applications at the same container path:
 
 | App | Container path | Env |
