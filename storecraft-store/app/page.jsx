@@ -8,7 +8,7 @@ import { getBestSellingProducts, getHotDealProducts, isShopifyEnabled } from "@/
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export const metadata = buildPageMetadata({
   title: "CrazzyCars.pk | Car Accessories Pakistan",

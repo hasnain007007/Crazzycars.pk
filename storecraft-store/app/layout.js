@@ -21,8 +21,8 @@ import { safeJsonLd } from "@/lib/safeJsonLd";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import "./globals.css";
 
-/** Cache HTML for 60s — major TTFB win vs force-dynamic. */
-export const revalidate = 60;
+/** Cache HTML for 5 min — major TTFB win vs force-dynamic. */
+export const revalidate = 300;
 
 const inter = Inter({
   subsets: ["latin"],
