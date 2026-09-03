@@ -62,12 +62,12 @@ function nearestNextWidth(width) {
   return best;
 }
 
-function localMediaOptimizedUrl(src, width, quality = 75) {
+function localMediaOptimizedUrl(src, width, quality = 82) {
   const path = localMediaPath(src);
   if (!path) return String(src || "").trim();
   const w = nearestNextWidth(width);
   if (!w) return path;
-  const q = Math.min(90, Math.max(40, Math.round(Number(quality) || 75)));
+  const q = Math.min(90, Math.max(50, Math.round(Number(quality) || 82)));
   return `/_next/image?url=${encodeURIComponent(path)}&w=${w}&q=${q}`;
 }
 
@@ -79,11 +79,13 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   if (isLocalMedia(url)) {
     if (!width) return localMediaPath(url) || url;
     const q =
-      quality === "auto" || quality === "auto:good" || quality === "auto:eco"
-        ? 75
-        : quality === "auto:best"
-          ? 82
-          : Number(quality) || 75;
+      quality === "auto" || quality === "auto:good"
+        ? 82
+        : quality === "auto:eco"
+          ? 75
+          : quality === "auto:best"
+            ? 86
+            : Number(quality) || 82;
     return localMediaOptimizedUrl(url, width, q);
   }
 
