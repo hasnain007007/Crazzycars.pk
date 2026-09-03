@@ -28,7 +28,13 @@ const CSV_PATH = path.join(ROOT, "data", "shopify-image-migration.csv");
 const REPORT_PATH = path.join(ROOT, "data", "media-rehost-report.json");
 const UA = "CrazzyCarsMediaRehost/1.0";
 
-const require = createRequire(path.join(ROOT, "storecraft-store", "package.json"));
+const require = createRequire(
+  fs.existsSync(path.join(ROOT, "storecraft-store", "package.json"))
+    ? path.join(ROOT, "storecraft-store", "package.json")
+    : fs.existsSync("/app/package.json")
+      ? "/app/package.json"
+      : path.join(process.cwd(), "package.json")
+);
 const mongoose = require("mongoose");
 
 const APPLY = process.argv.includes("--apply");
