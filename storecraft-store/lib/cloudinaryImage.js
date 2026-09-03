@@ -59,9 +59,23 @@ export function localMediaPath(src) {
   }
 }
 
-/** Direct /media file — never a -400 rewrite (missing thumbs 404 on phones). */
-function localMediaForWidth(src) {
-  return localMediaPath(src) || unwrapNextImageUrl(src) || String(src || "").trim();
+/**
+ * Category grid uses prebuilt -400.webp (~15–30KB). Masters stay for PDP/admin.
+ * Missing thumbs fall back in <img onError> to the master path.
+ */
+function localMediaForWidth(src, width) {
+  const path = localMediaPath(src) || "";
+  const w = Number(width) || 0;
+  if (
+    path &&
+    w > 0 &&
+    w <= 480 &&
+    /\/media\/categories\/[^/]+\.webp$/i.test(path) &&
+    !/-400\.webp$/i.test(path)
+  ) {
+    return path.replace(/\.webp$/i, "-400.webp");
+  }
+  return path || unwrapNextImageUrl(src) || String(src || "").trim();
 }
 
 export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto", gravity, effects = [] } = {}) {
@@ -70,7 +84,7 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
 
   // Local masters are already compressed. Serve them directly — never /_next/image.
   if (isLocalMedia(url) || unwrapNextImageUrl(url).includes("/media/")) {
-    return localMediaForWidth(url);
+    return localMediaForWidth(url, width);
   }
 
   const match = url.match(UPLOAD_RE);

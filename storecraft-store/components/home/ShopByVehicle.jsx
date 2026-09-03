@@ -272,7 +272,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                     href={v.href}
                     data-vehicle-card
                     className="group w-[31%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md sm:w-[18%]"
-                    style={{ scrollSnapAlign: "start" }}
+                    style={{ scrollSnapAlign: "start", contentVisibility: "auto", containIntrinsicSize: "160px" }}
                   >
                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3F4F6] sm:aspect-square">
                       {v.image ? (
@@ -283,6 +283,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                           className="h-full w-full object-contain object-center p-2 transition duration-300 group-hover:scale-105 sm:p-3"
                           loading="lazy"
                           decoding="async"
+                          fetchPriority="low"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-3xl text-[#9CA3AF]">🚗</div>

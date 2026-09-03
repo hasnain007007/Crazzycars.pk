@@ -3,9 +3,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { categoryHref } from "@/lib/categories";
-import { categoryImageUrl } from "@/lib/cloudinaryImage";
+import { categoryImageUrl, localMediaPath } from "@/lib/cloudinaryImage";
+import { pickHomepageCategories } from "@/lib/homepageCategories";
 
-function CategoryCard({ c }) {
+function masterCategorySrc(url) {
+  const path = localMediaPath(url);
+  if (path && /-400\.webp$/i.test(path)) return path.replace(/-400\.webp$/i, ".webp");
+  return path || url;
+}
+
+function CategoryCard({ c, eager }) {
   const imageUrl = c.imageUrl ? categoryImageUrl(c.imageUrl, 360) : "";
   const imageAlt = c.imageAlt || c.name;
   const imageTitle = c.imageTitle || c.name;
@@ -17,11 +24,22 @@ function CategoryCard({ c }) {
           src={imageUrl}
           alt={imageAlt}
           title={imageTitle}
-          loading="lazy"
+          loading={eager ? "eager" : "lazy"}
+          fetchPriority={eager ? "high" : "low"}
           decoding="async"
           className="home-category-card__img"
+          onLoad={(e) => e.currentTarget.classList.add("is-loaded")}
+          ref={(el) => {
+            if (el?.complete && el.naturalWidth > 0) el.classList.add("is-loaded");
+          }}
           onError={(e) => {
-            e.currentTarget.style.visibility = "hidden";
+            const img = e.currentTarget;
+            const fallback = masterCategorySrc(img.getAttribute("src") || "");
+            if (fallback && img.getAttribute("src") !== fallback) {
+              img.src = fallback;
+              return;
+            }
+            img.style.visibility = "hidden";
           }}
         />
       ) : (
@@ -55,36 +73,6 @@ function mapCat(c) {
     imageAlt: c.image?.altText || c.imageAlt || c.name,
     imageTitle: c.image?.title || c.imageTitle || c.name,
   };
-}
-
-const HOMEPAGE_CATEGORY_LIMIT = 10;
-
-/** Flatten the category tree — featured subcategories must surface too, not just roots. */
-function flattenTree(nodes, depth = 0, out = []) {
-  for (const node of Array.isArray(nodes) ? nodes : []) {
-    if (!node) continue;
-    out.push({ node, depth });
-    flattenTree(node.children, depth + 1, out);
-  }
-  return out;
-}
-
-function pickHomepageCategories(input) {
-  const seen = new Set();
-  const byDepth = [];
-
-  for (const { node, depth } of flattenTree(input)) {
-    if (!node.slug || !node.name) continue;
-    if (!(node.isFeatured || node.featured)) continue;
-    // A category can hang off several parents, so the same node repeats in the tree.
-    const key = String(node._id || node.slug);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    (byDepth[depth] ||= []).push(node);
-  }
-
-  // Top-level categories keep priority; featured subcategories fill the rest.
-  return byDepth.flatMap((group) => group || []).slice(0, HOMEPAGE_CATEGORY_LIMIT);
 }
 
 export default function CategoryGrid({ title = "Shop by Category", viewAllText = "View all →", categories: injected }) {
@@ -141,9 +129,10 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
           <div style={{ width: 40, height: 3, background: "#C41E1E", marginTop: 8, borderRadius: 2 }} />
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-6 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {categories.map((c) => (
+          {categories.map((c, i) => (
             <CategoryCard
               key={c.slug || c.href || c.name}
+              eager={i < 4}
               c={{
                 ...c,
                 href: c.href || categoryHref(c.slug),

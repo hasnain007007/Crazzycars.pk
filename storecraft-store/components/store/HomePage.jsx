@@ -4,23 +4,17 @@ import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import HomeHero from "@/components/home/HomeHero";
 import StatsBar from "@/components/home/StatsBar";
+import ShopByCar from "@/components/home/ShopByCar";
+import CategoryGrid from "@/components/home/CategoryGrid";
+import ShopByVehicle from "@/components/home/ShopByVehicle";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
-const ShopByCar = dynamic(() => import("@/components/home/ShopByCar"), {
-  loading: () => <SectionSkeleton height={280} />,
-});
-const CategoryGrid = dynamic(() => import("@/components/home/CategoryGrid"), {
-  loading: () => <SectionSkeleton height={220} />,
-});
 const HotDeals = dynamic(() => import("@/components/home/HotDeals"), {
   loading: () => <SectionSkeleton height={360} />,
 });
 const BestSellers = dynamic(() => import("@/components/home/BestSellers"), {
   loading: () => <SectionSkeleton height={360} />,
-});
-const ShopByVehicle = dynamic(() => import("@/components/home/ShopByVehicle"), {
-  loading: () => <SectionSkeleton height={240} />,
 });
 const WhyChooseUs = dynamic(() => import("@/components/home/WhyChooseUs"), {
   loading: () => <SectionSkeleton height={380} />,
@@ -46,13 +40,15 @@ function mergeHomepageSettings(raw) {
 }
 
 /**
- * Homepage — hero SSR-first; below-fold sections load as separate chunks.
+ * Homepage — above-the-fold sections are in the first JS/HTML.
+ * Deals / best sellers / story stay code-split.
  */
 export function HomePage({
   initialBestSellers = [],
   initialHotDeals = null,
   initialHeroSlides = null,
   initialCarCatalog = null,
+  initialCategories = null,
   activeProductCount = null,
 }) {
   const ctx = useStoreSettings();
@@ -89,6 +85,7 @@ export function HomePage({
         <CategoryGrid
           title={homepageSettings.categories?.title || homepageSettings.sectionTitles?.categories}
           viewAllText={homepageSettings.categories?.viewAllText}
+          categories={initialCategories}
         />
       ) : null}
       {sectionEnabled("hotDeals") && homepageSettings.sections?.showHotDeals !== false ? (
