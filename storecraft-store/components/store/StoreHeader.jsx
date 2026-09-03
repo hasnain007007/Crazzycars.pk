@@ -135,9 +135,15 @@ function deriveHeaderConfig(data) {
   const footer = data?.footer || {};
   const mega = data?.megaMenu || {};
 
+  const logoRaw = general.logo || general.logoUrl || data?.logoUrl || "";
+  const logo =
+    typeof logoRaw === "string"
+      ? logoRaw
+      : String(logoRaw?.url || "").trim();
+
   const brand = {
     storeName: general.storeName || data?.storeName || "Crazzycars.pk",
-    logo: general.logo || general.logoUrl || data?.logoUrl || "",
+    logo,
     phone: general.phone || data?.phone || "",
     email: normalizeStoreEmail(general.email || data?.email || ""),
     showStoreName: general.showStoreName !== false,
