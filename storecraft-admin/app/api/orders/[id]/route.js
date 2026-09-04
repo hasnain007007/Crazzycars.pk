@@ -103,6 +103,8 @@ function serializeOrder(doc) {
     courier: o.courier || o.tracking?.carrier || "Postex",
     trackingUrl: o.trackingUrl || o.tracking?.url || "",
     hasPostexLabel: Boolean(o.postexLabel),
+    hasRunCourierLabel: Boolean(o.runCourierLabel),
+    runCourierApi: o.runCourierApi || "",
     shippedAt: o.shippedAt || null,
     deliveredAt: o.deliveredAt || null,
     tracking: {

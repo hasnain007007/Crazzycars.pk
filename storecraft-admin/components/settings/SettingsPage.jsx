@@ -1256,7 +1256,7 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
             onChange={(e) => onPatch({ defaultCourier: e.target.value })}
             className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
           >
-            {["Postex", "TCS", "Leopards", "M&P", "Other"].map((c) => (
+            {["Postex", "Run Courier", "TCS", "Leopards", "M&P", "Other"].map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
@@ -1338,6 +1338,109 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
       {testResult ? (
         <p className="text-sm text-slate-600 dark:text-slate-300">{testResult}</p>
       ) : null}
+
+      <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
+        <h3 className="text-base font-semibold text-slate-900 dark:text-white">Run Courier</h3>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          Aggregator for Trax, M&amp;P, TCS, Leopard2, Daewoo, and more. Separate from PostEx — book from
+          Order Detail or the Run Courier app. API key from{" "}
+          <code className="text-xs">RUN_COURIER_API_KEY</code> env overrides the field below.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Toggle
+            label="Enable Run Courier booking"
+            checked={courier.runCourierEnabled !== false}
+            onChange={(v) => onPatch({ runCourierEnabled: v })}
+          />
+          <Field
+            label="Default Select API"
+            value={courier.runCourierDefaultApi || "Auto"}
+            onChange={(v) => onPatch({ runCourierDefaultApi: v })}
+          />
+          <Field
+            label="Run Courier API Key"
+            password
+            value={courier.runCourierApiKey || ""}
+            onChange={(v) => onPatch({ runCourierApiKey: v })}
+          />
+          <Field
+            label="API Base URL"
+            value={courier.runCourierBaseUrl || "https://portal.runcourier.com"}
+            onChange={(v) => onPatch({ runCourierBaseUrl: v })}
+          />
+          <Field
+            label="Product type"
+            value={courier.runCourierProductType || "Overnight"}
+            onChange={(v) => onPatch({ runCourierProductType: v })}
+          />
+          <Field
+            label="Service type"
+            value={courier.runCourierServiceType || "Overnight"}
+            onChange={(v) => onPatch({ runCourierServiceType: v })}
+          />
+          <Field
+            label="Origin city"
+            value={courier.runCourierOriginCity || courier.originCity || "Gujranwala"}
+            onChange={(v) => onPatch({ runCourierOriginCity: v })}
+          />
+          <Field
+            label="Shipper name (optional)"
+            value={courier.runCourierShipperName || ""}
+            onChange={(v) => onPatch({ runCourierShipperName: v })}
+          />
+          <Field
+            label="Shipper phone (optional)"
+            value={courier.runCourierShipperPhone || ""}
+            onChange={(v) => onPatch({ runCourierShipperPhone: v })}
+          />
+          <Field
+            label="Shipper address (optional)"
+            value={courier.runCourierShipperAddress || ""}
+            onChange={(v) => onPatch({ runCourierShipperAddress: v })}
+          />
+          <Field
+            label="Create path override (optional)"
+            value={courier.runCourierCreatePath || ""}
+            onChange={(v) => onPatch({ runCourierCreatePath: v })}
+          />
+          <Field
+            label="Track path override (optional)"
+            value={courier.runCourierTrackPath || ""}
+            onChange={(v) => onPatch({ runCourierTrackPath: v })}
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={async () => {
+              setTesting(true);
+              setTestResult("");
+              try {
+                const res = await fetch("/api/runcourier/carriers?type=test", {
+                  credentials: "include",
+                });
+                const json = await res.json();
+                if (json.success) {
+                  setTestResult(json.message || "Run Courier OK");
+                  toast.success("Run Courier connection OK");
+                } else {
+                  setTestResult(json.error || "Failed");
+                  toast.error(json.error || "Test failed");
+                }
+              } catch {
+                setTestResult("Network error");
+                toast.error("Network error");
+              } finally {
+                setTesting(false);
+              }
+            }}
+            disabled={testing}
+            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold hover:bg-slate-50 dark:border-slate-600"
+          >
+            {testing ? "Testing…" : "Test Run Courier"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

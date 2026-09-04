@@ -37,6 +37,7 @@ import {
   postexPublicTrackingUrl,
   storefrontTrackingUrl,
 } from "@/lib/postex";
+import RunCourierBookingPanel from "@/components/runcourier/RunCourierBookingPanel";
 import {
   getLegacyTrackingWhatsAppMessage,
   getOrderShippedWhatsAppMessage,
@@ -840,6 +841,8 @@ export function OrderDetail({ orderId }) {
   const [postexError, setPostexError] = useState("");
   const [postexSuccess, setPostexSuccess] = useState("");
   const [draftPricing, setDraftPricing] = useState(null);
+  const [showRunCourierForm, setShowRunCourierForm] = useState(false);
+  const [runCourierRebook, setRunCourierRebook] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -862,7 +865,7 @@ export function OrderDetail({ orderId }) {
       setTrackingCarrier(json.order?.courier || json.order?.tracking?.carrier || "Postex");
       setTrackingNumber(json.order?.trackingNumber || json.order?.tracking?.number || "");
       setTrackingUrl(json.order?.trackingUrl || json.order?.tracking?.url || "");
-      setHasLabel(Boolean(json.order?.hasPostexLabel));
+      setHasLabel(Boolean(json.order?.hasPostexLabel || json.order?.hasRunCourierLabel));
       setPostexSuccess("");
       setPostexError("");
       setLiveTracking(null);
@@ -1171,6 +1174,19 @@ export function OrderDetail({ orderId }) {
     }
     window.open(
       `/api/postex/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
+  function openRunCourierLabel() {
+    const tn = order?.trackingNumber || order?.tracking?.number || trackingNumber;
+    if (!tn) {
+      toast.error("No tracking number.");
+      return;
+    }
+    window.open(
+      `/api/runcourier/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`,
       "_blank",
       "noopener,noreferrer"
     );
@@ -1768,12 +1784,38 @@ export function OrderDetail({ orderId }) {
               </h2>
 
               {!hasTracking ? (
-                <div
-                  className="mt-2 rounded-lg border border-slate-200 p-3 dark:border-slate-600"
-                  style={{ background: "#FAFAFA" }}
-                >
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">📦 Book Postex Shipment</p>
-                  {postexBookingSection}
+                <div className="mt-2 space-y-3">
+                  <div
+                    className="rounded-lg border border-slate-200 p-3 dark:border-slate-600"
+                    style={{ background: "#FAFAFA" }}
+                  >
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">📦 Book Postex Shipment</p>
+                    {postexBookingSection}
+                  </div>
+                  <div
+                    className="rounded-lg border border-emerald-200 p-3 dark:border-emerald-900/40"
+                    style={{ background: "#F0FDF4" }}
+                  >
+                    <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100">
+                      🚚 Book with Run Courier
+                    </p>
+                    <p className="mt-1 text-xs text-emerald-800/80 dark:text-emerald-200/80">
+                      Choose Trax, M&amp;P, TCS, Leopard2, Daewoo, or Auto — separate from PostEx.
+                    </p>
+                    <RunCourierBookingPanel
+                      order={order}
+                      orderTotal={effectiveTotal}
+                      courierSettings={courierSettings}
+                      rebook={false}
+                      onBooked={(data) => {
+                        setTrackingNumber(data.trackingNumber || "");
+                        setTrackingCarrier(data.order?.courier || data.selectedApi || "Run Courier");
+                        setTrackingUrl(data.trackingUrl || "");
+                        setHasLabel(Boolean(data.hasLabel));
+                        load();
+                      }}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="mt-3 space-y-3 text-sm">
@@ -1826,10 +1868,13 @@ export function OrderDetail({ orderId }) {
                     >
                       Track on Postex →
                     </a>
-                    {(hasLabel || order.hasPostexLabel) ? (
+                    {(hasLabel || order.hasPostexLabel || order.hasRunCourierLabel) ? (
                       <button
                         type="button"
-                        onClick={openPostexLabel}
+                        onClick={() => {
+                          if (order.hasRunCourierLabel || order.runCourierApi) openRunCourierLabel();
+                          else openPostexLabel();
+                        }}
                         className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
                       >
                         Download Label
@@ -1855,16 +1900,55 @@ export function OrderDetail({ orderId }) {
                           setPostexRebook(true);
                           setPostexShipType(courierSettings.defaultShipperType || "Normal");
                           setShowPostexForm(true);
+                          setShowRunCourierForm(false);
                           setPostexError("");
                         }
                       }}
                       className="rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-100"
                     >
-                      Re-book
+                      Re-book Postex
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            "Re-book will create a NEW Run Courier shipment and replace the tracking number. Continue?"
+                          )
+                        ) {
+                          setRunCourierRebook(true);
+                          setShowRunCourierForm(true);
+                          setShowPostexForm(false);
+                        }
+                      }}
+                      className="rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-900 hover:bg-emerald-100"
+                    >
+                      Re-book Run Courier
                     </button>
                   </div>
 
                   {showPostexForm ? postexBookingSection : null}
+                  {showRunCourierForm ? (
+                    <RunCourierBookingPanel
+                      order={order}
+                      orderTotal={effectiveTotal}
+                      courierSettings={courierSettings}
+                      rebook={runCourierRebook}
+                      onCancelForm={() => {
+                        setShowRunCourierForm(false);
+                        setRunCourierRebook(false);
+                      }}
+                      onBooked={(data) => {
+                        setTrackingNumber(data.trackingNumber || "");
+                        setTrackingCarrier(data.order?.courier || data.selectedApi || "Run Courier");
+                        setTrackingUrl(data.trackingUrl || "");
+                        setHasLabel(Boolean(data.hasLabel));
+                        setShowRunCourierForm(false);
+                        setRunCourierRebook(false);
+                        load();
+                      }}
+                    />
+                  ) : null}
                 </div>
               )}
 
@@ -1880,7 +1964,7 @@ export function OrderDetail({ orderId }) {
                       onChange={(e) => setTrackingCarrier(e.target.value)}
                       className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
                     >
-                      {["Postex", "TCS", "Leopards", "M&P", "Other"].map((c) => (
+                      {["Postex", "Run Courier", "TCS", "Leopards", "M&P", "Trax", "Other"].map((c) => (
                         <option key={c} value={c}>
                           {c}
                         </option>

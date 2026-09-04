@@ -49,6 +49,7 @@ const NAV = [
     items: [
       { href: "/shipping", label: "Shipping", icon: "shippingEmoji" },
       { href: "/postex", label: "PostEx", icon: "truck" },
+      { href: "/runcourier", label: "Run Courier", icon: "truck" },
       { href: "/redirects", label: "Redirects", icon: "arrow" },
     ],
   },

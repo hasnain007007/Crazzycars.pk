@@ -261,6 +261,51 @@ export function BulkActionBar({
     setBusy(false);
   }, [ids, onClear, onUpdated]);
 
+  const bookRunCourierBulk = useCallback(async () => {
+    if (!ids.length) return;
+    const ok = window.confirm(
+      `Book ${ids.length} order(s) with Run Courier?\n\nUses the default Select API from Settings (e.g. Auto / TCS). Orders that already have tracking will be skipped.`
+    );
+    if (!ok) return;
+
+    setBusy(true);
+    let okCount = 0;
+    let failCount = 0;
+    const failures = [];
+
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      setBulkBookProgress(`Run Courier ${i + 1}/${ids.length}…`);
+      try {
+        const res = await fetch("/api/runcourier/create-shipment", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: id }),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          okCount += 1;
+        } else {
+          failCount += 1;
+          failures.push(`${json.order?.orderNumber || id}: ${json.error || "Failed"}`);
+        }
+      } catch {
+        failCount += 1;
+        failures.push(`${id}: Network error`);
+      }
+    }
+
+    setBulkBookProgress("");
+    if (okCount) toast.success(`Run Courier booked ${okCount} order(s).`);
+    if (failCount) {
+      toast.error(`${failCount} failed. ${failures.slice(0, 2).join(" · ")}${failures.length > 2 ? "…" : ""}`);
+    }
+    onClear();
+    onUpdated?.();
+    setBusy(false);
+  }, [ids, onClear, onUpdated]);
+
   const refreshLiveStatusBulk = useCallback(async () => {
     if (!ids.length) return;
     setBusy(true);
@@ -392,6 +437,17 @@ export function BulkActionBar({
             style={{ background: busy ? "var(--text-muted)" : "var(--accent-attention)" }}
           >
             {bulkBookProgress || "Book selected with Postex"}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={bookRunCourierBulk}
+            className="rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-none disabled:opacity-50"
+            style={{ background: busy ? "var(--text-muted)" : "#059669" }}
+          >
+            {bulkBookProgress?.startsWith("Run Courier")
+              ? bulkBookProgress
+              : "Book selected with Run Courier"}
           </button>
           <button
             type="button"
