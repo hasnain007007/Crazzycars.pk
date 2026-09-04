@@ -28,10 +28,10 @@ import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMuta
 import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
-import { revalidateStorefront } from "@/lib/revalidateStorefront";
+import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
 
-/** Homepage Best Sellers / Hot Deals are ISR-cached — purge after flag or catalog changes. */
-const HOMEPAGE_REVALIDATE_PATHS = ["/", "/api/homepage", "/api/products", "/api/products/deals"];
+/** Homepage Best Sellers / Hot Deals + shop listings — purge after flag or catalog changes. */
+const HOMEPAGE_REVALIDATE_PATHS = CATALOG_REVALIDATE_PATHS;
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;

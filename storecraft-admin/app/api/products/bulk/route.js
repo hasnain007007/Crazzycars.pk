@@ -10,6 +10,7 @@ import { denyUnlessCapability } from "@/lib/denyCapability";
 import Product from "@/lib/models/Product.model";
 import { isBodyKitProduct } from "@/lib/codEligibility";
 import { normalizeAddOns } from "@/lib/productPayload";
+import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
 
 const BULK_LIMIT = 200;
 
@@ -265,11 +266,14 @@ async function handleSaveRows({ user, body, request }) {
     ip: requestIp(request),
   });
 
+  const revalidated = await revalidateStorefront(CATALOG_REVALIDATE_PATHS);
+
   return NextResponse.json({
     success: errors.length === 0,
     modified,
     matched: rows.length,
     errors,
+    revalidated,
     error: errors.length ? `${errors.length} row(s) failed` : undefined,
   });
 }

@@ -60,7 +60,7 @@ export async function GET(request) {
       searchParams.get("new") === "1";
     const saleParam = searchParams.get("sale") === "true" || searchParams.get("deals") === "true";
 
-    const filter = { status: "active" };
+    const filter = { status: { $regex: /^active$/i } };
     const andParts = [];
 
     if (featuredFlag) {

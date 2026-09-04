@@ -131,7 +131,7 @@ export async function fetchProductsServer(params = {}) {
     const skip = (page - 1) * limit;
     const q = listing ? listing.q : String(params.q || "").trim();
 
-    const filter = { status: "active" };
+    const filter = { status: { $regex: /^active$/i } };
     if (listing) {
       await applyShopListingFilters(filter, listing);
     }

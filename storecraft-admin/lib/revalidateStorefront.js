@@ -5,6 +5,17 @@
 
 const SHOPIFY_HOST_HINTS = ["myshopify.com", "cdn.shopify.com"];
 
+/** Paths to purge after catalog product create/update/delete so /shop lists stay current. */
+export const CATALOG_REVALIDATE_PATHS = [
+  "/",
+  "/shop",
+  "/categories",
+  "/api/homepage",
+  "/api/products",
+  "/api/products/deals",
+  "/sitemap-products.xml",
+];
+
 /** Accepts either an origin or a full .../api/revalidate URL and returns the origin. */
 function normalizeBase(url) {
   return String(url || "")

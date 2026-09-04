@@ -25,6 +25,7 @@ import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMuta
 import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
+import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;
@@ -308,7 +309,11 @@ export async function POST(request) {
       .populate("categories", "name slug")
       .populate("recommendedProducts", "name slug status media.images")
       .lean();
-    return NextResponse.json({ success: true, data: withProductSaleComputed(populated) }, { status: 201 });
+    const revalidated = await revalidateStorefront(CATALOG_REVALIDATE_PATHS);
+    return NextResponse.json(
+      { success: true, data: withProductSaleComputed(populated), revalidated },
+      { status: 201 }
+    );
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to create product." },

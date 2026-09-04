@@ -23,6 +23,7 @@ import {
 } from "@/lib/csv";
 import { PRODUCT_CSV_HEADERS, PRODUCT_CSV_SAMPLE_ROWS } from "@/lib/productCsv";
 import { sanitizeMediaImages } from "@/lib/productMutations";
+import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
 
 async function uniqueProductSlug(base, excludeId) {
   const root = slugify(base || "product") || "product";
@@ -275,12 +276,16 @@ export async function POST(request) {
       }
     }
 
+    const revalidated =
+      created + updated > 0 ? await revalidateStorefront(CATALOG_REVALIDATE_PATHS) : { skipped: true };
+
     return NextResponse.json({
       success: true,
       created,
       updated,
       errors,
       processed: rows.length,
+      revalidated,
     });
   } catch (error) {
     return NextResponse.json(
