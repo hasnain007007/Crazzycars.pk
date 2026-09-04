@@ -105,8 +105,9 @@ export function isPrepaidOrderForCod(order) {
 /**
  * COD amount for Run Courier booking.
  * Explicit override always wins; else remaining COD (partial) or order total.
+ * When runCourierPaidOrdersCodZero (or shared paidOrdersCodZero) is on, fully paid → 0.
  */
-export function resolveRunCourierCodAmount(order, bookingOptions = {}) {
+export function resolveRunCourierCodAmount(order, bookingOptions = {}, settingsCourier = {}) {
   const opts = normalizeBookingOptions(bookingOptions);
   const overrideRaw =
     opts.codAmount != null && opts.codAmount !== ""
@@ -119,7 +120,15 @@ export function resolveRunCourierCodAmount(order, bookingOptions = {}) {
     if (Number.isFinite(n)) return n;
   }
 
+  const forcePaidZero =
+    settingsCourier.runCourierPaidOrdersCodZero === true ||
+    (settingsCourier.runCourierPaidOrdersCodZero == null &&
+      Boolean(settingsCourier.paidOrdersCodZero));
   const paymentStatus = String(order?.paymentStatus || "").toLowerCase();
+  if (forcePaidZero && (paymentStatus === "paid" || isPrepaidOrderForCod(order))) {
+    return 0;
+  }
+
   if (paymentStatus === "partial") {
     const remaining = Number(order?.payment?.remainingCod);
     if (Number.isFinite(remaining) && remaining >= 0) return Math.round(remaining);
@@ -139,12 +148,17 @@ function buildCleanStreet(addr = {}) {
   return street || area || "";
 }
 
-function itemDetailsFromOrder(order) {
+function itemDetailsFromOrder(order, { withSku = false } = {}) {
   const items = Array.isArray(order?.items) ? order.items : [];
   if (!items.length) return "Car accessories";
   return items
     .slice(0, 8)
-    .map((i) => `${i.quantity || 1}x ${i.name || "Item"}`)
+    .map((i) => {
+      const qty = i.quantity || 1;
+      const name = i.name || "Item";
+      const sku = withSku && (i.articleNo || i.sku) ? ` [${i.articleNo || i.sku}]` : "";
+      return `${qty}x ${name}${sku}`;
+    })
     .join("; ")
     .slice(0, 480);
 }
@@ -164,12 +178,65 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
   const serviceType = String(
     opts.serviceType || courier.runCourierServiceType || "Overnight"
   ).trim();
-  const codAmount = resolveRunCourierCodAmount(order, opts);
-  const weight = Math.max(0.5, Number(opts.weight) || Number(courier.defaultWeight) || 0.5);
-  const pieces = Math.max(1, Math.round(Number(opts.pieces) || order?.items?.length || 1));
-  const remarks =
-    String(opts.remarks || courier.shipperRemarks || "").trim() ||
+  const codAmount = resolveRunCourierCodAmount(order, opts, courier);
+
+  const autoWeight =
+    courier.runCourierAutoCalculateWeight === true ||
+    (courier.runCourierAutoCalculateWeight == null && Boolean(courier.autoCalculateWeight));
+  const grams = Number(order?.pricing?.totalWeightGrams) || 0;
+  const autoKg = grams > 0 ? Math.round((grams / 1000) * 100) / 100 : 0;
+  const weight = Math.max(
+    0.5,
+    Number(opts.weight) ||
+      (autoWeight && autoKg > 0 ? autoKg : 0) ||
+      Number(courier.runCourierDefaultWeight) ||
+      Number(courier.defaultWeight) ||
+      0.5
+  );
+
+  const autoPieces =
+    courier.runCourierAutoCalculatePieces === true ||
+    (courier.runCourierAutoCalculatePieces == null && Boolean(courier.autoCalculatePieces));
+  const pieces = Math.max(
+    1,
+    Math.round(
+      Number(opts.pieces) ||
+        (autoPieces ? order?.items?.length || 1 : 0) ||
+        order?.items?.length ||
+        1
+    )
+  );
+
+  const printDetails =
+    courier.runCourierPrintItemDetails === true ||
+    (courier.runCourierPrintItemDetails == null && Boolean(courier.printItemDetails));
+  const printSku =
+    courier.runCourierPrintItemDetailsSku === true ||
+    (courier.runCourierPrintItemDetailsSku == null && Boolean(courier.printItemDetailsSku));
+  const details = printDetails
+    ? itemDetailsFromOrder(order, { withSku: printSku })
+    : itemDetailsFromOrder(order);
+
+  let remarks =
+    String(opts.remarks || courier.runCourierShipperRemarks || courier.shipperRemarks || "").trim() ||
     "Call customer before delivery. Do not leave parcel unattended.";
+  const addNotes =
+    courier.runCourierAddOrderNotesInRemarks === true ||
+    (courier.runCourierAddOrderNotesInRemarks == null && Boolean(courier.addOrderNotesInRemarks));
+  if (addNotes) {
+    const notes = Array.isArray(order?.internalNotes)
+      ? order.internalNotes
+          .map((n) => n?.note || n)
+          .filter(Boolean)
+          .slice(0, 3)
+          .join(" | ")
+      : "";
+    if (notes) remarks = `${remarks} | Notes: ${notes}`.slice(0, 500);
+  }
+  if (printDetails && details) {
+    remarks = `${remarks} | Items: ${details}`.slice(0, 500);
+  }
+
   const city = String(opts.cityName || opts.city || addr.city || "").trim();
   const phone = String(
     opts.customerPhone || addr.phone || customer.phone || ""
@@ -204,14 +271,16 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
     consignee_city: city,
     originCity: String(courier.runCourierOriginCity || courier.originCity || "Gujranwala").trim(),
     origin_city: String(courier.runCourierOriginCity || courier.originCity || "Gujranwala").trim(),
+    pickupCode: String(courier.runCourierPickupCode || "").trim(),
+    pickup_code: String(courier.runCourierPickupCode || "").trim(),
     codAmount,
     cod_amount: codAmount,
     collection_amount: codAmount,
     weight,
     pieces,
     quantity: pieces,
-    itemDetail: itemDetailsFromOrder(order),
-    item_detail: itemDetailsFromOrder(order),
+    itemDetail: details,
+    item_detail: details,
     specialInstruction: remarks,
     special_instruction: remarks,
     remarks,

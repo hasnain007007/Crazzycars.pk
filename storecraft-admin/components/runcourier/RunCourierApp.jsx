@@ -109,25 +109,48 @@ export default function RunCourierApp() {
   const [defaultApi, setDefaultApi] = useState("Auto");
   const [rowApi, setRowApi] = useState({});
   const [rows, setRows] = useState({});
+  const [labelFrom, setLabelFrom] = useState(() => new Date().toISOString().slice(0, 10));
+  const [labelTo, setLabelTo] = useState(() => new Date().toISOString().slice(0, 10));
   const [settingsForm, setSettingsForm] = useState({
+    runCourierEnabled: true,
     runCourierApiKey: "",
     runCourierBaseUrl: "https://portal.runcourier.com",
     runCourierDefaultApi: "Auto",
     runCourierProductType: "Overnight",
     runCourierServiceType: "Overnight",
     runCourierOriginCity: "Gujranwala",
-    runCourierEnabled: true,
+    runCourierPickupCode: "",
+    runCourierShipperName: "",
+    runCourierShipperPhone: "",
+    runCourierShipperAddress: "",
+    runCourierDefaultWeight: 0.5,
+    runCourierShipperRemarks:
+      "Call customer before delivery. Do not leave parcel unattended.",
+    runCourierPrintItemDetails: false,
+    runCourierPrintItemDetailsSku: false,
+    runCourierAutoCreateShipment: false,
+    runCourierAutoSaveTracking: true,
+    runCourierAutoCalculateWeight: false,
+    runCourierAutoCalculatePieces: false,
+    runCourierPaidOrdersCodZero: false,
+    runCourierAddOrderNotesInRemarks: false,
   });
 
   function patchRow(id, partial) {
     setRows((prev) => ({ ...prev, [id]: { ...prev[id], ...partial } }));
   }
 
-  async function loadOrders(nextMode = mode) {
+  function patchSettings(partial) {
+    setSettingsForm((p) => ({ ...p, ...partial }));
+  }
+
+  async function loadOrders(nextMode = mode, dateRange = null) {
     setLoading(true);
     try {
-      const p = new URLSearchParams({ mode: nextMode, limit: "80" });
+      const p = new URLSearchParams({ mode: nextMode, limit: "100" });
       if (search.trim()) p.set("search", search.trim());
+      if (dateRange?.from) p.set("from", dateRange.from);
+      if (dateRange?.to) p.set("to", dateRange.to);
       const res = await fetch(`/api/runcourier/orders?${p}`, { credentials: "include" });
       const json = await res.json();
       if (!json.success) {
@@ -178,16 +201,44 @@ export default function RunCourierApp() {
       const json = await res.json();
       if (!json.success) return;
       const c = json.settings?.courier || json.data?.courier || {};
-      setSettingsForm((prev) => ({
-        ...prev,
+      setSettingsForm({
+        runCourierEnabled: c.runCourierEnabled !== false,
         runCourierApiKey: c.runCourierApiKey || "",
-        runCourierBaseUrl: c.runCourierBaseUrl || prev.runCourierBaseUrl,
+        runCourierBaseUrl: c.runCourierBaseUrl || "https://portal.runcourier.com",
         runCourierDefaultApi: c.runCourierDefaultApi || "Auto",
         runCourierProductType: c.runCourierProductType || "Overnight",
         runCourierServiceType: c.runCourierServiceType || "Overnight",
         runCourierOriginCity: c.runCourierOriginCity || c.originCity || "Gujranwala",
-        runCourierEnabled: c.runCourierEnabled !== false,
-      }));
+        runCourierPickupCode: c.runCourierPickupCode || "",
+        runCourierShipperName: c.runCourierShipperName || "",
+        runCourierShipperPhone: c.runCourierShipperPhone || "",
+        runCourierShipperAddress: c.runCourierShipperAddress || "",
+        runCourierDefaultWeight: c.runCourierDefaultWeight ?? c.defaultWeight ?? 0.5,
+        runCourierShipperRemarks:
+          c.runCourierShipperRemarks ||
+          c.shipperRemarks ||
+          "Call customer before delivery. Do not leave parcel unattended.",
+        runCourierPrintItemDetails: Boolean(c.runCourierPrintItemDetails ?? c.printItemDetails),
+        runCourierPrintItemDetailsSku: Boolean(
+          c.runCourierPrintItemDetailsSku ?? c.printItemDetailsSku
+        ),
+        runCourierAutoCreateShipment: Boolean(
+          c.runCourierAutoCreateShipment ?? c.autoCreateShipment
+        ),
+        runCourierAutoSaveTracking: c.runCourierAutoSaveTracking !== false,
+        runCourierAutoCalculateWeight: Boolean(
+          c.runCourierAutoCalculateWeight ?? c.autoCalculateWeight
+        ),
+        runCourierAutoCalculatePieces: Boolean(
+          c.runCourierAutoCalculatePieces ?? c.autoCalculatePieces
+        ),
+        runCourierPaidOrdersCodZero: Boolean(
+          c.runCourierPaidOrdersCodZero ?? c.paidOrdersCodZero
+        ),
+        runCourierAddOrderNotesInRemarks: Boolean(
+          c.runCourierAddOrderNotesInRemarks ?? c.addOrderNotesInRemarks
+        ),
+      });
       setDefaultApi(c.runCourierDefaultApi || "Auto");
     } catch {
       /* ignore */
@@ -205,7 +256,7 @@ export default function RunCourierApp() {
       loadOrders("unbooked");
     } else if (tab === "labels" || tab === "cancel") {
       setMode("booked");
-      loadOrders("booked");
+      loadOrders("booked", { from: labelFrom, to: labelTo });
     } else if (tab === "dashboard") {
       loadOrders("unbooked");
     } else if (tab === "settings") {
@@ -213,6 +264,35 @@ export default function RunCourierApp() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
+
+  function downloadSelectedLabels() {
+    const list = orders.filter((o) => selected.has(o.id) && o.trackingNumber);
+    if (!list.length) {
+      toast.error("Select booked orders with tracking numbers.");
+      return;
+    }
+    const trackingNumbers = list.map((o) => o.trackingNumber).join(",");
+    const orderIds = list.map((o) => o.id).join(",");
+    downloadLabel(
+      `/api/runcourier/label?trackingNumbers=${encodeURIComponent(trackingNumbers)}&orderIds=${encodeURIComponent(orderIds)}&download=1`
+    );
+    toast.success(
+      list.length === 1 ? "Opening label PDF…" : `Opening labels for ${list.length} orders…`
+    );
+  }
+
+  function SettingsToggle({ label, keyName }) {
+    return (
+      <label className="flex items-center justify-between gap-3 rounded border border-slate-200 px-3 py-2 text-sm dark:border-slate-700">
+        <span>{label}</span>
+        <input
+          type="checkbox"
+          checked={Boolean(settingsForm[keyName])}
+          onChange={(e) => patchSettings({ [keyName]: e.target.checked })}
+        />
+      </label>
+    );
+  }
 
   function toggleId(id) {
     setSelected((prev) => {
@@ -306,7 +386,20 @@ export default function RunCourierApp() {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courier: settingsForm }),
+        body: JSON.stringify({
+          courier: {
+            ...settingsForm,
+            runCourierDefaultWeight: Math.max(
+              0.1,
+              Number(settingsForm.runCourierDefaultWeight) || 0.5
+            ),
+            runCourierApiKey: String(settingsForm.runCourierApiKey || "").trim(),
+            runCourierBaseUrl: String(settingsForm.runCourierBaseUrl || "").trim(),
+            runCourierOriginCity:
+              String(settingsForm.runCourierOriginCity || "").trim() || "Gujranwala",
+            runCourierShipperRemarks: String(settingsForm.runCourierShipperRemarks || "").trim(),
+          },
+        }),
       });
       const json = await res.json();
       if (json.success) toast.success("Run Courier settings saved");
@@ -370,32 +463,72 @@ export default function RunCourierApp() {
 
       {tab === "booking" || tab === "labels" || tab === "cancel" ? (
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search order #, name, phone…"
-              className="h-9 min-w-[14rem] rounded-lg border border-slate-300 px-3 text-sm dark:border-slate-600 dark:bg-slate-900"
-            />
-            <button
-              type="button"
-              onClick={() => loadOrders(mode)}
-              className="h-9 rounded-lg border border-slate-300 px-3 text-sm font-semibold dark:border-slate-600"
-            >
-              Search
-            </button>
+          <div className="flex flex-wrap items-end gap-2">
             {tab === "booking" ? (
-              <button
-                type="button"
-                disabled={busy || !selected.size}
-                onClick={bookSelected}
-                className="h-9 rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white disabled:opacity-50"
-              >
-                Book selected ({selected.size})
-              </button>
-            ) : null}
+              <>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search order #, name, phone…"
+                  className="h-9 min-w-[14rem] rounded-lg border border-slate-300 px-3 text-sm dark:border-slate-600 dark:bg-slate-900"
+                />
+                <button
+                  type="button"
+                  onClick={() => loadOrders(mode)}
+                  className="h-9 rounded-lg border border-slate-300 px-3 text-sm font-semibold dark:border-slate-600"
+                >
+                  Search
+                </button>
+                <button
+                  type="button"
+                  disabled={busy || !selected.size}
+                  onClick={bookSelected}
+                  className="h-9 rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  Book selected ({selected.size})
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="mr-1 text-lg font-black text-emerald-700">Run Courier</span>
+                <input
+                  type="date"
+                  className="h-9 rounded border border-slate-300 px-2 text-sm dark:border-slate-600 dark:bg-slate-900"
+                  value={labelFrom}
+                  onChange={(e) => setLabelFrom(e.target.value)}
+                />
+                <input
+                  type="date"
+                  className="h-9 rounded border border-slate-300 px-2 text-sm dark:border-slate-600 dark:bg-slate-900"
+                  value={labelTo}
+                  onChange={(e) => setLabelTo(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => loadOrders("booked", { from: labelFrom, to: labelTo })}
+                  className="h-9 rounded bg-emerald-600 px-4 text-sm font-bold text-white"
+                >
+                  Search
+                </button>
+                {tab === "labels" ? (
+                  <button
+                    type="button"
+                    disabled={!selected.size}
+                    onClick={downloadSelectedLabels}
+                    className="ml-auto h-9 rounded bg-emerald-500 px-4 text-sm font-bold text-white disabled:opacity-60"
+                  >
+                    Download Label
+                  </button>
+                ) : null}
+              </>
+            )}
           </div>
+          {tab === "labels" ? (
+            <p className="text-xs text-slate-500">
+              Select one or more booked orders — labels open for printing.
+            </p>
+          ) : null}
 
           <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
             <table className="min-w-full text-left text-xs">
@@ -412,29 +545,43 @@ export default function RunCourierApp() {
                     />
                   </th>
                   <th className="px-2 py-2">Order</th>
-                  <th className="px-2 py-2">Customer</th>
-                  <th className="px-2 py-2">City</th>
-                  <th className="px-2 py-2">COD</th>
-                  {tab === "booking" ? <th className="px-2 py-2">Select API</th> : null}
-                  {tab !== "booking" ? <th className="px-2 py-2">Tracking</th> : null}
+                  {tab === "booking" ? (
+                    <>
+                      <th className="px-2 py-2">Name</th>
+                      <th className="px-2 py-2">Mobile</th>
+                      <th className="px-2 py-2">Address</th>
+                      <th className="px-2 py-2">City</th>
+                      <th className="px-2 py-2">COD</th>
+                      <th className="px-2 py-2">Select API</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-2 py-2">Customer</th>
+                      <th className="px-2 py-2">City</th>
+                      <th className="px-2 py-2">COD</th>
+                      <th className="px-2 py-2">Tracking</th>
+                    </>
+                  )}
                   <th className="px-2 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-slate-500">
+                    <td colSpan={10} className="px-3 py-6 text-center text-slate-500">
                       Loading…
                     </td>
                   </tr>
                 ) : orders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-slate-500">
+                    <td colSpan={10} className="px-3 py-6 text-center text-slate-500">
                       No orders
                     </td>
                   </tr>
                 ) : (
-                  orders.map((o) => (
+                  orders.map((o) => {
+                    const row = rows[o.id] || {};
+                    return (
                     <tr key={o.id} className="border-t border-slate-100 dark:border-slate-800">
                       <td className="px-2 py-2">
                         <input
@@ -448,29 +595,85 @@ export default function RunCourierApp() {
                           {o.orderNumber}
                         </Link>
                       </td>
-                      <td className="px-2 py-2">
-                        <div>{o.name}</div>
-                        <div className="text-slate-500">{o.phone}</div>
-                      </td>
-                      <td className="px-2 py-2">{o.city || "—"}</td>
-                      <td className="px-2 py-2">Rs. {Number(o.codAmount || 0).toLocaleString()}</td>
                       {tab === "booking" ? (
-                        <td className="px-2 py-2">
-                          <ApiSearchSelect
-                            carriers={carriers}
-                            value={rowApi[o.id] || o.suggestedApi || defaultApi}
-                            onChange={(v) => setRowApi((prev) => ({ ...prev, [o.id]: v }))}
-                          />
-                        </td>
-                      ) : null}
-                      {tab !== "booking" ? (
-                        <td className="px-2 py-2">
-                          <div className="font-mono">{o.trackingNumber || "—"}</div>
-                          <div className="text-slate-500">
-                            {o.runCourierApi || o.courier || ""}
-                          </div>
-                        </td>
-                      ) : null}
+                        <>
+                          <td className="px-2 py-2">
+                            <input
+                              className={CELL_INPUT}
+                              value={row.name ?? o.name ?? ""}
+                              onChange={(e) => patchRow(o.id, { name: e.target.value })}
+                              aria-label={`Name for ${o.orderNumber}`}
+                            />
+                          </td>
+                          <td className="px-2 py-2">
+                            <input
+                              className={`${CELL_INPUT} min-w-[9rem] font-mono`}
+                              value={row.phone ?? o.phone ?? ""}
+                              onChange={(e) => patchRow(o.id, { phone: e.target.value })}
+                              aria-label={`Mobile for ${o.orderNumber}`}
+                            />
+                          </td>
+                          <td className="px-2 py-2">
+                            <input
+                              className={`${CELL_INPUT} min-w-[14rem]`}
+                              value={row.address ?? o.address ?? ""}
+                              onChange={(e) => patchRow(o.id, { address: e.target.value })}
+                              title={row.address ?? o.address ?? ""}
+                              aria-label={`Address for ${o.orderNumber}`}
+                            />
+                          </td>
+                          <td className="px-2 py-2">
+                            <input
+                              className={`${CELL_INPUT} min-w-[8rem]`}
+                              value={row.city ?? o.city ?? ""}
+                              onChange={(e) => patchRow(o.id, { city: e.target.value })}
+                              aria-label={`City for ${o.orderNumber}`}
+                            />
+                          </td>
+                          <td className="px-2 py-2">
+                            <input
+                              type="number"
+                              min={0}
+                              step={1}
+                              className="h-8 w-24 rounded border border-slate-300 px-1 text-xs dark:border-slate-600 dark:bg-slate-900"
+                              value={row.cod ?? o.codAmount ?? 0}
+                              onChange={(e) =>
+                                patchRow(o.id, {
+                                  cod: Math.max(0, Math.round(Number(e.target.value) || 0)),
+                                })
+                              }
+                              aria-label={`COD for ${o.orderNumber}`}
+                            />
+                          </td>
+                          <td className="px-2 py-2">
+                            <ApiSearchSelect
+                              carriers={carriers}
+                              value={rowApi[o.id] || o.suggestedApi || defaultApi}
+                              onChange={(v) => setRowApi((prev) => ({ ...prev, [o.id]: v }))}
+                            />
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-2 py-2">
+                            <div className="font-medium">{o.name}</div>
+                            <div className="font-mono text-slate-500">{o.phone}</div>
+                            <div className="mt-0.5 max-w-[14rem] truncate text-[10px] text-slate-400" title={o.address}>
+                              {o.address || "—"}
+                            </div>
+                          </td>
+                          <td className="px-2 py-2">{o.city || "—"}</td>
+                          <td className="px-2 py-2">
+                            Rs. {Number(o.codAmount || 0).toLocaleString()}
+                          </td>
+                          <td className="px-2 py-2">
+                            <div className="font-mono">{o.trackingNumber || "—"}</div>
+                            <div className="text-slate-500">
+                              {o.runCourierApi || o.courier || ""} · {o.orderStatus || ""}
+                            </div>
+                          </td>
+                        </>
+                      )}
                       <td className="px-2 py-2">
                         {tab === "booking" ? (
                           <button
@@ -480,7 +683,7 @@ export default function RunCourierApp() {
                             onClick={async () => {
                               setBusy(true);
                               const r = await bookOne(
-                                o.id,
+                                o,
                                 rowApi[o.id] || o.suggestedApi || defaultApi
                               );
                               if (r.ok) toast.success(`Booked ${r.json.trackingNumber}`);
@@ -520,7 +723,8 @@ export default function RunCourierApp() {
                         ) : null}
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -529,56 +733,138 @@ export default function RunCourierApp() {
       ) : null}
 
       {tab === "settings" ? (
-        <div className="max-w-xl space-y-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <label className="flex items-center justify-between text-sm">
-            <span>Enabled</span>
-            <input
-              type="checkbox"
-              checked={settingsForm.runCourierEnabled !== false}
-              onChange={(e) =>
-                setSettingsForm((p) => ({ ...p, runCourierEnabled: e.target.checked }))
-              }
-            />
-          </label>
+        <div className="mx-auto max-w-2xl space-y-4 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
           <div>
-            <label className="text-xs font-medium text-slate-600">API Key</label>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Run Courier</h2>
+            <p className="text-sm text-slate-500">
+              Token, pickup/shipper defaults, and booking options — parallel to PostEx. Support:{" "}
+              info@runcourier.com
+            </p>
+          </div>
+
+          <SettingsToggle label="Enable Run Courier booking" keyName="runCourierEnabled" />
+
+          <label className="block text-xs font-semibold uppercase text-slate-500">
+            Token (API Key)
             <input
               type="password"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+              className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
               value={settingsForm.runCourierApiKey}
-              onChange={(e) =>
-                setSettingsForm((p) => ({ ...p, runCourierApiKey: e.target.value }))
-              }
+              onChange={(e) => patchSettings({ runCourierApiKey: e.target.value })}
+              placeholder="Run Courier API token"
             />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600">Base URL</label>
+          </label>
+
+          <label className="block text-xs font-semibold uppercase text-slate-500">
+            API Base URL
             <input
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+              className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
               value={settingsForm.runCourierBaseUrl}
-              onChange={(e) =>
-                setSettingsForm((p) => ({ ...p, runCourierBaseUrl: e.target.value }))
-              }
+              onChange={(e) => patchSettings({ runCourierBaseUrl: e.target.value })}
             />
-          </div>
+          </label>
+
           <div>
-            <label className="text-xs font-medium text-slate-600">Default Select API</label>
-            <ApiSearchSelect
-              carriers={carriers}
-              value={settingsForm.runCourierDefaultApi}
-              onChange={(v) => setSettingsForm((p) => ({ ...p, runCourierDefaultApi: v }))}
-              className="mt-1"
-            />
+            <span className="text-xs font-semibold uppercase text-slate-500">Pickup / Shipper</span>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <label className="block text-xs font-medium text-slate-600 sm:col-span-2">
+                Pickup code (optional)
+                <input
+                  className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                  value={settingsForm.runCourierPickupCode}
+                  onChange={(e) => patchSettings({ runCourierPickupCode: e.target.value })}
+                  placeholder="e.g. profile / warehouse code from portal"
+                />
+              </label>
+              <label className="block text-xs font-medium text-slate-600">
+                Shipper name
+                <input
+                  className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                  value={settingsForm.runCourierShipperName}
+                  onChange={(e) => patchSettings({ runCourierShipperName: e.target.value })}
+                />
+              </label>
+              <label className="block text-xs font-medium text-slate-600">
+                Shipper phone
+                <input
+                  className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                  value={settingsForm.runCourierShipperPhone}
+                  onChange={(e) => patchSettings({ runCourierShipperPhone: e.target.value })}
+                />
+              </label>
+              <label className="block text-xs font-medium text-slate-600 sm:col-span-2">
+                Shipper address
+                <input
+                  className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                  value={settingsForm.runCourierShipperAddress}
+                  onChange={(e) => patchSettings({ runCourierShipperAddress: e.target.value })}
+                />
+              </label>
+            </div>
+            {(settingsForm.runCourierShipperName ||
+              settingsForm.runCourierShipperAddress ||
+              settingsForm.runCourierPickupCode) && (
+              <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-slate-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-slate-200">
+                {settingsForm.runCourierPickupCode ? (
+                  <p className="font-bold text-emerald-800 dark:text-emerald-300">
+                    Code {settingsForm.runCourierPickupCode} · Pickup
+                  </p>
+                ) : null}
+                <p className="mt-1">{settingsForm.runCourierShipperAddress || "—"}</p>
+                <p className="mt-1 text-slate-600 dark:text-slate-400">
+                  {settingsForm.runCourierOriginCity}
+                  {settingsForm.runCourierShipperName
+                    ? ` · ${settingsForm.runCourierShipperName}`
+                    : ""}
+                </p>
+                <p className="mt-1 text-slate-600 dark:text-slate-400">
+                  Phone: {settingsForm.runCourierShipperPhone || "—"}
+                </p>
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-xs font-medium text-slate-600">Product type</label>
+
+          <label className="block text-xs font-semibold uppercase text-slate-500">
+            Origin City
+            <input
+              className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+              value={settingsForm.runCourierOriginCity}
+              onChange={(e) => patchSettings({ runCourierOriginCity: e.target.value })}
+            />
+          </label>
+
+          <label className="block text-xs font-semibold uppercase text-slate-500">
+            Default Weight (kg)
+            <input
+              type="number"
+              step="0.1"
+              min="0.1"
+              className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+              value={settingsForm.runCourierDefaultWeight}
+              onChange={(e) => patchSettings({ runCourierDefaultWeight: e.target.value })}
+            />
+          </label>
+
+          <label className="block text-xs font-semibold uppercase text-slate-500">
+            Shipper Remarks
+            <textarea
+              className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+              rows={3}
+              value={settingsForm.runCourierShipperRemarks}
+              onChange={(e) => patchSettings({ runCourierShipperRemarks: e.target.value })}
+            />
+            <span className="mt-1 block text-[11px] font-normal normal-case text-slate-500">
+              Saved remarks are sent on new Run Courier bookings and appear on labels when supported.
+            </span>
+          </label>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className="block text-xs font-semibold uppercase text-slate-500">
+              Product type
               <select
-                className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 value={settingsForm.runCourierProductType}
-                onChange={(e) =>
-                  setSettingsForm((p) => ({ ...p, runCourierProductType: e.target.value }))
-                }
+                onChange={(e) => patchSettings({ runCourierProductType: e.target.value })}
               >
                 {RUN_COURIER_PRODUCT_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -586,15 +872,13 @@ export default function RunCourierApp() {
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600">Service type</label>
+            </label>
+            <label className="block text-xs font-semibold uppercase text-slate-500">
+              Service type
               <select
-                className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 value={settingsForm.runCourierServiceType}
-                onChange={(e) =>
-                  setSettingsForm((p) => ({ ...p, runCourierServiceType: e.target.value }))
-                }
+                onChange={(e) => patchSettings({ runCourierServiceType: e.target.value })}
               >
                 {RUN_COURIER_SERVICE_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -602,25 +886,46 @@ export default function RunCourierApp() {
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
+            <label className="block text-xs font-semibold uppercase text-slate-500 sm:col-span-2">
+              Default Select API
+              <div className="mt-1">
+                <ApiSearchSelect
+                  carriers={carriers}
+                  value={settingsForm.runCourierDefaultApi}
+                  onChange={(v) => patchSettings({ runCourierDefaultApi: v })}
+                />
+              </div>
+            </label>
           </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600">Origin city</label>
-            <input
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-              value={settingsForm.runCourierOriginCity}
-              onChange={(e) =>
-                setSettingsForm((p) => ({ ...p, runCourierOriginCity: e.target.value }))
-              }
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <SettingsToggle label="Print Item Details" keyName="runCourierPrintItemDetails" />
+            <SettingsToggle label="Auto Calculate Weight" keyName="runCourierAutoCalculateWeight" />
+            <SettingsToggle
+              label="Print Item Details with SKU"
+              keyName="runCourierPrintItemDetailsSku"
+            />
+            <SettingsToggle label="Auto Calculate Pieces" keyName="runCourierAutoCalculatePieces" />
+            <SettingsToggle label="Auto Order Fulfillment" keyName="runCourierAutoCreateShipment" />
+            <SettingsToggle
+              label="Calculate Paid orders as Zero"
+              keyName="runCourierPaidOrdersCodZero"
+            />
+            <SettingsToggle label="Auto Save Tracking Details" keyName="runCourierAutoSaveTracking" />
+            <SettingsToggle
+              label="Add Order Notes in Remarks"
+              keyName="runCourierAddOrderNotesInRemarks"
             />
           </div>
+
           <button
             type="button"
             disabled={busy}
             onClick={saveSettings}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+            className="w-full rounded-lg bg-[#2563EB] py-3 text-sm font-bold text-white disabled:opacity-50"
           >
-            Save Run Courier settings
+            {busy ? "Saving…" : "Save Settings"}
           </button>
         </div>
       ) : null}

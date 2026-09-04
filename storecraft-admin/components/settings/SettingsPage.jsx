@@ -1384,6 +1384,11 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
             onChange={(v) => onPatch({ runCourierOriginCity: v })}
           />
           <Field
+            label="Default weight (kg)"
+            value={String(courier.runCourierDefaultWeight ?? courier.defaultWeight ?? 0.5)}
+            onChange={(v) => onPatch({ runCourierDefaultWeight: v })}
+          />
+          <Field
             label="Shipper name (optional)"
             value={courier.runCourierShipperName || ""}
             onChange={(v) => onPatch({ runCourierShipperName: v })}
@@ -1399,6 +1404,21 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
             onChange={(v) => onPatch({ runCourierShipperAddress: v })}
           />
           <Field
+            label="Pickup code (optional)"
+            value={courier.runCourierPickupCode || ""}
+            onChange={(v) => onPatch({ runCourierPickupCode: v })}
+          />
+          <Field
+            label="Shipper remarks"
+            multiline
+            value={
+              courier.runCourierShipperRemarks ||
+              courier.shipperRemarks ||
+              "Call customer before delivery. Do not leave parcel unattended."
+            }
+            onChange={(v) => onPatch({ runCourierShipperRemarks: v })}
+          />
+          <Field
             label="Create path override (optional)"
             value={courier.runCourierCreatePath || ""}
             onChange={(v) => onPatch({ runCourierCreatePath: v })}
@@ -1407,6 +1427,48 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
             label="Track path override (optional)"
             value={courier.runCourierTrackPath || ""}
             onChange={(v) => onPatch({ runCourierTrackPath: v })}
+          />
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <Toggle
+            label="Print Item Details"
+            checked={Boolean(courier.runCourierPrintItemDetails)}
+            onChange={(v) => onPatch({ runCourierPrintItemDetails: v })}
+          />
+          <Toggle
+            label="Auto Calculate Weight"
+            checked={Boolean(courier.runCourierAutoCalculateWeight)}
+            onChange={(v) => onPatch({ runCourierAutoCalculateWeight: v })}
+          />
+          <Toggle
+            label="Print Item Details with SKU"
+            checked={Boolean(courier.runCourierPrintItemDetailsSku)}
+            onChange={(v) => onPatch({ runCourierPrintItemDetailsSku: v })}
+          />
+          <Toggle
+            label="Auto Calculate Pieces"
+            checked={Boolean(courier.runCourierAutoCalculatePieces)}
+            onChange={(v) => onPatch({ runCourierAutoCalculatePieces: v })}
+          />
+          <Toggle
+            label="Auto Order Fulfillment"
+            checked={Boolean(courier.runCourierAutoCreateShipment)}
+            onChange={(v) => onPatch({ runCourierAutoCreateShipment: v })}
+          />
+          <Toggle
+            label="Calculate Paid orders as Zero"
+            checked={Boolean(courier.runCourierPaidOrdersCodZero)}
+            onChange={(v) => onPatch({ runCourierPaidOrdersCodZero: v })}
+          />
+          <Toggle
+            label="Auto Save Tracking Details"
+            checked={courier.runCourierAutoSaveTracking !== false}
+            onChange={(v) => onPatch({ runCourierAutoSaveTracking: v })}
+          />
+          <Toggle
+            label="Add Order Notes in Remarks"
+            checked={Boolean(courier.runCourierAddOrderNotesInRemarks)}
+            onChange={(v) => onPatch({ runCourierAddOrderNotesInRemarks: v })}
           />
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
