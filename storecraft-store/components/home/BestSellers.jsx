@@ -36,7 +36,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
 
   useEffect(() => {
     if (hasInitial) return;
-    fetch("/api/products?featured=true&limit=20")
+    fetch("/api/products?featured=true&limit=500")
       .then((r) => r.json())
       .then((data) => {
         const list = data?.products || data?.data || [];
@@ -63,8 +63,13 @@ export default function BestSellers({ initialProducts = [], settings }) {
               {settings?.bestSellers?.title || "Best Sellers"}
             </h2>
             <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8 }} />
+            {!loading && filtered.length > 0 ? (
+              <p className="mt-1.5 text-xs text-[#6B7280] md:text-sm">
+                {filtered.length} featured product{filtered.length === 1 ? "" : "s"}
+              </p>
+            ) : null}
           </div>
-          <Link href="/shop" className="text-sm font-semibold text-[#C41E1E] hover:underline">
+          <Link href="/shop?sort=featured" className="text-sm font-semibold text-[#C41E1E] hover:underline">
             View All →
           </Link>
         </div>
@@ -99,7 +104,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
           <p className="mt-8 text-sm text-[#6B7280]">No products in this tab yet.</p>
         ) : (
           <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
-            {filtered.slice(0, 10).map((p) => (
+            {filtered.map((p) => (
               <ProductCard key={p.id || p.slug} product={p} />
             ))}
           </div>

@@ -32,8 +32,8 @@ export default async function Page() {
   // (client components can still fall back to their own fetches if needed).
   try {
     [bestSellers, hotDeals, heroSlides, carCatalog, activeProductCount, homepageCategories] = await Promise.all([
-      shopify ? getBestSellingProducts(12) : fetchBestSellersServer({ limit: 12 }),
-      shopify ? getHotDealProducts(8) : fetchHotDealsServer({ filter: "all", limit: 8 }),
+      shopify ? getBestSellingProducts(100) : fetchBestSellersServer({ limit: 500 }),
+      shopify ? getHotDealProducts(100) : fetchHotDealsServer({ filter: "all", limit: 500 }),
       getHeroSlides(),
       fetchCarCatalogServer({ lean: true }),
       (async () => {

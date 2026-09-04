@@ -9,8 +9,8 @@ import { PRODUCT_CARD_SELECT } from "@/lib/serverProductFetch";
 /**
  * @param {{ limit?: number }} opts
  */
-export async function fetchBestSellersServer({ limit = 100 } = {}) {
-  const lim = Math.min(100, Math.max(1, Number(limit) || 100));
+export async function fetchBestSellersServer({ limit = 500 } = {}) {
+  const lim = Math.min(500, Math.max(1, Number(limit) || 500));
   try {
     await dbConnect();
     const rows = await Product.find({

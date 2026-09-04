@@ -9,7 +9,7 @@ export async function GET(request) {
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const filter = String(searchParams.get("filter") || "all").toLowerCase();
-    const limit = Math.min(48, Math.max(1, Number(searchParams.get("limit") || 24)));
+    const limit = Math.min(500, Math.max(1, Number(searchParams.get("limit") || 500)));
     const query = {
       status: { $regex: /^active$/i },
       pricing: { $exists: true },
@@ -25,10 +25,14 @@ export async function GET(request) {
       .lean();
 
     return NextResponse.json(
-      { success: true, products: rows.map(serializeStoreProductSummary) },
+      {
+        success: true,
+        products: rows.map(serializeStoreProductSummary),
+        total: rows.length,
+      },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
         },
       }
     );

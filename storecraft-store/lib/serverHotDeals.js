@@ -10,10 +10,10 @@ import { buildDealsMongoFilter } from "@/lib/dealsFilter";
  * @param {{ filter?: string, limit?: number }} opts
  * @returns {Promise<object[]>}
  */
-export async function fetchHotDealsServer({ filter = "all", limit = 12 } = {}) {
+export async function fetchHotDealsServer({ filter = "all", limit = 500 } = {}) {
   try {
     await dbConnect();
-    const lim = Math.min(48, Math.max(1, Number(limit) || 24));
+    const lim = Math.min(500, Math.max(1, Number(limit) || 500));
     const f = String(filter || "all").toLowerCase();
     const query = {
       status: { $regex: /^active$/i },

@@ -46,7 +46,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
     }
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/products/deals?filter=${encodeURIComponent(active)}&limit=24`)
+    fetch(`/api/products/deals?filter=${encodeURIComponent(active)}&limit=500`)
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -84,6 +84,11 @@ export default function HotDeals({ settings, initialProducts = null }) {
         <p className="mt-1.5 text-xs md:mt-2 md:text-sm" style={{ color: "#6B7280" }}>
           {subtitle}
         </p>
+        {!loading && hasDeals ? (
+          <p className="mt-1 text-xs font-medium" style={{ color: "#9CA3AF" }}>
+            Showing {products.length} Hot Deal product{products.length === 1 ? "" : "s"}
+          </p>
+        ) : null}
         {!loading && hasDeals && settings?.flashSaleEnabled !== false ? (
           <p
             className="mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold"
