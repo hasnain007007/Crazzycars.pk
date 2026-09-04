@@ -7,6 +7,9 @@ import { denyUnlessCapability } from "@/lib/denyCapability";
 import Product from "@/lib/models/Product.model";
 import Review from "@/lib/models/Review.model";
 import { requestIp } from "@/lib/requestIp";
+import { revalidateStorefront } from "@/lib/revalidateStorefront";
+
+const REVIEW_REVALIDATE_PATHS = ["/", "/api/reviews", "/api/products"];
 
 export async function GET(request) {
   try {
@@ -138,7 +141,8 @@ export async function POST(request) {
       ip: requestIp(request),
     });
 
-    return NextResponse.json({ success: true, review: populated });
+    const revalidated = await revalidateStorefront(REVIEW_REVALIDATE_PATHS);
+    return NextResponse.json({ success: true, review: populated, revalidated });
   } catch (e) {
     return NextResponse.json({ success: false, error: e.message || "Create failed" }, { status: 500 });
   }

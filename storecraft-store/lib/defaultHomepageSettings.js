@@ -38,6 +38,7 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
     showCategories: true,
     showBestSellers: true,
     showHotDeals: true,
+    showReviews: true,
   },
   categories: {
     title: "Shop by Category",
@@ -65,14 +66,16 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
     { id: "categories", label: "Categories", enabled: true, order: 3 },
     { id: "bestSellers", label: "Best Sellers", enabled: true, order: 4 },
     { id: "hotDeals", label: "Hot Deals", enabled: true, order: 5 },
-    { id: "flashSale", label: "Flash Sale", enabled: false, order: 6 },
-    { id: "brands", label: "Brand Carousel", enabled: true, order: 7 },
-    { id: "whyChooseUs", label: "Why Choose Us", enabled: true, order: 8 },
+    { id: "reviews", label: "Customer Reviews", enabled: true, order: 6 },
+    { id: "flashSale", label: "Flash Sale", enabled: false, order: 7 },
+    { id: "brands", label: "Brand Carousel", enabled: true, order: 8 },
+    { id: "whyChooseUs", label: "Why Choose Us", enabled: true, order: 9 },
   ],
   sectionTitles: {
     categories: "Shop by Category",
     bestSellers: "Best Sellers",
     hotDeals: "Hot Deals",
+    reviews: "Customer Reviews",
     flashSale: "Flash Sale",
     brands: "Shop by Car Brand",
     whyChooseUs: "Why Choose Us",
@@ -137,6 +140,7 @@ export function normalizeHomepageSettings(raw) {
       showCategories: raw.sections?.showCategories !== false,
       showBestSellers: raw.sections?.showBestSellers !== false,
       showHotDeals: raw.sections?.showHotDeals !== false,
+      showReviews: raw.sections?.showReviews !== false,
     },
     categories: {
       title: raw.categories?.title || raw.sectionTitles?.categories || d.categories.title,
@@ -186,21 +190,36 @@ export function normalizeHomepageSettings(raw) {
             })
           : d.hotDeals.tabs,
     },
-    sectionOrder:
-      Array.isArray(raw.sectionOrder) && raw.sectionOrder.length
-        ? raw.sectionOrder
-            .filter((s) => s?.id && s.id !== "trust")
-            .map((s, i) => ({
-              id: String(s?.id || ""),
-              label: String(s?.label || ""),
-              enabled: s?.enabled !== false,
-              order: Number.isFinite(Number(s?.order)) ? Number(s.order) : i + 1,
-            }))
-        : d.sectionOrder,
+    sectionOrder: (() => {
+      const rawOrder =
+        Array.isArray(raw.sectionOrder) && raw.sectionOrder.length
+          ? raw.sectionOrder
+              .filter((s) => s?.id && s.id !== "trust")
+              .map((s, i) => ({
+                id: String(s?.id || ""),
+                label: String(s?.label || ""),
+                enabled: s?.enabled !== false,
+                order: Number.isFinite(Number(s?.order)) ? Number(s.order) : i + 1,
+              }))
+          : d.sectionOrder;
+      if (rawOrder.some((s) => s.id === "reviews")) return rawOrder;
+      const afterHot = rawOrder.find((s) => s.id === "hotDeals")?.order;
+      const insertAt = Number.isFinite(afterHot) ? afterHot + 0.5 : 6;
+      return [
+        ...rawOrder,
+        {
+          id: "reviews",
+          label: "Customer Reviews",
+          enabled: true,
+          order: insertAt,
+        },
+      ];
+    })(),
     sectionTitles: {
       categories: raw.sectionTitles?.categories || d.sectionTitles.categories,
       bestSellers: raw.sectionTitles?.bestSellers || d.sectionTitles.bestSellers,
       hotDeals: raw.sectionTitles?.hotDeals || d.sectionTitles.hotDeals,
+      reviews: raw.sectionTitles?.reviews || d.sectionTitles.reviews,
       flashSale: raw.sectionTitles?.flashSale || d.sectionTitles.flashSale,
       brands: raw.sectionTitles?.brands || d.sectionTitles.brands,
       whyChooseUs: raw.sectionTitles?.whyChooseUs || d.sectionTitles.whyChooseUs,

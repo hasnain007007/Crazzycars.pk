@@ -253,8 +253,16 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
   const [matchedCombo, setMatchedCombo] = useState(null);
   const [selectedAddOns, setSelectedAddOns] = useState([]);
   const [openSection, setOpenSection] = useState(null);
-  const [reviewCount, setReviewCount] = useState(0);
-  const [reviewAverage, setReviewAverage] = useState(null);
+  const [reviewCount, setReviewCount] = useState(() => {
+    const n = Number(
+      initialProduct?.reviewCount ?? initialProduct?.numReviews ?? initialProduct?.totalReviews ?? 0
+    );
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  });
+  const [reviewAverage, setReviewAverage] = useState(() => {
+    const n = Number(initialProduct?.averageRating ?? initialProduct?.rating);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  });
   const [productBadges, setProductBadges] = useState(null);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isCompared, setIsCompared] = useState(false);
@@ -356,10 +364,12 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
   }, [product?.slug, product?.categories?.[0]?.slug]);
 
   useEffect(() => {
-    setReviewCount(0);
-    setReviewAverage(null);
+    const n = Number(product?.reviewCount ?? product?.numReviews ?? product?.totalReviews ?? 0);
+    setReviewCount(Number.isFinite(n) && n > 0 ? n : 0);
+    const avg = Number(product?.averageRating ?? product?.rating);
+    setReviewAverage(Number.isFinite(avg) && avg > 0 ? avg : null);
     setSelectedIndex(0);
-  }, [product?.id, product?._id, product?.slug]);
+  }, [product?.id, product?._id, product?.slug, product?.reviewCount, product?.numReviews, product?.totalReviews, product?.averageRating, product?.rating]);
 
   useEffect(() => {
     const pid = product?._id ?? product?.id;

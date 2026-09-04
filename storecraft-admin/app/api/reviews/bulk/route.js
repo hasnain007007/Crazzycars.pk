@@ -4,6 +4,9 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import Review from "@/lib/models/Review.model";
+import { revalidateStorefront } from "@/lib/revalidateStorefront";
+
+const REVIEW_REVALIDATE_PATHS = ["/", "/api/reviews", "/api/products"];
 
 export async function POST(request) {
   try {
@@ -41,7 +44,8 @@ export async function POST(request) {
         return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
+    const revalidated = await revalidateStorefront(REVIEW_REVALIDATE_PATHS);
+    return NextResponse.json({ success: true, revalidated });
   } catch (e) {
     return NextResponse.json({ success: false, error: e.message || "Bulk action failed" }, { status: 500 });
   }

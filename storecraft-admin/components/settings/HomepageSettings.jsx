@@ -187,6 +187,7 @@ const DEFAULT_FORM = {
     showCategories: true,
     showBestSellers: true,
     showHotDeals: true,
+    showReviews: true,
   },
   categories: {
     title: "Shop by Category",
@@ -214,9 +215,10 @@ const DEFAULT_FORM = {
     { id: "categories", label: "Categories", enabled: true, order: 3 },
     { id: "bestSellers", label: "Best Sellers", enabled: true, order: 4 },
     { id: "hotDeals", label: "Hot Deals", enabled: true, order: 5 },
-    { id: "flashSale", label: "Flash Sale", enabled: true, order: 6 },
-    { id: "brands", label: "Brand Carousel", enabled: true, order: 7 },
-    { id: "whyChooseUs", label: "Why Choose Us", enabled: true, order: 8 },
+    { id: "reviews", label: "Customer Reviews", enabled: true, order: 6 },
+    { id: "flashSale", label: "Flash Sale", enabled: true, order: 7 },
+    { id: "brands", label: "Brand Carousel", enabled: true, order: 8 },
+    { id: "whyChooseUs", label: "Why Choose Us", enabled: true, order: 9 },
   ],
   sectionTitles: {
     categories: "Shop by Category",

@@ -4,6 +4,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import Product from "@/lib/models/Product.model";
 import Review from "@/lib/models/Review.model";
+import { revalidateStorefront } from "@/lib/revalidateStorefront";
 
 export async function POST(request) {
   try {
@@ -40,10 +41,13 @@ export async function POST(request) {
       if (count > 0) updated += 1;
     }
 
+    const revalidated = await revalidateStorefront(["/", "/api/reviews", "/api/products"]);
+
     return NextResponse.json({
       success: true,
       message: `Updated ratings for ${updated} products`,
       total: products.length,
+      revalidated,
     });
   } catch (e) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });

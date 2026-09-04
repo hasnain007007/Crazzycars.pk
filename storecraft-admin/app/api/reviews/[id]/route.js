@@ -7,6 +7,9 @@ import { denyUnlessCapability } from "@/lib/denyCapability";
 import Product from "@/lib/models/Product.model";
 import Review from "@/lib/models/Review.model";
 import { requestIp } from "@/lib/requestIp";
+import { revalidateStorefront } from "@/lib/revalidateStorefront";
+
+const REVIEW_REVALIDATE_PATHS = ["/", "/api/reviews", "/api/products"];
 
 async function updateProductRating(productId) {
   try {
@@ -140,7 +143,8 @@ export async function PUT(request, context) {
       ip: requestIp(request),
     });
 
-    return NextResponse.json({ success: true, review });
+    const revalidated = await revalidateStorefront(REVIEW_REVALIDATE_PATHS);
+    return NextResponse.json({ success: true, review, revalidated });
   } catch (e) {
     return NextResponse.json({ success: false, error: e.message || "Update failed" }, { status: 500 });
   }
@@ -174,7 +178,8 @@ export async function DELETE(request, context) {
       ip: requestIp(request),
     });
 
-    return NextResponse.json({ success: true });
+    const revalidated = await revalidateStorefront(REVIEW_REVALIDATE_PATHS);
+    return NextResponse.json({ success: true, revalidated });
   } catch (e) {
     return NextResponse.json({ success: false, error: e.message || "Delete failed" }, { status: 500 });
   }
