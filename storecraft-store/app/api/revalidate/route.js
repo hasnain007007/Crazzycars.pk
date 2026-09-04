@@ -37,8 +37,13 @@ export async function POST(request) {
     revalidateTag("store-settings");
     for (const path of paths) {
       revalidatePath(path);
+      // Category listings are ISR — purge the whole segment when catalog changes.
+      if (path === "/categories" || path.startsWith("/categories/")) {
+        revalidatePath("/categories", "layout");
+      }
     }
     revalidatePath("/", "layout");
+    revalidatePath("/shop", "layout");
 
     return NextResponse.json({
       success: true,
