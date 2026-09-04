@@ -1224,7 +1224,6 @@ export function OrderDetail({ orderId }) {
     Number(draftPricing?.total ?? p.total ?? order.total ?? 0) || 0
   );
   const hasTracking = Boolean(order.trackingNumber || order.tracking?.number || trackingNumber);
-  const orderPrepaid = isPrepaidOrder(order);
   const pmLower = String(order.paymentMethod || order.payment?.method || "").toLowerCase();
 
   const postexBookingSection = (
