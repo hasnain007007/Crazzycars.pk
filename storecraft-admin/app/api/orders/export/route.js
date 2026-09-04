@@ -71,6 +71,8 @@ export async function GET(request) {
         { "customer.email": rx },
         { "customer.phone": rx },
         { "shippingAddress.phone": rx },
+        { "items.name": rx },
+        { "items.articleNo": rx },
       ];
       if (digits.length >= 7) {
         const digitRx = new RegExp(escapeRegex(digits));

@@ -131,7 +131,7 @@ export function OrderFilters({
           </label>
           <input
             type="search"
-            placeholder="Order #, name, phone, or email"
+            placeholder="Order #, product, name, phone, or email"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none"

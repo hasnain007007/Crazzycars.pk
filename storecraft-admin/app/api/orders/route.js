@@ -104,6 +104,8 @@ export async function GET(request) {
         { "customer.email": rx },
         { "customer.phone": rx },
         { "shippingAddress.phone": rx },
+        { "items.name": rx },
+        { "items.articleNo": rx },
         { tags: rx },
       ];
       // Phone-heavy guest checkouts: match digit runs in phone / guest+…@ email
