@@ -1799,22 +1799,51 @@ export function OrderDetail({ orderId }) {
                     <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100">
                       🚚 Book with Run Courier
                     </p>
-                    <p className="mt-1 text-xs text-emerald-800/80 dark:text-emerald-200/80">
-                      Choose Trax, M&amp;P, TCS, Leopard2, Daewoo, or Auto — separate from PostEx.
-                    </p>
-                    <RunCourierBookingPanel
-                      order={order}
-                      orderTotal={effectiveTotal}
-                      courierSettings={courierSettings}
-                      rebook={false}
-                      onBooked={(data) => {
-                        setTrackingNumber(data.trackingNumber || "");
-                        setTrackingCarrier(data.order?.courier || data.selectedApi || "Run Courier");
-                        setTrackingUrl(data.trackingUrl || "");
-                        setHasLabel(Boolean(data.hasLabel));
-                        load();
-                      }}
-                    />
+                    {!showRunCourierForm ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRunCourierRebook(false);
+                          setShowRunCourierForm(true);
+                          setShowPostexForm(false);
+                        }}
+                        style={{
+                          marginTop: 10,
+                          background: "#059669",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: 8,
+                          padding: "10px 20px",
+                          fontWeight: 700,
+                          fontSize: 14,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        🚚 Book with Run Courier
+                      </button>
+                    ) : (
+                      <RunCourierBookingPanel
+                        order={order}
+                        orderTotal={effectiveTotal}
+                        courierSettings={courierSettings}
+                        rebook={false}
+                        onCancelForm={() => {
+                          setShowRunCourierForm(false);
+                          setRunCourierRebook(false);
+                        }}
+                        onBooked={(data) => {
+                          setTrackingNumber(data.trackingNumber || "");
+                          setTrackingCarrier(data.order?.courier || data.selectedApi || "Run Courier");
+                          setTrackingUrl(data.trackingUrl || "");
+                          setHasLabel(Boolean(data.hasLabel));
+                          setShowRunCourierForm(false);
+                          load();
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
               ) : (
