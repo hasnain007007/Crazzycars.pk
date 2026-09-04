@@ -61,14 +61,15 @@ export default function ProductsPage() {
     };
   }, []);
 
-  const fetchList = useCallback(async () => {
-    setLoading(true);
+  const fetchList = useCallback(async (opts = {}) => {
+    const silent = Boolean(opts?.silent);
+    if (!silent) setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page), limit: "50" });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (status) params.set("status", status);
       if (category) params.set("category", category);
-      const res = await fetch(`/api/products?${params}`, { credentials: "include" });
+      const res = await fetch(`/api/products?${params}`, { credentials: "include", cache: "no-store" });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Failed to load");
       setRows(json.data || []);
@@ -76,12 +77,19 @@ export default function ProductsPage() {
       setTotal(json.total ?? 0);
       if (json.stats) setStats(json.stats);
     } catch (e) {
-      toast.error(e.message || "Failed to load");
-      setRows([]);
+      if (!silent) toast.error(e.message || "Failed to load");
+      if (!silent) setRows([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [page, debouncedSearch, status, category]);
+
+  const patchRow = useCallback((id, patch) => {
+    const sid = String(id);
+    setRows((prev) =>
+      prev.map((row) => (String(row._id) === sid ? { ...row, ...patch } : row))
+    );
+  }, []);
 
   useEffect(() => {
     fetchList();
@@ -328,6 +336,7 @@ export default function ProductsPage() {
           onSelectChange={setSelectedIds}
           onDeleteRow={(row) => setDeleteTarget(row)}
           onRefresh={fetchList}
+          onRowPatch={patchRow}
         />
       )}
 

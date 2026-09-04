@@ -28,6 +28,10 @@ import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMuta
 import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
+import { revalidateStorefront } from "@/lib/revalidateStorefront";
+
+/** Homepage Best Sellers / Hot Deals are ISR-cached — purge after flag or catalog changes. */
+const HOMEPAGE_REVALIDATE_PATHS = ["/", "/api/homepage", "/api/products", "/api/products/deals"];
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;
@@ -144,11 +148,16 @@ export async function PUT(request, context) {
         type: "update",
         ip: requestIp(request),
       });
+      const revalidated = await revalidateStorefront(HOMEPAGE_REVALIDATE_PATHS);
       const lean = await Product.findById(id)
         .populate("categories", "name slug")
         .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
         .lean();
-      return NextResponse.json({ success: true, data: withProductSaleComputed(lean) });
+      return NextResponse.json({
+        success: true,
+        data: withProductSaleComputed(lean),
+        revalidated,
+      });
     }
 
     const name = (body.name ?? existing.name).trim();
@@ -396,12 +405,18 @@ export async function PUT(request, context) {
       ip: requestIp(request),
     });
 
+    const revalidated = await revalidateStorefront(HOMEPAGE_REVALIDATE_PATHS);
+
     const populated = await Product.findById(id)
       .populate("categories", "name slug")
       .populate("recommendedProducts", "name slug status media.images")
       .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
       .lean();
-    return NextResponse.json({ success: true, data: withProductSaleComputed(populated) });
+    return NextResponse.json({
+      success: true,
+      data: withProductSaleComputed(populated),
+      revalidated,
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to update product." },
@@ -438,7 +453,9 @@ export async function DELETE(request, context) {
       ip: requestIp(request),
     });
 
-    return NextResponse.json({ success: true, data: { id } });
+    const revalidated = await revalidateStorefront(HOMEPAGE_REVALIDATE_PATHS);
+
+    return NextResponse.json({ success: true, data: { id }, revalidated });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to delete product." },

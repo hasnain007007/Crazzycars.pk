@@ -49,6 +49,7 @@ export function ProductsTable({
   onSelectChange,
   onDeleteRow,
   onRefresh,
+  onRowPatch,
 }) {
   const [busyFeatured, setBusyFeatured] = useState(null);
   const [busyDeal, setBusyDeal] = useState(null);
@@ -77,7 +78,10 @@ export function ProductsTable({
   );
 
   const setFeatured = async (row, value) => {
-    setBusyFeatured(String(row._id));
+    const id = String(row._id);
+    const prev = Boolean(row.featured || row.isFeatured);
+    setBusyFeatured(id);
+    onRowPatch?.(id, { featured: value, isFeatured: value });
     try {
       const res = await fetch(`/api/products/${row._id}`, {
         method: "PUT",
@@ -87,8 +91,10 @@ export function ProductsTable({
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Update failed");
-      onRefresh?.();
+      toast.success(value ? "Added to Featured (Best Sellers)" : "Removed from Featured");
+      onRefresh?.({ silent: true });
     } catch (e) {
+      onRowPatch?.(id, { featured: prev, isFeatured: prev });
       toast.error(e.message || "Update failed");
     } finally {
       setBusyFeatured(null);
@@ -96,7 +102,10 @@ export function ProductsTable({
   };
 
   const setHotDeal = async (row, value) => {
-    setBusyDeal(String(row._id));
+    const id = String(row._id);
+    const prev = Boolean(row.isDeal);
+    setBusyDeal(id);
+    onRowPatch?.(id, { isDeal: value });
     try {
       const res = await fetch(`/api/products/${row._id}`, {
         method: "PUT",
@@ -106,8 +115,10 @@ export function ProductsTable({
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Update failed");
-      onRefresh?.();
+      toast.success(value ? "Added to Hot Deals" : "Removed from Hot Deals");
+      onRefresh?.({ silent: true });
     } catch (e) {
+      onRowPatch?.(id, { isDeal: prev });
       toast.error(e.message || "Update failed");
     } finally {
       setBusyDeal(null);
@@ -232,20 +243,20 @@ export function ProductsTable({
                     <button
                       type="button"
                       disabled={busyFeatured === id}
-                      onClick={() => setFeatured(row, !row.featured)}
+                      onClick={() => setFeatured(row, !(row.featured || row.isFeatured))}
                       className={[
                         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
-                        row.featured ? "bg-[#1d6fb8]" : "bg-[#e5e7eb]",
+                        row.featured || row.isFeatured ? "bg-[#1d6fb8]" : "bg-[#e5e7eb]",
                         busyFeatured === id ? "opacity-60" : "",
                       ].join(" ")}
-                      aria-pressed={Boolean(row.featured)}
+                      aria-pressed={Boolean(row.featured || row.isFeatured)}
                       aria-label="Toggle featured (Best Sellers)"
                       title="Best Sellers on homepage"
                     >
                       <span
                         className={[
                           "pointer-events-none inline-block h-5 w-5 translate-x-0.5 transform rounded-full bg-white shadow ring-0 transition",
-                          row.featured ? "translate-x-5" : "",
+                          row.featured || row.isFeatured ? "translate-x-5" : "",
                         ].join(" ")}
                       />
                     </button>
