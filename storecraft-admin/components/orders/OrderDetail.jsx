@@ -64,12 +64,12 @@ function formatCurrencyAmount(order, amount) {
 }
 
 function defaultPostexCodAmount(order, orderTotal, prepaid) {
-  if (prepaid) return 0;
   const status = String(order?.paymentStatus || "").toLowerCase();
   if (status === "partial") {
     const remaining = Number(order?.payment?.remainingCod);
     if (Number.isFinite(remaining) && remaining >= 0) return Math.round(remaining);
   }
+  if (prepaid || status === "paid") return 0;
   return Math.max(0, Math.round(Number(orderTotal) || 0));
 }
 
@@ -1106,7 +1106,7 @@ export function OrderDetail({ orderId }) {
     setPostexSuccess("");
     try {
       const pickupCode = String(courierSettings.postexAddressCode || "").trim();
-      const prepaid = isPrepaidOrder(order);
+      const cod = Math.max(0, Math.round(Number(postexCodAmount) || 0));
       const res = await fetch("/api/postex/create-shipment", {
         method: "POST",
         credentials: "include",
@@ -1116,12 +1116,12 @@ export function OrderDetail({ orderId }) {
           rebook: postexRebook,
           handling: postexHandling,
           type: postexShipType,
-          codAmount: isPrepaidOrder(order) ? 0 : Math.max(0, Math.round(Number(postexCodAmount) || 0)),
+          codAmount: cod,
           weight: postexWeight,
           pieces: postexPieces,
           remarks: postexRemarks,
           pickupAddressCode: pickupCode,
-          paymentMethod: prepaid ? "Prepaid" : "COD",
+          paymentMethod: cod > 0 ? "COD" : "Prepaid",
         }),
       });
       const data = await res.json();
@@ -1311,9 +1311,11 @@ export function OrderDetail({ orderId }) {
             </div>
             <div>
               <strong>Payment:</strong>{" "}
-              {pmLower.includes("cod") || pmLower.includes("cash")
-                ? "Cash on Delivery"
-                : "Prepaid"}
+              {Number(postexCodAmount) > 0
+                ? `COD (Rs. ${Math.round(Number(postexCodAmount) || 0).toLocaleString()})`
+                : pmLower.includes("cod") || pmLower.includes("cash")
+                  ? "Cash on Delivery"
+                  : "Prepaid"}
             </div>
           </div>
 
@@ -1400,32 +1402,26 @@ export function OrderDetail({ orderId }) {
                 type="number"
                 min={0}
                 step={1}
-                value={orderPrepaid ? 0 : postexCodAmount}
-                disabled={orderPrepaid}
-                readOnly={orderPrepaid}
+                value={postexCodAmount}
                 onChange={(e) => {
                   postexCodManual.current = true;
                   setPostexCodAmount(Math.max(0, Math.round(Number(e.target.value) || 0)));
                 }}
-                title={
-                  orderPrepaid
-                    ? "Prepaid order — COD is 0"
-                    : "Editable COD collected by PostEx. Defaults to order total or remaining COD."
-                }
+                title="Editable COD collected by PostEx. For partial payments, defaults to remaining COD."
                 style={{
                   width: "100%",
                   padding: "8px 10px",
                   border: "1px solid #E5E7EB",
                   borderRadius: 6,
                   fontSize: 13,
-                  background: orderPrepaid ? "#F9FAFB" : "#fff",
-                  color: orderPrepaid ? "#6B7280" : "#111827",
+                  background: "#fff",
+                  color: "#111827",
                 }}
               />
               <p style={{ margin: "6px 0 0", fontSize: 11, color: "#6B7280" }}>
-                {orderPrepaid
-                  ? "Prepaid — PostEx will not collect COD."
-                  : "Defaults to order total (or remaining COD for partial). Edit before booking if needed."}
+                {Number(postexCodAmount) > 0
+                  ? "PostEx will collect this COD amount on delivery."
+                  : "Set to 0 for prepaid (no collection). Edit to collect remaining balance on delivery."}
               </p>
             </div>
 

@@ -382,13 +382,10 @@ export function isCodOrder(order, bookingOptions = {}, settingsCourier = {}) {
 
 /**
  * COD amount sent to PostEx as invoicePayment.
- * Uses explicit override when provided; otherwise partial remaining COD or order total.
+ * Explicit admin override always wins; otherwise partial remaining COD or order total.
  */
 export function resolvePostexCodAmount(order, bookingOptions = {}, settingsCourier = {}) {
   const opts = normalizeBookingOptions(bookingOptions);
-  const cod = isCodOrder(order, opts, settingsCourier);
-  const forcePaidZero = Boolean(settingsCourier.paidOrdersCodZero) && isPrepaidOrder(order);
-  if (forcePaidZero || !cod) return 0;
 
   const overrideRaw =
     opts.codAmount != null && opts.codAmount !== ""
@@ -400,6 +397,10 @@ export function resolvePostexCodAmount(order, bookingOptions = {}, settingsCouri
     const n = Math.max(0, Math.round(Number(overrideRaw)));
     if (Number.isFinite(n)) return n;
   }
+
+  const cod = isCodOrder(order, opts, settingsCourier);
+  const forcePaidZero = Boolean(settingsCourier.paidOrdersCodZero) && isPrepaidOrder(order);
+  if (forcePaidZero || !cod) return 0;
 
   const paymentStatus = String(order?.paymentStatus || "").toLowerCase();
   if (paymentStatus === "partial") {
