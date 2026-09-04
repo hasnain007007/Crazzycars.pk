@@ -138,6 +138,49 @@ export async function POST(request) {
       paymentMethod: body.paymentMethod,
     };
 
+    // Optional pre-book edits from Run Courier booking table.
+    if (body.shippingAddress && typeof body.shippingAddress === "object") {
+      const sa = body.shippingAddress;
+      if (!order.shippingAddress) order.shippingAddress = {};
+      if (sa.street != null || sa.address != null) {
+        const street = String(sa.street || sa.address || "").trim();
+        order.shippingAddress.street = street;
+        order.shippingAddress.line1 = street;
+        order.shippingAddress.address = street;
+      }
+      if (sa.phone != null) {
+        const phone = String(sa.phone || "").trim();
+        order.shippingAddress.phone = phone;
+        if (!order.customer) order.customer = {};
+        order.customer.phone = phone;
+        order.markModified("customer");
+      }
+      if (sa.name != null) {
+        const name = String(sa.name || "").trim();
+        if (name) {
+          order.shippingAddress.name = name;
+          if (!order.customer) order.customer = {};
+          order.customer.name = name;
+          order.markModified("customer");
+        }
+      }
+      if (sa.city != null) order.shippingAddress.city = String(sa.city || "").trim();
+      order.markModified("shippingAddress");
+    }
+
+    if (bookingOptions.customerName) {
+      bookingOptions.customerName = String(bookingOptions.customerName).trim();
+    }
+    if (bookingOptions.customerPhone) {
+      bookingOptions.customerPhone = String(bookingOptions.customerPhone).trim();
+    }
+    if (bookingOptions.cityName) {
+      bookingOptions.cityName = String(bookingOptions.cityName).trim();
+    }
+    if (bookingOptions.deliveryAddress) {
+      bookingOptions.deliveryAddress = String(bookingOptions.deliveryAddress).trim();
+    }
+
     const result = await createRunCourierShipment(
       { order: order.toObject(), settings },
       { bookingOptions }

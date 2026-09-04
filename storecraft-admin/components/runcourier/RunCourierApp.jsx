@@ -17,6 +17,9 @@ const TABS = [
   { id: "settings", label: "Settings" },
 ];
 
+const CELL_INPUT =
+  "h-8 w-full min-w-[8rem] rounded border border-slate-300 bg-white px-2 text-xs dark:border-slate-600 dark:bg-slate-900";
+
 function downloadLabel(url) {
   if (!url) return;
   const w = window.open(url, "_blank", "noopener,noreferrer");
@@ -105,6 +108,7 @@ export default function RunCourierApp() {
   const [carriers, setCarriers] = useState(RUN_COURIER_APIS);
   const [defaultApi, setDefaultApi] = useState("Auto");
   const [rowApi, setRowApi] = useState({});
+  const [rows, setRows] = useState({});
   const [settingsForm, setSettingsForm] = useState({
     runCourierApiKey: "",
     runCourierBaseUrl: "https://portal.runcourier.com",
@@ -114,6 +118,10 @@ export default function RunCourierApp() {
     runCourierOriginCity: "Gujranwala",
     runCourierEnabled: true,
   });
+
+  function patchRow(id, partial) {
+    setRows((prev) => ({ ...prev, [id]: { ...prev[id], ...partial } }));
+  }
 
   async function loadOrders(nextMode = mode) {
     setLoading(true);
@@ -126,9 +134,26 @@ export default function RunCourierApp() {
         toast.error(json.error || "Could not load orders");
         return;
       }
-      setOrders(json.orders || []);
+      const list = json.orders || [];
+      setOrders(list);
       setTotal(json.total || 0);
       if (json.defaultApi) setDefaultApi(json.defaultApi);
+      if (nextMode === "unbooked") {
+        const next = {};
+        const nextApi = {};
+        for (const o of list) {
+          next[o.id] = {
+            name: o.name || "",
+            phone: o.phone || "",
+            city: o.city || "",
+            address: o.address || "",
+            cod: o.codAmount ?? 0,
+          };
+          nextApi[o.id] = o.suggestedApi || json.defaultApi || "Auto";
+        }
+        setRows(next);
+        setRowApi(nextApi);
+      }
       setSelected(new Set());
     } catch {
       toast.error("Network error loading orders");
@@ -198,14 +223,40 @@ export default function RunCourierApp() {
     });
   }
 
-  async function bookOne(orderId, selectedApi) {
+  async function bookOne(order, selectedApi) {
+    const id = typeof order === "string" ? order : order.id;
+    const base = typeof order === "string" ? orders.find((o) => o.id === id) || {} : order;
+    const row = rows[id] || {};
+    const name = String(row.name ?? base.name ?? "").trim();
+    const phone = String(row.phone ?? base.phone ?? "").trim();
+    const city = String(row.city ?? base.city ?? "").trim();
+    const address = String(row.address ?? base.address ?? "").trim();
+    const cod = Math.max(
+      0,
+      Math.round(Number(row.cod != null && row.cod !== "" ? row.cod : base.codAmount) || 0)
+    );
+    const api = selectedApi || rowApi[id] || base.suggestedApi || defaultApi || "Auto";
+
     const res = await fetch("/api/runcourier/create-shipment", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        orderId,
-        selectedApi: selectedApi || defaultApi || "Auto",
+        orderId: id,
+        selectedApi: api,
+        customerName: name,
+        customerPhone: phone,
+        cityName: city,
+        deliveryAddress: address,
+        codAmount: cod,
+        paymentMethod: cod > 0 ? "COD" : "Prepaid",
+        shippingAddress: {
+          name,
+          phone,
+          city,
+          street: address,
+          address,
+        },
       }),
     });
     const json = await res.json();
@@ -224,8 +275,8 @@ export default function RunCourierApp() {
     let ok = 0;
     let fail = 0;
     for (const id of ids) {
-      const api = rowApi[id] || defaultApi;
-      const r = await bookOne(id, api);
+      const order = orders.find((o) => o.id === id);
+      const r = await bookOne(order || id, rowApi[id] || defaultApi);
       if (r.ok) ok += 1;
       else fail += 1;
     }
