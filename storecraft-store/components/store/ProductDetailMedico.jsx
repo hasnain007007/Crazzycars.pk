@@ -504,6 +504,28 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     });
   }, [galleryItems.length]);
 
+  /** When a logo/option combo has its own image, jump the gallery to that photo. */
+  useEffect(() => {
+    const raw =
+      typeof matchedCombo?.image === "string"
+        ? matchedCombo.image
+        : matchedCombo?.image?.url
+          ? String(matchedCombo.image.url)
+          : "";
+    if (!raw || !galleryItems.length) return;
+    const normalize = (u) =>
+      String(u || "")
+        .trim()
+        .replace(/^https?:/i, "")
+        .split("?")[0];
+    const target = normalize(raw);
+    if (!target) return;
+    const idx = galleryItems.findIndex(
+      (item) => item?.type === "image" && normalize(item.url) === target
+    );
+    if (idx >= 0) setSelectedIndex(idx);
+  }, [matchedCombo?.image, galleryItems]);
+
   const selectedItem = galleryItems[selectedIndex] ?? galleryItems[0] ?? null;
 
   const simpleVariations = Array.isArray(product?.simpleVariations) ? product.simpleVariations : [];
