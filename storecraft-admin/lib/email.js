@@ -30,7 +30,7 @@ function getSmtpTransporter() {
   });
 }
 
-export async function sendEmail({ to, subject, html, from }) {
+export async function sendEmail({ to, subject, html, text, from }) {
   const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
   const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER;
   const fromAddress = from || (fromEmail ? `"${storeName}" <${fromEmail}>` : null);
@@ -39,12 +39,14 @@ export async function sendEmail({ to, subject, html, from }) {
   const resend = getResend();
   if (resend && fromEmail) {
     try {
-      const { data, error } = await resend.emails.send({
+      const payload = {
         from: typeof fromAddress === "string" ? fromAddress : `${storeName} <${fromEmail}>`,
         to,
         subject,
         html,
-      });
+      };
+      if (text) payload.text = text;
+      const { data, error } = await resend.emails.send(payload);
       if (error) {
         console.error("Resend error:", error);
         return { success: false, error: error.message };
@@ -67,6 +69,7 @@ export async function sendEmail({ to, subject, html, from }) {
       to,
       subject,
       html,
+      text: text || undefined,
     });
     return { success: true, messageId: info.messageId };
   } catch (error) {

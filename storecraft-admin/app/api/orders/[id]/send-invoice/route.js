@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
-import { buildOrderInvoiceEmailHtml, resolveOrderInvoiceEmail } from "@/lib/orderInvoice";
+import { buildOrderInvoiceEmailHtml, buildOrderInvoiceEmailText, resolveOrderInvoiceEmail } from "@/lib/orderInvoice";
 import { recordEmailSent, sendEmail } from "@/lib/email";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
@@ -53,8 +53,9 @@ export async function POST(request, context) {
     const note = String(body.note || "").trim().slice(0, 500);
     const subject = `Invoice ${order.orderNumber} — ${storeName}`;
     const html = buildOrderInvoiceEmailHtml(order, storeMeta, { note });
+    const text = buildOrderInvoiceEmailText(order, storeMeta, { note });
 
-    const sent = await sendEmail({ to, subject, html });
+    const sent = await sendEmail({ to, subject, html, text });
     if (!sent.success) {
       await recordEmailSent(id, "invoice", subject, to, "failed");
       return NextResponse.json(

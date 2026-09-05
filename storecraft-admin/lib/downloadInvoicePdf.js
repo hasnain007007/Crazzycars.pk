@@ -111,7 +111,7 @@ export function downloadInvoicePdfPrint(invoice, storeMeta = {}) {
 }
 
 /**
- * Generates a .pdf file download. Falls back to opening a new tab if canvas export fails.
+ * Generates a colored .pdf via an isolated light-mode iframe (avoids admin dark-mode washout).
  */
 export async function downloadInvoicePdf(invoice, storeMeta = {}) {
   const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
@@ -120,51 +120,83 @@ export async function downloadInvoicePdf(invoice, storeMeta = {}) {
   ]);
 
   const body = buildInvoiceBody(invoice, storeMeta);
-  const mount = document.createElement("div");
-  mount.setAttribute("aria-hidden", "true");
-  mount.style.cssText = [
-    "position:fixed",
-    "left:0",
-    "top:0",
-    "width:794px",
-    "padding:24px",
-    "background:#ffffff",
-    "color:#111111",
-    "z-index:-9999",
-    "opacity:0",
-    "pointer-events:none",
-  ].join(";");
-  mount.innerHTML = body;
-  document.body.appendChild(mount);
+
+  // Isolated iframe — opacity:0 mounts inherit dark-mode and often export as B&W / blank.
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.cssText =
+    "position:fixed;left:-12000px;top:0;width:820px;height:1200px;border:0;background:#ffffff;opacity:1;visibility:visible;pointer-events:none;z-index:-1;";
+  document.body.appendChild(iframe);
+
+  const idoc = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!idoc) {
+    iframe.remove();
+    openInvoiceDocumentWindow(invoice, storeMeta);
+    throw new Error("Could not create PDF frame.");
+  }
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+    <meta name="color-scheme" content="light only"/>
+    <style>
+      :root { color-scheme: light only; }
+      html, body {
+        margin: 0; padding: 0;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        color-scheme: light only;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        forced-color-adjust: none !important;
+      }
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        padding: 24px;
+        width: 794px;
+        box-sizing: border-box;
+      }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      img { max-width: 100%; }
+    </style>
+  </head><body>${body}</body></html>`;
+
+  idoc.open();
+  idoc.write(html);
+  idoc.close();
 
   try {
-    stripCrossOriginImages(mount);
-    await waitForImagesInDocument(mount.ownerDocument);
-    if (document.fonts?.ready) {
-      try {
-        await document.fonts.ready;
-      } catch {
-        /* ignore */
-      }
-    }
+    stripCrossOriginImages(idoc.body);
+    await waitForImagesInDocument(idoc);
+    await new Promise((r) => setTimeout(r, 120));
 
-    const canvas = await html2canvas(mount, {
+    const target = idoc.body;
+    const canvas = await html2canvas(target, {
       scale: 2,
       useCORS: true,
       allowTaint: false,
       backgroundColor: "#ffffff",
       logging: false,
-      windowWidth: 794,
+      windowWidth: 820,
       width: 794,
+      foreignObjectRendering: false,
+      onclone: (clonedDoc) => {
+        try {
+          clonedDoc.documentElement.style.colorScheme = "light";
+          clonedDoc.body.style.background = "#ffffff";
+          clonedDoc.body.style.color = "#0f172a";
+        } catch {
+          /* ignore */
+        }
+      },
     });
 
     if (!canvas.width || !canvas.height) {
       throw new Error("Invoice canvas was empty.");
     }
 
+    // PNG keeps brand reds/greens; JPEG often looks washed / near-grayscale.
     let imgData;
     try {
-      imgData = canvas.toDataURL("image/jpeg", 0.92);
+      imgData = canvas.toDataURL("image/png");
     } catch {
       throw new Error("Could not export invoice image (cross-origin content).");
     }
@@ -179,13 +211,13 @@ export async function downloadInvoicePdf(invoice, storeMeta = {}) {
     let heightLeft = imgHeight;
     let y = margin;
 
-    pdf.addImage(imgData, "JPEG", margin, y, usableWidth, imgHeight);
+    pdf.addImage(imgData, "PNG", margin, y, usableWidth, imgHeight);
     heightLeft -= pageHeight - margin;
 
     while (heightLeft > 0) {
       y = margin - (imgHeight - heightLeft);
       pdf.addPage();
-      pdf.addImage(imgData, "JPEG", margin, y, usableWidth, imgHeight);
+      pdf.addImage(imgData, "PNG", margin, y, usableWidth, imgHeight);
       heightLeft -= pageHeight - margin;
     }
 
@@ -194,6 +226,6 @@ export async function downloadInvoicePdf(invoice, storeMeta = {}) {
     openInvoiceDocumentWindow(invoice, storeMeta);
     throw err;
   } finally {
-    if (mount.parentNode) mount.parentNode.removeChild(mount);
+    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
   }
 }
