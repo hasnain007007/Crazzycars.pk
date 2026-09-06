@@ -80,6 +80,42 @@ export function runCourierPublicTrackingUrl(trackingNumber) {
   return `https://portal.runcourier.com/tracking.php?code=${encodeURIComponent(id)}`;
 }
 
+/** Carriers / display names that mean this shipment was booked via Run Courier. */
+const RUN_COURIER_CARRIER_HINTS = [
+  "run courier",
+  "runcourier",
+  "trax",
+  "tcs",
+  "m&p",
+  "mnp",
+  "leopard",
+  "daewoo",
+  "dastaq",
+  "ahl",
+];
+
+export function isRunCourierOrder(order) {
+  if (!order) return false;
+  if (String(order.runCourierApi || "").trim()) return true;
+  if (String(order.runCourierLabel || "").trim()) return true;
+  const carrier = String(order.courier || order.tracking?.carrier || "")
+    .trim()
+    .toLowerCase();
+  if (!carrier) return false;
+  if (carrier.includes("postex")) return false;
+  return RUN_COURIER_CARRIER_HINTS.some((h) => carrier.includes(h));
+}
+
+export function isPostexOrder(order) {
+  if (!order) return false;
+  if (isRunCourierOrder(order)) return false;
+  const carrier = String(order.courier || order.tracking?.carrier || "")
+    .trim()
+    .toLowerCase();
+  if (!carrier || carrier === "postex") return true;
+  return carrier.includes("postex");
+}
+
 function pick(obj, ...keys) {
   if (!obj || typeof obj !== "object") return "";
   for (const k of keys) {
@@ -87,6 +123,319 @@ function pick(obj, ...keys) {
     if (v != null && String(v).trim() !== "") return String(v).trim();
   }
   return "";
+}
+
+function splitDateTime(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return { date: "", time: "" };
+  const d = new Date(s);
+  if (!Number.isNaN(d.getTime())) {
+    return {
+      date: d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      time: d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+    };
+  }
+  const [datePart, ...rest] = s.split(/\s+/);
+  return { date: datePart || s, time: rest.join(" ") };
+}
+
+function normalizeTrackEvent(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const { date, time } = splitDateTime(
+    entry.transactionDateTime ||
+      entry.statusDateTime ||
+      entry.dateTime ||
+      entry.timestamp ||
+      entry.created_at ||
+      entry.date ||
+      ""
+  );
+  const status =
+    pick(entry, "transactionStatus", "orderStatus", "status", "statusName", "status_name", "event") ||
+    "Update";
+  return {
+    date: entry.date || date,
+    time: entry.time || time,
+    status,
+    location: pick(entry, "cityName", "location", "operationalCity", "city", "hub"),
+    description:
+      pick(entry, "remarks", "description", "message", "comment", "detail", "status_detail") || status,
+    sortAt: new Date(
+      entry.transactionDateTime ||
+        entry.statusDateTime ||
+        entry.dateTime ||
+        entry.timestamp ||
+        entry.created_at ||
+        Date.now()
+    ).getTime(),
+  };
+}
+
+function extractTrackPayload(json) {
+  if (!json || typeof json !== "object") return null;
+  if (json.dist && typeof json.dist === "object") return json.dist;
+  if (json.data && typeof json.data === "object" && !Array.isArray(json.data)) return json.data;
+  if (json.shipment && typeof json.shipment === "object") return json.shipment;
+  if (json.tracking && typeof json.tracking === "object") return json.tracking;
+  if (json.order && typeof json.order === "object") return json.order;
+  if (
+    json.trackingNumber ||
+    json.status ||
+    json.orderStatus ||
+    json.currentStatus ||
+    Array.isArray(json.history)
+  ) {
+    return json;
+  }
+  return null;
+}
+
+function extractTrackHistory(dist) {
+  const lists = [
+    dist?.transactionStatusHistory,
+    dist?.orderStatusHistory,
+    dist?.statusHistory,
+    dist?.trackingHistory,
+    dist?.tracking_history,
+    dist?.history,
+    dist?.events,
+    dist?.statuses,
+  ].filter(Array.isArray);
+
+  const events = [];
+  for (const list of lists) {
+    for (const item of list) {
+      const ev = normalizeTrackEvent(typeof item === "string" ? { status: item } : item);
+      if (ev) events.push(ev);
+    }
+  }
+  if (!events.length) {
+    const status = pick(
+      dist,
+      "transactionStatus",
+      "orderStatus",
+      "status",
+      "currentStatus",
+      "shipmentStatus"
+    );
+    if (status) {
+      events.push({
+        date: "",
+        time: "",
+        status,
+        location: pick(dist, "cityName", "location", "currentLocation", "city"),
+        description: status,
+        sortAt: Date.now(),
+      });
+    }
+  }
+  events.sort((a, b) => (b.sortAt || 0) - (a.sortAt || 0));
+  return events.map(({ date, time, status, location, description }) => ({
+    date,
+    time,
+    status,
+    location,
+    description,
+  }));
+}
+
+function deriveLocationInsight(status, events = [], destinationCity = "") {
+  const latest = events[0] || null;
+  const currentLocation = String(latest?.location || "").trim();
+  const dest = String(destinationCity || "").trim();
+  const statusLower = String(status || "").toLowerCase();
+  const destinationReceived =
+    Boolean(dest) &&
+    (statusLower.includes("deliver") ||
+      (currentLocation && dest && currentLocation.toLowerCase().includes(dest.toLowerCase())));
+  return { currentLocation, destinationReceived };
+}
+
+/**
+ * Parse portal HTML tracking page when REST track path is unavailable.
+ */
+export function parseRunCourierPortalHtml(html, trackingNumber) {
+  const text = String(html || "");
+  if (!text || text.length < 80) return null;
+
+  const tn = String(trackingNumber || "").trim();
+  const events = [];
+
+  // Table rows: common portal pattern
+  const rowRx = /<tr[^>]*>[\s\S]*?<\/tr>/gi;
+  const cellRx = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+  let rowMatch;
+  while ((rowMatch = rowRx.exec(text))) {
+    const row = rowMatch[0];
+    if (/<th[\s>]/i.test(row)) continue;
+    const cells = [];
+    let cellMatch;
+    while ((cellMatch = cellRx.exec(row))) {
+      const plain = cellMatch[1]
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (plain) cells.push(plain);
+    }
+    if (cells.length >= 2) {
+      const status = cells.find((c) => /deliver|transit|book|dispatch|hub|return|out for|picked/i.test(c)) || cells[1];
+      const when = cells.find((c) => /\d{4}|\d{1,2}[\/\-]\d{1,2}/.test(c)) || cells[0];
+      const location = cells.find((c) => c !== status && c !== when) || "";
+      const { date, time } = splitDateTime(when);
+      events.push({
+        date,
+        time,
+        status,
+        location,
+        description: status,
+        sortAt: Date.now() - events.length,
+      });
+    }
+  }
+
+  let status = "";
+  const statusMatch =
+    text.match(/current\s*status[^<]*<\/[^>]+>\s*<[^>]+>([^<]+)/i) ||
+    text.match(/status\s*[:\-]\s*([^<\n]{3,60})/i);
+  if (statusMatch) status = statusMatch[1].replace(/\s+/g, " ").trim();
+  if (!status && events.length) status = events[0].status;
+  if (!status) return null;
+
+  // Ignore empty "enter tracking" form-only pages
+  if (/tracking-form/i.test(text) && !events.length && /please enter|enter tracking/i.test(text)) {
+    return null;
+  }
+
+  events.sort((a, b) => (b.sortAt || 0) - (a.sortAt || 0));
+  const cleanEvents = events.map(({ date, time, status: st, location, description }) => ({
+    date,
+    time,
+    status: st,
+    location,
+    description,
+  }));
+  const destination = "";
+  const insight = deriveLocationInsight(status, cleanEvents, destination);
+
+  return {
+    success: true,
+    trackingNumber: tn,
+    status,
+    statusCode: status.slice(0, 2).toUpperCase(),
+    courier: "Run Courier",
+    events: cleanEvents.length
+      ? cleanEvents
+      : [{ date: "", time: "", status, location: "", description: status }],
+    estimatedDelivery: "",
+    origin: "",
+    destination,
+    weight: "",
+    pieces: 1,
+    currentLocation: insight.currentLocation,
+    destinationReceived: insight.destinationReceived,
+    source: "portal",
+  };
+}
+
+export function parseRunCourierTrackingJson(json, trackingNumber) {
+  const dist = extractTrackPayload(json);
+  if (!dist) return null;
+  const tn =
+    pick(dist, "trackingNumber", "trackingNo", "cn", "consignmentNo", "awb", "code") ||
+    String(trackingNumber || "").trim();
+  const status =
+    pick(
+      dist,
+      "transactionStatus",
+      "orderStatus",
+      "status",
+      "currentStatus",
+      "shipmentStatus",
+      "transactionStatusName"
+    ) || "Unknown";
+  const events = extractTrackHistory(dist);
+  const destination = pick(dist, "deliveryCity", "destinationCity", "cityName", "consigneeCity");
+  const insight = deriveLocationInsight(status, events, destination);
+  const weightRaw = dist.weight ?? dist.orderWeight ?? dist.totalWeight;
+  const weight =
+    weightRaw != null && weightRaw !== ""
+      ? `${weightRaw}${String(weightRaw).includes("kg") ? "" : "kg"}`
+      : "";
+
+  return {
+    success: true,
+    trackingNumber: tn,
+    status,
+    statusCode: pick(dist, "statusCode", "statusId") || status.slice(0, 2).toUpperCase(),
+    courier: pick(dist, "courier", "carrier", "api_name", "selectedApi") || "Run Courier",
+    events,
+    estimatedDelivery: pick(dist, "expectedDeliveryDate", "edd", "deliveryDate"),
+    origin: pick(dist, "originCity", "pickupCity", "merchantCity"),
+    destination,
+    weight,
+    pieces: Number(dist.pieces ?? dist.items ?? dist.itemCount) || 1,
+    currentLocation: insight.currentLocation || pick(dist, "location", "currentLocation", "city"),
+    destinationReceived: insight.destinationReceived,
+    source: "api",
+  };
+}
+
+async function scrapeRunCourierPortal(trackingNumber) {
+  const tn = String(trackingNumber || "").trim();
+  if (!tn) return null;
+  const url = runCourierPublicTrackingUrl(tn);
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": "CrazzyCarsTracker/1.0" },
+      cache: "no-store",
+      redirect: "follow",
+    });
+    const html = await res.text();
+    return parseRunCourierPortalHtml(html, tn);
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchRunCourierTracking(trackingNumber, { settingsCourier } = {}) {
+  const tn = String(trackingNumber || "").trim();
+  if (!tn) return { success: false, error: "Tracking number required." };
+
+  const apiKey = resolveRunCourierApiKey(settingsCourier);
+  if (apiKey) {
+    const path = resolveRunCourierPath(settingsCourier, "track");
+    const attempts = [
+      { method: "GET", query: { trackingNumber: tn, cn: tn, code: tn, consignmentNo: tn } },
+      { method: "POST", body: { trackingNumber: tn, cn: tn, code: tn, consignmentNo: tn } },
+    ];
+    for (const attempt of attempts) {
+      const res = await runCourierFetch(path, {
+        method: attempt.method,
+        settingsCourier,
+        query: attempt.query,
+        body: attempt.body,
+      });
+      if (!res.ok) continue;
+      const parsed = parseRunCourierTrackingJson(res.json, tn);
+      if (parsed?.success) {
+        return { ...parsed, raw: res.json };
+      }
+    }
+  }
+
+  const scraped = await scrapeRunCourierPortal(tn);
+  if (scraped?.success) return scraped;
+
+  if (!apiKey) {
+    return {
+      success: false,
+      error:
+        "Run Courier API key missing and portal lookup found no status. Set RUN_COURIER_API_KEY or Settings → Run Courier.",
+    };
+  }
+  return { success: false, error: "Tracking number not found on Run Courier." };
 }
 
 function normalizeBookingOptions(bookingOptions) {
@@ -447,29 +796,6 @@ export async function fetchRunCourierLabel(trackingNumber, { settingsCourier } =
   const label = extractLabel(res.json);
   if (!label) return { success: false, error: "No label in Run Courier response." };
   return { success: true, label, trackingNumber: tn };
-}
-
-export async function fetchRunCourierTracking(trackingNumber, { settingsCourier } = {}) {
-  const tn = String(trackingNumber || "").trim();
-  if (!tn) return { success: false, error: "Tracking number required." };
-  const path = resolveRunCourierPath(settingsCourier, "track");
-  const res = await runCourierFetch(path, {
-    method: "GET",
-    settingsCourier,
-    query: { trackingNumber: tn, cn: tn, code: tn },
-  });
-  if (!res.ok) return { success: false, error: res.error };
-  const nested = res.json?.data || res.json?.dist || res.json || {};
-  const status =
-    pick(nested, "status", "orderStatus", "shipmentStatus", "currentStatus", "transactionStatus") ||
-    "Unknown";
-  return {
-    success: true,
-    trackingNumber: tn,
-    status,
-    location: pick(nested, "location", "city", "currentLocation", "cityName"),
-    raw: res.json,
-  };
 }
 
 export async function cancelRunCourierShipment(trackingNumber, { settingsCourier } = {}) {

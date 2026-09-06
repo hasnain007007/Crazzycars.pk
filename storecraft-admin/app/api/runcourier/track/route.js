@@ -31,6 +31,7 @@ export async function GET(request) {
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 400 });
     }
+    if (result.raw) delete result.raw;
     return NextResponse.json(result);
   } catch (e) {
     return NextResponse.json(

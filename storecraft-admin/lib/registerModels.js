@@ -21,6 +21,7 @@ import "./models/LoginAttempt.model";
 import "./models/Order.model";
 import "./models/Page.model";
 import "./models/PostexWebhookLog.model";
+import "./models/RunCourierWebhookLog.model";
 import "./models/Product.model";
 import "./models/ProductOption.model";
 import "./models/Redirect.model";

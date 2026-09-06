@@ -168,6 +168,8 @@ const orderSchema = new mongoose.Schema(
     trackingNumber: { type: String, default: "", trim: true },
     courier: { type: String, default: "Postex", trim: true },
     trackingUrl: { type: String, default: "", trim: true },
+    runCourierApi: { type: String, default: "", trim: true },
+    runCourierLabel: { type: String, default: "" },
     shippedAt: { type: Date, default: null },
     deliveredAt: { type: Date, default: null },
     tracking: {

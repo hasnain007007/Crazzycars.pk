@@ -118,8 +118,8 @@ export default function OrderTrackingView() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Postex tracking number"
-            aria-label="Postex tracking number"
+            placeholder="Tracking number"
+            aria-label="Tracking number"
             autoComplete="off"
           />
           <button className="cc-track__submit" type="submit" disabled={loading}>
@@ -142,7 +142,7 @@ export default function OrderTrackingView() {
                 <h2 className="cc-track__status">{data.status}</h2>
               </div>
               <div className="cc-track__ids">
-                <span>{data.courier || "Postex"}</span>
+                <span>{data.courier || "Courier"}</span>
                 <span className="cc-track__mono">{data.trackingNumber}</span>
               </div>
             </div>
@@ -181,7 +181,7 @@ export default function OrderTrackingView() {
 
             <div className="cc-track__timeline-wrap">
               <div className="cc-track__timeline-head">
-                <p className="cc-track__kicker">Postex scans</p>
+                <p className="cc-track__kicker">Shipment scans</p>
                 <span>{events.length}</span>
               </div>
               {events.length ? (

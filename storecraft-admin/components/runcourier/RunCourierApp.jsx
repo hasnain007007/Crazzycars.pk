@@ -13,6 +13,7 @@ const TABS = [
   { id: "dashboard", label: "Dashboard" },
   { id: "booking", label: "Add Booking" },
   { id: "labels", label: "Print Labels" },
+  { id: "track", label: "Track" },
   { id: "cancel", label: "Cancel Shipments" },
   { id: "settings", label: "Settings" },
 ];
@@ -111,6 +112,11 @@ export default function RunCourierApp() {
   const [rows, setRows] = useState({});
   const [labelFrom, setLabelFrom] = useState(() => new Date().toISOString().slice(0, 10));
   const [labelTo, setLabelTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [trackInput, setTrackInput] = useState("");
+  const [trackLoading, setTrackLoading] = useState(false);
+  const [trackResult, setTrackResult] = useState(null);
+  const [trackError, setTrackError] = useState("");
+  const [bulkTrackBusy, setBulkTrackBusy] = useState(false);
   const [settingsForm, setSettingsForm] = useState({
     runCourierEnabled: true,
     runCourierApiKey: "",
@@ -254,9 +260,12 @@ export default function RunCourierApp() {
     if (tab === "booking") {
       setMode("unbooked");
       loadOrders("unbooked");
-    } else if (tab === "labels" || tab === "cancel") {
+    } else if (tab === "labels" || tab === "cancel" || tab === "track") {
       setMode("booked");
-      loadOrders("booked", { from: labelFrom, to: labelTo });
+      loadOrders(
+        "booked",
+        tab === "labels" ? { from: labelFrom, to: labelTo } : null
+      );
     } else if (tab === "dashboard") {
       loadOrders("unbooked");
     } else if (tab === "settings") {
@@ -264,6 +273,66 @@ export default function RunCourierApp() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
+
+  async function lookupTracking(code) {
+    const tn = String(code || trackInput || "").trim();
+    if (!tn) {
+      setTrackError("Enter a tracking / CN number.");
+      setTrackResult(null);
+      return;
+    }
+    setTrackLoading(true);
+    setTrackError("");
+    setTrackResult(null);
+    try {
+      const res = await fetch(`/api/runcourier/track?trackingNumber=${encodeURIComponent(tn)}`, {
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setTrackError(json.error || "Tracking not found.");
+        return;
+      }
+      setTrackResult(json);
+      setTrackInput(tn);
+    } catch {
+      setTrackError("Network error.");
+    } finally {
+      setTrackLoading(false);
+    }
+  }
+
+  async function refreshBookedLiveStatus() {
+    const ids = orders.filter((o) => o.trackingNumber).map((o) => o.id);
+    if (!ids.length) {
+      toast.error("No booked orders with tracking numbers.");
+      return;
+    }
+    setBulkTrackBusy(true);
+    try {
+      const res = await fetch("/api/runcourier/track-bulk", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: ids.slice(0, 40), syncOrderStatus: true }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        toast.error(json.error || "Live status failed");
+        return;
+      }
+      const parts = [];
+      if (json.okCount) parts.push(`${json.okCount} updated`);
+      if (json.syncedCount) parts.push(`${json.syncedCount} synced`);
+      if (json.failCount) parts.push(`${json.failCount} failed`);
+      toast.success(parts.join(" · ") || "Done");
+      loadOrders("booked");
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setBulkTrackBusy(false);
+    }
+  }
 
   function downloadSelectedLabels() {
     const list = orders.filter((o) => selected.has(o.id) && o.trackingNumber);
@@ -330,6 +399,10 @@ export default function RunCourierApp() {
         deliveryAddress: address,
         codAmount: cod,
         paymentMethod: cod > 0 ? "COD" : "Prepaid",
+        remarks: settingsForm.runCourierShipperRemarks || undefined,
+        weight: settingsForm.runCourierDefaultWeight || undefined,
+        productType: settingsForm.runCourierProductType || undefined,
+        serviceType: settingsForm.runCourierServiceType || undefined,
         shippingAddress: {
           name,
           phone,
@@ -728,6 +801,142 @@ export default function RunCourierApp() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      ) : null}
+
+      {tab === "track" ? (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Track a shipment</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Look up live status from Run Courier API (portal fallback if API path is not ready).
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <input
+                value={trackInput}
+                onChange={(e) => setTrackInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") lookupTracking();
+                }}
+                placeholder="Tracking / CN number"
+                className="h-10 min-w-[16rem] flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-950"
+              />
+              <button
+                type="button"
+                disabled={trackLoading}
+                onClick={() => lookupTracking()}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {trackLoading ? "Tracking…" : "Track"}
+              </button>
+              <button
+                type="button"
+                disabled={bulkTrackBusy || loading}
+                onClick={refreshBookedLiveStatus}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              >
+                {bulkTrackBusy ? "Refreshing…" : "Refresh all booked statuses"}
+              </button>
+            </div>
+            {trackError ? <p className="mt-2 text-sm text-red-600">{trackError}</p> : null}
+            {trackResult?.success ? (
+              <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm dark:border-emerald-900/40 dark:bg-emerald-950/30">
+                <p className="font-semibold text-emerald-900 dark:text-emerald-100">
+                  {trackResult.trackingNumber} — {trackResult.status}
+                </p>
+                {trackResult.currentLocation || trackResult.location ? (
+                  <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">
+                    Location: {trackResult.currentLocation || trackResult.location}
+                  </p>
+                ) : null}
+                {trackResult.destination ? (
+                  <p className="text-xs text-emerald-800 dark:text-emerald-200">
+                    Destination: {trackResult.destination}
+                  </p>
+                ) : null}
+                {Array.isArray(trackResult.events) && trackResult.events.length ? (
+                  <ul className="mt-3 max-h-56 space-y-1 overflow-y-auto text-xs">
+                    {trackResult.events.map((ev, i) => (
+                      <li key={`${ev.status}-${i}`}>
+                        {[ev.date, ev.time].filter(Boolean).join(" ")} — <strong>{ev.status}</strong>
+                        {ev.location ? ` · ${ev.location}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+              <p className="text-sm font-semibold">Recent booked shipments</p>
+              <button
+                type="button"
+                className="text-xs font-semibold text-emerald-700 hover:underline"
+                onClick={() => loadOrders("booked")}
+              >
+                Reload
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-500 dark:bg-slate-800">
+                  <tr>
+                    <th className="px-2 py-2">Order</th>
+                    <th className="px-2 py-2">Tracking</th>
+                    <th className="px-2 py-2">API</th>
+                    <th className="px-2 py-2">Last status</th>
+                    <th className="px-2 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="px-3 py-6 text-center text-slate-500">
+                        Loading…
+                      </td>
+                    </tr>
+                  ) : orders.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-3 py-6 text-center text-slate-500">
+                        No booked Run Courier shipments.
+                      </td>
+                    </tr>
+                  ) : (
+                    orders.map((o) => (
+                      <tr key={o.id} className="border-t border-slate-100 dark:border-slate-800">
+                        <td className="px-2 py-2">
+                          <Link
+                            href={`/orders/${o.id}`}
+                            className="font-semibold text-emerald-700 hover:underline"
+                          >
+                            {o.orderNumber}
+                          </Link>
+                        </td>
+                        <td className="px-2 py-2 font-mono">{o.trackingNumber || "—"}</td>
+                        <td className="px-2 py-2">{o.runCourierApi || o.courier || "—"}</td>
+                        <td className="px-2 py-2">{o.lastStatus || o.tracking?.lastStatus || "—"}</td>
+                        <td className="px-2 py-2">
+                          {o.trackingNumber ? (
+                            <button
+                              type="button"
+                              className="text-xs font-semibold text-emerald-700 hover:underline"
+                              onClick={() => lookupTracking(o.trackingNumber)}
+                            >
+                              Track
+                            </button>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       ) : null}

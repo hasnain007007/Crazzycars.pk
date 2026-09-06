@@ -113,6 +113,8 @@ export async function GET(request) {
         trackingNumber: o.trackingNumber || o.tracking?.number || "",
         courier: o.courier || "",
         runCourierApi: o.runCourierApi || "",
+        lastStatus: o.tracking?.lastStatus || "",
+        lastStatusAt: o.tracking?.lastStatusAt || null,
         hasLabel: Boolean(o.runCourierLabel),
         itemCount: Array.isArray(o.items) ? o.items.length : 0,
         suggestedApi: defaultApi,

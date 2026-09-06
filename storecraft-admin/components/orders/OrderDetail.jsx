@@ -37,6 +37,10 @@ import {
   postexPublicTrackingUrl,
   storefrontTrackingUrl,
 } from "@/lib/postex";
+import {
+  isRunCourierOrder,
+  runCourierPublicTrackingUrl,
+} from "@/lib/runcourier";
 import RunCourierBookingPanel from "@/components/runcourier/RunCourierBookingPanel";
 import {
   getLegacyTrackingWhatsAppMessage,
@@ -973,18 +977,30 @@ export function OrderDetail({ orderId }) {
     }
   }
 
-  async function fetchLivePostexStatus(number) {
+  async function fetchLiveCourierStatus(number, orderHint = order) {
     const id = String(number || "").trim();
     if (!id) return null;
     setLiveTrackingLoading(true);
     try {
-      const res = await fetch(`/api/postex/track?trackingNumber=${encodeURIComponent(id)}`, {
-        credentials: "include",
-      });
+      const useRunCourier = isRunCourierOrder(orderHint);
+      const endpoint = useRunCourier
+        ? `/api/runcourier/track?trackingNumber=${encodeURIComponent(id)}`
+        : `/api/postex/track?trackingNumber=${encodeURIComponent(id)}`;
+      const res = await fetch(endpoint, { credentials: "include" });
       const json = await res.json();
       if (json.success) {
         setLiveTracking(json);
         return json;
+      }
+      // Fallback: try the other courier once
+      const alt = useRunCourier
+        ? `/api/postex/track?trackingNumber=${encodeURIComponent(id)}`
+        : `/api/runcourier/track?trackingNumber=${encodeURIComponent(id)}`;
+      const res2 = await fetch(alt, { credentials: "include" });
+      const json2 = await res2.json();
+      if (json2.success) {
+        setLiveTracking(json2);
+        return json2;
       }
       setLiveTracking(null);
       return null;
@@ -996,6 +1012,11 @@ export function OrderDetail({ orderId }) {
     }
   }
 
+  /** @deprecated alias — kept for existing call sites in this file */
+  async function fetchLivePostexStatus(number) {
+    return fetchLiveCourierStatus(number);
+  }
+
   async function saveTracking() {
     const num = String(trackingNumber || "").trim();
     if (!num) {
@@ -1003,11 +1024,28 @@ export function OrderDetail({ orderId }) {
       return;
     }
 
-    const isPostex = String(trackingCarrier || "").toLowerCase() === "postex";
-    if (isPostex) {
-      const verified = await fetchLivePostexStatus(num);
+    const carrierLower = String(trackingCarrier || "").toLowerCase();
+    const isPostex = carrierLower === "postex";
+    const isRun =
+      carrierLower.includes("run courier") ||
+      carrierLower === "trax" ||
+      carrierLower === "tcs" ||
+      carrierLower.includes("m&p") ||
+      carrierLower.includes("leopard") ||
+      Boolean(order?.runCourierApi);
+
+    if (isPostex || isRun) {
+      const verified = await fetchLiveCourierStatus(num, {
+        ...order,
+        courier: trackingCarrier,
+        runCourierApi: isRun ? order?.runCourierApi || "Auto" : "",
+      });
       if (!verified) {
-        toast.error("Postex could not verify this tracking number.");
+        toast.error(
+          isRun
+            ? "Run Courier could not verify this tracking number."
+            : "Postex could not verify this tracking number."
+        );
         return;
       }
     }
@@ -1015,7 +1053,8 @@ export function OrderDetail({ orderId }) {
     const url =
       String(trackingUrl || "").trim() ||
       storefrontTrackingUrl(num) ||
-      (isPostex ? postexPublicTrackingUrl(num) : "");
+      (isPostex ? postexPublicTrackingUrl(num) : "") ||
+      (isRun ? runCourierPublicTrackingUrl(num) : "");
 
     setTrackingSaving(true);
     try {
@@ -1042,7 +1081,7 @@ export function OrderDetail({ orderId }) {
       setOrder(json.order);
       setTrackingUrl(json.order?.trackingUrl || url);
       toast.success("Tracking saved.");
-      if (isPostex) await fetchLivePostexStatus(num);
+      if (isPostex || isRun) await fetchLiveCourierStatus(num, json.order);
     } catch {
       toast.error("Network error.");
     } finally {
@@ -1054,8 +1093,12 @@ export function OrderDetail({ orderId }) {
     const link =
       order?.trackingUrl ||
       trackingUrl ||
+      storefrontTrackingUrl(trackingNumber) ||
       (String(trackingCarrier).toLowerCase() === "postex"
         ? postexPublicTrackingUrl(trackingNumber)
+        : "") ||
+      (isRunCourierOrder({ ...order, courier: trackingCarrier })
+        ? runCourierPublicTrackingUrl(trackingNumber)
         : "");
     if (!link) {
       toast.error("No tracking link available.");
@@ -1856,18 +1899,51 @@ export function OrderDetail({ orderId }) {
                     {liveTrackingLoading ? (
                       <p className="mt-1 text-xs">Loading live status…</p>
                     ) : liveTracking?.status ? (
-                      <p className="mt-1">
-                        Live status: <strong>{liveTracking.status}</strong>
-                      </p>
+                      <div className="mt-1 space-y-1">
+                        <p>
+                          Live status: <strong>{liveTracking.status}</strong>
+                          {liveTracking.courier ? (
+                            <span className="ml-1 text-xs opacity-80">({liveTracking.courier})</span>
+                          ) : null}
+                        </p>
+                        {liveTracking.currentLocation || liveTracking.location ? (
+                          <p className="text-xs">
+                            Location: {liveTracking.currentLocation || liveTracking.location}
+                          </p>
+                        ) : null}
+                        {Array.isArray(liveTracking.events) && liveTracking.events.length > 0 ? (
+                          <ul className="mt-2 max-h-28 space-y-1 overflow-y-auto text-xs">
+                            {liveTracking.events.slice(0, 6).map((ev, i) => (
+                              <li key={`${ev.status}-${i}`} className="opacity-90">
+                                {[ev.date, ev.time].filter(Boolean).join(" ")} — {ev.status}
+                                {ev.location ? ` · ${ev.location}` : ""}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="text-xs text-[#1d6fb8] hover:underline"
+                          onClick={() =>
+                            fetchLiveCourierStatus(
+                              order.trackingNumber || order.tracking?.number || trackingNumber
+                            )
+                          }
+                        >
+                          Refresh status
+                        </button>
+                      </div>
                     ) : (
                       <button
                         type="button"
                         className="mt-1 text-xs text-[#1d6fb8] hover:underline"
                         onClick={() =>
-                          fetchLivePostexStatus(order.trackingNumber || order.tracking?.number || trackingNumber)
+                          fetchLiveCourierStatus(
+                            order.trackingNumber || order.tracking?.number || trackingNumber
+                          )
                         }
                       >
-                        Refresh Postex status
+                        Refresh {isRunCourierOrder(order) ? "Run Courier" : "courier"} status
                       </button>
                     )}
                   </div>
@@ -1889,13 +1965,20 @@ export function OrderDetail({ orderId }) {
                       href={
                         order.trackingUrl ||
                         trackingUrl ||
-                        postexPublicTrackingUrl(order.trackingNumber || trackingNumber)
+                        storefrontTrackingUrl(
+                          order.trackingNumber || trackingNumber
+                        ) ||
+                        (isRunCourierOrder(order)
+                          ? runCourierPublicTrackingUrl(
+                              order.trackingNumber || trackingNumber
+                            )
+                          : postexPublicTrackingUrl(order.trackingNumber || trackingNumber))
                       }
                       target="_blank"
                       rel="noreferrer"
                       className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-[#1d6fb8] hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
                     >
-                      Track on Postex →
+                      Track shipment →
                     </a>
                     {(hasLabel || order.hasPostexLabel || order.hasRunCourierLabel) ? (
                       <button

@@ -312,23 +312,49 @@ export function BulkActionBar({
     setLiveResults(null);
     setLiveProgress(`Fetching live status for ${ids.length} order(s)…`);
     try {
-      const res = await fetch("/api/postex/track-bulk", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderIds: ids, syncOrderStatus: true }),
+      const body = JSON.stringify({ orderIds: ids, syncOrderStatus: true });
+      const [postexRes, rcRes] = await Promise.all([
+        fetch("/api/postex/track-bulk", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body,
+        }),
+        fetch("/api/runcourier/track-bulk", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body,
+        }),
+      ]);
+      const postexJson = await postexRes.json().catch(() => ({}));
+      const rcJson = await rcRes.json().catch(() => ({}));
+
+      const mergeCounts = (a = {}, b = {}) => ({
+        okCount: (a.okCount || 0) + (b.okCount || 0),
+        syncedCount: (a.syncedCount || 0) + (b.syncedCount || 0),
+        skipCount: (a.skipCount || 0) + (b.skipCount || 0),
+        failCount: (a.failCount || 0) + (b.failCount || 0),
+        results: [...(a.results || []), ...(b.results || [])],
       });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        toast.error(json.error || "Live status refresh failed");
+
+      const postexOk = postexRes.ok && postexJson.success;
+      const rcOk = rcRes.ok && rcJson.success;
+      if (!postexOk && !rcOk) {
+        toast.error(postexJson.error || rcJson.error || "Live status refresh failed");
         return;
       }
-      setLiveResults(json);
+
+      const merged = mergeCounts(
+        postexOk ? postexJson : {},
+        rcOk ? rcJson : {}
+      );
+      setLiveResults({ success: true, ...merged, postex: postexJson, runcourier: rcJson });
       const parts = [];
-      if (json.okCount) parts.push(`${json.okCount} updated`);
-      if (json.syncedCount) parts.push(`${json.syncedCount} order status synced`);
-      if (json.skipCount) parts.push(`${json.skipCount} skipped`);
-      if (json.failCount) parts.push(`${json.failCount} failed`);
+      if (merged.okCount) parts.push(`${merged.okCount} updated`);
+      if (merged.syncedCount) parts.push(`${merged.syncedCount} order status synced`);
+      if (merged.skipCount) parts.push(`${merged.skipCount} skipped`);
+      if (merged.failCount) parts.push(`${merged.failCount} failed`);
       toast.success(parts.join(" · ") || "Done");
       onUpdated?.();
     } catch {

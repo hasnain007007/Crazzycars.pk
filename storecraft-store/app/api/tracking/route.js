@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
-import { fetchPostexTracking } from "@/lib/postex";
+import { resolvePublicTracking } from "@/lib/resolvePublicTracking";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 
 export const dynamic = "force-dynamic";
@@ -8,8 +8,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const trackingNumber = String(searchParams.get("trackingNumber") || "").trim();
-    if (!trackingNumber) {
+    const trackingNumber = String(
+      searchParams.get("trackingNumber") || searchParams.get("tracking") || ""
+    ).trim();
+    if (!trackingNumber || trackingNumber.length < 4) {
       return NextResponse.json(
         { success: false, error: "Invalid tracking number" },
         { status: 400 }
@@ -27,9 +29,10 @@ export async function GET(request) {
       /* env-only fallback */
     }
 
-    const result = await fetchPostexTracking(trackingNumber, { settingsCourier });
+    const result = await resolvePublicTracking(trackingNumber, { settingsCourier });
+    if (result?.raw) delete result.raw;
     const status = result.success ? 200 : result.error === "Tracking unavailable" ? 503 : 404;
-    return NextResponse.json(result, { status });
+    return NextResponse.json(result, { status, headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     return NextResponse.json(
       { success: false, error: e.message || "Could not connect to courier" },

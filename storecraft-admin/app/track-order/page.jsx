@@ -100,7 +100,7 @@ function TrackOrderInner() {
           Track Your Order
         </h1>
         <p style={{ fontSize: 14, color: "#64748b", margin: "0 0 28px", lineHeight: 1.6 }}>
-          Enter your PostEx tracking number to see live delivery updates.
+          Enter your tracking number (PostEx or Run Courier) to see live delivery updates.
         </p>
 
         <form
@@ -189,7 +189,7 @@ function TrackOrderInner() {
                 <strong>Tracking Number:</strong> {data.trackingNumber}
               </p>
               <p style={{ margin: "0 0 6px" }}>
-                <strong>Courier:</strong> {data.courier || "PostEx"}
+                <strong>Courier:</strong> {data.courier || "Courier"}
               </p>
               {data.origin || data.destination ? (
                 <p style={{ margin: "0 0 6px" }}>

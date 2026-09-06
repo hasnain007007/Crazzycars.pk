@@ -5,7 +5,7 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const metadata = buildPageMetadata({
   title: "Track Your Order | Crazzycars.pk",
-  description: "Track your Postex shipment with your tracking number.",
+  description: "Track your PostEx or Run Courier shipment with your tracking number.",
   path: "/track-order",
   absoluteTitle: true,
   noIndex: true,
