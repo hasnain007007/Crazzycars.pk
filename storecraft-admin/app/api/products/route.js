@@ -23,6 +23,7 @@ import {
 } from "@/lib/productPayload";
 import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMutations";
 import { withProductSaleComputed } from "@/lib/productSale";
+import { getProductSalesBatch } from "@/lib/productSales";
 import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
@@ -138,9 +139,35 @@ export async function GET(request) {
     const items = results[0];
     const total = results[1];
 
+    let salesMap = new Map();
+    if (!lite && items.length) {
+      try {
+        salesMap = await getProductSalesBatch(items.map((row) => row._id));
+      } catch {
+        salesMap = new Map();
+      }
+    }
+    const showRevenue = hasCapability(user, "canViewFinancials");
+
     const payload = {
       success: true,
-      data: items.map((row) => maybeStripProductCosts(user, withProductSaleComputed(row))),
+      data: items.map((row) => {
+        const base = maybeStripProductCosts(user, withProductSaleComputed(row));
+        const sales = salesMap.get(String(row._id)) || {
+          qtySold: 0,
+          revenue: 0,
+          orderCount: 0,
+        };
+        return {
+          ...base,
+          sales: {
+            qtySold: sales.qtySold,
+            orderCount: sales.orderCount,
+            ...(showRevenue ? { revenue: sales.revenue } : {}),
+            showRevenue,
+          },
+        };
+      }),
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1,

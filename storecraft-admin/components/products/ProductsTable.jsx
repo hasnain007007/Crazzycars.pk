@@ -153,6 +153,7 @@ export function ProductsTable({
               <th className="min-w-[100px] px-3 py-3 font-medium">Fitment</th>
               <th className="min-w-[140px] px-3 py-3 font-medium">Category</th>
               <th className="px-3 py-3 font-medium">Price</th>
+              <th className="px-3 py-3 font-medium">Sold</th>
               <th className="px-3 py-3 font-medium">Stock</th>
               <th className="px-3 py-3 font-medium">Status</th>
               <th className="px-3 py-3 font-medium" title="Shows in Best Sellers on homepage">
@@ -222,6 +223,23 @@ export function ProductsTable({
                   </td>
                   <td className="max-w-[180px] truncate px-3 py-2 text-[#374151]">{catLabel || "—"}</td>
                   <td className="px-3 py-2 tabular-nums">{priceLabel}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-semibold tabular-nums text-gray-900">
+                        {Number(row.sales?.qtySold || 0).toLocaleString("en-PK")}
+                      </span>
+                      {row.sales?.showRevenue ? (
+                        <span className="text-[11px] tabular-nums text-emerald-700">
+                          {formatAdminPrice(row.sales?.revenue || 0)}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-gray-400">
+                          {Number(row.sales?.orderCount || 0)} order
+                          {Number(row.sales?.orderCount || 0) === 1 ? "" : "s"}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-3 py-2">
                     <StockCell row={row} />
                   </td>
@@ -301,6 +319,13 @@ export function ProductsTable({
                         className="text-xs font-medium text-[#1d6fb8] hover:underline"
                       >
                         Edit
+                      </Link>
+                      <Link
+                        href={`/orders?productId=${encodeURIComponent(id)}`}
+                        className="text-xs font-medium text-[#374151] hover:underline"
+                        title="Orders for this product"
+                      >
+                        Orders
                       </Link>
                       <button type="button" className="text-xs font-medium text-red-600 hover:underline" onClick={() => onDeleteRow(row)}>
                         Delete

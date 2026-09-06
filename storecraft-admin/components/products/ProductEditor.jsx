@@ -21,6 +21,7 @@ import TabMedia from "./TabMedia";
 import { TabAddons } from "./TabAddons";
 import { TabOptions } from "./TabOptions";
 import { TabOrganisation } from "./TabOrganisation";
+import { ProductSalesPanel } from "./ProductSalesPanel";
 import TabVehicleFitment from "./TabVehicleFitment";
 import {
   buildVehicleCompatibilityPayload,
@@ -914,6 +915,10 @@ export function ProductEditor({ mode, productId }) {
             ) : null}
             </div>
           </div>
+
+          {isEdit && productId ? (
+            <ProductSalesPanel productId={productId} asideCardClass={asideCardClass} />
+          ) : null}
 
           <section className={asideCardClass}>
             <h2 className="mb-4 text-base font-semibold text-gray-900">Media</h2>

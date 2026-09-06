@@ -2,10 +2,12 @@
  * CSV export for orders (same filters as list API).
  */
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
+import Product from "@/lib/models/Product.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
 import { customerConfirmKind, customerConfirmLabel } from "@/lib/orderUi";
 
@@ -96,6 +98,24 @@ export async function GET(request) {
       if (!filter.orderStatus) {
         filter.orderStatus = { $nin: ["cancelled", "refunded"] };
       }
+    }
+
+    const productIdParam = (searchParams.get("productId") || "").trim();
+    if (productIdParam && mongoose.Types.ObjectId.isValid(productIdParam)) {
+      const productOid = new mongoose.Types.ObjectId(productIdParam);
+      const productDoc = await Product.findById(productOid).select("articleNo").lean();
+      const articleNo = String(productDoc?.articleNo || "").trim();
+      filter.$and = [
+        ...(filter.$and || []),
+        articleNo
+          ? {
+              $or: [
+                { "items.productId": productOid },
+                { "items.articleNo": articleNo },
+              ],
+            }
+          : { "items.productId": productOid },
+      ];
     }
 
     const rows = await Order.find(filter).sort({ createdAt: -1 }).limit(5000).lean();

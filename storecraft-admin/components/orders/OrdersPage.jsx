@@ -4,6 +4,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { OrderFilters } from "./OrderFilters";
 import { OrdersTable } from "./OrdersTable";
 import { InstrumentStatCard } from "@/components/ui/InstrumentStatCard";
@@ -24,6 +25,10 @@ const SAVED_VIEWS = [
 ];
 
 export function OrdersPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const productIdFromUrl = (searchParams.get("productId") || "").trim();
+
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -34,6 +39,8 @@ export function OrdersPage() {
   const [debouncedTag, setDebouncedTag] = useState("");
   const [customerConfirm, setCustomerConfirm] = useState("all");
   const [view, setView] = useState("all");
+  const [productId, setProductId] = useState(productIdFromUrl);
+  const [productFilter, setProductFilter] = useState(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
   const [sortKey, setSortKey] = useState("date");
@@ -59,6 +66,10 @@ export function OrdersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setProductId(productIdFromUrl);
+  }, [productIdFromUrl]);
+
+  useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
     return () => clearTimeout(t);
   }, [search]);
@@ -70,7 +81,18 @@ export function OrdersPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, customerConfirm, view, limit]);
+  }, [
+    debouncedSearch,
+    status,
+    paymentStatus,
+    dateFrom,
+    dateTo,
+    debouncedTag,
+    customerConfirm,
+    view,
+    limit,
+    productId,
+  ]);
 
   const queryString = useMemo(() => {
     const p = new URLSearchParams();
@@ -86,8 +108,23 @@ export function OrdersPage() {
     if (debouncedTag) p.set("tag", debouncedTag);
     if (customerConfirm !== "all") p.set("customerConfirm", customerConfirm);
     if (view && view !== "all") p.set("view", view);
+    if (productId) p.set("productId", productId);
     return p.toString();
-  }, [page, limit, sortKey, sortDir, debouncedSearch, status, paymentStatus, dateFrom, dateTo, debouncedTag, customerConfirm, view]);
+  }, [
+    page,
+    limit,
+    sortKey,
+    sortDir,
+    debouncedSearch,
+    status,
+    paymentStatus,
+    dateFrom,
+    dateTo,
+    debouncedTag,
+    customerConfirm,
+    view,
+    productId,
+  ]);
 
   function onSortChange(key) {
     if (sortKey === key) {
@@ -103,6 +140,15 @@ export function OrdersPage() {
     setPage(1);
   }
 
+  const clearProductFilter = useCallback(() => {
+    setProductId("");
+    setProductFilter(null);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("productId");
+    const qs = next.toString();
+    router.replace(qs ? `/orders?${qs}` : "/orders");
+  }, [router, searchParams]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -117,6 +163,7 @@ export function OrdersPage() {
       setTotalPages(json.totalPages ?? 1);
       if (json.stats) setStats(json.stats);
       if (json.views) setViews(json.views);
+      setProductFilter(json.productFilter || null);
     } catch {
       setOrders([]);
     } finally {
@@ -166,6 +213,7 @@ export function OrdersPage() {
     if (debouncedTag) p.set("tag", debouncedTag);
     if (customerConfirm !== "all") p.set("customerConfirm", customerConfirm);
     if (view && view !== "all") p.set("view", view);
+    if (productId) p.set("productId", productId);
     const qs = p.toString();
     window.open(`/api/orders/export${qs ? `?${qs}` : ""}`, "_blank", "noopener,noreferrer");
   }
@@ -199,6 +247,55 @@ export function OrdersPage() {
           </button>
         </div>
       </div>
+
+      {productId ? (
+        <div
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3"
+          style={{
+            background: "color-mix(in srgb, var(--accent-line) 8%, var(--bg-panel))",
+            borderColor: "var(--border-hairline)",
+          }}
+        >
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Filtered by product
+            </p>
+            <p className="truncate text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              {productFilter?.name || "Selected product"}
+              {productFilter?.articleNo ? (
+                <span className="ml-2 font-normal" style={{ color: "var(--text-muted)" }}>
+                  ({productFilter.articleNo})
+                </span>
+              ) : null}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={`/catalog/products/${productId}`}
+              className="rounded-lg border px-3 py-1.5 text-xs font-semibold hover:opacity-90"
+              style={{
+                background: "var(--bg-panel)",
+                borderColor: "var(--border-hairline)",
+                color: "var(--text-primary)",
+              }}
+            >
+              Open product
+            </a>
+            <button
+              type="button"
+              onClick={clearProductFilter}
+              className="rounded-lg border px-3 py-1.5 text-xs font-semibold hover:opacity-90"
+              style={{
+                background: "var(--bg-panel)",
+                borderColor: "var(--border-hairline)",
+                color: "var(--text-primary)",
+              }}
+            >
+              Clear product filter
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <InstrumentStatCard label="Total orders" value={stats.totalOrders} />

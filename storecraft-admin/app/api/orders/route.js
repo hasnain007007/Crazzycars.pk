@@ -156,6 +156,30 @@ export async function GET(request) {
       }
     }
 
+    const productIdParam = (searchParams.get("productId") || "").trim();
+    let productFilterMeta = null;
+    if (productIdParam && mongoose.Types.ObjectId.isValid(productIdParam)) {
+      const productOid = new mongoose.Types.ObjectId(productIdParam);
+      const productDoc = await Product.findById(productOid).select("name articleNo").lean();
+      const articleNo = String(productDoc?.articleNo || "").trim();
+      filter.$and = [
+        ...(filter.$and || []),
+        articleNo
+          ? {
+              $or: [
+                { "items.productId": productOid },
+                { "items.articleNo": articleNo },
+              ],
+            }
+          : { "items.productId": productOid },
+      ];
+      productFilterMeta = {
+        id: productIdParam,
+        name: productDoc?.name || "",
+        articleNo,
+      };
+    }
+
     const skip = (page - 1) * limit;
     const now = new Date();
     const dayStart = utcStartOfDay(now);
@@ -311,6 +335,7 @@ export async function GET(request) {
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1,
+      productFilter: productFilterMeta,
       stats: {
         totalOrders,
         pending: pendingCount,
