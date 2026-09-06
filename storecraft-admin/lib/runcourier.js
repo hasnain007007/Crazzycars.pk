@@ -4,6 +4,7 @@
  *
  * Endpoint paths are configurable via settings until official docs are wired.
  * Auth: Bearer token from RUN_COURIER_API_KEY or settings.courier.runCourierApiKey.
+ * Tracking: API + portal fallback, webhook sync, public multi-courier resolve.
  */
 
 import { storefrontTrackingUrl } from "@/lib/postex";
