@@ -163,6 +163,41 @@ export function productJsonLd(p) {
   if (mpn) ld.mpn = mpn;
   if (categoryName) ld.category = categoryName;
 
+  // Vehicle fitment — helps AI shopping agents match make/model recommendations.
+  const fitmentProps = [];
+  const vehicles =
+    (Array.isArray(p.compatibleCars) && p.compatibleCars.length
+      ? p.compatibleCars
+      : Array.isArray(p.vehicleCompatibility?.vehicles)
+        ? p.vehicleCompatibility.vehicles
+        : Array.isArray(p.compatibleVehicles)
+          ? p.compatibleVehicles
+          : []) || [];
+  for (const v of vehicles.slice(0, 12)) {
+    const make = String(v?.make || "").trim();
+    const model = String(v?.model || "").trim();
+    if (!make && !model) continue;
+    const years =
+      v?.yearFrom || v?.yearTo
+        ? ` ${[v.yearFrom, v.yearTo].filter(Boolean).join("–")}`
+        : "";
+    fitmentProps.push({
+      "@type": "PropertyValue",
+      name: "Vehicle Fitment",
+      value: `${make} ${model}${years}`.replace(/\s+/g, " ").trim(),
+    });
+  }
+  if (p.isUniversal || p.vehicleCompatibility?.fitmentType === "universal") {
+    fitmentProps.push({
+      "@type": "PropertyValue",
+      name: "Vehicle Fitment",
+      value: "Universal — fits most cars",
+    });
+  }
+  if (fitmentProps.length) {
+    ld.additionalProperty = fitmentProps;
+  }
+
   const ratingValue = Number(p.ratingValue || p.averageRating || p.rating) || 0;
   const reviewCount = Number(p.reviewCount || p.numReviews) || 0;
   if (ratingValue > 0 && reviewCount > 0) {

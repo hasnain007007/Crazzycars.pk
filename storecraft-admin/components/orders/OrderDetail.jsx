@@ -1659,6 +1659,18 @@ export function OrderDetail({ orderId }) {
                   paymentStatus={order.paymentStatus}
                 />
                 <CustomerConfirmBadge order={order} />
+                {order.aiAttributedSource ? (
+                  <span
+                    className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800 dark:bg-violet-900/40 dark:text-violet-200"
+                    title={
+                      order.aiAttributedAt
+                        ? `AI first-touch ${new Date(order.aiAttributedAt).toLocaleString()}`
+                        : "Attributed to AI agent traffic"
+                    }
+                  >
+                    AI · {order.aiAttributedSource}
+                  </span>
+                ) : null}
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
                   {formatCurrencyAmount(order, effectiveTotal)}
                 </span>

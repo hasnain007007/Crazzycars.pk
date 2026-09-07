@@ -57,7 +57,8 @@ const UA_RULES = [
 
 const REFERRER_HOSTS = [
   { source: "chatgpt", hosts: ["chat.openai.com", "chatgpt.com", "openai.com"] },
-  { source: "copilot", hosts: ["copilot.microsoft.com", "bing.com"] },
+  // Do NOT match bare bing.com — that pollutes Copilot with ordinary Bing organic.
+  { source: "copilot", hosts: ["copilot.microsoft.com", "copilot.cloud.microsoft"] },
   { source: "perplexity", hosts: ["perplexity.ai"] },
   { source: "claude", hosts: ["claude.ai"] },
   { source: "gemini", hosts: ["gemini.google.com", "bard.google.com"] },
@@ -68,6 +69,33 @@ const REFERRER_HOSTS = [
   { source: "deepseek", hosts: ["deepseek.com", "chat.deepseek.com"] },
   { source: "you", hosts: ["you.com"] },
 ];
+
+/** Host + path pairs that are AI chat UIs (not generic search). */
+const REFERRER_HOST_PATHS = [
+  { source: "copilot", host: "bing.com", pathIncludes: ["/chat", "/copilot", "/search?showconv=1"] },
+  { source: "copilot", host: "www.bing.com", pathIncludes: ["/chat", "/copilot", "/search?showconv=1"] },
+];
+
+/** utm_source / utm_medium values that count as AI shopping referrals. */
+const UTM_SOURCE_MAP = {
+  chatgpt: "chatgpt",
+  openai: "chatgpt",
+  "chat-gpt": "chatgpt",
+  copilot: "copilot",
+  bingchat: "copilot",
+  perplexity: "perplexity",
+  claude: "claude",
+  anthropic: "claude",
+  gemini: "gemini",
+  bard: "gemini",
+  grok: "grok",
+  xai: "grok",
+  metaai: "meta",
+  "meta-ai": "meta",
+  deepseek: "deepseek",
+  you: "you",
+  youcom: "you",
+};
 
 const SKIP_PATH_PREFIXES = [
   "/api/",
@@ -125,11 +153,49 @@ export function extractReferrerQuery(referrer) {
 }
 
 /**
- * @returns {{ matched: boolean, source: string, detection: 'user_agent'|'referrer'|'', userAgent: string, referrer: string, referrerQuery: string } | null}
+ * @param {{ userAgent?: string, referrer?: string, url?: string|URL|null }} opts
+ * @returns {{ matched: boolean, source: string, detection: 'user_agent'|'referrer'|'utm'|'', userAgent: string, referrer: string, referrerQuery: string } | null}
  */
-export function classifyAiTraffic({ userAgent = "", referrer = "" } = {}) {
+export function classifyAiTraffic({ userAgent = "", referrer = "", url = null } = {}) {
   const ua = String(userAgent || "");
   const ref = String(referrer || "");
+
+  // UTM / query params on the landing URL (share links from AI chats).
+  try {
+    const landing =
+      url instanceof URL
+        ? url
+        : typeof url === "string" && url
+          ? new URL(url, "https://crazzycars.pk")
+          : null;
+    if (landing) {
+      const utmSource = String(
+        landing.searchParams.get("utm_source") ||
+          landing.searchParams.get("ai_source") ||
+          ""
+      )
+        .trim()
+        .toLowerCase();
+      const mapped = UTM_SOURCE_MAP[utmSource];
+      if (mapped) {
+        return {
+          matched: true,
+          source: mapped,
+          detection: "utm",
+          userAgent: ua.slice(0, 400),
+          referrer: ref.slice(0, 1000),
+          referrerQuery:
+            extractReferrerQuery(ref) ||
+            String(landing.searchParams.get("utm_term") || landing.searchParams.get("q") || "").slice(
+              0,
+              500
+            ),
+        };
+      }
+    }
+  } catch {
+    /* ignore bad URL */
+  }
 
   for (const rule of UA_RULES) {
     if (rule.pattern.test(ua)) {
@@ -146,6 +212,27 @@ export function classifyAiTraffic({ userAgent = "", referrer = "" } = {}) {
 
   const host = hostFromReferrer(ref);
   if (host) {
+    let refPath = "";
+    try {
+      const u = new URL(ref);
+      refPath = `${u.pathname || ""}${u.search || ""}`.toLowerCase();
+    } catch {
+      refPath = "";
+    }
+
+    for (const rule of REFERRER_HOST_PATHS) {
+      if (hostMatches(host, rule.host) && rule.pathIncludes.some((p) => refPath.includes(p))) {
+        return {
+          matched: true,
+          source: rule.source,
+          detection: "referrer",
+          userAgent: ua.slice(0, 400),
+          referrer: ref.slice(0, 1000),
+          referrerQuery: extractReferrerQuery(ref),
+        };
+      }
+    }
+
     for (const rule of REFERRER_HOSTS) {
       if (rule.hosts.some((h) => hostMatches(host, h))) {
         return {

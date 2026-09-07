@@ -60,8 +60,15 @@ export async function POST(request) {
     let detection = String(body.detection || "").trim();
     let referrerQuery = String(body.referrerQuery || "").trim().slice(0, 500);
 
-    if (!ALLOWED_SOURCES.has(source) || !["user_agent", "referrer"].includes(detection)) {
-      const hit = classifyAiTraffic({ userAgent, referrer });
+    if (!ALLOWED_SOURCES.has(source) || !["user_agent", "referrer", "utm"].includes(detection)) {
+      let landingUrl = null;
+      try {
+        const origin = new URL(request.url).origin;
+        landingUrl = new URL(path.startsWith("http") ? path : `${origin}${path.startsWith("/") ? path : `/${path}`}`);
+      } catch {
+        landingUrl = null;
+      }
+      const hit = classifyAiTraffic({ userAgent, referrer, url: landingUrl });
       if (!hit?.matched) {
         return NextResponse.json({ success: false, error: "Not AI traffic." }, { status: 400 });
       }

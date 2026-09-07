@@ -19,6 +19,13 @@ const AI_CRAWLERS = [
   "Bingbot",
   "Applebot",
   "Applebot-Extended",
+  "meta-externalagent",
+  "Meta-ExternalAgent",
+  "DeepSeekBot",
+  "Bytespider",
+  "Amazonbot",
+  "CCBot",
+  "cohere-ai",
 ];
 
 export default async function robots() {

@@ -12,9 +12,9 @@ import { AI_SOURCES } from "@/lib/aiAgentTraffic";
 
 export const AI_ATTR_SOURCE_COOKIE = "ai_source";
 export const AI_ATTR_FIRST_TOUCH_COOKIE = "ai_first_touch_at";
-/** 14 days — within the common 1–30 day e-commerce attribution window. */
-export const AI_ATTRIBUTION_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
-export const AI_ATTRIBUTION_WINDOW_DAYS = 14;
+/** 30 days — captures delayed purchases after AI recommendation (still first-touch). */
+export const AI_ATTRIBUTION_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+export const AI_ATTRIBUTION_WINDOW_DAYS = 30;
 
 const SOURCE_SET = new Set(AI_SOURCES);
 
@@ -46,10 +46,12 @@ export function shouldWriteAiAttributionCookies(request) {
 }
 
 /**
- * Set first-touch cookies on a NextResponse when detection is a human AI referrer.
+ * Set first-touch cookies on a NextResponse when detection is a human AI referrer or UTM.
  */
 export function applyAiAttributionCookies(request, response, hit) {
-  if (!hit?.matched || hit.detection !== "referrer") return false;
+  if (!hit?.matched) return false;
+  // Crawler UAs inflate visits — only attribute shoppers from chat UI / share links.
+  if (hit.detection !== "referrer" && hit.detection !== "utm") return false;
   if (!isAllowedAiSource(hit.source)) return false;
   if (!shouldWriteAiAttributionCookies(request)) return false;
 

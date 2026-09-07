@@ -32,7 +32,7 @@ const aiAgentVisitSchema = new mongoose.Schema(
     },
     detection: {
       type: String,
-      enum: ["user_agent", "referrer"],
+      enum: ["user_agent", "referrer", "utm"],
       required: true,
     },
     userAgent: { type: String, default: "", maxlength: 400 },

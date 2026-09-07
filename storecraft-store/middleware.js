@@ -205,7 +205,11 @@ export async function middleware(request) {
   if (!shouldSkipAiVisitPath(pathname)) {
     const userAgent = request.headers.get("user-agent") || "";
     const referrer = request.headers.get("referer") || "";
-    aiHit = classifyAiTraffic({ userAgent, referrer });
+    aiHit = classifyAiTraffic({
+      userAgent,
+      referrer,
+      url: request.nextUrl,
+    });
     if (aiHit?.matched) {
       // Loopback avoids Traefik; internal token works in Edge without runtime secrets.
       const port = process.env.PORT || "3000";

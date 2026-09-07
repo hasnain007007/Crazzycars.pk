@@ -132,7 +132,8 @@ export async function GET(request) {
       orderStatus: { $nin: EXCLUDED_ORDER_STATUSES },
     };
 
-    const [total, bySourceRows, recentQueries, attributedOrderRows] = await Promise.all([
+    const [total, bySourceRows, recentQueries, attributedOrderRows, attributedOrderDocs] =
+      await Promise.all([
       AiAgentVisit.countDocuments(visitMatch),
       AiAgentVisit.aggregate([
         { $match: visitMatch },
@@ -158,6 +159,13 @@ export async function GET(request) {
         },
         { $sort: { revenue: -1 } },
       ]),
+      Order.find(orderMatch)
+        .select(
+          "_id orderNumber aiAttributedSource aiAttributedAt pricing.total orderStatus paymentStatus customer.name customer.phone createdAt"
+        )
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean(),
     ]);
 
     const ordersBySource = new Map(
@@ -201,6 +209,20 @@ export async function GET(request) {
       })
       .sort((a, b) => b.visits - a.visits || (showFinancials ? b.revenue - a.revenue : b.orders - a.orders));
 
+    const attributedOrdersList = (attributedOrderDocs || []).map((o) => ({
+      id: String(o._id),
+      orderNumber: o.orderNumber || "",
+      source: o.aiAttributedSource || "",
+      sourceLabel: SOURCE_LABELS[o.aiAttributedSource] || o.aiAttributedSource || "",
+      total: Math.round((Number(o.pricing?.total) || 0) * 100) / 100,
+      orderStatus: o.orderStatus || "",
+      paymentStatus: o.paymentStatus || "",
+      customerName: o.customer?.name || "Guest",
+      customerPhone: o.customer?.phone || "",
+      createdAt: o.createdAt || null,
+      attributedAt: o.aiAttributedAt || null,
+    }));
+
     const payload = {
       days,
       mode,
@@ -211,8 +233,9 @@ export async function GET(request) {
       toYmd: ymdUtc(to),
       total,
       attributedOrders,
-      attributionWindowDays: 14,
+      attributionWindowDays: 30,
       bySource,
+      attributedOrdersList,
       recentQueries: recentQueries.map((row) => ({
         query: row.referrerQuery,
         source: row.source,
@@ -224,6 +247,9 @@ export async function GET(request) {
     };
     if (showFinancials) {
       payload.attributedRevenue = attributedRevenue;
+    } else {
+      // Hide money on order rows for non-financial roles
+      for (const row of attributedOrdersList) delete row.total;
     }
 
     return NextResponse.json({
