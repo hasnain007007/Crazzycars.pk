@@ -92,6 +92,31 @@ export async function prepareRunCourierInvoiceHtml(invoiceLink) {
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
     .replace(/on\w+\s*=\s*(['"])[\s\S]*?\1/gi, "");
 
+  // Portal HTML often omits <html> — required for reliable rendering.
+  if (!/<html[\s>]/i.test(html)) {
+    if (/<!DOCTYPE/i.test(html)) {
+      html = html.replace(/<!DOCTYPE[^>]*>/i, "$&\n<html>");
+    } else {
+      html = `<!DOCTYPE html><html>${html}`;
+    }
+    if (!/<\/html>/i.test(html)) html = `${html}</html>`;
+  }
+
+  // Neutralize float layout that collapses height in PDF/html2canvas captures.
+  const layoutFix = `<style id="cc-airbill-fix">
+    html, body { background:#fff !important; }
+    .page-wrap, .table_invoice { float:none !important; display:block !important; width:867px !important; max-width:100% !important; }
+    .table_invoice::after { content:""; display:table; clear:both; }
+    button, .print_btn { display:none !important; }
+  </style>`;
+  if (/<\/head>/i.test(html)) {
+    html = html.replace(/<\/head>/i, `${layoutFix}</head>`);
+  } else if (/<head[^>]*>/i.test(html)) {
+    html = html.replace(/<head([^>]*)>/i, `<head$1>${layoutFix}`);
+  } else {
+    html = html.replace(/<html[^>]*>/i, (m) => `${m}<head>${layoutFix}</head>`);
+  }
+
   // Absolutize remaining relative URLs in common attributes.
   html = html.replace(
     /\b(src|href)=(["'])(?!data:|https?:|\/\/)([^"']+)\2/gi,

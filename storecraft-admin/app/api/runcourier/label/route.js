@@ -5,6 +5,7 @@ import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { fetchRunCourierLabel } from "@/lib/runcourier";
 import { prepareRunCourierInvoiceHtml } from "@/lib/runcourierInvoice";
+import { buildRunCourierAirbillPdf } from "@/lib/runcourierLabelPdf";
 
 export const dynamic = "force-dynamic";
 
@@ -30,16 +31,13 @@ function isHttpUrl(v) {
   return /^https?:\/\//i.test(String(v || "").trim());
 }
 
-function pdfResponse(labelBase64, tn) {
-  const buf = Buffer.from(
-    String(labelBase64).replace(/^data:application\/pdf;base64,/, ""),
-    "base64"
-  );
+function pdfResponse(buf, tn) {
   return new NextResponse(buf, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="runcourier-${tn}.pdf"`,
+      "Content-Disposition": `attachment; filename="runcourier-airbill-${tn || "shipment"}.pdf"`,
+      "Cache-Control": "no-store",
     },
   });
 }
@@ -59,6 +57,7 @@ export async function GET(request) {
     const orderIds = parseListParam(searchParams, ["orderIds", "orderId"]);
     const download = searchParams.get("download") === "1";
     const format = String(searchParams.get("format") || "").toLowerCase();
+    const wantPdf = download || format === "pdf" || !format || format === "html";
 
     await dbConnect();
     const settings =
@@ -111,10 +110,12 @@ export async function GET(request) {
 
     // Rare: stored PDF base64
     if (labelBase64 && !isHttpUrl(labelBase64)) {
-      if (download || format === "pdf") return pdfResponse(labelBase64, tn);
-      if (format !== "html") {
-        return NextResponse.json({ success: true, label: labelBase64, trackingNumber: tn });
-      }
+      const buf = Buffer.from(
+        String(labelBase64).replace(/^data:application\/pdf;base64,/, ""),
+        "base64"
+      );
+      if (download || format === "pdf" || !format) return pdfResponse(buf, tn);
+      return NextResponse.json({ success: true, label: labelBase64, trackingNumber: tn });
     }
 
     if (!invoiceLink) {
@@ -127,8 +128,19 @@ export async function GET(request) {
       );
     }
 
-    // Portal only serves HTML — prepare inlined HTML for client PDF conversion.
-    // Never redirect to portal (that opens a page instead of downloading a file).
+    // Default: build a real PDF server-side (portal HTML → blank via html2canvas).
+    if (wantPdf && format !== "html") {
+      const built = await buildRunCourierAirbillPdf(invoiceLink);
+      if (!built.success || !built.pdf?.length) {
+        return NextResponse.json(
+          { success: false, error: built.error || "Could not build airbill PDF." },
+          { status: 502 }
+        );
+      }
+      return pdfResponse(built.pdf, built.trackingNumber || tn);
+    }
+
+    // Optional HTML for debugging / legacy clients
     const prepared = await prepareRunCourierInvoiceHtml(invoiceLink);
     if (!prepared.success) {
       return NextResponse.json(
@@ -136,7 +148,6 @@ export async function GET(request) {
         { status: 502 }
       );
     }
-
     return NextResponse.json({
       success: true,
       html: prepared.html,
