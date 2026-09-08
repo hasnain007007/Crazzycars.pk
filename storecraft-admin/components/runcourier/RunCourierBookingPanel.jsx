@@ -107,8 +107,51 @@ export default function RunCourierBookingPanel({
       }
       setSuccess(`Booked! Tracking: ${data.trackingNumber} (${data.selectedApi})`);
       toast.success(`Run Courier booked: ${data.trackingNumber}`);
-      if (data.labelDownloadUrl) {
-        window.open(data.labelDownloadUrl, "_blank", "noopener,noreferrer");
+      // Auto-download airbill PDF on book (same as PostEx).
+      const orderId = order.id || order._id;
+      const tn = String(data.trackingNumber || "").trim();
+      let downloaded = false;
+      const rawPdf = String(data.labelPdfBase64 || "").replace(/^data:application\/pdf;base64,/, "");
+      if (rawPdf) {
+        try {
+          const binary = atob(rawPdf);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+          const blob = new Blob([bytes], { type: "application/pdf" });
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.rel = "noopener";
+          a.download = `runcourier-airbill-${tn || "shipment"}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+          downloaded = true;
+        } catch {
+          downloaded = false;
+        }
+      }
+      if (!downloaded) {
+        const labelUrl =
+          data.labelDownloadUrl ||
+          (tn
+            ? `/api/runcourier/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`
+            : "");
+        if (labelUrl) {
+          const a = document.createElement("a");
+          a.href = labelUrl;
+          a.rel = "noopener";
+          a.download = `runcourier-airbill-${tn || "shipment"}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          downloaded = true;
+        }
+      }
+      if (downloaded) toast.success("Downloading airbill PDF…");
+      else if (!data.hasLabel && !data.label) {
+        toast("Booked — airbill not ready yet. Use Print Label when available.");
       }
       onBooked?.(data);
     } catch {

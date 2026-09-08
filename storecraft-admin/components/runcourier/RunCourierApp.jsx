@@ -21,18 +21,46 @@ const TABS = [
 const CELL_INPUT =
   "h-8 w-full min-w-[8rem] rounded border border-slate-300 bg-white px-2 text-xs dark:border-slate-600 dark:bg-slate-900";
 
-function downloadLabel(url) {
+/** Force-download airbill PDF (same pattern as PostEx order booking). */
+function downloadLabel(url, trackingNumber = "") {
   if (!url) return;
-  const w = window.open(url, "_blank", "noopener,noreferrer");
-  if (!w) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  const a = document.createElement("a");
+  a.href = url;
+  a.rel = "noopener";
+  a.download = `runcourier-airbill-${trackingNumber || "shipment"}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function downloadLabelBase64(base64, trackingNumber = "") {
+  const raw = String(base64 || "").replace(/^data:application\/pdf;base64,/, "");
+  if (!raw) return false;
+  try {
+    const binary = atob(raw);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    downloadLabel(url, trackingNumber);
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    return true;
+  } catch {
+    return false;
   }
+}
+
+function autoDownloadAirbill(json, orderId) {
+  const tn = String(json?.trackingNumber || "").trim();
+  if (downloadLabelBase64(json?.labelPdfBase64, tn)) return true;
+  const labelUrl =
+    json?.labelDownloadUrl ||
+    (tn
+      ? `/api/runcourier/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`
+      : "");
+  if (!labelUrl) return false;
+  downloadLabel(labelUrl, tn);
+  return true;
 }
 
 function ApiSearchSelect({ carriers = RUN_COURIER_APIS, value, onChange, className = "" }) {
@@ -343,10 +371,11 @@ export default function RunCourierApp() {
     const trackingNumbers = list.map((o) => o.trackingNumber).join(",");
     const orderIds = list.map((o) => o.id).join(",");
     downloadLabel(
-      `/api/runcourier/label?trackingNumbers=${encodeURIComponent(trackingNumbers)}&orderIds=${encodeURIComponent(orderIds)}&download=1`
+      `/api/runcourier/label?trackingNumbers=${encodeURIComponent(trackingNumbers)}&orderIds=${encodeURIComponent(orderIds)}&download=1`,
+      list.length === 1 ? list[0].trackingNumber : "batch"
     );
     toast.success(
-      list.length === 1 ? "Opening label PDF…" : `Opening labels for ${list.length} orders…`
+      list.length === 1 ? "Downloading airbill PDF…" : `Downloading labels for ${list.length} orders…`
     );
   }
 
@@ -414,7 +443,13 @@ export default function RunCourierApp() {
     });
     const json = await res.json();
     if (res.ok && json.success) {
-      if (json.labelDownloadUrl) downloadLabel(json.labelDownloadUrl);
+      if (autoDownloadAirbill(json, id)) {
+        toast.success(
+          json.trackingNumber
+            ? `Airbill downloading: ${json.trackingNumber}`
+            : "Airbill downloading…"
+        );
+      }
       return { ok: true, json };
     }
     return { ok: false, error: json.error || "Failed" };

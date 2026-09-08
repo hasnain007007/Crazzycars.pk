@@ -1228,11 +1228,13 @@ export function OrderDetail({ orderId }) {
       toast.error("No tracking number.");
       return;
     }
-    window.open(
-      `/api/runcourier/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    const a = document.createElement("a");
+    a.href = `/api/runcourier/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`;
+    a.rel = "noopener";
+    a.download = `runcourier-airbill-${tn}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   async function sendTrackingEmail() {

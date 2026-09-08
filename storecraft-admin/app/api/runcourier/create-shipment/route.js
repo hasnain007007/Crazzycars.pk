@@ -234,6 +234,10 @@ export async function POST(request) {
     });
 
     const total = orderGrandTotal(order);
+    const labelPdf =
+      label && !String(label).startsWith("http")
+        ? String(label).replace(/^data:application\/pdf;base64,/, "")
+        : "";
     return NextResponse.json({
       success: true,
       message: `Shipment booked via Run Courier (${result.selectedApi}).`,
@@ -243,6 +247,8 @@ export async function POST(request) {
       trackingUrl: order.trackingUrl,
       label: Boolean(label),
       hasLabel: Boolean(label),
+      // Inline PDF so the browser can save the airbill immediately on book.
+      ...(labelPdf ? { labelPdfBase64: labelPdf } : {}),
       labelDownloadUrl: `/api/runcourier/label?trackingNumber=${encodeURIComponent(result.trackingNumber)}&orderId=${encodeURIComponent(orderId)}&download=1`,
       order: {
         id: order._id.toString(),
