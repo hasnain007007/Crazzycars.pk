@@ -2012,16 +2012,27 @@ export function OrderDetail({ orderId }) {
                       Track shipment →
                     </a>
                     {(hasLabel || order.hasPostexLabel || order.hasRunCourierLabel) ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (order.hasRunCourierLabel || order.runCourierApi) openRunCourierLabel();
-                          else openPostexLabel();
-                        }}
-                        className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
-                      >
-                        Download Label
-                      </button>
+                      <>
+                        {order.hasRunCourierLabel || order.runCourierApi ? (
+                          <button
+                            type="button"
+                            onClick={printRunCourierLabel}
+                            className="rounded-md border border-emerald-600 bg-white px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:bg-slate-800 dark:text-emerald-300"
+                          >
+                            Print Label
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (order.hasRunCourierLabel || order.runCourierApi) openRunCourierLabel();
+                            else openPostexLabel();
+                          }}
+                          className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
+                        >
+                          Download Label
+                        </button>
+                      </>
                     ) : null}
                     <button
                       type="button"
