@@ -4,6 +4,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { fetchRunCourierLabel } from "@/lib/runcourier";
+import { prepareRunCourierInvoiceHtml } from "@/lib/runcourierInvoice";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,24 @@ function parseListParam(searchParams, keys) {
   return [...new Set(out)];
 }
 
+function isHttpUrl(v) {
+  return /^https?:\/\//i.test(String(v || "").trim());
+}
+
+function pdfResponse(labelBase64, tn) {
+  const buf = Buffer.from(
+    String(labelBase64).replace(/^data:application\/pdf;base64,/, ""),
+    "base64"
+  );
+  return new NextResponse(buf, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="runcourier-${tn}.pdf"`,
+    },
+  });
+}
+
 export async function GET(request) {
   try {
     if (!getRequestUser(request)) {
@@ -39,6 +58,7 @@ export async function GET(request) {
     ]);
     const orderIds = parseListParam(searchParams, ["orderIds", "orderId"]);
     const download = searchParams.get("download") === "1";
+    const format = String(searchParams.get("format") || "").toLowerCase();
 
     await dbConnect();
     const settings =
@@ -70,54 +90,59 @@ export async function GET(request) {
 
     const tn = trackingNumbers[0] || "shipment";
 
-    // Portal invoice / airbill URL saved at booking time.
-    if (storedLabel.startsWith("http")) {
-      return NextResponse.redirect(storedLabel, 302);
+    let invoiceLink = isHttpUrl(storedLabel) ? storedLabel : "";
+    let labelBase64 = isHttpUrl(storedLabel) ? "" : storedLabel;
+
+    if (!invoiceLink) {
+      const fetched = await fetchRunCourierLabel(tn, {
+        settingsCourier: settings.courier,
+        invoiceLink: "",
+      });
+      if (fetched.success && fetched.invoiceLink) invoiceLink = fetched.invoiceLink;
+      if (fetched.success && fetched.label) labelBase64 = fetched.label;
     }
 
-    let labelBase64 = "";
-    const fetched = await fetchRunCourierLabel(tn, {
-      settingsCourier: settings.courier,
-      invoiceLink: storedLabel.startsWith("http") ? storedLabel : "",
-    });
-    if (fetched.success && fetched.invoiceLink) {
-      return NextResponse.redirect(fetched.invoiceLink, 302);
-    }
-    if (fetched.success) labelBase64 = fetched.label;
-
-    if (!labelBase64 && orderIds.length === 1) {
+    if (!invoiceLink && !labelBase64 && orderIds.length === 1) {
       const order = await Order.findById(orderIds[0]).select("runCourierLabel").lean();
       const raw = String(order?.runCourierLabel || "").trim();
-      if (raw.startsWith("http")) return NextResponse.redirect(raw, 302);
-      labelBase64 = raw;
+      if (isHttpUrl(raw)) invoiceLink = raw;
+      else if (raw) labelBase64 = raw;
     }
 
-    if (!labelBase64) {
+    // Rare: stored PDF base64
+    if (labelBase64 && !isHttpUrl(labelBase64)) {
+      if (download || format === "pdf") return pdfResponse(labelBase64, tn);
+      if (format !== "html") {
+        return NextResponse.json({ success: true, label: labelBase64, trackingNumber: tn });
+      }
+    }
+
+    if (!invoiceLink) {
       return NextResponse.json(
         {
           success: false,
-          error: "Airbill not available yet. Open the Run Courier invoice from the portal.",
+          error: "Airbill not available yet. Book with Run Courier first.",
         },
         { status: 404 }
       );
     }
 
-    if (labelBase64.startsWith("http")) {
-      return NextResponse.redirect(labelBase64, 302);
+    // Portal only serves HTML — prepare inlined HTML for client PDF conversion.
+    // Never redirect to portal (that opens a page instead of downloading a file).
+    const prepared = await prepareRunCourierInvoiceHtml(invoiceLink);
+    if (!prepared.success) {
+      return NextResponse.json(
+        { success: false, error: prepared.error || "Could not load airbill." },
+        { status: 502 }
+      );
     }
 
-    const buf = Buffer.from(labelBase64.replace(/^data:application\/pdf;base64,/, ""), "base64");
-    if (download) {
-      return new NextResponse(buf, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="runcourier-${tn}.pdf"`,
-        },
-      });
-    }
-
-    return NextResponse.json({ success: true, label: labelBase64, trackingNumber: tn });
+    return NextResponse.json({
+      success: true,
+      html: prepared.html,
+      invoiceLink: prepared.invoiceLink || invoiceLink,
+      trackingNumber: tn,
+    });
   } catch (e) {
     return NextResponse.json(
       { success: false, error: e.message || "Label fetch failed." },

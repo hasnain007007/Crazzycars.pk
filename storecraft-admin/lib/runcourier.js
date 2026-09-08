@@ -853,12 +853,12 @@ export async function fetchRunCourierLabel(trackingNumber, { settingsCourier, in
   if (link.startsWith("http")) {
     return { success: true, label: "", invoiceLink: link, trackingNumber };
   }
-  // No dedicated label PDF API — airbill is the portal invoice HTML.
+  // No dedicated label PDF API — airbill is the portal invoice HTML (converted client-side).
   const tn = String(trackingNumber || "").trim();
   if (!tn) return { success: false, error: "Tracking number required." };
   return {
     success: false,
-    error: "Open the Run Courier invoice link to print the airbill.",
+    error: "Invoice link not stored on this order yet.",
     trackingNumber: tn,
   };
 }

@@ -1222,19 +1222,20 @@ export function OrderDetail({ orderId }) {
     );
   }
 
-  function openRunCourierLabel() {
+  async function openRunCourierLabel() {
     const tn = order?.trackingNumber || order?.tracking?.number || trackingNumber;
     if (!tn) {
       toast.error("No tracking number.");
       return;
     }
-    const a = document.createElement("a");
-    a.href = `/api/runcourier/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`;
-    a.rel = "noopener";
-    a.download = `runcourier-airbill-${tn}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    const toastId = toast.loading("Preparing airbill PDF…");
+    try {
+      const { downloadRunCourierLabelPdf } = await import("@/lib/downloadRunCourierLabelPdf");
+      await downloadRunCourierLabelPdf({ orderId, trackingNumber: tn });
+      toast.success("Airbill PDF downloaded", { id: toastId });
+    } catch (e) {
+      toast.error(e?.message || "Could not download airbill PDF", { id: toastId });
+    }
   }
 
   async function sendTrackingEmail() {

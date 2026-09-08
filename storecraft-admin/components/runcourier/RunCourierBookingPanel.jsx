@@ -111,13 +111,8 @@ export default function RunCourierBookingPanel({
       const orderId = order.id || order._id;
       const tn = String(data.trackingNumber || "").trim();
       let downloaded = false;
-      const invoiceUrl = String(data.invoiceUrl || data.labelDownloadUrl || "").trim();
-      if (invoiceUrl.startsWith("http")) {
-        window.open(invoiceUrl, "_blank", "noopener,noreferrer");
-        downloaded = true;
-      }
       const rawPdf = String(data.labelPdfBase64 || "").replace(/^data:application\/pdf;base64,/, "");
-      if (!downloaded && rawPdf) {
+      if (rawPdf) {
         try {
           const binary = atob(rawPdf);
           const bytes = new Uint8Array(binary.length);
@@ -137,30 +132,18 @@ export default function RunCourierBookingPanel({
           downloaded = false;
         }
       }
-      if (!downloaded) {
-        const labelUrl =
-          data.labelDownloadUrl ||
-          (tn
-            ? `/api/runcourier/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`
-            : "");
-        if (labelUrl) {
-          if (labelUrl.startsWith("http")) {
-            window.open(labelUrl, "_blank", "noopener,noreferrer");
-          } else {
-            const a = document.createElement("a");
-            a.href = labelUrl;
-            a.rel = "noopener";
-            a.download = `runcourier-airbill-${tn || "shipment"}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-          }
+      if (!downloaded && (tn || orderId)) {
+        try {
+          const { downloadRunCourierLabelPdf } = await import("@/lib/downloadRunCourierLabelPdf");
+          await downloadRunCourierLabelPdf({ orderId, trackingNumber: tn });
           downloaded = true;
+        } catch {
+          downloaded = false;
         }
       }
-      if (downloaded) toast.success("Opening airbill…");
+      if (downloaded) toast.success("Airbill PDF downloaded");
       else if (!data.hasLabel && !data.label) {
-        toast("Booked — airbill not ready yet. Use Print Label when available.");
+        toast("Booked — airbill not ready yet. Use Download Label when available.");
       }
       onBooked?.(data);
     } catch {
