@@ -168,6 +168,10 @@ export default function RunCourierApp() {
     runCourierAutoCalculatePieces: false,
     runCourierPaidOrdersCodZero: false,
     runCourierAddOrderNotesInRemarks: false,
+    runCourierCreatePath: "",
+    runCourierTrackPath: "",
+    runCourierLabelPath: "",
+    runCourierCancelPath: "",
   });
 
   function patchRow(id, partial) {
@@ -272,6 +276,10 @@ export default function RunCourierApp() {
         runCourierAddOrderNotesInRemarks: Boolean(
           c.runCourierAddOrderNotesInRemarks ?? c.addOrderNotesInRemarks
         ),
+        runCourierCreatePath: c.runCourierCreatePath || "",
+        runCourierTrackPath: c.runCourierTrackPath || "",
+        runCourierLabelPath: c.runCourierLabelPath || "",
+        runCourierCancelPath: c.runCourierCancelPath || "",
       });
       setDefaultApi(c.runCourierDefaultApi || "Auto");
     } catch {
@@ -1141,6 +1149,53 @@ export default function RunCourierApp() {
                   onChange={(v) => patchSettings({ runCourierDefaultApi: v })}
                 />
               </div>
+            </label>
+          </div>
+
+          <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
+            <p className="font-semibold">API endpoint paths</p>
+            <p className="mt-1 opacity-90">
+              Default create path is <code>/api/v1/booking/create</code>. If booking shows HTTP
+              404, ask Run Courier (<a className="underline" href="mailto:info@runcourier.com">info@runcourier.com</a>) for their API docs and paste the exact Create / Track / Label
+              paths below.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block text-xs font-semibold uppercase text-slate-500 sm:col-span-2">
+              Create path
+              <input
+                className="mt-1 h-9 w-full rounded border border-slate-300 px-2 font-mono text-xs dark:border-slate-600 dark:bg-slate-900"
+                value={settingsForm.runCourierCreatePath}
+                onChange={(e) => patchSettings({ runCourierCreatePath: e.target.value })}
+                placeholder="/api/v1/booking/create"
+              />
+            </label>
+            <label className="block text-xs font-semibold uppercase text-slate-500">
+              Track path
+              <input
+                className="mt-1 h-9 w-full rounded border border-slate-300 px-2 font-mono text-xs dark:border-slate-600 dark:bg-slate-900"
+                value={settingsForm.runCourierTrackPath}
+                onChange={(e) => patchSettings({ runCourierTrackPath: e.target.value })}
+                placeholder="/api/v1/tracking"
+              />
+            </label>
+            <label className="block text-xs font-semibold uppercase text-slate-500">
+              Label path
+              <input
+                className="mt-1 h-9 w-full rounded border border-slate-300 px-2 font-mono text-xs dark:border-slate-600 dark:bg-slate-900"
+                value={settingsForm.runCourierLabelPath}
+                onChange={(e) => patchSettings({ runCourierLabelPath: e.target.value })}
+                placeholder="/api/v1/label"
+              />
+            </label>
+            <label className="block text-xs font-semibold uppercase text-slate-500 sm:col-span-2">
+              Cancel path
+              <input
+                className="mt-1 h-9 w-full rounded border border-slate-300 px-2 font-mono text-xs dark:border-slate-600 dark:bg-slate-900"
+                value={settingsForm.runCourierCancelPath}
+                onChange={(e) => patchSettings({ runCourierCancelPath: e.target.value })}
+                placeholder="/api/v1/booking/cancel"
+              />
             </label>
           </div>
 

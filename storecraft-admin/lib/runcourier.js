@@ -686,7 +686,9 @@ async function runCourierFetch(path, { method = "GET", body, settingsCourier, qu
     if (!res.ok) {
       const errMsg =
         pick(json, "message", "error", "statusMessage", "msg") ||
-        `Run Courier HTTP ${res.status}`;
+        (res.status === 404
+          ? `Run Courier booking URL not found (HTTP 404). Path tried: ${url}. Ask Run Courier for their API docs, then set the correct Create path in Run Courier → Settings.`
+          : `Run Courier HTTP ${res.status}`);
       return { ok: false, status: res.status, json, error: errMsg, url };
     }
     return { ok: true, status: res.status, json, error: "", url };
