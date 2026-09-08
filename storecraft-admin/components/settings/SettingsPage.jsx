@@ -1354,7 +1354,7 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
           />
           <Field
             label="Default Select API"
-            value={courier.runCourierDefaultApi || "Auto"}
+            value={courier.runCourierDefaultApi || "Leopard2"}
             onChange={(v) => onPatch({ runCourierDefaultApi: v })}
           />
           <Field

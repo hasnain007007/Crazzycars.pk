@@ -264,7 +264,7 @@ export function BulkActionBar({
   const bookRunCourierBulk = useCallback(async () => {
     if (!ids.length) return;
     const ok = window.confirm(
-      `Book ${ids.length} order(s) with Run Courier?\n\nUses the default Select API from Settings (e.g. Auto / TCS). Orders that already have tracking will be skipped.`
+      `Book ${ids.length} order(s) with Run Courier?\n\nUses the default Select API from Settings (e.g. Leopard2 / TCS). Orders that already have tracking will be skipped.`
     );
     if (!ok) return;
 

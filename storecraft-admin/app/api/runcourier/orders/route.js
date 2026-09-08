@@ -4,7 +4,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
-import { resolveRunCourierCodAmount, isPrepaidOrderForCod } from "@/lib/runcourier";
+import { resolveRunCourierCodAmount, isPrepaidOrderForCod, RUN_COURIER_DEFAULT_API } from "@/lib/runcourier";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +97,7 @@ export async function GET(request) {
         .then((doc) => doc || Settings.findOne({}).lean()),
     ]);
 
-    const defaultApi = settings?.courier?.runCourierDefaultApi || "Auto";
+    const defaultApi = settings?.courier?.runCourierDefaultApi || RUN_COURIER_DEFAULT_API;
 
     const orders = rows.map((o) => {
       const addr = o.shippingAddress || {};

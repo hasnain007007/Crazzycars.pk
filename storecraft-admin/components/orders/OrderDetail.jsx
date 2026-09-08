@@ -1038,7 +1038,7 @@ export function OrderDetail({ orderId }) {
       const verified = await fetchLiveCourierStatus(num, {
         ...order,
         courier: trackingCarrier,
-        runCourierApi: isRun ? order?.runCourierApi || "Auto" : "",
+        runCourierApi: isRun ? order?.runCourierApi || "Leopard2" : "",
       });
       if (!verified) {
         toast.error(

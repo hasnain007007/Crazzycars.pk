@@ -11,6 +11,9 @@ import { storefrontTrackingUrl } from "@/lib/postex";
 
 export { storefrontTrackingUrl };
 
+/** Default Select API when Settings / booking form has no override. */
+export const RUN_COURIER_DEFAULT_API = "Leopard2";
+
 /** Default Select API carriers shown in the portal dropdown. */
 export const RUN_COURIER_APIS = [
   "Auto",
@@ -506,7 +509,7 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
   const customer = order?.customer || {};
   const selectedApi = normalizeRunCourierApi(
     opts.selectedApi || opts.api || courier.runCourierDefaultApi,
-    courier.runCourierDefaultApi || "Auto"
+    courier.runCourierDefaultApi || RUN_COURIER_DEFAULT_API
   );
   const product = String(
     opts.product || opts.productType || courier.runCourierProductType || "Overnight"

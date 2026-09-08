@@ -13,6 +13,7 @@ import {
   createRunCourierShipment,
   displayCourierName,
   fetchRunCourierLabel,
+  RUN_COURIER_DEFAULT_API,
   storefrontTrackingUrl,
 } from "@/lib/runcourier";
 
@@ -28,7 +29,7 @@ function applyRunCourierShipmentToOrder(order, { trackingNumber, label, invoiceL
   order.trackingNumber = tn;
   order.courier = carrierDisplay;
   order.trackingUrl = url;
-  order.runCourierApi = String(selectedApi || "Auto");
+  order.runCourierApi = String(selectedApi || RUN_COURIER_DEFAULT_API);
   order.tracking = {
     number: tn,
     carrier: carrierDisplay,

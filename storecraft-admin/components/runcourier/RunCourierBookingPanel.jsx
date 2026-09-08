@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
   RUN_COURIER_APIS,
+  RUN_COURIER_DEFAULT_API,
   RUN_COURIER_PRODUCT_TYPES,
   RUN_COURIER_SERVICE_TYPES,
 } from "@/lib/runcourier";
@@ -32,7 +33,7 @@ export default function RunCourierBookingPanel({
 }) {
   const [carriers, setCarriers] = useState(RUN_COURIER_APIS);
   const [selectedApi, setSelectedApi] = useState(
-    courierSettings.runCourierDefaultApi || order?.runCourierApi || "Auto"
+    courierSettings.runCourierDefaultApi || order?.runCourierApi || RUN_COURIER_DEFAULT_API
   );
   const [productType, setProductType] = useState(
     courierSettings.runCourierProductType || "Overnight"
@@ -70,10 +71,10 @@ export default function RunCourierBookingPanel({
     const grams = Number(order.pricing?.totalWeightGrams) || 0;
     const weightKg = grams > 0 ? Math.round((grams / 1000) * 100) / 100 : 0.5;
     setWeight(Math.max(0.5, weightKg));
-    if (courierSettings.runCourierDefaultApi) {
-      setSelectedApi(courierSettings.runCourierDefaultApi);
-    }
-  }, [order, orderTotal, courierSettings.runCourierDefaultApi]);
+    setSelectedApi(
+      courierSettings.runCourierDefaultApi || order?.runCourierApi || RUN_COURIER_DEFAULT_API
+    );
+  }, [order, orderTotal, courierSettings.runCourierDefaultApi, order?.runCourierApi]);
 
   async function handleBook() {
     if (!order) return;

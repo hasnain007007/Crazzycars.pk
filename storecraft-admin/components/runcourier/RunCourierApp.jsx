@@ -5,6 +5,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import {
   RUN_COURIER_APIS,
+  RUN_COURIER_DEFAULT_API,
   RUN_COURIER_PRODUCT_TYPES,
   RUN_COURIER_SERVICE_TYPES,
 } from "@/lib/runcourier";
@@ -155,7 +156,7 @@ export default function RunCourierApp() {
   const [selected, setSelected] = useState(() => new Set());
   const [busy, setBusy] = useState(false);
   const [carriers, setCarriers] = useState(RUN_COURIER_APIS);
-  const [defaultApi, setDefaultApi] = useState("Auto");
+  const [defaultApi, setDefaultApi] = useState(RUN_COURIER_DEFAULT_API);
   const [rowApi, setRowApi] = useState({});
   const [rows, setRows] = useState({});
   const [labelFrom, setLabelFrom] = useState(() => new Date().toISOString().slice(0, 10));
@@ -171,7 +172,7 @@ export default function RunCourierApp() {
     runCourierClientCode: "",
     runCourierProfileId: "",
     runCourierBaseUrl: "https://portal.runcourier.com",
-    runCourierDefaultApi: "Auto",
+    runCourierDefaultApi: RUN_COURIER_DEFAULT_API,
     runCourierProductType: "Overnight",
     runCourierServiceType: "Overnight",
     runCourierOriginCity: "Gujranwala",
@@ -232,7 +233,7 @@ export default function RunCourierApp() {
             address: o.address || "",
             cod: o.codAmount ?? 0,
           };
-          nextApi[o.id] = o.suggestedApi || json.defaultApi || "Auto";
+          nextApi[o.id] = o.suggestedApi || json.defaultApi || RUN_COURIER_DEFAULT_API;
         }
         setRows(next);
         setRowApi(nextApi);
@@ -267,7 +268,7 @@ export default function RunCourierApp() {
         runCourierClientCode: c.runCourierClientCode || "",
         runCourierProfileId: c.runCourierProfileId || "",
         runCourierBaseUrl: c.runCourierBaseUrl || "https://portal.runcourier.com",
-        runCourierDefaultApi: c.runCourierDefaultApi || "Auto",
+        runCourierDefaultApi: c.runCourierDefaultApi || RUN_COURIER_DEFAULT_API,
         runCourierProductType: c.runCourierProductType || "Overnight",
         runCourierServiceType: c.runCourierServiceType || "Overnight",
         runCourierOriginCity: c.runCourierOriginCity || c.originCity || "Gujranwala",
@@ -305,7 +306,7 @@ export default function RunCourierApp() {
         runCourierLabelPath: c.runCourierLabelPath || "",
         runCourierCancelPath: c.runCourierCancelPath || "",
       });
-      setDefaultApi(c.runCourierDefaultApi || "Auto");
+      setDefaultApi(c.runCourierDefaultApi || RUN_COURIER_DEFAULT_API);
     } catch {
       /* ignore */
     }
@@ -475,7 +476,7 @@ export default function RunCourierApp() {
       0,
       Math.round(Number(row.cod != null && row.cod !== "" ? row.cod : base.codAmount) || 0)
     );
-    const api = selectedApi || rowApi[id] || base.suggestedApi || defaultApi || "Auto";
+    const api = selectedApi || rowApi[id] || base.suggestedApi || defaultApi || RUN_COURIER_DEFAULT_API;
 
     const res = await fetch("/api/runcourier/create-shipment", {
       method: "POST",

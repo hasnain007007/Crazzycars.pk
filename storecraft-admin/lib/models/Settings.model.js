@@ -122,7 +122,7 @@ const settingsSchema = new mongoose.Schema(
       runCourierClientCode: { type: String, default: "" },
       runCourierProfileId: { type: String, default: "" },
       runCourierBaseUrl: { type: String, default: "https://portal.runcourier.com" },
-      runCourierDefaultApi: { type: String, default: "Auto" },
+      runCourierDefaultApi: { type: String, default: "Leopard2" },
       runCourierProductType: { type: String, default: "Overnight" },
       runCourierServiceType: { type: String, default: "Overnight" },
       runCourierOriginCity: { type: String, default: "Gujranwala" },
