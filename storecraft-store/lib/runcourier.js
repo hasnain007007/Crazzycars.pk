@@ -4,7 +4,7 @@
  */
 
 export const RUN_COURIER_DEFAULT_BASE = "https://portal.runcourier.com";
-export const RUN_COURIER_DEFAULT_TRACK_PATH = "/api/v1/tracking";
+export const RUN_COURIER_DEFAULT_TRACK_PATH = "/API/TrackOrder.php";
 
 const RUN_COURIER_CARRIER_HINTS = [
   "run courier",
@@ -45,6 +45,12 @@ function resolveApiKey(settingsCourier) {
   const fromEnv = String(process.env.RUN_COURIER_API_KEY || "").trim();
   if (fromEnv) return fromEnv;
   return String(settingsCourier?.runCourierApiKey || "").trim();
+}
+
+function resolveClientCode(settingsCourier) {
+  const fromEnv = String(process.env.RUN_COURIER_CLIENT_CODE || "").trim();
+  if (fromEnv) return fromEnv;
+  return String(settingsCourier?.runCourierClientCode || "").trim();
 }
 
 function resolveBaseUrl(settingsCourier) {
@@ -301,18 +307,23 @@ export async function fetchRunCourierTracking(trackingNumber, { settingsCourier 
   if (!tn) return { success: false, error: "Tracking number required." };
 
   const apiKey = resolveApiKey(settingsCourier);
-  if (apiKey) {
+  const clientCode = resolveClientCode(settingsCourier);
+  if (apiKey && clientCode) {
     const base = resolveBaseUrl(settingsCourier);
     const path = resolveTrackPath(settingsCourier);
-    const url = `${base}${path}?trackingNumber=${encodeURIComponent(tn)}&cn=${encodeURIComponent(tn)}&code=${encodeURIComponent(tn)}`;
+    const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
     try {
       const res = await fetch(url, {
-        method: "GET",
+        method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "X-API-KEY": apiKey,
+          "Content-Type": "application/json",
           Accept: "application/json",
         },
+        body: JSON.stringify({
+          auth_key: apiKey,
+          client_code: clientCode,
+          tracking_no: tn,
+        }),
         cache: "no-store",
       });
       const text = await res.text();
@@ -322,7 +333,35 @@ export async function fetchRunCourierTracking(trackingNumber, { settingsCourier 
       } catch {
         json = null;
       }
-      if (res.ok && json) {
+      if (res.ok && json && typeof json !== "string") {
+        if (Array.isArray(json) && json.length) {
+          const events = json.map((entry, idx) => {
+            const status = String(entry.status || "Update").trim();
+            return {
+              date: "",
+              time: "",
+              status,
+              location: "",
+              description: status,
+              sortAt: Date.now() - idx,
+            };
+          });
+          const status = events[0]?.status || "Unknown";
+          return {
+            success: true,
+            trackingNumber: tn,
+            status,
+            statusCode: status.slice(0, 2).toUpperCase(),
+            courier: "Run Courier",
+            events,
+            estimatedDelivery: "",
+            origin: "",
+            destination: "",
+            currentLocation: "",
+            destinationReceived: false,
+            source: "api",
+          };
+        }
         const parsed = parseRunCourierTrackingJson(json, tn);
         if (parsed?.success) return parsed;
       }

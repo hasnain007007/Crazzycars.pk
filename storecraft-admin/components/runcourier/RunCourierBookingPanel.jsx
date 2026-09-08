@@ -111,8 +111,13 @@ export default function RunCourierBookingPanel({
       const orderId = order.id || order._id;
       const tn = String(data.trackingNumber || "").trim();
       let downloaded = false;
+      const invoiceUrl = String(data.invoiceUrl || data.labelDownloadUrl || "").trim();
+      if (invoiceUrl.startsWith("http")) {
+        window.open(invoiceUrl, "_blank", "noopener,noreferrer");
+        downloaded = true;
+      }
       const rawPdf = String(data.labelPdfBase64 || "").replace(/^data:application\/pdf;base64,/, "");
-      if (rawPdf) {
+      if (!downloaded && rawPdf) {
         try {
           const binary = atob(rawPdf);
           const bytes = new Uint8Array(binary.length);
@@ -139,17 +144,21 @@ export default function RunCourierBookingPanel({
             ? `/api/runcourier/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`
             : "");
         if (labelUrl) {
-          const a = document.createElement("a");
-          a.href = labelUrl;
-          a.rel = "noopener";
-          a.download = `runcourier-airbill-${tn || "shipment"}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
+          if (labelUrl.startsWith("http")) {
+            window.open(labelUrl, "_blank", "noopener,noreferrer");
+          } else {
+            const a = document.createElement("a");
+            a.href = labelUrl;
+            a.rel = "noopener";
+            a.download = `runcourier-airbill-${tn || "shipment"}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          }
           downloaded = true;
         }
       }
-      if (downloaded) toast.success("Downloading airbill PDF…");
+      if (downloaded) toast.success("Opening airbill…");
       else if (!data.hasLabel && !data.label) {
         toast("Booked — airbill not ready yet. Use Print Label when available.");
       }

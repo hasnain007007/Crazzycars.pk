@@ -21,9 +21,13 @@ const TABS = [
 const CELL_INPUT =
   "h-8 w-full min-w-[8rem] rounded border border-slate-300 bg-white px-2 text-xs dark:border-slate-600 dark:bg-slate-900";
 
-/** Force-download airbill PDF (same pattern as PostEx order booking). */
+/** Force-download airbill PDF, or open portal invoice/airbill URL. */
 function downloadLabel(url, trackingNumber = "") {
   if (!url) return;
+  if (/^https?:\/\//i.test(url)) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return;
+  }
   const a = document.createElement("a");
   a.href = url;
   a.rel = "noopener";
@@ -53,6 +57,11 @@ function downloadLabelBase64(base64, trackingNumber = "") {
 function autoDownloadAirbill(json, orderId) {
   const tn = String(json?.trackingNumber || "").trim();
   if (downloadLabelBase64(json?.labelPdfBase64, tn)) return true;
+  const invoice = String(json?.invoiceUrl || "").trim();
+  if (invoice.startsWith("http")) {
+    downloadLabel(invoice, tn);
+    return true;
+  }
   const labelUrl =
     json?.labelDownloadUrl ||
     (tn
@@ -148,6 +157,8 @@ export default function RunCourierApp() {
   const [settingsForm, setSettingsForm] = useState({
     runCourierEnabled: true,
     runCourierApiKey: "",
+    runCourierClientCode: "",
+    runCourierProfileId: "",
     runCourierBaseUrl: "https://portal.runcourier.com",
     runCourierDefaultApi: "Auto",
     runCourierProductType: "Overnight",
@@ -242,6 +253,8 @@ export default function RunCourierApp() {
       setSettingsForm({
         runCourierEnabled: c.runCourierEnabled !== false,
         runCourierApiKey: c.runCourierApiKey || "",
+        runCourierClientCode: c.runCourierClientCode || "",
+        runCourierProfileId: c.runCourierProfileId || "",
         runCourierBaseUrl: c.runCourierBaseUrl || "https://portal.runcourier.com",
         runCourierDefaultApi: c.runCourierDefaultApi || "Auto",
         runCourierProductType: c.runCourierProductType || "Overnight",
@@ -510,6 +523,8 @@ export default function RunCourierApp() {
               Number(settingsForm.runCourierDefaultWeight) || 0.5
             ),
             runCourierApiKey: String(settingsForm.runCourierApiKey || "").trim(),
+            runCourierClientCode: String(settingsForm.runCourierClientCode || "").trim(),
+            runCourierProfileId: String(settingsForm.runCourierProfileId || "").trim(),
             runCourierBaseUrl: String(settingsForm.runCourierBaseUrl || "").trim(),
             runCourierOriginCity:
               String(settingsForm.runCourierOriginCity || "").trim() || "Gujranwala",
@@ -997,14 +1012,35 @@ export default function RunCourierApp() {
 
           <SettingsToggle label="Enable Run Courier booking" keyName="runCourierEnabled" />
 
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block text-xs font-semibold uppercase text-slate-500">
+              Client Code
+              <input
+                className="mt-1 w-full rounded border px-3 py-2 font-mono text-sm dark:border-slate-600 dark:bg-slate-800"
+                value={settingsForm.runCourierClientCode}
+                onChange={(e) => patchSettings({ runCourierClientCode: e.target.value })}
+                placeholder="e.g. 991200"
+              />
+            </label>
+            <label className="block text-xs font-semibold uppercase text-slate-500">
+              Profile ID
+              <input
+                className="mt-1 w-full rounded border px-3 py-2 font-mono text-sm dark:border-slate-600 dark:bg-slate-800"
+                value={settingsForm.runCourierProfileId}
+                onChange={(e) => patchSettings({ runCourierProfileId: e.target.value })}
+                placeholder="From Api Setting → Generate Profile ID"
+              />
+            </label>
+          </div>
+
           <label className="block text-xs font-semibold uppercase text-slate-500">
-            Token (API Key)
+            Token (API Auth Key)
             <input
               type="password"
               className="mt-1 w-full rounded border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
               value={settingsForm.runCourierApiKey}
               onChange={(e) => patchSettings({ runCourierApiKey: e.target.value })}
-              placeholder="Run Courier API token"
+              placeholder="UUID from portal Api Setting"
             />
           </label>
 
@@ -1155,9 +1191,8 @@ export default function RunCourierApp() {
           <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
             <p className="font-semibold">API endpoint paths</p>
             <p className="mt-1 opacity-90">
-              Default create path is <code>/api/v1/booking/create</code>. If booking shows HTTP
-              404, ask Run Courier (<a className="underline" href="mailto:info@runcourier.com">info@runcourier.com</a>) for their API docs and paste the exact Create / Track / Label
-              paths below.
+              Official iCargos paths are uppercase <code>/API/CreateOrder.php</code> (etc.). Leave
+              blank to use defaults. Auth uses Client Code + API Auth Key in the JSON body.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -1167,7 +1202,7 @@ export default function RunCourierApp() {
                 className="mt-1 h-9 w-full rounded border border-slate-300 px-2 font-mono text-xs dark:border-slate-600 dark:bg-slate-900"
                 value={settingsForm.runCourierCreatePath}
                 onChange={(e) => patchSettings({ runCourierCreatePath: e.target.value })}
-                placeholder="/api/v1/booking/create"
+                placeholder="/API/CreateOrder.php"
               />
             </label>
             <label className="block text-xs font-semibold uppercase text-slate-500">
@@ -1176,7 +1211,7 @@ export default function RunCourierApp() {
                 className="mt-1 h-9 w-full rounded border border-slate-300 px-2 font-mono text-xs dark:border-slate-600 dark:bg-slate-900"
                 value={settingsForm.runCourierTrackPath}
                 onChange={(e) => patchSettings({ runCourierTrackPath: e.target.value })}
-                placeholder="/api/v1/tracking"
+                placeholder="/API/TrackOrder.php"
               />
             </label>
             <label className="block text-xs font-semibold uppercase text-slate-500">
@@ -1185,7 +1220,7 @@ export default function RunCourierApp() {
                 className="mt-1 h-9 w-full rounded border border-slate-300 px-2 font-mono text-xs dark:border-slate-600 dark:bg-slate-900"
                 value={settingsForm.runCourierLabelPath}
                 onChange={(e) => patchSettings({ runCourierLabelPath: e.target.value })}
-                placeholder="/api/v1/label"
+                placeholder="(invoice link from booking)"
               />
             </label>
             <label className="block text-xs font-semibold uppercase text-slate-500 sm:col-span-2">
@@ -1194,7 +1229,7 @@ export default function RunCourierApp() {
                 className="mt-1 h-9 w-full rounded border border-slate-300 px-2 font-mono text-xs dark:border-slate-600 dark:bg-slate-900"
                 value={settingsForm.runCourierCancelPath}
                 onChange={(e) => patchSettings({ runCourierCancelPath: e.target.value })}
-                placeholder="/api/v1/booking/cancel"
+                placeholder="/API/CancelOrder.php"
               />
             </label>
           </div>

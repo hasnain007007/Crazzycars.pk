@@ -20,7 +20,7 @@ function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
 }
 
-function applyRunCourierShipmentToOrder(order, { trackingNumber, label, adminName, selectedApi }) {
+function applyRunCourierShipmentToOrder(order, { trackingNumber, label, invoiceLink, adminName, selectedApi }) {
   const tn = String(trackingNumber || "").trim();
   const carrierDisplay = displayCourierName(selectedApi);
   const url = storefrontTrackingUrl(tn);
@@ -42,6 +42,9 @@ function applyRunCourierShipmentToOrder(order, { trackingNumber, label, adminNam
   };
   if (label) {
     order.runCourierLabel = String(label);
+  } else if (invoiceLink) {
+    // Store portal airbill/invoice URL for print/download.
+    order.runCourierLabel = String(invoiceLink);
   }
 
   const wasNotShipped = order.orderStatus !== "shipped" && order.orderStatus !== "delivered";
@@ -198,16 +201,23 @@ export async function POST(request) {
     }
 
     let label = result.label || "";
+    const invoiceLink = String(result.invoiceLink || "").trim();
+    if (!label && invoiceLink) {
+      label = invoiceLink;
+    }
     if (!label) {
       const labelRes = await fetchRunCourierLabel(result.trackingNumber, {
         settingsCourier: settings.courier,
+        invoiceLink,
       });
-      if (labelRes.success) label = labelRes.label;
+      if (labelRes.success && labelRes.invoiceLink) label = labelRes.invoiceLink;
+      else if (labelRes.success) label = labelRes.label;
     }
 
     applyRunCourierShipmentToOrder(order, {
       trackingNumber: result.trackingNumber,
       label,
+      invoiceLink,
       adminName,
       selectedApi: result.selectedApi,
     });
@@ -238,6 +248,7 @@ export async function POST(request) {
       label && !String(label).startsWith("http")
         ? String(label).replace(/^data:application\/pdf;base64,/, "")
         : "";
+    const invoiceUrl = invoiceLink || (String(label).startsWith("http") ? label : "");
     return NextResponse.json({
       success: true,
       message: `Shipment booked via Run Courier (${result.selectedApi}).`,
@@ -245,11 +256,14 @@ export async function POST(request) {
       orderReference: result.orderReference || "",
       selectedApi: result.selectedApi,
       trackingUrl: order.trackingUrl,
-      label: Boolean(label),
-      hasLabel: Boolean(label),
+      label: Boolean(label || invoiceUrl),
+      hasLabel: Boolean(label || invoiceUrl),
+      invoiceUrl,
       // Inline PDF so the browser can save the airbill immediately on book.
       ...(labelPdf ? { labelPdfBase64: labelPdf } : {}),
-      labelDownloadUrl: `/api/runcourier/label?trackingNumber=${encodeURIComponent(result.trackingNumber)}&orderId=${encodeURIComponent(orderId)}&download=1`,
+      labelDownloadUrl: invoiceUrl
+        ? invoiceUrl
+        : `/api/runcourier/label?trackingNumber=${encodeURIComponent(result.trackingNumber)}&orderId=${encodeURIComponent(orderId)}&download=1`,
       order: {
         id: order._id.toString(),
         orderNumber: order.orderNumber,

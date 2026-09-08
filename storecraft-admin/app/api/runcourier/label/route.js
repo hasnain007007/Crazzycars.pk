@@ -46,6 +46,7 @@ export async function GET(request) {
       (await Settings.findOne({}).lean()) ||
       {};
 
+    let storedLabel = "";
     if (orderIds.length) {
       const orders = await Order.find({ _id: { $in: orderIds } })
         .select("trackingNumber tracking runCourierLabel")
@@ -53,32 +54,56 @@ export async function GET(request) {
       for (const order of orders) {
         const tn = String(order.trackingNumber || order.tracking?.number || "").trim();
         if (tn) trackingNumbers.push(tn);
+        if (!storedLabel && order.runCourierLabel) {
+          storedLabel = String(order.runCourierLabel).trim();
+        }
       }
       trackingNumbers = [...new Set(trackingNumbers.filter(Boolean))];
     }
 
-    if (!trackingNumbers.length) {
+    if (!trackingNumbers.length && !storedLabel) {
       return NextResponse.json(
         { success: false, error: "Tracking number required." },
         { status: 400 }
       );
     }
 
-    const tn = trackingNumbers[0];
+    const tn = trackingNumbers[0] || "shipment";
+
+    // Portal invoice / airbill URL saved at booking time.
+    if (storedLabel.startsWith("http")) {
+      return NextResponse.redirect(storedLabel, 302);
+    }
+
     let labelBase64 = "";
-    const fetched = await fetchRunCourierLabel(tn, { settingsCourier: settings.courier });
+    const fetched = await fetchRunCourierLabel(tn, {
+      settingsCourier: settings.courier,
+      invoiceLink: storedLabel.startsWith("http") ? storedLabel : "",
+    });
+    if (fetched.success && fetched.invoiceLink) {
+      return NextResponse.redirect(fetched.invoiceLink, 302);
+    }
     if (fetched.success) labelBase64 = fetched.label;
 
     if (!labelBase64 && orderIds.length === 1) {
       const order = await Order.findById(orderIds[0]).select("runCourierLabel").lean();
-      labelBase64 = String(order?.runCourierLabel || "").trim();
+      const raw = String(order?.runCourierLabel || "").trim();
+      if (raw.startsWith("http")) return NextResponse.redirect(raw, 302);
+      labelBase64 = raw;
     }
 
     if (!labelBase64) {
       return NextResponse.json(
-        { success: false, error: "Label not available yet." },
+        {
+          success: false,
+          error: "Airbill not available yet. Open the Run Courier invoice from the portal.",
+        },
         { status: 404 }
       );
+    }
+
+    if (labelBase64.startsWith("http")) {
+      return NextResponse.redirect(labelBase64, 302);
     }
 
     const buf = Buffer.from(labelBase64.replace(/^data:application\/pdf;base64,/, ""), "base64");

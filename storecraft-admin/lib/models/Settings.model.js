@@ -119,6 +119,8 @@ const settingsSchema = new mongoose.Schema(
       /** Run Courier (aggregator) — parallel to PostEx; does not replace PostEx keys */
       runCourierEnabled: { type: Boolean, default: true },
       runCourierApiKey: { type: String, default: "" },
+      runCourierClientCode: { type: String, default: "" },
+      runCourierProfileId: { type: String, default: "" },
       runCourierBaseUrl: { type: String, default: "https://portal.runcourier.com" },
       runCourierDefaultApi: { type: String, default: "Auto" },
       runCourierProductType: { type: String, default: "Overnight" },

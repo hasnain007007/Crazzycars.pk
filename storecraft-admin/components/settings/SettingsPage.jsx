@@ -1364,6 +1364,16 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
             onChange={(v) => onPatch({ runCourierApiKey: v })}
           />
           <Field
+            label="Client Code"
+            value={courier.runCourierClientCode || ""}
+            onChange={(v) => onPatch({ runCourierClientCode: v })}
+          />
+          <Field
+            label="Profile ID"
+            value={courier.runCourierProfileId || ""}
+            onChange={(v) => onPatch({ runCourierProfileId: v })}
+          />
+          <Field
             label="API Base URL"
             value={courier.runCourierBaseUrl || "https://portal.runcourier.com"}
             onChange={(v) => onPatch({ runCourierBaseUrl: v })}
