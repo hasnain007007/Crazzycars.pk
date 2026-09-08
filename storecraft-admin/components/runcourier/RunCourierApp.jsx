@@ -58,6 +58,20 @@ async function downloadAirbillPdf({ orderId, trackingNumber, orderIds, trackingN
   return downloadRunCourierLabelPdf({ orderId, trackingNumber, orderIds, trackingNumbers });
 }
 
+async function printAirbillPdf({ orderId, trackingNumber, orderIds, trackingNumbers } = {}) {
+  const { printRunCourierLabelPdf, printRunCourierLabelsPdf } = await import(
+    "@/lib/downloadRunCourierLabelPdf"
+  );
+  if (Array.isArray(orderIds) && orderIds.length > 1) {
+    const items = orderIds.map((id, i) => ({
+      orderId: id,
+      trackingNumber: trackingNumbers?.[i] || trackingNumber,
+    }));
+    return printRunCourierLabelsPdf(items);
+  }
+  return printRunCourierLabelPdf({ orderId, trackingNumber, orderIds, trackingNumbers });
+}
+
 async function autoDownloadAirbill(json, orderId) {
   const tn = String(json?.trackingNumber || "").trim();
   if (downloadLabelBase64(json?.labelPdfBase64, tn)) return true;
@@ -405,6 +419,28 @@ export default function RunCourierApp() {
     }
   }
 
+  async function printSelectedLabels() {
+    const list = orders.filter((o) => selected.has(o.id) && o.trackingNumber);
+    if (!list.length) {
+      toast.error("Select booked orders with tracking numbers.");
+      return;
+    }
+    const toastId = toast.loading(
+      list.length === 1 ? "Opening print…" : `Preparing ${list.length} labels to print…`
+    );
+    try {
+      await printAirbillPdf({
+        orderIds: list.map((o) => o.id),
+        trackingNumbers: list.map((o) => o.trackingNumber),
+        orderId: list[0].id,
+        trackingNumber: list[0].trackingNumber,
+      });
+      toast.success("Print dialog opened", { id: toastId });
+    } catch (e) {
+      toast.error(e?.message || "Could not print airbill", { id: toastId });
+    }
+  }
+
   function SettingsToggle({ label, keyName }) {
     return (
       <label className="flex items-center justify-between gap-3 rounded border border-slate-200 px-3 py-2 text-sm dark:border-slate-700">
@@ -648,21 +684,31 @@ export default function RunCourierApp() {
                   Search
                 </button>
                 {tab === "labels" ? (
-                  <button
-                    type="button"
-                    disabled={!selected.size}
-                    onClick={downloadSelectedLabels}
-                    className="ml-auto h-9 rounded bg-emerald-500 px-4 text-sm font-bold text-white disabled:opacity-60"
-                  >
-                    Download Label
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      disabled={!selected.size}
+                      onClick={printSelectedLabels}
+                      className="ml-auto h-9 rounded border border-emerald-600 bg-white px-4 text-sm font-bold text-emerald-700 disabled:opacity-60 dark:bg-slate-900"
+                    >
+                      Print Label
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!selected.size}
+                      onClick={downloadSelectedLabels}
+                      className="h-9 rounded bg-emerald-500 px-4 text-sm font-bold text-white disabled:opacity-60"
+                    >
+                      Download Label
+                    </button>
+                  </>
                 ) : null}
               </>
             )}
           </div>
           {tab === "labels" ? (
             <p className="text-xs text-slate-500">
-              Select one or more Run Courier bookings — downloads airbill PDF files.
+              Select one or more Run Courier bookings — Print opens the printer dialog; Download saves a PDF.
             </p>
           ) : null}
 
@@ -832,26 +878,46 @@ export default function RunCourierApp() {
                           </button>
                         ) : null}
                         {tab === "labels" ? (
-                          <button
-                            type="button"
-                            className="rounded border border-slate-300 px-2 py-1 font-semibold"
-                            onClick={async () => {
-                              const toastId = toast.loading("Preparing airbill PDF…");
-                              try {
-                                await downloadAirbillPdf({
-                                  orderId: o.id,
-                                  trackingNumber: o.trackingNumber,
-                                });
-                                toast.success("Airbill PDF downloaded", { id: toastId });
-                              } catch (e) {
-                                toast.error(e?.message || "Could not download PDF", {
-                                  id: toastId,
-                                });
-                              }
-                            }}
-                          >
-                            Label
-                          </button>
+                          <div className="flex flex-wrap gap-1">
+                            <button
+                              type="button"
+                              className="rounded border border-emerald-600 px-2 py-1 font-semibold text-emerald-700"
+                              onClick={async () => {
+                                const toastId = toast.loading("Opening print…");
+                                try {
+                                  await printAirbillPdf({
+                                    orderId: o.id,
+                                    trackingNumber: o.trackingNumber,
+                                  });
+                                  toast.success("Print dialog opened", { id: toastId });
+                                } catch (e) {
+                                  toast.error(e?.message || "Could not print", { id: toastId });
+                                }
+                              }}
+                            >
+                              Print
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded border border-slate-300 px-2 py-1 font-semibold"
+                              onClick={async () => {
+                                const toastId = toast.loading("Preparing airbill PDF…");
+                                try {
+                                  await downloadAirbillPdf({
+                                    orderId: o.id,
+                                    trackingNumber: o.trackingNumber,
+                                  });
+                                  toast.success("Airbill PDF downloaded", { id: toastId });
+                                } catch (e) {
+                                  toast.error(e?.message || "Could not download PDF", {
+                                    id: toastId,
+                                  });
+                                }
+                              }}
+                            >
+                              Download
+                            </button>
+                          </div>
                         ) : null}
                         {tab === "cancel" ? (
                           <button

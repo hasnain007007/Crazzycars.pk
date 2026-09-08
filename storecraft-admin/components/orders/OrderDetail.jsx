@@ -1238,6 +1238,22 @@ export function OrderDetail({ orderId }) {
     }
   }
 
+  async function printRunCourierLabel() {
+    const tn = order?.trackingNumber || order?.tracking?.number || trackingNumber;
+    if (!tn) {
+      toast.error("No tracking number.");
+      return;
+    }
+    const toastId = toast.loading("Opening print…");
+    try {
+      const { printRunCourierLabelPdf } = await import("@/lib/downloadRunCourierLabelPdf");
+      await printRunCourierLabelPdf({ orderId, trackingNumber: tn });
+      toast.success("Print dialog opened", { id: toastId });
+    } catch (e) {
+      toast.error(e?.message || "Could not print airbill", { id: toastId });
+    }
+  }
+
   async function sendTrackingEmail() {
     if (!order?.trackingNumber && !order?.tracking?.number) {
       toast.error("Add tracking number first.");
