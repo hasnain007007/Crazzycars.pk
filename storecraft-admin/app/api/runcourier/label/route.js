@@ -5,7 +5,10 @@ import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { fetchRunCourierLabel } from "@/lib/runcourier";
 import { prepareRunCourierInvoiceHtml } from "@/lib/runcourierInvoice";
-import { buildRunCourierAirbillPdf } from "@/lib/runcourierLabelPdf";
+import {
+  buildRunCourierAirbillPdf,
+  buildRunCourierAirbillsPdf,
+} from "@/lib/runcourierLabelPdf";
 
 export const dynamic = "force-dynamic";
 
@@ -65,60 +68,85 @@ export async function GET(request) {
       (await Settings.findOne({}).lean()) ||
       {};
 
-    let storedLabel = "";
+    /** @type {Array<{ id: string, trackingNumber: string, orderNumber: string, invoiceLink: string }>} */
+    const labelJobs = [];
+
     if (orderIds.length) {
       const orders = await Order.find({ _id: { $in: orderIds } })
-        .select("trackingNumber tracking runCourierLabel")
+        .select("trackingNumber tracking runCourierLabel orderNumber")
         .lean();
       for (const order of orders) {
         const tn = String(order.trackingNumber || order.tracking?.number || "").trim();
         if (tn) trackingNumbers.push(tn);
-        if (!storedLabel && order.runCourierLabel) {
-          storedLabel = String(order.runCourierLabel).trim();
+        const link = String(order.runCourierLabel || "").trim();
+        if (isHttpUrl(link) || tn) {
+          labelJobs.push({
+            id: String(order._id),
+            trackingNumber: tn,
+            orderNumber: String(order.orderNumber || "").trim(),
+            invoiceLink: isHttpUrl(link) ? link : "",
+          });
         }
       }
       trackingNumbers = [...new Set(trackingNumbers.filter(Boolean))];
     }
 
-    if (!trackingNumbers.length && !storedLabel) {
+    if (!trackingNumbers.length && !labelJobs.length) {
       return NextResponse.json(
         { success: false, error: "Tracking number required." },
         { status: 400 }
       );
     }
 
-    const tn = trackingNumbers[0] || "shipment";
+    // Resolve invoice links for jobs missing them / tracking-only requests
+    if (!labelJobs.length && trackingNumbers.length) {
+      for (const tn of trackingNumbers) {
+        const order = await Order.findOne({
+          $or: [{ trackingNumber: tn }, { "tracking.number": tn }],
+        })
+          .select("trackingNumber tracking runCourierLabel orderNumber")
+          .lean();
+        labelJobs.push({
+          id: order ? String(order._id) : "",
+          trackingNumber: tn,
+          orderNumber: String(order?.orderNumber || "").trim(),
+          invoiceLink: isHttpUrl(order?.runCourierLabel) ? String(order.runCourierLabel) : "",
+        });
+      }
+    }
 
-    let invoiceLink = isHttpUrl(storedLabel) ? storedLabel : "";
-    let labelBase64 = isHttpUrl(storedLabel) ? "" : storedLabel;
-
-    if (!invoiceLink) {
-      const fetched = await fetchRunCourierLabel(tn, {
+    for (const job of labelJobs) {
+      if (job.invoiceLink) continue;
+      if (!job.trackingNumber) continue;
+      const fetched = await fetchRunCourierLabel(job.trackingNumber, {
         settingsCourier: settings.courier,
         invoiceLink: "",
       });
-      if (fetched.success && fetched.invoiceLink) invoiceLink = fetched.invoiceLink;
-      if (fetched.success && fetched.label) labelBase64 = fetched.label;
+      if (fetched.success && fetched.invoiceLink) {
+        job.invoiceLink = fetched.invoiceLink;
+      }
     }
 
-    if (!invoiceLink && !labelBase64 && orderIds.length === 1) {
-      const order = await Order.findById(orderIds[0]).select("runCourierLabel").lean();
-      const raw = String(order?.runCourierLabel || "").trim();
-      if (isHttpUrl(raw)) invoiceLink = raw;
-      else if (raw) labelBase64 = raw;
-    }
+    const ready = labelJobs.filter((j) => isHttpUrl(j.invoiceLink));
+    const tn = ready[0]?.trackingNumber || trackingNumbers[0] || "shipment";
 
-    // Rare: stored PDF base64
-    if (labelBase64 && !isHttpUrl(labelBase64)) {
-      const buf = Buffer.from(
-        String(labelBase64).replace(/^data:application\/pdf;base64,/, ""),
-        "base64"
-      );
-      if (download || format === "pdf" || !format) return pdfResponse(buf, tn);
-      return NextResponse.json({ success: true, label: labelBase64, trackingNumber: tn });
-    }
-
-    if (!invoiceLink) {
+    if (!ready.length) {
+      // Last chance: single stored non-http label (legacy PDF base64)
+      if (orderIds.length === 1) {
+        const order = await Order.findById(orderIds[0])
+          .select("runCourierLabel orderNumber trackingNumber")
+          .lean();
+        const raw = String(order?.runCourierLabel || "").trim();
+        if (raw && !isHttpUrl(raw)) {
+          const buf = Buffer.from(
+            raw.replace(/^data:application\/pdf;base64,/, ""),
+            "base64"
+          );
+          if (download || format === "pdf" || !format) {
+            return pdfResponse(buf, order?.trackingNumber || tn);
+          }
+        }
+      }
       return NextResponse.json(
         {
           success: false,
@@ -128,20 +156,40 @@ export async function GET(request) {
       );
     }
 
-    // Default: build a real PDF server-side (portal HTML → blank via html2canvas).
     if (wantPdf && format !== "html") {
-      const built = await buildRunCourierAirbillPdf(invoiceLink);
+      if (ready.length === 1) {
+        const built = await buildRunCourierAirbillPdf(ready[0].invoiceLink, {
+          orderNumber: ready[0].orderNumber,
+        });
+        if (!built.success || !built.pdf?.length) {
+          return NextResponse.json(
+            { success: false, error: built.error || "Could not build airbill PDF." },
+            { status: 502 }
+          );
+        }
+        return pdfResponse(
+          built.pdf,
+          built.trackingNumber || ready[0].trackingNumber || tn
+        );
+      }
+
+      // Batch: 2 compact airbills per A4 page
+      const built = await buildRunCourierAirbillsPdf(
+        ready.map((j) => ({
+          invoiceLink: j.invoiceLink,
+          orderNumber: j.orderNumber,
+        }))
+      );
       if (!built.success || !built.pdf?.length) {
         return NextResponse.json(
           { success: false, error: built.error || "Could not build airbill PDF." },
           { status: 502 }
         );
       }
-      return pdfResponse(built.pdf, built.trackingNumber || tn);
+      return pdfResponse(built.pdf, `batch-${ready.length}`);
     }
 
-    // Optional HTML for debugging / legacy clients
-    const prepared = await prepareRunCourierInvoiceHtml(invoiceLink);
+    const prepared = await prepareRunCourierInvoiceHtml(ready[0].invoiceLink);
     if (!prepared.success) {
       return NextResponse.json(
         { success: false, error: prepared.error || "Could not load airbill." },
@@ -151,8 +199,9 @@ export async function GET(request) {
     return NextResponse.json({
       success: true,
       html: prepared.html,
-      invoiceLink: prepared.invoiceLink || invoiceLink,
-      trackingNumber: tn,
+      invoiceLink: prepared.invoiceLink || ready[0].invoiceLink,
+      trackingNumber: ready[0].trackingNumber || tn,
+      orderNumber: ready[0].orderNumber || "",
     });
   } catch (e) {
     return NextResponse.json(

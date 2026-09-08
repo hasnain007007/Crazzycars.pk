@@ -53,15 +53,20 @@ export async function downloadRunCourierLabelPdf(opts = {}) {
 }
 
 /**
- * Download several airbills one-by-one as separate PDFs.
+ * Download several airbills as one PDF (2 compact labels per A4 page).
  */
 export async function downloadRunCourierLabelsPdf(items = []) {
   const list = (Array.isArray(items) ? items : []).filter(
     (i) => i?.orderId || i?.trackingNumber
   );
   if (!list.length) throw new Error("No labels selected.");
-  for (const item of list) {
-    await downloadRunCourierLabelPdf(item);
+  if (list.length === 1) {
+    return downloadRunCourierLabelPdf(list[0]);
   }
-  return { success: true, count: list.length };
+  // Single request → server stacks 2 airbills per A4 page.
+  return downloadRunCourierLabelPdf({
+    orderIds: list.map((i) => i.orderId).filter(Boolean),
+    trackingNumbers: list.map((i) => i.trackingNumber).filter(Boolean),
+    trackingNumber: list[0].trackingNumber || "batch",
+  });
 }

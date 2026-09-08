@@ -614,11 +614,15 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
   };
   if (profileId) payload.profile_id = profileId;
 
+  // Portal "Order ID" field — confirmed via CreateOrder live probe.
+  const orderRef = String(order?.orderNumber || order?._id || "").trim();
+  if (orderRef) payload.order_id = orderRef;
+
   // Keep UI/meta fields for our app (stripped before API send).
   return {
     ...payload,
     selectedApi,
-    orderRef: String(order?.orderNumber || order?._id || "").trim(),
+    orderRef,
     consigneePhone: phone,
     consigneeCity: destination,
     codAmount,
