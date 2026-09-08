@@ -23,6 +23,41 @@ export const RUN_COURIER_APIS = [
   "AHL",
 ];
 
+/**
+ * iCargos CreateOrder Select API field is `api_vendor` = "{id}|{gateway_id}".
+ * Confirmed live: Leopard2 → "5|0", Trax → "6|0", M&P → "10|0".
+ * Without this field, account api_default_vendor wins (Trax first on this account).
+ */
+export const RUN_COURIER_VENDOR_FALLBACK = {
+  Trax: "6|0",
+  "M&P": "10|0",
+  MNP: "10|0",
+  TCS: "13|0",
+  Leopard2: "5|0",
+  Leopards: "5|0",
+  Leopard: "5|0",
+  Daewoo: "8|0",
+  "Dastaq Logistics": "35|0",
+  Dastaq: "35|0",
+  AHL: "19|0",
+  // Digi aggregator gateways (title casing from getThirdpartyApiAndGateways)
+  leopard: "28|1",
+  trax: "28|2",
+  bluex: "28|4",
+  Tcs: "28|6",
+};
+
+/** Aliases → canonical Select API title used in our UI / RUN_COURIER_APIS. */
+const RUN_COURIER_API_ALIASES = {
+  leopards: "Leopard2",
+  "leopard2": "Leopard2",
+  "leopard courier": "Leopard2",
+  "leopards courier": "Leopard2",
+  mnp: "M&P",
+  "m & p": "M&P",
+  "m and p": "M&P",
+};
+
 export const RUN_COURIER_PRODUCT_TYPES = ["Overnight", "OverLand", "DETAINED"];
 export const RUN_COURIER_SERVICE_TYPES = [
   "Overnight",
@@ -34,6 +69,9 @@ export const RUN_COURIER_SERVICE_TYPES = [
 ];
 
 export const RUN_COURIER_DEFAULT_BASE = "https://portal.runcourier.com";
+
+/** Live carrier rows from getThirdpartyApiAndGateways (cached briefly). */
+let carriersCache = { at: 0, rows: [] };
 
 /** Official iCargos paths — case-sensitive `/API/` (lowercase `/api/` 404s). */
 export const RUN_COURIER_DEFAULT_PATHS = {
@@ -96,6 +134,8 @@ export function resolveRunCourierPath(settingsCourier, key) {
 export function normalizeRunCourierApi(raw, fallback = "Auto") {
   const v = String(raw || "").trim();
   if (!v) return fallback;
+  const alias = RUN_COURIER_API_ALIASES[v.toLowerCase()];
+  if (alias) return alias;
   const hit = RUN_COURIER_APIS.find((a) => a.toLowerCase() === v.toLowerCase());
   return hit || v;
 }
@@ -104,6 +144,55 @@ export function displayCourierName(selectedApi) {
   const api = normalizeRunCourierApi(selectedApi, "Auto");
   if (!api || api.toLowerCase() === "auto") return "Run Courier";
   return `Run Courier (${api})`;
+}
+
+/**
+ * Build CreateOrder `api_vendor` ("{id}|{gateway_id}") for a Select API choice.
+ * Returns "" for Auto / unknown — portal then uses account default vendor order.
+ */
+export function resolveRunCourierApiVendor(selectedApi, carrierRows = []) {
+  const raw = String(selectedApi || "").trim();
+  if (!raw || raw.toLowerCase() === "auto") return "";
+
+  const rows = Array.isArray(carrierRows) ? carrierRows : [];
+  const rawLower = raw.toLowerCase();
+
+  // Exact title from live carrier list first (keeps digi "leopard" distinct from Leopard2)
+  const exact = rows.find((r) => String(r.title || "").toLowerCase() === rawLower);
+  if (exact?.id != null && String(exact.id).toLowerCase() !== "auto") {
+    const gw = exact.gateway_id != null ? exact.gateway_id : 0;
+    return `${exact.id}|${gw}`;
+  }
+
+  const api = normalizeRunCourierApi(raw, "Auto");
+  if (!api || api.toLowerCase() === "auto") return "";
+
+  const canon = rows.find((r) => String(r.title || "").toLowerCase() === api.toLowerCase());
+  if (canon?.id != null && String(canon.id).toLowerCase() !== "auto") {
+    const gw = canon.gateway_id != null ? canon.gateway_id : 0;
+    return `${canon.id}|${gw}`;
+  }
+
+  if (RUN_COURIER_VENDOR_FALLBACK[api]) return RUN_COURIER_VENDOR_FALLBACK[api];
+  const fbKey = Object.keys(RUN_COURIER_VENDOR_FALLBACK).find(
+    (k) => k.toLowerCase() === api.toLowerCase() || k.toLowerCase() === rawLower
+  );
+  return fbKey ? RUN_COURIER_VENDOR_FALLBACK[fbKey] : "";
+}
+
+/**
+ * Some carriers need a matching service_type (e.g. TCS + Overnight → "TCS Overnight").
+ */
+export function resolveRunCourierServiceForApi(selectedApi, serviceType, product) {
+  const api = normalizeRunCourierApi(selectedApi, "Auto");
+  const svc = String(serviceType || product || "Overnight").trim();
+  const prod = String(product || serviceType || "Overnight").trim();
+  if (api === "TCS") {
+    if (/detained/i.test(svc) || /detained/i.test(prod)) return "TCS Detained";
+    if (/overland/i.test(svc) || /overland/i.test(prod)) return "TCS Overland";
+    if (!/^tcs\s/i.test(svc)) return "TCS Overnight";
+  }
+  return svc;
 }
 
 export function runCourierPublicTrackingUrl(trackingNumber) {
@@ -422,9 +511,11 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
   const product = String(
     opts.product || opts.productType || courier.runCourierProductType || "Overnight"
   ).trim();
-  const serviceType = String(
-    opts.serviceType || courier.runCourierServiceType || product || "Overnight"
-  ).trim();
+  const serviceType = resolveRunCourierServiceForApi(
+    selectedApi,
+    opts.serviceType || courier.runCourierServiceType || product || "Overnight",
+    product
+  );
   const codAmount = resolveRunCourierCodAmount(order, opts, courier);
 
   const autoWeight =
@@ -559,6 +650,7 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
   }
 
   const cityList = await ensureCityList(settingsCourier);
+  const carrierRows = await ensureCarrierRows(settingsCourier);
   const built = buildRunCourierPayload(order, bookingOptions, settingsCourier, cityList);
   if (!built.consigneePhone) {
     return { success: false, error: "Customer phone is required for Run Courier booking." };
@@ -576,6 +668,12 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     ...apiBody
   } = built;
 
+  // Critical: without api_vendor, iCargos uses account api_default_vendor (Trax-first here).
+  const apiVendor = resolveRunCourierApiVendor(selectedApi, carrierRows);
+  if (apiVendor) {
+    apiBody.api_vendor = apiVendor;
+  }
+
   const path = resolveRunCourierPath(settingsCourier, "create");
   const res = await runCourierFetch(path, {
     method: "POST",
@@ -589,6 +687,7 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
       error: res.error || "Booking failed.",
       debugUrl: res.url,
       selectedApi,
+      apiVendor: apiVendor || "",
       origin: apiBody.origin,
       destination: apiBody.destination,
     };
@@ -603,17 +702,22 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
         "Run Courier responded but no tracking number was returned.",
       raw: res.json,
       selectedApi,
+      apiVendor: apiVendor || "",
     };
   }
 
-  const thirdParty = pick(res.json, "thirdparty_name", "thirdpartyName", "carrier") || selectedApi;
+  const thirdParty = pick(res.json, "thirdparty_name", "thirdpartyName", "carrier");
+  // Prefer the carrier actually booked; fall back to what the admin selected.
+  const bookedApi = thirdParty || selectedApi;
   const invoiceLink = pick(res.json, "invoice_link", "invoiceLink", "label_url", "labelUrl");
 
   return {
     success: true,
     trackingNumber,
     orderReference: orderRef,
-    selectedApi: thirdParty || selectedApi,
+    selectedApi: bookedApi,
+    requestedApi: selectedApi,
+    apiVendor: apiVendor || "",
     label: "",
     invoiceLink,
     orderId: res.json?.id || "",
@@ -777,20 +881,52 @@ export async function fetchRunCourierCarriers({ settingsCourier } = {}) {
   const path = resolveRunCourierPath(settingsCourier, "carriers");
   const res = await runCourierFetch(path, { method: "GET", settingsCourier });
   if (!res.ok) {
-    return { success: true, carriers: [...RUN_COURIER_APIS], source: "fallback" };
+    return { success: true, carriers: [...RUN_COURIER_APIS], rows: [], source: "fallback" };
   }
   const nested = res.json?.API || res.json?.data || res.json?.carriers || res.json;
-  let list = [];
+  const rows = [];
   if (Array.isArray(nested)) {
-    list = nested
-      .map((c) => (typeof c === "string" ? c : c?.title || c?.name || c?.api || c?.id))
-      .filter(Boolean);
+    for (const c of nested) {
+      if (typeof c === "string") {
+        rows.push({ id: c, title: c, booking_api_id: 0, gateway_id: 0 });
+        continue;
+      }
+      const title = c?.title || c?.name || c?.api || "";
+      if (!title && c?.id == null) continue;
+      rows.push({
+        id: c?.id != null ? String(c.id) : "",
+        title: String(title || c?.id || ""),
+        booking_api_id: c?.booking_api_id ?? 0,
+        gateway_id: c?.gateway_id ?? 0,
+      });
+    }
   }
-  // Prefer human titles; ensure Auto first
-  const unique = [...new Set(list.map((x) => String(x)))];
+  if (rows.length) {
+    carriersCache = { at: Date.now(), rows };
+  }
+  const list = rows.map((r) => r.title).filter(Boolean);
+  // Prefer human titles; ensure Auto first; de-dupe case-insensitively preferring first
+  const unique = [];
+  const seen = new Set();
+  for (const title of list) {
+    const key = String(title).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(String(title));
+  }
   if (!unique.some((x) => String(x).toLowerCase() === "auto")) unique.unshift("Auto");
-  if (!unique.length) return { success: true, carriers: [...RUN_COURIER_APIS], source: "fallback" };
-  return { success: true, carriers: unique, source: "api" };
+  if (!unique.length) {
+    return { success: true, carriers: [...RUN_COURIER_APIS], rows: [], source: "fallback" };
+  }
+  return { success: true, carriers: unique, rows, source: "api" };
+}
+
+async function ensureCarrierRows(settingsCourier) {
+  if (carriersCache.rows.length && Date.now() - carriersCache.at < 6 * 60 * 60 * 1000) {
+    return carriersCache.rows;
+  }
+  const loaded = await fetchRunCourierCarriers({ settingsCourier });
+  return loaded.rows || carriersCache.rows || [];
 }
 
 export async function testRunCourierConnection({ settingsCourier } = {}) {
