@@ -42,7 +42,14 @@ export async function GET(request) {
       });
       and.push({ orderStatus: { $nin: ["cancelled", "refunded", "delivered"] } });
     } else if (mode === "booked") {
+      // Print Labels / Track / Cancel: only shipments booked via Run Courier.
       and.push({ trackingNumber: { $exists: true, $nin: [null, ""] } });
+      and.push({
+        $or: [
+          { runCourierApi: { $exists: true, $nin: [null, ""] } },
+          { runCourierLabel: { $exists: true, $nin: [null, ""] } },
+        ],
+      });
     }
 
     if (fulfillmentStatus) and.push({ orderStatus: fulfillmentStatus });

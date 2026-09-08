@@ -662,7 +662,7 @@ export default function RunCourierApp() {
           </div>
           {tab === "labels" ? (
             <p className="text-xs text-slate-500">
-              Select one or more booked orders — downloads airbill PDF files.
+              Select one or more Run Courier bookings — downloads airbill PDF files.
             </p>
           ) : null}
 
