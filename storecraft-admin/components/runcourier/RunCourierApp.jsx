@@ -809,7 +809,8 @@ export default function RunCourierApp() {
                             className="rounded border border-slate-300 px-2 py-1 font-semibold"
                             onClick={() =>
                               downloadLabel(
-                                `/api/runcourier/label?orderId=${encodeURIComponent(o.id)}&trackingNumber=${encodeURIComponent(o.trackingNumber)}&download=1`
+                                `/api/runcourier/label?orderId=${encodeURIComponent(o.id)}&trackingNumber=${encodeURIComponent(o.trackingNumber)}&download=1`,
+                                o.trackingNumber
                               )
                             }
                           >
