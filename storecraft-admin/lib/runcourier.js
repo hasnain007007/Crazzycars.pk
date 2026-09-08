@@ -343,7 +343,7 @@ function parseIcargosBody(text) {
   try {
     return JSON.parse(text);
   } catch {
-    return { raw: text };
+    return { raw: String(text) };
   }
 }
 
@@ -351,14 +351,118 @@ function icargosErrorMessage(json) {
   if (typeof json === "string") return json;
   if (!json || typeof json !== "object") return "";
   if (typeof json.raw === "string") {
+    const raw = json.raw;
+    if (/busy|One moment|Retrying automatically|system is busy/i.test(raw)) {
+      return "Run Courier server busy — try again in a moment.";
+    }
     try {
-      const inner = JSON.parse(json.raw);
+      const inner = JSON.parse(raw);
       if (typeof inner === "string") return inner;
     } catch {
-      return json.raw.slice(0, 300);
+      const stripped = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      return stripped.slice(0, 220) || "Run Courier returned a non-JSON error.";
     }
   }
   return pick(json, "message", "error", "alert_msg", "msg", "statusMessage");
+}
+
+function isRetryableRunCourierFailure(res) {
+  const status = Number(res?.status) || 0;
+  if ([429, 502, 503, 504].includes(status)) return true;
+  const err = String(res?.error || "");
+  const raw =
+    (typeof res?.json === "string" ? res.json : "") ||
+    (typeof res?.json?.raw === "string" ? res.json.raw : "") ||
+    "";
+  const blob = `${err}\n${raw}`;
+  if (/API HTTP Error:\s*5\d\d/i.test(blob)) return true;
+  if (/busy|One moment|Retrying automatically|system is busy/i.test(blob)) return true;
+  return false;
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Common shop city spellings → Run Courier GetCitiesList names. */
+const RUN_COURIER_CITY_ALIASES = {
+  khairpur: "Khairpur",
+  "khair pur": "Khairpur",
+  "khairpur mirs": "Khairpur Mirs",
+  "khairpur mir's": "Khairpur Mirs",
+  gujranwala: "Gujranwala",
+  "gujranwala cantt": "Gujranwala",
+  "gujranwala cantonment": "Gujranwala",
+  sahiwal: "Sahiwal",
+  lahore: "Lahore",
+  karachi: "Karachi",
+  islamabad: "Islamabad",
+  rawalpindi: "Rawalpindi",
+};
+
+/**
+ * Match order city to an exact Run Courier city_name (case-sensitive API).
+ * Prefer exact / alias / shortest safe match — never upgrade "Gujranwala" → "Gujranwala Cantt"
+ * (Cantt origins are often disabled and return cryptic CreateOrder errors).
+ */
+export function matchRunCourierCity(rawCity, cityList = []) {
+  const raw = String(rawCity || "").trim();
+  if (!raw) return "";
+  const lower = raw.toLowerCase();
+  const compact = lower.replace(/[^a-z0-9]/g, "");
+
+  const aliasKey = RUN_COURIER_CITY_ALIASES[lower] || RUN_COURIER_CITY_ALIASES[compact];
+  if (aliasKey && !cityList.length) return aliasKey;
+
+  if (!cityList.length) return raw;
+
+  if (aliasKey) {
+    const aliasHit = cityList.find((c) => String(c).toLowerCase() === aliasKey.toLowerCase());
+    if (aliasHit) return aliasHit;
+  }
+
+  const exact = cityList.find((c) => String(c).toLowerCase() === lower);
+  if (exact) return exact;
+
+  const compactHit = cityList
+    .filter((c) => String(c).toLowerCase().replace(/[^a-z0-9]/g, "") === compact)
+    .sort((a, b) => a.length - b.length);
+  if (compactHit.length) return compactHit[0];
+
+  const scored = [];
+  for (const c of cityList) {
+    const cl = String(c).toLowerCase();
+    if (cl === lower) {
+      scored.push({ c, score: 0 });
+      continue;
+    }
+    // Order city more specific than list entry (e.g. "Sahiwal City" → "Sahiwal")
+    if (lower.startsWith(cl) && (lower.length === cl.length || /[\s-]/.test(lower[cl.length]))) {
+      scored.push({ c, score: 1 + (lower.length - cl.length) });
+      continue;
+    }
+    // List entry extends order city — only if extension is not Cantt/City noise when a base exists
+    if (cl.startsWith(lower) && (cl.length === lower.length || /[\s-]/.test(cl[lower.length]))) {
+      const rest = cl.slice(lower.length).trim();
+      if (/^(cantt|cantonment|city|town|district)\b/i.test(rest)) {
+        scored.push({ c, score: 50 + rest.length });
+      } else {
+        scored.push({ c, score: 10 + (cl.length - lower.length) });
+      }
+    }
+  }
+  if (scored.length) {
+    scored.sort((a, b) => a.score - b.score || a.c.length - b.c.length);
+    // Prefer non-Cantt if best score is the noisy Cantt upgrade
+    const best = scored[0];
+    if (best.score >= 50) {
+      const base = cityList.find((c) => String(c).toLowerCase() === lower);
+      if (base) return base;
+    }
+    return best.c;
+  }
+
+  return raw;
 }
 
 /**
@@ -485,23 +589,6 @@ async function ensureCityList(settingsCourier) {
   return loaded.cities || [];
 }
 
-/** Match order city to an exact Run Courier city_name (case-sensitive API). */
-export function matchRunCourierCity(rawCity, cityList = []) {
-  const raw = String(rawCity || "").trim();
-  if (!raw) return "";
-  if (!cityList.length) return raw;
-  const lower = raw.toLowerCase();
-  const exact = cityList.find((c) => String(c).toLowerCase() === lower);
-  if (exact) return exact;
-  const starts = cityList.find((c) => String(c).toLowerCase().startsWith(lower));
-  if (starts) return starts;
-  const includes = cityList.find((c) => String(c).toLowerCase().includes(lower));
-  if (includes) return includes;
-  // Prefer shorter parent city when raw is longer (e.g. "Sahiwal City" → "Sahiwal")
-  const reverse = cityList.find((c) => lower.includes(String(c).toLowerCase()));
-  return reverse || raw;
-}
-
 export function buildRunCourierPayload(order, bookingOptions = {}, settingsCourier = {}, cityList = []) {
   const opts = normalizeBookingOptions(bookingOptions);
   const courier = settingsCourier || {};
@@ -554,9 +641,15 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
   const printSku =
     courier.runCourierPrintItemDetailsSku === true ||
     (courier.runCourierPrintItemDetailsSku == null && Boolean(courier.printItemDetailsSku));
-  const details = printDetails
+  const detailsRaw = printDetails
     ? itemDetailsFromOrder(order, { withSku: printSku })
     : itemDetailsFromOrder(order);
+  // Strip fancy punctuation that occasionally breaks Leopard/iCargos payloads.
+  const details = String(detailsRaw || "")
+    .replace(/[\u2010-\u2015]/g, "-")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .trim();
 
   let remarks =
     String(opts.remarks || courier.runCourierShipperRemarks || courier.shipperRemarks || "").trim() ||
@@ -618,14 +711,22 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
   if (profileId) payload.profile_id = profileId;
 
   // Portal "Order ID" field — confirmed via CreateOrder live probe.
+  // Rebook must use a unique id or CreateOrder can fail with opaque upstream errors.
   const orderRef = String(order?.orderNumber || order?._id || "").trim();
-  if (orderRef) payload.order_id = orderRef;
+  if (orderRef) {
+    if (opts.rebook) {
+      const suffix = String(opts.rebookSuffix || Date.now()).slice(-6);
+      payload.order_id = `${orderRef}-R${suffix}`;
+    } else {
+      payload.order_id = orderRef;
+    }
+  }
 
   // Keep UI/meta fields for our app (stripped before API send).
   return {
     ...payload,
     selectedApi,
-    orderRef,
+    orderRef: payload.order_id || orderRef,
     consigneePhone: phone,
     consigneeCity: destination,
     codAmount,
@@ -682,16 +783,56 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
   }
 
   const path = resolveRunCourierPath(settingsCourier, "create");
-  const res = await runCourierFetch(path, {
+  let res = await runCourierFetch(path, {
     method: "POST",
     body: apiBody,
     settingsCourier,
   });
 
+  // Portal intermittently returns "API HTTP Error: 500" / busy HTML — retry a few times.
+  for (let attempt = 0; attempt < 3 && !res.ok && isRetryableRunCourierFailure(res); attempt += 1) {
+    await sleep(700 * (attempt + 1));
+    res = await runCourierFetch(path, {
+      method: "POST",
+      body: apiBody,
+      settingsCourier,
+    });
+  }
+
+  // If origin was upgraded to a Cantt/City variant and failed, retry with base city name.
+  if (
+    !res.ok &&
+    /city is disabled for origin|Invalid charges calculation/i.test(String(res.error || ""))
+  ) {
+    const originBase = String(apiBody.origin || "")
+      .replace(/\s+(cantt|cantonment|city|town)$/i, "")
+      .trim();
+    if (originBase && originBase !== apiBody.origin) {
+      const retryBody = { ...apiBody, origin: matchRunCourierCity(originBase, cityList) || originBase };
+      res = await runCourierFetch(path, {
+        method: "POST",
+        body: retryBody,
+        settingsCourier,
+      });
+      if (res.ok) apiBody.origin = retryBody.origin;
+    }
+  }
+
   if (!res.ok) {
+    const upstream = String(res.error || "Booking failed.").trim();
+    let friendly = upstream;
+    if (/API HTTP Error:\s*5\d\d/i.test(upstream)) {
+      friendly = `Run Courier / ${selectedApi} failed (${upstream}). Origin ${apiBody.origin} → ${apiBody.destination}. Try again, or pick another carrier.`;
+    } else if (/city is disabled for origin/i.test(upstream)) {
+      friendly = `Origin city "${apiBody.origin}" is not enabled for ${selectedApi}. Check Settings → Run Courier origin city (use Gujranwala, not Cantt).`;
+    } else if (/Invalid charges calculation/i.test(upstream)) {
+      friendly = `Run Courier could not price ${apiBody.origin} → ${apiBody.destination} via ${selectedApi}. Check city names or try another carrier.`;
+    } else if (apiBody.origin && apiBody.destination) {
+      friendly = `${upstream} (${selectedApi}: ${apiBody.origin} → ${apiBody.destination})`;
+    }
     return {
       success: false,
-      error: res.error || "Booking failed.",
+      error: friendly,
       debugUrl: res.url,
       selectedApi,
       apiVendor: apiVendor || "",

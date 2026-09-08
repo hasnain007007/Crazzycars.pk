@@ -51,6 +51,7 @@ function applyRunCourierShipmentToOrder(order, { trackingNumber, label, invoiceL
   const wasNotShipped = order.orderStatus !== "shipped" && order.orderStatus !== "delivered";
   if (wasNotShipped) {
     order.orderStatus = "shipped";
+    if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
     order.statusHistory.push({
       status: "shipped",
       changedBy: adminName,
@@ -140,6 +141,8 @@ export async function POST(request) {
       customerPhone: body.customerPhone || "",
       codAmount: body.codAmount,
       paymentMethod: body.paymentMethod,
+      rebook,
+      rebookSuffix: rebook ? `${Date.now()}` : "",
     };
 
     // Optional pre-book edits from Run Courier booking table.
@@ -196,6 +199,8 @@ export async function POST(request) {
           success: false,
           error: result.error || "Booking failed.",
           selectedApi: result.selectedApi || bookingOptions.selectedApi,
+          origin: result.origin || "",
+          destination: result.destination || "",
         },
         { status: 400 }
       );

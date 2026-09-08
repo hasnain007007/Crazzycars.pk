@@ -157,26 +157,33 @@ export default function RunCourierBookingPanel({
 
   const inputStyle = {
     width: "100%",
-    padding: "8px 10px",
+    padding: "6px 8px",
     border: "1px solid #E5E7EB",
     borderRadius: 6,
     fontSize: 13,
     background: "#fff",
     color: "#111827",
   };
+  const labelStyle = {
+    fontSize: 11,
+    fontWeight: 600,
+    display: "block",
+    marginBottom: 2,
+    color: "#374151",
+  };
 
   return (
-    <div style={{ marginTop: 8 }}>
+    <div style={{ marginTop: 6 }}>
       {success ? (
         <div
           style={{
-            padding: "12px 16px",
+            padding: "8px 10px",
             background: "#F0FDF4",
             border: "1px solid #BBF7D0",
-            borderRadius: 8,
+            borderRadius: 6,
             color: "#16A34A",
-            fontSize: 13,
-            marginBottom: 12,
+            fontSize: 12,
+            marginBottom: 8,
           }}
         >
           {success}
@@ -185,13 +192,13 @@ export default function RunCourierBookingPanel({
       {error ? (
         <div
           style={{
-            padding: "12px 16px",
+            padding: "8px 10px",
             background: "#FEF2F2",
             border: "1px solid #FECACA",
-            borderRadius: 8,
+            borderRadius: 6,
             color: "#B91C1C",
-            fontSize: 13,
-            marginBottom: 12,
+            fontSize: 12,
+            marginBottom: 8,
           }}
         >
           {error}
@@ -203,10 +210,10 @@ export default function RunCourierBookingPanel({
           background: "#ECFDF5",
           border: "1px solid #A7F3D0",
           borderRadius: 8,
-          padding: 16,
+          padding: 10,
         }}
       >
-        <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: "#065F46" }}>
+        <h4 style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700, color: "#065F46" }}>
           Review Run Courier Shipment{rebook ? " (Re-book)" : ""}
         </h4>
 
@@ -214,17 +221,16 @@ export default function RunCourierBookingPanel({
           style={{
             background: "#fff",
             border: "1px solid #E5E7EB",
-            borderRadius: 8,
-            padding: 12,
-            marginBottom: 12,
-            fontSize: 13,
+            borderRadius: 6,
+            padding: "8px 10px",
+            marginBottom: 8,
+            fontSize: 12,
             color: "#374151",
+            lineHeight: 1.35,
           }}
         >
           <div>
-            <strong>Customer:</strong> {order?.shippingAddress?.name || order?.customer?.name}
-          </div>
-          <div>
+            <strong>Customer:</strong> {order?.shippingAddress?.name || order?.customer?.name} ·{" "}
             <strong>Phone:</strong> {order?.shippingAddress?.phone || order?.customer?.phone}
           </div>
           <div>
@@ -235,11 +241,9 @@ export default function RunCourierBookingPanel({
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           <div style={{ gridColumn: "1 / -1" }}>
-            <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
-              Select API (courier company) *
-            </label>
+            <label style={labelStyle}>Select API (courier company) *</label>
             <select
               value={selectedApi}
               onChange={(e) => setSelectedApi(e.target.value)}
@@ -251,15 +255,10 @@ export default function RunCourierBookingPanel({
                 </option>
               ))}
             </select>
-            <p style={{ margin: "4px 0 0", fontSize: 11, color: "#6B7280" }}>
-              Run Courier routes the parcel through this carrier (same as portal Select API).
-            </p>
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
-              Product type
-            </label>
+            <label style={labelStyle}>Product type</label>
             <select value={productType} onChange={(e) => setProductType(e.target.value)} style={inputStyle}>
               {RUN_COURIER_PRODUCT_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -270,9 +269,7 @@ export default function RunCourierBookingPanel({
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
-              Service type
-            </label>
+            <label style={labelStyle}>Service type</label>
             <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} style={inputStyle}>
               {RUN_COURIER_SERVICE_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -283,9 +280,18 @@ export default function RunCourierBookingPanel({
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
-              COD Amount (Rs.)
-            </label>
+            <label style={labelStyle}>Pieces</label>
+            <input
+              type="number"
+              min={1}
+              value={pieces}
+              onChange={(e) => setPieces(Math.max(1, Number(e.target.value) || 1))}
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>COD Amount (Rs.)</label>
             <input
               type="number"
               min={0}
@@ -300,9 +306,7 @@ export default function RunCourierBookingPanel({
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
-              Weight (kg)
-            </label>
+            <label style={labelStyle}>Weight (kg)</label>
             <input
               type="number"
               min={0.5}
@@ -313,33 +317,18 @@ export default function RunCourierBookingPanel({
             />
           </div>
 
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
-              Pieces
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={pieces}
-              onChange={(e) => setPieces(Math.max(1, Number(e.target.value) || 1))}
-              style={inputStyle}
-            />
-          </div>
-
           <div style={{ gridColumn: "1 / -1" }}>
-            <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>
-              Remarks
-            </label>
+            <label style={labelStyle}>Remarks</label>
             <textarea
-              rows={3}
+              rows={2}
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-              style={{ ...inputStyle, resize: "vertical" }}
+              style={{ ...inputStyle, resize: "vertical", minHeight: 52 }}
             />
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           <button
             type="button"
             disabled={booking || !selectedApi}
@@ -349,7 +338,7 @@ export default function RunCourierBookingPanel({
               color: "#fff",
               border: "none",
               borderRadius: 6,
-              padding: "10px 16px",
+              padding: "8px 14px",
               fontWeight: 700,
               fontSize: 13,
               cursor: booking ? "wait" : "pointer",
@@ -365,7 +354,7 @@ export default function RunCourierBookingPanel({
                 background: "#fff",
                 border: "1px solid #D1D5DB",
                 borderRadius: 6,
-                padding: "10px 16px",
+                padding: "8px 14px",
                 fontWeight: 600,
                 fontSize: 13,
               }}
