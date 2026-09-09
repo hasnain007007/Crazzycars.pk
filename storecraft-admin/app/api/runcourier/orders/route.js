@@ -12,6 +12,14 @@ function escapeRegex(s) {
   return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** Calendar day bounds in Pakistan time (UTC+5). */
+function pkDayStart(ymd) {
+  return new Date(`${String(ymd).trim()}T00:00:00+05:00`);
+}
+function pkDayEnd(ymd) {
+  return new Date(`${String(ymd).trim()}T23:59:59.999+05:00`);
+}
+
 export async function GET(request) {
   try {
     if (!getRequestUser(request)) {
@@ -28,7 +36,7 @@ export async function GET(request) {
     ).trim();
     const from = searchParams.get("from");
     const to = searchParams.get("to");
-    const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit"), 10) || 50));
+    const limit = Math.min(500, Math.max(1, parseInt(searchParams.get("limit"), 10) || 50));
     const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
 
     const and = [];
@@ -54,16 +62,35 @@ export async function GET(request) {
 
     if (fulfillmentStatus) and.push({ orderStatus: fulfillmentStatus });
     if (paymentStatus) and.push({ paymentStatus });
+
     if (from || to) {
-      const createdAt = {};
-      if (from) createdAt.$gte = new Date(from);
-      if (to) {
-        const end = new Date(to);
-        end.setHours(23, 59, 59, 999);
-        createdAt.$lte = end;
+      const range = {};
+      if (from) range.$gte = pkDayStart(from);
+      if (to) range.$lte = pkDayEnd(to);
+
+      if (mode === "booked") {
+        // Filter by courier BOOKING date (not order receive / createdAt).
+        and.push({
+          $or: [
+            { runCourierBookedAt: range },
+            {
+              $and: [
+                {
+                  $or: [
+                    { runCourierBookedAt: { $exists: false } },
+                    { runCourierBookedAt: null },
+                  ],
+                },
+                { shippedAt: range },
+              ],
+            },
+          ],
+        });
+      } else {
+        and.push({ createdAt: range });
       }
-      and.push({ createdAt });
     }
+
     if (search) {
       const rx = new RegExp(escapeRegex(search), "i");
       and.push({
@@ -81,14 +108,18 @@ export async function GET(request) {
 
     const filter = and.length ? { $and: and } : {};
     const skip = (page - 1) * limit;
+    const sort =
+      mode === "booked"
+        ? { runCourierBookedAt: -1, shippedAt: -1, createdAt: -1 }
+        : { createdAt: -1 };
 
     const [rows, total, settings] = await Promise.all([
       Order.find(filter)
-        .sort({ createdAt: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(limit)
         .select(
-          "orderNumber createdAt orderStatus paymentStatus paymentMethod customer shippingAddress pricing items trackingNumber courier tracking runCourierLabel runCourierApi payment"
+          "orderNumber createdAt shippedAt runCourierBookedAt orderStatus paymentStatus paymentMethod customer shippingAddress pricing items trackingNumber courier tracking runCourierLabel runCourierApi payment"
         )
         .lean(),
       Order.countDocuments(filter),
@@ -104,10 +135,13 @@ export async function GET(request) {
       const customer = o.customer || {};
       const prepaid = isPrepaidOrderForCod(o);
       const codAmount = resolveRunCourierCodAmount(o, {});
+      const bookedAt = o.runCourierBookedAt || o.shippedAt || null;
       return {
         id: String(o._id),
         orderNumber: o.orderNumber,
         createdAt: o.createdAt,
+        bookedAt,
+        shippedAt: o.shippedAt || null,
         orderStatus: o.orderStatus,
         paymentStatus: o.paymentStatus,
         paymentMethod: o.paymentMethod || (prepaid ? "prepaid" : "cod"),

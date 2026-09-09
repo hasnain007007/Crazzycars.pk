@@ -22,6 +22,14 @@ const TABS = [
 const CELL_INPUT =
   "h-8 w-full min-w-[8rem] rounded border border-slate-300 bg-white px-2 text-xs dark:border-slate-600 dark:bg-slate-900";
 
+/** Local calendar YYYY-MM-DD (Pakistan shop day — not UTC ISO). */
+function localYmd(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function downloadLabelBase64(base64, trackingNumber = "") {
   const raw = String(base64 || "").replace(/^data:application\/pdf;base64,/, "");
   if (!raw) return false;
@@ -159,8 +167,8 @@ export default function RunCourierApp() {
   const [defaultApi, setDefaultApi] = useState(RUN_COURIER_DEFAULT_API);
   const [rowApi, setRowApi] = useState({});
   const [rows, setRows] = useState({});
-  const [labelFrom, setLabelFrom] = useState(() => new Date().toISOString().slice(0, 10));
-  const [labelTo, setLabelTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [labelFrom, setLabelFrom] = useState(() => localYmd());
+  const [labelTo, setLabelTo] = useState(() => localYmd());
   const [trackInput, setTrackInput] = useState("");
   const [trackLoading, setTrackLoading] = useState(false);
   const [trackResult, setTrackResult] = useState(null);
@@ -205,10 +213,13 @@ export default function RunCourierApp() {
     setSettingsForm((p) => ({ ...p, ...partial }));
   }
 
-  async function loadOrders(nextMode = mode, dateRange = null) {
+  async function loadOrders(nextMode = mode, dateRange = null, opts = {}) {
     setLoading(true);
     try {
-      const p = new URLSearchParams({ mode: nextMode, limit: "100" });
+      const p = new URLSearchParams({
+        mode: nextMode,
+        limit: nextMode === "booked" ? "500" : "100",
+      });
       if (search.trim()) p.set("search", search.trim());
       if (dateRange?.from) p.set("from", dateRange.from);
       if (dateRange?.to) p.set("to", dateRange.to);
@@ -238,7 +249,12 @@ export default function RunCourierApp() {
         setRows(next);
         setRowApi(nextApi);
       }
-      setSelected(new Set());
+      // Select all bookings for the chosen booking-date range (Print Labels).
+      if (opts.selectAll && list.length) {
+        setSelected(new Set(list.map((o) => o.id)));
+      } else {
+        setSelected(new Set());
+      }
     } catch {
       toast.error("Network error loading orders");
     } finally {
@@ -325,7 +341,8 @@ export default function RunCourierApp() {
       setMode("booked");
       loadOrders(
         "booked",
-        tab === "labels" ? { from: labelFrom, to: labelTo } : null
+        tab === "labels" ? { from: labelFrom, to: labelTo } : null,
+        { selectAll: tab === "labels" }
       );
     } else if (tab === "dashboard") {
       loadOrders("unbooked");
@@ -665,27 +682,43 @@ export default function RunCourierApp() {
             ) : (
               <>
                 <span className="mr-1 text-lg font-black text-emerald-700">Run Courier</span>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Booking date
+                </label>
                 <input
                   type="date"
+                  title="Courier booking date (not order received date)"
                   className="h-9 rounded border border-slate-300 px-2 text-sm dark:border-slate-600 dark:bg-slate-900"
                   value={labelFrom}
                   onChange={(e) => setLabelFrom(e.target.value)}
                 />
+                <span className="text-xs text-slate-400">to</span>
                 <input
                   type="date"
+                  title="Courier booking date (not order received date)"
                   className="h-9 rounded border border-slate-300 px-2 text-sm dark:border-slate-600 dark:bg-slate-900"
                   value={labelTo}
                   onChange={(e) => setLabelTo(e.target.value)}
                 />
                 <button
                   type="button"
-                  onClick={() => loadOrders("booked", { from: labelFrom, to: labelTo })}
+                  onClick={() =>
+                    loadOrders("booked", { from: labelFrom, to: labelTo }, { selectAll: true })
+                  }
                   className="h-9 rounded bg-emerald-600 px-4 text-sm font-bold text-white"
                 >
                   Search
                 </button>
                 {tab === "labels" ? (
                   <>
+                    <button
+                      type="button"
+                      onClick={() => setSelected(new Set(orders.map((o) => o.id)))}
+                      disabled={!orders.length}
+                      className="h-9 rounded border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                    >
+                      Select all ({orders.length})
+                    </button>
                     <button
                       type="button"
                       disabled={!selected.size}
@@ -709,7 +742,9 @@ export default function RunCourierApp() {
           </div>
           {tab === "labels" ? (
             <p className="text-xs text-slate-500">
-              Select one or more Run Courier bookings — Print opens the printer dialog; Download saves a PDF.
+              Dates are <strong>courier booking date</strong> (when you booked with Run Courier), not
+              order received date. Use the header checkbox or <strong>Select all</strong> for every
+              airbill that day — then Print or Download.
             </p>
           ) : null}
 
@@ -720,6 +755,8 @@ export default function RunCourierApp() {
                   <th className="px-2 py-2">
                     <input
                       type="checkbox"
+                      title="Select all orders booked on these dates"
+                      aria-label="Select all"
                       checked={orders.length > 0 && selected.size === orders.length}
                       onChange={(e) => {
                         if (e.target.checked) setSelected(new Set(orders.map((o) => o.id)));
@@ -742,6 +779,7 @@ export default function RunCourierApp() {
                       <th className="px-2 py-2">Customer</th>
                       <th className="px-2 py-2">City</th>
                       <th className="px-2 py-2">COD</th>
+                      <th className="px-2 py-2">Booked</th>
                       <th className="px-2 py-2">Tracking</th>
                     </>
                   )}
@@ -848,6 +886,15 @@ export default function RunCourierApp() {
                           <td className="px-2 py-2">{o.city || "—"}</td>
                           <td className="px-2 py-2">
                             Rs. {Number(o.codAmount || 0).toLocaleString()}
+                          </td>
+                          <td className="px-2 py-2 whitespace-nowrap text-slate-600">
+                            {o.bookedAt
+                              ? new Date(o.bookedAt).toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                })
+                              : "—"}
                           </td>
                           <td className="px-2 py-2">
                             <div className="font-mono">{o.trackingNumber || "—"}</div>

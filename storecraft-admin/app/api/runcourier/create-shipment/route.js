@@ -81,8 +81,10 @@ function applyRunCourierShipmentToOrder(order, { trackingNumber, label, invoiceL
     by: "admin",
   });
 
+  // Always stamp booking time (Print Labels filters by this, not order createdAt).
+  order.runCourierBookedAt = new Date();
   if (!order.shippedAt) {
-    order.shippedAt = new Date();
+    order.shippedAt = order.runCourierBookedAt;
   }
 
   order.markModified("timeline");

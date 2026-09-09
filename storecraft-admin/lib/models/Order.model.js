@@ -188,6 +188,8 @@ const orderSchema = new mongoose.Schema(
     runCourierLabel: { type: String, default: "", trim: true },
     /** Select API used for Run Courier booking (Trax, TCS, Auto, …). */
     runCourierApi: { type: String, default: "", trim: true },
+    /** When the Run Courier shipment was last booked (for Print Labels date filter). */
+    runCourierBookedAt: { type: Date, default: null },
     shippedAt: { type: Date, default: null },
     deliveredAt: { type: Date, default: null },
     tracking: {
