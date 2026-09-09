@@ -246,13 +246,11 @@ export function isAllowedNextImageSrc(url) {
   if (!raw || raw.startsWith("/_next/image")) return false;
   // Local /media must never hit /_next/image (invalid q/w → 400, self-fetch timeouts).
   if (/crazzycars\.pk\/media\/|^\/media\//i.test(raw)) return false;
+  // Cloudinary cloud is disabled (401) — never send through the optimizer.
+  if (/res\.cloudinary\.com/i.test(raw)) return false;
   try {
     const host = new URL(raw).hostname.replace(/^www\./, "").toLowerCase();
-    return (
-      host === "res.cloudinary.com" ||
-      host === "cdn.shopify.com" ||
-      host === "upload.wikimedia.org"
-    );
+    return host === "cdn.shopify.com" || host === "upload.wikimedia.org";
   } catch {
     return false;
   }

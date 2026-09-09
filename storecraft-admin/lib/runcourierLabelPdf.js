@@ -136,17 +136,27 @@ function parseAirbillFields(html) {
 
   const shipperIdx = lines.findIndex((l) => /^shipper$/i.test(l));
   if (shipperIdx >= 0) {
-    const block = lines.slice(shipperIdx, shipperIdx + 35);
+    const block = lines.slice(shipperIdx, shipperIdx + 45);
     const companyIdx = block.findIndex((l) => /^company:?$/i.test(l));
-    const nameIdx = block.findIndex((l) => /^name:?$/i.test(l));
     if (companyIdx >= 0) company = block[companyIdx + 1] || company;
-    if (nameIdx >= 0) consigneeName = block[nameIdx + 1] || "";
+
+    // Portal HTML is a 2-col Shipper|Consignee table: first Name is consignee.
+    // A later dedicated Consignee block also has Name — prefer the last Name label.
+    const nameIndexes = block
+      .map((l, i) => (/^name:?$/i.test(l) ? i : -1))
+      .filter((i) => i >= 0);
+    if (nameIndexes.length) {
+      const nameIdx = nameIndexes[nameIndexes.length - 1];
+      consigneeName = block[nameIdx + 1] || "";
+    }
 
     const phoneIndexes = block
       .map((l, i) => (/^phone\s*no\s*:?$/i.test(l) ? i : -1))
       .filter((i) => i >= 0);
     if (phoneIndexes[0] != null) shipperPhone = block[phoneIndexes[0] + 1] || "";
-    if (phoneIndexes[1] != null) consigneePhone = block[phoneIndexes[1] + 1] || "";
+    if (phoneIndexes.length > 1) {
+      consigneePhone = block[phoneIndexes[phoneIndexes.length - 1] + 1] || "";
+    }
 
     const pickupIdx = block.findIndex((l) => /^pickup address:?$/i.test(l));
     if (pickupIdx >= 0) pickup = block[pickupIdx + 1] || "";
@@ -155,14 +165,15 @@ function parseAirbillFields(html) {
       .filter((i) => i >= 0);
     if (!pickup && addressIndexes[0] != null) pickup = block[addressIndexes[0] + 1] || "";
     if (addressIndexes.length) {
-      const consigneeAddrIdx =
-        addressIndexes.find((i) => i > (pickupIdx >= 0 ? pickupIdx : -1)) ??
-        addressIndexes[addressIndexes.length - 1];
+      // Last Address: in the block is the consignee delivery address.
+      const consigneeAddrIdx = addressIndexes[addressIndexes.length - 1];
       consigneeAddress = block[consigneeAddrIdx + 1] || "";
     }
   }
 
   if (!consigneeName) consigneeName = valueAfter(lines, "Name");
+  // Never show the store/company as the consignee name.
+  if (consigneeName && /^crazzycars/i.test(consigneeName)) consigneeName = "";
   const phones = lines.filter((l) => /^03\d{9}$/.test(l.replace(/\s/g, "")));
   if (!shipperPhone) shipperPhone = phones[0] || "";
   if (!consigneePhone) consigneePhone = phones[1] || phones[0] || "";
@@ -224,7 +235,7 @@ function parseAirbillFields(html) {
 }
 
 function extractDataImages(html) {
-  const out = { barcode: null, logo: null, qr: null };
+  const out = { trackingBarcode: null, orderBarcode: null, logo: null, qr: null };
   const re = /<img\b[^>]*src=(["'])(data:image\/[a-zA-Z0-9+.-]+;base64,[A-Za-z0-9+/=\s]+)\1[^>]*>/gi;
   const imgs = [];
   let m;
@@ -236,10 +247,32 @@ function extractDataImages(html) {
     (i) =>
       i.dataUri.startsWith("data:image/jpeg") || i.dataUri.startsWith("data:image/jpg")
   );
-  out.barcode = pngs[0]?.dataUri || null;
+  // Portal only embeds tracking barcode (+ QR). Order Ref barcode is fetched separately.
+  out.trackingBarcode = pngs[0]?.dataUri || null;
   out.logo = jpgs[0]?.dataUri || null;
   out.qr = pngs.length > 1 ? pngs[pngs.length - 1].dataUri : pngs[1]?.dataUri || null;
   return out;
+}
+
+async function fetchPortalBarcodeDataUri(code) {
+  const value = String(code || "").trim();
+  if (!value || value === "-" || value === "0") return null;
+  const url = `https://portal.runcourier.com/barcode.php?code=${encodeURIComponent(value)}`;
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "image/*,*/*", "User-Agent": "CrazzycarsLabel/1.0" },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (!buf.length) return null;
+    const ct = String(res.headers.get("content-type") || "image/png").split(";")[0].trim();
+    if (!ct.startsWith("image/")) return null;
+    return `data:${ct};base64,${buf.toString("base64")}`;
+  } catch {
+    return null;
+  }
 }
 
 function dataUriToBytes(dataUri) {
@@ -249,11 +282,13 @@ function dataUriToBytes(dataUri) {
   return Buffer.from(s.slice(i + 7), "base64");
 }
 
+/** Helvetica/WinAnsi-safe text; keep common Latin punctuation. */
 function pdfSafe(text) {
   return String(text || "")
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\u00A0/g, " ")
     .replace(/[^\x20-\x7E\n]/g, "")
     .trim();
 }
@@ -296,6 +331,17 @@ function drawText(page, text, x, y, opts = {}) {
   return cy;
 }
 
+function truncateToWidth(font, text, size, maxWidth) {
+  const value = pdfSafe(text);
+  if (!value || !font || !maxWidth) return value;
+  if (font.widthOfTextAtSize(value, size) <= maxWidth) return value;
+  let out = value;
+  while (out.length > 1 && font.widthOfTextAtSize(`${out}…`, size) > maxWidth) {
+    out = out.slice(0, -1);
+  }
+  return `${out}…`;
+}
+
 function resolveOrderNo(fields, orderNumber) {
   const fromDb = pdfSafe(orderNumber);
   if (fromDb) return fromDb;
@@ -305,13 +351,26 @@ function resolveOrderNo(fields, orderNumber) {
 }
 
 async function embedImages(pdfDoc, images) {
-  let barcodeImg = null;
+  let trackingBarcodeImg = null;
+  let orderBarcodeImg = null;
   let logoImg = null;
   let qrImg = null;
   try {
-    if (images.barcode) barcodeImg = await pdfDoc.embedPng(dataUriToBytes(images.barcode));
+    if (images.trackingBarcode) {
+      trackingBarcodeImg = await pdfDoc.embedPng(dataUriToBytes(images.trackingBarcode));
+    }
   } catch {
-    barcodeImg = null;
+    trackingBarcodeImg = null;
+  }
+  try {
+    if (images.orderBarcode) {
+      const bytes = dataUriToBytes(images.orderBarcode);
+      orderBarcodeImg = images.orderBarcode.includes("image/jpeg")
+        ? await pdfDoc.embedJpg(bytes)
+        : await pdfDoc.embedPng(bytes);
+    }
+  } catch {
+    orderBarcodeImg = null;
   }
   try {
     if (images.logo) {
@@ -328,7 +387,7 @@ async function embedImages(pdfDoc, images) {
   } catch {
     qrImg = null;
   }
-  return { barcodeImg, logoImg, qrImg };
+  return { trackingBarcodeImg, orderBarcodeImg, logoImg, qrImg };
 }
 
 function cityCode(city) {
@@ -380,7 +439,7 @@ function cellBorder(page, x, y, w, h) {
  */
 function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   const { font, bold } = fonts;
-  const { barcodeImg, logoImg, qrImg } = images;
+  const { trackingBarcodeImg, orderBarcodeImg, logoImg, qrImg } = images;
   const { x: ox, y: oy, width: rw, height: rh } = region;
   const pad = 6;
 
@@ -435,39 +494,47 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
     color: rgb(0.3, 0.3, 0.3),
   });
 
-  // Order Ref barcode area
+  // Order Ref barcode (distinct from tracking — never reuse tracking barcode)
   const orderBarX = innerX + 70;
-  if (barcodeImg) {
-    page.drawImage(barcodeImg, {
+  const orderBarW = 120;
+  if (orderBarcodeImg) {
+    page.drawImage(orderBarcodeImg, {
       x: orderBarX,
       y: y - 28,
-      width: 120,
+      width: orderBarW,
       height: 22,
     });
   }
-  page.drawText(`Order Ref: ${orderDisplay}`, {
-    x: orderBarX,
-    y: y - 40,
-    size: 7.5,
-    font: bold,
-  });
+  page.drawText(
+    truncateToWidth(bold, `Order Ref: ${orderDisplay}`, 7.5, orderBarW + 10),
+    {
+      x: orderBarX,
+      y: y - 40,
+      size: 7.5,
+      font: bold,
+    }
+  );
 
-  // Tracking barcode area
+  // Tracking barcode
   const trackBarX = orderBarX + 135;
-  if (barcodeImg) {
-    page.drawImage(barcodeImg, {
+  const trackBarW = 130;
+  if (trackingBarcodeImg) {
+    page.drawImage(trackingBarcodeImg, {
       x: trackBarX,
       y: y - 28,
-      width: 130,
+      width: trackBarW,
       height: 22,
     });
   }
-  page.drawText(`Tracking No: ${tracking}`, {
-    x: trackBarX,
-    y: y - 40,
-    size: 7.5,
-    font: bold,
-  });
+  page.drawText(
+    truncateToWidth(bold, `Tracking No: ${tracking}`, 7.5, trackBarW + 8),
+    {
+      x: trackBarX,
+      y: y - 40,
+      size: 7.5,
+      font: bold,
+    }
+  );
 
   // Large city code (PostEx style)
   const codeSize = 28;
@@ -516,7 +583,7 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   const maxW1 = col1W - 10;
 
   page.drawText("Name:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
-  page.drawText(pdfSafe(fields.consigneeName) || "-", {
+  page.drawText(truncateToWidth(bold, fields.consigneeName || "-", valSize, maxW1 - 28), {
     x: c1x + leftPad + 28,
     y: cy,
     size: valSize,
@@ -524,7 +591,7 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   });
   cy -= 11;
   page.drawText("Contact:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
-  page.drawText(pdfSafe(fields.consigneePhone) || "-", {
+  page.drawText(truncateToWidth(bold, fields.consigneePhone || "-", valSize, maxW1 - 36), {
     x: c1x + leftPad + 36,
     y: cy,
     size: valSize,
@@ -559,7 +626,7 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   sectionHeader(page, fonts, c1x, cy + hdrH, col1W, hdrH, "Shipper Information");
   cy -= 8;
   page.drawText("Name:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
-  page.drawText(pdfSafe(fields.company) || "CRAZZYCARS.PK", {
+  page.drawText(truncateToWidth(bold, fields.company || "CRAZZYCARS.PK", valSize, maxW1 - 28), {
     x: c1x + leftPad + 28,
     y: cy,
     size: valSize,
@@ -567,7 +634,7 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   });
   cy -= 10;
   page.drawText("Contact:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
-  page.drawText(pdfSafe(fields.shipperPhone) || "-", {
+  page.drawText(truncateToWidth(font, fields.shipperPhone || "-", valSize, maxW1 - 36), {
     x: c1x + leftPad + 36,
     y: cy,
     size: valSize,
@@ -601,9 +668,10 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
     ["Destination:", dest.toUpperCase()],
     ["Return City:", origin.toUpperCase()],
   ];
+  const shipValMax = col2W - 10 - 58;
   for (const [k, v] of shipRows) {
     page.drawText(k, { x: c2x + leftPad, y: my, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
-    page.drawText(v, {
+    page.drawText(truncateToWidth(bold, v, 7.5, shipValMax), {
       x: c2x + leftPad + 58,
       y: my,
       size: 7.5,
@@ -693,12 +761,15 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
     font,
     color: rgb(0.35, 0.35, 0.35),
   });
-  page.drawText(pdfSafe(fields.services || fields.bookingType) || "Overnight", {
-    x: c3x + leftPad + 50,
-    y: oy3,
-    size: valSize,
-    font: bold,
-  });
+  page.drawText(
+    truncateToWidth(bold, fields.services || fields.bookingType || "Overnight", valSize, col3W - 60),
+    {
+      x: c3x + leftPad + 50,
+      y: oy3,
+      size: valSize,
+      font: bold,
+    }
+  );
 
   // --- FOOTER: Order Details ---
   const footTop = bodyBottom;
@@ -720,6 +791,14 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   return { contentBottom: oy, usedHeight: rh };
 }
 
+async function prepareAirbillAssets(pdfDoc, html, orderNo) {
+  const images = extractDataImages(html);
+  if (orderNo && orderNo !== "-") {
+    images.orderBarcode = await fetchPortalBarcodeDataUri(orderNo);
+  }
+  return embedImages(pdfDoc, images);
+}
+
 /**
  * @param {string} invoiceLink
  * @param {{ orderNumber?: string }} [opts]
@@ -732,11 +811,10 @@ export async function buildRunCourierAirbillPdf(invoiceLink, opts = {}) {
 
   const fields = parseAirbillFields(prepared.html);
   const orderNo = resolveOrderNo(fields, opts.orderNumber);
-  const images = extractDataImages(prepared.html);
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const embedded = await embedImages(pdfDoc, images);
+  const embedded = await prepareAirbillAssets(pdfDoc, prepared.html, orderNo);
 
   const labelW = A4_W - SIDE_MARGIN * 2;
   const page = pdfDoc.addPage([A4_W, LABEL_H + PAGE_MARGIN * 2]);
@@ -781,7 +859,7 @@ export async function buildRunCourierAirbillsPdf(items = []) {
     if (!prepared.success || !prepared.html) continue;
     const fields = parseAirbillFields(prepared.html);
     const orderNo = resolveOrderNo(fields, item.orderNumber);
-    const embedded = await embedImages(pdfDoc, extractDataImages(prepared.html));
+    const embedded = await prepareAirbillAssets(pdfDoc, prepared.html, orderNo);
     if (!trackingNumber) trackingNumber = fields.tracking || "";
 
     if (!page || slot >= LABELS_PER_PAGE) {

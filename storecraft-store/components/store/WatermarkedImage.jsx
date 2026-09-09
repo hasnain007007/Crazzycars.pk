@@ -24,12 +24,18 @@ export function WatermarkedImage({
   const [failed, setFailed] = useState(false);
   const [retrySrc, setRetrySrc] = useState(null);
 
-  const resolved = optimize
-    ? (crop === "fill" ? cardImageUrl(retrySrc || src, width) : cloudinaryUrl(retrySrc || src, { width, crop })) || retrySrc || src
-    : retrySrc || src;
+  const rawSrc = retrySrc || src;
+  const optimized =
+    optimize
+      ? crop === "fill"
+        ? cardImageUrl(rawSrc, width)
+        : cloudinaryUrl(rawSrc, { width, crop })
+      : rawSrc;
+  // Cloudinary URLs resolve to "" (account disabled) — treat as missing.
+  const resolved = optimized || (!/res\.cloudinary\.com/i.test(String(rawSrc || "")) ? rawSrc : "");
 
-  if (!src || failed) {
-    if (!src) return null;
+  if (!src) return null;
+  if (failed || !resolved) {
     return (
       <div
         className={className || imgClassName}
@@ -57,7 +63,7 @@ export function WatermarkedImage({
   const srcSet =
     optimize &&
     responsive &&
-    String(src).includes("res.cloudinary.com") &&
+    !/res\.cloudinary\.com/i.test(String(src)) &&
     !/crazzycars\.pk\/media\/|^\/media\//i.test(String(resolved))
       ? cloudinarySrcSet(src, srcSetWidths, { crop })
       : undefined;

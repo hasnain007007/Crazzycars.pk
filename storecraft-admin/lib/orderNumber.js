@@ -42,7 +42,7 @@ export async function allocateOrderNumber() {
     ];
 
     const doc = await Settings.findOneAndUpdate(filter, pipeline, {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       setDefaultsOnInsert: true,
     }).lean();

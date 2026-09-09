@@ -97,6 +97,23 @@ export async function middleware(request) {
   if (wwwRedirect) return wwwRedirect;
 
   const { pathname } = request.nextUrl;
+
+  // Stale Google / CDN HTML still hits /_next/image?url=res.cloudinary.com… —
+  // that cloud is billing-disabled (401). Serve a local asset instead.
+  if (pathname === "/_next/image" || pathname.startsWith("/_next/image?")) {
+    const remote = request.nextUrl.searchParams.get("url") || "";
+    let decoded = remote;
+    try {
+      decoded = decodeURIComponent(remote);
+    } catch {
+      /* keep raw */
+    }
+    if (/res\.cloudinary\.com|dquier8fv/i.test(decoded)) {
+      return NextResponse.redirect(new URL("/logo.png", request.url), 302);
+    }
+    return NextResponse.next();
+  }
+
   const lower = pathname.toLowerCase();
 
   // Linux hosts are case-sensitive — Google indexes /Categories/Exterior etc.
@@ -275,9 +292,11 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     /*
-     * Match all paths except static assets / Next internals / liveness probe.
+     * Match all paths except static assets / liveness probe.
+     * /_next/image is included so disabled Cloudinary optimizer URLs can be short-circuited.
      * Includes public pages (for AI logging) and /account/* (for auth).
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/health|media/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)$).*)",
+    "/_next/image",
+    "/((?!_next/static|favicon.ico|api/health|media/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)$).*)",
   ],
 };

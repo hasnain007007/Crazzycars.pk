@@ -8,17 +8,43 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
+import Product from "@/lib/models/Product.model";
 import { orderGrandTotal, orderPricing } from "@/lib/orderFormat";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
 import { dispatchOrderLifecycleEmails } from "@/lib/customerLifecycleEmail";
+import {
+  isBrokenCloudinaryUrl,
+  productMainImageUrl,
+} from "@/lib/resolveLineItemImage";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
 }
 
-function serializeOrder(doc) {
+async function productImageMapForOrder(doc) {
+  const ids = [
+    ...new Set(
+      (doc?.items || [])
+        .filter((i) => i?.productId && isBrokenCloudinaryUrl(i?.image))
+        .map((i) => String(i.productId))
+        .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    ),
+  ];
+  if (!ids.length) return new Map();
+  const products = await Product.find({ _id: { $in: ids } })
+    .select("media.images")
+    .lean();
+  const map = new Map();
+  for (const p of products) {
+    const url = productMainImageUrl(p);
+    if (url) map.set(String(p._id), url);
+  }
+  return map;
+}
+
+function serializeOrder(doc, productImageById = null) {
   if (!doc) return null;
   const o = doc;
   const pricing = orderPricing(o);
@@ -26,6 +52,7 @@ function serializeOrder(doc) {
     o.customer?.customerId &&
     typeof o.customer.customerId === "object" &&
     o.customer.customerId._id;
+  const imageMap = productImageById instanceof Map ? productImageById : null;
   return {
     id: o._id.toString(),
     orderNumber: o.orderNumber,
@@ -48,11 +75,18 @@ function serializeOrder(doc) {
     currency: o.currency || "PKR",
     subtotal: pricing.subtotal,
     shippingCost: pricing.shippingCost,
-    items: (o.items || []).map((i) => ({
+    items: (o.items || []).map((i) => {
+      let image = i.image || "";
+      if (isBrokenCloudinaryUrl(image) && imageMap) {
+        const pid = i.productId ? String(i.productId) : "";
+        const live = pid ? imageMap.get(pid) || "" : "";
+        image = live || "";
+      }
+      return {
       productId: i.productId ? String(i.productId) : null,
       articleNo: i.articleNo || "",
       name: i.name,
-      image: i.image || "",
+      image,
       variation: i.variation || "",
       selectedVariation: i.selectedVariation || null,
       selectedAddOns: Array.isArray(i.selectedAddOns)
@@ -65,7 +99,8 @@ function serializeOrder(doc) {
       unitPrice: i.unitPrice,
       unitCost: Number(i.unitCost) || 0,
       total: i.total,
-    })),
+    };
+    }),
     pricing,
     orderStatus: o.orderStatus,
     paymentStatus: o.paymentStatus,
@@ -199,7 +234,8 @@ export async function GET(request, context) {
       return NextResponse.json({ success: false, error: "Not found." }, { status: 404 });
     }
     const neighbors = await findOrderNeighbors(doc);
-    return NextResponse.json({ success: true, order: serializeOrder(doc), neighbors });
+    const imageMap = await productImageMapForOrder(doc);
+    return NextResponse.json({ success: true, order: serializeOrder(doc, imageMap), neighbors });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to load order." },
@@ -719,7 +755,8 @@ export async function PUT(request, context) {
 
     if (!updates.length) {
       const lean = await Order.findById(id).populate("customer.customerId", "name email phone").lean();
-      return NextResponse.json({ success: true, order: serializeOrder(lean), changed: false });
+      const imageMap = await productImageMapForOrder(lean);
+      return NextResponse.json({ success: true, order: serializeOrder(lean, imageMap), changed: false });
     }
 
     await order.save();
@@ -745,7 +782,8 @@ export async function PUT(request, context) {
     });
 
     const lean = await Order.findById(id).populate("customer.customerId", "name email phone").lean();
-    return NextResponse.json({ success: true, order: serializeOrder(lean), changed: true });
+    const imageMap = await productImageMapForOrder(lean);
+    return NextResponse.json({ success: true, order: serializeOrder(lean, imageMap), changed: true });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Update failed." },

@@ -10,6 +10,11 @@
 const UPLOAD_RE =
   /^(https?:\/\/res\.cloudinary\.com\/[^/]+\/(?:image|video|raw)\/upload\/)(.+)$/i;
 
+/** Live Cloudinary cloud is billing-disabled — never transform or optimize these. */
+export function isCloudinaryUrl(src) {
+  return /res\.cloudinary\.com/i.test(String(src || ""));
+}
+
 function isTransformSegment(segment) {
   if (!segment) return false;
   if (segment.includes(",")) return true;
@@ -86,6 +91,9 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   if (isLocalMedia(url) || unwrapNextImageUrl(url).includes("/media/")) {
     return localMediaForWidth(url, width);
   }
+
+  // Disabled Cloudinary account — do not emit transform URLs (401s in Next optimizer).
+  if (isCloudinaryUrl(url)) return "";
 
   const match = url.match(UPLOAD_RE);
   if (!match) return url;
