@@ -1,20 +1,46 @@
 /**
- * Run Courier airbill PDF — 3 large labels per A4; border hugs content; QR sized for print.
+ * Run Courier airbill PDF — PostEx-style layout, exactly 3 equal labels per A4.
  * Portal has no PDF API — we build from invoice HTML + order number from our DB.
  */
+
 
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { prepareRunCourierInvoiceHtml } from "./runcourierInvoice.js";
 
 const A4_W = 595.28;
 const A4_H = 841.89;
-/** Exactly 3 airbills per A4 — border hugs content (no empty box footer). */
+/** PostEx-style: exactly 3 equal airbills fill one A4 (no empty page footer). */
 const LABELS_PER_PAGE = 3;
-const PAGE_MARGIN = 8;
-const SIDE_MARGIN = 10;
-const LABEL_GAP = 8;
-/** Scratch/slot height for measuring; actual border hugs drawn content. */
-const LABEL_H = 220;
+const PAGE_MARGIN = 10;
+const SIDE_MARGIN = 12;
+const LABEL_GAP = 6;
+const LABEL_H = Math.floor(
+  (A4_H - PAGE_MARGIN * 2 - LABEL_GAP * (LABELS_PER_PAGE - 1)) / LABELS_PER_PAGE
+); // ~269pt
+
+/** Destination city → short code (PostEx airbill style). */
+const CITY_CODES = {
+  gujranwala: "GRW",
+  lahore: "LHE",
+  karachi: "KHI",
+  islamabad: "ISB",
+  rawalpindi: "RWP",
+  quetta: "UET",
+  peshawar: "PEW",
+  faisalabad: "LYP",
+  multan: "MUX",
+  sialkot: "SKT",
+  hyderabad: "HDD",
+  sukkur: "SKZ",
+  sahiwal: "SWL",
+  khairpur: "KHP",
+  hafizabad: "HFD",
+  tulamba: "TLB",
+  gujrat: "GJT",
+  bahawalpur: "BHV",
+  sargodha: "SGI",
+  abbottabad: "AAW",
+};
 
 function stripToLines(html) {
   let clean = String(html || "");
@@ -305,214 +331,393 @@ async function embedImages(pdfDoc, images) {
   return { barcodeImg, logoImg, qrImg };
 }
 
+function cityCode(city) {
+  const raw = String(city || "").trim();
+  if (!raw) return "PK";
+  const key = raw.toLowerCase();
+  if (CITY_CODES[key]) return CITY_CODES[key];
+  const compact = key.replace(/[^a-z]/g, "");
+  const hit = Object.keys(CITY_CODES).find((k) => compact.startsWith(k.replace(/\s/g, "")) || k.startsWith(compact));
+  if (hit) return CITY_CODES[hit];
+  return (compact.slice(0, 3) || "PK").toUpperCase();
+}
+
+function sectionHeader(page, fonts, x, y, w, h, title) {
+  const { font, bold } = fonts;
+  page.drawRectangle({
+    x,
+    y: y - h,
+    width: w,
+    height: h,
+    color: rgb(0.88, 0.9, 0.93),
+    borderColor: rgb(0.55, 0.55, 0.55),
+    borderWidth: 0.5,
+  });
+  page.drawText(title, {
+    x: x + 4,
+    y: y - h + 3.5,
+    size: 7,
+    font: bold,
+    color: rgb(0.15, 0.15, 0.15),
+  });
+}
+
+function cellBorder(page, x, y, w, h) {
+  page.drawRectangle({
+    x,
+    y: y - h,
+    width: w,
+    height: h,
+    borderColor: rgb(0.55, 0.55, 0.55),
+    borderWidth: 0.5,
+    color: undefined,
+  });
+}
+
 /**
- * Draw one airbill into a region. Border hugs content — no empty space under the note.
- * QR is moderate size and inset from the right edge for reliable scanning/printing.
+ * PostEx-style airbill: logo + barcodes header, 3 info columns, order-details footer.
+ * Fills the allocated slot completely (equal thirds of A4).
  */
 function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   const { font, bold } = fonts;
   const { barcodeImg, logoImg, qrImg } = images;
   const { x: ox, y: oy, width: rw, height: rh } = region;
-  const pad = 9;
-  const contentW = rw - pad * 2;
+  const pad = 6;
+
+  // Outer border fills full slot
+  page.drawRectangle({
+    x: ox,
+    y: oy,
+    width: rw,
+    height: rh,
+    borderColor: rgb(0.1, 0.1, 0.1),
+    borderWidth: 1.2,
+    color: rgb(1, 1, 1),
+  });
+
+  const innerX = ox + pad;
+  const innerW = rw - pad * 2;
   const top = oy + rh - pad;
+  const orderDisplay = orderNo || pdfSafe(fields.orderId) || "-";
+  const tracking = pdfSafe(fields.tracking) || "-";
+  const dest = pdfSafe(fields.destination) || "-";
+  const origin = pdfSafe(fields.origin) || "Gujranwala";
+  const code = cityCode(dest);
+
+  // --- HEADER: logo | order barcode | tracking barcode | city code ---
+  const headerH = 48;
   let y = top;
 
-  // QR: smaller than before, clear of the border (quiet zone + print bleed)
-  const qrSize = 40;
-  const qrInset = 12;
-  const qrLeft = ox + rw - qrInset - qrSize;
-  const headerRightLimit = qrLeft - 8;
-
-  // --- Header: barcode | meta | QR ---
-  if (barcodeImg) {
-    const bw = Math.min(145, Math.max(115, headerRightLimit - (ox + pad) - 175));
-    const bh = Math.min(28, (barcodeImg.height / barcodeImg.width) * bw);
-    page.drawImage(barcodeImg, {
-      x: ox + pad,
-      y: y - bh,
-      width: bw,
-      height: bh,
-    });
-  }
-  page.drawText(pdfSafe(fields.tracking) || "-", {
-    x: ox + pad + 2,
-    y: y - 38,
-    size: 12,
-    font: bold,
-  });
-
-  const metaX = ox + pad + 150;
-  const metaColW = Math.max(68, (headerRightLimit - metaX) / 3);
-  const meta = [
-    ["Date", fields.date],
-    ["Service", fields.services],
-    ["Origin", fields.origin],
-    ["Weight", fields.weight],
-    ["Type", fields.bookingType],
-    ["Dest", fields.destination],
-  ];
-  meta.forEach(([k, v], idx) => {
-    const col = idx % 3;
-    const row = Math.floor(idx / 3);
-    const mx = metaX + col * metaColW;
-    const my = y - 5 - row * 18;
-    page.drawText(k, { x: mx, y: my, size: 6.5, font, color: rgb(0.4, 0.4, 0.4) });
-    page.drawText(pdfSafe(v) || "-", { x: mx, y: my - 9, size: 9, font: bold });
-  });
-
-  if (qrImg) {
-    page.drawRectangle({
-      x: qrLeft - 2,
-      y: y - qrSize - 2,
-      width: qrSize + 4,
-      height: qrSize + 4,
-      color: rgb(1, 1, 1),
-      borderWidth: 0,
-    });
-    page.drawImage(qrImg, {
-      x: qrLeft,
-      y: y - qrSize,
-      width: qrSize,
-      height: qrSize,
-    });
-  }
+  // Logo / brand
   if (logoImg) {
-    const lw = 44;
-    const lh = Math.min(15, (logoImg.height / logoImg.width) * lw);
+    const lw = 52;
+    const lh = Math.min(22, (logoImg.height / logoImg.width) * lw);
     page.drawImage(logoImg, {
-      x: qrLeft + (qrSize - lw) / 2,
-      y: y - qrSize - lh - 2,
+      x: innerX,
+      y: y - lh - 2,
       width: lw,
       height: lh,
     });
+  } else {
+    page.drawText("Run Courier", {
+      x: innerX,
+      y: y - 14,
+      size: 10,
+      font: bold,
+      color: rgb(0.1, 0.35, 0.2),
+    });
+  }
+  page.drawText("crazzycars.pk", {
+    x: innerX,
+    y: y - 28,
+    size: 7,
+    font,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  // Order Ref barcode area
+  const orderBarX = innerX + 70;
+  if (barcodeImg) {
+    page.drawImage(barcodeImg, {
+      x: orderBarX,
+      y: y - 28,
+      width: 120,
+      height: 22,
+    });
+  }
+  page.drawText(`Order Ref: ${orderDisplay}`, {
+    x: orderBarX,
+    y: y - 40,
+    size: 7.5,
+    font: bold,
+  });
+
+  // Tracking barcode area
+  const trackBarX = orderBarX + 135;
+  if (barcodeImg) {
+    page.drawImage(barcodeImg, {
+      x: trackBarX,
+      y: y - 28,
+      width: 130,
+      height: 22,
+    });
+  }
+  page.drawText(`Tracking No: ${tracking}`, {
+    x: trackBarX,
+    y: y - 40,
+    size: 7.5,
+    font: bold,
+  });
+
+  // Large city code (PostEx style)
+  const codeSize = 28;
+  const codeW = bold.widthOfTextAtSize(code, codeSize);
+  page.drawText(code, {
+    x: ox + rw - pad - codeW - 4,
+    y: y - 34,
+    size: codeSize,
+    font: bold,
+    color: rgb(0.05, 0.05, 0.05),
+  });
+
+  y = top - headerH;
+  page.drawLine({
+    start: { x: ox + 1, y },
+    end: { x: ox + rw - 1, y },
+    thickness: 0.7,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+
+  // --- BODY: 3 columns ---
+  const footerH = 28;
+  const bodyTop = y;
+  const bodyBottom = oy + pad + footerH;
+  const bodyH = bodyTop - bodyBottom;
+  const colGap = 3;
+  const col1W = Math.floor(innerW * 0.36);
+  const col3W = Math.floor(innerW * 0.28);
+  const col2W = innerW - col1W - col3W - colGap * 2;
+  const c1x = innerX;
+  const c2x = c1x + col1W + colGap;
+  const c3x = c2x + col2W + colGap;
+
+  // Column outlines
+  cellBorder(page, c1x, bodyTop, col1W, bodyH);
+  cellBorder(page, c2x, bodyTop, col2W, bodyH);
+  cellBorder(page, c3x, bodyTop, col3W, bodyH);
+
+  const hdrH = 12;
+  // Col1: Consignee + Shipper
+  sectionHeader(page, fonts, c1x, bodyTop, col1W, hdrH, "Consignee Information");
+  let cy = bodyTop - hdrH - 8;
+  const labelSize = 6.5;
+  const valSize = 8;
+  const leftPad = 4;
+  const maxW1 = col1W - 10;
+
+  page.drawText("Name:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
+  page.drawText(pdfSafe(fields.consigneeName) || "-", {
+    x: c1x + leftPad + 28,
+    y: cy,
+    size: valSize,
+    font: bold,
+  });
+  cy -= 11;
+  page.drawText("Contact:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
+  page.drawText(pdfSafe(fields.consigneePhone) || "-", {
+    x: c1x + leftPad + 36,
+    y: cy,
+    size: valSize,
+    font: bold,
+  });
+  cy -= 11;
+  page.drawText("Delivery Address:", {
+    x: c1x + leftPad,
+    y: cy,
+    size: labelSize,
+    font,
+    color: rgb(0.35, 0.35, 0.35),
+  });
+  cy -= 9;
+  cy = drawText(page, fields.consigneeAddress, c1x + leftPad, cy, {
+    size: 7.5,
+    font,
+    maxWidth: maxW1,
+    lineHeight: 9,
+    maxLines: 3,
+  });
+  cy -= 10;
+
+  // Divider inside col1
+  page.drawLine({
+    start: { x: c1x + 2, y: cy + 4 },
+    end: { x: c1x + col1W - 2, y: cy + 4 },
+    thickness: 0.4,
+    color: rgb(0.7, 0.7, 0.7),
+  });
+  cy -= 2;
+  sectionHeader(page, fonts, c1x, cy + hdrH, col1W, hdrH, "Shipper Information");
+  cy -= 8;
+  page.drawText("Name:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
+  page.drawText(pdfSafe(fields.company) || "CRAZZYCARS.PK", {
+    x: c1x + leftPad + 28,
+    y: cy,
+    size: valSize,
+    font: bold,
+  });
+  cy -= 10;
+  page.drawText("Contact:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
+  page.drawText(pdfSafe(fields.shipperPhone) || "-", {
+    x: c1x + leftPad + 36,
+    y: cy,
+    size: valSize,
+    font,
+  });
+  cy -= 10;
+  page.drawText("Pickup Address:", {
+    x: c1x + leftPad,
+    y: cy,
+    size: labelSize,
+    font,
+    color: rgb(0.35, 0.35, 0.35),
+  });
+  cy -= 9;
+  drawText(page, fields.pickup || origin, c1x + leftPad, cy, {
+    size: 7,
+    font,
+    maxWidth: maxW1,
+    lineHeight: 8.5,
+    maxLines: 3,
+  });
+
+  // Col2: Shipment Information + Remarks
+  sectionHeader(page, fonts, c2x, bodyTop, col2W, hdrH, "Shipment Information");
+  let my = bodyTop - hdrH - 8;
+  const shipRows = [
+    ["Pieces:", pdfSafe(fields.pieces) || "1"],
+    ["Order Ref:", orderDisplay],
+    ["Tracking No:", tracking],
+    ["Origin:", origin.toUpperCase()],
+    ["Destination:", dest.toUpperCase()],
+    ["Return City:", origin.toUpperCase()],
+  ];
+  for (const [k, v] of shipRows) {
+    page.drawText(k, { x: c2x + leftPad, y: my, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
+    page.drawText(v, {
+      x: c2x + leftPad + 58,
+      y: my,
+      size: 7.5,
+      font: bold,
+    });
+    my -= 11;
+  }
+  my -= 4;
+  page.drawLine({
+    start: { x: c2x + 2, y: my + 6 },
+    end: { x: c2x + col2W - 2, y: my + 6 },
+    thickness: 0.4,
+    color: rgb(0.7, 0.7, 0.7),
+  });
+  sectionHeader(page, fonts, c2x, my + hdrH, col2W, hdrH, "Remarks");
+  my -= 8;
+  let instr = String(fields.instructions || "");
+  const itemsIdx = instr.indexOf("| Items:");
+  if (itemsIdx > 0) instr = instr.slice(0, itemsIdx).trim();
+  if (!instr) instr = "Call customer before delivery. Do not leave parcel unattended. Allow to Open";
+  drawText(page, instr, c2x + leftPad, my, {
+    size: 7,
+    font,
+    maxWidth: col2W - 10,
+    lineHeight: 8.5,
+    maxLines: 5,
+  });
+
+  // Col3: Order Information + QR + Amount/Date/Type
+  sectionHeader(page, fonts, c3x, bodyTop, col3W, hdrH, "Order Information");
+  let oy3 = bodyTop - hdrH - 6;
+  const qrSize = 58;
+  const qrX = c3x + (col3W - qrSize) / 2;
+  if (qrImg) {
+    page.drawRectangle({
+      x: qrX - 2,
+      y: oy3 - qrSize - 2,
+      width: qrSize + 4,
+      height: qrSize + 4,
+      color: rgb(1, 1, 1),
+    });
+    page.drawImage(qrImg, {
+      x: qrX,
+      y: oy3 - qrSize,
+      width: qrSize,
+      height: qrSize,
+    });
+    oy3 -= qrSize + 10;
+  } else {
+    oy3 -= 8;
   }
 
-  y = top - 54;
-
-  page.drawLine({
-    start: { x: ox + pad, y },
-    end: { x: ox + rw - pad, y },
-    thickness: 0.65,
-    color: rgb(0.55, 0.55, 0.55),
-  });
-  y -= 9;
-
-  const colW = contentW / 2 - 8;
-  const leftX = ox + pad;
-  const rightX = ox + pad + colW + 12;
-  page.drawText("SHIPPER", { x: leftX, y, size: 7.5, font: bold });
-  page.drawText("CONSIGNEE", { x: rightX, y, size: 7.5, font: bold });
-  y -= 10;
-
-  page.drawText(pdfSafe(fields.company) || "crazzycars.pk", {
-    x: leftX,
-    y,
-    size: 9.5,
-    font: bold,
-  });
-  page.drawText(pdfSafe(fields.consigneeName) || "-", {
-    x: rightX,
-    y,
-    size: 9.5,
-    font: bold,
-  });
-  y -= 10;
-  page.drawText(pdfSafe(fields.shipperPhone) || "-", { x: leftX, y, size: 8.5, font });
-  page.drawText(pdfSafe(fields.consigneePhone) || "-", { x: rightX, y, size: 8.5, font });
-  y -= 9;
-
-  const leftEnd = drawText(page, fields.pickup, leftX, y, {
-    size: 8,
+  const amount = pdfSafe(fields.cod) || "0";
+  page.drawText("Amount:", {
+    x: c3x + leftPad,
+    y: oy3,
+    size: labelSize,
     font,
-    maxWidth: colW,
-    lineHeight: 9.5,
-    maxLines: 2,
+    color: rgb(0.35, 0.35, 0.35),
   });
-  const rightEnd = drawText(page, fields.consigneeAddress, rightX, y, {
-    size: 8,
-    font,
-    maxWidth: colW,
-    lineHeight: 9.5,
-    maxLines: 2,
-  });
-  y = Math.min(leftEnd, rightEnd) - 6;
-
-  page.drawLine({
-    start: { x: ox + pad, y },
-    end: { x: ox + rw - pad, y },
-    thickness: 0.55,
-    color: rgb(0.65, 0.65, 0.65),
-  });
-  y -= 10;
-
-  const orderDisplay = orderNo || "-";
-  page.drawText(`Order: ${orderDisplay}`, {
-    x: leftX,
-    y,
-    size: 9.5,
-    font: bold,
-  });
-  page.drawText(`Ref: ${orderDisplay}`, {
-    x: leftX + 180,
-    y,
-    size: 9.5,
-    font: bold,
-  });
-  page.drawText(`COD: Rs ${pdfSafe(fields.cod) || "0"}`, {
-    x: leftX + 330,
-    y,
+  page.drawText(`${amount}/-`, {
+    x: c3x + leftPad + 40,
+    y: oy3,
     size: 11,
     font: bold,
     color: rgb(0.75, 0.05, 0.05),
   });
-  page.drawText(`Pcs: ${pdfSafe(fields.pieces) || "1"}`, {
-    x: leftX + 480,
-    y,
-    size: 9.5,
+  oy3 -= 13;
+  page.drawText("Date:", {
+    x: c3x + leftPad,
+    y: oy3,
+    size: labelSize,
     font,
+    color: rgb(0.35, 0.35, 0.35),
   });
-  y -= 12;
-
-  page.drawText("Product:", { x: leftX, y, size: 8.5, font: bold });
-  y = drawText(page, fields.product, leftX + 46, y, {
-    size: 8.5,
+  page.drawText(pdfSafe(fields.date) || "-", {
+    x: c3x + leftPad + 28,
+    y: oy3,
+    size: valSize,
+    font: bold,
+  });
+  oy3 -= 12;
+  page.drawText("Order Type:", {
+    x: c3x + leftPad,
+    y: oy3,
+    size: labelSize,
     font,
-    maxWidth: contentW - 50,
-    lineHeight: 10,
-    maxLines: 2,
+    color: rgb(0.35, 0.35, 0.35),
   });
-  y -= 8;
+  page.drawText(pdfSafe(fields.services || fields.bookingType) || "Overnight", {
+    x: c3x + leftPad + 50,
+    y: oy3,
+    size: valSize,
+    font: bold,
+  });
 
-  let instr = String(fields.instructions || "");
-  const itemsIdx = instr.indexOf("| Items:");
-  if (itemsIdx > 0) instr = instr.slice(0, itemsIdx).trim();
-  page.drawText("Note:", { x: leftX, y, size: 8.5, font: bold });
-  y = drawText(page, instr, leftX + 30, y, {
+  // --- FOOTER: Order Details ---
+  const footTop = bodyBottom;
+  page.drawLine({
+    start: { x: ox + 1, y: footTop },
+    end: { x: ox + rw - 1, y: footTop },
+    thickness: 0.7,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+  sectionHeader(page, fonts, innerX, footTop, innerW, hdrH, "Order Details");
+  drawText(page, fields.product || "Car accessories", innerX + 4, footTop - hdrH - 8, {
     size: 8,
     font,
-    maxWidth: contentW - 34,
-    lineHeight: 9.5,
-    maxLines: 2,
+    maxWidth: innerW - 8,
+    lineHeight: 9,
+    maxLines: 1,
   });
 
-  const contentBottom = y - 6;
-
-  // Border hugs content only — eliminates empty white under the note
-  page.drawRectangle({
-    x: ox,
-    y: contentBottom,
-    width: rw,
-    height: top - contentBottom + pad,
-    borderColor: rgb(0.15, 0.15, 0.15),
-    borderWidth: 1.2,
-    color: undefined,
-  });
-
-  return {
-    contentBottom,
-    usedHeight: top + pad - contentBottom,
-  };
+  return { contentBottom: oy, usedHeight: rh };
 }
 
 /**
@@ -534,26 +739,14 @@ export async function buildRunCourierAirbillPdf(invoiceLink, opts = {}) {
   const embedded = await embedImages(pdfDoc, images);
 
   const labelW = A4_W - SIDE_MARGIN * 2;
-  const measurePage = pdfDoc.addPage([A4_W, LABEL_H]);
-  const measured = drawAirbillIntoPage(
-    measurePage,
-    { font, bold },
-    embedded,
-    fields,
-    orderNo,
-    { x: SIDE_MARGIN, y: 0, width: labelW, height: LABEL_H }
-  );
-  pdfDoc.removePage(0);
-
-  const pageH = Math.max(150, Math.ceil((measured?.usedHeight || LABEL_H) + 2));
-  const page = pdfDoc.addPage([A4_W, pageH]);
+  const page = pdfDoc.addPage([A4_W, LABEL_H + PAGE_MARGIN * 2]);
   drawAirbillIntoPage(
     page,
     { font, bold },
     embedded,
     fields,
     orderNo,
-    { x: SIDE_MARGIN, y: 0, width: labelW, height: pageH }
+    { x: SIDE_MARGIN, y: PAGE_MARGIN, width: labelW, height: LABEL_H }
   );
 
   const bytes = await pdfDoc.save();
@@ -566,8 +759,7 @@ export async function buildRunCourierAirbillPdf(invoiceLink, opts = {}) {
 }
 
 /**
- * Build A4 PDF(s) with exactly 3 content-hugging airbills per page.
- * Leftover page height is split as gaps between labels (no empty box footers).
+ * Build A4 PDF(s) with exactly 3 PostEx-style airbills per page (equal slots, full page).
  * @param {Array<{ invoiceLink: string, orderNumber?: string }>} items
  */
 export async function buildRunCourierAirbillsPdf(items = []) {
@@ -581,9 +773,9 @@ export async function buildRunCourierAirbillsPdf(items = []) {
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const labelW = A4_W - SIDE_MARGIN * 2;
   let trackingNumber = "";
+  let page = null;
+  let slot = 0;
 
-  // Prepare pages of up to 3, measure, then place with gaps filling the sheet.
-  const preparedItems = [];
   for (const item of list) {
     const prepared = await prepareRunCourierInvoiceHtml(item.invoiceLink);
     if (!prepared.success || !prepared.html) continue;
@@ -591,47 +783,22 @@ export async function buildRunCourierAirbillsPdf(items = []) {
     const orderNo = resolveOrderNo(fields, item.orderNumber);
     const embedded = await embedImages(pdfDoc, extractDataImages(prepared.html));
     if (!trackingNumber) trackingNumber = fields.tracking || "";
-    preparedItems.push({ fields, orderNo, embedded });
-  }
 
-  for (let i = 0; i < preparedItems.length; i += LABELS_PER_PAGE) {
-    const chunk = preparedItems.slice(i, i + LABELS_PER_PAGE);
-    const heights = [];
-
-    // Measure each label's natural height
-    for (const row of chunk) {
-      const mp = pdfDoc.addPage([A4_W, LABEL_H]);
-      const m = drawAirbillIntoPage(
-        mp,
-        { font, bold },
-        row.embedded,
-        row.fields,
-        row.orderNo,
-        { x: SIDE_MARGIN, y: 0, width: labelW, height: LABEL_H }
-      );
-      heights.push(Math.ceil(m?.usedHeight || 180));
-      pdfDoc.removePage(pdfDoc.getPageCount() - 1);
+    if (!page || slot >= LABELS_PER_PAGE) {
+      page = pdfDoc.addPage([A4_W, A4_H]);
+      slot = 0;
     }
 
-    const page = pdfDoc.addPage([A4_W, A4_H]);
-    const totalH = heights.reduce((a, b) => a + b, 0);
-    const free = Math.max(0, A4_H - PAGE_MARGIN * 2 - totalH);
-    const gaps = chunk.length > 1 ? free / (chunk.length - 1) : 0;
-
-    let top = A4_H - PAGE_MARGIN;
-    chunk.forEach((row, idx) => {
-      const h = heights[idx];
-      const regionY = top - h;
-      drawAirbillIntoPage(
-        page,
-        { font, bold },
-        row.embedded,
-        row.fields,
-        row.orderNo,
-        { x: SIDE_MARGIN, y: regionY, width: labelW, height: h }
-      );
-      top = regionY - (idx < chunk.length - 1 ? gaps : 0);
-    });
+    const regionY = A4_H - PAGE_MARGIN - (slot + 1) * LABEL_H - slot * LABEL_GAP;
+    drawAirbillIntoPage(
+      page,
+      { font, bold },
+      embedded,
+      fields,
+      orderNo,
+      { x: SIDE_MARGIN, y: regionY, width: labelW, height: LABEL_H }
+    );
+    slot += 1;
   }
 
   if (!pdfDoc.getPageCount()) {
@@ -643,6 +810,6 @@ export async function buildRunCourierAirbillsPdf(items = []) {
     success: true,
     pdf: Buffer.from(bytes),
     trackingNumber,
-    count: preparedItems.length,
+    count: list.length,
   };
 }
