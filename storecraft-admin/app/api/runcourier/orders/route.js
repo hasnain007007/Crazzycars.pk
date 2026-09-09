@@ -14,10 +14,28 @@ function escapeRegex(s) {
 
 /** Calendar day bounds in Pakistan time (UTC+5). */
 function pkDayStart(ymd) {
-  return new Date(`${String(ymd).trim()}T00:00:00+05:00`);
+  const s = String(ymd || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  return new Date(`${s}T00:00:00+05:00`);
 }
 function pkDayEnd(ymd) {
-  return new Date(`${String(ymd).trim()}T23:59:59.999+05:00`);
+  const s = String(ymd || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  return new Date(`${s}T23:59:59.999+05:00`);
+}
+
+/** Run Courier shipment (exclude PostEx-only). */
+function runCourierBookedClause() {
+  return {
+    trackingNumber: { $exists: true, $nin: [null, ""] },
+    $or: [
+      { runCourierApi: { $exists: true, $nin: [null, ""] } },
+      { runCourierLabel: { $exists: true, $nin: [null, ""] } },
+      { courier: /run\s*courier/i },
+      // Leopard CN format from Run Courier / Leopard2 bookings
+      { trackingNumber: /^GW\d{6,}/i },
+    ],
+  };
 }
 
 export async function GET(request) {
@@ -34,10 +52,17 @@ export async function GET(request) {
     const fulfillmentStatus = String(
       searchParams.get("status") || searchParams.get("fulfillmentStatus") || ""
     ).trim();
-    const from = searchParams.get("from");
-    const to = searchParams.get("to");
+    let from = String(searchParams.get("from") || "").trim();
+    let to = String(searchParams.get("to") || "").trim();
     const limit = Math.min(500, Math.max(1, parseInt(searchParams.get("limit"), 10) || 50));
     const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
+
+    // Swap inverted ranges (e.g. user picked end before start).
+    if (from && to && from > to) {
+      const tmp = from;
+      from = to;
+      to = tmp;
+    }
 
     const and = [];
     if (mode === "unbooked") {
@@ -50,41 +75,25 @@ export async function GET(request) {
       });
       and.push({ orderStatus: { $nin: ["cancelled", "refunded", "delivered"] } });
     } else if (mode === "booked") {
-      // Print Labels / Track / Cancel: only shipments booked via Run Courier.
-      and.push({ trackingNumber: { $exists: true, $nin: [null, ""] } });
-      and.push({
-        $or: [
-          { runCourierApi: { $exists: true, $nin: [null, ""] } },
-          { runCourierLabel: { $exists: true, $nin: [null, ""] } },
-        ],
-      });
+      and.push(runCourierBookedClause());
     }
 
     if (fulfillmentStatus) and.push({ orderStatus: fulfillmentStatus });
     if (paymentStatus) and.push({ paymentStatus });
 
-    if (from || to) {
+    const start = from ? pkDayStart(from) : null;
+    const end = to ? pkDayEnd(to) : null;
+    const hasDate = Boolean(start || end);
+
+    if (hasDate) {
       const range = {};
-      if (from) range.$gte = pkDayStart(from);
-      if (to) range.$lte = pkDayEnd(to);
+      if (start) range.$gte = start;
+      if (end) range.$lte = end;
 
       if (mode === "booked") {
-        // Filter by courier BOOKING date (not order receive / createdAt).
+        // Courier booking day: either dedicated stamp or shippedAt.
         and.push({
-          $or: [
-            { runCourierBookedAt: range },
-            {
-              $and: [
-                {
-                  $or: [
-                    { runCourierBookedAt: { $exists: false } },
-                    { runCourierBookedAt: null },
-                  ],
-                },
-                { shippedAt: range },
-              ],
-            },
-          ],
+          $or: [{ runCourierBookedAt: range }, { shippedAt: range }],
         });
       } else {
         and.push({ createdAt: range });
@@ -97,11 +106,15 @@ export async function GET(request) {
         $or: [
           { orderNumber: rx },
           { "customer.name": rx },
+          { "customer.firstName": rx },
+          { "customer.lastName": rx },
+          { "shippingAddress.name": rx },
           { "customer.phone": rx },
           { "shippingAddress.phone": rx },
           { "shippingAddress.city": rx },
           { trackingNumber: rx },
           { runCourierApi: rx },
+          { courier: rx },
         ],
       });
     }
@@ -169,6 +182,7 @@ export async function GET(request) {
       page,
       limit,
       defaultApi,
+      filters: { mode, from: from || null, to: to || null, search: search || null },
     });
   } catch (e) {
     return NextResponse.json(

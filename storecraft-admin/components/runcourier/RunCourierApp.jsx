@@ -30,6 +30,10 @@ function localYmd(d = new Date()) {
   return `${y}-${m}-${day}`;
 }
 
+function localMonthStart(d = new Date()) {
+  return localYmd(new Date(d.getFullYear(), d.getMonth(), 1));
+}
+
 function downloadLabelBase64(base64, trackingNumber = "") {
   const raw = String(base64 || "").replace(/^data:application\/pdf;base64,/, "");
   if (!raw) return false;
@@ -160,6 +164,7 @@ export default function RunCourierApp() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [labelSearch, setLabelSearch] = useState("");
   const [mode, setMode] = useState("unbooked");
   const [selected, setSelected] = useState(() => new Set());
   const [busy, setBusy] = useState(false);
@@ -167,7 +172,7 @@ export default function RunCourierApp() {
   const [defaultApi, setDefaultApi] = useState(RUN_COURIER_DEFAULT_API);
   const [rowApi, setRowApi] = useState({});
   const [rows, setRows] = useState({});
-  const [labelFrom, setLabelFrom] = useState(() => localYmd());
+  const [labelFrom, setLabelFrom] = useState(() => localMonthStart());
   const [labelTo, setLabelTo] = useState(() => localYmd());
   const [trackInput, setTrackInput] = useState("");
   const [trackLoading, setTrackLoading] = useState(false);
@@ -216,13 +221,32 @@ export default function RunCourierApp() {
   async function loadOrders(nextMode = mode, dateRange = null, opts = {}) {
     setLoading(true);
     try {
+      let from = dateRange?.from || "";
+      let to = dateRange?.to || "";
+      if (from && to && from > to) {
+        const tmp = from;
+        from = to;
+        to = tmp;
+        if (dateRange) {
+          setLabelFrom(from);
+          setLabelTo(to);
+        }
+      }
+
+      const q =
+        opts.search != null
+          ? String(opts.search)
+          : nextMode === "booked"
+            ? labelSearch
+            : search;
+
       const p = new URLSearchParams({
         mode: nextMode,
         limit: nextMode === "booked" ? "500" : "100",
       });
-      if (search.trim()) p.set("search", search.trim());
-      if (dateRange?.from) p.set("from", dateRange.from);
-      if (dateRange?.to) p.set("to", dateRange.to);
+      if (String(q || "").trim()) p.set("search", String(q).trim());
+      if (from) p.set("from", from);
+      if (to) p.set("to", to);
       const res = await fetch(`/api/runcourier/orders?${p}`, { credentials: "include" });
       const json = await res.json();
       if (!json.success) {
@@ -249,7 +273,6 @@ export default function RunCourierApp() {
         setRows(next);
         setRowApi(nextApi);
       }
-      // Select all bookings for the chosen booking-date range (Print Labels).
       if (opts.selectAll && list.length) {
         setSelected(new Set(list.map((o) => o.id)));
       } else {
@@ -260,6 +283,14 @@ export default function RunCourierApp() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function searchLabelBookings({ selectAll = true } = {}) {
+    return loadOrders(
+      "booked",
+      { from: labelFrom, to: labelTo },
+      { selectAll, search: labelSearch }
+    );
   }
 
   async function loadCarriers() {
@@ -342,7 +373,7 @@ export default function RunCourierApp() {
       loadOrders(
         "booked",
         tab === "labels" ? { from: labelFrom, to: labelTo } : null,
-        { selectAll: tab === "labels" }
+        { selectAll: tab === "labels", search: tab === "labels" ? labelSearch : "" }
       );
     } else if (tab === "dashboard") {
       loadOrders("unbooked");
@@ -682,6 +713,16 @@ export default function RunCourierApp() {
             ) : (
               <>
                 <span className="mr-1 text-lg font-black text-emerald-700">Run Courier</span>
+                <input
+                  type="search"
+                  value={labelSearch}
+                  onChange={(e) => setLabelSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") searchLabelBookings();
+                  }}
+                  placeholder="Order # or customer name…"
+                  className="h-9 min-w-[12rem] rounded border border-slate-300 px-3 text-sm dark:border-slate-600 dark:bg-slate-900"
+                />
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                   Booking date
                 </label>
@@ -702,9 +743,7 @@ export default function RunCourierApp() {
                 />
                 <button
                   type="button"
-                  onClick={() =>
-                    loadOrders("booked", { from: labelFrom, to: labelTo }, { selectAll: true })
-                  }
+                  onClick={() => searchLabelBookings({ selectAll: true })}
                   className="h-9 rounded bg-emerald-600 px-4 text-sm font-bold text-white"
                 >
                   Search
@@ -719,6 +758,9 @@ export default function RunCourierApp() {
                     >
                       Select all ({orders.length})
                     </button>
+                    <span className="text-xs font-semibold text-slate-500">
+                      {total ? `${orders.length} shown · ${total} total` : null}
+                    </span>
                     <button
                       type="button"
                       disabled={!selected.size}
@@ -742,9 +784,9 @@ export default function RunCourierApp() {
           </div>
           {tab === "labels" ? (
             <p className="text-xs text-slate-500">
-              Dates are <strong>courier booking date</strong> (when you booked with Run Courier), not
-              order received date. Use the header checkbox or <strong>Select all</strong> for every
-              airbill that day — then Print or Download.
+              Filter by <strong>booking date</strong> (when Run Courier was booked), and/or search by{" "}
+              <strong>order number</strong> or <strong>customer name</strong>. Select all then Print /
+              Download.
             </p>
           ) : null}
 
