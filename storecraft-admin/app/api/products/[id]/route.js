@@ -28,10 +28,7 @@ import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMuta
 import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
-import { revalidateStorefront, CATALOG_REVALIDATE_PATHS, productRevalidatePaths } from "@/lib/revalidateStorefront";
-
-/** Homepage Best Sellers / Hot Deals + shop listings — purge after flag or catalog changes. */
-const HOMEPAGE_REVALIDATE_PATHS = CATALOG_REVALIDATE_PATHS;
+import { revalidateStorefront, productRevalidatePaths } from "@/lib/revalidateStorefront";
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;

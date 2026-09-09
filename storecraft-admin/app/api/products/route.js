@@ -26,7 +26,7 @@ import { withProductSaleComputed } from "@/lib/productSale";
 import { getProductSalesBatch } from "@/lib/productSales";
 import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
-import { revalidateStorefront, CATALOG_REVALIDATE_PATHS, productRevalidatePaths } from "@/lib/revalidateStorefront";
+import { revalidateStorefront, productRevalidatePaths } from "@/lib/revalidateStorefront";
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;
