@@ -16,6 +16,21 @@ export const CATALOG_REVALIDATE_PATHS = [
   "/sitemap-products.xml",
 ];
 
+/** Include the PDP (+ old slug) so Product JSON-LD / OG images update right after media saves. */
+export function productRevalidatePaths(product, { previousSlug } = {}) {
+  const paths = [...CATALOG_REVALIDATE_PATHS];
+  const slug = String(product?.slug || "").trim().replace(/^\/+/, "");
+  if (slug) paths.push(`/${slug}`);
+  const prev = String(previousSlug || "").trim().replace(/^\/+/, "");
+  if (prev && prev !== slug) paths.push(`/${prev}`);
+  for (const raw of product?.previousSlugs || []) {
+    const s = String(raw || "").trim().replace(/^\/+/, "");
+    if (s && s !== slug) paths.push(`/${s}`);
+  }
+  // Unique while preserving order
+  return [...new Set(paths)];
+}
+
 /** Accepts either an origin or a full .../api/revalidate URL and returns the origin. */
 function normalizeBase(url) {
   return String(url || "")

@@ -334,9 +334,14 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
 });
 
 function toProductLd(product) {
-  const images = (product.media?.images || product.images || [])
+  const fromMedia = (product.media?.images || [])
     .map((i) => (typeof i === "string" ? i : i?.url))
     .filter(Boolean);
+  const fromImages = (product.images || [])
+    .map((i) => (typeof i === "string" ? i : i?.url))
+    .filter(Boolean);
+  // Prefer media; fall back to images[]; never pass an empty array that blocks media fallback.
+  const images = fromMedia.length ? fromMedia : fromImages;
   const price = Number(
     product.isOnSale && product.salePrice
       ? product.salePrice
@@ -348,6 +353,7 @@ function toProductLd(product) {
     slug: product.slug,
     urlPath: `/${product.slug}`,
     images,
+    media: { images: images.map((url) => ({ url })) },
     metaDescription: product.metaDescription || product.seo?.metaDescription,
     shortDescription: stripHtml(product.shortDescription || product.longDescription || ""),
     sku: product.articleNo || product.inventory?.sku,

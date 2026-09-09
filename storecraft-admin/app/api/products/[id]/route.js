@@ -28,7 +28,7 @@ import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMuta
 import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
-import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
+import { revalidateStorefront, CATALOG_REVALIDATE_PATHS, productRevalidatePaths } from "@/lib/revalidateStorefront";
 
 /** Homepage Best Sellers / Hot Deals + shop listings — purge after flag or catalog changes. */
 const HOMEPAGE_REVALIDATE_PATHS = CATALOG_REVALIDATE_PATHS;
@@ -148,7 +148,9 @@ export async function PUT(request, context) {
         type: "update",
         ip: requestIp(request),
       });
-      const revalidated = await revalidateStorefront(HOMEPAGE_REVALIDATE_PATHS);
+      const revalidated = await revalidateStorefront(
+        productRevalidatePaths(existing)
+      );
       const lean = await Product.findById(id)
         .populate("categories", "name slug")
         .populate("compatibleVehicles", "make model yearFrom yearTo displayName generation")
@@ -170,6 +172,7 @@ export async function PUT(request, context) {
     }
 
     let slug = existing.slug;
+    const previousSlug = existing.slug;
     if (body.slug !== undefined) {
       const want = slugify(body.slug || name) || slugify(name);
       slug = want === existing.slug ? existing.slug : await uniqueProductSlugExcluding(want, existing._id);
@@ -405,7 +408,9 @@ export async function PUT(request, context) {
       ip: requestIp(request),
     });
 
-    const revalidated = await revalidateStorefront(HOMEPAGE_REVALIDATE_PATHS);
+    const revalidated = await revalidateStorefront(
+      productRevalidatePaths(existing, { previousSlug })
+    );
 
     const populated = await Product.findById(id)
       .populate("categories", "name slug")
@@ -453,7 +458,7 @@ export async function DELETE(request, context) {
       ip: requestIp(request),
     });
 
-    const revalidated = await revalidateStorefront(HOMEPAGE_REVALIDATE_PATHS);
+    const revalidated = await revalidateStorefront(productRevalidatePaths(existing));
 
     return NextResponse.json({ success: true, data: { id }, revalidated });
   } catch (error) {

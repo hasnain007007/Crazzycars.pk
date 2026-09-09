@@ -26,7 +26,7 @@ import { withProductSaleComputed } from "@/lib/productSale";
 import { getProductSalesBatch } from "@/lib/productSales";
 import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
-import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
+import { revalidateStorefront, CATALOG_REVALIDATE_PATHS, productRevalidatePaths } from "@/lib/revalidateStorefront";
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;
@@ -336,7 +336,7 @@ export async function POST(request) {
       .populate("categories", "name slug")
       .populate("recommendedProducts", "name slug status media.images")
       .lean();
-    const revalidated = await revalidateStorefront(CATALOG_REVALIDATE_PATHS);
+    const revalidated = await revalidateStorefront(productRevalidatePaths(doc));
     return NextResponse.json(
       { success: true, data: withProductSaleComputed(populated), revalidated },
       { status: 201 }

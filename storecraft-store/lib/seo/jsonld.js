@@ -24,6 +24,8 @@ function absoluteImageUrls(images, siteUrl) {
   for (const item of list) {
     const raw = String(typeof item === "string" ? item : item?.url || "").trim();
     if (!raw) continue;
+    // Skip dead Cloudinary hosts — Google still validates image URLs.
+    if (/res\.cloudinary\.com|dquier8fv/i.test(raw)) continue;
     let href = raw;
     if (href.startsWith("//")) href = `https:${href}`;
     else if (href.startsWith("/")) href = `${SITE}${href}`;
@@ -97,7 +99,7 @@ export function productJsonLd(p) {
 
   const rawImages = Array.isArray(p.images)
     ? p.images
-    : p.media?.images?.map((i) => i.url).filter(Boolean) || [];
+    : p.media?.images?.map((i) => (typeof i === "string" ? i : i?.url)).filter(Boolean) || [];
   const images = absoluteImageUrls(rawImages, SITE);
   const path = p.urlPath || `/${p.slug}`;
   const url = absoluteProductUrl(path);
@@ -127,6 +129,7 @@ export function productJsonLd(p) {
     brand: { "@type": "Brand", name: p.brand || "CrazzyCars.pk" },
   };
 
+  // Google Product rich results require image — omit the field when empty (never emit []).
   if (images.length) ld.image = images;
 
   if (price != null) {
