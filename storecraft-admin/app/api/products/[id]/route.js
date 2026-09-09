@@ -266,16 +266,9 @@ export async function PUT(request, context) {
         videoUrl: String(body.media?.videoUrl || "").trim(),
         videoType: ["youtube", "mp4"].includes(body.media?.videoType) ? body.media.videoType : "",
       };
-    } else {
-      existing.media = {
-        images: sanitizeMediaImages(existing.media?.images, mediaOwner),
-        videos: normalizeMediaVideos(existing.media?.videos),
-        videoUrl: String(existing.media?.videoUrl || "").trim(),
-        videoType: ["youtube", "mp4"].includes(existing.media?.videoType)
-          ? existing.media.videoType
-          : "",
-      };
     }
+    // When media is omitted from the PATCH body, leave existing.media untouched.
+    // Re-running alt-guard on every save was wiping valid galleries.
     if (body.variations !== undefined) {
       existing.variations = normalizeVariations(body.variations);
     }

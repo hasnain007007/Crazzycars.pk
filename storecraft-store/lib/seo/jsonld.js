@@ -6,6 +6,7 @@ import {
   buildMerchantReturnPolicies,
   buildOfferShippingDetails,
 } from "../schema/merchantReturnPolicy.mjs";
+import { resolveProductImageUrls } from "../productImages.js";
 
 function site() {
   return getSiteUrl();
@@ -24,7 +25,6 @@ function absoluteImageUrls(images, siteUrl) {
   for (const item of list) {
     const raw = String(typeof item === "string" ? item : item?.url || "").trim();
     if (!raw) continue;
-    // Skip dead Cloudinary hosts — Google still validates image URLs.
     if (/res\.cloudinary\.com|dquier8fv/i.test(raw)) continue;
     let href = raw;
     if (href.startsWith("//")) href = `https:${href}`;
@@ -34,6 +34,9 @@ function absoluteImageUrls(images, siteUrl) {
   }
   return out;
 }
+
+/** @deprecated prefer resolveProductImageUrls — kept for callers passing a bare URL list */
+export { absoluteImageUrls as absolutizeImageUrlList };
 
 function conditionUrl(condition) {
   const c = String(condition || "new").toLowerCase();
@@ -97,10 +100,13 @@ export function productJsonLd(p) {
     ? combos.reduce((sum, c) => sum + Math.max(0, Number(c.stock) || 0), 0)
     : Number(p.stock ?? p.inventory?.quantity ?? 0);
 
-  const rawImages = Array.isArray(p.images)
-    ? p.images
-    : p.media?.images?.map((i) => (typeof i === "string" ? i : i?.url)).filter(Boolean) || [];
-  const images = absoluteImageUrls(rawImages, SITE);
+  // Prefer full product media resolution (handles media.images / images / image).
+  const fromProduct = resolveProductImageUrls(p, { siteUrl: SITE });
+  const fromList = absoluteImageUrls(
+    Array.isArray(p.images) ? p.images : p.media?.images || [],
+    SITE
+  );
+  const images = fromProduct.length ? fromProduct : fromList;
   const path = p.urlPath || `/${p.slug}`;
   const url = absoluteProductUrl(path);
   const sku = p.sku || p.articleNo || p.inventory?.sku || undefined;

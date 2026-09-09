@@ -167,18 +167,22 @@ export function getProductCardImage(product) {
   const media = Array.isArray(product?.media?.images) ? product.media.images : [];
   const owned = media.filter((img) => imageBelongsToProduct(img, product));
   const main = owned.find((i) => i?.isMain) || owned[0];
-  if (main?.url) return String(main.url).trim();
+  if (main?.url && !/res\.cloudinary\.com/i.test(String(main.url))) {
+    return String(main.url).trim();
+  }
 
-  const rejected = new Set(
-    media
-      .filter((img) => !imageBelongsToProduct(img, product))
-      .map((img) => String(img?.url || "").trim())
-      .filter(Boolean)
-  );
+  // Soft fallback — never blank a card when Mongo still has a usable /media URL.
+  const local = media.find((i) => i?.url && !/res\.cloudinary\.com/i.test(String(i.url)));
+  if (local?.url) return String(local.url).trim();
+
   const list = [];
   pushImageUrl(list, product?.image);
   for (const img of product?.images || []) pushImageUrl(list, img);
-  return list.find((url) => url && !rejected.has(url) && imageBelongsToProduct({ url, altText: "" }, product)) || "";
+  const usable = list.find((url) => url && !/res\.cloudinary\.com/i.test(url));
+  if (usable) return usable;
+
+  if (main?.url) return String(main.url).trim();
+  return media.find((i) => i?.url)?.url ? String(media.find((i) => i?.url).url).trim() : "";
 }
 
 function mediaImageAlt(product) {

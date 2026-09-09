@@ -396,22 +396,27 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
   const countdownEndDate = product?.saleSchedule?.endDate || product?.pricing?.saleSchedule?.endDate || null;
   const scheduleEnabled = Boolean(product?.saleSchedule?.enabled || product?.pricing?.saleSchedule?.enabled);
   const salePct = hasSale && regularPrice > 0 ? Math.max(1, Math.round(((regularPrice - basePrice) / regularPrice) * 100)) : 0;
-  const images = (
-    Array.isArray(product?.images)
-      ? product.images
-      : product?.image
-        ? [product.image]
-        : Array.isArray(product?.media?.images)
-          ? product.media.images
-          : []
-  )
-    .map((im) => {
-      const url = typeof im === "string" ? im : im?.url || "";
-      const rawAlt = typeof im === "string" ? "" : String(im?.altText || im?.alt || "").trim();
-      const altText = rawAlt && altBelongsToProduct(rawAlt, product) ? rawAlt : String(product?.name || "");
-      return { url, altText };
-    })
-    .filter((im) => im.url && imageBelongsToProduct(im, product));
+  const images = (() => {
+    const mapped = (
+      Array.isArray(product?.images)
+        ? product.images
+        : product?.image
+          ? [product.image]
+          : Array.isArray(product?.media?.images)
+            ? product.media.images
+            : []
+    )
+      .map((im) => {
+        const url = typeof im === "string" ? im : im?.url || "";
+        const rawAlt = typeof im === "string" ? "" : String(im?.altText || im?.alt || "").trim();
+        const altText = rawAlt && altBelongsToProduct(rawAlt, product) ? rawAlt : String(product?.name || "");
+        return { url, altText };
+      })
+      .filter((im) => im.url && !/res\.cloudinary\.com/i.test(im.url));
+    const owned = mapped.filter((im) => imageBelongsToProduct(im, product));
+    // Soft fallback: never blank the gallery when media still exists in Mongo.
+    return owned.length ? owned : mapped;
+  })();
 
   const productVideoUrl =
     String(product?.videoUrl || product?.media?.videoUrl || "").trim();

@@ -13,6 +13,7 @@ import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib
 import { getSiteUrl } from "@/lib/siteUrl";
 import { findActiveProductBySlugParam } from "@/lib/resolveProductSlug";
 import { cloudinarySrcSet, pdpImageUrl } from "@/lib/cloudinaryImage";
+import { resolveProductImageUrls, resolvePrimaryProductImageUrl } from "@/lib/productImages";
 import {
   productJsonLd as buildProductJsonLd,
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
@@ -279,7 +280,10 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     const keywords = Array.isArray(p.seo?.metaKeywords)
       ? p.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
       : [];
-    const mainImg = p.media?.images?.find((i) => i?.isMain)?.url || p.media?.images?.[0]?.url;
+    const mainImg =
+      resolvePrimaryProductImageUrl(p) ||
+      p.media?.images?.find((i) => i?.isMain)?.url ||
+      p.media?.images?.[0]?.url;
 
     return {
       title: { absolute: title },
@@ -334,14 +338,7 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
 });
 
 function toProductLd(product) {
-  const fromMedia = (product.media?.images || [])
-    .map((i) => (typeof i === "string" ? i : i?.url))
-    .filter(Boolean);
-  const fromImages = (product.images || [])
-    .map((i) => (typeof i === "string" ? i : i?.url))
-    .filter(Boolean);
-  // Prefer media; fall back to images[]; never pass an empty array that blocks media fallback.
-  const images = fromMedia.length ? fromMedia : fromImages;
+  const images = resolveProductImageUrls(product);
   const price = Number(
     product.isOnSale && product.salePrice
       ? product.salePrice
@@ -353,7 +350,7 @@ function toProductLd(product) {
     slug: product.slug,
     urlPath: `/${product.slug}`,
     images,
-    media: { images: images.map((url) => ({ url })) },
+    media: { images: images.map((url) => ({ url, isMain: url === images[0] })) },
     metaDescription: product.metaDescription || product.seo?.metaDescription,
     shortDescription: stripHtml(product.shortDescription || product.longDescription || ""),
     sku: product.articleNo || product.inventory?.sku,
@@ -406,12 +403,7 @@ export default async function ProductPage({ params, searchParams }) {
         return null;
       }
     })();
-    const lcpRaw =
-      content.data?.media?.images?.find((i) => i?.isMain)?.url ||
-      content.data?.media?.images?.[0]?.url ||
-      (Array.isArray(content.data?.images) ? content.data.images[0] : "") ||
-      "";
-    const lcpSrc = typeof lcpRaw === "string" ? lcpRaw : lcpRaw?.url || "";
+    const lcpSrc = resolvePrimaryProductImageUrl(content.data) || "";
     const lcpUrl = lcpSrc ? pdpImageUrl(lcpSrc, 720) : "";
     const lcpSrcSet = lcpSrc ? cloudinarySrcSet(lcpSrc, [480, 720, 900], { crop: "limit" }) : "";
 

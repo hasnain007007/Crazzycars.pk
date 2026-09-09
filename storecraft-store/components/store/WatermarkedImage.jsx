@@ -20,6 +20,7 @@ export function WatermarkedImage({
   widths,
   sizes = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw",
   responsive = true,
+  itemProp,
 }) {
   const [failed, setFailed] = useState(false);
   const [retrySrc, setRetrySrc] = useState(null);
@@ -76,6 +77,7 @@ export function WatermarkedImage({
     loading,
     decoding: "async",
     fetchPriority,
+    ...(itemProp ? { itemProp } : {}),
     onError: () => {
       const fallback = cardImageUrl(src, width) || String(src || "").split("?")[0];
       if (!retrySrc && fallback && fallback !== resolved) {

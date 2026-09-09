@@ -41,8 +41,13 @@ import { imageBelongsToProduct } from "@/lib/mediaAltGuard";
 
 /**
  * Persist-safe image rows (drops client-only keys like _localId).
- * Also drops photos whose alt or Cloudinary filename belong to another SKU.
+ * Prefer photos that belong to this SKU; never wipe the whole gallery when
+ * the alt-guard false-positives (that left products with visible UI photos
+ * but empty JSON-LD `image` after the next admin save).
  */
 export function sanitizeMediaImages(images, product = {}) {
-  return normalizeMediaImages(images).filter((img) => imageBelongsToProduct(img, product));
+  const normalized = normalizeMediaImages(images);
+  if (!normalized.length) return [];
+  const owned = normalized.filter((img) => imageBelongsToProduct(img, product));
+  return owned.length ? owned : normalized;
 }

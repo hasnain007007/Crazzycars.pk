@@ -67,7 +67,9 @@ function feedPrice(product) {
 function primaryImage(product, siteUrl) {
   const imgs = product?.media?.images || [];
   const main = imgs.find((i) => i.isMain) || imgs[0];
-  return absUrl(main?.url || "", siteUrl);
+  const url = absUrl(main?.url || "", siteUrl);
+  if (/res\.cloudinary\.com|dquier8fv/i.test(url)) return "";
+  return url;
 }
 
 function additionalImages(product, siteUrl) {
@@ -75,7 +77,7 @@ function additionalImages(product, siteUrl) {
   return imgs
     .slice(0, 10)
     .map((i) => absUrl(i?.url || "", siteUrl))
-    .filter(Boolean)
+    .filter((u) => u && !/res\.cloudinary\.com|dquier8fv/i.test(u))
     .slice(1);
 }
 
