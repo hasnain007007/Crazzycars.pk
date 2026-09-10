@@ -1,9 +1,14 @@
 /**
  * Public multi-courier tracking for the storefront.
+ * Only resolves consignments that belong to this store (no open courier proxy).
  */
 import Order from "@/lib/models/Order.model";
 import { fetchPostexTracking } from "@/lib/postex";
 import { fetchRunCourierTracking, isRunCourierOrder, isPostexOrder } from "@/lib/runcourier";
+import {
+  normalizePublicTrackingNumber,
+  toPublicTrackingPayload,
+} from "@/lib/publicTracking";
 
 async function findOrderByTrackingNumber(trackingNumber) {
   const tn = String(trackingNumber || "").trim();
@@ -16,8 +21,8 @@ async function findOrderByTrackingNumber(trackingNumber) {
 }
 
 export async function resolvePublicTracking(trackingNumber, { settingsCourier } = {}) {
-  const tn = String(trackingNumber || "").trim();
-  if (!tn || tn.length < 4) {
+  const tn = normalizePublicTrackingNumber(trackingNumber);
+  if (!tn) {
     return { success: false, error: "Invalid tracking number" };
   }
 
@@ -28,32 +33,42 @@ export async function resolvePublicTracking(trackingNumber, { settingsCourier } 
     order = null;
   }
 
-  const preferRunCourier = order ? isRunCourierOrder(order) : false;
-  const preferPostex = order ? isPostexOrder(order) : !preferRunCourier;
+  // Security: only look up parcels we booked — never proxy arbitrary courier queries.
+  if (!order) {
+    return { success: false, error: "Invalid tracking number" };
+  }
+
+  const preferRunCourier = isRunCourierOrder(order);
+  const preferPostex = isPostexOrder(order) || !preferRunCourier;
+  let live = null;
 
   if (preferRunCourier) {
-    const rc = await fetchRunCourierTracking(tn, { settingsCourier });
-    if (rc.success) {
-      return { ...rc, courier: rc.courier || order?.courier || "Run Courier" };
+    live = await fetchRunCourierTracking(tn, { settingsCourier });
+    if (!live?.success) {
+      live = await fetchPostexTracking(tn, { settingsCourier });
     }
-    const px = await fetchPostexTracking(tn, { settingsCourier });
-    if (px.success) return px;
-    return rc;
+  } else if (preferPostex) {
+    live = await fetchPostexTracking(tn, { settingsCourier });
+    if (!live?.success) {
+      live = await fetchRunCourierTracking(tn, { settingsCourier });
+    }
+  } else {
+    const [px, rc] = await Promise.all([
+      fetchPostexTracking(tn, { settingsCourier }),
+      fetchRunCourierTracking(tn, { settingsCourier }),
+    ]);
+    live = px?.success ? px : rc;
   }
 
-  if (preferPostex) {
-    const px = await fetchPostexTracking(tn, { settingsCourier });
-    if (px.success) return px;
-    const rc = await fetchRunCourierTracking(tn, { settingsCourier });
-    if (rc.success) return { ...rc, courier: rc.courier || "Run Courier" };
-    return px;
+  if (!live?.success) {
+    return toPublicTrackingPayload(live || { success: false, error: "Invalid tracking number" });
   }
 
-  const [px, rc] = await Promise.all([
-    fetchPostexTracking(tn, { settingsCourier }),
-    fetchRunCourierTracking(tn, { settingsCourier }),
-  ]);
-  if (px.success) return px;
-  if (rc.success) return { ...rc, courier: rc.courier || "Run Courier" };
-  return px.error === "Tracking unavailable" ? rc : px;
+  return toPublicTrackingPayload(
+    {
+      ...live,
+      courier: live.courier || order.courier || live.courier,
+    },
+    { orderNumber: order.orderNumber || "" }
+  );
 }

@@ -261,7 +261,12 @@ export function buildPaymentInstructions(order, settings = {}) {
 
 export function buildTrackingSection(order) {
   const tn = String(order?.trackingNumber || order?.tracking?.number || "").trim();
-  const url = storefrontTrackingUrl(tn) || String(order?.trackingUrl || order?.tracking?.url || "").trim();
+  // Always prefer a fresh storefront URL — never reuse a stored admin.crazzycars.pk link.
+  const url =
+    storefrontTrackingUrl(tn) ||
+    String(order?.trackingUrl || order?.tracking?.url || "")
+      .trim()
+      .replace(/^https?:\/\/admin\.crazzycars\.pk\/track-order/i, "https://crazzycars.pk/track-order");
   if (!tn && !url) return "";
   if (url) return `📍 Track: ${url}`;
   return `📍 Tracking: ${tn}`;
@@ -356,7 +361,9 @@ export function buildOrderShippedVariables(order, settings = {}, overrides = {})
   const courier = String(overrides.courier || order?.courier || order?.tracking?.carrier || "Postex");
   const trackingUrl =
     storefrontTrackingUrl(trackingNumber) ||
-    String(overrides.trackingUrl || order?.trackingUrl || order?.tracking?.url || "").trim() ||
+    String(overrides.trackingUrl || order?.trackingUrl || order?.tracking?.url || "")
+      .trim()
+      .replace(/^https?:\/\/admin\.crazzycars\.pk\/track-order/i, "https://crazzycars.pk/track-order") ||
     postexPublicTrackingUrl(trackingNumber);
   const storePhone = settings?.general?.phone || "";
 
