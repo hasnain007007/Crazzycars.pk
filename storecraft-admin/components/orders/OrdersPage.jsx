@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
 import { OrderFilters } from "./OrderFilters";
 import { OrdersTable } from "./OrdersTable";
 import { InstrumentStatCard } from "@/components/ui/InstrumentStatCard";
@@ -64,6 +65,9 @@ export function OrdersPage() {
     awaitingCustomer: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [liveSyncBusy, setLiveSyncBusy] = useState(false);
+  const [liveSyncProgress, setLiveSyncProgress] = useState("");
+  const [liveSyncSummary, setLiveSyncSummary] = useState(null);
 
   useEffect(() => {
     setProductId(productIdFromUrl);
@@ -175,6 +179,43 @@ export function OrdersPage() {
     load();
   }, [load]);
 
+  const syncAllLiveOrders = useCallback(async () => {
+    const ok = window.confirm(
+      "Update all live courier orders?\n\nChecks PostEx + Run Courier tracking and auto-marks Delivered / Returned when the courier confirms."
+    );
+    if (!ok) return;
+
+    setLiveSyncBusy(true);
+    setLiveSyncSummary(null);
+    setLiveSyncProgress("Checking courier tracking…");
+    try {
+      const res = await fetch("/api/orders/sync-live", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 120 }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        toast.error(json.error || "Live sync failed");
+        return;
+      }
+      setLiveSyncSummary(json);
+      const parts = [];
+      if (json.scanned != null) parts.push(`${json.scanned} checked`);
+      if (json.okCount) parts.push(`${json.okCount} refreshed`);
+      if (json.syncedCount) parts.push(`${json.syncedCount} status updated`);
+      if (json.failCount) parts.push(`${json.failCount} failed`);
+      toast.success(parts.join(" · ") || "Done");
+      await load();
+    } catch {
+      toast.error("Network error while updating live orders");
+    } finally {
+      setLiveSyncProgress("");
+      setLiveSyncBusy(false);
+    }
+  }, [load]);
+
   function selectView(key) {
     setView(key);
     if (key !== "all") {
@@ -235,6 +276,19 @@ export function OrdersPage() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
+            disabled={liveSyncBusy}
+            onClick={() => void syncAllLiveOrders()}
+            className="shrink-0 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-sm disabled:opacity-60"
+            style={{
+              background: liveSyncBusy ? "var(--text-muted)" : "#008060",
+              minWidth: "14rem",
+            }}
+            title="Refresh PostEx + Run Courier tracking for all in-transit orders and auto-set Delivered / Returned"
+          >
+            {liveSyncProgress || "↻ Update all live orders"}
+          </button>
+          <button
+            type="button"
             onClick={exportCsv}
             className="shrink-0 rounded-lg border px-4 py-2 text-sm font-semibold shadow-none hover:opacity-90"
             style={{
@@ -247,6 +301,55 @@ export function OrdersPage() {
           </button>
         </div>
       </div>
+
+      {liveSyncSummary ? (
+        <div
+          className="rounded-xl border px-4 py-3"
+          style={{
+            background: "color-mix(in srgb, #008060 8%, var(--bg-panel))",
+            borderColor: "var(--border-hairline)",
+          }}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#008060" }}>
+                Live sync results
+              </p>
+              <p className="mt-1 text-sm" style={{ color: "var(--text-primary)" }}>
+                Checked {liveSyncSummary.scanned ?? 0} · refreshed {liveSyncSummary.okCount ?? 0} ·
+                status synced {liveSyncSummary.syncedCount ?? 0} · failed {liveSyncSummary.failCount ?? 0}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="text-xs font-semibold hover:underline"
+              style={{ color: "#008060" }}
+              onClick={() => setLiveSyncSummary(null)}
+            >
+              Dismiss
+            </button>
+          </div>
+          {(liveSyncSummary.results || []).some((r) => r.orderStatusSynced) ? (
+            <ul className="mt-2 max-h-40 space-y-1 overflow-auto text-xs" style={{ color: "var(--text-primary)" }}>
+              {(liveSyncSummary.results || [])
+                .filter((r) => r.orderStatusSynced)
+                .slice(0, 40)
+                .map((r) => (
+                  <li key={r.orderId}>
+                    <span className="font-bold">{r.orderNumber}</span>
+                    {" → "}
+                    <span style={{ color: "#008060" }}>
+                      {r.orderStatusSynced.to || r.orderStatusSynced}
+                    </span>
+                    {r.status ? (
+                      <span style={{ color: "var(--text-muted)" }}> ({r.status})</span>
+                    ) : null}
+                  </li>
+                ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
 
       {productId ? (
         <div

@@ -1,5 +1,6 @@
 /**
  * Order / payment badge helpers + pending-age brackets for the admin orders UI.
+ * Badge tones follow Shopify Polaris (attention / info / success / warning / critical).
  */
 
 /** Fulfillment-axis statuses (orderStatus) — distinct from payment. */
@@ -18,6 +19,30 @@ export const FULFILLMENT_STATUSES = [
 
 /** Statuses that mean “still needs fulfillment work”. */
 export const UNFULFILLED_STATUSES = ["pending", "confirmed", "processing", "packed"];
+
+/** Shopify Polaris-ish badge tone tokens (light admin UI). */
+const SHOPIFY_TONES = {
+  // Unfulfilled — yellow / attention
+  attention: { background: "#FFF5D6", color: "#5C4400" },
+  // Confirmed / in progress — blue / info
+  info: { background: "#E0F0FF", color: "#003A5A" },
+  // Processing — stronger blue
+  infoStrong: { background: "#C8E1FF", color: "#002B4D" },
+  // Packed — indigo
+  indigo: { background: "#E4E5FF", color: "#2C2E6B" },
+  // Shipped / fulfilled-in-transit — teal
+  teal: { background: "#D0F5F0", color: "#085041" },
+  // Delivered / paid — green / success
+  success: { background: "#CDFEE1", color: "#0C5132" },
+  // Partial payment / caution
+  warning: { background: "#FFEBDB", color: "#7A2E0B" },
+  // Returned / disputed
+  caution: { background: "#FFE6C5", color: "#6B3A00" },
+  // Unpaid / cancelled / failed — critical
+  critical: { background: "#FEE9E8", color: "#8E1F0B" },
+  // Refunded / neutral
+  neutral: { background: "#E4E5E7", color: "#202223" },
+};
 
 export function fulfillmentLabel(status) {
   const s = String(status || "").toLowerCase();
@@ -48,33 +73,28 @@ export function paymentLabel(status) {
   return map[s] || (s ? s.charAt(0).toUpperCase() + s.slice(1) : "—");
 }
 
-/** Inline style for fulfillment badge (instrument tokens). */
+/** Inline style for fulfillment badge — Shopify-distinct per status. */
 export function fulfillmentBadgeStyle(status) {
   const s = String(status || "").toLowerCase();
-  if (s === "delivered") {
-    return { background: "color-mix(in srgb, var(--accent-line) 18%, transparent)", color: "var(--accent-line)" };
-  }
-  if (["shipped", "packed", "processing", "confirmed"].includes(s)) {
-    return { background: "color-mix(in srgb, var(--accent-line) 12%, transparent)", color: "var(--accent-line)" };
-  }
-  if (["cancelled", "refunded", "disputed", "returned"].includes(s)) {
-    return { background: "color-mix(in srgb, var(--accent-attention) 16%, transparent)", color: "var(--accent-attention)" };
-  }
-  return { background: "color-mix(in srgb, var(--accent-money) 16%, transparent)", color: "var(--accent-money)" };
+  if (s === "pending") return SHOPIFY_TONES.attention;
+  if (s === "confirmed") return SHOPIFY_TONES.info;
+  if (s === "processing") return SHOPIFY_TONES.infoStrong;
+  if (s === "packed") return SHOPIFY_TONES.indigo;
+  if (s === "shipped") return SHOPIFY_TONES.teal;
+  if (s === "delivered") return SHOPIFY_TONES.success;
+  if (s === "returned" || s === "disputed") return SHOPIFY_TONES.caution;
+  if (s === "cancelled") return SHOPIFY_TONES.critical;
+  if (s === "refunded") return SHOPIFY_TONES.neutral;
+  return SHOPIFY_TONES.attention;
 }
 
 export function paymentBadgeStyle(status) {
   const s = String(status || "").toLowerCase();
-  if (s === "paid") {
-    return { background: "color-mix(in srgb, var(--accent-line) 18%, transparent)", color: "var(--accent-line)" };
-  }
-  if (s === "partial") {
-    return { background: "color-mix(in srgb, var(--accent-money) 18%, transparent)", color: "var(--accent-money)" };
-  }
-  if (s === "unpaid" || s === "failed") {
-    return { background: "color-mix(in srgb, var(--accent-attention) 16%, transparent)", color: "var(--accent-attention)" };
-  }
-  return { background: "color-mix(in srgb, var(--text-muted) 14%, transparent)", color: "var(--text-muted)" };
+  if (s === "paid") return SHOPIFY_TONES.success;
+  if (s === "partial") return SHOPIFY_TONES.warning;
+  if (s === "unpaid" || s === "failed") return SHOPIFY_TONES.critical;
+  if (s === "refunded") return SHOPIFY_TONES.neutral;
+  return SHOPIFY_TONES.neutral;
 }
 
 /** Legacy Tailwind classes — still used on customer detail / older cards. */
@@ -84,7 +104,7 @@ export function orderStatusBadgeClass(status) {
     confirmed: "bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-100",
     processing: "bg-blue-100 text-blue-900 dark:bg-blue-950/50 dark:text-blue-100",
     packed: "bg-indigo-100 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100",
-    shipped: "bg-violet-100 text-violet-900 dark:bg-violet-950/50 dark:text-violet-100",
+    shipped: "bg-teal-100 text-teal-900 dark:bg-teal-950/50 dark:text-teal-100",
     delivered: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100",
     returned: "bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-100",
     cancelled: "bg-red-100 text-red-900 dark:bg-red-950/50 dark:text-red-100",
@@ -99,7 +119,7 @@ export function paymentStatusBadgeClass(status) {
     paid: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100",
     unpaid: "bg-red-100 text-red-900 dark:bg-red-950/50 dark:text-red-100",
     refunded: "bg-slate-200 text-slate-800 dark:bg-slate-600 dark:text-slate-100",
-    partial: "bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-100",
+    partial: "bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-100",
     failed: "bg-red-100 text-red-900 dark:bg-red-950/50 dark:text-red-100",
   };
   return map[status] || "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200";
@@ -148,19 +168,19 @@ export function pendingAgeBadge(createdAt, orderStatus, paymentStatus, now = new
   if (days <= 3) {
     bracket = "0-3";
     className = "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100";
-    style = { background: "color-mix(in srgb, var(--accent-line) 14%, transparent)", color: "var(--accent-line)" };
+    style = { ...SHOPIFY_TONES.success };
   } else if (days <= 7) {
     bracket = "3-7";
     className = "bg-amber-100 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100";
-    style = { background: "color-mix(in srgb, var(--accent-money) 16%, transparent)", color: "var(--accent-money)" };
+    style = { ...SHOPIFY_TONES.attention };
   } else if (days <= 14) {
     bracket = "7-14";
     className = "bg-orange-100 text-orange-950 dark:bg-orange-950/40 dark:text-orange-100";
-    style = { background: "color-mix(in srgb, var(--accent-attention) 14%, transparent)", color: "var(--accent-attention)" };
+    style = { ...SHOPIFY_TONES.warning };
   } else {
     bracket = "14+";
     className = "bg-red-100 text-red-900 dark:bg-red-950/40 dark:text-red-100";
-    style = { background: "color-mix(in srgb, var(--accent-attention) 22%, transparent)", color: "var(--accent-attention)" };
+    style = { ...SHOPIFY_TONES.critical };
   }
   const label = days === 0 ? "Today" : days === 1 ? "1 day" : `${days} days`;
   return { label, className, style, bracket, days };
@@ -198,26 +218,8 @@ export function customerConfirmLabel(kind) {
 }
 
 export function customerConfirmBadgeStyle(kind) {
-  if (kind === "confirmed") {
-    return {
-      background: "color-mix(in srgb, var(--accent-line) 16%, transparent)",
-      color: "var(--accent-line)",
-    };
-  }
-  if (kind === "waiting") {
-    return {
-      background: "color-mix(in srgb, var(--accent-money) 16%, transparent)",
-      color: "var(--accent-money)",
-    };
-  }
-  if (kind === "cancelled") {
-    return {
-      background: "color-mix(in srgb, var(--accent-attention) 16%, transparent)",
-      color: "var(--accent-attention)",
-    };
-  }
-  return {
-    background: "color-mix(in srgb, var(--text-muted) 12%, transparent)",
-    color: "var(--text-muted)",
-  };
+  if (kind === "confirmed") return { ...SHOPIFY_TONES.success };
+  if (kind === "waiting") return { ...SHOPIFY_TONES.attention };
+  if (kind === "cancelled") return { ...SHOPIFY_TONES.critical };
+  return { ...SHOPIFY_TONES.neutral };
 }

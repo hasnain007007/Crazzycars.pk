@@ -651,7 +651,10 @@ export function BulkActionBar({
                           color: "var(--accent-line)",
                         }}
                       >
-                        order → {r.orderStatusSynced.to}
+                        order →{" "}
+                        {typeof r.orderStatusSynced === "object"
+                          ? r.orderStatusSynced.to
+                          : r.orderStatusSynced}
                       </span>
                     ) : null}
                   </>
