@@ -208,6 +208,8 @@ export async function GET(request) {
       viewNeedsAttention,
       viewToday,
       viewAwaitingCustomer,
+      deliveredCount,
+      returnedCount,
     ] = await Promise.all([
       Order.find(filter)
         .sort(sortSpec)
@@ -245,8 +247,15 @@ export async function GET(request) {
         orderStatus: "pending",
         codConfirmed: { $ne: true },
       }),
+      Order.countDocuments({ orderStatus: "delivered" }),
+      Order.countDocuments({ orderStatus: "returned" }),
     ]);
 
+    const courierSettled = deliveredCount + returnedCount;
+    const deliveryRatio =
+      courierSettled > 0 ? Math.round((deliveredCount / courierSettled) * 1000) / 10 : null;
+    const returnRatio =
+      courierSettled > 0 ? Math.round((returnedCount / courierSettled) * 1000) / 10 : null;
     let todayRevenue = 0;
     for (const o of todayPaidOrders) {
       todayRevenue += orderGrandTotal(o);
@@ -340,6 +349,11 @@ export async function GET(request) {
         totalOrders,
         pending: pendingCount,
         processing: processingCount,
+        delivered: deliveredCount,
+        returned: returnedCount,
+        courierSettled,
+        deliveryRatio,
+        returnRatio,
         // Aggregate money — Owner-only (per-order totals on rows stay visible)
         ...(hasCapability(listUser, "canViewFinancials")
           ? { todayRevenue, pendingValueAtRisk }

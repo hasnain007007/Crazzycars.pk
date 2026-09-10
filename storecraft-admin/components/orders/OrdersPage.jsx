@@ -53,6 +53,11 @@ export function OrdersPage() {
     totalOrders: 0,
     pending: 0,
     processing: 0,
+    delivered: 0,
+    returned: 0,
+    courierSettled: 0,
+    deliveryRatio: null,
+    returnRatio: null,
     todayRevenue: 0,
     pendingValueAtRisk: 0,
   });
@@ -334,18 +339,22 @@ export function OrdersPage() {
               {(liveSyncSummary.results || [])
                 .filter((r) => r.orderStatusSynced)
                 .slice(0, 40)
-                .map((r) => (
+                .map((r) => {
+                  const to = String(r.orderStatusSynced?.to || r.orderStatusSynced || "").toLowerCase();
+                  const color = to === "returned" ? "#E67E22" : to === "delivered" ? "#008060" : "#008060";
+                  return (
                   <li key={r.orderId}>
                     <span className="font-bold">{r.orderNumber}</span>
                     {" → "}
-                    <span style={{ color: "#008060" }}>
+                    <span style={{ color }}>
                       {r.orderStatusSynced.to || r.orderStatusSynced}
                     </span>
                     {r.status ? (
                       <span style={{ color: "var(--text-muted)" }}> ({r.status})</span>
                     ) : null}
                   </li>
-                ))}
+                  );
+                })}
             </ul>
           ) : null}
         </div>
@@ -400,10 +409,22 @@ export function OrdersPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
         <InstrumentStatCard label="Total orders" value={stats.totalOrders} />
         <InstrumentStatCard label="Pending" value={stats.pending} />
         <InstrumentStatCard label="Processing" value={stats.processing} />
+        <InstrumentStatCard
+          label="Delivery ratio"
+          value={stats.deliveryRatio != null ? `${stats.deliveryRatio}%` : "—"}
+          tone="line"
+          hint={`${stats.delivered || 0} delivered · of settled`}
+        />
+        <InstrumentStatCard
+          label="Return ratio"
+          value={stats.returnRatio != null ? `${stats.returnRatio}%` : "—"}
+          tone="attention"
+          hint={`${stats.returned || 0} returned · of settled`}
+        />
         <InstrumentStatCard
           label="Pending value at risk"
           value={formatMoney(stats.pendingValueAtRisk || 0)}
@@ -418,6 +439,43 @@ export function OrdersPage() {
           money
         />
       </div>
+
+      {(stats.courierSettled || 0) > 0 ? (
+        <div
+          className="rounded-xl border px-4 py-3"
+          style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+              Courier portion (all-time settled)
+            </p>
+            <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+              {stats.delivered || 0} delivered · {stats.returned || 0} returned · {stats.courierSettled} settled
+            </p>
+          </div>
+          <div
+            className="mt-2 h-2.5 w-full overflow-hidden rounded-full"
+            style={{ background: "color-mix(in srgb, var(--text-muted) 12%, transparent)" }}
+          >
+            <div className="flex h-full w-full">
+              <div
+                className="h-full"
+                style={{
+                  width: `${stats.deliveryRatio || 0}%`,
+                  background: "#008060",
+                }}
+              />
+              <div
+                className="h-full"
+                style={{
+                  width: `${stats.returnRatio || 0}%`,
+                  background: "#E67E22",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div
         className="flex flex-wrap gap-1 rounded-xl border p-1.5"

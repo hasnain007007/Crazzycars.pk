@@ -8,6 +8,7 @@ import { AiAgentTrafficCard } from "./AiAgentTrafficCard";
 import { BusinessInsightsCard } from "./BusinessInsightsCard";
 import { CategorySalesDonut } from "./CategorySalesDonut";
 import { DashboardDateRange } from "./DashboardDateRange";
+import { DeliveryReturnRatioCard } from "./DeliveryReturnRatioCard";
 import { InventoryAlertsCard } from "./InventoryAlertsCard";
 import { KpiCards } from "./KpiCards";
 import { LiveUsersCard } from "./LiveUsersCard";
@@ -45,6 +46,9 @@ const emptyData = {
   ordersDispatched: 0,
   ordersDelivered: 0,
   ordersReturned: 0,
+  courierSettled: 0,
+  deliveryRatio: null,
+  returnRatio: null,
   recentOrders: [],
   orderStatusCounts: {},
   salesLast7Days: [],
@@ -159,6 +163,39 @@ export function DashboardView() {
       <div className={loading ? "pointer-events-none opacity-60 transition" : "transition"}>
         {/* Hero KPIs */}
         <KpiCards data={data} />
+
+        {/* Courier delivery / return portion */}
+        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <DeliveryReturnRatioCard data={data} />
+          <div className="rounded-xl border border-border-hairline bg-bg-panel p-5 shadow-none">
+            <h3
+              className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Courier funnel ({rangeLabel})
+            </h3>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { label: "Received", value: data.ordersReceived, color: "var(--text-primary)" },
+                { label: "Dispatched", value: data.ordersDispatched, color: "#085041" },
+                { label: "Delivered", value: data.ordersDelivered, color: "#0C5132" },
+                { label: "Returned", value: data.ordersReturned, color: "#7A2E0B" },
+              ].map((row) => (
+                <div key={row.label}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+                    {row.label}
+                  </p>
+                  <p className="font-gauge mt-1 text-2xl font-bold tabular-nums" style={{ color: row.color }}>
+                    {(Number(row.value) || 0).toLocaleString("en-PK")}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-[11px]" style={{ color: "var(--text-muted)" }}>
+              Delivery ratio = delivered ÷ (delivered + returned). Return ratio = returned ÷ (delivered + returned).
+            </p>
+          </div>
+        </div>
 
         {/* Charts row */}
         <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">

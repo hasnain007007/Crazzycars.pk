@@ -563,10 +563,14 @@ export async function GET(request) {
       });
     }
     if (ordersReturned > 0 && ordersReceived > 0) {
-      const retPct = Math.round((ordersReturned / ordersReceived) * 1000) / 10;
+      const settledForInsight = ordersDelivered + ordersReturned;
+      const retPct =
+        settledForInsight > 0
+          ? Math.round((ordersReturned / settledForInsight) * 1000) / 10
+          : Math.round((ordersReturned / ordersReceived) * 1000) / 10;
       insights.push({
         icon: "bolt",
-        text: `Return rate is ${retPct}% in this period. Review returned SKUs and city patterns.`,
+        text: `Return ratio is ${retPct}% of settled courier orders (delivered + returned) in this period. Review returned SKUs and city patterns.`,
       });
     }
     if (!insights.length) {
@@ -577,6 +581,12 @@ export async function GET(request) {
     }
 
     const trendPaidTotal = salesTrend.reduce((s, b) => s + (Number(b.revenue) || 0), 0);
+
+    const courierSettled = (Number(ordersDelivered) || 0) + (Number(ordersReturned) || 0);
+    const deliveryRatio =
+      courierSettled > 0 ? Math.round((ordersDelivered / courierSettled) * 1000) / 10 : null;
+    const returnRatio =
+      courierSettled > 0 ? Math.round((ordersReturned / courierSettled) * 1000) / 10 : null;
 
     const user = getRequestUser(request);
     const data = {
@@ -622,6 +632,9 @@ export async function GET(request) {
       ordersDispatched,
       ordersDelivered,
       ordersReturned,
+      courierSettled,
+      deliveryRatio,
+      returnRatio,
       recentOrders,
       orderStatusCounts,
       salesLast7Days: salesTrend,
