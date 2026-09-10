@@ -16,6 +16,7 @@ import {
   RUN_COURIER_DEFAULT_API,
   storefrontTrackingUrl,
 } from "@/lib/runcourier";
+import { buildRunCourierAirbillPdf } from "@/lib/runcourierLabelPdf";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
@@ -252,11 +253,24 @@ export async function POST(request) {
     });
 
     const total = orderGrandTotal(order);
-    const labelPdf =
-      label && !String(label).startsWith("http")
-        ? String(label).replace(/^data:application\/pdf;base64,/, "")
-        : "";
     const invoiceUrl = invoiceLink || (String(label).startsWith("http") ? label : "");
+    // Prefer our PostEx-style full-A4 PDF (not a short custom page) for immediate download.
+    let labelPdf = "";
+    if (invoiceUrl && String(invoiceUrl).startsWith("http")) {
+      try {
+        const built = await buildRunCourierAirbillPdf(invoiceUrl, {
+          orderNumber: order.orderNumber,
+        });
+        if (built.success && built.pdf?.length) {
+          labelPdf = Buffer.from(built.pdf).toString("base64");
+        }
+      } catch (e) {
+        console.error("[runcourier] airbill pdf build:", e?.message || e);
+      }
+    }
+    if (!labelPdf && label && !String(label).startsWith("http")) {
+      labelPdf = String(label).replace(/^data:application\/pdf;base64,/, "");
+    }
     return NextResponse.json({
       success: true,
       message: `Shipment booked via Run Courier (${result.selectedApi}).`,
@@ -269,9 +283,7 @@ export async function POST(request) {
       invoiceUrl,
       // Inline PDF so the browser can save the airbill immediately on book.
       ...(labelPdf ? { labelPdfBase64: labelPdf } : {}),
-      labelDownloadUrl: invoiceUrl
-        ? invoiceUrl
-        : `/api/runcourier/label?trackingNumber=${encodeURIComponent(result.trackingNumber)}&orderId=${encodeURIComponent(orderId)}&download=1`,
+      labelDownloadUrl: `/api/runcourier/label?trackingNumber=${encodeURIComponent(result.trackingNumber)}&orderId=${encodeURIComponent(orderId)}&download=1`,
       order: {
         id: order._id.toString(),
         orderNumber: order.orderNumber,

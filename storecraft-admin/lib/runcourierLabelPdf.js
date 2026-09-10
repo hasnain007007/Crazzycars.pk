@@ -800,40 +800,15 @@ async function prepareAirbillAssets(pdfDoc, html, orderNo) {
 }
 
 /**
+ * Single airbill on a full A4 page (PostEx print behaviour).
+ * Label sits in the top third; empty slots below so A4 paper + 100% scale match PostEx.
  * @param {string} invoiceLink
  * @param {{ orderNumber?: string }} [opts]
  */
 export async function buildRunCourierAirbillPdf(invoiceLink, opts = {}) {
-  const prepared = await prepareRunCourierInvoiceHtml(invoiceLink);
-  if (!prepared.success || !prepared.html) {
-    return { success: false, error: prepared.error || "Could not load airbill." };
-  }
-
-  const fields = parseAirbillFields(prepared.html);
-  const orderNo = resolveOrderNo(fields, opts.orderNumber);
-  const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const embedded = await prepareAirbillAssets(pdfDoc, prepared.html, orderNo);
-
-  const labelW = A4_W - SIDE_MARGIN * 2;
-  const page = pdfDoc.addPage([A4_W, LABEL_H + PAGE_MARGIN * 2]);
-  drawAirbillIntoPage(
-    page,
-    { font, bold },
-    embedded,
-    fields,
-    orderNo,
-    { x: SIDE_MARGIN, y: PAGE_MARGIN, width: labelW, height: LABEL_H }
-  );
-
-  const bytes = await pdfDoc.save();
-  return {
-    success: true,
-    pdf: Buffer.from(bytes),
-    trackingNumber: fields.tracking || "",
-    orderNumber: orderNo,
-  };
+  return buildRunCourierAirbillsPdf([
+    { invoiceLink, orderNumber: opts.orderNumber },
+  ]);
 }
 
 /**

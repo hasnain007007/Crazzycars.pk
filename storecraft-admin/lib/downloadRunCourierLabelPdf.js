@@ -19,7 +19,9 @@ function triggerBlobDownload(blob, filename) {
  */
 async function fetchRunCourierLabelPdfBlob(opts = {}) {
   const tn = String(opts.trackingNumber || opts.trackingNumbers?.[0] || "shipment").trim();
-  const params = new URLSearchParams({ format: "pdf", download: "1" });
+  // download=1 → attachment (save file). Print uses inline like PostEx label PDFs.
+  const params = new URLSearchParams({ format: "pdf" });
+  if (opts.download) params.set("download", "1");
   if (opts.orderId) params.set("orderId", String(opts.orderId));
   if (opts.trackingNumber) params.set("trackingNumber", String(opts.trackingNumber));
   if (opts.orderIds?.length) params.set("orderIds", opts.orderIds.join(","));
@@ -54,23 +56,30 @@ async function fetchRunCourierLabelPdfBlob(opts = {}) {
  * @param {{ orderId?: string, trackingNumber?: string, orderIds?: string[], trackingNumbers?: string[] }} opts
  */
 export async function downloadRunCourierLabelPdf(opts = {}) {
-  const { blob, trackingNumber: tn } = await fetchRunCourierLabelPdfBlob(opts);
+  const { blob, trackingNumber: tn } = await fetchRunCourierLabelPdfBlob({
+    ...opts,
+    download: true,
+  });
   triggerBlobDownload(blob, `runcourier-airbill-${tn}.pdf`);
   return { success: true, trackingNumber: tn };
 }
 
 /**
  * Open the system print dialog for the airbill PDF (no file download).
+ * PDF is full A4 (PostEx-style) so Chrome defaults to A4 / ~100% scale.
  */
 export async function printRunCourierLabelPdf(opts = {}) {
-  const { blob, trackingNumber: tn } = await fetchRunCourierLabelPdfBlob(opts);
+  const { blob, trackingNumber: tn } = await fetchRunCourierLabelPdfBlob({
+    ...opts,
+    download: false,
+  });
   const url = URL.createObjectURL(blob);
 
-  // Hidden iframe keeps focus in admin; print dialog shows the PDF pages.
+  // Hidden iframe sized to A4 CSS px (~96dpi) so the PDF viewer paints at page size.
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   iframe.style.cssText =
-    "position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none;";
+    "position:fixed;right:0;bottom:0;width:794px;height:1123px;border:0;opacity:0;pointer-events:none;";
   document.body.appendChild(iframe);
 
   const cleanup = () => {
@@ -146,7 +155,7 @@ export async function printRunCourierLabelPdf(opts = {}) {
 }
 
 /**
- * Download several airbills as one PDF (2 compact labels per A4 page).
+ * Download several airbills as one PDF (3 PostEx-style labels per A4 page).
  */
 export async function downloadRunCourierLabelsPdf(items = []) {
   const list = (Array.isArray(items) ? items : []).filter(
@@ -164,7 +173,7 @@ export async function downloadRunCourierLabelsPdf(items = []) {
 }
 
 /**
- * Print several airbills as one PDF (2 compact labels per A4 page).
+ * Print several airbills as one PDF (3 PostEx-style labels per A4 page).
  */
 export async function printRunCourierLabelsPdf(items = []) {
   const list = (Array.isArray(items) ? items : []).filter(

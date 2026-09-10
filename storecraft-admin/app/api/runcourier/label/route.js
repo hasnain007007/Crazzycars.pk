@@ -34,12 +34,14 @@ function isHttpUrl(v) {
   return /^https?:\/\//i.test(String(v || "").trim());
 }
 
-function pdfResponse(buf, tn) {
+function pdfResponse(buf, tn, { download = false } = {}) {
+  // Match PostEx: inline for print/preview, attachment only when download=1.
+  const filename = `runcourier-airbill-${tn || "shipment"}.pdf`;
   return new NextResponse(buf, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="runcourier-airbill-${tn || "shipment"}.pdf"`,
+      "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${filename}"`,
       "Cache-Control": "no-store",
     },
   });
@@ -143,7 +145,7 @@ export async function GET(request) {
             "base64"
           );
           if (download || format === "pdf" || !format) {
-            return pdfResponse(buf, order?.trackingNumber || tn);
+            return pdfResponse(buf, order?.trackingNumber || tn, { download });
           }
         }
       }
@@ -157,36 +159,29 @@ export async function GET(request) {
     }
 
     if (wantPdf && format !== "html") {
-      if (ready.length === 1) {
-        const built = await buildRunCourierAirbillPdf(ready[0].invoiceLink, {
-          orderNumber: ready[0].orderNumber,
-        });
-        if (!built.success || !built.pdf?.length) {
-          return NextResponse.json(
-            { success: false, error: built.error || "Could not build airbill PDF." },
-            { status: 502 }
-          );
-        }
-        return pdfResponse(
-          built.pdf,
-          built.trackingNumber || ready[0].trackingNumber || tn
-        );
-      }
-
-      // Batch: 2 compact airbills per A4 page
-      const built = await buildRunCourierAirbillsPdf(
-        ready.map((j) => ({
-          invoiceLink: j.invoiceLink,
-          orderNumber: j.orderNumber,
-        }))
-      );
+      // Always full A4 pages (PostEx-style): 1 label = top third of A4; batch = 3 per page.
+      const built =
+        ready.length === 1
+          ? await buildRunCourierAirbillPdf(ready[0].invoiceLink, {
+              orderNumber: ready[0].orderNumber,
+            })
+          : await buildRunCourierAirbillsPdf(
+              ready.map((j) => ({
+                invoiceLink: j.invoiceLink,
+                orderNumber: j.orderNumber,
+              }))
+            );
       if (!built.success || !built.pdf?.length) {
         return NextResponse.json(
           { success: false, error: built.error || "Could not build airbill PDF." },
           { status: 502 }
         );
       }
-      return pdfResponse(built.pdf, `batch-${ready.length}`);
+      const fileTn =
+        ready.length === 1
+          ? built.trackingNumber || ready[0].trackingNumber || tn
+          : `batch-${ready.length}`;
+      return pdfResponse(built.pdf, fileTn, { download });
     }
 
     const prepared = await prepareRunCourierInvoiceHtml(ready[0].invoiceLink);

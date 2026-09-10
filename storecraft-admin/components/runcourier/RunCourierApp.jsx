@@ -785,8 +785,9 @@ export default function RunCourierApp() {
           {tab === "labels" ? (
             <p className="text-xs text-slate-500">
               Filter by <strong>booking date</strong> (when Run Courier was booked), and/or search by{" "}
-              <strong>order number</strong> or <strong>customer name</strong>. Select all then Print /
-              Download.
+              <strong>order number</strong> or <strong>customer name</strong>. Print / Download opens a
+              single <strong>A4 PDF</strong> like PostEx (1 label = top third of the page; up to 3 per
+              sheet).
             </p>
           ) : null}
 
