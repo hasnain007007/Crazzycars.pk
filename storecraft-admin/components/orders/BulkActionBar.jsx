@@ -58,6 +58,10 @@ export function BulkActionBar({
   const [liveResults, setLiveResults] = useState(null);
   const [statusOpen, setStatusOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [waQueue, setWaQueue] = useState(null);
+  const [waIndex, setWaIndex] = useState(0);
+  const [waSentCount, setWaSentCount] = useState(0);
+  const [waBusy, setWaBusy] = useState(false);
   const statusRef = useRef(null);
   const payRef = useRef(null);
 
@@ -365,6 +369,103 @@ export function BulkActionBar({
     }
   }, [ids, onUpdated]);
 
+  const startBulkWhatsAppConfirm = useCallback(async () => {
+    if (!ids.length) return;
+    const ok = window.confirm(
+      `Send WhatsApp confirmation to ${ids.length} selected order(s)?\n\n` +
+        `WhatsApp will open one chat at a time with Yes/No confirm links.\n` +
+        `Tap Send in WhatsApp, then click “Next” here for the next customer.\n\n` +
+        `Already confirmed / already-sent / no-phone orders are skipped.`
+    );
+    if (!ok) return;
+
+    setBusy(true);
+    setWaBusy(true);
+    try {
+      const res = await fetch("/api/orders/bulk-wa-confirm", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: ids }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        toast.error(json.error || "Could not prepare WhatsApp messages");
+        return;
+      }
+      const ready = (json.results || []).filter((r) => r.success && r.waUrl);
+      if (!ready.length) {
+        toast.error(
+          json.skipCount
+            ? `Nothing to send — ${json.skipCount} skipped (no phone / already confirmed / already sent).`
+            : "No messages ready."
+        );
+        return;
+      }
+      setWaQueue(ready);
+      setWaIndex(0);
+      setWaSentCount(0);
+      toast.success(
+        `Ready: ${ready.length} message(s)${json.skipCount ? ` · ${json.skipCount} skipped` : ""}`
+      );
+    } catch {
+      toast.error("Network error preparing WhatsApp confirmations");
+    } finally {
+      setBusy(false);
+      setWaBusy(false);
+    }
+  }, [ids]);
+
+  const markWaNotified = useCallback(async (orderId) => {
+    try {
+      await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ whatsappNotified: true }),
+      });
+    } catch {
+      /* non-fatal */
+    }
+  }, []);
+
+  const openCurrentWaConfirm = useCallback(async () => {
+    if (!waQueue?.length) return;
+    const row = waQueue[waIndex];
+    if (!row?.waUrl) return;
+    setWaBusy(true);
+    try {
+      window.open(row.waUrl, "_blank", "noopener,noreferrer");
+      await markWaNotified(row.orderId);
+      setWaSentCount((n) => n + 1);
+      toast.success(`Opened WhatsApp for ${row.orderNumber}`);
+    } finally {
+      setWaBusy(false);
+    }
+  }, [waQueue, waIndex, markWaNotified]);
+
+  const nextWaConfirm = useCallback(() => {
+    if (!waQueue?.length) return;
+    if (waIndex >= waQueue.length - 1) {
+      toast.success(`Done — opened ${waSentCount || waQueue.length} WhatsApp confirmation(s).`);
+      setWaQueue(null);
+      setWaIndex(0);
+      onUpdated?.();
+      return;
+    }
+    setWaIndex((i) => i + 1);
+  }, [waQueue, waIndex, waSentCount, onUpdated]);
+
+  const skipWaConfirm = useCallback(() => {
+    nextWaConfirm();
+  }, [nextWaConfirm]);
+
+  const closeWaConfirm = useCallback(() => {
+    setWaQueue(null);
+    setWaIndex(0);
+    onUpdated?.();
+  }, [onUpdated]);
+
   const exportCsv = useCallback(async () => {
     if (!ids.length) return;
     setBusy(true);
@@ -422,6 +523,16 @@ export function BulkActionBar({
             title="Mark selected as Processing"
           >
             Mark as Processing
+          </button>
+          <button
+            type="button"
+            disabled={busy || waBusy}
+            onClick={() => void startBulkWhatsAppConfirm()}
+            className="rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-none disabled:opacity-50"
+            style={{ background: busy || waBusy ? "var(--text-muted)" : "#25D366" }}
+            title="Open WhatsApp confirmation (Yes/No links) for each selected order, one by one"
+          >
+            WhatsApp confirm selected
           </button>
           <button
             type="button"
@@ -601,6 +712,91 @@ export function BulkActionBar({
           </button>
         </div>
       </div>
+
+      {waQueue?.length ? (
+        <div
+          className="mt-3 rounded-lg border p-4"
+          style={{
+            background: "color-mix(in srgb, #25D366 10%, var(--bg-panel))",
+            borderColor: "var(--border-hairline)",
+          }}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#128C7E" }}>
+                WhatsApp confirmation queue
+              </p>
+              <p className="mt-1 text-sm" style={{ color: "var(--text-primary)" }}>
+                {waIndex + 1} of {waQueue.length}
+                {waSentCount ? ` · ${waSentCount} opened` : ""}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="text-xs font-semibold hover:underline"
+              style={{ color: "#128C7E" }}
+              onClick={closeWaConfirm}
+            >
+              Close
+            </button>
+          </div>
+
+          {(() => {
+            const row = waQueue[waIndex];
+            if (!row) return null;
+            return (
+              <div
+                className="mt-3 rounded-lg border p-3"
+                style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
+              >
+                <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+                  {row.orderNumber} · {row.customerName}
+                </p>
+                <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>
+                  {row.phone}
+                </p>
+                <p className="mt-2 text-[11px] leading-snug" style={{ color: "var(--text-muted)" }}>
+                  Opens WhatsApp with Yes/No confirm links. Tap <strong>Send</strong> in WhatsApp,
+                  then <strong>Next</strong> here.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={waBusy}
+                    onClick={() => void openCurrentWaConfirm()}
+                    className="rounded-lg px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+                    style={{ background: "#25D366" }}
+                  >
+                    {waBusy ? "Opening…" : "Open WhatsApp"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={waBusy}
+                    onClick={nextWaConfirm}
+                    className="rounded-lg border px-4 py-2 text-xs font-bold disabled:opacity-60"
+                    style={{
+                      background: "var(--bg-panel)",
+                      borderColor: "var(--border-hairline)",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {waIndex >= waQueue.length - 1 ? "Finish" : "Next →"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={waBusy}
+                    onClick={skipWaConfirm}
+                    className="rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-60"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      ) : null}
 
       {liveResults ? (
         <div
