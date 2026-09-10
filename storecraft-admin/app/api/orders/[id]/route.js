@@ -665,6 +665,24 @@ export async function PUT(request, context) {
       });
     }
 
+    if (body.whatsappNotified !== undefined) {
+      const next = Boolean(body.whatsappNotified);
+      if (Boolean(order.whatsappNotified) !== next) {
+        order.whatsappNotified = next;
+        updates.push(next ? "WhatsApp confirmation opened" : "WhatsApp notified cleared");
+        if (next) {
+          if (!Array.isArray(order.timeline)) order.timeline = [];
+          order.timeline.push({
+            status: order.orderStatus,
+            title: "WhatsApp confirmation sent",
+            description: "Customer confirmation message opened / sent via WhatsApp",
+            timestamp: new Date(),
+            by: adminName,
+          });
+        }
+      }
+    }
+
     const trackingNumberIn =
       body.trackingNumber !== undefined
         ? String(body.trackingNumber || "").trim().slice(0, 120)
