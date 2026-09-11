@@ -255,6 +255,8 @@ const settingsSchema = new mongoose.Schema(
       googleAnalyticsId: { type: String, default: "" },
       googleSearchConsoleId: { type: String, default: "" },
       facebookPixelId: { type: String, default: "" },
+      metaCapiAccessToken: { type: String, default: "" },
+      metaCapiTestEventCode: { type: String, default: "" },
       canonicalUrl: { type: String, default: "" },
       robotsTxt: { type: String, default: "index, follow" },
       themeDefault: { type: String, enum: ["light", "dark", "system"], default: "light" },

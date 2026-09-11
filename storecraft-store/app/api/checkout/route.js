@@ -37,6 +37,14 @@ import {
   recordActionAttempt,
 } from "@/lib/actionRateLimit";
 import { requestIp } from "@/lib/requestIp";
+import {
+  buildPurchaseCustomData,
+  hashUserData,
+  newMetaEventId,
+  readMetaCookiesFromRequest,
+  resolveMetaCapiConfig,
+  sendMetaCapiEvent,
+} from "@/lib/metaCapi";
 
 const CHECKOUT_RATE = { maxAttempts: 5, windowMs: 10 * 60 * 1000 };
 
@@ -1176,11 +1184,79 @@ export async function POST(request) {
       console.error("CartSession recover mark failed:", cartErr?.message || cartErr);
     }
 
+    const metaFromBody = body.meta && typeof body.meta === "object" ? body.meta : {};
+    const metaPurchaseEventId =
+      String(metaFromBody.eventId || metaFromBody.purchaseEventId || "").trim() || newMetaEventId();
+    const cookieIds = readMetaCookiesFromRequest(request);
+    const fbp = String(metaFromBody.fbp || cookieIds.fbp || "").trim();
+    const fbc = String(metaFromBody.fbc || cookieIds.fbc || "").trim();
+
+    try {
+      order.metaPurchaseEventId = metaPurchaseEventId;
+      await order.save();
+    } catch (metaSaveErr) {
+      console.error("metaPurchaseEventId save failed:", metaSaveErr?.message || metaSaveErr);
+    }
+
+    // Server Purchase for Conversions API (Pixel on thank-you uses the same event_id).
+    void (async () => {
+      try {
+        const config = await resolveMetaCapiConfig();
+        if (!config.enabled) return;
+        const contentIds = [];
+        const contents = [];
+        for (const it of lineItems) {
+          const id = String(it.articleNo || it.productId || "").trim();
+          if (!id) continue;
+          contentIds.push(id);
+          contents.push({ id, quantity: Math.max(1, Number(it.quantity) || 1) });
+        }
+        const numItems = lineItems.reduce(
+          (sum, it) => sum + Math.max(1, Number(it.quantity) || 1),
+          0
+        );
+        const nameParts = String(name || "").trim().split(/\s+/);
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+        await sendMetaCapiEvent({
+          eventName: "Purchase",
+          eventId: metaPurchaseEventId,
+          eventSourceUrl: `${process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crazzycars.pk"}/checkout/success`,
+          userData: hashUserData({
+            email: isValidCustomerEmail(email) ? email : "",
+            phone,
+            firstName,
+            lastName,
+            city: shippingAddress?.city,
+            state: shippingAddress?.province || shippingAddress?.state,
+            zip: shippingAddress?.postalCode || shippingAddress?.zip,
+            country: "pk",
+            externalId: String(customerId || order._id || ""),
+            fbp,
+            fbc,
+            clientIpAddress: requestIp(request),
+            clientUserAgent: request.headers.get("user-agent") || "",
+          }),
+          customData: buildPurchaseCustomData({
+            value: total,
+            contentIds,
+            contents,
+            numItems,
+            orderId: orderNumber,
+          }),
+          config,
+        });
+      } catch (capiErr) {
+        console.error("Meta CAPI Purchase failed:", capiErr?.message || capiErr);
+      }
+    })();
+
     return NextResponse.json({
       success: true,
       orderId: order._id.toString(),
       orderNumber: order.orderNumber,
       accessToken: publicAccessToken,
+      metaPurchaseEventId,
       total,
       paymentStatus,
       order: {

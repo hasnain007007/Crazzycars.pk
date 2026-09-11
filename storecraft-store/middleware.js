@@ -12,6 +12,7 @@ import {
   PAID_TRAFFIC_MAX_AGE,
   detectPaidSocialSource,
 } from "@/lib/paidTraffic";
+import { buildFbcFromFbclid } from "@/lib/metaClickIds";
 import { looksLikeProductSlug, slugFromPathname } from "@/lib/missingProductHelpers";
 import { stripBrandSuffix } from "@/lib/productSlugParam";
 
@@ -75,8 +76,26 @@ function setPaidTrafficCookie(request, response, source) {
   });
 }
 
+/** Preserve Meta click id before we strip fbclid from the URL (needed for CAPI). */
+function setMetaFbcCookie(request, response) {
+  const fbclid = String(request.nextUrl.searchParams.get("fbclid") || "").trim();
+  if (!fbclid) return;
+  const existing = String(request.cookies.get("_fbc")?.value || "").trim();
+  if (existing.includes(fbclid)) return;
+  const fbc = buildFbcFromFbclid(fbclid);
+  if (!fbc) return;
+  response.cookies.set("_fbc", fbc, {
+    path: "/",
+    maxAge: 90 * 24 * 60 * 60,
+    sameSite: "lax",
+    secure: request.nextUrl.protocol === "https:",
+    httpOnly: false,
+  });
+}
+
 function withPaidCookie(request, response) {
   setPaidTrafficCookie(request, response, paidSourceFromRequest(request));
+  setMetaFbcCookie(request, response);
   return response;
 }
 
@@ -207,6 +226,7 @@ export async function middleware(request) {
 
   let response = NextResponse.next({ request: { headers: requestHeaders } });
   setPaidTrafficCookie(request, response, paidSource);
+  setMetaFbcCookie(request, response);
   const pathSlug = slugFromPathname(pathname);
   if (paidSource || looksLikeProductSlug(pathSlug)) {
     response.cookies.set("cc_path", pathname, {

@@ -15,6 +15,10 @@ const DEFAULT_FORM = {
   googleAnalyticsId: "",
   googleSearchConsoleId: "",
   facebookPixelId: "",
+  metaCapiAccessToken: "",
+  metaCapiTestEventCode: "",
+  metaCapiConfigured: false,
+  metaCapiAccessTokenMasked: "",
   canonicalUrl: "",
   robotsTxt: "index, follow",
 };
@@ -36,6 +40,10 @@ export default function SeoSettings() {
             metaTitle: seo.metaTitle || seo.defaultMetaTitle || "",
             metaDescription: seo.metaDescription || seo.defaultMetaDescription || "",
             robotsTxt: seo.robotsTxt || "index, follow",
+            // Token is redacted on GET — keep empty unless user pastes a new one.
+            metaCapiAccessToken: "",
+            metaCapiConfigured: Boolean(seo.metaCapiConfigured),
+            metaCapiAccessTokenMasked: String(seo.metaCapiAccessTokenMasked || ""),
           });
         }
       } catch {
@@ -58,6 +66,8 @@ export default function SeoSettings() {
       googleAnalyticsId: String(form.googleAnalyticsId || "").trim(),
       googleSearchConsoleId: String(form.googleSearchConsoleId || "").trim(),
       facebookPixelId: String(form.facebookPixelId || "").trim(),
+      metaCapiAccessToken: String(form.metaCapiAccessToken || "").trim(),
+      metaCapiTestEventCode: String(form.metaCapiTestEventCode || "").trim(),
       canonicalUrl: String(form.canonicalUrl || "").trim(),
       robotsTxt: String(form.robotsTxt || "index, follow").trim(),
       defaultMetaTitle: metaTitle,
@@ -84,6 +94,13 @@ export default function SeoSettings() {
             metaTitle: saved.metaTitle || saved.defaultMetaTitle || "",
             metaDescription: saved.metaDescription || saved.defaultMetaDescription || "",
             robotsTxt: saved.robotsTxt || "index, follow",
+            metaCapiAccessToken: "",
+            metaCapiConfigured: Boolean(saved.metaCapiConfigured) || Boolean(form.metaCapiAccessToken),
+            metaCapiAccessTokenMasked:
+              String(saved.metaCapiAccessTokenMasked || "") ||
+              (form.metaCapiAccessToken
+                ? `••••${String(form.metaCapiAccessToken).slice(-4)}`
+                : ""),
           });
         }
         toast.success("SEO settings saved!");
@@ -360,13 +377,56 @@ export default function SeoSettings() {
           </p>
         </div>
 
-        <div style={{ marginBottom: 0 }}>
-          <label style={labelStyle}>Facebook Pixel ID</label>
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>Facebook / Meta Pixel ID</label>
           <input
             style={inputStyle}
-            placeholder="XXXXXXXXXXXXXXX"
+            placeholder="941277015101099"
             value={form.facebookPixelId}
             onChange={(e) => setForm((f) => ({ ...f, facebookPixelId: e.target.value }))}
+          />
+          <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>
+            Events Manager → Data sources → Pixel (browser Pixel + CAPI share this ID)
+          </p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>
+            Meta Conversions API access token
+            <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 400, marginLeft: 6 }}>
+              (server-side — keep secret)
+            </span>
+          </label>
+          <input
+            style={inputStyle}
+            type="password"
+            autoComplete="off"
+            placeholder={
+              form.metaCapiConfigured
+                ? `Configured ${form.metaCapiAccessTokenMasked || "••••"} — paste new token to replace`
+                : "Paste token from Events Manager → Conversions API → Generate access token"
+            }
+            value={form.metaCapiAccessToken}
+            onChange={(e) => setForm((f) => ({ ...f, metaCapiAccessToken: e.target.value }))}
+          />
+          <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>
+            Replaces Shopify&apos;s server events. Leave blank to keep the existing token. Or set env
+            META_CAPI_ACCESS_TOKEN on the store app.
+          </p>
+        </div>
+
+        <div style={{ marginBottom: 0 }}>
+          <label style={labelStyle}>
+            Meta CAPI test event code
+            <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 400, marginLeft: 6 }}>
+              (optional — Test Events only)
+            </span>
+          </label>
+          <input
+            style={inputStyle}
+            placeholder="TEST12345"
+            value={form.metaCapiTestEventCode}
+            onChange={(e) => setForm((f) => ({ ...f, metaCapiTestEventCode: e.target.value }))}
           />
         </div>
       </div>

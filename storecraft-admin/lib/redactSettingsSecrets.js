@@ -14,6 +14,13 @@ export function redactSettingsSecrets(raw) {
     delete clone.payment.stripeWebhookSecret;
     delete clone.payment.stripeEnabled;
   }
+  // Mask CAPI token in GET responses — UI keeps a local value after typing; empty means "unchanged".
+  if (clone.seo && typeof clone.seo === "object" && clone.seo.metaCapiAccessToken) {
+    const t = String(clone.seo.metaCapiAccessToken);
+    clone.seo.metaCapiAccessTokenMasked = t.length > 8 ? `••••${t.slice(-4)}` : "••••";
+    clone.seo.metaCapiAccessToken = "";
+    clone.seo.metaCapiConfigured = true;
+  }
   return clone;
 }
 
@@ -27,5 +34,17 @@ export function omitBlankPaymentSecrets(payment) {
   delete next.stripePublishableKey;
   delete next.stripeWebhookSecret;
   delete next.stripeEnabled;
+  return next;
+}
+
+/** Keep existing CAPI token when admin saves SEO without re-entering the secret. */
+export function omitBlankSeoSecrets(seo) {
+  if (!seo || typeof seo !== "object") return seo;
+  const next = { ...seo };
+  if (!String(next.metaCapiAccessToken || "").trim()) {
+    delete next.metaCapiAccessToken;
+  }
+  delete next.metaCapiAccessTokenMasked;
+  delete next.metaCapiConfigured;
   return next;
 }

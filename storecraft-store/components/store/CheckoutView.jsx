@@ -34,7 +34,7 @@ import { PakistaniPaymentIcon } from "./PakistaniPaymentIcons";
 import { formatPrice } from "@/lib/currency";
 import { useCustomer } from "@/lib/customerAuth";
 import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
-import { resolveProductContentId, trackInitiateCheckout } from "@/lib/metaPixel";
+import { resolveProductContentId, trackInitiateCheckout, getMetaClickIds, newMetaEventId } from "@/lib/metaPixel";
 import { standardDeliveryFeeStatement } from "@/lib/storePolicyCopy";
 import {
   fetchRecoverCart,
@@ -789,6 +789,10 @@ export function CheckoutView() {
           status: "pending",
           cartSessionId: getCartSessionId(),
           cartRecoveryToken: getStoredRecoveryToken(),
+          meta: {
+            eventId: newMetaEventId(),
+            ...getMetaClickIds(),
+          },
         }),
       });
       const json = await res.json();

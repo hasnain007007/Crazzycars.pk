@@ -21,7 +21,7 @@ export async function GET(req, { params }) {
 
     const order = await Order.findById(id)
       .select(
-        "orderNumber publicAccessToken pricing paymentStatus paymentMethod orderStatus createdAt items.productId items.articleNo items.quantity items.unitPrice items.total items.name payment.advanceRequired payment.advanceMode payment.advanceMaxPercent payment.remainingCod"
+        "orderNumber publicAccessToken pricing paymentStatus paymentMethod orderStatus createdAt items.productId items.articleNo items.quantity items.unitPrice items.total items.name payment.advanceRequired payment.advanceMode payment.advanceMaxPercent payment.remainingCod metaPurchaseEventId"
       )
       .lean();
 
@@ -63,6 +63,7 @@ export async function GET(req, { params }) {
         },
         items,
         total: Number(order?.pricing?.total ?? 0),
+        metaPurchaseEventId: String(order.metaPurchaseEventId || "").trim(),
       },
     });
   } catch (e) {

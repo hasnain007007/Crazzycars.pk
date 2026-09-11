@@ -186,6 +186,9 @@ export default function CheckoutSuccessView() {
         value,
         orderId: order.orderNumber || orderKey,
         numItems: numItems || undefined,
+        eventId: String(order.metaPurchaseEventId || "").trim() || undefined,
+        // Server already sent CAPI Purchase at checkout with this event_id.
+        skipCapi: true,
       });
     });
   }, [order, orderId]);

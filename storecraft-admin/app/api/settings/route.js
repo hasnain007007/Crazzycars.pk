@@ -7,7 +7,7 @@ import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { requestIp } from "@/lib/requestIp";
 import { revalidateStorefront } from "@/lib/revalidateStorefront";
 import { sanitizeSettingsDocument } from "@/lib/sanitizeForeignBrand";
-import { omitBlankPaymentSecrets, redactSettingsSecrets } from "@/lib/redactSettingsSecrets";
+import { omitBlankPaymentSecrets, omitBlankSeoSecrets, redactSettingsSecrets } from "@/lib/redactSettingsSecrets";
 
 function mergeNested(target, patch) {
   if (!patch || typeof patch !== "object") return;
@@ -118,7 +118,7 @@ export async function PUT(request) {
     }
     if (body.seo !== undefined && body.seo !== null && typeof body.seo === "object") {
       if (!doc.seo) doc.set("seo", {});
-      mergeNested(doc.seo, body.seo);
+      mergeNested(doc.seo, omitBlankSeoSecrets(body.seo));
       doc.markModified("seo");
     }
     if (body.emailTemplates) mergeNested(doc.emailTemplates, body.emailTemplates);

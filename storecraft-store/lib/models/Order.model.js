@@ -191,6 +191,8 @@ const orderSchema = new mongoose.Schema(
     tags: { type: [String], default: [], index: true },
     whatsappNotified: { type: Boolean, default: false },
     codConfirmed: { type: Boolean, default: false },
+    /** Shared Pixel ↔ Conversions API event id for Purchase (dedupe). */
+    metaPurchaseEventId: { type: String, default: "", trim: true },
     /**
      * Optional first-touch AI referrer attribution (14-day cookie window).
      * Absent on most orders — expected.
