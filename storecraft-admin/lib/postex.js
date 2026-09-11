@@ -363,17 +363,24 @@ export function resolvePostexCodAmount(order, bookingOptions = {}, settingsCouri
     if (Number.isFinite(n)) return n;
   }
 
+  const paymentStatus = String(order?.paymentStatus || "").toLowerCase();
+  // Partial always wins over prepaid-zero (EasyPaisa/bank advance + remaining COD).
+  if (paymentStatus === "partial") {
+    const paid = Math.max(0, Math.round(Number(order?.payment?.paidAmount ?? order?.payment?.amount) || 0));
+    const pricing = order.pricing || {};
+    const total = Math.max(0, Math.round(Number(pricing.total ?? order.total) || 0));
+    const stored = Number(order?.payment?.remainingCod);
+    if (Number.isFinite(stored) && stored >= 0) {
+      const live = Math.max(0, total - paid);
+      // Prefer live calc when totals changed after partial was saved.
+      return Math.round(live > 0 || paid > 0 ? live : stored);
+    }
+    return Math.max(0, total - paid);
+  }
+
   const cod = isCodOrder(order, opts, settingsCourier);
   const forcePaidZero = Boolean(settingsCourier.paidOrdersCodZero) && isPrepaidOrder(order);
   if (forcePaidZero || !cod) return 0;
-
-  const paymentStatus = String(order?.paymentStatus || "").toLowerCase();
-  if (paymentStatus === "partial") {
-    const remaining = Number(order?.payment?.remainingCod);
-    if (Number.isFinite(remaining) && remaining >= 0) {
-      return Math.round(remaining);
-    }
-  }
 
   const pricing = order.pricing || {};
   const total = Math.max(0, Number(pricing.total ?? order.total) || 0);

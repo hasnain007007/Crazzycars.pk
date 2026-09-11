@@ -48,6 +48,17 @@ export function normalizePhoneForMeta(phone) {
   return d;
 }
 
+/** Meta advanced matching: lowercase, trim, strip spaces (names also strip punctuation). */
+function normalizeMetaText(value, { stripSpaces = false, stripNamePunct = false } = {}) {
+  let s = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (!s) return "";
+  if (stripNamePunct) s = s.replace(/[^a-z0-9\s]/g, "");
+  if (stripSpaces) s = s.replace(/\s+/g, "");
+  return s.trim();
+}
+
 export function hashUserData({
   email,
   phone,
@@ -68,13 +79,13 @@ export function hashUserData({
   if (em) user_data.em = [em];
   const ph = sha256Hex(normalizePhoneForMeta(phone));
   if (ph) user_data.ph = [ph];
-  const fn = sha256Hex(String(firstName || "").trim());
+  const fn = sha256Hex(normalizeMetaText(firstName, { stripSpaces: true, stripNamePunct: true }));
   if (fn) user_data.fn = [fn];
-  const ln = sha256Hex(String(lastName || "").trim());
+  const ln = sha256Hex(normalizeMetaText(lastName, { stripSpaces: true, stripNamePunct: true }));
   if (ln) user_data.ln = [ln];
-  const ct = sha256Hex(String(city || "").trim());
+  const ct = sha256Hex(normalizeMetaText(city, { stripSpaces: true }));
   if (ct) user_data.ct = [ct];
-  const st = sha256Hex(String(state || "").trim());
+  const st = sha256Hex(normalizeMetaText(state, { stripSpaces: true }));
   if (st) user_data.st = [st];
   const zp = sha256Hex(String(zip || "").replace(/\s+/g, ""));
   if (zp) user_data.zp = [zp];
@@ -100,8 +111,13 @@ export function readMetaCookiesFromRequest(request) {
     const i = part.indexOf("=");
     if (i < 0) continue;
     const k = part.slice(0, i).trim();
-    const v = part.slice(i + 1).trim();
-    if (k) map[k] = decodeURIComponent(v);
+    const raw = part.slice(i + 1).trim();
+    if (!k) continue;
+    try {
+      map[k] = decodeURIComponent(raw);
+    } catch {
+      map[k] = raw;
+    }
   }
   return {
     fbp: String(map._fbp || "").trim(),

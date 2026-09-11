@@ -300,13 +300,20 @@ export function resolveRunCourierCodAmount(order, bookingOptions = {}, settingsC
     (settingsCourier.runCourierPaidOrdersCodZero == null &&
       Boolean(settingsCourier.paidOrdersCodZero));
   const paymentStatus = String(order?.paymentStatus || "").toLowerCase();
+  // Partial remaining COD before prepaid-zero (matches PostEx / payment UI).
+  if (paymentStatus === "partial") {
+    const paid = Math.max(0, Math.round(Number(order?.payment?.paidAmount ?? order?.payment?.amount) || 0));
+    const pricing = order.pricing || {};
+    const total = Math.max(0, Math.round(Number(pricing.total ?? order.total) || 0));
+    const stored = Number(order?.payment?.remainingCod);
+    const live = Math.max(0, total - paid);
+    if (Number.isFinite(stored) && stored >= 0) {
+      return Math.round(live > 0 || paid > 0 ? live : stored);
+    }
+    return live;
+  }
   if (forcePaidZero && (paymentStatus === "paid" || isPrepaidOrderForCod(order))) {
     return 0;
-  }
-
-  if (paymentStatus === "partial") {
-    const remaining = Number(order?.payment?.remainingCod);
-    if (Number.isFinite(remaining) && remaining >= 0) return Math.round(remaining);
   }
   if (paymentStatus === "paid" || isPrepaidOrderForCod(order)) return 0;
 

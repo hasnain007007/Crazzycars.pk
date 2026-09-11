@@ -1199,10 +1199,10 @@ export async function POST(request) {
     }
 
     // Server Purchase for Conversions API (Pixel on thank-you uses the same event_id).
-    void (async () => {
-      try {
-        const config = await resolveMetaCapiConfig();
-        if (!config.enabled) return;
+    // Await so serverless cannot freeze and drop the event before it flushes.
+    try {
+      const config = await resolveMetaCapiConfig();
+      if (config.enabled) {
         const contentIds = [];
         const contents = [];
         for (const it of lineItems) {
@@ -1246,10 +1246,10 @@ export async function POST(request) {
           }),
           config,
         });
-      } catch (capiErr) {
-        console.error("Meta CAPI Purchase failed:", capiErr?.message || capiErr);
       }
-    })();
+    } catch (capiErr) {
+      console.error("Meta CAPI Purchase failed:", capiErr?.message || capiErr);
+    }
 
     return NextResponse.json({
       success: true,

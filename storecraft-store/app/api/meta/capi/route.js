@@ -76,6 +76,13 @@ export async function POST(request) {
   if (!isAllowedMetaEvent(eventName)) {
     return NextResponse.json({ success: false, error: "Unsupported event." }, { status: 400 });
   }
+  // Purchase must only come from server checkout (prevents forged conversion spam).
+  if (eventName === "Purchase") {
+    return NextResponse.json(
+      { success: false, error: "Purchase events are server-only." },
+      { status: 403 }
+    );
+  }
 
   await recordActionAttempt(rlKey, RATE);
 
