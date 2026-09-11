@@ -182,13 +182,13 @@ export function invoiceInnerHtml(order, options = {}) {
 
   return `
     <div class="inv" style="max-width:800px;margin:0 auto;color:#0f172a;">
-      <div style="height:6px;background:${esc(accent)};border-radius:4px 4px 0 0;margin:-16px -16px 20px;"></div>
+      <div style="height:6px;background:${esc(accent)};border-radius:4px 4px 0 0;margin:0 0 20px;"></div>
 
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;">
         <div style="flex:1;min-width:220px;">
           ${
             logoUrl
-              ? `<img src="${esc(logoUrl)}" alt="${esc(name)}" crossorigin="anonymous" style="height:120px;max-height:120px;max-width:320px;width:auto;object-fit:contain;display:block;" />`
+              ? `<img src="${esc(logoUrl)}" alt="${esc(name)}" crossorigin="anonymous" style="height:72px;max-height:72px;max-width:240px;width:auto;object-fit:contain;display:block;" />`
               : `<div style="font-size:22px;font-weight:800;color:${esc(accent)};">${esc(name)}</div>`
           }
           ${logoUrl ? `<div style="margin-top:10px;font-size:16px;font-weight:800;">${esc(name)}</div>` : ""}
