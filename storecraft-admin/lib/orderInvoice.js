@@ -13,16 +13,16 @@ function formatMoney(n) {
 export function enrichOrderForInvoice(order) {
   if (!order) return order;
   const pricing = orderPricing(order);
-  const total = Number(pricing.total) || 0;
+  const total = Math.round(Number(pricing.total) || 0);
   const payStatus = String(order.paymentStatus || "").toLowerCase();
-  const paidFromPayment = Number(order.payment?.paidAmount ?? order.payment?.amount) || 0;
+  const paidFromPayment = Math.round(Number(order.payment?.paidAmount ?? order.payment?.amount) || 0);
   let amountPaid = 0;
   if (payStatus === "paid") {
     amountPaid = paidFromPayment > 0 ? paidFromPayment : total;
   } else if (payStatus === "partial") {
     amountPaid = paidFromPayment;
   }
-  const remainingBalance = Math.max(0, Math.round((total - amountPaid) * 100) / 100);
+  const remainingBalance = Math.max(0, total - amountPaid);
   return {
     ...order,
     pricing,

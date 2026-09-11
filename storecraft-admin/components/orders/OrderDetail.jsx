@@ -28,7 +28,7 @@ import {
   openWhatsApp,
   OrderWhatsAppButton,
 } from "@/components/orders/OrderWhatsAppButton";
-import { formatAdminPrice } from "@/lib/currency";
+import { formatAdminPrice, roundRupees } from "@/lib/currency";
 import { printInvoice as printProfessionalInvoice } from "@/lib/downloadInvoicePdf";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import {
@@ -65,7 +65,7 @@ function paymentMethodLabel(method) {
 
 function formatCurrencyAmount(order, amount) {
   const currency = order?.currency || "PKR";
-  return `${currency} ${Number(amount || 0).toFixed(2)}`;
+  return `${currency} ${roundRupees(amount).toLocaleString("en-PK")}`;
 }
 
 function defaultPostexCodAmount(order, orderTotal, prepaid) {
@@ -524,17 +524,12 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
 
 function PaymentInformationSection({ order, orderId, onRefunded, orderTotal }) {
   const pm = order.payment?.method || order.paymentMethod || "";
-  const total = Math.max(
-    0,
-    Number(orderTotal ?? order.pricing?.total ?? order.total ?? 0) || 0
-  );
-  const paidAmount = Number(order.payment?.paidAmount ?? order.payment?.amount ?? 0) || 0;
+  const total = roundRupees(orderTotal ?? order.pricing?.total ?? order.total ?? 0);
+  const paidAmount = roundRupees(order.payment?.paidAmount ?? order.payment?.amount ?? 0);
   const paymentStatus = String(order.paymentStatus || "unpaid").toLowerCase();
   const showOrderTotal = paymentStatus === "unpaid" || paymentStatus === "partial";
   const liveRemainingCod =
-    paymentStatus === "partial"
-      ? Math.max(0, Math.round((total - paidAmount) * 100) / 100)
-      : 0;
+    paymentStatus === "partial" ? Math.max(0, total - paidAmount) : 0;
 
   async function issueRefund() {
     if (!window.confirm("Issue a full refund for this order?")) return;
@@ -1297,10 +1292,7 @@ export function OrderDetail({ orderId }) {
   }
 
   const p = order.pricing || { subtotal: 0, discount: 0, shippingCost: 0, total: 0 };
-  const effectiveTotal = Math.max(
-    0,
-    Number(draftPricing?.total ?? p.total ?? order.total ?? 0) || 0
-  );
+  const effectiveTotal = roundRupees(draftPricing?.total ?? p.total ?? order.total ?? 0);
   const hasTracking = Boolean(order.trackingNumber || order.tracking?.number || trackingNumber);
   const pmLower = String(order.paymentMethod || order.payment?.method || "").toLowerCase();
 

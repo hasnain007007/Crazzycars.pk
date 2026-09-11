@@ -10,6 +10,7 @@ import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal, orderPricing } from "@/lib/orderFormat";
+import { roundRupees } from "@/lib/currency";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
@@ -326,26 +327,30 @@ export async function PUT(request, context) {
       const paymentRef = String(body.paymentReference ?? body.transactionId ?? "").trim();
 
       if (nextPay === "partial") {
-        const paidAmount = Number(body.paidAmount);
-        const remainingCod = Number(body.remainingCod);
-        if (!Number.isFinite(paidAmount) || paidAmount < 0) {
+        const total = roundRupees(orderGrandTotal(order));
+        const paidAmount = roundRupees(body.paidAmount);
+        if (!Number.isFinite(Number(body.paidAmount)) || paidAmount < 0) {
           return NextResponse.json(
             { success: false, error: "Enter a valid paid amount for partial payment." },
             { status: 400 }
           );
         }
-        if (!Number.isFinite(remainingCod) || remainingCod < 0) {
+        if (paidAmount <= 0) {
           return NextResponse.json(
-            { success: false, error: "Enter a valid remaining COD amount." },
+            { success: false, error: "Partial payment must be greater than Rs. 0." },
             { status: 400 }
           );
         }
-        if (paidAmount <= 0 && remainingCod <= 0) {
+        if (total > 0 && paidAmount >= total) {
           return NextResponse.json(
-            { success: false, error: "Partial payment requires a paid amount and/or remaining COD." },
+            {
+              success: false,
+              error: "Paid amount covers the full order total — mark payment status as Paid instead.",
+            },
             { status: 400 }
           );
         }
+        const remainingCod = Math.max(0, total - paidAmount);
         if (!order.payment || typeof order.payment !== "object") order.payment = {};
         order.payment.paidAmount = paidAmount;
         order.payment.remainingCod = remainingCod;
@@ -374,7 +379,7 @@ export async function PUT(request, context) {
               { status: 400 }
             );
           }
-          const total = orderGrandTotal(order);
+          const total = roundRupees(orderGrandTotal(order));
           order.payment.paidAmount = total;
           order.payment.remainingCod = 0;
           order.payment.amount = total;

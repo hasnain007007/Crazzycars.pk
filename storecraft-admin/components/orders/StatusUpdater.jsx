@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { formatAdminPrice, roundRupees } from "@/lib/currency";
 import { orderStatusBadgeClass, paymentStatusBadgeClass } from "@/lib/orderUi";
 
 const ORDER_STATUSES = [
@@ -115,16 +116,18 @@ export function OrderStatusCard({ order, onUpdated }) {
 }
 
 function orderTotal(order) {
-  const t = Number(order?.pricing?.total ?? order?.subtotal ?? 0);
-  return Number.isFinite(t) ? t : 0;
+  const t = Number(order?.pricing?.total ?? order?.total ?? order?.subtotal ?? 0);
+  return roundRupees(t);
 }
 
 export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
-  const total =
+  const total = roundRupees(
     orderTotalOverride != null && Number.isFinite(Number(orderTotalOverride))
       ? Number(orderTotalOverride)
-      : orderTotal(order);
-  const [next, setNext] = useState(() => String(order.paymentStatus || "unpaid").toLowerCase());
+      : orderTotal(order)
+  );
+  const savedStatus = String(order.paymentStatus || "unpaid").toLowerCase();
+  const [next, setNext] = useState(() => savedStatus);
   const [paidAmount, setPaidAmount] = useState("");
   const [remainingCod, setRemainingCod] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
@@ -132,18 +135,28 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
 
   const isPartial = String(next).toLowerCase() === "partial";
   const needsReference = String(next).toLowerCase() === "paid" || isPartial;
+  const displayStatus = String(next).toLowerCase();
+  const statusDirty = displayStatus !== savedStatus;
 
   useEffect(() => {
     const status = String(order.paymentStatus || "unpaid").toLowerCase();
     setNext(status);
-    const paid = Number(order.payment?.paidAmount ?? order.payment?.amount ?? 0) || 0;
-    const rem = Number(order.payment?.remainingCod ?? 0) || 0;
+    const paid = roundRupees(order.payment?.paidAmount ?? order.payment?.amount ?? 0);
+    const remStored = roundRupees(order.payment?.remainingCod ?? 0);
     setPaymentReference(
       order.paymentConfirmation?.reference || order.payment?.transactionId || ""
     );
     if (status === "partial") {
-      setPaidAmount(paid > 0 ? String(paid) : "");
-      setRemainingCod(rem > 0 ? String(rem) : total > 0 ? String(total) : "");
+      if (paid > 0) {
+        setPaidAmount(String(paid));
+        setRemainingCod(String(Math.max(0, total - paid)));
+      } else if (remStored > 0) {
+        setRemainingCod(String(remStored));
+        setPaidAmount(String(Math.max(0, total - remStored)));
+      } else {
+        setPaidAmount("");
+        setRemainingCod(total > 0 ? String(total) : "");
+      }
     } else {
       setPaidAmount("");
       setRemainingCod(total > 0 ? String(total) : "");
@@ -163,10 +176,14 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
     const v = String(value).toLowerCase();
     setNext(v);
     if (v === "partial") {
-      const paid = Number(order.payment?.paidAmount ?? order.payment?.amount ?? 0) || 0;
-      const rem = Number(order.payment?.remainingCod ?? 0) || 0;
-      setPaidAmount(paid > 0 ? String(paid) : "");
-      setRemainingCod(rem > 0 ? String(rem) : total > 0 ? String(total) : "");
+      const paid = roundRupees(order.payment?.paidAmount ?? order.payment?.amount ?? 0);
+      if (paid > 0 && paid < total) {
+        setPaidAmount(String(paid));
+        setRemainingCod(String(Math.max(0, total - paid)));
+      } else {
+        setPaidAmount("");
+        setRemainingCod(total > 0 ? String(total) : "");
+      }
     }
   }
 
@@ -174,7 +191,7 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
     setPaidAmount(value);
     const paid = Number(value);
     if (Number.isFinite(paid) && paid >= 0 && total > 0) {
-      setRemainingCod(String(Math.max(0, Math.round((total - paid) * 100) / 100)));
+      setRemainingCod(String(Math.max(0, total - roundRupees(paid))));
     }
   }
 
@@ -182,14 +199,14 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
     setRemainingCod(value);
     const rem = Number(value);
     if (Number.isFinite(rem) && rem >= 0 && total > 0) {
-      setPaidAmount(String(Math.max(0, Math.round((total - rem) * 100) / 100)));
+      setPaidAmount(String(Math.max(0, total - roundRupees(rem))));
     }
   }
 
   async function submit(e) {
     e.preventDefault();
     const status = String(next).toLowerCase();
-    const sameStatus = status === String(order.paymentStatus || "").toLowerCase();
+    const sameStatus = status === savedStatus;
 
     if (sameStatus && status !== "partial") {
       toast.error("Select a different payment status.");
@@ -199,16 +216,22 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
     let paid = 0;
     let remaining = 0;
     if (status === "partial") {
-      paid = Number(paidAmount);
-      remaining = Number(remainingCod);
-      if (!Number.isFinite(paid) || paid < 0 || String(paidAmount).trim() === "") {
+      paid = roundRupees(paidAmount);
+      remaining = Math.max(0, total - paid);
+      if (!Number.isFinite(Number(paidAmount)) || String(paidAmount).trim() === "") {
         toast.error("Enter how much was paid (partial payment).");
         return;
       }
-      if (!Number.isFinite(remaining) || remaining < 0 || String(remainingCod).trim() === "") {
-        toast.error("Enter the remaining COD amount.");
+      if (paid <= 0) {
+        toast.error("Partial payment must be greater than Rs. 0.");
         return;
       }
+      if (total > 0 && paid >= total) {
+        toast.error("Paid amount covers the full total — mark as Paid instead.");
+        return;
+      }
+      setPaidAmount(String(paid));
+      setRemainingCod(String(remaining));
     }
 
     const ref = String(paymentReference || "").trim();
@@ -251,35 +274,41 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Payment status</h2>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-xs text-slate-500 dark:text-slate-400">Current</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          {statusDirty ? "Selected" : "Current"}
+        </span>
         <span
           className={[
             "inline-flex rounded-full px-3 py-1 text-sm font-semibold capitalize",
-            paymentStatusBadgeClass(order.paymentStatus),
+            paymentStatusBadgeClass(displayStatus),
           ].join(" ")}
         >
-          {order.paymentStatus}
+          {displayStatus}
         </span>
+        {statusDirty ? (
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+            Saved: <span className="capitalize">{savedStatus}</span> — click Update payment
+          </span>
+        ) : null}
       </div>
 
-      {String(order.paymentStatus).toLowerCase() === "partial" ? (
+      {savedStatus === "partial" ? (
         <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
           <p>
             Paid:{" "}
             <strong>
-              Rs. {(Number(order.payment?.paidAmount ?? order.payment?.amount) || 0).toLocaleString()}
+              {formatAdminPrice(order.payment?.paidAmount ?? order.payment?.amount)}
             </strong>
           </p>
           <p className="mt-0.5">
             Remaining COD:{" "}
             <strong>
-              Rs.{" "}
-              {Math.max(
-                0,
-                Math.round(
-                  (total - (Number(order.payment?.paidAmount ?? order.payment?.amount) || 0)) * 100
-                ) / 100
-              ).toLocaleString()}
+              {formatAdminPrice(
+                Math.max(
+                  0,
+                  total - roundRupees(order.payment?.paidAmount ?? order.payment?.amount)
+                )
+              )}
             </strong>
           </p>
         </div>
@@ -351,7 +380,8 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
               />
               {total > 0 ? (
                 <p className="mt-1 text-[11px] text-slate-500">
-                  Order total Rs. {total.toLocaleString()}. Enter paid — remaining fills automatically.
+                  Order total {formatAdminPrice(total)}. Enter paid — remaining fills automatically
+                  (whole rupees).
                 </p>
               ) : null}
             </div>
