@@ -86,6 +86,10 @@ const settingsSchema = new mongoose.Schema(
       advancePaymentDiscountPercent: { type: Number, default: 3 },
       flatDeliveryCharge: { type: Number, default: 250 },
     },
+    finance: {
+      /** Default COD withholding rate (sheet Deduction 4% preferred when present). */
+      codTaxRate: { type: Number, default: 0.04, min: 0, max: 1 },
+    },
     courier: {
       defaultCourier: { type: String, default: "Postex" },
       originCity: { type: String, default: "Gujranwala" },

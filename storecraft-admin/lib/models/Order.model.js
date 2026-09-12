@@ -192,6 +192,23 @@ const orderSchema = new mongoose.Schema(
     runCourierBookedAt: { type: Date, default: null },
     shippedAt: { type: Date, default: null },
     deliveredAt: { type: Date, default: null },
+    /**
+     * Snapshot written when a courier CPR settlement batch is posted.
+     */
+    courierSettlement: {
+      batchId: { type: mongoose.Schema.Types.ObjectId, default: null },
+      cprNumber: { type: String, default: "", trim: true },
+      trackingNumber: { type: String, default: "", trim: true },
+      codCollected: { type: Number, default: 0 },
+      shippingCharges: { type: Number, default: 0 },
+      gst: { type: Number, default: 0 },
+      deduction4pct: { type: Number, default: 0 },
+      netReceived: { type: Number, default: 0 },
+      productCogs: { type: Number, default: 0 },
+      lineProfit: { type: Number, default: 0 },
+      sheetStatus: { type: String, default: "", trim: true },
+      postedAt: { type: Date, default: null },
+    },
     tracking: {
       number: { type: String, default: "", trim: true },
       carrier: { type: String, default: "", trim: true },

@@ -56,6 +56,7 @@ const NAV = [
   {
     label: "REPORTS",
     items: [
+      { href: "/finance", label: "Finance", icon: "cash" },
       { href: "/reports/stock", label: "Stock Report", icon: "chartBar" },
       { href: "/reports/sales", label: "Sales Report", icon: "chartLine" },
     ],

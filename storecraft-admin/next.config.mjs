@@ -5,6 +5,7 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: false,
+  serverExternalPackages: ["pdf-parse"],
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },

@@ -29,6 +29,8 @@ const PATH_TITLES = [
   { prefix: "/runcourier", title: "Run Courier" },
   { prefix: "/shipping", title: "Shipping" },
   { prefix: "/redirects", title: "Redirects" },
+  { prefix: "/finance/settlements", title: "Settlement" },
+  { prefix: "/finance", title: "Finance" },
   { prefix: "/reports/stock", title: "Stock Report" },
   { prefix: "/reports/sales", title: "Sales Report" },
   { prefix: "/users", title: "Users" },
