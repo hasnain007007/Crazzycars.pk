@@ -203,7 +203,7 @@ export async function loadProductsForVehicle(vehicleOrId, { limit = 200 } = {}) 
 
   const products = await Product.find(buildVehiclePageProductFilter(vehicle))
     .select(
-      "name slug media pricing inventory status featured newArrival categories isUniversal rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo createdAt"
+      "name slug media pricing inventory status featured newArrival categories isUniversal rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo brand gtin ean mpn partNumber createdAt"
     )
     .populate("categories", "name slug")
     .sort({ featured: -1, createdAt: -1 })
@@ -240,6 +240,10 @@ export function serializeVehicleProduct(p) {
     createdAt: p.createdAt || null,
     shortDescription: p.shortDescription || "",
     articleNo: p.articleNo || p.inventory?.sku || "",
+    brand: p.brand || "CrazzyCars.pk",
+    sku: p.articleNo || p.inventory?.sku || "",
+    gtin: p.gtin || p.ean || "",
+    mpn: p.mpn || p.partNumber || "",
     categories: Array.isArray(p.categories)
       ? p.categories
           .map((c) =>

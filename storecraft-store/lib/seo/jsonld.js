@@ -98,6 +98,110 @@ function productHasRichResultSignal(node) {
   return false;
 }
 
+/** Plain-text product description — never empty (Google treats "" as missing). */
+function resolveProductDescription(p, slug = "") {
+  const name = String(p?.name || slug || "Product").trim();
+  const raw = String(
+    p?.metaDescription ||
+      p?.seo?.metaDescription ||
+      p?.shortDescription ||
+      p?.description ||
+      p?.longDescription ||
+      ""
+  )
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return (
+    raw ||
+    `${name} — shop online at CrazzyCars.pk with Cash on Delivery across Pakistan.`
+  ).slice(0, 5000);
+}
+
+/** Always emit sku so merchant listings have a stable identifier with brand. */
+function resolveProductSku(p, slug = "") {
+  const sku = String(p?.sku || p?.articleNo || p?.inventory?.sku || "").trim();
+  if (sku) return sku;
+  const fromSlug = String(slug || p?.slug || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+  return fromSlug || "CC-PRODUCT";
+}
+
+function resolvePriceValidUntil(p) {
+  if (p?.priceValidUntil) return String(p.priceValidUntil).slice(0, 10);
+  const d = new Date();
+  d.setFullYear(d.getFullYear() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function applyGtinMpn(node, p) {
+  const gtin = String(p?.gtin || p?.ean || "").replace(/\D/g, "");
+  if (gtin.length >= 8) {
+    if (gtin.length === 13) node.gtin13 = gtin;
+    else if (gtin.length === 12) node.gtin12 = gtin;
+    else if (gtin.length === 14) node.gtin14 = gtin;
+    else node.gtin = gtin;
+  }
+  const mpn = String(p?.mpn || p?.partNumber || "").trim();
+  if (mpn) node.mpn = mpn;
+}
+
+/**
+ * Shared Offer block for PDP + collection ItemList Products.
+ * Always includes shippingDetails + hasMerchantReturnPolicy (GSC merchant warnings).
+ */
+function buildMerchantOffer({
+  url,
+  price,
+  stockMeta,
+  condition,
+  siteUrl,
+  includeSeller = false,
+  priceValidUntil,
+} = {}) {
+  const SITE = siteUrl || site();
+  const offer = {
+    "@type": "Offer",
+    url,
+    priceCurrency: "PKR",
+    price: Number(price).toFixed(2),
+    priceValidUntil: priceValidUntil || resolvePriceValidUntil(),
+    itemCondition: conditionUrl(condition),
+    availability: availabilityUrl(stockMeta || {}),
+    shippingDetails: buildOfferShippingDetails(),
+    hasMerchantReturnPolicy: buildMerchantReturnPolicies(SITE),
+  };
+  if (includeSeller) {
+    offer.seller = {
+      "@type": "Organization",
+      name: "CrazzyCars.pk",
+      url: SITE,
+    };
+  }
+  return offer;
+}
+
+function resolveStockMeta(p) {
+  const combos = Array.isArray(p?.variationCombinations) ? p.variationCombinations : [];
+  const hasComboStock = combos.some(
+    (c) => c?.stock !== undefined && c?.stock !== null && Number.isFinite(Number(c.stock))
+  );
+  const anyComboInStock = hasComboStock ? combos.some((c) => Number(c.stock) > 0) : false;
+  const stock = hasComboStock
+    ? combos.reduce((sum, c) => sum + Math.max(0, Number(c.stock) || 0), 0)
+    : Number(p?.stock ?? p?.inventory?.quantity ?? p?.quantity ?? 0);
+  return {
+    stock,
+    trackInventory: p?.trackInventory ?? p?.inventory?.trackInventory,
+    allowBackorder: p?.allowBackorder ?? p?.inventory?.allowBackorder,
+    hasComboStock,
+    anyComboInStock,
+  };
+}
+
 /**
  * Build a Google-valid Product node for ItemList, or null if incomplete.
  * Bare Product (name/url only) triggers GSC: "Either offers, review, or aggregateRating…".
@@ -114,77 +218,26 @@ function buildCollectionProductNode(p) {
   const hasRating = ratingValue > 0 && reviewCount > 0;
   if (priceNum == null && !hasRating) return null;
 
-  const combos = Array.isArray(p.variationCombinations) ? p.variationCombinations : [];
-  const hasComboStock = combos.some(
-    (c) => c?.stock !== undefined && c?.stock !== null && Number.isFinite(Number(c.stock))
-  );
-  const anyComboInStock = hasComboStock ? combos.some((c) => Number(c.stock) > 0) : false;
-  const stock = hasComboStock
-    ? combos.reduce((sum, c) => sum + Math.max(0, Number(c.stock) || 0), 0)
-    : Number(p.stock ?? p.inventory?.quantity ?? p.quantity ?? 0);
-
   const productNode = {
     "@type": "Product",
     "@id": `${itemUrl}#product`,
     name: p.name || slug,
     url: itemUrl,
     brand: { "@type": "Brand", name: String(p.brand || "CrazzyCars.pk").trim() || "CrazzyCars.pk" },
+    description: resolveProductDescription(p, slug),
+    sku: resolveProductSku(p, slug),
   };
-
-  const description = String(
-    p.metaDescription ||
-      p.seo?.metaDescription ||
-      p.shortDescription ||
-      p.description ||
-      ""
-  )
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  productNode.description = (
-    description ||
-    `${p.name || slug} — shop online at CrazzyCars.pk with Cash on Delivery across Pakistan.`
-  ).slice(0, 5000);
-
-  // Global identifiers — clears "No global identifier (gtin, brand)" merchant warnings.
-  const sku = String(p.sku || p.articleNo || p.inventory?.sku || "").trim();
-  if (sku) productNode.sku = sku;
-  else productNode.sku = slug.toUpperCase().replace(/[^A-Z0-9]+/g, "-").slice(0, 64);
-  const gtin = String(p.gtin || p.ean || "").replace(/\D/g, "");
-  if (gtin.length >= 8) {
-    if (gtin.length === 13) productNode.gtin13 = gtin;
-    else if (gtin.length === 12) productNode.gtin12 = gtin;
-    else if (gtin.length === 14) productNode.gtin14 = gtin;
-    else productNode.gtin = gtin;
-  }
-  const mpn = String(p.mpn || p.partNumber || "").trim();
-  if (mpn) productNode.mpn = mpn;
-
-  const priceValidUntil = (() => {
-    if (p.priceValidUntil) return String(p.priceValidUntil).slice(0, 10);
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 1);
-    return d.toISOString().slice(0, 10);
-  })();
+  applyGtinMpn(productNode, p);
 
   if (priceNum != null) {
-    productNode.offers = {
-      "@type": "Offer",
+    productNode.offers = buildMerchantOffer({
       url: itemUrl,
-      priceCurrency: "PKR",
-      price: Number(priceNum).toFixed(2),
-      priceValidUntil,
-      itemCondition: conditionUrl(p.condition),
-      availability: availabilityUrl({
-        stock,
-        trackInventory: p.trackInventory ?? p.inventory?.trackInventory,
-        allowBackorder: p.allowBackorder ?? p.inventory?.allowBackorder,
-        hasComboStock,
-        anyComboInStock,
-      }),
-      shippingDetails: buildOfferShippingDetails(),
-      hasMerchantReturnPolicy: buildMerchantReturnPolicies(SITE),
-    };
+      price: priceNum,
+      stockMeta: resolveStockMeta(p),
+      condition: p.condition,
+      siteUrl: SITE,
+      priceValidUntil: resolvePriceValidUntil(p),
+    });
   }
 
   if (hasRating) {
@@ -224,16 +277,7 @@ export function isCompleteProductJsonLd(ld) {
 export function productJsonLd(p) {
   const SITE = site();
   const price = resolveOfferPrice(p);
-  const combos = Array.isArray(p.variationCombinations) ? p.variationCombinations : [];
-  const hasComboStock = combos.some(
-    (c) => c?.stock !== undefined && c?.stock !== null && Number.isFinite(Number(c.stock))
-  );
-  const anyComboInStock = hasComboStock
-    ? combos.some((c) => Number(c.stock) > 0)
-    : false;
-  const stock = hasComboStock
-    ? combos.reduce((sum, c) => sum + Math.max(0, Number(c.stock) || 0), 0)
-    : Number(p.stock ?? p.inventory?.quantity ?? 0);
+  const slug = String(p?.slug || "").trim();
 
   // Prefer full product media resolution (handles media.images / images / image).
   const fromProduct = resolveProductImageUrls(p, { siteUrl: SITE });
@@ -242,22 +286,12 @@ export function productJsonLd(p) {
     SITE
   );
   const images = fromProduct.length ? fromProduct : fromList;
-  const path = p.urlPath || `/${p.slug}`;
+  const path = p.urlPath || `/${slug}`;
   const url = absoluteProductUrl(path);
-  const sku = p.sku || p.articleNo || p.inventory?.sku || undefined;
-  const gtin = String(p.gtin || p.ean || "").replace(/\D/g, "");
-  const mpn = String(p.mpn || p.partNumber || "").trim() || undefined;
   const categoryName =
     p.category ||
     (Array.isArray(p.categories) ? p.categories.map((c) => c?.name).filter(Boolean).join(" > ") : "") ||
     undefined;
-
-  const priceValidUntil = (() => {
-    if (p.priceValidUntil) return String(p.priceValidUntil).slice(0, 10);
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 1);
-    return d.toISOString().slice(0, 10);
-  })();
 
   const ld = {
     "@context": "https://schema.org",
@@ -265,46 +299,27 @@ export function productJsonLd(p) {
     "@id": `${url}#product`,
     name: p.name,
     url,
-    description: p.metaDescription || p.seo?.metaDescription || p.shortDescription || "",
-    sku: sku || undefined,
-    brand: { "@type": "Brand", name: p.brand || "CrazzyCars.pk" },
+    description: resolveProductDescription(p, slug),
+    sku: resolveProductSku(p, slug),
+    brand: { "@type": "Brand", name: String(p.brand || "CrazzyCars.pk").trim() || "CrazzyCars.pk" },
   };
 
   // Google Product rich results require image — omit the field when empty (never emit []).
   if (images.length) ld.image = images;
 
   if (price != null) {
-    ld.offers = {
-      "@type": "Offer",
+    ld.offers = buildMerchantOffer({
       url,
-      priceCurrency: "PKR",
-      price: price.toFixed(2),
-      priceValidUntil,
-      availability: availabilityUrl({
-        stock,
-        trackInventory: p.trackInventory ?? p.inventory?.trackInventory,
-        allowBackorder: p.allowBackorder ?? p.inventory?.allowBackorder,
-        hasComboStock,
-        anyComboInStock,
-      }),
-      itemCondition: conditionUrl(p.condition),
-      seller: {
-        "@type": "Organization",
-        name: "CrazzyCars.pk",
-        url: SITE,
-      },
-      shippingDetails: buildOfferShippingDetails(),
-      hasMerchantReturnPolicy: buildMerchantReturnPolicies(SITE),
-    };
+      price,
+      stockMeta: resolveStockMeta(p),
+      condition: p.condition,
+      siteUrl: SITE,
+      includeSeller: true,
+      priceValidUntil: resolvePriceValidUntil(p),
+    });
   }
 
-  if (gtin.length >= 8) {
-    if (gtin.length === 13) ld.gtin13 = gtin;
-    else if (gtin.length === 12) ld.gtin12 = gtin;
-    else if (gtin.length === 14) ld.gtin14 = gtin;
-    else ld.gtin = gtin;
-  }
-  if (mpn) ld.mpn = mpn;
+  applyGtinMpn(ld, p);
   if (categoryName) ld.category = categoryName;
 
   // Vehicle fitment — helps AI shopping agents match make/model recommendations.
