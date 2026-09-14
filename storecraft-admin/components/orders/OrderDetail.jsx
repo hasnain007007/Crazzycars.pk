@@ -262,26 +262,48 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
 
   const addr = order.shippingAddress || {};
   const instructions = shippingInstructionsFromOrder(order);
+  const fullName = addr.name || customerFullName(order) || "";
+  const phone = addr.phone || order.customer?.phone || "";
+  const addressLine =
+    [addr.street || addr.line1, addr.street2 || addr.line2, addr.area]
+      .filter(Boolean)
+      .join(", ") ||
+    addr.address ||
+    "";
+  const city = addr.city || "";
+  const province = addr.province || addr.state || "";
+  const postal = addr.postcode || addr.postalCode || addr.zip || "";
   const displayRows = [
-    { label: "Full Name", value: addr.name || customerFullName(order) },
-    { label: "Phone", value: addr.phone || order.customer?.phone || "—" },
-    {
-      label: "Address",
-      value:
-        [addr.street || addr.line1, addr.street2 || addr.line2, addr.area]
-          .filter(Boolean)
-          .join(", ") ||
-        addr.address ||
-        "—",
-    },
-    { label: "City", value: addr.city || "—" },
-    { label: "Province", value: addr.province || addr.state || "—" },
-    {
-      label: "Postal Code",
-      value: addr.postcode || addr.postalCode || addr.zip || "—",
-    },
+    { label: "Full Name", value: fullName || "—" },
+    { label: "Phone", value: phone || "—" },
+    { label: "Address", value: addressLine || "—" },
+    { label: "City", value: city || "—" },
+    { label: "Province", value: province || "—" },
+    { label: "Postal Code", value: postal || "—" },
     instructions ? { label: "Notes / Instructions", value: instructions } : null,
   ].filter(Boolean);
+
+  function copyFullAddress() {
+    const lines = [
+      fullName,
+      phone,
+      addressLine,
+      [city, province, postal].filter(Boolean).join(", "),
+      addr.country || "Pakistan",
+      instructions ? `Notes: ${instructions}` : "",
+    ]
+      .map((s) => String(s || "").trim())
+      .filter(Boolean);
+    if (!lines.length) {
+      toast.error("No address to copy.");
+      return;
+    }
+    const text = lines.join("\n");
+    navigator.clipboard?.writeText(text).then(
+      () => toast.success("Full address copied."),
+      () => toast.error("Could not copy address.")
+    );
+  }
 
   function patchField(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -357,13 +379,22 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
           Shipping Address
         </h3>
         {!editing ? (
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-          >
-            ✏️ Edit Address
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={copyFullAddress}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            >
+              📋 Copy Address
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            >
+              ✏️ Edit Address
+            </button>
+          </div>
         ) : null}
       </div>
 
