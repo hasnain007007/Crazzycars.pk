@@ -2,7 +2,7 @@
  * Shipping fee helpers (legacy filename).
  * Flat STORE_POLICY fee only — no order-value waiver.
  */
-import { formatPrice } from "@/lib/currency";
+import { formatPrice, roundRupees } from "@/lib/currency";
 import { isAdvancePaymentMethod } from "@/lib/pakistaniPaymentMethods";
 import { STORE_POLICY } from "@/config/store-policy";
 import { standardDeliveryFeeShort } from "@/lib/storePolicyCopy";
@@ -35,8 +35,7 @@ export function normalizeShippingRules(storePayment) {
     freeShippingOnAdvancePayment: false,
     freeShippingOnOrderAbove: 0,
     freeShippingOnOrderAboveEnabled: false,
-    advancePaymentAmount: Math.max(
-      0,
+    advancePaymentAmount: roundRupees(
       Number(p.advancePaymentAmount) || DEFAULT_SHIPPING_RULES.advancePaymentAmount
     ),
     advancePaymentMessageEnabled:
@@ -72,7 +71,7 @@ export function computeAdvancePaymentDiscount({
   }
   const base = Math.max(0, Number(amountAfterCoupon) || 0);
   const percent = sp.advancePaymentDiscountPercent;
-  const discount = Math.max(0, Math.round(base * (percent / 100) * 100) / 100);
+  const discount = roundRupees(base * (percent / 100));
   return { discount, percent, applied: discount > 0 };
 }
 

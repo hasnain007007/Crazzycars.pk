@@ -2,6 +2,7 @@
  * Invoices list + create (standalone — not Orders).
  */
 import { NextResponse } from "next/server";
+import { roundRupees } from "@/lib/currency";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
@@ -206,7 +207,8 @@ export async function POST(request) {
         );
       }
       const unitCost = Math.max(0, Number(raw?.unitCost ?? product?.pricing?.costPerItem ?? 0) || 0);
-      const lineTotal = Math.round(quantity * unitPrice * 100) / 100;
+      unitPrice = roundRupees(unitPrice);
+      const lineTotal = roundRupees(quantity * unitPrice);
       normalizedItems.push({
         productId: product ? product._id : null,
         name: nameItem.slice(0, 300),
@@ -222,10 +224,10 @@ export async function POST(request) {
     }
 
     const subtotal =
-      Math.round(normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0) * 100) / 100;
-    const discount = Math.max(0, Number(body.discount) || 0);
-    const shippingCost = Math.max(0, Number(body.shippingCost) || 0);
-    const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+      roundRupees(normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0));
+    const discount = roundRupees(body.discount);
+    const shippingCost = roundRupees(body.shippingCost);
+    const total = Math.max(0, roundRupees(subtotal - discount + shippingCost));
 
     let paymentMethod = String(body.paymentMethod || "cod").trim();
     if (paymentMethod === "card") paymentMethod = "bankTransfer";
@@ -234,7 +236,7 @@ export async function POST(request) {
     let paymentStatus = String(body.paymentStatus || "unpaid").trim();
     if (!["unpaid", "paid", "partial"].includes(paymentStatus)) paymentStatus = "unpaid";
 
-    const receivedAmount = Math.max(0, Math.round((Number(body.receivedAmount) || 0) * 100) / 100);
+    const receivedAmount = roundRupees(body.receivedAmount);
 
     const invoiceNumber = await allocateInvoiceNumber();
     const adminLabel = user.name || user.email || "Admin";

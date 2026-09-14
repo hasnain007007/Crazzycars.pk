@@ -38,6 +38,6 @@ export function computeCouponDiscount(coupon, orderAmount, categoryIds = []) {
     discount = Number(coupon.discountValue) || 0;
   }
   discount = Math.min(discount, orderAmount);
-  discount = Math.round(discount * 100) / 100;
+  discount = Math.round(discount); // whole rupees
   return { valid: true, discount, message: "Coupon applied." };
 }

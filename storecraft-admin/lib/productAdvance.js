@@ -1,6 +1,7 @@
 /**
  * Per-product % advance payment helpers (e.g. "pay at least 50% advance").
  */
+import { roundRupees } from "@/lib/currency";
 
 export function normalizeAdvancePercent(raw) {
   const n = Number(raw);
@@ -21,8 +22,8 @@ export function computeProductAdvanceRequired(items) {
     if (percent <= 0) continue;
     const qty = Math.max(1, Number(item.quantity) || 1);
     const unit = Number(item.unitPrice ?? item.price) || 0;
-    const lineTotal = Math.round(unit * qty * 100) / 100;
-    const lineAdvance = Math.round((lineTotal * percent) / 100);
+    const lineTotal = roundRupees(unit * qty);
+    const lineAdvance = roundRupees((lineTotal * percent) / 100);
     if (lineAdvance <= 0) continue;
     amount += lineAdvance;
     maxPercent = Math.max(maxPercent, percent);
@@ -32,7 +33,7 @@ export function computeProductAdvanceRequired(items) {
       amount: lineAdvance,
     });
   }
-  amount = Math.round(amount * 100) / 100;
+  amount = roundRupees(amount);
   return { amount, maxPercent, lines };
 }
 
@@ -67,7 +68,7 @@ export function computeCodAdvanceDue({
     };
   }
   const ship = Math.max(0, Number(shippingCost) || 0);
-  const flat = Math.max(0, Number(storeAdvanceAmount) || 0);
+  const flat = roundRupees(storeAdvanceAmount);
   if (advanceMessageEnabled && ship > 0 && flat > 0) {
     return {
       amount: flat,

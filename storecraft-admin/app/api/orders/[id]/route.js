@@ -419,7 +419,7 @@ export async function PUT(request, context) {
         const raw = body.items[itemIdx];
         const name = String(raw?.name || "").trim();
         const quantity = Math.max(1, Math.min(999, Math.round(Number(raw?.quantity) || 1)));
-        const unitPrice = Math.max(0, Number(raw?.unitPrice) || 0);
+        const unitPrice = roundRupees(raw?.unitPrice);
         if (!name) {
           return NextResponse.json(
             { success: false, error: "Each item needs a product name." },
@@ -432,7 +432,7 @@ export async function PUT(request, context) {
             { status: 400 }
           );
         }
-        const lineTotal = Math.round(quantity * unitPrice * 100) / 100;
+        const lineTotal = roundRupees(quantity * unitPrice);
         let productId = null;
         if (raw?.productId && mongoose.Types.ObjectId.isValid(String(raw.productId))) {
           productId = raw.productId;
@@ -441,7 +441,7 @@ export async function PUT(request, context) {
           ? raw.selectedAddOns
               .map((a) => ({
                 name: String(a?.name || "").trim().slice(0, 120),
-                price: Math.max(0, Number(a?.price) || 0),
+                price: roundRupees(a?.price),
               }))
               .filter((a) => a.name)
               .slice(0, 20)
@@ -499,24 +499,24 @@ export async function PUT(request, context) {
         });
       }
 
-      const subtotal = Math.round(
-        normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0) * 100
-      ) / 100;
+      const subtotal = roundRupees(
+        normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0)
+      );
       const discount =
         body.discount !== undefined
-          ? Math.min(subtotal, Math.max(0, Number(body.discount) || 0))
-          : Math.max(0, Number(order.pricing?.discount) || 0);
+          ? Math.min(subtotal, roundRupees(body.discount))
+          : roundRupees(order.pricing?.discount);
 
-      let shippingCost = Number(order.pricing?.shippingCost ?? order.shippingCost ?? 0) || 0;
+      let shippingCost = roundRupees(order.pricing?.shippingCost ?? order.shippingCost ?? 0);
       if (body.deliveryEnabled === false) {
         shippingCost = 0;
       } else if (body.shippingCost !== undefined) {
-        shippingCost = Math.max(0, Number(body.shippingCost) || 0);
+        shippingCost = roundRupees(body.shippingCost);
       } else if (body.deliveryEnabled === true && body.shippingCost === undefined && shippingCost <= 0) {
         shippingCost = 250;
       }
 
-      const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+      const total = Math.max(0, roundRupees(subtotal - discount + shippingCost));
 
       order.items = normalizedItems;
       order.subtotal = subtotal;
@@ -548,18 +548,17 @@ export async function PUT(request, context) {
       body.deliveryEnabled !== undefined ||
       body.discount !== undefined
     ) {
-      const subtotal = Math.max(
-        0,
+      const subtotal = roundRupees(
         Number(order.pricing?.subtotal ?? order.subtotal) || 0
       );
       const discount =
         body.discount !== undefined
-          ? Math.min(subtotal, Math.max(0, Number(body.discount) || 0))
-          : Math.max(0, Number(order.pricing?.discount) || 0);
-      let shippingCost = Number(order.pricing?.shippingCost ?? order.shippingCost ?? 0) || 0;
+          ? Math.min(subtotal, roundRupees(body.discount))
+          : roundRupees(order.pricing?.discount);
+      let shippingCost = roundRupees(order.pricing?.shippingCost ?? order.shippingCost ?? 0);
       if (body.deliveryEnabled === false) shippingCost = 0;
-      else if (body.shippingCost !== undefined) shippingCost = Math.max(0, Number(body.shippingCost) || 0);
-      const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+      else if (body.shippingCost !== undefined) shippingCost = roundRupees(body.shippingCost);
+      const total = Math.max(0, roundRupees(subtotal - discount + shippingCost));
       order.shippingCost = shippingCost;
       order.pricing = {
         ...(order.pricing?.toObject?.() || order.pricing || {}),

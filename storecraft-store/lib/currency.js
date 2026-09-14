@@ -7,8 +7,15 @@ export function setStoreCurrency(code) {
   storeCurrencyCode = String(code || CURRENCY_CODE).toUpperCase();
 }
 
+/** Whole-rupee money for PKR (no paisa). */
+export function roundRupees(amount) {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.round(n));
+}
+
 function formatPkrAmount(amount) {
-  const num = Number.parseFloat(amount) || 0;
+  const num = roundRupees(amount);
   const formatted = new Intl.NumberFormat("en-PK", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
@@ -29,7 +36,7 @@ export function formatPrice(amount) {
 }
 
 export function formatPriceShort(amount) {
-  const num = Number.parseFloat(amount) || 0;
+  const num = roundRupees(amount);
   if (num === 0) return "Rs.0";
   return formatPkrAmount(amount);
 }

@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { allocateOrderNumber } from "@/lib/orderNumber";
+import { roundRupees } from "@/lib/currency";
 import { dbConnect } from "@/lib/db";
 import Coupon from "@/lib/models/Coupon.model";
 import Customer from "@/lib/models/Customer.model";
@@ -299,9 +300,9 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
       const addKg = toKg(v.additionalShippingWeight, v.weightUnit || "kg");
       const unitPrice = Math.max(0, Number(v.price) || 0);
       return {
-        unitPrice: Math.round(unitPrice * 100) / 100,
+        unitPrice: roundRupees(unitPrice),
         perUnitWeightKg: Math.max(0, baseWeightKg + addKg),
-        surcharge: Math.max(0, Number(v.shippingPriceSurcharge) || 0),
+        surcharge: roundRupees(v.shippingPriceSurcharge),
         variant: v,
         combo: null,
       };
@@ -321,7 +322,7 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
         ? toKg(comboWeightRaw, p.inventory?.weightUnit || "g")
         : baseWeightKg;
     return {
-      unitPrice: Math.round(unitPrice * 100) / 100,
+      unitPrice: roundRupees(unitPrice),
       perUnitWeightKg: Math.max(0, perUnitWeightKg),
       surcharge: 0,
       variant: null,
@@ -334,7 +335,7 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
   // Never trust client unitPrice / shipping surcharge / weight — price from DB only.
   if (!selectedVariation) {
     return {
-      unitPrice: Math.round(base * 100) / 100,
+      unitPrice: roundRupees(base),
       perUnitWeightKg: baseWeightKg,
       surcharge: 0,
       variant: null,
@@ -354,9 +355,9 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
       }
     }
     return {
-      unitPrice: Math.round((base + optionAdd) * 100) / 100,
+      unitPrice: roundRupees(base + optionAdd),
       perUnitWeightKg: Math.max(0, baseWeightKg + addShipKg),
-      surcharge,
+      surcharge: roundRupees(surcharge),
       variant: null,
       combo: null,
     };
@@ -364,9 +365,9 @@ function lineUnitPriceAndShipping(p, raw, selectedVariation) {
   const addShipKg = toKg(selectedVariation?.additionalShippingWeight ?? 0, "kg");
   const surcharge = Number(selectedVariation?.shippingPriceSurcharge) || 0;
   return {
-    unitPrice: Math.round(base * 100) / 100,
+    unitPrice: roundRupees(base),
     perUnitWeightKg: Math.max(0, baseWeightKg + addShipKg),
-    surcharge,
+    surcharge: roundRupees(surcharge),
     variant: null,
     combo: null,
   };
@@ -664,7 +665,7 @@ export async function POST(request) {
         p.media?.images?.find((i) => i.isMain)?.url ||
         p.media?.images?.[0]?.url ||
         "";
-      const lineTotal = Math.round(unitPrice * qty * 100) / 100;
+      const lineTotal = roundRupees(unitPrice * qty);
       const unitCost = Math.max(0, Number(p.pricing?.costPerItem) || 0);
       const advancePercentRequired = Math.min(
         100,
@@ -701,7 +702,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "No valid line items." }, { status: 400 });
     }
 
-    subtotal = Math.round(subtotal * 100) / 100;
+    subtotal = roundRupees(subtotal);
     let discount = 0;
     let couponCode = "";
     let couponId = null;
@@ -732,18 +733,18 @@ export async function POST(request) {
       );
     }
 
-    const afterCoupon = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
+    const afterCoupon = Math.max(0, roundRupees(subtotal - discount));
     const adv = computeAdvancePaymentDiscount({
       amountAfterCoupon: afterCoupon,
       paymentMethod,
       storePayment,
     });
     advancePaymentDiscount = adv.discount;
-    discount = Math.max(0, Math.round((discount + advancePaymentDiscount) * 100) / 100);
+    discount = Math.max(0, roundRupees(discount + advancePaymentDiscount));
 
     const activeZones = await ShippingZone.find({ status: "active" }).sort({ sortOrder: 1 }).lean();
     const totalWeightGrams = Math.max(0, Math.round(totalOrderWeightKg * 1000));
-    const orderSubtotalAfterDiscount = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
+    const orderSubtotalAfterDiscount = Math.max(0, roundRupees(subtotal - discount));
     const country = String(shippingAddress.country || "Pakistan").trim();
     const city = String(shippingAddress.city || "").trim();
     const province = String(shippingAddress.state || shippingAddress.province || "").trim();
@@ -759,7 +760,7 @@ export async function POST(request) {
     let shippingMethod = "";
     let shippingZoneLabel = "";
 
-    const zoneShippingCost = Math.round(Math.max(0, Number(quote.shippingCost) || 0) * 100) / 100;
+    const zoneShippingCost = roundRupees(quote.shippingCost);
     const rulesResult = applyShippingRules({
       baseDeliveryCharge: zoneShippingCost,
       zoneShippingCost,
@@ -768,7 +769,7 @@ export async function POST(request) {
       zoneIsFree: Boolean(quote.isFree),
       storePayment,
     });
-    shippingCost = Math.round(rulesResult.shippingCost * 100) / 100;
+    shippingCost = roundRupees(rulesResult.shippingCost);
     shippingMethod = "Weight-based";
     shippingZoneLabel = String(quote.zoneName || "").trim();
     const advanceNote = buildAdvancePaymentOrderNote(
@@ -783,7 +784,7 @@ export async function POST(request) {
       );
     }
 
-    const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+    const total = Math.max(0, roundRupees(subtotal - discount + shippingCost));
     const advanceDue = computeCodAdvanceDue({
       items: lineItems.map((li) => ({
         name: li.name,
@@ -796,9 +797,9 @@ export async function POST(request) {
       storeAdvanceAmount: storePayment.advancePaymentAmount,
       advanceMessageEnabled: storePayment.advancePaymentMessageEnabled !== false,
     });
-    const advanceRequired = Math.min(total, Math.max(0, Number(advanceDue.amount) || 0));
+    const advanceRequired = Math.min(total, roundRupees(advanceDue.amount));
     const remainingCod =
-      paymentMethod === "cod" ? Math.max(0, Math.round((total - advanceRequired) * 100) / 100) : 0;
+      paymentMethod === "cod" ? Math.max(0, roundRupees(total - advanceRequired)) : 0;
 
     if (advanceDue.mode === "percent" && advanceRequired > 0) {
       statusNotes.push(

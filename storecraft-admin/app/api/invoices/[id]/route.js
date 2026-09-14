@@ -2,6 +2,7 @@
  * Single invoice: read, update, delete.
  */
 import { NextResponse } from "next/server";
+import { roundRupees } from "@/lib/currency";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
@@ -132,7 +133,8 @@ async function normalizeItems(rawItems) {
     }
     if (!nameItem) throw new Error("Each item needs a product name.");
     const unitCost = Math.max(0, Number(raw?.unitCost ?? product?.pricing?.costPerItem ?? 0) || 0);
-    const lineTotal = Math.round(quantity * unitPrice * 100) / 100;
+    unitPrice = roundRupees(unitPrice);
+    const lineTotal = roundRupees(quantity * unitPrice);
     normalizedItems.push({
       productId: product ? product._id : null,
       name: nameItem.slice(0, 300),
@@ -228,16 +230,16 @@ export async function PUT(request, context) {
       try {
         const normalizedItems = await normalizeItems(body.items);
         const subtotal =
-          Math.round(normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0) * 100) / 100;
+          roundRupees(normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0));
         const discount =
           body.discount !== undefined
-            ? Math.max(0, Number(body.discount) || 0)
+            ? roundRupees(body.discount)
             : Math.max(0, Number(invoice.pricing?.discount) || 0);
         const shippingCost =
           body.shippingCost !== undefined
-            ? Math.max(0, Number(body.shippingCost) || 0)
+            ? roundRupees(body.shippingCost)
             : Math.max(0, Number(invoice.pricing?.shippingCost) || 0);
-        const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+        const total = Math.max(0, roundRupees(subtotal - discount + shippingCost));
         invoice.items = normalizedItems;
         invoice.pricing = { subtotal, discount, shippingCost, total };
         invoice.markModified("items");
@@ -249,13 +251,13 @@ export async function PUT(request, context) {
       const subtotal = Math.max(0, Number(invoice.pricing?.subtotal) || 0);
       const discount =
         body.discount !== undefined
-          ? Math.max(0, Number(body.discount) || 0)
+          ? roundRupees(body.discount)
           : Math.max(0, Number(invoice.pricing?.discount) || 0);
       const shippingCost =
         body.shippingCost !== undefined
-          ? Math.max(0, Number(body.shippingCost) || 0)
+          ? roundRupees(body.shippingCost)
           : Math.max(0, Number(invoice.pricing?.shippingCost) || 0);
-      const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+      const total = Math.max(0, roundRupees(subtotal - discount + shippingCost));
       invoice.pricing = {
         ...(invoice.pricing?.toObject?.() || invoice.pricing || {}),
         subtotal,

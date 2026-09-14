@@ -7,21 +7,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { formatAdminPrice } from "@/lib/currency";
+import { formatAdminPrice, roundRupees } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
 import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
 import { useInvoiceProductCatalog } from "@/components/invoices/useInvoiceProductCatalog";
 
 function lineTotal(qty, unitPrice) {
-  return Math.round(Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0) * 100) / 100;
+  return roundRupees(
+    Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0)
+  );
 }
 
 function productUnitPrice(product) {
   const sale = Number(product?.pricing?.salePrice);
   const regular = Number(product?.pricing?.regularPrice);
-  if (Number.isFinite(sale) && sale > 0) return sale;
-  if (Number.isFinite(regular) && regular >= 0) return regular;
+  if (Number.isFinite(sale) && sale > 0) return roundRupees(sale);
+  if (Number.isFinite(regular) && regular >= 0) return roundRupees(regular);
   return 0;
 }
 
@@ -149,9 +151,9 @@ export function CreateInvoiceForm() {
     () => lines.reduce((sum, line) => sum + lineTotal(line.quantity, line.unitPrice), 0),
     [lines]
   );
-  const discountNum = Math.max(0, Number(discount) || 0);
-  const shipNum = deliveryOn ? Math.max(0, Number(shippingCost) || 0) : 0;
-  const total = Math.max(0, Math.round((subtotal - discountNum + shipNum) * 100) / 100);
+  const discountNum = roundRupees(discount);
+  const shipNum = deliveryOn ? roundRupees(shippingCost) : 0;
+  const total = Math.max(0, roundRupees(subtotal - discountNum + shipNum));
   const receivedNum = Math.max(0, Math.round((Number(receivedAmount) || 0) * 100) / 100);
   const invoiceBalance = Math.max(0, Math.round((total - Math.min(receivedNum, total)) * 100) / 100);
   const totalReceivables = Math.round((invoiceBalance + previousBalance) * 100) / 100;
@@ -213,7 +215,7 @@ export function CreateInvoiceForm() {
         if (i !== index) return line;
         const next = { ...line, ...patch };
         if (patch.quantity != null) next.quantity = Math.max(1, Math.min(999, Number(patch.quantity) || 1));
-        if (patch.unitPrice != null) next.unitPrice = Math.max(0, Number(patch.unitPrice) || 0);
+        if (patch.unitPrice != null) next.unitPrice = roundRupees(patch.unitPrice);
         return next;
       })
     );

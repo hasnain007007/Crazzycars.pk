@@ -5,21 +5,23 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { formatAdminPrice } from "@/lib/currency";
+import { formatAdminPrice, roundRupees } from "@/lib/currency";
 
 function formatMoney(n) {
   return formatAdminPrice(Number(n) || 0);
 }
 
 function lineTotal(qty, unitPrice) {
-  return Math.round(Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0) * 100) / 100;
+  return roundRupees(
+    Math.max(0, Number(qty) || 0) * Math.max(0, Number(unitPrice) || 0)
+  );
 }
 
 function productUnitPrice(product) {
   const sale = Number(product?.pricing?.salePrice);
   const regular = Number(product?.pricing?.regularPrice);
-  if (Number.isFinite(sale) && sale > 0) return sale;
-  if (Number.isFinite(regular) && regular >= 0) return regular;
+  if (Number.isFinite(sale) && sale > 0) return roundRupees(sale);
+  if (Number.isFinite(regular) && regular >= 0) return roundRupees(regular);
   return 0;
 }
 
@@ -84,7 +86,7 @@ function computeUnitPrice(basePrice, combo, selectedAddOns, legacyExtra = 0) {
   for (const a of selectedAddOns || []) {
     price += Math.max(0, Number(a.price) || 0);
   }
-  return Math.max(0, Math.round(price * 100) / 100);
+  return roundRupees(price);
 }
 
 function buildVariationLabel(selectedOptions, selectedAddOns) {
@@ -167,7 +169,10 @@ function normalizeLines(items, prevLines = []) {
   return (items || []).map((item, idx) => {
     const selectedAddOns = Array.isArray(item.selectedAddOns)
       ? item.selectedAddOns
-          .map((a) => ({ name: String(a?.name || "").trim(), price: Math.max(0, Number(a?.price) || 0) }))
+          .map((a) => ({
+            name: String(a?.name || "").trim(),
+            price: roundRupees(a?.price),
+          }))
           .filter((a) => a.name)
       : [];
     const selectedOptions = selectedOptionsFromItem(item);
@@ -183,8 +188,8 @@ function normalizeLines(items, prevLines = []) {
       selectedOptions,
       selectedAddOns,
       quantity: Math.max(1, Number(item.quantity) || 1),
-      unitPrice: Math.max(0, Number(item.unitPrice) || 0),
-      basePrice: Math.max(0, Number(item.unitPrice) || 0),
+      unitPrice: roundRupees(item.unitPrice),
+      basePrice: roundRupees(item.unitPrice),
       // Keep catalog across parent re-fetches so variation dropdowns do not flash "No variations".
       catalog: sameProduct && prev?.catalog ? prev.catalog : null,
       articleNo: item.articleNo || prev?.articleNo || "",
@@ -207,7 +212,7 @@ function extractCatalog(product) {
       ? product.addOns
           .map((a) => ({
             name: String(a?.name || "").trim(),
-            price: Math.max(0, Number(a?.price) || 0),
+            price: roundRupees(a?.price),
             required: Boolean(a?.required),
           }))
           .filter((a) => a.name)
@@ -218,12 +223,12 @@ function extractCatalog(product) {
 export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
   const [lines, setLines] = useState(() => normalizeLines(order.items));
   const [discountAmount, setDiscountAmount] = useState(() => {
-    const d = Number(order?.pricing?.discount) || 0;
+    const d = roundRupees(order?.pricing?.discount);
     return d > 0 ? String(d) : "";
   });
   const [deliveryOn, setDeliveryOn] = useState(() => Number(order?.pricing?.shippingCost) > 0);
   const [shippingCost, setShippingCost] = useState(() => {
-    const s = Number(order?.pricing?.shippingCost) || 0;
+    const s = roundRupees(order?.pricing?.shippingCost);
     return s > 0 ? String(s) : "250";
   });
   const [saving, setSaving] = useState(false);
@@ -239,10 +244,10 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
 
   useEffect(() => {
     setLines((prev) => normalizeLines(order.items, prev));
-    const ship = Number(order?.pricing?.shippingCost) || 0;
+    const ship = roundRupees(order?.pricing?.shippingCost);
     setDeliveryOn(ship > 0);
     if (ship > 0) setShippingCost(String(ship));
-    const disc = Number(order?.pricing?.discount) || 0;
+    const disc = roundRupees(order?.pricing?.discount);
     setDiscountAmount(disc > 0 ? String(disc) : "");
     setDirty(false);
     setFailedMeta({});
@@ -348,9 +353,9 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
     () => lines.reduce((sum, line) => sum + lineTotal(line.quantity, line.unitPrice), 0),
     [lines]
   );
-  const discountNum = Math.min(subtotal, Math.max(0, Number(discountAmount) || 0));
-  const shipNum = deliveryOn ? Math.max(0, Number(shippingCost) || 0) : 0;
-  const total = Math.max(0, Math.round((subtotal - discountNum + shipNum) * 100) / 100);
+  const discountNum = Math.min(subtotal, roundRupees(discountAmount));
+  const shipNum = deliveryOn ? roundRupees(shippingCost) : 0;
+  const total = Math.max(0, roundRupees(subtotal - discountNum + shipNum));
   const couponCode = String(order?.couponCode || "").trim();
 
   useEffect(() => {
@@ -378,7 +383,7 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
           ) {
             next = repriceLine(next);
           } else if (patch.unitPrice != null) {
-            next.unitPrice = Math.max(0, Number(patch.unitPrice) || 0);
+            next.unitPrice = roundRupees(patch.unitPrice);
           }
           return next;
         })

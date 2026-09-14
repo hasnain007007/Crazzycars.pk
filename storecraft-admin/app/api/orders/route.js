@@ -13,6 +13,7 @@ import { allocateOrderNumber } from "@/lib/orderNumber";
 import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
+import { roundRupees } from "@/lib/currency";
 import { syncStockAlertForProduct } from "@/lib/productMutations";
 import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { dispatchOrderLifecycleEmails, sendTemplatedCustomerEmail } from "@/lib/customerLifecycleEmail";
@@ -448,6 +449,7 @@ export async function POST(request) {
       if (!Number.isFinite(unitPrice) || unitPrice < 0) {
         unitPrice = product ? unitPriceFromProduct(product) : 0;
       }
+      unitPrice = roundRupees(unitPrice);
       if (!nameItem) {
         return NextResponse.json(
           { success: false, error: "Each item needs a product name." },
@@ -458,7 +460,7 @@ export async function POST(request) {
         0,
         Number(raw?.unitCost ?? product?.pricing?.costPerItem ?? 0) || 0
       );
-      const lineTotal = Math.round(quantity * unitPrice * 100) / 100;
+      const lineTotal = roundRupees(quantity * unitPrice);
       normalizedItems.push({
         productId: product ? product._id : null,
         name: nameItem.slice(0, 300),
@@ -473,11 +475,12 @@ export async function POST(request) {
       });
     }
 
-    const subtotal =
-      Math.round(normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0) * 100) / 100;
-    const discount = Math.max(0, Number(body.discount) || 0);
-    const shippingCost = Math.max(0, Number(body.shippingCost) || 0);
-    const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100);
+    const subtotal = roundRupees(
+      normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0)
+    );
+    const discount = roundRupees(body.discount);
+    const shippingCost = roundRupees(body.shippingCost);
+    const total = Math.max(0, roundRupees(subtotal - discount + shippingCost));
 
     let paymentMethod = String(body.paymentMethod || "cod").trim();
     if (!PAYMENT_METHODS.has(paymentMethod)) paymentMethod = "cod";
