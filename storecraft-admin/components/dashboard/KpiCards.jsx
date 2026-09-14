@@ -173,13 +173,21 @@ export function KpiCards({ data }) {
         hint={`This month (PKT) · vs ${formatAdminPrice(d.lastMonthRevenue)} last month`}
       />
 
-      {/* Period: paid Rs is the glance figure; counts move to subtext */}
+      {/* Period order count (not rupees) — follows Last 7 / 30 days / custom range */}
+      <HeroCard
+        label="Orders received"
+        value={formatCount(periodOrders)}
+        tone="line"
+        hint={`${formatCount(paidOrders)} paid · ${formatCount(unpaidPeriod)} unpaid · ${formatCount(partialPeriod)} partial · ${formatCount(pendingPeriod)} pending · ${rangeLabel}`}
+      />
+
+      {/* Period: paid Rs is the glance figure */}
       <HeroCard
         label="Period Revenue"
         value={formatAdminPrice(d.periodSales)}
         tone={unpaidPeriod > 0 || pendingPeriod > 0 ? "attention" : "money"}
         money
-        hint={`${formatCount(periodOrders)} orders · ${formatCount(paidOrders)} paid · ${formatCount(unpaidPeriod)} unpaid · ${formatCount(partialPeriod)} partial · ${rangeLabel}`}
+        hint={`Paid revenue · ${formatCount(periodOrders)} orders · ${rangeLabel}`}
       />
 
       <HeroCard
