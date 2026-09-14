@@ -22,6 +22,7 @@ import {
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
+import Review from "@/lib/models/Review.model";
 
 /**
  * ISR for product / CMS pages. Category slugs 308 to /categories/:slug.
@@ -337,7 +338,7 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
   };
 });
 
-function toProductLd(product) {
+function toProductLd(product, reviews = []) {
   const images = resolveProductImageUrls(product);
   const price = Number(
     product.isOnSale && product.salePrice
@@ -369,6 +370,7 @@ function toProductLd(product) {
     allowBackorder: product.allowBackorder ?? product.inventory?.allowBackorder,
     ratingValue: product.averageRating || product.rating,
     reviewCount: product.reviewCount || product.numReviews,
+    reviews,
   });
 }
 
@@ -395,9 +397,24 @@ export default async function ProductPage({ params, searchParams }) {
   }
 
   if (content.type === "product") {
+    let approvedReviews = [];
+    try {
+      await dbConnect();
+      const productId = content.data?.id || content.data?._id;
+      if (productId) {
+        approvedReviews = await Review.find({ product: productId, status: "approved" })
+          .select("reviewer.name rating title body createdAt")
+          .sort({ featured: -1, createdAt: -1 })
+          .limit(8)
+          .lean();
+      }
+    } catch (err) {
+      console.error("[product reviews json-ld]", err?.message || err);
+    }
+
     const productLd = (() => {
       try {
-        return toProductLd(content.data);
+        return toProductLd(content.data, approvedReviews);
       } catch (e) {
         console.error("product json-ld:", e);
         return null;

@@ -384,6 +384,34 @@ export function productJsonLd(p) {
     };
   }
 
+  const reviewRows = Array.isArray(p.reviews) ? p.reviews : [];
+  if (reviewRows.length) {
+    ld.review = reviewRows.slice(0, 8).map((r) => {
+      const authorName = String(r?.reviewer?.name || r?.author || r?.name || "Customer").trim() || "Customer";
+      const body = String(r?.body || r?.reviewBody || "").trim();
+      const title = String(r?.title || r?.name || "").trim();
+      const rating = Number(r?.rating || r?.reviewRating?.ratingValue) || 5;
+      const published = r?.createdAt || r?.datePublished || r?.publishedAt;
+      const node = {
+        "@type": "Review",
+        author: { "@type": "Person", name: authorName },
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: String(Math.min(5, Math.max(1, rating))),
+          bestRating: "5",
+          worstRating: "1",
+        },
+      };
+      if (title) node.name = title.slice(0, 200);
+      if (body) node.reviewBody = body.slice(0, 5000);
+      if (published) {
+        const d = new Date(published);
+        if (!Number.isNaN(d.getTime())) node.datePublished = d.toISOString().slice(0, 10);
+      }
+      return node;
+    });
+  }
+
   return ld;
 }
 

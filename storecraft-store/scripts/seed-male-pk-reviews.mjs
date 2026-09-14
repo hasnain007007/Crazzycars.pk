@@ -23,8 +23,13 @@ function arg(name, fallback = "") {
   return fallback;
 }
 const zeroRating = args.includes("--zero-rating");
-const categorySlug = arg("category", zeroRating ? "" : "led-lighting");
+const productSlug = arg("slug", "").trim();
+const categorySlug = arg("category", zeroRating || productSlug ? "" : "led-lighting");
 const limit = Math.max(1, Math.min(400, parseInt(arg("limit", zeroRating ? "250" : "40"), 10) || 40));
+const reviewsPerProduct = Math.max(
+  1,
+  Math.min(6, parseInt(arg("per-product", productSlug ? "3" : "2"), 10) || (productSlug ? 3 : 2))
+);
 
 const MALE_REVIEWERS = [
   { name: "Ahmed Khan", location: "Lahore" },
@@ -139,6 +144,17 @@ async function recalc(productId) {
 }
 
 async function loadProducts() {
+  if (productSlug) {
+    const p = await Product.findOne({ status: "active", slug: productSlug })
+      .select("name slug reviewCount averageRating")
+      .lean();
+    if (!p) {
+      console.error("Product not found:", productSlug);
+      process.exit(1);
+    }
+    return [p];
+  }
+
   if (zeroRating) {
     const products = await Product.find({
       status: "active",
@@ -177,9 +193,11 @@ async function main() {
 
   const products = await loadProducts();
   console.log(
-    zeroRating
-      ? `Seeding reviews for ${products.length} zero-rating products`
-      : `Seeding reviews for ${products.length} products in ${categorySlug}`
+    productSlug
+      ? `Seeding ${reviewsPerProduct} reviews for slug ${productSlug}`
+      : zeroRating
+        ? `Seeding reviews for ${products.length} zero-rating products`
+        : `Seeding reviews for ${products.length} products in ${categorySlug}`
   );
 
   let created = 0;
@@ -187,8 +205,8 @@ async function main() {
 
   for (let i = 0; i < products.length; i++) {
     const p = products[i];
-    for (let j = 0; j < 2; j++) {
-      const reviewer = MALE_REVIEWERS[(i * 2 + j) % MALE_REVIEWERS.length];
+    for (let j = 0; j < reviewsPerProduct; j++) {
+      const reviewer = MALE_REVIEWERS[(i * reviewsPerProduct + j) % MALE_REVIEWERS.length];
       const tpl = TEMPLATES[(i + j) % TEMPLATES.length];
       const exists = await Review.findOne({
         product: p._id,
@@ -225,7 +243,19 @@ async function main() {
     await recalc(p._id);
   }
 
-  console.log(JSON.stringify({ created, skipped, products: products.length, mode: zeroRating ? "zero-rating" : categorySlug }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        created,
+        skipped,
+        products: products.length,
+        perProduct: reviewsPerProduct,
+        mode: productSlug || (zeroRating ? "zero-rating" : categorySlug),
+      },
+      null,
+      2
+    )
+  );
   await mongoose.disconnect();
 }
 
