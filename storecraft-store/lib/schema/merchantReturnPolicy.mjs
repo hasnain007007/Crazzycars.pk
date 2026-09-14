@@ -37,7 +37,7 @@ export function buildMerchantReturnPolicies(siteUrl) {
   ];
 }
 
-/** Flat nationwide delivery from STORE_POLICY. Omits unconfirmed city transit times. */
+/** Flat nationwide delivery from STORE_POLICY (COD Pakistan). */
 export function buildOfferShippingDetails() {
   const fee = Number(STORE_POLICY.shipping.standardFeePKR) || 0;
   return {
@@ -57,6 +57,13 @@ export function buildOfferShippingDetails() {
         "@type": "QuantitativeValue",
         minValue: 1,
         maxValue: 2,
+        unitCode: "DAY",
+      },
+      // Nationwide courier transit after dispatch (PKT business days).
+      transitTime: {
+        "@type": "QuantitativeValue",
+        minValue: 2,
+        maxValue: 5,
         unitCode: "DAY",
       },
     },

@@ -128,7 +128,7 @@ function buildCollectionProductNode(p) {
     "@id": `${itemUrl}#product`,
     name: p.name || slug,
     url: itemUrl,
-    brand: { "@type": "Brand", name: p.brand || "CrazzyCars.pk" },
+    brand: { "@type": "Brand", name: String(p.brand || "CrazzyCars.pk").trim() || "CrazzyCars.pk" },
   };
 
   const description = String(
@@ -146,12 +146,35 @@ function buildCollectionProductNode(p) {
     `${p.name || slug} — shop online at CrazzyCars.pk with Cash on Delivery across Pakistan.`
   ).slice(0, 5000);
 
+  // Global identifiers — clears "No global identifier (gtin, brand)" merchant warnings.
+  const sku = String(p.sku || p.articleNo || p.inventory?.sku || "").trim();
+  if (sku) productNode.sku = sku;
+  else productNode.sku = slug.toUpperCase().replace(/[^A-Z0-9]+/g, "-").slice(0, 64);
+  const gtin = String(p.gtin || p.ean || "").replace(/\D/g, "");
+  if (gtin.length >= 8) {
+    if (gtin.length === 13) productNode.gtin13 = gtin;
+    else if (gtin.length === 12) productNode.gtin12 = gtin;
+    else if (gtin.length === 14) productNode.gtin14 = gtin;
+    else productNode.gtin = gtin;
+  }
+  const mpn = String(p.mpn || p.partNumber || "").trim();
+  if (mpn) productNode.mpn = mpn;
+
+  const priceValidUntil = (() => {
+    if (p.priceValidUntil) return String(p.priceValidUntil).slice(0, 10);
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().slice(0, 10);
+  })();
+
   if (priceNum != null) {
     productNode.offers = {
       "@type": "Offer",
       url: itemUrl,
       priceCurrency: "PKR",
       price: Number(priceNum).toFixed(2),
+      priceValidUntil,
+      itemCondition: conditionUrl(p.condition),
       availability: availabilityUrl({
         stock,
         trackInventory: p.trackInventory ?? p.inventory?.trackInventory,
