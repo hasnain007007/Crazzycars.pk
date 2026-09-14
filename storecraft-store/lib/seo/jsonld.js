@@ -137,6 +137,17 @@ function resolvePriceValidUntil(p) {
   return d.toISOString().slice(0, 10);
 }
 
+/** Offer.validFrom — clears GSC merchant "Missing field validFrom (optional)". */
+function resolveOfferValidFrom(p) {
+  if (p?.validFrom) return String(p.validFrom).slice(0, 10);
+  const fromDoc = p?.updatedAt || p?.createdAt || p?.publishedAt;
+  if (fromDoc) {
+    const d = new Date(fromDoc);
+    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  }
+  return new Date().toISOString().slice(0, 10);
+}
+
 function applyGtinMpn(node, p) {
   const gtin = String(p?.gtin || p?.ean || "").replace(/\D/g, "");
   if (gtin.length >= 8) {
@@ -161,6 +172,7 @@ function buildMerchantOffer({
   siteUrl,
   includeSeller = false,
   priceValidUntil,
+  validFrom,
 } = {}) {
   const SITE = siteUrl || site();
   const offer = {
@@ -168,6 +180,7 @@ function buildMerchantOffer({
     url,
     priceCurrency: "PKR",
     price: Number(price).toFixed(2),
+    validFrom: validFrom || resolveOfferValidFrom(),
     priceValidUntil: priceValidUntil || resolvePriceValidUntil(),
     itemCondition: conditionUrl(condition),
     availability: availabilityUrl(stockMeta || {}),
@@ -237,6 +250,7 @@ function buildCollectionProductNode(p) {
       condition: p.condition,
       siteUrl: SITE,
       priceValidUntil: resolvePriceValidUntil(p),
+      validFrom: resolveOfferValidFrom(p),
     });
   }
 
@@ -316,6 +330,7 @@ export function productJsonLd(p) {
       siteUrl: SITE,
       includeSeller: true,
       priceValidUntil: resolvePriceValidUntil(p),
+      validFrom: resolveOfferValidFrom(p),
     });
   }
 
