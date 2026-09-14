@@ -105,6 +105,7 @@ function productHasRichResultSignal(node) {
 function buildCollectionProductNode(p) {
   const slug = String(p?.slug || "").trim();
   if (!slug) return null;
+  const SITE = site();
   const path = p.urlPath || `/${slug}`;
   const itemUrl = absoluteProductUrl(path);
   const priceNum = resolveOfferPrice(p);
@@ -130,6 +131,21 @@ function buildCollectionProductNode(p) {
     brand: { "@type": "Brand", name: p.brand || "CrazzyCars.pk" },
   };
 
+  const description = String(
+    p.metaDescription ||
+      p.seo?.metaDescription ||
+      p.shortDescription ||
+      p.description ||
+      ""
+  )
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  productNode.description = (
+    description ||
+    `${p.name || slug} — shop online at CrazzyCars.pk with Cash on Delivery across Pakistan.`
+  ).slice(0, 5000);
+
   if (priceNum != null) {
     productNode.offers = {
       "@type": "Offer",
@@ -143,6 +159,8 @@ function buildCollectionProductNode(p) {
         hasComboStock,
         anyComboInStock,
       }),
+      shippingDetails: buildOfferShippingDetails(),
+      hasMerchantReturnPolicy: buildMerchantReturnPolicies(SITE),
     };
   }
 
@@ -158,7 +176,6 @@ function buildCollectionProductNode(p) {
 
   if (!productHasRichResultSignal(productNode)) return null;
 
-  const SITE = site();
   const imgCandidates = [
     typeof p.image === "string" ? p.image : "",
     Array.isArray(p.images) ? p.images[0] : "",
