@@ -66,6 +66,7 @@ function resolveOfferPrice(p) {
     p?.price,
     p?.salePrice,
     p?.regularPrice,
+    p?.compareAt,
     p?.pricing?.salePrice,
     p?.pricing?.regularPrice,
   ];
@@ -73,7 +74,101 @@ function resolveOfferPrice(p) {
     const n = Number(c);
     if (Number.isFinite(n) && n > 0) return n;
   }
+  // Variation matrix / combo fallback (raw catalog docs).
+  const combos = Array.isArray(p?.variationCombinations) ? p.variationCombinations : [];
+  let minCombo = null;
+  for (const c of combos) {
+    const n = Number(c?.price);
+    if (Number.isFinite(n) && n > 0 && (minCombo == null || n < minCombo)) minCombo = n;
+  }
+  if (minCombo != null) return minCombo;
+  const variants = Array.isArray(p?.variants) ? p.variants : [];
+  for (const v of variants) {
+    const n = Number(v?.price);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
   return null;
+}
+
+function productHasRichResultSignal(node) {
+  if (!node || typeof node !== "object") return false;
+  if (node.offers && Number(node.offers.price) > 0) return true;
+  if (node.aggregateRating && Number(node.aggregateRating.reviewCount) > 0) return true;
+  if (Array.isArray(node.review) && node.review.length > 0) return true;
+  return false;
+}
+
+/**
+ * Build a Google-valid Product node for ItemList, or null if incomplete.
+ * Bare Product (name/url only) triggers GSC: "Either offers, review, or aggregateRating…".
+ */
+function buildCollectionProductNode(p) {
+  const slug = String(p?.slug || "").trim();
+  if (!slug) return null;
+  const path = p.urlPath || `/${slug}`;
+  const itemUrl = absoluteProductUrl(path);
+  const priceNum = resolveOfferPrice(p);
+  const ratingValue = Number(p.ratingValue || p.averageRating || p.ratingAverage || p.rating) || 0;
+  const reviewCount = Number(p.reviewCount || p.numReviews || p.totalReviews) || 0;
+  const hasRating = ratingValue > 0 && reviewCount > 0;
+  if (priceNum == null && !hasRating) return null;
+
+  const combos = Array.isArray(p.variationCombinations) ? p.variationCombinations : [];
+  const hasComboStock = combos.some(
+    (c) => c?.stock !== undefined && c?.stock !== null && Number.isFinite(Number(c.stock))
+  );
+  const anyComboInStock = hasComboStock ? combos.some((c) => Number(c.stock) > 0) : false;
+  const stock = hasComboStock
+    ? combos.reduce((sum, c) => sum + Math.max(0, Number(c.stock) || 0), 0)
+    : Number(p.stock ?? p.inventory?.quantity ?? p.quantity ?? 0);
+
+  const productNode = {
+    "@type": "Product",
+    "@id": `${itemUrl}#product`,
+    name: p.name || slug,
+    url: itemUrl,
+    brand: { "@type": "Brand", name: p.brand || "CrazzyCars.pk" },
+  };
+
+  if (priceNum != null) {
+    productNode.offers = {
+      "@type": "Offer",
+      url: itemUrl,
+      priceCurrency: "PKR",
+      price: Number(priceNum).toFixed(2),
+      availability: availabilityUrl({
+        stock,
+        trackInventory: p.trackInventory ?? p.inventory?.trackInventory,
+        allowBackorder: p.allowBackorder ?? p.inventory?.allowBackorder,
+        hasComboStock,
+        anyComboInStock,
+      }),
+    };
+  }
+
+  if (hasRating) {
+    productNode.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(ratingValue),
+      reviewCount: String(reviewCount),
+      bestRating: "5",
+      worstRating: "1",
+    };
+  }
+
+  if (!productHasRichResultSignal(productNode)) return null;
+
+  const SITE = site();
+  const imgCandidates = [
+    typeof p.image === "string" ? p.image : "",
+    Array.isArray(p.images) ? p.images[0] : "",
+    p.media?.images?.find((i) => i?.isMain)?.url,
+    p.media?.images?.[0]?.url,
+  ];
+  const imgs = absoluteImageUrls(imgCandidates, SITE);
+  if (imgs.length) productNode.image = imgs[0];
+
+  return productNode;
 }
 
 /** True when Google Product / merchant listing rich results can accept this node. */
@@ -265,70 +360,26 @@ export function collectionPageJsonLd({
       if (!slug) return null;
       const path = p.urlPath || `/${slug}`;
       const itemUrl = absoluteProductUrl(path);
-      const priceNum = resolveOfferPrice(p);
-      const combos = Array.isArray(p.variationCombinations) ? p.variationCombinations : [];
-      const hasComboStock = combos.some(
-        (c) => c?.stock !== undefined && c?.stock !== null && Number.isFinite(Number(c.stock))
-      );
-      const anyComboInStock = hasComboStock
-        ? combos.some((c) => Number(c.stock) > 0)
-        : false;
-      const stock = hasComboStock
-        ? combos.reduce((sum, c) => sum + Math.max(0, Number(c.stock) || 0), 0)
-        : Number(p.stock ?? p.inventory?.quantity ?? 0);
-      const productNode = {
-        "@type": "Product",
-        "@id": `${itemUrl}#product`,
-        name: p.name || slug,
-        url: itemUrl,
-      };
-      const ratingValue = Number(p.ratingValue || p.averageRating || p.rating) || 0;
-      const reviewCount = Number(p.reviewCount || p.numReviews || p.totalReviews) || 0;
-      // Google Product rich results require offers | review | aggregateRating.
-      // Never emit a bare Product node — that is the "1 critical issue" in GSC.
-      if (priceNum != null) {
-        productNode.offers = {
-          "@type": "Offer",
-          url: itemUrl,
-          priceCurrency: "PKR",
-          price: priceNum.toFixed(2),
-          availability: availabilityUrl({
-            stock,
-            trackInventory: p.trackInventory ?? p.inventory?.trackInventory,
-            allowBackorder: p.allowBackorder ?? p.inventory?.allowBackorder,
-            hasComboStock,
-            anyComboInStock,
-          }),
-        };
-      }
-      if (ratingValue > 0 && reviewCount > 0) {
-        productNode.aggregateRating = {
-          "@type": "AggregateRating",
-          ratingValue: String(ratingValue),
-          reviewCount: String(reviewCount),
-          bestRating: "5",
-          worstRating: "1",
-        };
-      }
       const listItem = {
         "@type": "ListItem",
         position: i + 1,
         url: itemUrl,
         name: p.name || slug,
       };
-      if (productNode.offers || productNode.aggregateRating) {
-        const img =
-          (typeof p.image === "string" && p.image) ||
-          p.images?.[0] ||
-          p.media?.images?.find((i) => i?.isMain)?.url ||
-          p.media?.images?.[0]?.url ||
-          null;
-        if (img) productNode.image = img;
-        listItem.item = productNode;
-      }
+      // Only attach Product when Google-complete — never emit bare name/url Product.
+      const productNode = buildCollectionProductNode(p);
+      if (productNode) listItem.item = productNode;
       return listItem;
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    // Safety net: if anything incomplete slipped through, drop the Product item.
+    .map((li) => {
+      if (li?.item?.["@type"] === "Product" && !productHasRichResultSignal(li.item)) {
+        const { item, ...rest } = li;
+        return rest;
+      }
+      return li;
+    });
 
   const total =
     Number.isFinite(Number(numberOfItems)) && Number(numberOfItems) >= 0

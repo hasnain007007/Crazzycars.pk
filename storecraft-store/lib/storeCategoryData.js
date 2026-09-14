@@ -6,6 +6,7 @@ import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
 import { listingMongoSortSpec } from "@/lib/productListing";
 import { pruneCategoryTreeWithoutProducts } from "@/lib/emptyLeafCategory";
+import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 
 export { pruneCategoryTreeWithoutProducts };
 
@@ -366,7 +367,8 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
   return {
     category,
     subcategories: liveSubcategories,
-    products,
+    // Serialize so JSON-LD always gets top-level price + rating fields (not bare Mongo docs).
+    products: (products || []).map((p) => serializeStoreProductSummary(p)),
     breadcrumbs,
     /** Alias for clients expecting `breadcrumb` */
     breadcrumb: breadcrumbs,
