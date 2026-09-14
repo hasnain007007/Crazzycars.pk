@@ -4,6 +4,7 @@
  */
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
+import Review from "@/lib/models/Review.model";
 import { listingMongoSortSpec } from "@/lib/productListing";
 import { pruneCategoryTreeWithoutProducts } from "@/lib/emptyLeafCategory";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
@@ -339,7 +340,7 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
   const [products, productCount] = await Promise.all([
     Product.find(productQuery)
       .select(
-        "name slug media.images pricing.regularPrice pricing.salePrice inventory featured newArrival status createdAt shortDescription articleNo categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
+        "name slug media.images pricing.regularPrice pricing.salePrice inventory featured newArrival status createdAt updatedAt shortDescription articleNo brand gtin ean mpn partNumber categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
       .populate("categories", "name slug")
       .sort(sortSpec)
@@ -348,6 +349,22 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
       .lean(),
     Product.countDocuments(productQuery),
   ]);
+
+  const productIds = (products || []).map((p) => p._id).filter(Boolean);
+  const reviewDocs = productIds.length
+    ? await Review.find({ product: { $in: productIds }, status: "approved" })
+        .select("product reviewer.name rating title body createdAt featured")
+        .sort({ featured: -1, createdAt: -1 })
+        .lean()
+    : [];
+  const reviewsByProduct = new Map();
+  for (const r of reviewDocs) {
+    const key = String(r.product);
+    const list = reviewsByProduct.get(key) || [];
+    if (list.length >= 2) continue;
+    list.push(r);
+    reviewsByProduct.set(key, list);
+  }
 
   const breadcrumbs = [];
   const anc = category.ancestors;
@@ -368,7 +385,12 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
     category,
     subcategories: liveSubcategories,
     // Serialize so JSON-LD always gets top-level price + rating fields (not bare Mongo docs).
-    products: (products || []).map((p) => serializeStoreProductSummary(p)),
+    products: (products || []).map((p) => ({
+      ...serializeStoreProductSummary(p),
+      createdAt: p.createdAt || null,
+      updatedAt: p.updatedAt || null,
+      reviews: reviewsByProduct.get(String(p._id)) || [],
+    })),
     breadcrumbs,
     /** Alias for clients expecting `breadcrumb` */
     breadcrumb: breadcrumbs,
