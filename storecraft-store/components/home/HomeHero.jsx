@@ -159,28 +159,29 @@ function HeroRail({ items }) {
   );
 }
 
-function HeroCopy({ slide, settings, animateKey, headingLevel = "p" }) {
-  const { headline, sub, buttons, hasOverlay, hasText } = resolveCopy(slide, settings);
-  const TitleTag = headingLevel === "h1" ? "h1" : headingLevel === "h2" ? "h2" : "p";
+const PAGE_H1_FALLBACK = `${BRAND} — Car Accessories Pakistan`;
 
-  if (!hasOverlay) {
-    if (headingLevel === "h1") {
-      return (
-        <h1 className="sr-only" key={animateKey}>
-          {BRAND} — Car Accessories Pakistan
-        </h1>
-      );
-    }
-    return null;
-  }
+/**
+ * Single page H1 for the homepage hero — rendered once outside the slide track
+ * so carousel SSR can never emit two <h1> tags.
+ */
+function PageHeroH1({ slide, settings }) {
+  const { headline, hasText } = resolveCopy(slide, settings);
+  const text = hasText && headline ? headline : PAGE_H1_FALLBACK;
+  // Designed / image-only banners: keep H1 for crawlers without overlaying art.
+  // Text overlays: visual title stays a <p> in HeroCopy; this H1 mirrors it for a11y/SEO.
+  return <h1 className="sr-only">{text}</h1>;
+}
+
+/** Slide overlay copy — never emits <h1>; page heading lives in PageHeroH1. */
+function HeroCopy({ slide, settings, animateKey }) {
+  const { headline, sub, buttons, hasOverlay, hasText } = resolveCopy(slide, settings);
+
+  if (!hasOverlay) return null;
 
   return (
     <div className={`home-hero__copy${!hasText ? " home-hero__copy--ctas-only" : ""}`} key={animateKey}>
-      {headline ? (
-        <TitleTag className="home-hero__title">{headline}</TitleTag>
-      ) : headingLevel === "h1" ? (
-        <h1 className="sr-only">{BRAND} — Car Accessories Pakistan</h1>
-      ) : null}
+      {headline ? <p className="home-hero__title">{headline}</p> : null}
       {sub ? <p className="home-hero__sub">{sub}</p> : null}
       {buttons.length ? (
         <div className="home-hero__ctas">
@@ -301,12 +302,7 @@ function HeroSlidePanel({
           aria-label={`Shop at ${BRAND}`}
           tabIndex={isActive ? 0 : -1}
         >
-          {/* Only the active slide may own the page H1 (sr-only brand fallback). */}
-          {isActive ? (
-            <h1 className="sr-only">{BRAND} — Car Accessories Pakistan</h1>
-          ) : (
-            <span className="sr-only">{BRAND}</span>
-          )}
+          <span className="sr-only">{BRAND}</span>
         </Link>
       ) : (
         <div className="home-hero__inner">
@@ -314,7 +310,6 @@ function HeroSlidePanel({
             slide={slide}
             settings={settings}
             animateKey={reduceMotion ? "static" : `${slide.id}-${isActive ? "on" : "off"}`}
-            headingLevel={isActive ? "h1" : "p"}
           />
         </div>
       )}
@@ -553,6 +548,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
           if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false);
         }}
       >
+        <PageHeroH1 slide={slide} settings={settings} />
         <div
           className="home-hero__viewport"
           onPointerDown={multi ? onPointerDown : undefined}

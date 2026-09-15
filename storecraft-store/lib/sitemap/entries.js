@@ -79,6 +79,78 @@ function toEntry(headers, path, lastmod, changefreq, priority) {
   };
 }
 
+function asDate(value) {
+  if (!value) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function maxDate(...values) {
+  let max = null;
+  for (const value of values) {
+    const d = asDate(value);
+    if (!d) continue;
+    if (!max || d > max) max = d;
+  }
+  return max;
+}
+
+function maxUpdatedAt(docs) {
+  return docs.reduce((max, doc) => maxDate(max, doc?.updatedAt, doc?.publishedAt), null);
+}
+
+/**
+ * Static routes previously omitted lastmod (Bing/GSC often surface that as "now").
+ * Derive real timestamps from catalog / CMS freshness — never Date.now().
+ */
+function staticPageLastmod(path, { products, categories, vehicles, blogPosts, cmsBySlug }) {
+  const maxProduct = maxUpdatedAt(products);
+  const maxCategory = maxUpdatedAt(categories);
+  const maxVehicle = maxUpdatedAt(vehicles);
+  const maxBlog = maxUpdatedAt(blogPosts);
+  const catalogFloor = maxDate(maxProduct, maxCategory, maxVehicle, maxBlog);
+
+  let lastmod = null;
+  switch (path) {
+    case "/":
+      lastmod = catalogFloor;
+      break;
+    case "/shop":
+    case "/sale":
+      lastmod = maxProduct;
+      break;
+    case "/categories":
+      lastmod = maxCategory;
+      break;
+    case "/cars":
+      lastmod = maxVehicle;
+      break;
+    case "/blogs":
+      lastmod = maxBlog;
+      break;
+    case "/faq":
+      lastmod = maxDate(cmsBySlug.get("faq"), maxBlog);
+      break;
+    case "/contact":
+      lastmod = cmsBySlug.get("contact") || cmsBySlug.get("contact-us");
+      break;
+    case "/about":
+      lastmod = cmsBySlug.get("about") || cmsBySlug.get("about-us");
+      break;
+    case "/shipping-policy":
+      lastmod = cmsBySlug.get("shipping-policy");
+      break;
+    case "/returns-policy":
+      lastmod = cmsBySlug.get("returns-policy");
+      break;
+    default:
+      lastmod = null;
+  }
+
+  // Never emit a missing lastmod for static routes (tools treat that as "now").
+  return lastmod || catalogFloor;
+}
+
 function paginateEntries(entries, chunkIndex = 0) {
   const start = chunkIndex * MAX_SITEMAP_URLS;
   return entries.slice(start, start + MAX_SITEMAP_URLS);
@@ -106,6 +178,15 @@ export async function fetchSitemapContext(headers) {
     products.map((p) => String(p.slug || "").toLowerCase()).filter(Boolean)
   );
 
+  const cmsBySlug = new Map();
+  for (const page of cmsPages) {
+    const slug = String(page.slug || "").trim().toLowerCase();
+    if (!slug) continue;
+    cmsBySlug.set(slug, asDate(page.updatedAt));
+  }
+
+  const lastmodCtx = { products, categories, vehicles, blogPosts, cmsBySlug };
+
   const productEntries = products
     .filter((p) => p.slug)
     .map((p) => toEntry(headers, `/${p.slug}`, p.updatedAt, "weekly", 0.7));
@@ -119,7 +200,13 @@ export async function fetchSitemapContext(headers) {
     .map((v) => toEntry(headers, `/cars/${v.slug}`, v.updatedAt, "weekly", 0.8));
 
   const staticPageEntries = STATIC_PAGE_PATHS.map((path) =>
-    toEntry(headers, path, null, path === "/" ? "daily" : "weekly", path === "/" ? 1 : 0.8)
+    toEntry(
+      headers,
+      path,
+      staticPageLastmod(path, lastmodCtx),
+      path === "/" ? "daily" : "weekly",
+      path === "/" ? 1 : 0.8
+    )
   );
 
   const cmsPageEntries = cmsPages
