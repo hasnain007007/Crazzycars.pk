@@ -17,6 +17,7 @@ import {
   whatsappWaMeDigits,
 } from "@/lib/freeDelivery";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
+import { WhatsAppPaymentButton } from "@/components/store/WhatsAppPaymentButton";
 
 function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentMethods }) {
   const pm = String(order?.paymentMethod || "").toLowerCase();
@@ -38,24 +39,33 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
 
   const waNum = String(whatsapp?.number || process.env.NEXT_PUBLIC_WHATSAPP || storePolicyWhatsApp()).trim();
   const waDisplay = formatWhatsAppDisplay(waNum || storePolicyWhatsApp());
+  const amount = showPercent ? advanceRequired : rules.advancePaymentAmount || shipping || 250;
   const messageBody = formatAdvancePaymentMessage(
     showPercent
       ? `Please pay at least {amount} in advance (${advanceMaxPercent}% of eligible items).\n\nRemaining on delivery: ${formatPrice(remainingCod)}.\n\nSend payment screenshot on WhatsApp: {whatsapp}`
       : rules.advancePaymentMessage,
-    showPercent ? advanceRequired : rules.advancePaymentAmount || shipping || 250,
+    amount,
     waDisplay
   );
   const accountLines = getAdvancePaymentAccountLines(
     normalizePakistaniPaymentMethods(pakistaniPaymentMethods)
   );
-  const waLink = `https://wa.me/${whatsappWaMeDigits(waNum || storePolicyWhatsApp())}`;
+  const orderRef = String(order?.orderNumber || order?._id || "").trim();
+  const waText = encodeURIComponent(
+    [
+      `Hi CrazzyCars, I paid the delivery / advance charges for order ${orderRef || "(new order)"}.`,
+      `Amount: ${formatPrice(amount)}.`,
+      "Sending payment screenshot now.",
+    ].join("\n")
+  );
+  const waLink = `https://wa.me/${whatsappWaMeDigits(waNum || storePolicyWhatsApp())}?text=${waText}`;
 
   return (
     <div
       style={{
-        background: "#FFFBEB",
-        border: "1px solid #FDE68A",
-        borderLeft: "4px solid #F59E0B",
+        background: "#FFF5F5",
+        border: "1px solid #FECACA",
+        borderLeft: "4px solid #1E3A5F",
         borderRadius: 8,
         padding: "16px 20px",
         marginBottom: 28,
@@ -67,16 +77,18 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
           margin: "0 0 10px",
           fontWeight: 700,
           fontSize: 15,
-          color: "#92400E",
+          color: "#9F1239",
         }}
       >
-        {showPercent ? `Pay at least ${advanceMaxPercent}% advance` : rules.advancePaymentMessageTitle}
+        {showPercent
+          ? `Pay at least ${advanceMaxPercent}% advance`
+          : rules.advancePaymentMessageTitle || "Pay Delivery Charges to Confirm"}
       </p>
       <p
         style={{
           margin: "0 0 10px",
           fontSize: 14,
-          color: "#78350F",
+          color: "#9F1239",
           lineHeight: 1.6,
           whiteSpace: "pre-wrap",
         }}
@@ -89,23 +101,18 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
             margin: "0 0 10px",
             paddingLeft: 18,
             fontSize: 14,
-            color: "#78350F",
+            color: "#9F1239",
             lineHeight: 1.7,
           }}
         >
           {accountLines.map((line) => (
             <li key={line.label}>
-              <strong style={{ color: "#92400E" }}>{line.label}:</strong> {line.value}
+              <strong style={{ color: "#881337" }}>{line.label}:</strong> {line.value}
             </li>
           ))}
         </ul>
       ) : null}
-      <p style={{ margin: 0, fontSize: 14, color: "#78350F", fontWeight: 700 }}>
-        WhatsApp screenshot:{" "}
-        <a href={waLink} target="_blank" rel="noopener noreferrer" style={{ color: "#16A34A" }}>
-          {waDisplay}
-        </a>
-      </p>
+      <WhatsAppPaymentButton href={waLink} displayNumber={waDisplay} />
     </div>
   );
 }
