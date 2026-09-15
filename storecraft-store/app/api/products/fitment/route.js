@@ -4,6 +4,7 @@ import Product from "@/lib/models/Product.model";
 import { productMatchesVehicle, vehicleMatchScore } from "@/lib/vehicleCompatibility";
 import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
+import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 /** GET /api/products/fitment?make=Toyota&model=Yaris&year=2022&variant=GLI */
 export async function GET(request) {
@@ -29,7 +30,7 @@ export async function GET(request) {
     const vehicleIdSet = new Set((vehicleIds || []).map((id) => String(id)));
 
     const candidates = await Product.find({
-      status: "active",
+      ...STOREFRONT_PRODUCT_FILTER,
       $or: orClauses,
     })
       .select(

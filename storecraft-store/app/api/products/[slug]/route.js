@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Product from "@/lib/models/Product.model";
 import { dbConnect } from "@/lib/db";
 import { serializeStoreProductDetail } from "@/lib/storeSerialize";
+import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 export async function GET(_request, context) {
   try {
@@ -10,14 +11,14 @@ export async function GET(_request, context) {
       return NextResponse.json({ success: false, error: "Missing slug." }, { status: 400 });
     }
     await dbConnect();
-    const p = await Product.findOne({ slug: String(slug), status: { $regex: /^active$/i } })
+    const p = await Product.findOne({ slug: String(slug), ...STOREFRONT_PRODUCT_FILTER })
       .select(
         "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications isUniversal compatibleCars vehicleCompatibility rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
       .populate("categories", "name slug")
       .populate({
         path: "recommendedProducts",
-        match: { status: "active" },
+        match: { ...STOREFRONT_PRODUCT_FILTER },
         select:
           "name slug status media pricing inventory featured newArrival categories articleNo simpleVariations variationCombinations tags shortDescription",
       })

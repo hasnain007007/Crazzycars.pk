@@ -5,6 +5,7 @@ import Product from "@/lib/models/Product.model";
 import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { queryProductsWithSearch } from "@/lib/productSearch";
+import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 function escapeRegex(s) {
   return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -60,7 +61,7 @@ export async function GET(request) {
       searchParams.get("new") === "1";
     const saleParam = searchParams.get("sale") === "true" || searchParams.get("deals") === "true";
 
-    const filter = { status: { $regex: /^active$/i } };
+    const filter = { ...STOREFRONT_PRODUCT_FILTER };
     const andParts = [];
 
     if (featuredFlag) {

@@ -24,6 +24,7 @@ import {
 import { PRODUCT_CSV_HEADERS, PRODUCT_CSV_SAMPLE_ROWS } from "@/lib/productCsv";
 import { sanitizeMediaImages } from "@/lib/productMutations";
 import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
+import { denySecurityHoldMutation } from "@/lib/securityHold";
 
 async function uniqueProductSlug(base, excludeId) {
   const root = slugify(base || "product") || "product";
@@ -251,6 +252,15 @@ export async function POST(request) {
         }
 
         if (existing) {
+          const holdDenied = denySecurityHoldMutation(
+            existing,
+            { status, securityHold: undefined },
+            user
+          );
+          if (holdDenied) {
+            const body = await holdDenied.json().catch(() => ({}));
+            throw new Error(body.error || "Security hold blocked CSV update");
+          }
           const slug = await uniqueProductSlug(requestedSlug, existing._id);
           // Merge images: if CSV provided images, replace; else keep existing (still filtered)
           if (!imageUrls.length && existing.media?.images?.length) {

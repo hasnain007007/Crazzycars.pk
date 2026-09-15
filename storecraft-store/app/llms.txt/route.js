@@ -3,6 +3,7 @@ import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -25,7 +26,7 @@ export async function GET() {
         .sort({ sortOrder: 1, name: 1 })
         .limit(40)
         .lean(),
-      Product.find({ status: "active" })
+      Product.find(STOREFRONT_PRODUCT_FILTER)
         .select("name slug pricing.regularPrice pricing.salePrice shortDescription featured isDeal")
         .sort({ featured: -1, isDeal: -1, updatedAt: -1 })
         .limit(40)

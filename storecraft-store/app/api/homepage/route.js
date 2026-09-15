@@ -5,6 +5,7 @@ import Product from "@/lib/models/Product.model";
 import Category from "@/lib/models/Category.model";
 import BlogPost from "@/lib/models/BlogPost.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
+import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 export async function GET() {
   try {
@@ -18,7 +19,7 @@ export async function GET() {
         .sort({ sortOrder: 1, createdAt: -1 })
         .lean(),
       Product.find({
-        status: { $regex: /^active$/i },
+        ...STOREFRONT_PRODUCT_FILTER,
         featured: true,
       })
         .select("name slug media pricing inventory featured newArrival categories simpleVariations variationCombinations variationTypes variationOptions variants")
@@ -26,7 +27,7 @@ export async function GET() {
         .limit(8)
         .lean(),
       Product.find({
-        status: { $regex: /^active$/i },
+        ...STOREFRONT_PRODUCT_FILTER,
         newArrival: true,
       })
         .select("name slug media pricing inventory featured newArrival categories simpleVariations variationCombinations variationTypes variationOptions variants")

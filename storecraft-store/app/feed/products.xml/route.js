@@ -4,6 +4,7 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { buildMerchantRssXml, productToMerchantItem } from "@/lib/merchantFeed";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 1800;
@@ -18,7 +19,7 @@ export async function GET() {
     const site = getSiteUrl({ headers: h });
 
     await dbConnect();
-    const products = await Product.find({ status: "active" })
+    const products = await Product.find(STOREFRONT_PRODUCT_FILTER)
       .select(
         "name slug articleNo ean partNumber condition vendor shortDescription longDescription seo media pricing inventory categories updatedAt"
       )

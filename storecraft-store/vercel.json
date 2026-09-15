@@ -24,6 +24,10 @@
     {
       "path": "/api/cron/abandoned-carts",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/security-hold-audit",
+      "schedule": "0 3 * * *"
     }
   ]
 }

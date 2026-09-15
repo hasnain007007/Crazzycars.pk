@@ -7,6 +7,7 @@ import Vehicle from "@/lib/models/Vehicle.model";
 import { VEHICLE_HANDLE_ALIASES } from "@/lib/categoryHandleAliases";
 import { buildVehiclePageProductFilter } from "@/lib/productVehicleQuery";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
+import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 function escapeRegex(s) {
   return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -268,7 +269,7 @@ export async function loadShopByCarIndex() {
   const rows = await Product.aggregate([
     {
       $match: {
-        status: "active",
+        ...STOREFRONT_PRODUCT_FILTER,
         compatibleVehicles: { $exists: true, $type: "array", $ne: [] },
       },
     },

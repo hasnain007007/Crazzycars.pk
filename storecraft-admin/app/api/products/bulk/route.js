@@ -11,6 +11,7 @@ import Product from "@/lib/models/Product.model";
 import { isBodyKitProduct } from "@/lib/codEligibility";
 import { normalizeAddOns } from "@/lib/productPayload";
 import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
+import { denySecurityHoldMutation } from "@/lib/securityHold";
 
 const BULK_LIMIT = 200;
 
@@ -249,6 +250,21 @@ async function handleSaveRows({ user, body, request }) {
     if (!Object.keys($set).length) continue;
 
     try {
+      const existing = await Product.findById(id).select("securityHold status").lean();
+      if (!existing) {
+        errors.push({ id, error: "Not found" });
+        continue;
+      }
+      const holdDenied = denySecurityHoldMutation(
+        existing,
+        { status: $set.status, securityHold: $set.securityHold },
+        user
+      );
+      if (holdDenied) {
+        const body = await holdDenied.json().catch(() => ({}));
+        errors.push({ id, error: body.error || "Security hold blocked update" });
+        continue;
+      }
       const res = await Product.updateOne({ _id: id }, { $set });
       if (res.modifiedCount) modified += 1;
     } catch (e) {

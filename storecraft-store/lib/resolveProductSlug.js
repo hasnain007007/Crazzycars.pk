@@ -11,13 +11,23 @@ function statusFilter(statuses) {
   return list.length === 1 ? list[0] : { $in: list };
 }
 
+/** Active lookups never surface security-held SKUs. */
+function productMatch(statuses) {
+  const list = Array.isArray(statuses) && statuses.length ? statuses : ["active"];
+  const filter = { status: statusFilter(list) };
+  if (list.length === 1 && list[0] === "active") {
+    filter.securityHold = { $ne: true };
+  }
+  return filter;
+}
+
 async function findExactOrCi(key, statuses, select) {
-  const status = statusFilter(statuses);
-  const exact = await Product.findOne({ slug: key, status }).select(select).lean();
+  const match = productMatch(statuses);
+  const exact = await Product.findOne({ slug: key, ...match }).select(select).lean();
   if (exact) return exact;
   const ci = await Product.findOne({
     slug: { $regex: `^${escapeRegex(key)}$`, $options: "i" },
-    status,
+    ...match,
   })
     .select(select)
     .lean();
@@ -25,20 +35,20 @@ async function findExactOrCi(key, statuses, select) {
   // Renamed SKUs (e.g. 8pcs → 4pcs) keep old handles in previousSlugs
   return Product.findOne({
     previousSlugs: key,
-    status,
+    ...match,
   })
     .select(select)
     .lean();
 }
 
 async function findPrefixOrYear(key, statuses, select) {
-  const status = statusFilter(statuses);
+  const match = productMatch(statuses);
 
   // Short Shopify handles that grew longer after migration
   // e.g. deal-5-complete-body-kit → deal-5-complete-body-kit-deal-front-...
   if (key.length >= 8) {
     const prefixHits = await Product.find({
-      status,
+      ...match,
       slug: { $regex: `^${escapeRegex(key)}(-|$)`, $options: "i" },
     })
       .select(select)
@@ -56,7 +66,7 @@ async function findPrefixOrYear(key, statuses, select) {
   if (/\d{4}-\d{4}/.test(key)) {
     const flex = escapeRegex(key).replace(/\d{4}-\d{4}/g, "\\d{4}-\\d{4}");
     const yearHits = await Product.find({
-      status,
+      ...match,
       slug: { $regex: `^${flex}`, $options: "i" },
     })
       .select(select)

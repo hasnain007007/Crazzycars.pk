@@ -237,6 +237,12 @@ const productSchema = new mongoose.Schema(
       default: "draft",
       index: true,
     },
+    /**
+     * Security / data-quality hold. When true, storefront treats the SKU as
+     * unpublished and only an owner may clear the hold or set status=active.
+     */
+    securityHold: { type: Boolean, default: false, index: true },
+    securityHoldReason: { type: String, default: "", trim: true },
     featured: { type: Boolean, default: false, index: true },
     isFeatured: { type: Boolean, default: false, index: true },
     isDeal: { type: Boolean, default: false, index: true },

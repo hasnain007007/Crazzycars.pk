@@ -29,6 +29,7 @@ import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 import { revalidateStorefront, productRevalidatePaths } from "@/lib/revalidateStorefront";
+import { denySecurityHoldMutation } from "@/lib/securityHold";
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;
@@ -308,8 +309,29 @@ export async function PUT(request, context) {
         metaKeywords: normalizeMetaKeywords(body.seo.metaKeywords),
       };
     }
-    if (body.status !== undefined && ["active", "inactive", "draft"].includes(body.status)) {
-      existing.status = body.status;
+
+    const nextStatus =
+      body.status !== undefined && ["active", "inactive", "draft"].includes(body.status)
+        ? body.status
+        : undefined;
+    const nextHold =
+      body.securityHold !== undefined ? Boolean(body.securityHold) : undefined;
+    const holdDenied = denySecurityHoldMutation(
+      existing,
+      { status: nextStatus, securityHold: nextHold },
+      user
+    );
+    if (holdDenied) return holdDenied;
+
+    if (nextStatus !== undefined) {
+      existing.status = nextStatus;
+    }
+    if (nextHold !== undefined) {
+      existing.securityHold = nextHold;
+      if (nextHold === false) existing.securityHoldReason = "";
+    }
+    if (body.securityHoldReason !== undefined && (existing.securityHold || nextHold === true)) {
+      existing.securityHoldReason = String(body.securityHoldReason || "").trim().slice(0, 500);
     }
     if (body.featured !== undefined) {
       existing.featured = Boolean(body.featured);
@@ -393,7 +415,12 @@ export async function PUT(request, context) {
       action: "Product updated",
       resource: "Product",
       resourceId: id,
-      details: { name: existing.name, slug: existing.slug },
+      details: {
+        name: existing.name,
+        slug: existing.slug,
+        status: existing.status,
+        securityHold: Boolean(existing.securityHold),
+      },
       type: "update",
       ip: requestIp(request),
     });

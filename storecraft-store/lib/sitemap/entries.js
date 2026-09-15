@@ -7,6 +7,7 @@ import BlogPost from "@/lib/models/BlogPost.model";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { MAX_SITEMAP_URLS } from "@/lib/sitemap/xml";
 import { getCategoryIdsWithProducts } from "@/lib/storeCategoryData";
+import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 /** Static storefront routes (no query strings, no redirect aliases). */
 const STATIC_PAGE_PATHS = [
@@ -60,7 +61,7 @@ async function vehicleIdsWithProducts() {
   const rows = await Product.aggregate([
     {
       $match: {
-        status: "active",
+        ...STOREFRONT_PRODUCT_FILTER,
         compatibleVehicles: { $exists: true, $type: "array", $ne: [] },
       },
     },
@@ -165,7 +166,7 @@ export async function fetchSitemapContext(headers) {
 
   const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts] =
     await Promise.all([
-      Product.find({ status: "active" }).select("slug updatedAt").lean(),
+      Product.find(STOREFRONT_PRODUCT_FILTER).select("slug updatedAt").lean(),
       Category.find({ status: "active" }).select("slug updatedAt _id").lean(),
       Vehicle.find({ isActive: true }).select("slug updatedAt _id").lean(),
       categoryIdsWithProducts(),

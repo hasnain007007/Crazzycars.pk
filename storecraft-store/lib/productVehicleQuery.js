@@ -16,7 +16,7 @@
 import Vehicle from "@/lib/models/Vehicle.model";
 
 export function activeProductStatusFilter() {
-  return { status: { $regex: /^active$/i } };
+  return { status: { $regex: /^active$/i }, securityHold: { $ne: true } };
 }
 
 export function escapeRegex(s) {
