@@ -166,7 +166,13 @@ export function DashboardView() {
 
         {/* Courier delivery / return portion */}
         <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <DeliveryReturnRatioCard data={data} />
+          <DeliveryReturnRatioCard
+            data={data}
+            from={customFrom}
+            to={customTo}
+            onRangeChange={onRangeChange}
+            loading={loading}
+          />
           <div className="rounded-xl border border-border-hairline bg-bg-panel p-5 shadow-none">
             <h3
               className="text-[10px] font-semibold uppercase tracking-[0.14em]"
@@ -192,7 +198,8 @@ export function DashboardView() {
               ))}
             </div>
             <p className="mt-3 text-[11px]" style={{ color: "var(--text-muted)" }}>
-              Delivery ratio = delivered ÷ (delivered + returned). Return ratio = returned ÷ (delivered + returned).
+              Use the calendar on Courier success to pick days. Dispatched = currently shipped; delivered / returned =
+              final courier outcomes in the selected period.
             </p>
           </div>
         </div>

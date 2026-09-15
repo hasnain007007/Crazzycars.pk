@@ -30,6 +30,40 @@ function dateMatch(from, to) {
   return { createdAt };
 }
 
+/** Build { $gte, $lte } date bounds when either end is set. */
+function dateBounds(from, to) {
+  if (!from && !to) return null;
+  const bounds = {};
+  if (from) bounds.$gte = from;
+  if (to) bounds.$lte = to;
+  return bounds;
+}
+
+/**
+ * Courier event in range: prefer event timestamp (shippedAt / deliveredAt),
+ * else fall back to createdAt for legacy rows missing those fields.
+ */
+function courierEventMatch(eventField, statuses, from, to) {
+  const bounds = dateBounds(from, to);
+  const statusFilter = Array.isArray(statuses) ? { $in: statuses } : statuses;
+  if (!bounds) {
+    return { orderStatus: statusFilter };
+  }
+  return {
+    $or: [
+      { [eventField]: bounds },
+      {
+        $and: [
+          {
+            $or: [{ [eventField]: null }, { [eventField]: { $exists: false } }],
+          },
+          { orderStatus: statusFilter, createdAt: bounds },
+        ],
+      },
+    ],
+  };
+}
+
 function pctChange(current, previous) {
   const c = Number(current) || 0;
   const p = Number(previous) || 0;
@@ -237,8 +271,12 @@ export async function GET(request) {
         createdAt: { $gte: todayStart, $lte: todayEnd },
       }),
       Order.countDocuments(period),
-      Order.countDocuments({ ...period, orderStatus: "shipped" }),
-      Order.countDocuments({ ...period, orderStatus: "delivered" }),
+      // Dispatched in selected days (shippedAt), including parcels now delivered/returned.
+      Order.countDocuments(
+        courierEventMatch("shippedAt", ["shipped", "delivered", "returned"], range.from, range.to)
+      ),
+      Order.countDocuments(courierEventMatch("deliveredAt", "delivered", range.from, range.to)),
+      // Returned: no returnedAt field — use createdAt window + current returned status.
       Order.countDocuments({ ...period, orderStatus: "returned" }),
       Order.find(period)
         .sort({ createdAt: -1 })
