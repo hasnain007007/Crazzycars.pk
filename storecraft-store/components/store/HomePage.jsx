@@ -13,6 +13,9 @@ import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 const HotDeals = dynamic(() => import("@/components/home/HotDeals"), {
   loading: () => <SectionSkeleton height={360} />,
 });
+const CategoryShowcaseRails = dynamic(() => import("@/components/home/CategoryShowcaseRails"), {
+  loading: () => <SectionSkeleton height={420} />,
+});
 const BestSellers = dynamic(() => import("@/components/home/BestSellers"), {
   loading: () => <SectionSkeleton height={360} />,
 });
@@ -52,6 +55,7 @@ export function HomePage({
   initialHeroSlides = null,
   initialCarCatalog = null,
   initialCategories = null,
+  initialCategoryTree = null,
   activeProductCount = null,
 }) {
   const ctx = useStoreSettings();
@@ -91,6 +95,7 @@ export function HomePage({
           categories={initialCategories}
         />
       ) : null}
+      <CategoryShowcaseRails initialTree={initialCategoryTree} />
       {sectionEnabled("hotDeals") && homepageSettings.sections?.showHotDeals !== false ? (
         <HotDeals settings={homepageSettings} initialProducts={initialHotDeals} />
       ) : null}
