@@ -29,12 +29,12 @@ function canSell(product) {
 
 function productNeedsOptions(product) {
   if (product?.requiresOptions === true) return true;
-  const hasAxes = (product?.simpleVariations || []).some(
-    (v) => v?.enabled && Array.isArray(v.tags) && v.tags.length > 0
+  const hasChoiceAxes = (product?.simpleVariations || []).some(
+    (v) => v?.enabled && Array.isArray(v.tags) && v.tags.length > 1
   );
   const hasCombos =
     Array.isArray(product?.variationCombinations) && product.variationCombinations.length > 0;
-  return hasAxes && hasCombos;
+  return hasChoiceAxes && hasCombos;
 }
 
 function getProductImages(product) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getWatermarkOverlayStyle } from "@/lib/productImageWatermark";
 import { cardImageUrl, cloudinarySrcSet, cloudinaryUrl } from "@/lib/cloudinaryImage";
 
@@ -24,6 +24,12 @@ export function WatermarkedImage({
 }) {
   const [failed, setFailed] = useState(false);
   const [retrySrc, setRetrySrc] = useState(null);
+
+  // Reset error/retry state when the gallery switches to another image.
+  useEffect(() => {
+    setFailed(false);
+    setRetrySrc(null);
+  }, [src]);
 
   const rawSrc = retrySrc || src;
   const optimized =

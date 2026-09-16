@@ -27,6 +27,12 @@ export default function ProductVariations({
     () => (simpleVariations || []).filter((v) => v.enabled && v.tags?.length > 0),
     [simpleVariations]
   );
+  /** Axes with only one option are auto-selected — don't show a useless "Style: Neon LED" picker. */
+  const choiceVariations = useMemo(
+    () =>
+      enabledVariations.filter((v) => (v.tags || []).map(variationTagLabel).filter(Boolean).length > 1),
+    [enabledVariations]
+  );
 
   const checkIfOutOfStock = useCallback(
     (variationName, tag) => {
@@ -95,10 +101,14 @@ export default function ProductVariations({
   }, [selected, enabledVariations, variationCombinations, basePrice]);
 
   if (enabledVariations.length === 0) return null;
+  if (choiceVariations.length === 0) {
+    // Still run selection/price effects above; nothing for the shopper to choose.
+    return <input type="hidden" value={currentPrice || basePrice || 0} readOnly />;
+  }
 
   return (
     <div className="pdp-vars">
-      {enabledVariations.map((variation) => {
+      {choiceVariations.map((variation) => {
         const tags = (variation.tags || []).map(variationTagLabel).filter(Boolean);
         const current = selected[variation.name] || "";
         const isSwatch = isSwatchVariation(variation.name, variation.tags);

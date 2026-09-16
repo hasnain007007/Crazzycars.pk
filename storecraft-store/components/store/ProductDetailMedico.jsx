@@ -397,7 +397,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
   const countdownEndDate = product?.saleSchedule?.endDate || product?.pricing?.saleSchedule?.endDate || null;
   const scheduleEnabled = Boolean(product?.saleSchedule?.enabled || product?.pricing?.saleSchedule?.enabled);
   const salePct = hasSale && regularPrice > 0 ? Math.max(1, Math.round(((regularPrice - basePrice) / regularPrice) * 100)) : 0;
-  const images = (() => {
+  const images = useMemo(() => {
     const mapped = (
       Array.isArray(product?.images)
         ? product.images
@@ -417,7 +417,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     const owned = mapped.filter((im) => imageBelongsToProduct(im, product));
     // Soft fallback: never blank the gallery when media still exists in Mongo.
     return owned.length ? owned : mapped;
-  })();
+  }, [product]);
 
   const productVideoUrl =
     String(product?.videoUrl || product?.media?.videoUrl || "").trim();
@@ -510,27 +510,34 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     });
   }, [galleryItems.length]);
 
-  /** When a logo/option combo has its own image, jump the gallery to that photo. */
-  useEffect(() => {
+  /** When a logo/option combo has its own image, jump the gallery to that photo (once per combo image). */
+  const matchedComboImageKey = useMemo(() => {
     const raw =
       typeof matchedCombo?.image === "string"
         ? matchedCombo.image
         : matchedCombo?.image?.url
           ? String(matchedCombo.image.url)
           : "";
-    if (!raw || !galleryItems.length) return;
+    return String(raw || "")
+      .trim()
+      .replace(/^https?:/i, "")
+      .split("?")[0];
+  }, [matchedCombo?.image]);
+
+  useEffect(() => {
+    if (!matchedComboImageKey || !galleryItems.length) return;
     const normalize = (u) =>
       String(u || "")
         .trim()
         .replace(/^https?:/i, "")
         .split("?")[0];
-    const target = normalize(raw);
-    if (!target) return;
     const idx = galleryItems.findIndex(
-      (item) => item?.type === "image" && normalize(item.url) === target
+      (item) => item?.type === "image" && normalize(item.url) === matchedComboImageKey
     );
     if (idx >= 0) setSelectedIndex(idx);
-  }, [matchedCombo?.image, galleryItems]);
+    // Do not depend on galleryItems identity — that reset the preview on every click.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchedComboImageKey, product?.slug]);
 
   const selectedItem = galleryItems[selectedIndex] ?? galleryItems[0] ?? null;
 
@@ -548,11 +555,13 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     const backorderOk = product?.inventory?.allowBackorder === true;
     const productStock = Number(product?.inventory?.quantity ?? product?.stock ?? 0);
 
-    const hasVariations =
-      product?.simpleVariations?.some((v) => v.enabled && v.tags?.length > 0) ||
-      (Array.isArray(product?.variationTypes) && product.variationTypes.length > 0);
-
     const enabledVars = (product?.simpleVariations || []).filter((v) => v.enabled && v.tags?.length > 0);
+    const choiceVars = enabledVars.filter((v) => (v.tags || []).length > 1);
+    const hasCustomerChoices = choiceVars.length > 0;
+
+    const hasVariations =
+      enabledVars.length > 0 ||
+      (Array.isArray(product?.variationTypes) && product.variationTypes.length > 0);
 
     const allSelected = hasVariations ? enabledVars.every((v) => selectedOptions?.[v.name]) : true;
 
@@ -589,7 +598,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
       btnBg = "#9CA3AF";
     };
 
-    if (hasVariations && !allSelected) {
+    if (hasCustomerChoices && !choiceVars.every((v) => selectedOptions?.[v.name])) {
       stockStatus = "select_options";
       stockText = "Select options";
       stockColor = "#6b7280";
