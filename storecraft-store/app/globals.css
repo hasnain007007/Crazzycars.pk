@@ -4088,7 +4088,7 @@ textarea::placeholder {
 .filter-by-car-fields {
   display: flex;
   flex-wrap: nowrap;
-  align-items: stretch;
+  align-items: center;
   gap: 10px;
 }
 
@@ -4209,6 +4209,7 @@ textarea::placeholder {
   background: #f8f8f8;
   border-top: 1px solid #efefef;
   padding: 14px 0 16px;
+  overflow-x: hidden;
 }
 
 .sbv-head {
@@ -4325,12 +4326,12 @@ textarea::placeholder {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  padding: 2px 2px 6px;
+  padding: 2px 8px 6px;
 }
 
 .sbv-card {
   flex: 0 0 auto;
-  width: 164px;
+  width: 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4338,16 +4339,14 @@ textarea::placeholder {
   text-decoration: none;
   color: inherit;
   scroll-snap-align: start;
-  content-visibility: auto;
-  contain-intrinsic-size: 230px;
 }
 
 .sbv-ring {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 150px;
-  height: 150px;
+  width: 108px;
+  height: 108px;
   border-radius: 50%;
   background: #ffffff;
   border: 2px solid #e8e8e8;
@@ -4363,22 +4362,22 @@ textarea::placeholder {
   height: 100%;
   object-fit: contain;
   object-position: center;
-  padding: 0;
-  transform: scale(1.24);
+  padding: 8px;
+  transform: none;
   pointer-events: none;
   transition: transform 0.35s ease;
 }
 
 .sbv-card:hover .sbv-ring,
 .sbv-card:focus-visible .sbv-ring {
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-2px);
   border-color: #c41e1e;
   box-shadow: 0 8px 18px rgba(196, 30, 30, 0.16);
 }
 
 .sbv-card:hover .sbv-ring img,
 .sbv-card:focus-visible .sbv-ring img {
-  transform: scale(1.32);
+  transform: scale(1.04);
 }
 
 .sbv-fallback {
@@ -4460,21 +4459,27 @@ textarea::placeholder {
   }
 
   .sbv-card {
-    width: 184px;
+    width: 156px;
   }
 
   .sbv-ring {
-    width: 168px;
-    height: 168px;
+    width: 148px;
+    height: 148px;
   }
 
   .sbv-ring img {
-    transform: scale(1.28);
+    transform: none;
+    padding: 10px;
   }
 
   .sbv-card:hover .sbv-ring img,
   .sbv-card:focus-visible .sbv-ring img {
-    transform: scale(1.36);
+    transform: scale(1.04);
+  }
+
+  .sbv-slider {
+    padding-left: 36px;
+    padding-right: 36px;
   }
 
   .sbv-model {
@@ -4511,16 +4516,17 @@ textarea::placeholder {
   }
 
   .sbv-card {
-    width: 136px;
+    width: 120px;
   }
 
   .sbv-ring {
-    width: 124px;
-    height: 124px;
+    width: 108px;
+    height: 108px;
   }
 
   .sbv-ring img {
-    transform: scale(1.24);
+    transform: none;
+    padding: 8px;
   }
 
   .sbv-make {
