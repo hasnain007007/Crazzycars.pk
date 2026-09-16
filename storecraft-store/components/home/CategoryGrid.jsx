@@ -89,7 +89,7 @@ export default function CategoryGrid({
           />
         </div>
 
-        <div className="subcat-circle-marquee mt-4 sm:mt-6" aria-label={title}>
+        <div className="subcat-circle-marquee home-cat-marquee mt-4 sm:mt-6" aria-label={title}>
           <div
             className="subcat-circle-track"
             style={{ animationDuration: `${durationSec}s` }}
@@ -97,12 +97,12 @@ export default function CategoryGrid({
             {[0, 1].map((copy) =>
               categories.map((c, idx) => {
                 const href = c.href || categoryHref(c.slug);
-                const imageUrl = c.imageUrl ? categoryImageUrl(c.imageUrl, 240) : "";
+                const imageUrl = c.imageUrl ? categoryImageUrl(c.imageUrl, 360) : "";
                 return (
                   <Link
                     key={`${copy}-${c.slug || c.name || idx}`}
                     href={href}
-                    className="subcat-circle-item"
+                    className="subcat-circle-item home-cat-marquee__item"
                     tabIndex={copy === 0 ? undefined : -1}
                     aria-hidden={copy === 1 ? true : undefined}
                     style={
@@ -111,7 +111,7 @@ export default function CategoryGrid({
                         : undefined
                     }
                   >
-                    <span className="subcat-circle-ring">
+                    <span className="subcat-circle-ring home-cat-marquee__ring">
                       {imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -137,7 +137,7 @@ export default function CategoryGrid({
                         </span>
                       )}
                     </span>
-                    <span className="subcat-circle-label">{c.name}</span>
+                    <span className="subcat-circle-label home-cat-marquee__label">{c.name}</span>
                   </Link>
                 );
               })
