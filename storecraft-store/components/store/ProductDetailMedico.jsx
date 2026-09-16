@@ -650,11 +650,23 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
     inStock,
   } = variationState;
 
-  const displayPrice = Number.isFinite(Number(matchedCombo?.price))
-    ? Number(matchedCombo?.price)
-    : Number.isFinite(Number(matchedVariation?.price))
-      ? Number(matchedVariation?.price)
-      : Number(product?.price || basePrice || 0);
+  const matchedForPrice = matchedCombo || matchedVariation;
+  const displayPrice = Number.isFinite(Number(matchedForPrice?.price))
+    ? Number(matchedForPrice.price)
+    : Number(product?.price || basePrice || 0);
+  /** Combo compare-at when set — multipack "was" price must follow the selected pack. */
+  const displayRegularPrice = (() => {
+    const fromCombo = Number(matchedForPrice?.compareAtPrice);
+    if (Number.isFinite(fromCombo) && fromCombo > 0) return fromCombo;
+    return regularPrice;
+  })();
+  const displayHasSale =
+    displayPrice > 0 &&
+    displayRegularPrice > displayPrice &&
+    product?.isOnSale !== false;
+  const displaySalePct = displayHasSale
+    ? Math.max(1, Math.round(((displayRegularPrice - displayPrice) / displayRegularPrice) * 100))
+    : 0;
   const availableStock = usesCombinationStock
     ? (matchedCombo || matchedVariation) != null &&
       Number.isFinite(Number((matchedCombo || matchedVariation)?.stock))
@@ -1081,7 +1093,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
               {product.name}
             </h1>
             <div className="flex flex-wrap items-center gap-3" style={{ margin: "8px 0" }}>
-              {hasSale ? (
+              {displayHasSale ? (
                 <>
                   <span
                     className="price pdp-price"
@@ -1106,7 +1118,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                       lineHeight: 1.2,
                     }}
                   >
-                    {formatPrice(regularPrice)}
+                    {formatPrice(displayRegularPrice)}
                   </span>
                 </>
               ) : (
@@ -1123,7 +1135,11 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   {formatPrice(displayPrice)}
                 </span>
               )}
-              {hasSale ? <span className="rounded bg-red-500 px-2 py-1 text-xs font-semibold text-white">-{salePct}%</span> : null}
+              {displayHasSale ? (
+                <span className="rounded bg-red-500 px-2 py-1 text-xs font-semibold text-white">
+                  -{displaySalePct}%
+                </span>
+              ) : null}
             </div>
             <p
               style={{
