@@ -19,6 +19,7 @@ describe("STORE_POLICY", () => {
     assert.equal(STORE_POLICY.shipping.freeDeliveryExists, false);
     assert.equal(STORE_POLICY.shipping.freeShippingThresholdPKR, null);
     assert.equal(STORE_POLICY.shipping.standardFeePKR, 250);
+    assert.equal(STORE_POLICY.shipping.bulkyFeePKR, 500);
     assert.deepEqual(STORE_POLICY.shipping.cityETAs.lahore, { minDays: 2, maxDays: 3 });
     assert.equal(STORE_POLICY.shipping.cityETAs.default, null);
     assert.equal(STORE_POLICY.shipping.codAvailable, true);
@@ -46,6 +47,7 @@ describe("STORE_POLICY", () => {
     assert.match(returnsPolicyCanonical(), /defective/);
     assert.match(returnsPolicyCanonical(), /exchange/);
     assert.match(standardDeliveryFeeStatement(), /Rs\. 250/);
+    assert.match(standardDeliveryFeeStatement(), /Rs\. 500|bulky/i);
     assert.match(deliveryEtaSummary(), /Lahore: 2–3/);
     assert.match(nonLahoreEtaStatement(), /confirmed at checkout/);
   });

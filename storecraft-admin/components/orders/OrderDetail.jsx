@@ -14,7 +14,7 @@ import {
   printHtmlWithIframe,
 } from "./printOrderDocuments";
 import { formatCustomerListMeta } from "@/lib/guestCustomerDisplay";
-import { DualStatusBadges } from "./DualStatusBadges";
+import { OrderStatusBadges } from "./OrderStatusBadges";
 import { CustomerConfirmBadge } from "./CustomerConfirmBadge";
 import { InternalNotes } from "./InternalNotes";
 import { OrderActivityFeed } from "./OrderActivityFeed";
@@ -1696,10 +1696,7 @@ export function OrderDetail({ orderId }) {
                 <h1 className="m-0 text-lg font-bold leading-tight text-slate-900 dark:text-white">
                   Order #{order.orderNumber}
                 </h1>
-                <DualStatusBadges
-                  orderStatus={order.orderStatus || order.status}
-                  paymentStatus={order.paymentStatus}
-                />
+                <OrderStatusBadges order={order} />
                 <CustomerConfirmBadge order={order} />
                 {order.aiAttributedSource ? (
                   <span

@@ -257,7 +257,7 @@ export async function GET(request) {
       [rows, total] = await Promise.all([
         Product.find(filter)
           .select(
-            "name slug media pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo createdAt tags"
+            "name slug media pricing inventory featured newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews shortDescription articleNo createdAt tags codEnabled isBulky advancePercentRequired"
           )
           .populate("categories", "name slug")
           .sort(sortSpec)

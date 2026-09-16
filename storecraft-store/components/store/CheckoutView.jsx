@@ -37,6 +37,8 @@ import { useCustomer } from "@/lib/customerAuth";
 import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
 import { resolveProductContentId, trackInitiateCheckout, getMetaClickIds, newMetaEventId } from "@/lib/metaPixel";
 import { standardDeliveryFeeStatement } from "@/lib/storePolicyCopy";
+import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
+import { cartHasBulkyItem } from "@/lib/shippingTier";
 import {
   fetchRecoverCart,
   getCartSessionId,
@@ -568,6 +570,8 @@ export function CheckoutView() {
     [subtotal, totalDiscount]
   );
 
+  const cartHasBulky = useMemo(() => cartHasBulkyItem(items), [items]);
+
   const shippingApplied = useMemo(
     () =>
       applyShippingRules({
@@ -577,8 +581,9 @@ export function CheckoutView() {
         paymentMethod,
         zoneIsFree: shippingIsFree,
         storePayment,
+        hasBulky: cartHasBulky,
       }),
-    [zoneShippingCost, cartTotalAfterAllDiscounts, paymentMethod, shippingIsFree, storePayment]
+    [zoneShippingCost, cartTotalAfterAllDiscounts, paymentMethod, shippingIsFree, storePayment, cartHasBulky]
   );
   const displayShippingCost = shippingApplied.shippingCost;
   const displayShippingFree = shippingApplied.isFree;
@@ -611,9 +616,9 @@ export function CheckoutView() {
     [items, paymentMethod, displayShippingCost, shippingRules]
   );
   const effectiveAdvanceAmount =
-    productAdvanceDue.mode === "percent"
+    productAdvanceDue.amount > 0
       ? productAdvanceDue.amount
-      : shippingRules.advancePaymentAmount || displayShippingCost || 250;
+      : displayShippingCost || 250;
   const showProductAdvanceBox =
     paymentMethod === "cod" && productAdvanceDue.mode === "percent" && productAdvanceDue.amount > 0;
   const advanceMessageBody = formatAdvancePaymentMessage(
@@ -1278,6 +1283,7 @@ export function CheckoutView() {
 
           <h2 className="mb-2 text-base font-semibold text-zinc-900">Payment</h2>
           <p className="mb-2 text-xs text-zinc-600">{freeDeliveryNote}</p>
+          <ShippingAdvanceBanner hasBulky={cartHasBulky} className="mb-3" />
           {!cartAllowsCod ? (
             <p className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
               Cash on Delivery is not available for

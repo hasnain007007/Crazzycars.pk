@@ -27,6 +27,7 @@ import {
   returnsTrustBadge,
   standardDeliveryFeeStatement,
 } from "@/lib/storePolicyCopy";
+import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 const COMPARE_KEY = "sialkot_compare";
@@ -752,6 +753,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
       simpleVariations: product.simpleVariations || [],
       variationCombinations: product.variationCombinations || [],
       codEnabled: productAllowsCod(product),
+      isBulky: product.isBulky === true,
       advancePercentRequired: Math.min(
         100,
         Math.max(0, Number(product.advancePercentRequired) || 0)
@@ -1426,6 +1428,10 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
                   ✓ {deliveryFeeText}
                 </p>
               </div>
+              <ShippingAdvanceBanner
+                hasBulky={product.isBulky === true ? true : null}
+                className="mt-3"
+              />
             </div>
 
             {(!productBadges || productBadges?.discreteShipping?.enabled !== false) && (

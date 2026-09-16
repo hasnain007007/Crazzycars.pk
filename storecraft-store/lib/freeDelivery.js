@@ -6,6 +6,7 @@ import { formatPrice, roundRupees } from "@/lib/currency";
 import { isAdvancePaymentMethod } from "@/lib/pakistaniPaymentMethods";
 import { STORE_POLICY } from "@/config/store-policy";
 import { standardDeliveryFeeShort } from "@/lib/storePolicyCopy";
+import { shippingFloorPKR } from "@/lib/shippingTier";
 
 const DEFAULT_ADVANCE_MESSAGE =
   "Your order is placed. To confirm dispatch, please pay the delivery charges of {amount} in advance and send the payment screenshot on WhatsApp: {whatsapp}\n\nProduct payment will be collected on delivery.";
@@ -120,15 +121,16 @@ export function toPublicShippingQuote(raw) {
 /**
  * Apply store policy on top of zone/courier quotes.
  * Courier is always charged — never waive the fee for order value.
- * Higher zone/courier quotes are kept; 0 / missing falls back to the flat fee.
+ * Floor = Rs. 250 regular or Rs. 500 when cartHasBulky; final = MAX(floor, zone).
  */
 export function applyShippingRules({
   storePayment,
   baseDeliveryCharge,
   zoneShippingCost,
+  hasBulky = false,
 } = {}) {
   normalizeShippingRules(storePayment);
-  const flat = STORE_POLICY.shipping.standardFeePKR;
+  const floor = shippingFloorPKR(!!hasBulky);
   const rawBase =
     baseDeliveryCharge !== undefined && baseDeliveryCharge !== null
       ? baseDeliveryCharge
@@ -136,7 +138,7 @@ export function applyShippingRules({
   const hasExplicitBase =
     rawBase !== undefined && rawBase !== null && Number.isFinite(Number(rawBase));
   const explicitBase = hasExplicitBase ? Math.max(0, Number(rawBase) || 0) : null;
-  const cost = Math.max(flat, explicitBase != null && explicitBase > 0 ? explicitBase : flat);
+  const cost = Math.max(floor, explicitBase != null && explicitBase > 0 ? explicitBase : floor);
 
   return {
     shippingCost: cost,
@@ -146,6 +148,8 @@ export function applyShippingRules({
     orderAboveEnabled: false,
     freeDeliveryThreshold: 0,
     baseDeliveryCharge: cost,
+    hasBulky: !!hasBulky,
+    shippingFloor: floor,
   };
 }
 

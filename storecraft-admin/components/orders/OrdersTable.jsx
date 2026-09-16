@@ -8,8 +8,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isStaleOrder, pendingAgeBadge } from "@/lib/orderUi";
 import { formatCustomerListMeta, formatPhoneDisplay } from "@/lib/guestCustomerDisplay";
-import { DualStatusBadges } from "./DualStatusBadges";
 import { CustomerConfirmBadge } from "./CustomerConfirmBadge";
+import { OrderStatusBadges } from "./OrderStatusBadges";
 import { BulkActionBar } from "./BulkActionBar";
 import { formatAdminPrice } from "@/lib/currency";
 
@@ -430,10 +430,7 @@ export function OrdersTable({
                           {formatMoney(o.total)}
                         </td>
                         <td className={CELL} onClick={(e) => e.stopPropagation()}>
-                          <DualStatusBadges
-                            orderStatus={o.orderStatus}
-                            paymentStatus={o.paymentStatus}
-                          />
+                          <OrderStatusBadges order={o} />
                         </td>
                         <td className={`${CELL} whitespace-nowrap`}>
                           <CustomerConfirmBadge order={o} compact />

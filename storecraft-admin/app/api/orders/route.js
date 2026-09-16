@@ -320,6 +320,12 @@ export async function GET(request) {
         total: orderGrandTotal(o),
         orderStatus: o.orderStatus,
         paymentStatus: o.paymentStatus,
+        payment: {
+          paidAmount: Number(o.payment?.paidAmount ?? o.payment?.amount) || 0,
+          remainingCod: Number(o.payment?.remainingCod) || 0,
+          advanceRequired: Number(o.payment?.advanceRequired) || 0,
+          advanceMode: String(o.payment?.advanceMode || ""),
+        },
         codConfirmed: Boolean(o.codConfirmed),
         whatsappNotified: Boolean(o.whatsappNotified),
         customerCancelled: isCustomerWaCancelled(o),

@@ -8,6 +8,8 @@ import { FreeDeliveryProgress } from "@/components/store/FreeDeliveryProgress";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
 import { getProgressBarThreshold } from "@/lib/freeDelivery";
+import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
+import { cartHasBulkyItem, shippingFloorPKR } from "@/lib/shippingTier";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -25,10 +27,8 @@ export function CartDrawer() {
   const emptyMsg = checkoutMessages.cartEmptyMessage || "Your cart is empty";
   const freeShippingThreshold = getProgressBarThreshold(storePayment);
   const [openMeasurements, setOpenMeasurements] = useState({});
-  const estimatedShipping = items.reduce(
-    (sum, item) => sum + (Number(item.estimatedShipping) || 0) * (Number(item.quantity) || 1),
-    0
-  );
+  const hasBulky = cartHasBulkyItem(items);
+  const estimatedShipping = items.length > 0 ? shippingFloorPKR(hasBulky) : 0;
 
   useEffect(() => {
     if (!open) return;
@@ -68,6 +68,7 @@ export function CartDrawer() {
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">
+          {items.length > 0 ? <ShippingAdvanceBanner hasBulky={hasBulky} className="mb-4" /> : null}
           {!items.length ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <svg className="h-16 w-16 text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>

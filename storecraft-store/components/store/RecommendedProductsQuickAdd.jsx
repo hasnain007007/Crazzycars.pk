@@ -58,6 +58,7 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
         .map((c) => String(c?.id || c?._id || c || "").trim())
         .filter(Boolean),
       codEnabled: productAllowsCod(rec),
+      isBulky: rec.isBulky === true,
       advancePercentRequired: Math.min(100, Math.max(0, Number(rec.advancePercentRequired) || 0)),
       openCart: false,
     });

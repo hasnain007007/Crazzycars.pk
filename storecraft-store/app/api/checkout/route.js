@@ -38,6 +38,7 @@ import {
   recordActionAttempt,
 } from "@/lib/actionRateLimit";
 import { requestIp } from "@/lib/requestIp";
+import { shippingFloorPKR } from "@/lib/shippingTier";
 import {
   buildPurchaseCustomData,
   hashUserData,
@@ -671,6 +672,7 @@ export async function POST(request) {
         100,
         Math.max(0, Math.round(Number(p.advancePercentRequired) || 0))
       );
+      const isBulky = p.isBulky === true;
       subtotal += lineTotal;
       lineItems.push({
         productId: p._id,
@@ -695,6 +697,7 @@ export async function POST(request) {
         unitCost,
         total: lineTotal,
         advancePercentRequired,
+        isBulky,
       });
     }
 
@@ -761,6 +764,7 @@ export async function POST(request) {
     let shippingZoneLabel = "";
 
     const zoneShippingCost = roundRupees(quote.shippingCost);
+    const cartHasBulky = lineItems.some((li) => li.isBulky === true);
     const rulesResult = applyShippingRules({
       baseDeliveryCharge: zoneShippingCost,
       zoneShippingCost,
@@ -768,9 +772,10 @@ export async function POST(request) {
       paymentMethod,
       zoneIsFree: Boolean(quote.isFree),
       storePayment,
+      hasBulky: cartHasBulky,
     });
     shippingCost = roundRupees(rulesResult.shippingCost);
-    shippingMethod = "Weight-based";
+    shippingMethod = cartHasBulky ? "Standard (bulky)" : "Standard";
     shippingZoneLabel = String(quote.zoneName || "").trim();
     const advanceNote = buildAdvancePaymentOrderNote(
       storePayment,
@@ -778,6 +783,11 @@ export async function POST(request) {
       settingsDoc?.pakistaniPaymentMethods
     );
     const statusNotes = [];
+    if (cartHasBulky) {
+      statusNotes.push(
+        `Bulky shipping floor Rs. ${shippingFloorPKR(true)} (charged Rs. ${shippingCost})`
+      );
+    }
     if (advancePaymentDiscount > 0) {
       statusNotes.push(
         `Advance payment discount ${adv.percent}% (−Rs. ${advancePaymentDiscount})`

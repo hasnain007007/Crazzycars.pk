@@ -119,6 +119,9 @@ function serializeOrder(doc, productImageById = null) {
         amount: Number(plain.amount) || 0,
         paidAmount: Number(plain.paidAmount ?? plain.amount) || 0,
         remainingCod: Number(plain.remainingCod) || 0,
+        advanceRequired: Number(plain.advanceRequired) || 0,
+        advanceMode: String(plain.advanceMode || ""),
+        advanceMaxPercent: Number(plain.advanceMaxPercent) || 0,
       };
     })(),
     paymentConfirmation: (() => {

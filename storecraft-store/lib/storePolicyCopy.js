@@ -52,11 +52,15 @@ export function deliveryEtaSummary() {
 }
 
 export function standardDeliveryFeeStatement() {
-  return `Standard delivery is a flat ${formatPkrAmount(STORE_POLICY.shipping.standardFeePKR)} on every order. There is no order-value waiver for delivery.`;
+  const regular = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
+  const bulky = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
+  return `Delivery is ${regular} for regular items, or ${bulky} when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). Shipping is paid in advance; the rest is Cash on Delivery. There is no order-value waiver for delivery.`;
 }
 
 export function standardDeliveryFeeShort() {
-  return `Standard delivery Rs. ${Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK")}`;
+  const regular = Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK");
+  const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR || 500).toLocaleString("en-PK");
+  return `Delivery Rs. ${regular} regular · Rs. ${bulky} bulky`;
 }
 
 export function returnsPolicyCanonical() {

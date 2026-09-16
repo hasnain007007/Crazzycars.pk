@@ -201,6 +201,11 @@ export function CartProvider({ children, shopifyEnabled = false }) {
             articleNo: row.articleNo || "",
             sku: row.sku || "",
             codEnabled: productAllowsCod(row),
+            isBulky: row.isBulky === true,
+            advancePercentRequired: Math.min(
+              100,
+              Math.max(0, Number(row.advancePercentRequired) || 0)
+            ),
           },
         ];
       }

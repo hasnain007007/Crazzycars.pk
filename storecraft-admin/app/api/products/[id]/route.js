@@ -343,6 +343,7 @@ export async function PUT(request, context) {
     if (isBodyKitProduct({ name: body.name ?? existing.name, slug: body.slug ?? existing.slug })) {
       existing.codEnabled = false;
     }
+    if (body.isBulky !== undefined) existing.isBulky = body.isBulky === true;
     if (body.advancePercentRequired !== undefined) {
       const pct = Number(body.advancePercentRequired);
       existing.advancePercentRequired = Number.isFinite(pct)

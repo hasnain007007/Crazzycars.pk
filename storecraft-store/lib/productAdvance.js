@@ -1,5 +1,10 @@
 /**
- * Per-product % advance payment helpers (e.g. "pay at least 50% advance").
+ * Per-product % advance payment helpers + COD shipping advance.
+ *
+ * COD advance rule (v1):
+ *   amount = MAX(sum of line % advances, shippingCost)
+ *   Not stacked. Whichever is higher wins.
+ *   Product % advance does not add on top of shipping advance.
  */
 import { roundRupees } from "@/lib/currency";
 
@@ -38,9 +43,8 @@ export function computeProductAdvanceRequired(items) {
 }
 
 /**
- * COD advance to collect before shipping:
- * - If any product requires %, use that sum (goods advance).
- * - Else fall back to store flat delivery advance when shipping applies.
+ * COD advance to collect before shipping.
+ * Uses the higher of product-% advance vs shipping charge (not stacked).
  */
 export function computeCodAdvanceDue({
   items,
@@ -49,6 +53,7 @@ export function computeCodAdvanceDue({
   storeAdvanceAmount,
   advanceMessageEnabled = true,
 }) {
+  void storeAdvanceAmount; // legacy settings flat — shippingCost is source of truth
   const pm = String(paymentMethod || "cod").toLowerCase();
   const product = computeProductAdvanceRequired(items);
   if (pm !== "cod") {
@@ -59,23 +64,31 @@ export function computeCodAdvanceDue({
       lines: product.lines,
     };
   }
-  if (product.amount > 0) {
+  const ship = Math.max(0, Number(shippingCost) || 0);
+  const shippingAdvance =
+    advanceMessageEnabled !== false && ship > 0 ? roundRupees(ship) : 0;
+  const amount = Math.max(product.amount, shippingAdvance);
+  if (amount <= 0) {
     return {
-      amount: product.amount,
+      amount: 0,
+      mode: "none",
+      maxPercent: product.maxPercent,
+      lines: product.lines,
+    };
+  }
+  // Prefer percent mode when product % is the winning (or equal and > 0) amount.
+  if (product.amount > 0 && product.amount >= shippingAdvance) {
+    return {
+      amount,
       mode: "percent",
       maxPercent: product.maxPercent,
       lines: product.lines,
     };
   }
-  const ship = Math.max(0, Number(shippingCost) || 0);
-  const flat = Math.max(0, Number(storeAdvanceAmount) || 0);
-  if (advanceMessageEnabled && ship > 0 && flat > 0) {
-    return {
-      amount: flat,
-      mode: "delivery",
-      maxPercent: 0,
-      lines: [],
-    };
-  }
-  return { amount: 0, mode: "none", maxPercent: 0, lines: [] };
+  return {
+    amount,
+    mode: "delivery",
+    maxPercent: product.maxPercent,
+    lines: product.lines,
+  };
 }

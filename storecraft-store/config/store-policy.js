@@ -26,8 +26,10 @@ const POLICY_CORE = {
     /** CONFIRMED — no order-value waiver; always charge standard fee. */
     freeDeliveryExists: false,
     freeShippingThresholdPKR: null,
-    /** CONFIRMED — flat standard delivery fee (PKR). */
+    /** CONFIRMED — flat standard delivery fee (PKR) for non-bulky carts. */
     standardFeePKR: 250,
+    /** CONFIRMED — minimum delivery fee (PKR) when cart has any bulky item. */
+    bulkyFeePKR: 500,
     cityETAs: {
       /** CONFIRMED — Lahore only. */
       lahore: { minDays: 2, maxDays: 3 },

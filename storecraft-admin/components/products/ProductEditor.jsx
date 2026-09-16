@@ -170,6 +170,7 @@ function emptyForm() {
     isDeal: false,
     newArrival: false,
     codEnabled: true,
+    isBulky: false,
     advancePercentRequired: 0,
     isUniversal: false,
     compatibleCars: [],
@@ -316,6 +317,7 @@ function productToForm(p) {
     isDeal: Boolean(p.isDeal),
     newArrival: Boolean(p.newArrival),
     codEnabled: p.codEnabled !== false,
+    isBulky: p.isBulky === true,
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     ...(() => {
       const fit = vehicleCompatibilityFromProduct(p);
@@ -423,6 +425,7 @@ function buildApiPayload(form) {
     isDeal: Boolean(form.isDeal),
     newArrival: form.newArrival,
     codEnabled: form.codEnabled !== false,
+    isBulky: form.isBulky === true,
     advancePercentRequired: Math.min(100, Math.max(0, Number(form.advancePercentRequired) || 0)),
     ...buildVehicleCompatibilityPayload(form.vehicleCompatibility || emptyVehicleCompatibility()),
     productType: String(form.productType || "").trim(),
@@ -1109,10 +1112,27 @@ export function ProductEditor({ mode, productId }) {
                   </span>
                 </span>
               </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.isBulky)}
+                  onChange={(e) => setForm((f) => ({ ...f, isBulky: e.target.checked }))}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#1d6fb8] focus:ring-[#1d6fb8]"
+                />
+                <span>
+                  <span className="block text-sm font-semibold text-gray-900">Bulky item (Rs. 500 shipping floor)</span>
+                  <span className="text-xs text-gray-500">
+                    Splitters, side skirts, spoilers, floor mats, body kits, etc. Any bulky item in the cart sets
+                    shipping to MAX(Rs. 500, zone rate). Regular carts use MAX(Rs. 250, zone rate).
+                  </span>
+                </span>
+              </label>
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <label className="block text-sm font-semibold text-gray-900">Advance payment required</label>
                 <p className="mt-0.5 text-xs text-gray-500">
                   Customer must pay at least this % of the item total before dispatch (e.g. 50%).
+                  COD advance is MAX(this %, shipping charge) — not stacked. Example: 40% of Rs. 5,000 = Rs. 2,000
+                  vs bulky shipping Rs. 500 → advance is Rs. 2,000.
                 </p>
                 <select
                   value={String(form.advancePercentRequired || 0)}

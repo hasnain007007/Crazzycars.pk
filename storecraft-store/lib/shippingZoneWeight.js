@@ -1,10 +1,24 @@
 /**
  * Country / city + weight (grams) shipping for ShippingZone documents.
  * Store policy: courier is always charged — never waive the fee for order value.
+ * Floor = regular Rs. 250 or bulky Rs. 500 via optional hasBulky / shippingFloor.
  */
 import { STORE_POLICY } from "@/config/store-policy";
+import { shippingFloorPKR } from "@/lib/shippingTier";
 
-const FLAT_FEE = STORE_POLICY.shipping.standardFeePKR;
+function resolveFloor(opts = {}) {
+  if (opts.shippingFloor != null && Number.isFinite(Number(opts.shippingFloor))) {
+    return Math.max(0, Number(opts.shippingFloor));
+  }
+  if (typeof opts.hasBulky === "boolean") {
+    return shippingFloorPKR(opts.hasBulky);
+  }
+  return Math.max(0, Number(STORE_POLICY.shipping.standardFeePKR) || 250);
+}
+
+const DEFAULT_FLOOR = Math.max(0, Number(STORE_POLICY.shipping.standardFeePKR) || 250);
+/** @deprecated use resolveFloor — kept as regular (non-bulky) floor for zone quotes */
+const FLAT_FEE = DEFAULT_FLOOR;
 
 function norm(s) {
   return String(s || "")

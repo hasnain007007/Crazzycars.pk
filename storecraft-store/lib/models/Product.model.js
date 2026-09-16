@@ -253,6 +253,11 @@ const productSchema = new mongoose.Schema(
     newArrival: { type: Boolean, default: false },
     /** When false, Cash on Delivery is not offered for carts that include this product. */
     codEnabled: { type: Boolean, default: true, index: true },
+    /**
+     * Bulky freight (splitters, skirts, spoilers, floor mats, body kits, etc.).
+     * Any bulky line in the cart raises the shipping floor to bulkyFeePKR.
+     */
+    isBulky: { type: Boolean, default: false, index: true },
     /** Require customer to pay at least this % of the line total in advance (0 = none). */
     advancePercentRequired: { type: Number, default: 0, min: 0, max: 100 },
     productType: { type: String, default: "", trim: true },

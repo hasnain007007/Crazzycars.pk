@@ -13,7 +13,7 @@ export async function GET(_request, context) {
     await dbConnect();
     const p = await Product.findOne({ slug: String(slug), ...STOREFRONT_PRODUCT_FILTER })
       .select(
-        "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications isUniversal compatibleCars vehicleCompatibility rating averageRating ratingAverage reviewCount totalReviews numReviews"
+        "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications isUniversal compatibleCars vehicleCompatibility rating averageRating ratingAverage reviewCount totalReviews numReviews codEnabled isBulky advancePercentRequired"
       )
       .populate("categories", "name slug")
       .populate({

@@ -305,6 +305,7 @@ export async function POST(request) {
       codEnabled: isBodyKitProduct({ name: body.name, slug: body.slug })
         ? false
         : body.codEnabled !== false,
+      isBulky: body.isBulky === true,
       advancePercentRequired: (() => {
         const pct = Number(body.advancePercentRequired);
         return Number.isFinite(pct) ? Math.min(100, Math.max(0, Math.round(pct))) : 0;

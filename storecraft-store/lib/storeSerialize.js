@@ -119,6 +119,7 @@ export function serializeStoreProductSummary(p, opts = {}) {
     gtin: p.gtin || p.ean || "",
     mpn: p.mpn || p.partNumber || "",
     codEnabled: productAllowsCod(p),
+    isBulky: p.isBulky === true,
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     createdAt: p.createdAt || null,
     categories: Array.isArray(p.categories)
@@ -289,6 +290,7 @@ export function serializeStoreProductDetail(p) {
     features: p.features || [],
     specifications: Array.isArray(p.specifications) ? p.specifications.filter((s) => s.label && s.value) : [],
     codEnabled: productAllowsCod(p),
+    isBulky: p.isBulky === true,
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     addOns: Array.isArray(p.addOns)
       ? p.addOns.map((a) => ({
