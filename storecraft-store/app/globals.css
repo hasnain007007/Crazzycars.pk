@@ -4060,13 +4060,13 @@ textarea::placeholder {
 
 /* Homepage Shop by Category — match Shop By Your Vehicle circle size */
 .home-cat-marquee .home-cat-marquee__item {
-  width: 120px;
+  width: 136px;
   gap: 6px;
 }
 
 .home-cat-marquee .home-cat-marquee__ring {
-  width: 108px;
-  height: 108px;
+  width: 124px;
+  height: 124px;
   background: #ffffff;
 }
 
@@ -4077,25 +4077,25 @@ textarea::placeholder {
 }
 
 .home-cat-marquee .home-cat-marquee__label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   min-height: 2.4em;
-  max-width: 118px;
+  max-width: 132px;
 }
 
 @media (min-width: 768px) {
   .home-cat-marquee .home-cat-marquee__item {
-    width: 156px;
+    width: 180px;
   }
 
   .home-cat-marquee .home-cat-marquee__ring {
-    width: 148px;
-    height: 148px;
+    width: 172px;
+    height: 172px;
   }
 
   .home-cat-marquee .home-cat-marquee__label {
     font-size: 13px;
-    max-width: 150px;
+    max-width: 172px;
   }
 }
 
@@ -5811,17 +5811,17 @@ textarea::placeholder {
 
   .home-cat-marquee .home-cat-marquee__ring,
   .home-cat-marquee .home-cat-marquee__ring img {
-    width: 108px !important;
-    height: 108px !important;
+    width: 124px !important;
+    height: 124px !important;
   }
 
   .home-cat-marquee .home-cat-marquee__item {
-    width: 120px !important;
+    width: 136px !important;
   }
 
   .home-cat-marquee .home-cat-marquee__label {
-    font-size: 11px;
-    max-width: 118px;
+    font-size: 12px;
+    max-width: 132px;
     min-height: 2.4em;
   }
 
