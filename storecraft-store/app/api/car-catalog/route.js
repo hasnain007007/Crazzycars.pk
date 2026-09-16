@@ -3,6 +3,7 @@ import { dbConnect } from "@/lib/db";
 import { buildCatalogFromMakes } from "@/lib/carCatalogApi";
 import { CAR_MAKES, CAR_DATA, QUICK_CAR_PILLS } from "@/lib/carCatalog";
 import CarCatalog from "@/lib/models/CarCatalog.model";
+import { vehicleSlugsWithStorefrontProducts } from "@/lib/vehiclePageData";
 
 export const revalidate = 3600;
 
@@ -114,11 +115,14 @@ export async function GET(request) {
       }));
 
     if (popularOnly) {
+      const slugsWithProducts = await vehicleSlugsWithStorefrontProducts();
       return NextResponse.json(
         {
           success: true,
           source: "database",
-          popular: buildPopularList(activeMakes),
+          popular: buildPopularList(activeMakes).filter((row) =>
+            slugsWithProducts.has(String(row?.slug || "").trim())
+          ),
         },
         { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" } }
       );
@@ -138,6 +142,10 @@ export async function GET(request) {
       if (carData[make]?.some((m) => m.model === model)) quickPills.push({ make, model });
     }
 
+    const slugsWithProducts = await vehicleSlugsWithStorefrontProducts();
+    const keepIfHasProducts = (row) =>
+      slugsWithProducts.has(String(row?.slug || "").trim());
+
     return NextResponse.json(
       {
         success: true,
@@ -146,8 +154,8 @@ export async function GET(request) {
         carData,
         makesMeta: makesMeta || {},
         quickPills: quickPills.length ? quickPills : QUICK_CAR_PILLS,
-        popular: buildPopularList(activeMakes),
-        vehicles: buildAllModelsList(activeMakes),
+        popular: buildPopularList(activeMakes).filter(keepIfHasProducts),
+        vehicles: buildAllModelsList(activeMakes).filter(keepIfHasProducts),
       },
       {
         headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" },

@@ -21,7 +21,6 @@ export default function HotDeals({ settings, initialProducts = null }) {
   const [active, setActive] = useState(defaultFilter);
   const [products, setProducts] = useState(ssrSeed || []);
   const [loading, setLoading] = useState(ssrSeed == null);
-  const [seconds, setSeconds] = useState(6 * 60 * 60);
 
   // Keep default tab in sync if settings change the first filter key — do not wipe SSR seed.
   useEffect(() => {
@@ -29,12 +28,6 @@ export default function HotDeals({ settings, initialProducts = null }) {
   }, [defaultFilter]);
 
   const hasDeals = products.length > 0;
-
-  useEffect(() => {
-    if (!hasDeals) return undefined;
-    const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 0)), 1000);
-    return () => clearInterval(t);
-  }, [hasDeals]);
 
   useEffect(() => {
     const seed = ssrSeedRef.current;
@@ -87,16 +80,6 @@ export default function HotDeals({ settings, initialProducts = null }) {
         {!loading && hasDeals ? (
           <p className="mt-1 text-xs font-medium" style={{ color: "#9CA3AF" }}>
             Showing {products.length} Hot Deal product{products.length === 1 ? "" : "s"}
-          </p>
-        ) : null}
-        {!loading && hasDeals && settings?.flashSaleEnabled !== false ? (
-          <p
-            className="mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold"
-            style={{ borderColor: "#E5E7EB", color: "#374151", background: "#FFFFFF" }}
-          >
-            Flash ends in {String(Math.floor(seconds / 3600)).padStart(2, "0")}:
-            {String(Math.floor((seconds % 3600) / 60)).padStart(2, "0")}:
-            {String(seconds % 60).padStart(2, "0")}
           </p>
         ) : null}
 

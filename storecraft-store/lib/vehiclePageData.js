@@ -264,8 +264,11 @@ export function serializeVehicleProduct(p) {
   };
 }
 
-/** Vehicles that have at least one assigned product — same set as sitemap-cars.xml. */
-export async function loadShopByCarIndex() {
+/**
+ * Slugs of Vehicle docs that have ≥1 storefront-visible product via compatibleVehicles.
+ * Used to hide empty cars from homepage Shop by Vehicle (records stay in Mongo).
+ */
+export async function vehicleSlugsWithStorefrontProducts() {
   const rows = await Product.aggregate([
     {
       $match: {
@@ -276,14 +279,26 @@ export async function loadShopByCarIndex() {
     { $unwind: "$compatibleVehicles" },
     { $group: { _id: "$compatibleVehicles" } },
   ]);
-  const withProducts = new Set(rows.map((r) => String(r._id)));
+  if (!rows.length) return new Set();
+  const docs = await Vehicle.find({
+    _id: { $in: rows.map((r) => r._id) },
+    isActive: { $ne: false },
+  })
+    .select("slug")
+    .lean();
+  return new Set(docs.map((v) => String(v.slug || "").trim()).filter(Boolean));
+}
+
+/** Vehicles that have at least one assigned product — same set as sitemap-cars.xml. */
+export async function loadShopByCarIndex() {
+  const withProducts = await vehicleSlugsWithStorefrontProducts();
   const vehicles = await Vehicle.find({ isActive: true })
     .select("slug make model displayName yearFrom yearTo generation nickname image")
     .sort({ make: 1, model: 1, yearFrom: 1 })
     .lean();
 
   return vehicles
-    .filter((v) => v.slug && withProducts.has(String(v._id)))
+    .filter((v) => v.slug && withProducts.has(String(v.slug)))
     .map((v) => ({
       slug: v.slug,
       make: v.make || "",

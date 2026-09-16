@@ -63,6 +63,8 @@ function mapCatalogToItems(data) {
 
 /**
  * Vehicle browser — square photo cards + auto-scrolling horizontal slider.
+ * Empty generations (0 storefront products) are filtered out upstream in
+ * fetchCarCatalogServer / GET /api/car-catalog — Vehicle/CarCatalog rows stay in Mongo.
  */
 export default function ShopByVehicle({ initialCatalog = null }) {
   const seeded = mapCatalogToItems(initialCatalog);
@@ -286,6 +288,9 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                           fetchPriority="low"
                         />
                       ) : (
+                        /* TODO: upload real CarCatalog images for BAIC BJ40, Chery Tiggo 4/8 Pro,
+                           Deepal S05, DFSK Glory 580, KIA Sorento/Stonic, Nissan Note, Proton X70.
+                           Keep emoji fallback — these generations have sellable products. */
                         <div className="flex h-full items-center justify-center text-3xl text-[#9CA3AF]">🚗</div>
                       )}
                     </div>

@@ -5,6 +5,7 @@ import { dbConnect } from "@/lib/db";
 import { buildCatalogFromMakes } from "@/lib/carCatalogApi";
 import { CAR_MAKES, CAR_DATA, QUICK_CAR_PILLS } from "@/lib/carCatalog";
 import CarCatalog from "@/lib/models/CarCatalog.model";
+import { vehicleSlugsWithStorefrontProducts } from "@/lib/vehiclePageData";
 
 function fallbackPayload() {
   const { makes, carData } = buildCatalogFromMakes(
@@ -129,8 +130,14 @@ export async function fetchCarCatalogServer(opts = {}) {
       if (carData[make]?.some((m) => m.model === model)) quickPills.push({ make, model });
     }
 
-    let vehicles = buildAllModelsList(activeMakes);
-    let popular = buildPopularList(activeMakes);
+    // Homepage carousel: only generations with ≥1 sellable product (e.g. hide BYD Shark 6).
+    // CarCatalog / Vehicle docs are not deleted — Filter By Car still lists them.
+    const slugsWithProducts = await vehicleSlugsWithStorefrontProducts();
+    const keepIfHasProducts = (row) =>
+      slugsWithProducts.has(String(row?.slug || "").trim());
+
+    let vehicles = buildAllModelsList(activeMakes).filter(keepIfHasProducts);
+    let popular = buildPopularList(activeMakes).filter(keepIfHasProducts);
     let slimCarData = carData;
     if (lean) {
       const slimVehicle = (v) => ({
