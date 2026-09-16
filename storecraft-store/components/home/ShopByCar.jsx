@@ -144,7 +144,9 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
     <section id="shop-by-car" className="filter-by-car-section">
       <div className="store-container">
         <form onSubmit={onSubmit} className="filter-by-car-card">
-          <h2 className="filter-by-car-title">{title === "Find Parts For Your Car" ? "Filter By Car" : title}</h2>
+          <h2 className="filter-by-car-title">
+            {title === "Find Parts For Your Car" ? "Filter By Car" : title}
+          </h2>
 
           <div className="filter-by-car-fields">
             <select
@@ -161,37 +163,39 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
               ))}
             </select>
 
-            <div className="filter-by-car-row">
-              <select
-                className="filter-by-car-select"
-                value={modelSlug}
-                onChange={(e) => setModelSlug(e.target.value)}
-                disabled={!make}
-                aria-label="Select model"
-              >
-                <option value="">SELECT MODEL</option>
-                {models.map((m) => (
-                  <option key={m.slug} value={m.slug}>
-                    {(m.nickname || m.generation || m.model || "").toUpperCase()}
-                  </option>
-                ))}
-              </select>
+            <select
+              className="filter-by-car-select"
+              value={modelSlug}
+              onChange={(e) => setModelSlug(e.target.value)}
+              disabled={!make}
+              aria-label="Select model"
+            >
+              <option value="">SELECT MODEL</option>
+              {models.map((m) => (
+                <option key={m.slug} value={m.slug}>
+                  {(m.nickname || m.generation || m.model || "").toUpperCase()}
+                </option>
+              ))}
+            </select>
 
-              <select
-                className="filter-by-car-select"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                disabled={!modelSlug}
-                aria-label="Select year"
-              >
-                <option value="">SELECT YEAR</option>
-                {yearOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              className="filter-by-car-select"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              disabled={!modelSlug}
+              aria-label="Select year"
+            >
+              <option value="">SELECT YEAR</option>
+              {yearOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+
+            <button type="submit" disabled={loading} className="filter-by-car-btn">
+              {loading ? "…" : "FILTER"}
+            </button>
           </div>
 
           {error ? (
@@ -199,10 +203,6 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
               {error}
             </p>
           ) : null}
-
-          <button type="submit" disabled={loading} className="filter-by-car-btn">
-            {loading ? "…" : "FILTER"}
-          </button>
         </form>
       </div>
     </section>
