@@ -63,18 +63,14 @@ export function standardDeliveryFeeShort() {
   return `Delivery Rs. ${regular} regular · Rs. ${bulky} bulky`;
 }
 
-/** Cart / checkout / PDP banner — English (fees from STORE_POLICY). */
+/** Cart / checkout / PDP banner — English. Customer-facing: ask for advance only (no tier breakdown). */
 export function shippingAdvanceBannerEn() {
-  const regular = Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK");
-  const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR || 500).toLocaleString("en-PK");
-  return `Shipping: Rs. ${regular} regular · Rs. ${bulky} bulky (splitters, side skirts, spoilers, floor mats, etc.). Pay shipping in advance; the rest is Cash on Delivery.`;
+  return `Please pay delivery charges in advance. The rest is Cash on Delivery.`;
 }
 
-/** Cart / checkout / PDP banner — Urdu. */
+/** Cart / checkout / PDP banner — Urdu. Customer-facing: ask for advance only. */
 export function shippingAdvanceBannerUr() {
-  const regular = Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK");
-  const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR || 500).toLocaleString("en-PK");
-  return `شپنگ: عام آرڈر Rs. ${regular}، بڑے آئٹمز Rs. ${bulky}۔ شپنگ پہلے ادا کریں؛ باقی کیش آن ڈیلیوری۔`;
+  return `براہ کرم ڈیلیوری چارجز پہلے ادا کریں۔ باقی کیش آن ڈیلیوری۔`;
 }
 
 export function returnsPolicyCanonical() {
