@@ -56,34 +56,35 @@ export default function HotDeals({ settings, initialProducts = null }) {
     };
   }, [active, defaultFilter]);
 
+  const maxOff = useMemo(() => {
+    let max = 0;
+    for (const p of products) {
+      const reg = Number(p.regularPrice ?? p.compareAt ?? p.price ?? 0);
+      const sale = Number(p.salePrice ?? p.price ?? reg);
+      if (reg > sale && sale > 0) {
+        max = Math.max(max, Math.round(((reg - sale) / reg) * 100));
+      }
+    }
+    return max;
+  }, [products]);
+
   if (section.enabled === false) return null;
 
-  const title = section.title || "🔥 Hot Deals";
-  const subtitle = section.subtitle || "Limited time offers — grab them before they're gone!";
-
   return (
-    <section
-      className="homepage-section py-6 md:py-20"
-      style={{
-        background: "#FFF8F0",
-        borderLeft: "4px solid #C41E1E",
-      }}
-    >
+    <section className="homepage-section flash-sale-section py-6 md:py-14">
       <div className="store-container">
-        <h2 className="font-heading text-[20px] font-bold md:text-[32px]" style={{ color: "#111111" }}>
-          {title}
-        </h2>
-        <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 8 }} />
-        <p className="mt-1.5 text-xs md:mt-2 md:text-sm" style={{ color: "#6B7280" }}>
-          {subtitle}
+        <header className="flash-sale-header">
+          <div className="flash-sale-header__rule" aria-hidden />
+          <h2 className="flash-sale-header__title">
+            FLASH SALE <span aria-hidden>🔥</span>
+          </h2>
+          <div className="flash-sale-header__rule" aria-hidden />
+        </header>
+        <p className="flash-sale-header__sub">
+          {maxOff > 0 ? `> GET UP TO ${maxOff}% OFF` : "> LIMITED TIME DEALS"}
         </p>
-        {!loading && hasDeals ? (
-          <p className="mt-1 text-xs font-medium" style={{ color: "#9CA3AF" }}>
-            Showing {products.length} Hot Deal product{products.length === 1 ? "" : "s"}
-          </p>
-        ) : null}
 
-        <div className="scrollbar-hidden mt-3 flex gap-1.5 overflow-x-auto pb-1 md:mt-6 md:gap-2 md:pb-2">
+        <div className="scrollbar-hidden mt-4 flex gap-1.5 overflow-x-auto pb-1 md:mt-6 md:gap-2 md:pb-2">
           {tabs.map((t) => {
             const isActive = active === t.filter;
             return (

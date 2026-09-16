@@ -27,11 +27,13 @@ export default async function Page() {
   let carCatalog = null;
   let activeProductCount = null;
   let homepageCategories = [];
+  let homepageCircleCategories = [];
 
   // Never let a single Mongo/Shopify failure 500 the document — degrade to empty SSR props
   // (client components can still fall back to their own fetches if needed).
   try {
-    [bestSellers, hotDeals, heroSlides, carCatalog, activeProductCount, homepageCategories] = await Promise.all([
+    let categoryTree = [];
+    [bestSellers, hotDeals, heroSlides, carCatalog, activeProductCount, categoryTree] = await Promise.all([
       shopify ? getBestSellingProducts(100) : fetchBestSellersServer({ limit: 500 }),
       shopify ? getHotDealProducts(100) : fetchHotDealsServer({ filter: "all", limit: 500 }),
       getHeroSlides(),
@@ -44,10 +46,14 @@ export default async function Page() {
           return null;
         }
       })(),
-      fetchCategoryTreeServer().then((tree) =>
-        pickHomepageCategories(tree).map(serializeHomepageCategory).filter(Boolean)
-      ),
+      fetchCategoryTreeServer(),
     ]);
+    homepageCategories = pickHomepageCategories(categoryTree)
+      .map(serializeHomepageCategory)
+      .filter(Boolean);
+    homepageCircleCategories = (Array.isArray(categoryTree) ? categoryTree : [])
+      .map(serializeHomepageCategory)
+      .filter(Boolean);
   } catch (err) {
     console.error("[homepage] SSR data load failed:", err?.message || err);
   }
@@ -66,6 +72,7 @@ export default async function Page() {
         initialHeroSlides={heroSlides}
         initialCarCatalog={carCatalog}
         initialCategories={homepageCategories}
+        initialCircleCategories={homepageCircleCategories}
         activeProductCount={activeProductCount}
       />
     </>
