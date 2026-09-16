@@ -15,7 +15,7 @@ export function AccountLoginView() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/account/login", {
+      const res = await fetch("/api/customer/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

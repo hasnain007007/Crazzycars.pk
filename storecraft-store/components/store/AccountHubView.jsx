@@ -9,7 +9,7 @@ export function AccountHubView() {
   const [customer, setCustomer] = useState(undefined);
 
   useEffect(() => {
-    fetch("/api/account/me", { credentials: "include" })
+    fetch("/api/customer/me", { credentials: "include" })
       .then((r) => r.json())
       .then((j) => {
         if (j.success) setCustomer(j.customer);
@@ -46,7 +46,7 @@ export function AccountHubView() {
           type="button"
           className="rounded-xl border border-[rgba(248,113,113,0.35)] bg-[#111111] px-4 py-3 text-left font-medium text-[#f87171] hover:bg-[rgba(248,113,113,0.08)]"
           onClick={async () => {
-            await fetch("/api/account/logout", { method: "POST", credentials: "include" });
+            await fetch("/api/customer/logout", { method: "POST", credentials: "include" });
             router.replace("/");
             router.refresh();
           }}

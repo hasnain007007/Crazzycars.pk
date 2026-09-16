@@ -42,7 +42,8 @@ const customerSchema = new mongoose.Schema(
     lastName: { type: String, default: "", trim: true },
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    phone: { type: String, default: "" },
+    /** Canonical PK mobile 03XXXXXXXXX — unique when non-empty (partial index). */
+    phone: { type: String, default: "", trim: true },
     dateOfBirth: { type: Date },
     avatar: { type: String, default: "" },
     address: {
@@ -72,5 +73,13 @@ const customerSchema = new mongoose.Schema(
 );
 
 customerSchema.index({ createdAt: -1 });
+customerSchema.index(
+  { phone: 1 },
+  {
+    unique: true,
+    name: "phone_unique_nonzero",
+    partialFilterExpression: { phone: { $type: "string", $gt: "" } },
+  }
+);
 
 export default mongoose.models.Customer || mongoose.model("Customer", customerSchema);

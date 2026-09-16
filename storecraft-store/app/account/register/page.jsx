@@ -24,6 +24,7 @@ function RegisterPageContent() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
   });
@@ -42,6 +43,11 @@ function RegisterPageContent() {
       return;
     }
 
+    if (!form.phone.trim()) {
+      toast.error("Phone number is required");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -53,6 +59,7 @@ function RegisterPageContent() {
           firstName: form.firstName.trim(),
           lastName: form.lastName.trim(),
           email: form.email.trim(),
+          phone: form.phone.trim(),
           password: form.password,
         }),
       });
@@ -209,6 +216,30 @@ function RegisterPageContent() {
               placeholder="info@crazzycars.pk"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#374151",
+                marginBottom: 6,
+              }}
+            >
+              Mobile Number
+            </label>
+            <input
+              type="tel"
+              required
+              inputMode="numeric"
+              autoComplete="tel"
+              style={inputStyle}
+              placeholder="03XX XXXXXXX"
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
             />
           </div>
 

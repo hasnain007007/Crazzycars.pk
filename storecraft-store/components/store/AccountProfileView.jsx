@@ -15,7 +15,7 @@ export function AccountProfileView() {
   const [addr, setAddr] = useState({ street: "", city: "", state: "", country: "", zip: "" });
 
   useEffect(() => {
-    fetch("/api/account/me", { credentials: "include" })
+    fetch("/api/customer/me", { credentials: "include" })
       .then((r) => {
         if (r.status === 401) {
           router.replace("/account/login");
@@ -46,7 +46,7 @@ export function AccountProfileView() {
     try {
       const body = { name, phone, address: addr };
       if (password.trim()) body.password = password.trim();
-      const res = await fetch("/api/account/profile", {
+      const res = await fetch("/api/customer/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

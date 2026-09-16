@@ -36,7 +36,8 @@ const CustomerSchema = new mongoose.Schema(
     },
     password: { type: String, default: "" },
     passwordHash: { type: String, default: "" },
-    phone: { type: String, default: "" },
+    /** Canonical PK mobile 03XXXXXXXXX — unique when non-empty (partial index). */
+    phone: { type: String, default: "", trim: true },
     avatar: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
     isVerified: { type: Boolean, default: false },
@@ -65,6 +66,15 @@ const CustomerSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  }
+);
+
+CustomerSchema.index(
+  { phone: 1 },
+  {
+    unique: true,
+    name: "phone_unique_nonzero",
+    partialFilterExpression: { phone: { $type: "string", $gt: "" } },
   }
 );
 

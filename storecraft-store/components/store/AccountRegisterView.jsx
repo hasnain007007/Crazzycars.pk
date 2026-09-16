@@ -17,7 +17,7 @@ export function AccountRegisterView() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/account/register", {
+      const res = await fetch("/api/customer/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -45,8 +45,8 @@ export function AccountRegisterView() {
       <form onSubmit={submit} className="mt-8 space-y-4">
         <input required className="w-full rounded-xl border border-zinc-200 px-3 py-2.5 text-sm" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} />
         <input required type="email" className="w-full rounded-xl border border-zinc-200 px-3 py-2.5 text-sm" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input className="w-full rounded-xl border border-zinc-200 px-3 py-2.5 text-sm" placeholder="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        <input required type="password" minLength={8} className="w-full rounded-xl border border-zinc-200 px-3 py-2.5 text-sm" placeholder="Password (8+ characters)" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input required className="w-full rounded-xl border border-zinc-200 px-3 py-2.5 text-sm" placeholder="Phone (03XX XXXXXXX)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <input required type="password" minLength={6} className="w-full rounded-xl border border-zinc-200 px-3 py-2.5 text-sm" placeholder="Password (6+ characters)" value={password} onChange={(e) => setPassword(e.target.value)} />
         <button type="submit" disabled={loading} className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50">
           {loading ? "Creating…" : "Register"}
         </button>

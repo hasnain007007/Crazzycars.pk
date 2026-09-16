@@ -10,7 +10,7 @@ export function AccountOrdersView() {
   const [orders, setOrders] = useState(null);
 
   useEffect(() => {
-    fetch("/api/account/orders", { credentials: "include" })
+    fetch("/api/customer/orders", { credentials: "include" })
       .then((r) => {
         if (r.status === 401) {
           router.replace("/account/login");
