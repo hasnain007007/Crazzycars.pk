@@ -536,7 +536,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
           role="status"
           style={{
             position: "fixed",
-            top: brand.phone || brand.email ? 72 : 80,
+            top: 52,
             right: 16,
             zIndex: 8000,
             background: "#111111",
@@ -553,22 +553,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
           {cartToast.message}
         </div>
       ) : null}
-      {brand.phone || brand.email ? (
-        <div className="hidden border-b bg-[#111111] text-xs text-white md:block" style={{ borderColor: "#2A2A2A" }}>
-          <div className="store-container flex h-9 items-center justify-end gap-6">
-            {brand.phone ? (
-              <a href={`tel:${String(brand.phone).replace(/\s/g, "")}`} className="hover:text-[#F87171]">
-                {brand.phone}
-              </a>
-            ) : null}
-            {brand.email ? (
-              <a href={`mailto:${brand.email}`} className="hover:text-[#F87171]">
-                {brand.email}
-              </a>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+      {/* Contact lives in site-wide AnnouncementBar (all pages). */}
       {/* Row 1 — main (above nav so search dropdown is never covered) */}
       <div className="relative z-[80] border-b bg-white" style={{ borderColor: "#E5E7EB" }}>
         <div className="store-container relative grid h-14 grid-cols-[72px_1fr_72px] items-center md:flex md:h-[72px] md:gap-4">

@@ -73,6 +73,22 @@ export function shippingAdvanceBannerUr() {
   return `براہ کرم ڈیلیوری چارجز پہلے ادا کریں۔ باقی کیش آن ڈیلیوری۔`;
 }
 
+/** Site-wide top announcement bar — short advance-delivery ask (no tier breakdown). */
+export function announcementAdvanceDeliveryText() {
+  return "Delivery charges are paid in advance";
+}
+
+/** Fee-only / bulky-tier lines that should not stay customer-facing in the top bar. */
+export function looksLikeFeeOnlyAnnouncement(text) {
+  const t = String(text || "").trim();
+  if (!t) return false;
+  if (/advance/i.test(t)) return false;
+  if (/^delivery\s+rs\.?\s*[\d,]+$/i.test(t)) return true;
+  if (/regular\s*[·•|]\s*.*bulky/i.test(t)) return true;
+  if (/delivery\s+rs\.?\s*[\d,]+\s+regular/i.test(t)) return true;
+  return false;
+}
+
 export function returnsPolicyCanonical() {
   const days = STORE_POLICY.returns.windowDays;
   return `Returns and refunds are accepted within ${days} days for items that arrive defective or if the wrong item was shipped. In these cases, you'll receive a full refund. For change-of-mind returns, we offer an exchange for a different product or size — cash refunds are not available for change-of-mind requests.`;
@@ -144,12 +160,26 @@ export function sanitizeCustomerShippingNote(text) {
 
 export function sanitizeAnnouncementItems(items) {
   const list = Array.isArray(items) ? items : [];
-  return list.map((item) => {
+  const mapped = list.map((item) => {
     if (!item || typeof item !== "object") return item;
     const text = String(item.text || item.message || "").trim();
-    if (!looksLikeFreeDeliveryCopy(text)) return item;
-    return { ...item, text: standardDeliveryFeeShort() };
+    if (looksLikeFreeDeliveryCopy(text) || looksLikeFeeOnlyAnnouncement(text)) {
+      return { ...item, text: announcementAdvanceDeliveryText(), link: item.link || "/shipping-policy" };
+    }
+    return item;
   });
+  const hasAdvance = mapped.some((item) =>
+    /advance/i.test(String(item?.text || item?.message || ""))
+  );
+  if (hasAdvance) return mapped;
+  return [
+    {
+      text: announcementAdvanceDeliveryText(),
+      link: "/shipping-policy",
+      enabled: true,
+    },
+    ...mapped,
+  ];
 }
 
 export function getFaqItems() {

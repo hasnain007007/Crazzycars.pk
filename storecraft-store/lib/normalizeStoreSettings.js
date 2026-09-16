@@ -7,15 +7,15 @@ import { rewriteStorePath } from "@/lib/categoryHandleAliases";
 import {
   sanitizeAnnouncementItems,
   sanitizeCustomerShippingNote,
-  standardDeliveryFeeShort,
   standardDeliveryFeeStatement,
+  announcementAdvanceDeliveryText,
 } from "@/lib/storePolicyCopy";
 
 export const DEFAULT_ANNOUNCEMENT_BAR = {
   enabled: true,
   items: [
+    { text: announcementAdvanceDeliveryText(), link: "/shipping-policy", enabled: true },
     { text: "Cash on Delivery Available", link: "/shipping-policy", enabled: true },
-    { text: standardDeliveryFeeShort(), link: "/shipping-policy", enabled: true },
   ],
   backgroundColor: "#111111",
   textColor: "#FFFFFF",

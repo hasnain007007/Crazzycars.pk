@@ -1,8 +1,8 @@
-import { looksLikeFreeDeliveryCopy, standardDeliveryFeeShort } from "./storePolicyCopy.js";
+import { looksLikeFreeDeliveryCopy, announcementAdvanceDeliveryText } from "./storePolicyCopy.js";
 
 export const DEFAULT_HOMEPAGE_SETTINGS = {
   announcementMessages: [
-    { text: standardDeliveryFeeShort(), isActive: true },
+    { text: announcementAdvanceDeliveryText(), isActive: true },
     { text: "Cash on delivery available at checkout", isActive: true },
   ],
   announcementBgColor: "#111111",
@@ -93,7 +93,10 @@ export function normalizeHomepageSettings(raw) {
         ? raw.announcementMessages.map((m) => {
             const text = String(m?.text ?? "").trim();
             return {
-              text: !text || looksLikeFreeDeliveryCopy(text) ? standardDeliveryFeeShort() : text,
+              text:
+                !text || looksLikeFreeDeliveryCopy(text) || /delivery\s+rs\.?\s*[\d,]+/i.test(text)
+                  ? announcementAdvanceDeliveryText()
+                  : text,
               isActive: m?.isActive !== false,
             };
           })
