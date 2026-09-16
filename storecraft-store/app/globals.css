@@ -4293,7 +4293,7 @@ textarea::placeholder {
 
 .sbv-nav {
   position: absolute;
-  top: 36px;
+  top: 48px;
   z-index: 2;
   display: none;
   width: 32px;
@@ -4330,24 +4330,24 @@ textarea::placeholder {
 
 .sbv-card {
   flex: 0 0 auto;
-  width: 92px;
+  width: 112px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   text-decoration: none;
   color: inherit;
   scroll-snap-align: start;
   content-visibility: auto;
-  contain-intrinsic-size: 140px;
+  contain-intrinsic-size: 170px;
 }
 
 .sbv-ring {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 76px;
-  height: 76px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   background: #ffffff;
   border: 2px solid #e8e8e8;
@@ -4363,7 +4363,7 @@ textarea::placeholder {
   height: 100%;
   object-fit: contain;
   object-position: center;
-  padding: 6px;
+  padding: 2px;
   pointer-events: none;
   transition: transform 0.35s ease;
 }
@@ -4459,12 +4459,12 @@ textarea::placeholder {
   }
 
   .sbv-card {
-    width: 104px;
+    width: 128px;
   }
 
   .sbv-ring {
-    width: 88px;
-    height: 88px;
+    width: 116px;
+    height: 116px;
   }
 
   .sbv-model {
@@ -4497,20 +4497,20 @@ textarea::placeholder {
   }
 
   .sbv-slider {
-    gap: 8px;
+    gap: 10px;
   }
 
   .sbv-card {
-    width: 78px;
+    width: 96px;
   }
 
   .sbv-ring {
-    width: 64px;
-    height: 64px;
+    width: 84px;
+    height: 84px;
   }
 
   .sbv-ring img {
-    padding: 4px;
+    padding: 1px;
   }
 
   .sbv-make {
