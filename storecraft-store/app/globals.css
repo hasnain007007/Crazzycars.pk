@@ -4204,6 +4204,335 @@ textarea::placeholder {
   }
 }
 
+/* ===== Shop By Your Vehicle — compact circular rail ===== */
+.sbv {
+  background: #f8f8f8;
+  border-top: 1px solid #efefef;
+  padding: 14px 0 16px;
+}
+
+.sbv-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sbv-head__titles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+}
+
+.sbv-title {
+  margin: 0;
+  font-family: var(--font-heading), Rajdhani, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.2;
+}
+
+.sbv-all {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c41e1e;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sbv-all:hover {
+  text-decoration: underline;
+}
+
+.sbv-pills {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 0 0 12px;
+  padding-bottom: 2px;
+}
+
+.sbv-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.sbv-pill {
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.sbv-pill.is-on {
+  background: #c41e1e;
+  border-color: #c41e1e;
+  color: #ffffff;
+}
+
+.sbv-pill:not(.is-on):hover {
+  border-color: rgba(196, 30, 30, 0.45);
+}
+
+.sbv-rail {
+  position: relative;
+}
+
+.sbv-nav {
+  position: absolute;
+  top: 36px;
+  z-index: 2;
+  display: none;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #111111;
+  font-size: 18px;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.sbv-nav--prev {
+  left: -4px;
+}
+
+.sbv-nav--next {
+  right: -4px;
+}
+
+.sbv-slider {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding: 2px 2px 6px;
+}
+
+.sbv-card {
+  flex: 0 0 auto;
+  width: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  color: inherit;
+  scroll-snap-align: start;
+  content-visibility: auto;
+  contain-intrinsic-size: 140px;
+}
+
+.sbv-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #e8e8e8;
+  overflow: hidden;
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s ease,
+    box-shadow 0.3s ease;
+}
+
+.sbv-ring img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  padding: 6px;
+  pointer-events: none;
+  transition: transform 0.35s ease;
+}
+
+.sbv-card:hover .sbv-ring,
+.sbv-card:focus-visible .sbv-ring {
+  transform: translateY(-2px) scale(1.04);
+  border-color: #c41e1e;
+  box-shadow: 0 8px 18px rgba(196, 30, 30, 0.16);
+}
+
+.sbv-card:hover .sbv-ring img,
+.sbv-card:focus-visible .sbv-ring img {
+  transform: scale(1.06);
+}
+
+.sbv-fallback {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.sbv-make {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c41e1e;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.sbv-model {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-heading), Rajdhani, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #111111;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.sbv-years {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.sbv-card--skeleton .sbv-ring {
+  background: #e8e8e8;
+  border-color: #e8e8e8;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.sbv-skel-line {
+  display: block;
+  width: 70%;
+  height: 8px;
+  border-radius: 4px;
+  background: #e8e8e8;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.sbv-skel-line--short {
+  width: 45%;
+}
+
+@media (min-width: 768px) {
+  .sbv {
+    padding: 18px 0 22px;
+  }
+
+  .sbv-title {
+    font-size: 22px;
+  }
+
+  .sbv-nav {
+    display: flex;
+  }
+
+  .sbv-card {
+    width: 104px;
+  }
+
+  .sbv-ring {
+    width: 88px;
+    height: 88px;
+  }
+
+  .sbv-model {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sbv {
+    padding: 10px 0 12px;
+  }
+
+  .sbv-title {
+    font-size: 16px;
+  }
+
+  .sbv-all {
+    font-size: 11px;
+  }
+
+  .sbv-pills {
+    margin-bottom: 10px;
+    gap: 5px;
+  }
+
+  .sbv-pill {
+    height: 26px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  .sbv-slider {
+    gap: 8px;
+  }
+
+  .sbv-card {
+    width: 78px;
+  }
+
+  .sbv-ring {
+    width: 64px;
+    height: 64px;
+  }
+
+  .sbv-ring img {
+    padding: 4px;
+  }
+
+  .sbv-make {
+    font-size: 8px;
+  }
+
+  .sbv-model {
+    font-size: 11px;
+  }
+
+  .sbv-years {
+    font-size: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sbv-ring,
+  .sbv-ring img {
+    transition: none;
+  }
+}
+
 /* ── AutoJin-style mega menu ─────────────────────────────────────────── */
 .mega-menu {
   position: absolute;
@@ -5396,17 +5725,20 @@ textarea::placeholder {
     gap: 10px !important;
   }
 
-  .shop-by-vehicle-pills {
+  .shop-by-vehicle-pills,
+  .sbv-pills {
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
 
-  .shop-by-vehicle-pills::-webkit-scrollbar {
+  .shop-by-vehicle-pills::-webkit-scrollbar,
+  .sbv-pills::-webkit-scrollbar {
     display: none;
   }
 
-  .shop-by-vehicle-slider {
+  .shop-by-vehicle-slider,
+  .sbv-slider {
     gap: 8px;
   }
 

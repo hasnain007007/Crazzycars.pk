@@ -62,9 +62,8 @@ function mapCatalogToItems(data) {
 }
 
 /**
- * Vehicle browser — square photo cards + auto-scrolling horizontal slider.
- * Empty generations (0 storefront products) are filtered out upstream in
- * fetchCarCatalogServer / GET /api/car-catalog — Vehicle/CarCatalog rows stay in Mongo.
+ * Compact vehicle browser — circular photos + single-line make chips + auto-scroll.
+ * Empty generations filtered upstream in fetchCarCatalogServer / GET /api/car-catalog.
  */
 export default function ShopByVehicle({ initialCatalog = null }) {
   const seeded = mapCatalogToItems(initialCatalog);
@@ -122,13 +121,12 @@ export default function ShopByVehicle({ initialCatalog = null }) {
     const el = scrollerRef.current;
     if (!el) return;
     const card = el.querySelector("[data-vehicle-card]");
-    const step = card ? card.getBoundingClientRect().width + 12 : el.clientWidth * 0.8;
+    const step = card ? card.getBoundingClientRect().width + 10 : el.clientWidth * 0.7;
     el.scrollBy({ left: dir * step, behavior: "smooth" });
   }
 
-  // Auto-scroll: advance one card; loop to start at the end. Pause on hover/touch/focus.
   useEffect(() => {
-    if (loading || visible.length < 3) return undefined;
+    if (loading || visible.length < 4) return undefined;
     const el = scrollerRef.current;
     if (!el) return undefined;
 
@@ -157,8 +155,10 @@ export default function ShopByVehicle({ initialCatalog = null }) {
       const max = node.scrollWidth - node.clientWidth;
       if (max <= 8) return;
       const card = node.querySelector("[data-vehicle-card]");
-      const gap = 12;
-      const step = card ? card.getBoundingClientRect().width + gap : Math.max(160, node.clientWidth * 0.35);
+      const gap = 10;
+      const step = card
+        ? card.getBoundingClientRect().width + gap
+        : Math.max(110, node.clientWidth * 0.28);
       if (node.scrollLeft >= max - 12) {
         node.scrollTo({ left: 0, behavior: "smooth" });
       } else {
@@ -166,7 +166,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
       }
     };
 
-    const id = window.setInterval(tick, 3200);
+    const id = window.setInterval(tick, 2800);
     return () => {
       window.clearInterval(id);
       el.removeEventListener("mouseenter", pause);
@@ -181,60 +181,51 @@ export default function ShopByVehicle({ initialCatalog = null }) {
   if (!loading && !items.length) return null;
 
   return (
-    <section id="shop-by-vehicle" className="border-t border-[#EFEFEF] bg-[#F8F8F8] pb-5 pt-3 md:pb-10 md:pt-6">
+    <section id="shop-by-vehicle" className="sbv">
       <div className="store-container">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#C41E1E]">
-              Or browse by model
-            </p>
-            <h2 className="font-heading mt-0.5 text-[18px] font-bold text-[#111111] sm:text-[22px]">
-              Shop By Your Vehicle
-            </h2>
-            <Link href="/cars" className="mt-1 inline-block text-xs font-semibold text-[#C41E1E] hover:underline">
-              View all cars →
+        <div className="sbv-head">
+          <div className="sbv-head__titles">
+            <h2 className="sbv-title">Shop By Your Vehicle</h2>
+            <Link href="/cars" className="sbv-all">
+              View all →
             </Link>
           </div>
-
-          {!loading && byMake.length > 0 ? (
-            <div className="shop-by-vehicle-pills -mx-1 flex gap-1.5 overflow-x-auto pb-0.5 sm:mx-0 sm:flex-wrap sm:overflow-visible">
-              <button
-                type="button"
-                onClick={() => setActiveMake("")}
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold transition sm:px-3 sm:text-[11px] ${
-                  !activeMake
-                    ? "bg-[#C41E1E] text-white"
-                    : "border border-[#E5E7EB] bg-white text-[#374151] hover:border-[#C41E1E]/40"
-                }`}
-              >
-                All · {items.length}
-              </button>
-              {byMake.map(([make, list]) => (
-                <button
-                  key={make}
-                  type="button"
-                  onClick={() => setActiveMake(make)}
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold transition sm:px-3 sm:text-[11px] ${
-                    activeMake === make
-                      ? "bg-[#C41E1E] text-white"
-                      : "border border-[#E5E7EB] bg-white text-[#374151] hover:border-[#C41E1E]/40"
-                  }`}
-                >
-                  {make} · {list.length}
-                </button>
-              ))}
-            </div>
-          ) : null}
         </div>
 
-        <div className="relative mt-3 md:mt-4">
-          {visible.length > 3 ? (
+        {!loading && byMake.length > 0 ? (
+          <div className="sbv-pills" role="tablist" aria-label="Filter by make">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!activeMake}
+              onClick={() => setActiveMake("")}
+              className={`sbv-pill${!activeMake ? " is-on" : ""}`}
+            >
+              All · {items.length}
+            </button>
+            {byMake.map(([make, list]) => (
+              <button
+                key={make}
+                type="button"
+                role="tab"
+                aria-selected={activeMake === make}
+                onClick={() => setActiveMake(make)}
+                className={`sbv-pill${activeMake === make ? " is-on" : ""}`}
+              >
+                {make} · {list.length}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="sbv-rail">
+          {visible.length > 4 ? (
             <>
               <button
                 type="button"
                 aria-label="Scroll vehicles left"
                 onClick={() => scrollByCards(-1)}
-                className="absolute -left-1 top-[38%] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-lg shadow-sm md:flex"
+                className="sbv-nav sbv-nav--prev"
               >
                 ‹
               </button>
@@ -242,30 +233,20 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                 type="button"
                 aria-label="Scroll vehicles right"
                 onClick={() => scrollByCards(1)}
-                className="absolute -right-1 top-[38%] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-lg shadow-sm md:flex"
+                className="sbv-nav sbv-nav--next"
               >
                 ›
               </button>
             </>
           ) : null}
 
-          <div
-            ref={scrollerRef}
-            className="shop-by-vehicle-slider flex gap-3 overflow-x-auto pb-2"
-            style={{
-              scrollSnapType: "x mandatory",
-              WebkitOverflowScrolling: "touch",
-              scrollbarWidth: "thin",
-            }}
-          >
+          <div ref={scrollerRef} className="sbv-slider">
             {loading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-[31%] shrink-0 animate-pulse sm:w-[18%]"
-                  >
-                    <div className="aspect-[4/3] rounded-xl bg-[#E8E8E8] sm:aspect-square" />
-                    <div className="mt-2 h-10 rounded bg-[#E8E8E8]" />
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="sbv-card sbv-card--skeleton" aria-hidden>
+                    <span className="sbv-ring" />
+                    <span className="sbv-skel-line" />
+                    <span className="sbv-skel-line sbv-skel-line--short" />
                   </div>
                 ))
               : visible.map((v) => (
@@ -273,38 +254,28 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                     key={`${v.make}-${v.slug}`}
                     href={v.href}
                     data-vehicle-card
-                    className="group w-[31%] shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white transition hover:border-[#C41E1E]/45 hover:shadow-md sm:w-[18%]"
-                    style={{ scrollSnapAlign: "start", contentVisibility: "auto", containIntrinsicSize: "160px" }}
+                    className="sbv-card"
                   >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3F4F6] sm:aspect-square">
+                    <span className="sbv-ring">
                       {v.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={v.image}
                           alt={`${v.make} ${v.model}`}
-                          className="h-full w-full object-contain object-center p-2 transition duration-300 group-hover:scale-105 sm:p-3"
                           loading="lazy"
                           decoding="async"
                           fetchPriority="low"
+                          draggable={false}
                         />
                       ) : (
-                        /* TODO: upload real CarCatalog images for BAIC BJ40, Chery Tiggo 4/8 Pro,
-                           Deepal S05, DFSK Glory 580, KIA Sorento/Stonic, Nissan Note, Proton X70.
-                           Keep emoji fallback — these generations have sellable products. */
-                        <div className="flex h-full items-center justify-center text-3xl text-[#9CA3AF]">🚗</div>
+                        <span className="sbv-fallback" aria-hidden>
+                          🚗
+                        </span>
                       )}
-                    </div>
-                    <div className="px-1.5 py-1.5 sm:px-2.5 sm:py-2">
-                      <p className="truncate text-[8px] font-bold uppercase tracking-wider text-[#C41E1E] sm:text-[9px]">
-                        {v.make}
-                      </p>
-                      <p className="font-heading truncate text-[12px] font-bold leading-tight text-[#111111] sm:text-[13px]">
-                        {v.model}
-                      </p>
-                      {yearLabel(v) ? (
-                        <p className="mt-0.5 truncate text-[9px] text-[#6B7280] sm:text-[10px]">{yearLabel(v)}</p>
-                      ) : null}
-                    </div>
+                    </span>
+                    <span className="sbv-make">{v.make}</span>
+                    <span className="sbv-model">{v.model}</span>
+                    {yearLabel(v) ? <span className="sbv-years">{yearLabel(v)}</span> : null}
                   </Link>
                 ))}
           </div>
