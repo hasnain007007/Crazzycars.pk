@@ -19,24 +19,28 @@ const RAIL_CONFIG = [
     title: "LED & Lighting",
     tagline: "Headlights, indicators, ambient & more",
     accent: "#C41E1E",
+    accentEnd: "#1A0505",
   },
   {
     slug: "exterior",
     title: "Exterior",
     tagline: "Body kits, splitters, mirrors & styling",
-    accent: "#111111",
+    accent: "#2A2A2A",
+    accentEnd: "#0A0A0A",
   },
   {
     slug: "carbon-fiber",
     title: "Carbon Fiber",
     tagline: "Interior & exterior carbon trim upgrades",
-    accent: "#1F2937",
+    accent: "#374151",
+    accentEnd: "#0F172A",
   },
   {
     slug: "interior",
     title: "Interior",
     tagline: "Cabin comfort, mats, covers & lighting",
-    accent: "#7F1D1D",
+    accent: "#9B1C1C",
+    accentEnd: "#1A0505",
   },
 ];
 
@@ -203,7 +207,9 @@ function CategoryRail({ config, root }) {
           <Link
             href={href}
             className="cat-showcase__promo"
-            style={{ background: `linear-gradient(165deg, ${config.accent} 0%, #111111 72%)` }}
+            style={{
+              background: `linear-gradient(160deg, ${config.accent} 0%, ${config.accentEnd || "#111111"} 78%)`,
+            }}
           >
             <div className="cat-showcase__promo-top">
               <span className="cat-showcase__promo-brand">CrazzyCars.pk</span>
