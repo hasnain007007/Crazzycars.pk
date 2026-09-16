@@ -1,7 +1,7 @@
 /**
  * Country / city + weight (grams) shipping for ShippingZone documents.
  * Store policy: courier is always charged — never waive the fee for order value.
- * Floor = regular Rs. 250 or bulky Rs. 500 via optional hasBulky / shippingFloor.
+ * Floor via STORE_POLICY.shipping.standardFeePKR / bulkyFeePKR (see shippingTier).
  */
 import { STORE_POLICY } from "@/config/store-policy";
 import { shippingFloorPKR } from "@/lib/shippingTier";

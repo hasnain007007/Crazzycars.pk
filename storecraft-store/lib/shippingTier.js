@@ -1,17 +1,17 @@
 /**
- * Tiered shipping floors: regular Rs. 250, bulky Rs. 500.
+ * Tiered shipping floors from STORE_POLICY (standardFeePKR / bulkyFeePKR).
  * Final charge = MAX(floor, zone rate). Never stacked per-item.
  */
 import { STORE_POLICY } from "@/config/store-policy";
 
 export function regularShippingFeePKR() {
-  return Math.max(0, Number(STORE_POLICY.shipping.standardFeePKR) || 250);
+  return Math.max(0, Number(STORE_POLICY.shipping.standardFeePKR) || 0);
 }
 
 export function bulkyShippingFeePKR() {
   return Math.max(
     regularShippingFeePKR(),
-    Number(STORE_POLICY.shipping.bulkyFeePKR) || 500
+    Number(STORE_POLICY.shipping.bulkyFeePKR) || 0
   );
 }
 
@@ -35,8 +35,7 @@ export function applyShippingFloor(zoneRate, hasBulky) {
   return Math.max(floor, zone > 0 ? zone : floor);
 }
 
-export const SHIPPING_ADVANCE_BANNER_EN =
-  "Shipping: Rs. 250 regular · Rs. 500 bulky (splitters, side skirts, spoilers, floor mats, etc.). Pay shipping in advance; the rest is Cash on Delivery.";
-
-export const SHIPPING_ADVANCE_BANNER_UR =
-  "شپنگ: عام آرڈر Rs. 250، بڑے آئٹمز Rs. 500۔ شپنگ پہلے ادا کریں؛ باقی کیش آن ڈیلیوری۔";
+export {
+  shippingAdvanceBannerEn as SHIPPING_ADVANCE_BANNER_EN,
+  shippingAdvanceBannerUr as SHIPPING_ADVANCE_BANNER_UR,
+} from "@/lib/storePolicyCopy";

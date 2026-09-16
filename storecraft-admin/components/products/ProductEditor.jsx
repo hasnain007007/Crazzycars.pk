@@ -13,6 +13,12 @@ import { richTextPlainLength } from "@/lib/richTextPlain";
 import { generateSlugFromProductName } from "@/lib/slugify";
 import { toDatetimeLocalValue } from "@/lib/datetimeLocal";
 import { isBodyKitProduct } from "@/lib/codEligibility";
+import {
+  advancePercentHelpText,
+  bulkyFeePkr,
+  bulkyItemHelpText,
+  formatPkrAmount,
+} from "@/lib/storePolicyDefaults";
 import { getStorefrontBaseUrl } from "@/lib/storefrontUrl";
 import { TabBasicInfo, CategoryPicker } from "./TabBasicInfo";
 import { TabPricing } from "./TabPricing";
@@ -1120,20 +1126,15 @@ export function ProductEditor({ mode, productId }) {
                   className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#1d6fb8] focus:ring-[#1d6fb8]"
                 />
                 <span>
-                  <span className="block text-sm font-semibold text-gray-900">Bulky item (Rs. 500 shipping floor)</span>
-                  <span className="text-xs text-gray-500">
-                    Splitters, side skirts, spoilers, floor mats, body kits, etc. Any bulky item in the cart sets
-                    shipping to MAX(Rs. 500, zone rate). Regular carts use MAX(Rs. 250, zone rate).
+                  <span className="block text-sm font-semibold text-gray-900">
+                    Bulky item ({formatPkrAmount(bulkyFeePkr())} shipping floor)
                   </span>
+                  <span className="text-xs text-gray-500">{bulkyItemHelpText()}</span>
                 </span>
               </label>
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <label className="block text-sm font-semibold text-gray-900">Advance payment required</label>
-                <p className="mt-0.5 text-xs text-gray-500">
-                  Customer must pay at least this % of the item total before dispatch (e.g. 50%).
-                  COD advance is MAX(this %, shipping charge) — not stacked. Example: 40% of Rs. 5,000 = Rs. 2,000
-                  vs bulky shipping Rs. 500 → advance is Rs. 2,000.
-                </p>
+                <p className="mt-0.5 text-xs text-gray-500">{advancePercentHelpText()}</p>
                 <select
                   value={String(form.advancePercentRequired || 0)}
                   onChange={(e) =>

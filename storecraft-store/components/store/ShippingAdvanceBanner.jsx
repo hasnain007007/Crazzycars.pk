@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  SHIPPING_ADVANCE_BANNER_EN,
-  SHIPPING_ADVANCE_BANNER_UR,
-  shippingFloorPKR,
-} from "@/lib/shippingTier";
+  shippingAdvanceBannerEn,
+  shippingAdvanceBannerUr,
+} from "@/lib/storePolicyCopy";
+import { shippingFloorPKR } from "@/lib/shippingTier";
 
 /**
  * Mobile-first shipping + advance payment notice.
@@ -21,14 +21,14 @@ export function ShippingAdvanceBanner({ hasBulky = null, className = "" }) {
       role="note"
     >
       <p className="m-0 text-[13px] font-medium leading-snug text-amber-950 sm:text-sm">
-        {SHIPPING_ADVANCE_BANNER_EN}
+        {shippingAdvanceBannerEn()}
       </p>
       <p
         className="mt-1.5 mb-0 text-[12px] leading-snug text-amber-900/90 sm:text-[13px]"
         lang="ur"
         dir="rtl"
       >
-        {SHIPPING_ADVANCE_BANNER_UR}
+        {shippingAdvanceBannerUr()}
       </p>
       {showCartLine ? (
         <p className="mt-1.5 mb-0 text-[12px] font-semibold text-amber-950 sm:text-[13px]">

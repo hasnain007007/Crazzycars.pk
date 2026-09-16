@@ -121,7 +121,7 @@ export function toPublicShippingQuote(raw) {
 /**
  * Apply store policy on top of zone/courier quotes.
  * Courier is always charged — never waive the fee for order value.
- * Floor = Rs. 250 regular or Rs. 500 when cartHasBulky; final = MAX(floor, zone).
+ * Floor = STORE_POLICY.shipping.standardFeePKR (regular) or bulkyFeePKR; final = MAX(floor, zone).
  */
 export function applyShippingRules({
   storePayment,

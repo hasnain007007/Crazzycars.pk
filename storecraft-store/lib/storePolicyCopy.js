@@ -63,6 +63,20 @@ export function standardDeliveryFeeShort() {
   return `Delivery Rs. ${regular} regular · Rs. ${bulky} bulky`;
 }
 
+/** Cart / checkout / PDP banner — English (fees from STORE_POLICY). */
+export function shippingAdvanceBannerEn() {
+  const regular = Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK");
+  const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR || 500).toLocaleString("en-PK");
+  return `Shipping: Rs. ${regular} regular · Rs. ${bulky} bulky (splitters, side skirts, spoilers, floor mats, etc.). Pay shipping in advance; the rest is Cash on Delivery.`;
+}
+
+/** Cart / checkout / PDP banner — Urdu. */
+export function shippingAdvanceBannerUr() {
+  const regular = Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK");
+  const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR || 500).toLocaleString("en-PK");
+  return `شپنگ: عام آرڈر Rs. ${regular}، بڑے آئٹمز Rs. ${bulky}۔ شپنگ پہلے ادا کریں؛ باقی کیش آن ڈیلیوری۔`;
+}
+
 export function returnsPolicyCanonical() {
   const days = STORE_POLICY.returns.windowDays;
   return `Returns and refunds are accepted within ${days} days for items that arrive defective or if the wrong item was shipped. In these cases, you'll receive a full refund. For change-of-mind returns, we offer an exchange for a different product or size — cash refunds are not available for change-of-mind requests.`;
