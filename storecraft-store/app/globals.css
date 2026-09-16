@@ -4293,7 +4293,7 @@ textarea::placeholder {
 
 .sbv-nav {
   position: absolute;
-  top: 78px;
+  top: 68px;
   z-index: 2;
   display: none;
   width: 34px;
@@ -4330,24 +4330,24 @@ textarea::placeholder {
 
 .sbv-card {
   flex: 0 0 auto;
-  width: 190px;
+  width: 164px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   text-decoration: none;
   color: inherit;
   scroll-snap-align: start;
   content-visibility: auto;
-  contain-intrinsic-size: 260px;
+  contain-intrinsic-size: 230px;
 }
 
 .sbv-ring {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 174px;
-  height: 174px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   background: #ffffff;
   border: 2px solid #e8e8e8;
@@ -4364,7 +4364,7 @@ textarea::placeholder {
   object-fit: contain;
   object-position: center;
   padding: 0;
-  transform: scale(1.28);
+  transform: scale(1.24);
   pointer-events: none;
   transition: transform 0.35s ease;
 }
@@ -4378,7 +4378,7 @@ textarea::placeholder {
 
 .sbv-card:hover .sbv-ring img,
 .sbv-card:focus-visible .sbv-ring img {
-  transform: scale(1.36);
+  transform: scale(1.32);
 }
 
 .sbv-fallback {
@@ -4392,7 +4392,7 @@ textarea::placeholder {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -4408,7 +4408,7 @@ textarea::placeholder {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--font-heading), Rajdhani, sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: #111111;
   text-align: center;
@@ -4421,7 +4421,7 @@ textarea::placeholder {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 9px;
+  font-size: 10px;
   color: #6b7280;
   text-align: center;
   line-height: 1.1;
@@ -4460,21 +4460,21 @@ textarea::placeholder {
   }
 
   .sbv-card {
-    width: 216px;
+    width: 184px;
   }
 
   .sbv-ring {
-    width: 198px;
-    height: 198px;
+    width: 168px;
+    height: 168px;
   }
 
   .sbv-ring img {
-    transform: scale(1.32);
+    transform: scale(1.28);
   }
 
   .sbv-card:hover .sbv-ring img,
   .sbv-card:focus-visible .sbv-ring img {
-    transform: scale(1.4);
+    transform: scale(1.36);
   }
 
   .sbv-model {
@@ -4511,16 +4511,16 @@ textarea::placeholder {
   }
 
   .sbv-card {
-    width: 162px;
+    width: 136px;
   }
 
   .sbv-ring {
-    width: 144px;
-    height: 144px;
+    width: 124px;
+    height: 124px;
   }
 
   .sbv-ring img {
-    transform: scale(1.28);
+    transform: scale(1.24);
   }
 
   .sbv-make {
