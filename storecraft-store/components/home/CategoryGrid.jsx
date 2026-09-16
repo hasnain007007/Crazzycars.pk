@@ -12,58 +12,9 @@ function masterCategorySrc(url) {
   return path || url;
 }
 
-function CategoryCard({ c, eager }) {
-  const imageUrl = c.imageUrl ? categoryImageUrl(c.imageUrl, 360) : "";
-  const imageAlt = c.imageAlt || c.name;
-  const imageTitle = c.imageTitle || c.name;
-  return (
-    <Link href={c.href} className="home-category-card group">
-      {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={imageUrl}
-          alt={imageAlt}
-          title={imageTitle}
-          loading={eager ? "eager" : "lazy"}
-          fetchPriority={eager ? "high" : "low"}
-          decoding="async"
-          className="home-category-card__img"
-          onLoad={(e) => e.currentTarget.classList.add("is-loaded")}
-          ref={(el) => {
-            if (el?.complete && el.naturalWidth > 0) el.classList.add("is-loaded");
-          }}
-          onError={(e) => {
-            const img = e.currentTarget;
-            const fallback = masterCategorySrc(img.getAttribute("src") || "");
-            if (fallback && img.getAttribute("src") !== fallback) {
-              img.src = fallback;
-              return;
-            }
-            img.style.visibility = "hidden";
-          }}
-        />
-      ) : (
-        <span className="home-category-card__icon" aria-hidden>
-          {c.homepageIcon || "🚗"}
-        </span>
-      )}
-
-      <div className="home-category-card__fade" aria-hidden />
-
-      <div className="home-category-card__label">
-        <span className="home-category-card__title" title={c.name}>
-          {c.name}
-        </span>
-      </div>
-    </Link>
-  );
-}
-
 function mapCat(c) {
   const imageUrl =
-    typeof c.image === "string"
-      ? c.image
-      : c.image?.url || c.imageUrl || "";
+    typeof c.image === "string" ? c.image : c.image?.url || c.imageUrl || "";
   return {
     name: c.name,
     slug: c.slug,
@@ -75,7 +26,11 @@ function mapCat(c) {
   };
 }
 
-export default function CategoryGrid({ title = "Shop by Category", viewAllText = "View all →", categories: injected }) {
+export default function CategoryGrid({
+  title = "Shop by Category",
+  viewAllText = "View all →",
+  categories: injected,
+}) {
   const [fetched, setFetched] = useState([]);
 
   useEffect(() => {
@@ -95,7 +50,6 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
       .then((all) => {
         if (cancelled || !all) return;
         const cats = all?.categories || all?.data || [];
-        // Flat payload: sort shallowest-first so roots still lead the grid.
         const sorted = (Array.isArray(cats) ? cats : [])
           .slice()
           .sort((a, b) => Number(a?.level || 0) - Number(b?.level || 0));
@@ -119,32 +73,82 @@ export default function CategoryGrid({ title = "Shop by Category", viewAllText =
 
   if (!categories.length) return null;
 
-  const viewAllLabel = String(viewAllText || "View all →").replace(/\s*→\s*$/, "").trim() || "View all";
+  const viewAllLabel =
+    String(viewAllText || "View all →").replace(/\s*→\s*$/, "").trim() || "View all";
+  const durationSec = Math.max(categories.length * 3.2, 28);
 
   return (
-    <section className="homepage-section bg-white py-6 md:py-20">
+    <section className="homepage-section bg-white py-6 md:py-16">
       <div className="store-container">
         <div className="mb-3">
-          <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">{title}</h2>
-          <div style={{ width: 40, height: 3, background: "#C41E1E", marginTop: 8, borderRadius: 2 }} />
+          <h2 className="font-heading text-[20px] font-bold text-[#111111] md:text-[32px]">
+            {title}
+          </h2>
+          <div
+            style={{ width: 40, height: 3, background: "#C41E1E", marginTop: 8, borderRadius: 2 }}
+          />
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-6 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {categories.map((c, i) => (
-            <CategoryCard
-              key={c.slug || c.href || c.name}
-              eager={i < 4}
-              c={{
-                ...c,
-                href: c.href || categoryHref(c.slug),
-              }}
-            />
-          ))}
+
+        <div className="subcat-circle-marquee mt-4 sm:mt-6" aria-label={title}>
+          <div
+            className="subcat-circle-track"
+            style={{ animationDuration: `${durationSec}s` }}
+          >
+            {[0, 1].map((copy) =>
+              categories.map((c, idx) => {
+                const href = c.href || categoryHref(c.slug);
+                const imageUrl = c.imageUrl ? categoryImageUrl(c.imageUrl, 240) : "";
+                return (
+                  <Link
+                    key={`${copy}-${c.slug || c.name || idx}`}
+                    href={href}
+                    className="subcat-circle-item"
+                    tabIndex={copy === 0 ? undefined : -1}
+                    aria-hidden={copy === 1 ? true : undefined}
+                    style={
+                      copy === 0
+                        ? { animationDelay: `${Math.min(idx, 12) * 45}ms` }
+                        : undefined
+                    }
+                  >
+                    <span className="subcat-circle-ring">
+                      {imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={imageUrl}
+                          alt={copy === 0 ? c.imageAlt || c.name : ""}
+                          title={c.imageTitle || c.name}
+                          loading={copy === 0 && idx < 6 ? "eager" : "lazy"}
+                          decoding="async"
+                          draggable={false}
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            const fallback = masterCategorySrc(img.getAttribute("src") || "");
+                            if (fallback && img.getAttribute("src") !== fallback) {
+                              img.src = fallback;
+                              return;
+                            }
+                            img.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <span className="subcat-circle-fallback" aria-hidden>
+                          {(c.name || "?").charAt(0)}
+                        </span>
+                      )}
+                    </span>
+                    <span className="subcat-circle-label">{c.name}</span>
+                  </Link>
+                );
+              })
+            )}
+          </div>
         </div>
+
         <div className="mt-6 flex justify-center">
           <Link
             href="/categories"
             className="inline-flex items-center gap-2 rounded-full border border-[#111111] bg-[#111111] px-4 py-2 text-xs font-semibold transition hover:bg-[#C41E1E] hover:border-[#C41E1E] md:px-6 md:py-3 md:text-sm"
-            // Inline: the unlayered `a { color: inherit }` in globals.css outranks Tailwind's layered text-white.
             style={{ color: "#FFFFFF" }}
           >
             {viewAllLabel}
