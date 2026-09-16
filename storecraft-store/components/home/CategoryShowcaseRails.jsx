@@ -115,37 +115,57 @@ function CategoryRail({ config, root }) {
   }, [activeSlug, config.slug]);
 
   const pageCount = Math.max(1, Math.ceil(products.length / 4));
+  const pageRef = useRef(0);
+  const scrollingRef = useRef(false);
 
-  const scrollByPage = useCallback((dir) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const step = Math.max(el.clientWidth * 0.85, 240);
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
-  }, []);
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+
+  const goToPage = useCallback(
+    (idx) => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      const clamped = Math.min(pageCount - 1, Math.max(0, idx));
+      pageRef.current = clamped;
+      setPage(clamped);
+      const max = el.scrollWidth - el.clientWidth;
+      const target = pageCount <= 1 ? 0 : (clamped / (pageCount - 1)) * max;
+      scrollingRef.current = true;
+      el.scrollTo({ left: target, behavior: "smooth" });
+      window.setTimeout(() => {
+        scrollingRef.current = false;
+      }, 420);
+    },
+    [pageCount]
+  );
+
+  const scrollByPage = useCallback(
+    (dir) => {
+      goToPage(pageRef.current + dir);
+    },
+    [goToPage]
+  );
 
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return undefined;
     const onScroll = () => {
+      if (scrollingRef.current) return;
       const max = el.scrollWidth - el.clientWidth;
       if (max <= 0) {
+        pageRef.current = 0;
         setPage(0);
         return;
       }
       const ratio = el.scrollLeft / max;
-      setPage(Math.min(pageCount - 1, Math.round(ratio * (pageCount - 1))));
+      const next = Math.min(pageCount - 1, Math.round(ratio * (pageCount - 1)));
+      pageRef.current = next;
+      setPage(next);
     };
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, [pageCount, products.length]);
-
-  const goToPage = (idx) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    const target = pageCount <= 1 ? 0 : (idx / (pageCount - 1)) * max;
-    el.scrollTo({ left: target, behavior: "smooth" });
-  };
 
   if (!root) return null;
   if (!loading && products.length === 0 && activeSlug === config.slug) return null;
