@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Filter By Car — Carzstore-style horizontal bar (Make → Model → Year → FILTER + reset)
- * Data from Car Catalog (admin). Only navigates to generations that exist in our catalog.
+ * Filter By Car — AutoJin-style card (Make → Model | Year → FILTER)
+ * Data from Car Catalog (admin).
  */
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,20 +14,6 @@ function formatYearRange(m) {
   if (!m?.yearFrom) return "";
   const to = m.yearTo == null || Number(m.yearTo) >= new Date().getFullYear() ? "Present" : m.yearTo;
   return `${m.yearFrom}–${to}`;
-}
-
-function ResetIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M4.5 12a7.5 7.5 0 0 1 12.9-5.2M19.5 12a7.5 7.5 0 0 1-12.9 5.2"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path d="M17.2 3.8v4.2h-4.2M6.8 20.2v-4.2h4.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
 }
 
 export default function ShopByCar({ title = "Filter By Car", initialCatalog = null }) {
@@ -83,6 +69,7 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
     [models, modelSlug]
   );
 
+  /** Year options: full generation range first, then individual years */
   const yearOptions = useMemo(() => {
     if (!selectedModel) return [];
     const opts = [];
@@ -115,13 +102,6 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
     setYear("");
   }, [modelSlug]);
 
-  const reset = useCallback(() => {
-    setMake("");
-    setModelSlug("");
-    setYear("");
-    setError("");
-  }, []);
-
   const onSubmit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -149,6 +129,7 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
           }
         }
 
+        // Fallback: catalog model slug (store page resolves → Vehicle automatically)
         router.push(`/cars/${modelSlug}${yearParam ? `?year=${yearParam}` : ""}`);
       } catch {
         setError("Could not open that car. Try again.");
@@ -159,76 +140,70 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
     [make, modelSlug, year, selectedModel, router]
   );
 
-  if (!makes.length) return null;
-
   return (
-    <section id="shop-by-car" className="car-filter-bar-section" aria-label={title}>
+    <section id="shop-by-car" className="filter-by-car-section">
       <div className="store-container">
-        <form onSubmit={onSubmit} className="car-filter-bar">
-          <select
-            className="car-filter-bar__select"
-            value={make}
-            onChange={(e) => setMake(e.target.value)}
-            aria-label="Select make"
-          >
-            <option value="">Select Make</option>
-            {makes.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+        <form onSubmit={onSubmit} className="filter-by-car-card">
+          <h2 className="filter-by-car-title">{title === "Find Parts For Your Car" ? "Filter By Car" : title}</h2>
 
-          <select
-            className="car-filter-bar__select"
-            value={modelSlug}
-            onChange={(e) => setModelSlug(e.target.value)}
-            disabled={!make}
-            aria-label="Select model"
-          >
-            <option value="">Select Model</option>
-            {models.map((m) => (
-              <option key={m.slug} value={m.slug}>
-                {m.nickname || m.generation || m.model || ""}
-              </option>
-            ))}
-          </select>
+          <div className="filter-by-car-fields">
+            <select
+              className="filter-by-car-select"
+              value={make}
+              onChange={(e) => setMake(e.target.value)}
+              aria-label="Select make"
+            >
+              <option value="">SELECT MAKE</option>
+              {makes.map((m) => (
+                <option key={m} value={m}>
+                  {String(m).toUpperCase()}
+                </option>
+              ))}
+            </select>
 
-          <select
-            className="car-filter-bar__select"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            disabled={!modelSlug}
-            aria-label="Select year"
-          >
-            <option value="">Select Year</option>
-            {yearOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <div className="filter-by-car-row">
+              <select
+                className="filter-by-car-select"
+                value={modelSlug}
+                onChange={(e) => setModelSlug(e.target.value)}
+                disabled={!make}
+                aria-label="Select model"
+              >
+                <option value="">SELECT MODEL</option>
+                {models.map((m) => (
+                  <option key={m.slug} value={m.slug}>
+                    {(m.nickname || m.generation || m.model || "").toUpperCase()}
+                  </option>
+                ))}
+              </select>
 
-          <button type="submit" disabled={loading} className="car-filter-bar__submit">
-            {loading ? "…" : "FILTER BY CAR"}
-          </button>
+              <select
+                className="filter-by-car-select"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                disabled={!modelSlug}
+                aria-label="Select year"
+              >
+                <option value="">SELECT YEAR</option>
+                {yearOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-          <button
-            type="button"
-            className="car-filter-bar__reset"
-            onClick={reset}
-            aria-label="Reset car filter"
-            title="Reset"
-          >
-            <ResetIcon />
+          {error ? (
+            <p className="filter-by-car-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <button type="submit" disabled={loading} className="filter-by-car-btn">
+            {loading ? "…" : "FILTER"}
           </button>
         </form>
-
-        {error ? (
-          <p className="car-filter-bar__error" role="alert">
-            {error}
-          </p>
-        ) : null}
       </div>
     </section>
   );

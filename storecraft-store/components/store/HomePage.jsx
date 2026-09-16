@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import HomeHero from "@/components/home/HomeHero";
 import StatsBar from "@/components/home/StatsBar";
 import ShopByCar from "@/components/home/ShopByCar";
-import CategoryCircles from "@/components/home/CategoryCircles";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import ShopByVehicle from "@/components/home/ShopByVehicle";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
@@ -53,7 +52,6 @@ export function HomePage({
   initialHeroSlides = null,
   initialCarCatalog = null,
   initialCategories = null,
-  initialCircleCategories = null,
   activeProductCount = null,
 }) {
   const ctx = useStoreSettings();
@@ -85,12 +83,6 @@ export function HomePage({
           initialCatalog={initialCarCatalog}
         />
       ) : null}
-      {sectionEnabled("categories") && homepageSettings.sections?.showCategories !== false ? (
-        <CategoryCircles categories={initialCircleCategories || initialCategories} />
-      ) : null}
-      {sectionEnabled("hotDeals") && homepageSettings.sections?.showHotDeals !== false ? (
-        <HotDeals settings={homepageSettings} initialProducts={initialHotDeals} />
-      ) : null}
       <ShopByVehicle initialCatalog={initialCarCatalog} />
       {sectionEnabled("categories") && homepageSettings.sections?.showCategories !== false ? (
         <CategoryGrid
@@ -98,6 +90,9 @@ export function HomePage({
           viewAllText={homepageSettings.categories?.viewAllText}
           categories={initialCategories}
         />
+      ) : null}
+      {sectionEnabled("hotDeals") && homepageSettings.sections?.showHotDeals !== false ? (
+        <HotDeals settings={homepageSettings} initialProducts={initialHotDeals} />
       ) : null}
       {sectionEnabled("bestSellers") && homepageSettings.sections?.showBestSellers !== false ? (
         <BestSellers initialProducts={initialBestSellers} settings={homepageSettings} />
