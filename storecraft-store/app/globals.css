@@ -4293,11 +4293,11 @@ textarea::placeholder {
 
 .sbv-nav {
   position: absolute;
-  top: 54px;
+  top: 78px;
   z-index: 2;
   display: none;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
@@ -4330,24 +4330,24 @@ textarea::placeholder {
 
 .sbv-card {
   flex: 0 0 auto;
-  width: 128px;
+  width: 190px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   text-decoration: none;
   color: inherit;
   scroll-snap-align: start;
   content-visibility: auto;
-  contain-intrinsic-size: 190px;
+  contain-intrinsic-size: 260px;
 }
 
 .sbv-ring {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 116px;
-  height: 116px;
+  width: 174px;
+  height: 174px;
   border-radius: 50%;
   background: #ffffff;
   border: 2px solid #e8e8e8;
@@ -4364,21 +4364,21 @@ textarea::placeholder {
   object-fit: contain;
   object-position: center;
   padding: 0;
-  transform: scale(1.18);
+  transform: scale(1.28);
   pointer-events: none;
   transition: transform 0.35s ease;
 }
 
 .sbv-card:hover .sbv-ring,
 .sbv-card:focus-visible .sbv-ring {
-  transform: translateY(-2px) scale(1.04);
+  transform: translateY(-2px) scale(1.03);
   border-color: #c41e1e;
   box-shadow: 0 8px 18px rgba(196, 30, 30, 0.16);
 }
 
 .sbv-card:hover .sbv-ring img,
 .sbv-card:focus-visible .sbv-ring img {
-  transform: scale(1.26);
+  transform: scale(1.36);
 }
 
 .sbv-fallback {
@@ -4460,21 +4460,21 @@ textarea::placeholder {
   }
 
   .sbv-card {
-    width: 144px;
+    width: 216px;
   }
 
   .sbv-ring {
-    width: 132px;
-    height: 132px;
+    width: 198px;
+    height: 198px;
   }
 
   .sbv-ring img {
-    transform: scale(1.22);
+    transform: scale(1.32);
   }
 
   .sbv-card:hover .sbv-ring img,
   .sbv-card:focus-visible .sbv-ring img {
-    transform: scale(1.3);
+    transform: scale(1.4);
   }
 
   .sbv-model {
@@ -4507,20 +4507,20 @@ textarea::placeholder {
   }
 
   .sbv-slider {
-    gap: 10px;
+    gap: 12px;
   }
 
   .sbv-card {
-    width: 108px;
+    width: 162px;
   }
 
   .sbv-ring {
-    width: 96px;
-    height: 96px;
+    width: 144px;
+    height: 144px;
   }
 
   .sbv-ring img {
-    transform: scale(1.2);
+    transform: scale(1.28);
   }
 
   .sbv-make {
