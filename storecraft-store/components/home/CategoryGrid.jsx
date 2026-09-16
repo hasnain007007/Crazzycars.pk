@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { categoryHref } from "@/lib/categories";
 import { categoryImageUrl, localMediaPath } from "@/lib/cloudinaryImage";
 import { pickHomepageCategories } from "@/lib/homepageCategories";
@@ -32,6 +32,8 @@ export default function CategoryGrid({
   categories: injected,
 }) {
   const [fetched, setFetched] = useState([]);
+  const scrollerRef = useRef(null);
+  const pausedRef = useRef(false);
 
   useEffect(() => {
     if (Array.isArray(injected) && injected.length) return;
@@ -71,11 +73,70 @@ export default function CategoryGrid({
         }))
       : fetched.map(mapCat);
 
+  function scrollByCards(dir) {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const card = el.querySelector("[data-home-cat-card]");
+    const step = card ? card.getBoundingClientRect().width + 12 : el.clientWidth * 0.7;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
+  }
+
+  // Gentle auto-scroll like vehicle catalogue — pause on hover/touch.
+  useEffect(() => {
+    if (categories.length < 5) return undefined;
+    const el = scrollerRef.current;
+    if (!el) return undefined;
+
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (reduce) return undefined;
+
+    const pause = () => {
+      pausedRef.current = true;
+    };
+    const resume = () => {
+      pausedRef.current = false;
+    };
+
+    el.addEventListener("mouseenter", pause);
+    el.addEventListener("mouseleave", resume);
+    el.addEventListener("focusin", pause);
+    el.addEventListener("focusout", resume);
+    el.addEventListener("touchstart", pause, { passive: true });
+    el.addEventListener("touchend", resume, { passive: true });
+
+    const tick = () => {
+      if (pausedRef.current || !scrollerRef.current) return;
+      const node = scrollerRef.current;
+      const max = node.scrollWidth - node.clientWidth;
+      if (max <= 8) return;
+      const card = node.querySelector("[data-home-cat-card]");
+      const gap = 12;
+      const step = card ? card.getBoundingClientRect().width + gap : 140;
+      if (node.scrollLeft >= max - 12) {
+        node.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        node.scrollBy({ left: step, behavior: "smooth" });
+      }
+    };
+
+    const id = window.setInterval(tick, 3000);
+    return () => {
+      window.clearInterval(id);
+      el.removeEventListener("mouseenter", pause);
+      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("focusin", pause);
+      el.removeEventListener("focusout", resume);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("touchend", resume);
+    };
+  }, [categories.length]);
+
   if (!categories.length) return null;
 
   const viewAllLabel =
     String(viewAllText || "View all →").replace(/\s*→\s*$/, "").trim() || "View all";
-  const durationSec = Math.max(categories.length * 3.2, 28);
 
   return (
     <section className="homepage-section bg-white py-6 md:py-16">
@@ -89,59 +150,78 @@ export default function CategoryGrid({
           />
         </div>
 
-        <div className="subcat-circle-marquee home-cat-marquee mt-4 sm:mt-6" aria-label={title}>
+        <div className="home-cat-rail home-cat-marquee relative mt-4 sm:mt-6">
+          {categories.length > 4 ? (
+            <>
+              <button
+                type="button"
+                aria-label="Scroll categories left"
+                onClick={() => scrollByCards(-1)}
+                className="home-cat-nav home-cat-nav--prev"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                aria-label="Scroll categories right"
+                onClick={() => scrollByCards(1)}
+                className="home-cat-nav home-cat-nav--next"
+              >
+                ›
+              </button>
+            </>
+          ) : null}
+
           <div
-            className="subcat-circle-track"
-            style={{ animationDuration: `${durationSec}s` }}
+            ref={scrollerRef}
+            className="home-cat-slider"
+            aria-label={title}
+            style={{
+              scrollSnapType: "x mandatory",
+              WebkitOverflowScrolling: "touch",
+            }}
           >
-            {[0, 1].map((copy) =>
-              categories.map((c, idx) => {
-                const href = c.href || categoryHref(c.slug);
-                const imageUrl = c.imageUrl ? categoryImageUrl(c.imageUrl, 360) : "";
-                return (
-                  <Link
-                    key={`${copy}-${c.slug || c.name || idx}`}
-                    href={href}
-                    className="subcat-circle-item home-cat-marquee__item"
-                    tabIndex={copy === 0 ? undefined : -1}
-                    aria-hidden={copy === 1 ? true : undefined}
-                    style={
-                      copy === 0
-                        ? { animationDelay: `${Math.min(idx, 12) * 45}ms` }
-                        : undefined
-                    }
-                  >
-                    <span className="subcat-circle-ring home-cat-marquee__ring">
-                      {imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={imageUrl}
-                          alt={copy === 0 ? c.imageAlt || c.name : ""}
-                          title={c.imageTitle || c.name}
-                          loading={copy === 0 && idx < 6 ? "eager" : "lazy"}
-                          decoding="async"
-                          draggable={false}
-                          onError={(e) => {
-                            const img = e.currentTarget;
-                            const fallback = masterCategorySrc(img.getAttribute("src") || "");
-                            if (fallback && img.getAttribute("src") !== fallback) {
-                              img.src = fallback;
-                              return;
-                            }
-                            img.style.display = "none";
-                          }}
-                        />
-                      ) : (
-                        <span className="subcat-circle-fallback" aria-hidden>
-                          {(c.name || "?").charAt(0)}
-                        </span>
-                      )}
-                    </span>
-                    <span className="subcat-circle-label home-cat-marquee__label">{c.name}</span>
-                  </Link>
-                );
-              })
-            )}
+            {categories.map((c, idx) => {
+              const href = c.href || categoryHref(c.slug);
+              const imageUrl = c.imageUrl ? categoryImageUrl(c.imageUrl, 360) : "";
+              return (
+                <Link
+                  key={c.slug || c.name || idx}
+                  href={href}
+                  data-home-cat-card
+                  className="home-cat-marquee__item home-cat-card"
+                  style={{ scrollSnapAlign: "start" }}
+                >
+                  <span className="home-cat-marquee__ring home-cat-card__ring">
+                    {imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={imageUrl}
+                        alt={c.imageAlt || c.name}
+                        title={c.imageTitle || c.name}
+                        loading={idx < 6 ? "eager" : "lazy"}
+                        decoding="async"
+                        draggable={false}
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          const fallback = masterCategorySrc(img.getAttribute("src") || "");
+                          if (fallback && img.getAttribute("src") !== fallback) {
+                            img.src = fallback;
+                            return;
+                          }
+                          img.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <span className="subcat-circle-fallback" aria-hidden>
+                        {(c.name || "?").charAt(0)}
+                      </span>
+                    )}
+                  </span>
+                  <span className="home-cat-marquee__label">{c.name}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
