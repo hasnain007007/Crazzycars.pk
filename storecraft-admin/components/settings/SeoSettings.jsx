@@ -188,6 +188,71 @@ export default function SeoSettings() {
             fontSize: 14,
             fontWeight: 700,
             color: "#111827",
+            margin: "0 0 8px",
+            paddingBottom: 12,
+            borderBottom: "1px solid #f3f4f6",
+          }}
+        >
+          Google Merchant / Shopping feed
+        </h3>
+        <p style={{ fontSize: 13, color: "#4b5563", margin: "0 0 12px", lineHeight: 1.5 }}>
+          Free product listings need this feed in Google Merchant Center. Use a scheduled daily
+          fetch.
+        </p>
+        <code
+          style={{
+            display: "block",
+            padding: "10px 12px",
+            background: "#f9fafb",
+            border: "1px solid #e5e7eb",
+            borderRadius: 8,
+            fontSize: 13,
+            color: "#111827",
+            wordBreak: "break-all",
+          }}
+        >
+          https://crazzycars.pk/feed/products.xml
+        </code>
+        <ol
+          style={{
+            margin: "12px 0 0",
+            paddingLeft: 18,
+            fontSize: 13,
+            color: "#374151",
+            lineHeight: 1.65,
+          }}
+        >
+          <li>
+            Open{" "}
+            <a
+              href="https://merchants.google.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#0f766e", fontWeight: 600 }}
+            >
+              merchants.google.com
+            </a>
+          </li>
+          <li>Products → Feeds → Add feed → Scheduled fetch</li>
+          <li>Country: Pakistan · Language: English · paste the feed URL</li>
+          <li>Enable Free listings, then clear Diagnostics disapprovals</li>
+        </ol>
+      </div>
+
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid #e5e7eb",
+          borderRadius: 12,
+          padding: 20,
+          marginBottom: 20,
+        }}
+      >
+        <h3
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: "#111827",
             margin: "0 0 16px",
             paddingBottom: 12,
             borderBottom: "1px solid #f3f4f6",
