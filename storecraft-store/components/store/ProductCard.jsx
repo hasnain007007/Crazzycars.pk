@@ -190,8 +190,8 @@ export function ProductCard({ product }) {
                   hoverImageUrl ? "" : "group-hover:scale-[1.02]"
                 }`}
                 imgStyle={{ height: "100%", width: "100%", objectFit: "cover" }}
-                width={640}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                width={400}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
               />
             </div>
             {hoverImageUrl && hoverReady ? (
@@ -203,7 +203,7 @@ export function ProductCard({ product }) {
                   className="h-full w-full"
                   imgClassName="h-full w-full object-cover"
                   imgStyle={{ height: "100%", width: "100%", objectFit: "cover" }}
-                  width={640}
+                  width={400}
                   loading="eager"
                 />
               </div>

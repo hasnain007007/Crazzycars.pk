@@ -24,11 +24,13 @@ export function WatermarkedImage({
 }) {
   const [failed, setFailed] = useState(false);
   const [retrySrc, setRetrySrc] = useState(null);
+  const [loaded, setLoaded] = useState(false);
 
-  // Reset error/retry state when the gallery switches to another image.
+  // Reset error/retry/load state when the gallery switches to another image.
   useEffect(() => {
     setFailed(false);
     setRetrySrc(null);
+    setLoaded(false);
   }, [src]);
 
   const rawSrc = retrySrc || src;
@@ -75,6 +77,8 @@ export function WatermarkedImage({
       ? cloudinarySrcSet(src, srcSetWidths, { crop })
       : undefined;
 
+  const showWatermark = Boolean(watermark?.enabled && watermark?.text && loaded);
+
   const imgProps = {
     src: resolved,
     alt: alt || "",
@@ -84,10 +88,19 @@ export function WatermarkedImage({
     decoding: "async",
     fetchPriority,
     ...(itemProp ? { itemProp } : {}),
+    onLoad: () => setLoaded(true),
     onError: () => {
+      // Thumb (-400.webp) missing → fall back to the original master URL once.
+      const master = String(src || "").trim();
+      if (!retrySrc && master && resolved !== master && !/-400\./i.test(master)) {
+        setRetrySrc(master);
+        setLoaded(false);
+        return;
+      }
       const fallback = cardImageUrl(src, width) || String(src || "").split("?")[0];
       if (!retrySrc && fallback && fallback !== resolved) {
         setRetrySrc(fallback);
+        setLoaded(false);
         return;
       }
       setFailed(true);
@@ -109,7 +122,7 @@ export function WatermarkedImage({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img {...imgProps} style={{ width: "100%", height: "100%", display: "block", ...imgStyle }} />
-      <div style={getWatermarkOverlayStyle(watermark)} aria-hidden />
+      {showWatermark ? <div style={getWatermarkOverlayStyle(watermark)} aria-hidden /> : null}
     </div>
   );
 }

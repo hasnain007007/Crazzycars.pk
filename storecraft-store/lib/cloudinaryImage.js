@@ -65,20 +65,21 @@ export function localMediaPath(src) {
 }
 
 /**
- * Category grid uses prebuilt -400.webp (~15–30KB). Masters stay for PDP/admin.
- * Missing thumbs fall back in <img onError> to the master path.
+ * Prefer prebuilt -400.webp thumbs for card-sized local media.
+ * Categories and products use `{stem}-400.webp` beside the master.
+ * Missing thumbs: <img onError> falls back to the original master URL.
  */
 function localMediaForWidth(src, width) {
   const path = localMediaPath(src) || "";
   const w = Number(width) || 0;
-  if (
-    path &&
-    w > 0 &&
-    w <= 480 &&
-    /\/media\/categories\/[^/]+\.webp$/i.test(path) &&
-    !/-400\.webp$/i.test(path)
-  ) {
-    return path.replace(/\.webp$/i, "-400.webp");
+  if (!path || !(w > 0 && w <= 480)) {
+    return path || unwrapNextImageUrl(src) || String(src || "").trim();
+  }
+  if (/-400\.(webp|jpe?g|png)$/i.test(path)) {
+    return path;
+  }
+  if (/\/media\/(categories|products|uploads)\//i.test(path)) {
+    return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
   }
   return path || unwrapNextImageUrl(src) || String(src || "").trim();
 }

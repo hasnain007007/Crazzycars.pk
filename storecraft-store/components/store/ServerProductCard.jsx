@@ -67,7 +67,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
 
   const rawImageUrl = getProductCardImage(card);
   // Always use direct /media (or Cloudinary) URLs — never /_next/image wrappers.
-  const imageUrl = cardImageUrl(rawImageUrl, 480) || rawImageUrl;
+  const imageUrl = cardImageUrl(rawImageUrl, 400) || rawImageUrl;
   const { regular, sale, onSale } = getProductCardPrices(card);
   const reviews = getProductCardReviews(card);
   const alt = productCardAlt(card, categoryName);
