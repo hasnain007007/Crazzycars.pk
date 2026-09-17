@@ -108,6 +108,9 @@ export async function GET(request) {
         { "items.name": rx },
         { "items.articleNo": rx },
         { tags: rx },
+        { trackingNumber: rx },
+        { "tracking.number": rx },
+        { "courierSettlement.trackingNumber": rx },
       ];
       // Phone-heavy guest checkouts: match digit runs in phone / guest+…@ email
       if (digits.length >= 7) {
@@ -115,6 +118,13 @@ export async function GET(request) {
         or.push({ "customer.phone": digitRx });
         or.push({ "shippingAddress.phone": digitRx });
         or.push({ "customer.email": new RegExp(`guest\\+${escapeRegex(digits)}`, "i") });
+      }
+      // Tracking IDs are often pure digits / CN numbers — match those fields too
+      if (digits.length >= 6 && digits !== search) {
+        const digitRx = new RegExp(escapeRegex(digits));
+        or.push({ trackingNumber: digitRx });
+        or.push({ "tracking.number": digitRx });
+        or.push({ "courierSettlement.trackingNumber": digitRx });
       }
       filter.$or = or;
     }
