@@ -192,9 +192,16 @@ export async function middleware(request) {
 
   // Soft-404 / duplicate deal facets — /sale is the money URL.
   if (lower === "/shop") {
-    const deals = String(request.nextUrl.searchParams.get("deals") || "").toLowerCase();
-    const sale = String(request.nextUrl.searchParams.get("sale") || "").toLowerCase();
-    if (deals === "1" || deals === "true" || sale === "1" || sale === "true") {
+    let dealsOrSale = false;
+    for (const [key, value] of request.nextUrl.searchParams.entries()) {
+      const k = String(key).toLowerCase();
+      const v = String(value || "").toLowerCase();
+      if ((k === "deals" || k === "sale") && (v === "1" || v === "true" || v === "yes")) {
+        dealsOrSale = true;
+        break;
+      }
+    }
+    if (dealsOrSale) {
       return withPaidCookie(request, NextResponse.redirect(new URL("/sale", request.url), 308));
     }
   }
