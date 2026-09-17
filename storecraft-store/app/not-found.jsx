@@ -13,8 +13,8 @@ import {
 } from "@/lib/suggestMissingProduct";
 
 export const metadata = {
-  title: "Page not found",
-  description: "This page does not exist on CrazzyCars.pk.",
+  title: "Quick help — find your part",
+  description: "Search CrazzyCars.pk for car accessories, or browse shop and sale deals.",
   robots: ROBOTS_NOINDEX_FOLLOW,
   alternates: { canonical: null },
 };

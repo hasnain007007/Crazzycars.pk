@@ -3,7 +3,8 @@ import Link from "next/link";
 /**
  * Server-rendered sale page hero — always emits one H1 for crawlers.
  */
-export function SalePageChrome() {
+export function SalePageChrome({ productCount = 0 }) {
+  const count = Math.max(0, Number(productCount) || 0);
   return (
     <section
       className="relative overflow-hidden py-8 md:py-28"
@@ -29,8 +30,14 @@ export function SalePageChrome() {
         </span>
         <h1 className="font-display text-2xl text-white uppercase md:text-8xl">Sale</h1>
         <p className="mt-2 max-w-xl text-sm text-white/60 md:mt-4 md:text-lg">
-          Discover up to 50% off premium car accessories, from everyday basics to statement designs.
+          Discover up to 50% off premium car accessories — LED lights, spoilers, carbon fiber
+          trims, body kits and more. Cash on Delivery across Pakistan.
         </p>
+        {count > 0 ? (
+          <p className="mt-3 text-sm font-medium text-white/80 md:mt-5 md:text-base">
+            {count} deal{count === 1 ? "" : "s"} live now — updated daily on CrazzyCars.pk.
+          </p>
+        ) : null}
       </div>
     </section>
   );

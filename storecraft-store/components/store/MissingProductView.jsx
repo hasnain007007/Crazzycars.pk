@@ -11,13 +11,15 @@ function whatsappUrl(message) {
   ).replace(/\D/g, "");
   const text = encodeURIComponent(
     message ||
-      "Hi CrazzyCars.pk — I landed on a missing page. Can you help me find the right product?"
+      "Hi CrazzyCars.pk — I need help finding a product. Can you assist?"
   );
   return `https://wa.me/${digits}?text=${text}`;
 }
 
 /**
- * Shared empty/discontinued landing — no extra Mongo on the generic 404 path.
+ * Shared empty/discontinued landing — no extra Mongo on the generic miss path.
+ * Copy avoids Soft-404 trigger phrases ("404", "not found", "does not exist")
+ * because Next.js embeds this tree in every page's RSC flight payload.
  * `kind`: "missing" | "unavailable"
  */
 export function MissingProductView({
@@ -30,14 +32,14 @@ export function MissingProductView({
   const unavailable = kind === "unavailable";
   const title =
     heading ||
-    (unavailable ? "This product is no longer available." : "This page has driven away.");
+    (unavailable ? "This product is no longer in our catalog." : "Let's find the right accessory.");
   const blurb = unavailable
     ? suggestions.length
-      ? `${productName || "This item"} is not in the live catalog. Here are current products that match this vehicle.`
-      : `${productName || "This item"} is not in the live catalog. Search below or browse a category — we will not guess a random replacement.`
+      ? `${productName || "This item"} is out of the live catalog. Here are current products that match this vehicle.`
+      : `${productName || "This item"} is out of the live catalog. Search below or browse a category — we will not guess a random replacement.`
     : suggestions.length
-      ? "This URL is not on CrazzyCars.pk. These look like a close match — we did not send you to a random product."
-      : "This URL is not on CrazzyCars.pk. Search for the product or category you need — we do not send missing pages to the homepage.";
+      ? "Try one of these close matches, or search the shop for exactly what you need."
+      : "Search for the product or category you need, or browse popular sections below.";
 
   const wa = unavailable
     ? whatsappUrl(
@@ -50,7 +52,7 @@ export function MissingProductView({
   return (
     <section className="mx-auto flex min-h-[50vh] max-w-5xl flex-col items-center px-4 py-10 text-center md:px-6 md:py-16">
       <p className="text-sm font-semibold uppercase tracking-widest text-red-700">
-        {unavailable ? "Unavailable" : "404"}
+        {unavailable ? "Unavailable" : "Quick help"}
       </p>
       <h1 className="mt-2 max-w-3xl text-2xl font-bold md:mt-3 md:text-4xl">{title}</h1>
       <p className="mt-4 max-w-2xl text-gray-600">{blurb}</p>
@@ -106,6 +108,9 @@ export function MissingProductView({
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
         <Link href="/shop" className="text-sm font-semibold text-red-700 underline">
           Browse the shop
+        </Link>
+        <Link href="/sale" className="text-sm font-semibold text-red-700 underline">
+          View current deals
         </Link>
         <a
           href={wa}
