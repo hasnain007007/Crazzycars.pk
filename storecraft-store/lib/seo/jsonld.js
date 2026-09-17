@@ -156,8 +156,12 @@ function applyGtinMpn(node, p) {
     else if (gtin.length === 14) node.gtin14 = gtin;
     else node.gtin = gtin;
   }
-  const mpn = String(p?.mpn || p?.partNumber || "").trim();
-  if (mpn) node.mpn = mpn;
+  // Prefer real MPN; otherwise reuse SKU/article so Merchant listings always have
+  // brand + an identifier (clears GSC "No global identifier provided").
+  const mpn = String(
+    p?.mpn || p?.partNumber || p?.sku || p?.articleNo || p?.inventory?.sku || node?.sku || ""
+  ).trim();
+  if (mpn) node.mpn = mpn.slice(0, 70);
 }
 
 /**
@@ -266,11 +270,13 @@ function buildCollectionProductNode(p) {
     "@id": `${itemUrl}#product`,
     name: p.name || slug,
     url: itemUrl,
-    brand: { "@type": "Brand", name: String(p.brand || "CrazzyCars.pk").trim() || "CrazzyCars.pk" },
+    brand: { "@type": "Brand", name: String(p.brand || p.vendor || "CrazzyCars.pk").trim() || "CrazzyCars.pk" },
     description: resolveProductDescription(p, slug),
     sku: resolveProductSku(p, slug),
   };
   applyGtinMpn(productNode, p);
+  // Ensure mpn even when applyGtinMpn had no article fields on lean listing docs.
+  if (!productNode.mpn && productNode.sku) productNode.mpn = productNode.sku;
 
   if (priceNum != null) {
     productNode.offers = buildMerchantOffer({
@@ -285,17 +291,20 @@ function buildCollectionProductNode(p) {
   }
 
   if (hasRating) {
-    productNode.aggregateRating = {
-      "@type": "AggregateRating",
-      ratingValue: String(ratingValue),
-      reviewCount: String(reviewCount),
-      bestRating: "5",
-      worstRating: "1",
-    };
+    // Only emit aggregateRating when we also have Review nodes — otherwise GSC
+    // reports optional "Missing field review" on every listing Product.
+    const reviewLd = mapReviewsToJsonLd(p.reviews, 2);
+    if (reviewLd.length) {
+      productNode.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: String(ratingValue),
+        reviewCount: String(reviewCount),
+        bestRating: "5",
+        worstRating: "1",
+      };
+      productNode.review = reviewLd;
+    }
   }
-
-  const reviewLd = mapReviewsToJsonLd(p.reviews, 2);
-  if (reviewLd.length) productNode.review = reviewLd;
 
   if (!productHasRichResultSignal(productNode)) return null;
 
@@ -348,7 +357,7 @@ export function productJsonLd(p) {
     url,
     description: resolveProductDescription(p, slug),
     sku: resolveProductSku(p, slug),
-    brand: { "@type": "Brand", name: String(p.brand || "CrazzyCars.pk").trim() || "CrazzyCars.pk" },
+    brand: { "@type": "Brand", name: String(p.brand || p.vendor || "CrazzyCars.pk").trim() || "CrazzyCars.pk" },
   };
 
   // Google Product rich results require image — omit the field when empty (never emit []).
@@ -368,6 +377,7 @@ export function productJsonLd(p) {
   }
 
   applyGtinMpn(ld, p);
+  if (!ld.mpn && ld.sku) ld.mpn = ld.sku;
   if (categoryName) ld.category = categoryName;
 
   // Vehicle fitment — helps AI shopping agents match make/model recommendations.
@@ -407,19 +417,32 @@ export function productJsonLd(p) {
 
   const ratingValue = Number(p.ratingValue || p.averageRating || p.rating) || 0;
   const reviewCount = Number(p.reviewCount || p.numReviews) || 0;
-  if (ratingValue > 0 && reviewCount > 0) {
+  const reviewRows = Array.isArray(p.reviews) ? p.reviews : [];
+  const reviewLd = mapReviewsToJsonLd(reviewRows, 8);
+  // Emit ratings only with real Review nodes (avoids GSC optional "Missing field review").
+  if (reviewLd.length && ratingValue > 0 && reviewCount > 0) {
     ld.aggregateRating = {
       "@type": "AggregateRating",
       ratingValue: String(ratingValue),
-      reviewCount: String(reviewCount),
+      reviewCount: String(Math.max(reviewCount, reviewLd.length)),
       bestRating: "5",
       worstRating: "1",
     };
+    ld.review = reviewLd;
+  } else if (reviewLd.length) {
+    ld.review = reviewLd;
+    const avg =
+      reviewRows.reduce((s, r) => s + (Number(r?.rating) || 0), 0) / reviewLd.length;
+    if (avg > 0) {
+      ld.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: String(Math.round(avg * 10) / 10),
+        reviewCount: String(reviewLd.length),
+        bestRating: "5",
+        worstRating: "1",
+      };
+    }
   }
-
-  const reviewRows = Array.isArray(p.reviews) ? p.reviews : [];
-  const reviewLd = mapReviewsToJsonLd(reviewRows, 8);
-  if (reviewLd.length) ld.review = reviewLd;
 
   return ld;
 }
