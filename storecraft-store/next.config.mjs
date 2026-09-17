@@ -36,6 +36,26 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/returns",
+        destination: "/returns-policy",
+        permanent: true,
+      },
+      {
+        source: "/return-policy",
+        destination: "/returns-policy",
+        permanent: true,
+      },
+      {
+        source: "/refund-policy",
+        destination: "/returns-policy",
+        permanent: true,
+      },
+      {
+        source: "/terms",
+        destination: "/terms-conditions",
+        permanent: true,
+      },
+      {
         source: "/pages/terms-of-service",
         destination: "/terms-conditions",
         permanent: true,
