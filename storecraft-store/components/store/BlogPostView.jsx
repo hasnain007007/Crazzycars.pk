@@ -150,9 +150,7 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
             <span style={{ fontWeight: 700, color: "#444" }}>Tags:</span>{" "}
             {post.tags.map((tag, idx) => (
               <span key={tag}>
-                <Link href={`/blogs?search=${encodeURIComponent(tag)}`} style={{ color: "#888", textDecoration: "none" }}>
-                  {tag}
-                </Link>
+                <span style={{ color: "#888" }}>{tag}</span>
                 {idx < post.tags.length - 1 ? " | " : ""}
               </span>
             ))}

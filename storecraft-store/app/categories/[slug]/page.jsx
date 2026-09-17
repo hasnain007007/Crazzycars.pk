@@ -151,6 +151,7 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
     ]);
 
     if (isEmptyCategoryTree(detail)) notFound();
+    if (detail && listing.page > (Number(detail.totalPages) || 1)) notFound();
 
     if (category) {
       const titleMeta = buildBrandedAbsoluteTitle(
@@ -239,6 +240,7 @@ export default async function CategoryPage({ params, searchParams }) {
   // when Shopify is enabled but collections use different handles.
   const detail = await getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort);
   if (isEmptyCategoryTree(detail)) notFound();
+  if (detail && listing.page > (Number(detail.totalPages) || 1)) notFound();
   if (detail) {
     const brand = await getCachedBrand();
     const data = detail;

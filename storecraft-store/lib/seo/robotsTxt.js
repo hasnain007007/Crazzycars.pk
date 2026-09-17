@@ -20,6 +20,7 @@ export const ROBOTS_PRIVATE_PATHS = [
 export const ROBOTS_FILTER_QUERY_DISALLOWS = [
   "/*?*sort=",
   "/*?*q=",
+  "/*?*search=",
   "/*?*view=",
   "/*?*per_page=",
   "/*?*show=",

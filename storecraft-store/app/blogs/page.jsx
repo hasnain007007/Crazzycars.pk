@@ -10,17 +10,19 @@ export const dynamic = "force-dynamic";
 export const generateMetadata = withSafeMetadata(async function blogsMetadata({ searchParams }) {
   const sp = (await searchParams) || {};
   const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
+  const search = String(sp.search || sp.q || "").trim();
+  const noIndex = page > 1 || Boolean(search);
   const base = buildPageMetadata({
     title: "Car Accessories Blog | Guides & Tips | CrazzyCars.pk",
     description:
       "Expert car accessories guides, fitment tips and aftercare advice from CrazzyCars.pk — body kits, LED lights, carbon fiber and more for Pakistan.",
     path: "/blogs",
     absoluteTitle: true,
-    noIndex: page > 1,
+    noIndex,
   });
   return {
     ...base,
-    robots: page > 1 ? ROBOTS_NOINDEX_FOLLOW : ROBOTS_INDEX_FOLLOW,
+    robots: noIndex ? ROBOTS_NOINDEX_FOLLOW : ROBOTS_INDEX_FOLLOW,
   };
 });
 
