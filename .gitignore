@@ -8,6 +8,9 @@ node_modules/
 
 .local/
 
+# Local scratch / image staging
+.tmp/
+
 # VPS / local media volume (do not commit binaries)
 storecraft-store/media/
 storecraft-admin/media/

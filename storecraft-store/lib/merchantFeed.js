@@ -75,21 +75,95 @@ function feedPrice(product) {
   };
 }
 
+/** Hosts Google Merchant / Shopping crawlers should not use for image_link. */
+function isBlockedImageHost(url) {
+  return /res\.cloudinary\.com|dquier8fv|cdn\.shopify\.com/i.test(String(url || ""));
+}
+
+const IMAGE_STOP = new Set([
+  "abs",
+  "pcs",
+  "the",
+  "and",
+  "for",
+  "with",
+  "to",
+  "of",
+  "in",
+  "car",
+  "style",
+  "pair",
+  "set",
+  "matt",
+  "matte",
+  "black",
+  "plastic",
+  "premium",
+  "quality",
+  "universal",
+]);
+
+function slugTokens(slug) {
+  return String(slug || "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t && t.length > 2 && !IMAGE_STOP.has(t) && !/^\d+$/.test(t));
+}
+
+function imageBasename(url) {
+  try {
+    const clean = String(url || "").split("?")[0];
+    return decodeURIComponent(clean.split("/").pop() || "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+/** Prefer images whose filename matches the product slug (avoids swapped catalog photos). */
+function scoreImageForSlug(slug, url) {
+  const tokens = slugTokens(slug);
+  const base = imageBasename(url);
+  if (!tokens.length || !base) return 0;
+  let hit = 0;
+  for (const t of tokens.slice(0, 8)) {
+    if (base.includes(t)) hit += 1;
+  }
+  let score = hit / Math.min(8, tokens.length);
+  // Slight preference for JPEG (Merchant crawlers reprocess these more reliably).
+  if (/\.jpe?g$/i.test(base)) score += 0.05;
+  return score;
+}
+
+function rankedFeedImages(product, siteUrl) {
+  const imgs = Array.isArray(product?.media?.images) ? product.media.images : [];
+  const ranked = imgs
+    .map((img, index) => {
+      const url = absUrl(img?.url || "", siteUrl);
+      if (!url || isBlockedImageHost(url)) return null;
+      const slugScore = scoreImageForSlug(product?.slug, url);
+      const mainBoost = img?.isMain ? 0.02 : 0;
+      return { url, score: slugScore + mainBoost, index };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score || a.index - b.index);
+  return ranked;
+}
+
 function primaryImage(product, siteUrl) {
-  const imgs = product?.media?.images || [];
-  const main = imgs.find((i) => i.isMain) || imgs[0];
-  const url = absUrl(main?.url || "", siteUrl);
-  if (/res\.cloudinary\.com|dquier8fv/i.test(url)) return "";
-  return url;
+  const ranked = rankedFeedImages(product, siteUrl);
+  if (!ranked.length) return "";
+  const best = ranked[0];
+  // Drop clearly swapped photos (e.g. spoiler image on a canard SKU).
+  if (best.score < 0.2) return "";
+  return best.url;
 }
 
 function additionalImages(product, siteUrl) {
-  const imgs = product?.media?.images || [];
-  return imgs
-    .slice(0, 10)
-    .map((i) => absUrl(i?.url || "", siteUrl))
-    .filter((u) => u && !/res\.cloudinary\.com|dquier8fv/i.test(u))
-    .slice(1);
+  const primary = primaryImage(product, siteUrl);
+  return rankedFeedImages(product, siteUrl)
+    .map((r) => r.url)
+    .filter((u) => u && u !== primary)
+    .slice(0, 9);
 }
 
 function productDescription(product) {
@@ -108,6 +182,9 @@ function productDescription(product) {
  * @param {{ siteUrl?: string }} [opts]
  */
 export function productToMerchantItem(product, opts = {}) {
+  if (product?.seo?.excludeFromMerchantFeed === true) {
+    return { id: "", title: "", link: "", image_link: "", price: "" };
+  }
   const site = cleanSite(opts.siteUrl);
   const id = String(product.articleNo || product._id || "").trim();
   const title = String(product.name || "").trim().slice(0, 150);

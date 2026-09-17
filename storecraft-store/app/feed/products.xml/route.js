@@ -8,7 +8,7 @@ import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { STORE_POLICY } from "@/config/store-policy";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 1800;
+export const revalidate = 0;
 
 /**
  * Google Merchant Center–compatible product feed (RSS 2.0 + g: namespace).
@@ -43,7 +43,7 @@ export async function GET() {
       status: 200,
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
-        "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=86400",
+        "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=3600",
       },
     });
   } catch (e) {
@@ -52,7 +52,10 @@ export async function GET() {
       `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel><title>Error</title><description>${String(e.message || "Feed failed").replace(/[<>&]/g, "")}</description></channel></rss>`,
       {
         status: 500,
-        headers: { "Content-Type": "application/xml; charset=utf-8" },
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          "Cache-Control": "no-store",
+        },
       }
     );
   }
