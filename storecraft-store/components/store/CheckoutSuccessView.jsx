@@ -18,6 +18,7 @@ import {
 } from "@/lib/freeDelivery";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 import { WhatsAppPaymentButton } from "@/components/store/WhatsAppPaymentButton";
+import GoogleCustomerReviewsOptIn from "@/components/store/GoogleCustomerReviewsOptIn";
 
 function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentMethods }) {
   const pm = String(order?.paymentMethod || "").toLowerCase();
@@ -203,6 +204,8 @@ export default function CheckoutSuccessView() {
       });
     });
   }, [order, orderId]);
+
+  const gcrPayload = order?.googleCustomerReviews || null;
 
   if (showFailed) {
     return (
@@ -564,6 +567,7 @@ export default function CheckoutSuccessView() {
           </Link>
         </div>
       </div>
+      {gcrPayload ? <GoogleCustomerReviewsOptIn payload={gcrPayload} /> : null}
     </div>
   );
 }

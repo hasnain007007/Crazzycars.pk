@@ -2,12 +2,19 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order.model";
+import Product from "@/lib/models/Product.model";
+import {
+  estimatedDeliveryDateISO,
+  gtinFromRaw,
+  toDeliveryCountryCode,
+} from "@/lib/googleCustomerReviews";
 
 /**
  * Guest success-page order summary.
  * Requires `?t=` matching order.publicAccessToken when the order has a token
  * (all new checkouts). Legacy orders without a token return 404 to avoid IDOR.
- * Never returns customer email/phone/address.
+ * Never returns phone/full address. Email + ISO country are returned only for
+ * Google Customer Reviews (token-gated).
  */
 export async function GET(req, { params }) {
   try {
@@ -21,7 +28,7 @@ export async function GET(req, { params }) {
 
     const order = await Order.findById(id)
       .select(
-        "orderNumber publicAccessToken pricing paymentStatus paymentMethod orderStatus createdAt items.productId items.articleNo items.quantity items.unitPrice items.total items.name payment.advanceRequired payment.advanceMode payment.advanceMaxPercent payment.remainingCod metaPurchaseEventId"
+        "orderNumber publicAccessToken pricing paymentStatus paymentMethod orderStatus createdAt items.productId items.articleNo items.quantity items.unitPrice items.total items.name payment.advanceRequired payment.advanceMode payment.advanceMaxPercent payment.remainingCod metaPurchaseEventId customer.email shippingAddress.country shippingAddress.city"
       )
       .lean();
 
@@ -45,6 +52,40 @@ export async function GET(req, { params }) {
         }))
       : [];
 
+    // Optional GTINs for GCR product association (only real barcodes).
+    const productIds = items
+      .map((it) => it.productId)
+      .filter((pid) => pid && mongoose.Types.ObjectId.isValid(pid));
+    /** @type {{ gtin: string }[]} */
+    const gtinProducts = [];
+    if (productIds.length) {
+      const products = await Product.find({ _id: { $in: productIds } })
+        .select("ean")
+        .lean();
+      const seen = new Set();
+      for (const p of products) {
+        const gtin = gtinFromRaw(p?.ean);
+        if (!gtin || seen.has(gtin)) continue;
+        seen.add(gtin);
+        gtinProducts.push({ gtin });
+      }
+    }
+
+    const email = String(order?.customer?.email || "")
+      .trim()
+      .toLowerCase();
+    const guestEmail = email.endsWith("@guest.checkout");
+    const googleCustomerReviews =
+      email && !guestEmail
+        ? {
+            orderId: String(order.orderNumber || order._id),
+            email,
+            deliveryCountry: toDeliveryCountryCode(order?.shippingAddress?.country),
+            estimatedDeliveryDate: estimatedDeliveryDateISO(order),
+            products: gtinProducts,
+          }
+        : null;
+
     return NextResponse.json({
       success: true,
       order: {
@@ -64,6 +105,7 @@ export async function GET(req, { params }) {
         items,
         total: Number(order?.pricing?.total ?? 0),
         metaPurchaseEventId: String(order.metaPurchaseEventId || "").trim(),
+        googleCustomerReviews,
       },
     });
   } catch (e) {

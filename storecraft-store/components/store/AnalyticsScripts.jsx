@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { trackPageView } from "@/lib/metaPixel";
+import GoogleCustomerReviewsBadge from "@/components/store/GoogleCustomerReviewsBadge";
 
 /**
  * Fire PageView on App Router navigations (including first paint).
@@ -49,8 +50,6 @@ export default function AnalyticsScripts({ settings }) {
   const gaId = String(settings?.seo?.googleAnalyticsId || "").trim();
   const fbPixelId = String(settings?.seo?.facebookPixelId || "").trim();
 
-  if (!gaId && !fbPixelId) return null;
-
   return (
     <>
       {gaId ? (
@@ -87,6 +86,7 @@ export default function AnalyticsScripts({ settings }) {
           <MetaPixelPageViews />
         </>
       ) : null}
+      <GoogleCustomerReviewsBadge />
     </>
   );
 }
