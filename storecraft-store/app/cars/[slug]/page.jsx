@@ -33,6 +33,8 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
     }
     const assigned = await Product.countDocuments(buildVehiclePageProductFilter(vehicle));
     if (assigned === 0) notFound();
+    const totalPages = Math.max(1, Math.ceil(assigned / listing.pageSize) || 1);
+    if (listing.page > totalPages) notFound();
 
     const titleMeta = buildBrandedAbsoluteTitle(
       (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
@@ -106,7 +108,8 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const sorted = sortProductsClient(allProducts, listing.sort);
   const total = sorted.length;
   const totalPages = Math.max(1, Math.ceil(total / listing.pageSize) || 1);
-  const page = Math.min(listing.page, totalPages);
+  if (listing.page > totalPages) notFound();
+  const page = listing.page;
   const products = sorted.slice((page - 1) * listing.pageSize, page * listing.pageSize);
   const listingForUi = { ...listing, page };
   if (total === 0) notFound();

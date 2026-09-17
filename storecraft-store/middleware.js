@@ -173,6 +173,32 @@ export async function middleware(request) {
     return withPaidCookie(request, redirectPath(request, "/blogs", 308));
   }
 
+  // Soft-404: /blogs?search=… is thin / duplicate of /blogs — collapse to clean index.
+  if (lower === "/blogs" || lower === "/blog") {
+    const search = String(
+      request.nextUrl.searchParams.get("search") || request.nextUrl.searchParams.get("q") || ""
+    ).trim();
+    if (search) {
+      return withPaidCookie(request, NextResponse.redirect(new URL("/blogs", request.url), 308));
+    }
+  }
+
+  // /cars index is not paginated — drop ?page= Soft 404 / duplicate URLs.
+  if (lower === "/cars") {
+    if (request.nextUrl.searchParams.has("page")) {
+      return withPaidCookie(request, NextResponse.redirect(new URL("/cars", request.url), 308));
+    }
+  }
+
+  // Soft-404 / duplicate deal facets — /sale is the money URL.
+  if (lower === "/shop") {
+    const deals = String(request.nextUrl.searchParams.get("deals") || "").toLowerCase();
+    const sale = String(request.nextUrl.searchParams.get("sale") || "").toLowerCase();
+    if (deals === "1" || deals === "true" || sale === "1" || sale === "true") {
+      return withPaidCookie(request, NextResponse.redirect(new URL("/sale", request.url), 308));
+    }
+  }
+
   // Duplicate catalog index — /shop is canonical. /products/:handle still 308s below.
   if (lower.replace(/\/+$/, "") === "/products") {
     return withPaidCookie(request, redirectPath(request, "/shop", 308));

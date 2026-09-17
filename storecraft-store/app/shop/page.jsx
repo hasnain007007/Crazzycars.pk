@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { ShopListingLayout } from "@/components/store/ShopListingLayout";
 import { fetchProductsServer } from "@/lib/serverProductFetch";
 import { buildPageMetadata } from "@/lib/pageMetadata";
@@ -38,6 +39,7 @@ export const generateMetadata = withSafeMetadata(async function shopMetadata({ s
 export default async function ShopPage({ searchParams }) {
   const listing = parseListingSearchParams(await searchParams);
   const { products, total, totalPages } = await fetchProductsServer({ listing });
+  if (listing.page > Math.max(1, Number(totalPages) || 1)) notFound();
 
   const breadcrumbLd = breadcrumbJsonLd([
     { name: "Home", url: "/" },
