@@ -19,6 +19,7 @@ import { buildFaviconMetadata } from "@/lib/faviconUrl";
 import { sanitizeMetadata, withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
+import { GOOGLE_MERCHANT_ID } from "@/lib/googleCustomerReviews";
 import "./globals.css";
 
 /** Cache HTML for 5 min — major TTFB win vs force-dynamic. */
@@ -260,6 +261,29 @@ export default async function RootLayout({ children }) {
       >
         <ThemeInjector settings={settings} />
         <AnalyticsScripts settings={settings} />
+        {/* Google Customer Reviews badge — in initial HTML for Merchant verification crawlers */}
+        <script
+          id="merchantWidgetScript"
+          src="https://www.gstatic.com/shopping/merchant/merchantwidget.js"
+          defer
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function(){
+  function start(){
+    try{
+      if(typeof merchantwidget==='undefined'||!merchantwidget.start)return false;
+      merchantwidget.start({merchant_id:${GOOGLE_MERCHANT_ID},position:'BOTTOM_RIGHT'});
+      return true;
+    }catch(e){return false;}
+  }
+  var s=document.getElementById('merchantWidgetScript');
+  if(s){s.addEventListener('load',start);}
+  if(!start()){var n=0,t=setInterval(function(){n++;if(start()||n>50)clearInterval(t);},200);}
+})();`,
+          }}
+        />
         <LivePresenceClient />
         <script
           type="application/ld+json"
