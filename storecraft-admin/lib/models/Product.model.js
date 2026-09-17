@@ -212,6 +212,8 @@ const productSchema = new mongoose.Schema(
       metaTitle: { type: String, default: "" },
       metaDescription: { type: String, default: "" },
       metaKeywords: [{ type: String, trim: true }],
+      /** When true, omit this SKU from Merchant product feed. */
+      excludeFromMerchantFeed: { type: Boolean, default: false },
     },
     isUniversal: { type: Boolean, default: false, index: true },
     compatibleVehicles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Vehicle" }],
