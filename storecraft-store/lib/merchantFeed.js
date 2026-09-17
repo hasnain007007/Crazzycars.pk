@@ -47,9 +47,12 @@ function feedPrice(product) {
   const regular = Number(product?.pricing?.regularPrice) || 0;
   const scheduleOn = Boolean(product?.pricing?.saleSchedule?.enabled);
   let amount = regular;
+  let onSale = false;
   if (Number.isFinite(sale) && sale > 0 && sale < regular) {
-    if (!scheduleOn) amount = sale;
-    else {
+    if (!scheduleOn) {
+      amount = sale;
+      onSale = true;
+    } else {
       const now = Date.now();
       const start = product.pricing.saleSchedule.startDate
         ? new Date(product.pricing.saleSchedule.startDate).getTime()
@@ -57,11 +60,19 @@ function feedPrice(product) {
       const end = product.pricing.saleSchedule.endDate
         ? new Date(product.pricing.saleSchedule.endDate).getTime()
         : Infinity;
-      if (now >= start && now <= end) amount = sale;
+      if (now >= start && now <= end) {
+        amount = sale;
+        onSale = true;
+      }
     }
   }
-  if (!(amount > 0)) return "";
-  return `${amount.toFixed(2)} PKR`;
+  if (!(amount > 0)) return { price: "", salePrice: "", regularPrice: "" };
+  const regularFmt = regular > 0 ? `${regular.toFixed(2)} PKR` : "";
+  return {
+    price: onSale && regular > amount ? regularFmt : `${amount.toFixed(2)} PKR`,
+    salePrice: onSale ? `${amount.toFixed(2)} PKR` : "",
+    regularPrice: regularFmt,
+  };
 }
 
 function primaryImage(product, siteUrl) {
@@ -108,10 +119,17 @@ export function productToMerchantItem(product, opts = {}) {
   const cats = Array.isArray(product.categories)
     ? product.categories.map((c) => (typeof c === "object" ? c.name : "")).filter(Boolean)
     : [];
+  const { price, salePrice } = feedPrice(product);
 
   // Meta rejects many items when identifier_exists=yes without a real GTIN.
   // Only claim identifiers when we have a GTIN; still send MPN when available.
   const identifierExists = gtin.length >= 8 ? "yes" : "no";
+
+  const shippingFee = Number(opts.shippingFeePKR);
+  const shippingPrice =
+    Number.isFinite(shippingFee) && shippingFee >= 0
+      ? `${shippingFee.toFixed(2)} PKR`
+      : "250.00 PKR";
 
   return {
     id,
@@ -121,7 +139,8 @@ export function productToMerchantItem(product, opts = {}) {
     image_link: imageLink,
     additional_image_link: additionalImages(product, site),
     availability: feedAvailability(product),
-    price: feedPrice(product),
+    price,
+    sale_price: salePrice,
     brand,
     condition: feedCondition(product.condition),
     gtin: gtin.length >= 8 ? gtin : "",
@@ -129,6 +148,12 @@ export function productToMerchantItem(product, opts = {}) {
     product_type: cats.join(" > "),
     google_product_category: "5613", // Vehicle Parts & Accessories (Google taxonomy)
     identifier_exists: identifierExists,
+    shipping: {
+      country: "PK",
+      service: "Standard",
+      price: shippingPrice,
+    },
+    return_policy_label: "7-day-returns",
   };
 }
 
@@ -147,6 +172,9 @@ export function buildMerchantRssXml(items, { title, link, description } = {}) {
       for (const img of it.additional_image_link || []) {
         extras.push(`      <g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`);
       }
+      if (it.sale_price) {
+        extras.push(`      <g:sale_price>${escapeXml(it.sale_price)}</g:sale_price>`);
+      }
       if (it.gtin) extras.push(`      <g:gtin>${escapeXml(it.gtin)}</g:gtin>`);
       if (it.mpn) extras.push(`      <g:mpn>${escapeXml(it.mpn)}</g:mpn>`);
       if (it.product_type) {
@@ -158,6 +186,18 @@ export function buildMerchantRssXml(items, { title, link, description } = {}) {
         );
       }
       extras.push(`      <g:identifier_exists>${escapeXml(it.identifier_exists)}</g:identifier_exists>`);
+      if (it.return_policy_label) {
+        extras.push(
+          `      <g:return_policy_label>${escapeXml(it.return_policy_label)}</g:return_policy_label>`
+        );
+      }
+      if (it.shipping?.country && it.shipping?.price) {
+        extras.push(`      <g:shipping>
+        <g:country>${escapeXml(it.shipping.country)}</g:country>
+        <g:service>${escapeXml(it.shipping.service || "Standard")}</g:service>
+        <g:price>${escapeXml(it.shipping.price)}</g:price>
+      </g:shipping>`);
+      }
 
       return `    <item>
       <g:id>${escapeXml(it.id)}</g:id>

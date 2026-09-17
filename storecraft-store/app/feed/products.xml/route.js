@@ -5,6 +5,7 @@ import Product from "@/lib/models/Product.model";
 import { buildMerchantRssXml, productToMerchantItem } from "@/lib/merchantFeed";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { STORE_POLICY } from "@/config/store-policy";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 1800;
@@ -17,6 +18,7 @@ export async function GET() {
   try {
     const h = await headers();
     const site = getSiteUrl({ headers: h });
+    const shippingFeePKR = Number(STORE_POLICY?.shipping?.standardFeePKR) || 250;
 
     await dbConnect();
     const products = await Product.find(STOREFRONT_PRODUCT_FILTER)
@@ -28,7 +30,7 @@ export async function GET() {
       .lean();
 
     const items = (products || [])
-      .map((p) => productToMerchantItem(p, { siteUrl: site }))
+      .map((p) => productToMerchantItem(p, { siteUrl: site, shippingFeePKR }))
       .filter((it) => it.id && it.title && it.link && it.image_link);
 
     const xml = buildMerchantRssXml(items, {
