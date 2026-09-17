@@ -2,12 +2,17 @@
 /**
  * Fix wrong / external product images that break Google Merchant Center.
  *
- * Usage:
- *   node --env-file=storecraft-store/.env.local scripts/fix-merchant-product-images.mjs
- *   node --env-file=storecraft-store/.env.local scripts/fix-merchant-product-images.mjs --apply
+ * IMPORTANT: production store uses VPS Mongo (`sialkot-mongo`), not Atlas.
+ * Prefer running inside the store container:
+ *   docker exec -w /app <store> node /tmp/fix-vps-merchant-images.js
  *
- * Optional:
- *   --scp   after local downloads, scp new files to panel VPS MEDIA_ROOT
+ * Local Atlas (.env.local) is only a mirror / leftover — updating it alone
+ * will not change https://crazzycars.pk/feed/products.xml.
+ *
+ * Usage (local staging of JPEGs + scp media files):
+ *   MERCHANT_IMAGE_PUBLIC_ORIGIN=https://crazzycars.pk \
+ *     node --env-file=storecraft-store/.env.local \
+ *     scripts/fix-merchant-product-images.mjs --apply --scp
  */
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
