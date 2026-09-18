@@ -413,7 +413,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
         const altText = rawAlt && altBelongsToProduct(rawAlt, product) ? rawAlt : String(product?.name || "");
         return { url, altText };
       })
-      .filter((im) => im.url && !/res\.cloudinary\.com/i.test(im.url));
+      .filter((im) => Boolean(im.url));
     const owned = mapped.filter((im) => imageBelongsToProduct(im, product));
     // Soft fallback: never blank the gallery when media still exists in Mongo.
     return owned.length ? owned : mapped;

@@ -117,21 +117,8 @@ export async function middleware(request) {
 
   const { pathname } = request.nextUrl;
 
-  // Stale Google / CDN HTML still hits /_next/image?url=res.cloudinary.com… —
-  // that cloud is billing-disabled (401). Serve a local asset instead.
-  if (pathname === "/_next/image" || pathname.startsWith("/_next/image?")) {
-    const remote = request.nextUrl.searchParams.get("url") || "";
-    let decoded = remote;
-    try {
-      decoded = decodeURIComponent(remote);
-    } catch {
-      /* keep raw */
-    }
-    if (/res\.cloudinary\.com|dquier8fv/i.test(decoded)) {
-      return NextResponse.redirect(new URL("/logo.png", request.url), 302);
-    }
-    return NextResponse.next();
-  }
+  // Legacy /_next/image?url=res.cloudinary.com… — allow through; Cloudinary is live again.
+  // (Previously redirected to /logo.png when the cloud was billing-disabled.)
 
   const lower = pathname.toLowerCase();
 
