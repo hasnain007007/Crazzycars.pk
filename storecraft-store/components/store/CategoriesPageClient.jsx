@@ -57,11 +57,22 @@ function CategoriesPageInner({ initialCategories }) {
                       className="category-image"
                       loading="lazy"
                       decoding="async"
+                      data-master={cat.image.url.split("?")[0]}
                       style={{
                         position: "absolute",
                         top: 0,
                         left: 0,
                         objectPosition: "center",
+                      }}
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        const master = img.getAttribute("data-master") || "";
+                        if (master && img.getAttribute("src") !== master) {
+                          img.src = master;
+                          return;
+                        }
+                        img.removeAttribute("alt");
+                        img.style.visibility = "hidden";
                       }}
                     />
                   ) : (

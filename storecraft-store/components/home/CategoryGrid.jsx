@@ -6,10 +6,13 @@ import { categoryHref } from "@/lib/categories";
 import { categoryImageUrl, localMediaPath } from "@/lib/cloudinaryImage";
 import { pickHomepageCategories } from "@/lib/homepageCategories";
 
-function masterCategorySrc(url) {
-  const path = localMediaPath(url);
+/** Fall back to the original master URL (keeps .jpg/.png — never force .webp). */
+function masterCategorySrc(thumbUrl, originalUrl) {
+  const master = localMediaPath(originalUrl) || String(originalUrl || "").split("?")[0].trim();
+  if (master) return master;
+  const path = localMediaPath(thumbUrl);
   if (path && /-400\.webp$/i.test(path)) return path.replace(/-400\.webp$/i, ".webp");
-  return path || url;
+  return path || thumbUrl;
 }
 
 function mapCat(c) {
@@ -204,11 +207,12 @@ export default function CategoryGrid({
                         draggable={false}
                         onError={(e) => {
                           const img = e.currentTarget;
-                          const fallback = masterCategorySrc(img.getAttribute("src") || "");
+                          const fallback = masterCategorySrc(img.getAttribute("src") || "", c.imageUrl);
                           if (fallback && img.getAttribute("src") !== fallback) {
                             img.src = fallback;
                             return;
                           }
+                          img.removeAttribute("alt");
                           img.style.display = "none";
                         }}
                       />

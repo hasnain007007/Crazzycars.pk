@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { formatPrice } from "@/lib/currency";
 import { cardImageUrl } from "@/lib/cloudinaryImage";
+import LocalMediaImg from "@/components/store/LocalMediaImg";
 import {
   getProductCardImage,
   getProductCardPrices,
@@ -9,9 +9,10 @@ import {
   normalizeProductForCard,
   productCardAlt,
 } from "@/lib/productCardShape";
+import Image from "next/image";
 
-function CardImage({ src, alt, priority, sizes, className }) {
-  if (!src) {
+function CardImage({ src, master, alt, priority, sizes, className }) {
+  if (!src && !master) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-1 px-3 text-center">
         <span className="text-2xl text-[#D1D5DB]">—</span>
@@ -20,7 +21,7 @@ function CardImage({ src, alt, priority, sizes, className }) {
   }
   // Local /media is already compressed WebP — use plain <img> so we never depend on
   // /_next/image quality allowlists (invalid q → HTTP 400 → blank cards).
-  const localMedia = /crazzycars\.pk\/media\/|^\/media\//i.test(String(src));
+  const localMedia = /crazzycars\.pk\/media\/|^\/media\//i.test(String(src || master || ""));
   if (!localMedia && isAllowedNextImageSrc(src)) {
     return (
       <Image
@@ -35,13 +36,14 @@ function CardImage({ src, alt, priority, sizes, className }) {
     );
   }
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
+    <LocalMediaImg
+      src={src || master}
+      master={master || src}
       alt={alt}
       className={`h-full w-full object-cover ${className || ""}`}
       loading={priority ? "eager" : "lazy"}
-      decoding="async"
+      fetchPriority={priority ? "high" : undefined}
+      sizes={sizes}
     />
   );
 }
@@ -95,6 +97,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             <span className="pl-row-thumb relative block overflow-hidden">
               <CardImage
                 src={imageUrl}
+                master={rawImageUrl}
                 alt={alt}
                 priority={priority}
                 sizes="120px"
@@ -133,6 +136,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
         <div className="cc-card-media relative block aspect-square overflow-hidden bg-[#F9FAFB]">
           <CardImage
             src={imageUrl}
+            master={rawImageUrl}
             alt={alt}
             priority={priority}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

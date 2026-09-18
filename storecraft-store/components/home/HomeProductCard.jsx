@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
 import { cardImageUrl } from "@/lib/cloudinaryImage";
+import LocalMediaImg from "@/components/store/LocalMediaImg";
 
 function pctOff(regular, sale, onSale) {
   if (!onSale || regular <= 0) return 0;
@@ -68,15 +69,14 @@ export function HomeProductCard({ product }) {
       >
         {imageUrl ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <LocalMediaImg
               src={imageUrl}
+              master={images[0] || imageUrl}
               alt={product.name || "Product"}
               className={`absolute inset-0 h-full w-full object-cover transition duration-300 ${
                 hoverImageUrl ? "group-hover:opacity-0" : "group-hover:scale-[1.03]"
               }`}
               loading="lazy"
-              decoding="async"
             />
             {hoverImageUrl && hoverLoaded ? (
               // eslint-disable-next-line @next/next/no-img-element
