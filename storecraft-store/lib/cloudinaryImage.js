@@ -175,6 +175,14 @@ export function storyImageUrlOptimized(src) {
 
 /** Wide cinematic cover for the homepage editorial band. */
 export function editorialCoverUrl(src) {
+  // Local masters can be multi-hundred KB; prefer prebuilt -800.webp when present.
+  if (isLocalMedia(src) || unwrapNextImageUrl(src).includes("/media/")) {
+    const path = localMediaPath(src);
+    if (path && /\/media\/(brand|uploads|categories)\//i.test(path)) {
+      return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-800.webp");
+    }
+    return path || unwrapNextImageUrl(src) || String(src || "").trim();
+  }
   return cloudinaryUrl(src, {
     width: 1600,
     height: 1000,
