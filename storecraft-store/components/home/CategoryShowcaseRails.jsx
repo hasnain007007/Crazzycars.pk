@@ -184,7 +184,12 @@ function CategoryRail({ config, root }) {
           <h2 id={`cat-rail-${config.slug}`} className="cat-showcase__title">
             {config.title}
           </h2>
-          <div className="cat-showcase__tabs" role="tablist" aria-label={`${config.title} filters`}>
+          <div
+            className="cat-showcase__tabs"
+            role="tablist"
+            aria-label={`${config.title} filters`}
+            style={{ ["--rail-accent"]: config.accent || "#C41E1E" }}
+          >
             {tabs.map((t) => {
               const on = activeSlug === t.slug;
               return (
@@ -196,7 +201,7 @@ function CategoryRail({ config, root }) {
                   className={`cat-showcase__tab${on ? " is-on" : ""}`}
                   onClick={() => setActiveSlug(t.slug)}
                 >
-                  {t.label}
+                  <span className="cat-showcase__tab-label">{t.label}</span>
                 </button>
               );
             })}
