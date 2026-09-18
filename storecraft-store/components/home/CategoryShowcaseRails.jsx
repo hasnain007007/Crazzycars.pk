@@ -63,7 +63,7 @@ function nodeImage(node) {
     typeof node.image === "string"
       ? node.image
       : node.image?.url || node.imageUrl || "";
-  return raw ? categoryImageUrl(raw, 640) : "";
+  return raw ? categoryImageUrl(raw, 400) : "";
 }
 
 function buildTabs(root) {

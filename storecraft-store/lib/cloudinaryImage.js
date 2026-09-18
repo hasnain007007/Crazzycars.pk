@@ -68,17 +68,18 @@ export function localMediaPath(src) {
  * Prefer prebuilt -400.webp thumbs for card-sized local media.
  * Categories and products use `{stem}-400.webp` beside the master.
  * Missing thumbs: <img onError> falls back to the original master URL.
+ * Use thumbs for any request up to 800px-wide slots (promo cards, grids).
  */
 function localMediaForWidth(src, width) {
   const path = localMediaPath(src) || "";
   const w = Number(width) || 0;
-  if (!path || !(w > 0 && w <= 480)) {
+  if (!path || !(w > 0 && w <= 800)) {
     return path || unwrapNextImageUrl(src) || String(src || "").trim();
   }
   if (/-400\.(webp|jpe?g|png)$/i.test(path)) {
     return path;
   }
-  if (/\/media\/(categories|products|uploads)\//i.test(path)) {
+  if (/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
     return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
   }
   return path || unwrapNextImageUrl(src) || String(src || "").trim();

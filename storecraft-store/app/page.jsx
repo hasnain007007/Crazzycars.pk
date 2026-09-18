@@ -34,8 +34,8 @@ export default async function Page() {
   try {
     let tree = [];
     [bestSellers, hotDeals, heroSlides, carCatalog, activeProductCount, tree] = await Promise.all([
-      shopify ? getBestSellingProducts(100) : fetchBestSellersServer({ limit: 500 }),
-      shopify ? getHotDealProducts(100) : fetchHotDealsServer({ filter: "all", limit: 500 }),
+      shopify ? getBestSellingProducts(24) : fetchBestSellersServer({ limit: 24 }),
+      shopify ? getHotDealProducts(24) : fetchHotDealsServer({ filter: "all", limit: 24 }),
       getHeroSlides(),
       fetchCarCatalogServer({ lean: true }),
       (async () => {
