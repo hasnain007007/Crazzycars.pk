@@ -71,10 +71,9 @@ export function buildOrderSearchOr(search) {
     { "items.sku": rx },
     { tags: rx },
     { courier: rx },
-    { "timeline.note": rx },
+    { "timeline.description": rx },
     { "statusHistory.note": rx },
     { "internalNotes.note": rx },
-    { "internalNotes.text": rx },
   ];
 
   for (const field of trackingFields) {
