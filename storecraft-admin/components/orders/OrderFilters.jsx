@@ -131,10 +131,12 @@ export function OrderFilters({
           </label>
           <input
             type="search"
-            placeholder="Order #, tracking ID, product, name, phone…"
+            placeholder="Tracking ID (GW…), order #, phone, name…"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none"
+            autoComplete="off"
+            spellCheck={false}
+            className="mt-0.5 w-full rounded-lg border px-2 py-2 text-sm outline-none font-mono"
             style={inputStyle}
           />
         </div>

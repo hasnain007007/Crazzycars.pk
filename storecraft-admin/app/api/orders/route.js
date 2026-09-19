@@ -17,6 +17,7 @@ import { roundRupees } from "@/lib/currency";
 import { syncStockAlertForProduct } from "@/lib/productMutations";
 import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { dispatchOrderLifecycleEmails, sendTemplatedCustomerEmail } from "@/lib/customerLifecycleEmail";
+import { buildOrderSearchOr, looksLikeTrackingId } from "@/lib/orderSearch";
 
 const PAYMENT_METHODS = new Set([
   "cod",
@@ -59,10 +60,6 @@ function utcEndOfDay(d) {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
 }
 
-function escapeRegex(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 export async function GET(request) {
   try {
     const listUser = getRequestUser(request);
@@ -79,12 +76,16 @@ export async function GET(request) {
     const paymentStatus = (searchParams.get("paymentStatus") || "").trim();
     const from = searchParams.get("from");
     const to = searchParams.get("to");
+    const trackingLookup = looksLikeTrackingId(search);
 
     const filter = {};
-    if (status && status !== "all") filter.orderStatus = status;
-    if (paymentStatus && paymentStatus !== "all") filter.paymentStatus = paymentStatus;
+    // Tracking / CN lookups must not be hidden by status tabs — search across all orders.
+    if (!trackingLookup) {
+      if (status && status !== "all") filter.orderStatus = status;
+      if (paymentStatus && paymentStatus !== "all") filter.paymentStatus = paymentStatus;
+    }
 
-    if (from || to) {
+    if (!trackingLookup && (from || to)) {
       filter.createdAt = {};
       if (from) {
         const d = new Date(from);
@@ -96,41 +97,13 @@ export async function GET(request) {
       }
     }
 
-    if (search) {
-      const rx = new RegExp(escapeRegex(search), "i");
-      const digits = search.replace(/\D/g, "");
-      const or = [
-        { orderNumber: rx },
-        { "customer.name": rx },
-        { "customer.email": rx },
-        { "customer.phone": rx },
-        { "shippingAddress.phone": rx },
-        { "items.name": rx },
-        { "items.articleNo": rx },
-        { tags: rx },
-        { trackingNumber: rx },
-        { "tracking.number": rx },
-        { "courierSettlement.trackingNumber": rx },
-      ];
-      // Phone-heavy guest checkouts: match digit runs in phone / guest+…@ email
-      if (digits.length >= 7) {
-        const digitRx = new RegExp(escapeRegex(digits));
-        or.push({ "customer.phone": digitRx });
-        or.push({ "shippingAddress.phone": digitRx });
-        or.push({ "customer.email": new RegExp(`guest\\+${escapeRegex(digits)}`, "i") });
-      }
-      // Tracking IDs are often pure digits / CN numbers — match those fields too
-      if (digits.length >= 6 && digits !== search) {
-        const digitRx = new RegExp(escapeRegex(digits));
-        or.push({ trackingNumber: digitRx });
-        or.push({ "tracking.number": digitRx });
-        or.push({ "courierSettlement.trackingNumber": digitRx });
-      }
-      filter.$or = or;
+    const searchOr = buildOrderSearchOr(search);
+    if (searchOr) {
+      filter.$or = searchOr;
     }
 
     const tag = (searchParams.get("tag") || "").trim();
-    if (tag) {
+    if (tag && !trackingLookup) {
       filter.tags = tag;
     }
 
@@ -141,29 +114,33 @@ export async function GET(request) {
     // Needs Attention === stale rule (OR8): pending + unpaid + age >= 10 days
     const attentionCutoff = new Date(nowForView.getTime() - 10 * 86_400_000);
 
-    if (view === "unfulfilled") {
-      filter.orderStatus = { $in: ["pending", "confirmed", "processing", "packed"] };
-    } else if (view === "unpaid") {
-      filter.paymentStatus = "unpaid";
-      filter.orderStatus = { $nin: ["cancelled", "refunded"] };
-    } else if (view === "needsAttention") {
-      filter.orderStatus = "pending";
-      filter.paymentStatus = "unpaid";
-      filter.createdAt = { ...(filter.createdAt || {}), $lte: attentionCutoff };
-    } else if (view === "today") {
-      filter.createdAt = { $gte: dayStartView, $lte: dayEndView };
-    } else if (view === "awaitingCustomer") {
-      filter.codConfirmed = { $ne: true };
-      filter.orderStatus = "pending";
+    if (!trackingLookup) {
+      if (view === "unfulfilled") {
+        filter.orderStatus = { $in: ["pending", "confirmed", "processing", "packed"] };
+      } else if (view === "unpaid") {
+        filter.paymentStatus = "unpaid";
+        filter.orderStatus = { $nin: ["cancelled", "refunded"] };
+      } else if (view === "needsAttention") {
+        filter.orderStatus = "pending";
+        filter.paymentStatus = "unpaid";
+        filter.createdAt = { ...(filter.createdAt || {}), $lte: attentionCutoff };
+      } else if (view === "today") {
+        filter.createdAt = { $gte: dayStartView, $lte: dayEndView };
+      } else if (view === "awaitingCustomer") {
+        filter.codConfirmed = { $ne: true };
+        filter.orderStatus = "pending";
+      }
     }
 
     const customerConfirm = (searchParams.get("customerConfirm") || "").trim().toLowerCase();
-    if (customerConfirm === "yes") {
-      filter.codConfirmed = true;
-    } else if (customerConfirm === "waiting") {
-      filter.codConfirmed = { $ne: true };
-      if (!filter.orderStatus) {
-        filter.orderStatus = { $nin: ["cancelled", "refunded"] };
+    if (!trackingLookup) {
+      if (customerConfirm === "yes") {
+        filter.codConfirmed = true;
+      } else if (customerConfirm === "waiting") {
+        filter.codConfirmed = { $ne: true };
+        if (!filter.orderStatus) {
+          filter.orderStatus = { $nin: ["cancelled", "refunded"] };
+        }
       }
     }
 
@@ -362,6 +339,10 @@ export async function GET(request) {
       page,
       totalPages: Math.ceil(total / limit) || 1,
       productFilter: productFilterMeta,
+      searchMeta: {
+        query: search,
+        trackingLookup,
+      },
       stats: {
         totalOrders,
         pending: pendingCount,

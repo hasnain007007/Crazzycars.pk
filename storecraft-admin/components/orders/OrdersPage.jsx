@@ -10,6 +10,7 @@ import { OrderFilters } from "./OrderFilters";
 import { OrdersTable } from "./OrdersTable";
 import { InstrumentStatCard } from "@/components/ui/InstrumentStatCard";
 import { formatAdminPrice } from "@/lib/currency";
+import { looksLikeTrackingId } from "@/lib/orderSearch";
 
 function formatMoney(n) {
   return formatAdminPrice(n);
@@ -82,6 +83,15 @@ export function OrdersPage() {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
     return () => clearTimeout(t);
   }, [search]);
+
+  // Courier CN / tracking paste: jump to All so shipped orders aren't hidden by tabs
+  useEffect(() => {
+    if (!debouncedSearch || !looksLikeTrackingId(debouncedSearch)) return;
+    if (view !== "all") setView("all");
+    if (status !== "all") setStatus("all");
+    if (paymentStatus !== "all") setPaymentStatus("all");
+    if (customerConfirm !== "all") setCustomerConfirm("all");
+  }, [debouncedSearch, view, status, paymentStatus, customerConfirm]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedTag(tag.trim().toLowerCase()), 350);
@@ -540,6 +550,7 @@ export function OrdersPage() {
         onSortChange={onSortChange}
         loading={loading}
         onOrdersChanged={load}
+        searchQuery={debouncedSearch}
       />
     </div>
   );

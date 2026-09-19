@@ -282,5 +282,8 @@ orderSchema.index({ "customer.phone": 1 });
 orderSchema.index({ whatsappNotified: 1 });
 orderSchema.index({ codConfirmed: 1 });
 orderSchema.index({ aiAttributedSource: 1, createdAt: -1 });
+orderSchema.index({ trackingNumber: 1 });
+orderSchema.index({ "tracking.number": 1 });
+orderSchema.index({ orderNumber: 1 });
 
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);

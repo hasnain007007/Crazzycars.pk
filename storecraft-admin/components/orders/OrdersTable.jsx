@@ -75,6 +75,7 @@ export function OrdersTable({
   onSortChange,
   loading,
   onOrdersChanged,
+  searchQuery = "",
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState({});
@@ -156,6 +157,8 @@ export function OrdersTable({
   }, []);
 
   if (!loading && (!orders || !orders.length)) {
+    const q = String(searchQuery || "").trim();
+    const trackingHint = /^[A-Za-z]{0,4}\d{8,}$/.test(q.replace(/[\s_-]/g, "")) || /^(GW|PE|PX)/i.test(q);
     return (
       <div
         className="rounded-xl border border-dashed p-12 text-center"
@@ -167,7 +170,9 @@ export function OrdersTable({
       >
         <p className="text-sm font-medium">No orders found</p>
         <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
-          Try adjusting filters or date range.
+          {trackingHint
+            ? `No order is linked to tracking “${q}”. Check the CN on the courier label, or open the order and confirm tracking was saved.`
+            : "Try adjusting filters or date range."}
         </p>
       </div>
     );
