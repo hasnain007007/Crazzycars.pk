@@ -82,7 +82,7 @@ const getCategoryMeta = cache(async (slugStr) =>
         .lean()
         .then((doc) => (doc ? JSON.parse(JSON.stringify(doc)) : null));
     },
-    ["category-meta-v3", slugStr],
+    ["category-meta-v4", slugStr],
     { revalidate: 120 }
   )()
 );

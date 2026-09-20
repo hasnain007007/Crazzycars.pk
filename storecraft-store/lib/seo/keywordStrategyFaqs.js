@@ -1,7 +1,8 @@
 /**
- * FAQPage JSON-LD + grounded Q&A for keyword Phase 4 / Batch 2 categories & PDPs.
+ * FAQPage JSON-LD + grounded Q&A for keyword Phase 4 / Batches 1–3 categories & PDPs.
  * Answers reuse storePolicyCopy; do not invent fitment or GTINs.
  * CC-0004 intentionally omitted (securityHold).
+ * Batch 3 drops hub umbrellas exterior / interior / led-lighting (cannibalization).
  */
 import { STORE_POLICY } from "../../config/store-policy.js";
 import {
@@ -93,7 +94,7 @@ function formatPkr(n) {
 /**
  * @typedef {{
  *   name: string,
- *   priceMode?: 'range' | 'fromMin' | 'rangeHighEnd',
+ *   priceMode?: 'range' | 'fromMin' | 'rangeHighEnd' | 'flat',
  *   priceQuestion?: string,
  *   extras?: { question: string, answer: string }[],
  * }} CategoryFaqConfig
@@ -180,6 +181,60 @@ const CATEGORY_FAQ_EXTRAS = {
   },
   "front-grilles": { name: "Front Grilles" },
   gadgets: { name: "Car Gadgets" },
+  // Batch 3 (A4–A10; hubs exterior/interior/led-lighting intentionally omitted)
+  "key-covers-key-chains": {
+    name: "Key Covers & Key Chains",
+    extras: [
+      {
+        question: "How do I pick the right key cover?",
+        answer:
+          "Match your key’s brand and button layout to the product title and photos (for example 3-button vs 4-button Civic covers). If unsure, WhatsApp a clear photo of your key.",
+      },
+    ],
+  },
+  "floor-mats": {
+    name: "Floor Mats",
+    extras: [
+      {
+        question: "Why is delivery often higher for mats?",
+        answer: (() => {
+          const { regular, bulky } = feeAmounts();
+          return `Floor mats are treated as bulky. Delivery is ${bulky} when the cart includes bulky items, or ${regular} for regular-only carts. Shipping is paid in advance; the rest is Cash on Delivery where eligible.`;
+        })(),
+      },
+    ],
+  },
+  "dashboard-mats": {
+    name: "Dashboard Mats",
+    priceMode: "flat",
+    priceQuestion: "What do dashboard mats cost on CrazzyCars?",
+    extras: [
+      {
+        question: "Are these universal?",
+        answer:
+          "No. These are vehicle-specific dashboard mats. Open the product page and confirm your car’s make, model, and years before ordering.",
+      },
+    ],
+  },
+  "fog-lamps-drl-covers": { name: "Fog Lamps & DRL Covers" },
+  "multimedia-steering-controls": {
+    name: "Multimedia Steering Controls",
+    extras: [
+      {
+        question: "Do these need professional install?",
+        answer:
+          "Many kits include a spiral/clock-spring cable and wire into the steering column. Follow the listing notes; if you are unsure about wiring, use a trusted installer or WhatsApp us with your car year and model.",
+      },
+    ],
+  },
+  "air-freshener-decoration": {
+    name: "Air Fresheners & Decor",
+    priceQuestion: "What price range do air fresheners and décor sell for on CrazzyCars?",
+  },
+  "fender-light": {
+    name: "Fender Light",
+    priceQuestion: "What do fender lights cost on CrazzyCars?",
+  },
 };
 
 /**
@@ -203,14 +258,19 @@ export function buildCategoryKeywordFaqs(slug, range = {}) {
       question: cfg.priceQuestion || `What do ${cfg.name} cost on CrazzyCars?`,
       answer: `Prices on this category currently start from ${minLabel}. Full projector headlight assemblies are higher — always check the product card for the live price. Prices change with stock and deals.`,
     });
+  } else if (mode === "flat" && minLabel) {
+    items.push({
+      question: cfg.priceQuestion || `What do ${cfg.name} cost on CrazzyCars?`,
+      answer: `On this category, live prices are currently ${minLabel} per mat. Prices change with stock and deals — check the product card for the current price.`,
+    });
   } else if (mode === "rangeHighEnd" && minLabel && maxLabel) {
     items.push({
-      question: `What price range do ${cfg.name} sell for on CrazzyCars?`,
+      question: cfg.priceQuestion || `What price range do ${cfg.name} sell for on CrazzyCars?`,
       answer: `On this category, live prices currently range from ${minLabel} to ${maxLabel}. Full assemblies sit at the high end — always check the product card for the live price.`,
     });
   } else if (minLabel && maxLabel) {
     items.push({
-      question: `What price range do ${cfg.name} sell for on CrazzyCars?`,
+      question: cfg.priceQuestion || `What price range do ${cfg.name} sell for on CrazzyCars?`,
       answer: `On this category, live prices currently range from ${minLabel} to ${maxLabel}. Prices change with stock and deals — check the product card for the current price.`,
     });
   }
@@ -595,6 +655,247 @@ const PRODUCT_FAQ_BY_SKU = {
       question: "Is it real carbon fiber?",
       answer:
         "No. It is a carbon-style multimedia steering wheel trim, per the product description.",
+    },
+  ],
+  // Batch 3 B1–B20
+  "CC-0207": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is listed as a universal SOS / police-style red-blue LED strip strobe. Check mount style and power notes on this page before ordering.",
+    },
+    {
+      question: "Is it the same as the grill 4×4 police light?",
+      answer:
+        "No. This is a strip-style strobe. The grill 4×4 police light is a different product — compare photos and titles before checkout.",
+    },
+  ],
+  "CC-0095": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer:
+        "The vehicle compatibility table on this page lists Honda Civic Reborn 2006–2012. The product title lists 2007–2012 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. It is a forged carbon-texture ABS overlay for the hand brake, per the product description. Snap-on; no tools required.",
+    },
+  ],
+  "CC-0144": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is listed as a universal heads-up display that projects speed and driving data. Check the listing for power/OBD notes before ordering.",
+    },
+    {
+      question: "Does it need professional install?",
+      answer:
+        "Most HUDs are DIY plug-in devices. Follow the product instructions; WhatsApp us if your car’s power setup is unclear.",
+    },
+  ],
+  "CC-0202": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer: "Honda Civic X 2016–2021 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "How does it install?",
+      answer:
+        "The listing describes clip-on ABS Batman-style covers with no tools or body modifications. Follow the product photos and notes.",
+    },
+  ],
+  "CC-UNI-LGT-IND-W40": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. These are listed as universal bright LED indicator bulbs (2 pcs). Confirm the bulb base/socket on your car against the listing before ordering.",
+    },
+    {
+      question: "Will they work as a drop-in halogen replacement?",
+      answer:
+        "They are sold as brighter, faster LED turn-signal bulbs versus halogen. Socket compatibility still depends on your car — check the product notes or WhatsApp a bulb photo.",
+    },
+  ],
+  "CC-UNI-AMB-DYN-10": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is listed as a multi-point dynamic ambient interior light kit for cars. Check the listing for included points and controller notes.",
+    },
+    {
+      question: "Does install require removing trim?",
+      answer:
+        "Ambient kits usually need routing wires and placing strips behind or along trim. Follow the product guide; use a trusted installer if you are not comfortable with interior trim work.",
+    },
+  ],
+  "CC-0206": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is a simple universal rear bumper lip in gloss black ABS — a single rear lip, not a full body kit, per the product description.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Splitters and lips are often flagged bulky. Delivery follows the store bulky fee when the cart includes bulky items; the exact fee is shown at checkout.",
+    },
+  ],
+  "CC-0178": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer: "Honda Civic Reborn 2006–2012 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. It is ABS plastic with a carbon-style texture, per the product description. OEM-style fit without modification.",
+    },
+  ],
+  "CC-0007": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table on this page lists Toyota Corolla 2014–2026 (E170 generation). The product title lists 2015–2023 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. It is a 4-piece carbon-style ABS power-window switch trim set with peel-and-stick install, per the product description.",
+    },
+  ],
+  "CC-0147": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table on this page lists Toyota Corolla E140 2009–2014. The product title lists 2008–2013 — use the table on this page as the fitment source of truth before ordering.",
+    },
+    {
+      question: "What functions are included?",
+      answer:
+        "The listing is a 3-in-1 LED rear bumper reflector set: brake + DRL + turn signal, described as plug-and-play OEM-style replacement.",
+    },
+  ],
+  "CC-OX7-MIR-BAT": () => [
+    {
+      question: "Which Oshan X7 does this fit?",
+      answer:
+        "Changan Oshan X7 from 2022–present per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "What finishes are available?",
+      answer:
+        "The listing offers carbon-style or gloss black Batman-style covers. Confirm the finish option on this page before ordering.",
+    },
+  ],
+  "CC-0169": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer: "Honda Civic 11th Gen 2022–present per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is delivery different for spoilers?",
+      answer:
+        "Roof or trunk spoilers often use a special courier fee shown at checkout, and bulky carts use the bulky delivery rate. Check the fee at checkout before paying.",
+    },
+  ],
+  "CC-0108": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer: "Honda Civic X 2016–2021 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. It is a 4-piece carbon-texture ABS interior door-panel trim set with adhesive backing, per the product description.",
+    },
+  ],
+  "CC-0209": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is listed as a universal dynamic RGB LED underbody kit with remote control (color, breathing, strobe, and static modes).",
+    },
+    {
+      question: "Is it waterproof?",
+      answer:
+        "The listing describes waterproof strips for underbody use. Follow the product install notes for cable routing and ground clearance.",
+    },
+  ],
+  "CC-0118": () => [
+    {
+      question: "Which Toyota does this fit?",
+      answer:
+        "The vehicle compatibility table on this page lists Toyota Yaris 2020–present and also Toyota Yaris Cross 2020–present. The product title is written for Yaris 2020–2026 — use the table (and product photos) as the fitment source of truth; WhatsApp us if you drive a Yaris Cross and need confirmation.",
+    },
+    {
+      question: "Is this a full body kit?",
+      answer:
+        "No. It is a single ABS trunk lip spoiler, not a full body kit, per the product description.",
+    },
+  ],
+  "CC-0146": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table on this page lists Toyota Corolla E170 2014–2026. The product title lists 2014–2020 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "What functions are included?",
+      answer:
+        "The listing is a 3-in-1 LED rear bumper reflector set: brake + DRL + turn signal, described as plug-and-play stock reflector replacement.",
+    },
+  ],
+  "CC-0088": () => [
+    {
+      question: "Can I use Cash on Delivery on this body kit?",
+      answer:
+        "No. This is a body kit, so Cash on Delivery is not available. Pay the full order with JazzCash, Meezan, or bank transfer at checkout, then send your payment screenshot on WhatsApp. See our Cash on Delivery page for details.",
+    },
+    {
+      question: "Which City years does this fit?",
+      answer:
+        "The vehicle compatibility table on this page lists Honda City 2021–present. The product title lists 2021–2025 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "What material is it?",
+      answer:
+        "Unpainted fibreglass Modulo-style kit (front, side skirts, and rear) — paint to match your City, per the product description.",
+    },
+  ],
+  "CC-0155": () => [
+    {
+      question: "Which City years does this fit?",
+      answer:
+        "The vehicle compatibility table on this page lists Honda City 2021–present. The product title lists 2020–2026 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. It is ABS plastic with a carbon-style texture for all four handles, snap-on with no drilling, per the product description.",
+    },
+  ],
+  "CC-0127": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table on this page lists Toyota Corolla E140 2009–2014. The product title mentions 2012 / 2008–2013 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "What does it cover?",
+      answer:
+        "It is a top AC / center dashboard vent-and-button panel overlay for worn factory plastic, per the product description.",
+    },
+  ],
+  "CC-0009": () => [
+    {
+      question: "Which Alto does this fit?",
+      answer: "Suzuki Alto 2020–present per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "What is included?",
+      answer:
+        "Multimedia steering control buttons with spiral cable in glossy black for volume, media, calls, and navigation from the wheel, per the product description.",
     },
   ],
 };
