@@ -50,6 +50,7 @@ export async function GET(request, { params }) {
         matchedCount: batch.matchedCount,
         unmatchedCount: batch.unmatchedCount,
         productCogsTotal: batch.productCogsTotal || 0,
+        returnFeesTotal: batch.returnFeesTotal || 0,
         profitTotal: batch.profitTotal || 0,
         uploadedBy: batch.uploadedBy,
         postedAt: batch.postedAt,

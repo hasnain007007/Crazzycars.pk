@@ -30,6 +30,8 @@ const courierSettlementBatchSchema = new mongoose.Schema(
     unmatchedCount: { type: Number, default: 0 },
     /** Sum of matched Delivered line product COGS */
     productCogsTotal: { type: Number, default: 0 },
+    /** Return shipping / fee drag (absolute of negative return nets) */
+    returnFeesTotal: { type: Number, default: 0 },
     /** Sum of matched Delivered line profit (net − COGS); negative = loss */
     profitTotal: { type: Number, default: 0 },
   },

@@ -87,6 +87,104 @@ export function displayOrderRef(raw) {
   return cleaned || "";
 }
 
+/**
+ * Build tracking → order ref map from spreadsheet (or any) lines.
+ * @param {Array<{ trackingNumber?: string, orderNumberHint?: string, sheetOrderNumber?: string, orderNumber?: string }>} lines
+ * @returns {Map<string, string>}
+ */
+export function buildOrderRefMapFromLines(lines) {
+  const map = new Map();
+  for (const line of lines || []) {
+    const ref = displayOrderRef(
+      line.orderNumberHint || line.sheetOrderNumber || line.orderNumber || ""
+    );
+    if (!ref) continue;
+    for (const k of trackingLookupKeys(line.trackingNumber)) {
+      if (!map.has(k)) map.set(k, ref);
+    }
+  }
+  return map;
+}
+
+/**
+ * Copy ORDER_REF / Order ID onto lines missing an order hint (e.g. CPR PDF + CSV).
+ * @param {object[]} lines
+ * @param {Map<string, string>|Record<string, string>} refMap
+ */
+export function mergeOrderRefsByTracking(lines, refMap) {
+  const map =
+    refMap instanceof Map
+      ? refMap
+      : new Map(Object.entries(refMap || {}));
+  if (!map.size) return lines || [];
+  return (lines || []).map((line) => {
+    const existing = displayOrderRef(
+      line.orderNumberHint || line.sheetOrderNumber || line.orderNumber || ""
+    );
+    if (existing) {
+      return {
+        ...line,
+        orderNumberHint: existing,
+        sheetOrderNumber: existing,
+      };
+    }
+    let ref = "";
+    for (const k of trackingLookupKeys(line.trackingNumber)) {
+      if (map.has(k)) {
+        ref = map.get(k);
+        break;
+      }
+    }
+    if (!ref) return line;
+    return {
+      ...line,
+      orderNumberHint: ref,
+      sheetOrderNumber: ref,
+    };
+  });
+}
+
+/**
+ * Batch-level COGS / return fees / profit from enriched lines + optional CPR net.
+ */
+export function computeSettlementProfitTotals(enriched, batchNetTotal = null) {
+  const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+  const matchedDelivered = (enriched || []).filter(
+    (l) =>
+      l.status === "Delivered" &&
+      (l.matchStatus === "matched" || l.matchStatus === "manual")
+  );
+  const productCogsTotal = round2(
+    matchedDelivered.reduce((s, l) => s + (Number(l.productCogs) || 0), 0)
+  );
+  const matchedLineProfit = round2(
+    matchedDelivered.reduce((s, l) => s + (Number(l.lineProfit) || 0), 0)
+  );
+  const returnFeesTotal = round2(
+    (enriched || [])
+      .filter((l) => l.status === "Return")
+      .reduce((s, l) => {
+        const net = Number(l.netAmount) || 0;
+        if (net < 0) return s + Math.abs(net);
+        return s + (Number(l.shippingCharges) || 0) + (Number(l.gst) || 0);
+      }, 0)
+  );
+  const net =
+    batchNetTotal != null && Number.isFinite(Number(batchNetTotal))
+      ? Number(batchNetTotal)
+      : round2(
+          matchedDelivered.reduce((s, l) => s + (Number(l.netAmount) || 0), 0)
+        );
+  // Authoritative: CPR net (already nets return fees) − matched product cost
+  const profitTotal = round2(net - productCogsTotal);
+  return {
+    productCogsTotal,
+    returnFeesTotal,
+    matchedLineProfit,
+    profitTotal,
+  };
+}
+
 export async function computeOrderCogs(order, costByProduct = null) {
   let map = costByProduct;
   if (!map) {

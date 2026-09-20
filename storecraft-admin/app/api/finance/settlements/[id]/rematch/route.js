@@ -11,7 +11,10 @@ import { logActivity } from "@/lib/auth";
 import { requestIp } from "@/lib/requestIp";
 import CourierSettlementBatch from "@/lib/models/CourierSettlementBatch.model";
 import CourierSettlementLine from "@/lib/models/CourierSettlementLine.model";
-import { enrichLinesWithMatches } from "@/lib/matchSettlementLine";
+import {
+  computeSettlementProfitTotals,
+  enrichLinesWithMatches,
+} from "@/lib/matchSettlementLine";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -91,9 +94,7 @@ export async function POST(request, { params }) {
     }
 
     // Recount including manual/ignored
-    const all = await CourierSettlementLine.find({ batchId: batch._id })
-      .select("matchStatus status returnReceivedStatus")
-      .lean();
+    const all = await CourierSettlementLine.find({ batchId: batch._id }).lean();
     matchedCount = all.filter((l) => l.matchStatus === "matched" || l.matchStatus === "manual").length;
     unmatchedCount = all.filter((l) => l.matchStatus === "unmatched").length;
     const returnsPending = all.filter(
@@ -104,25 +105,10 @@ export async function POST(request, { params }) {
     batch.unmatchedCount = unmatchedCount;
     batch.lineCount = all.length;
 
-    const profitAgg = await CourierSettlementLine.aggregate([
-      {
-        $match: {
-          batchId: batch._id,
-          status: "Delivered",
-          matchStatus: { $in: ["matched", "manual"] },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          productCogsTotal: { $sum: "$productCogs" },
-          profitTotal: { $sum: "$lineProfit" },
-        },
-      },
-    ]);
-    batch.productCogsTotal =
-      Math.round((Number(profitAgg[0]?.productCogsTotal) || 0) * 100) / 100;
-    batch.profitTotal = Math.round((Number(profitAgg[0]?.profitTotal) || 0) * 100) / 100;
+    const totals = computeSettlementProfitTotals(all, batch.netTotal);
+    batch.productCogsTotal = totals.productCogsTotal;
+    batch.returnFeesTotal = totals.returnFeesTotal;
+    batch.profitTotal = totals.profitTotal;
     await batch.save();
 
     const adminName = user?.name || user?.email || "Admin";
@@ -149,6 +135,7 @@ export async function POST(request, { params }) {
       lineCount: all.length,
       returnsPending,
       productCogsTotal: batch.productCogsTotal,
+      returnFeesTotal: batch.returnFeesTotal,
       profitTotal: batch.profitTotal,
     });
   } catch (e) {

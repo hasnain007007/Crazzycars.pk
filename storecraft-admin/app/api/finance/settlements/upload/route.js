@@ -2,6 +2,7 @@
  * POST /api/finance/settlements/upload
  * Accepts PostEx CPR PDFs, CPR_Transactions CSV/Excel, Run Courier sheets, screenshots.
  * Multiple CPR PDFs → one settlement batch each.
+ * Spreadsheet ORDER_REF / Order ID merges onto CPR PDF lines by tracking (CSV alone still creates a batch).
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -12,7 +13,12 @@ import { requestIp } from "@/lib/requestIp";
 import CourierSettlementBatch from "@/lib/models/CourierSettlementBatch.model";
 import CourierSettlementLine from "@/lib/models/CourierSettlementLine.model";
 import { parseCourierRemittance } from "@/lib/parseCourierRemittance";
-import { enrichLinesWithMatches } from "@/lib/matchSettlementLine";
+import {
+  buildOrderRefMapFromLines,
+  computeSettlementProfitTotals,
+  enrichLinesWithMatches,
+  mergeOrderRefsByTracking,
+} from "@/lib/matchSettlementLine";
 import { isRemittanceImage } from "@/lib/extractScreenshotText";
 import { isRemittanceSpreadsheet } from "@/lib/parseRemittanceSpreadsheet";
 
@@ -39,6 +45,19 @@ function isAllowedUpload(file) {
   return false;
 }
 
+function isSpreadsheetMeta(meta) {
+  return isRemittanceSpreadsheet(meta);
+}
+
+function isPostexTxnSheet(parsed, meta) {
+  const name = String(meta.filename || "").toLowerCase();
+  if (/cpr[_-]?transactions/i.test(name)) return true;
+  if (parsed?.source === "excel" && /POSTEX-TXN/i.test(String(parsed.cprNumber || ""))) {
+    return true;
+  }
+  return false;
+}
+
 async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) {
   const existing = await CourierSettlementBatch.findOne({ cprNumber: parsed.cprNumber }).lean();
   if (existing) {
@@ -56,16 +75,10 @@ async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) 
     (l) => l.matchStatus === "matched" || l.matchStatus === "manual"
   ).length;
   const unmatchedCount = enriched.filter((l) => l.matchStatus === "unmatched").length;
-  const productCogsTotal = Math.round(
-    enriched
-      .filter((l) => l.status === "Delivered" && (l.matchStatus === "matched" || l.matchStatus === "manual"))
-      .reduce((s, l) => s + (Number(l.productCogs) || 0), 0) * 100
-  ) / 100;
-  const profitTotal = Math.round(
-    enriched
-      .filter((l) => l.status === "Delivered" && (l.matchStatus === "matched" || l.matchStatus === "manual"))
-      .reduce((s, l) => s + (Number(l.lineProfit) || 0), 0) * 100
-  ) / 100;
+  const { productCogsTotal, returnFeesTotal, profitTotal } = computeSettlementProfitTotals(
+    enriched,
+    parsed.netTotal
+  );
 
   const batch = await CourierSettlementBatch.create({
     cprNumber: parsed.cprNumber,
@@ -85,6 +98,7 @@ async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) 
     matchedCount,
     unmatchedCount,
     productCogsTotal,
+    returnFeesTotal,
     profitTotal,
   });
 
@@ -109,7 +123,7 @@ async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) 
         matchStatus: l.matchStatus,
         productCogs: l.productCogs,
         lineProfit: l.lineProfit,
-        returnReceivedStatus: "pending",
+        returnReceivedStatus: l.status === "Return" ? "pending" : "pending",
       }))
     );
   }
@@ -126,6 +140,7 @@ async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) 
       source: parsed.source || "pdf",
       lines: enriched.length,
       matched: matchedCount,
+      profitTotal,
     },
     type: "create",
     ip,
@@ -142,6 +157,7 @@ async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) 
     unmatchedCount,
     returnedCount: parsed.returnedCount || enriched.filter((l) => l.status === "Return").length,
     productCogsTotal,
+    returnFeesTotal,
     profitTotal,
     netTotal: parsed.netTotal,
   };
@@ -198,16 +214,70 @@ export async function POST(request) {
 
     const adminName = user?.name || user?.email || "Admin";
     const ip = requestIp(request);
-    const results = [];
-    const errors = [];
 
-    // Each CPR PDF / sheet becomes its own settlement batch (do not merge different CPR numbers)
+    // Parse all first so CSV ORDER_REF can enrich CPR PDF lines
+    const parsedFiles = [];
+    const parseErrors = [];
     for (const f of files) {
       try {
         const parsed = await parseCourierRemittance(f.buffer, f);
-        // Screenshots without unique CPR: allow merge-style id from parser
-        const created = await createBatchFromParsed(parsed, {
+        parsedFiles.push({ ...f, parsed });
+      } catch (err) {
+        parseErrors.push({
+          ok: false,
           filename: f.filename,
+          error: err.message || "Parse failed",
+        });
+      }
+    }
+
+    const sheetParts = parsedFiles.filter((p) => isSpreadsheetMeta(p));
+    const otherParts = parsedFiles.filter((p) => !isSpreadsheetMeta(p));
+    const hasNonSheet = otherParts.length > 0;
+
+    const refMap = new Map();
+    for (const part of sheetParts) {
+      for (const [k, v] of buildOrderRefMapFromLines(part.parsed.lines || [])) {
+        if (!refMap.has(k)) refMap.set(k, v);
+      }
+    }
+
+    const results = [];
+    const errors = [...parseErrors];
+
+    // Non-spreadsheet (CPR PDFs / screenshots): merge refs then create batches
+    for (const part of otherParts) {
+      try {
+        const lines = mergeOrderRefsByTracking(part.parsed.lines || [], refMap);
+        const created = await createBatchFromParsed(
+          { ...part.parsed, lines },
+          { filename: part.filename, adminName, user, ip }
+        );
+        if (created.ok) results.push(created);
+        else errors.push(created);
+      } catch (err) {
+        errors.push({
+          ok: false,
+          filename: part.filename,
+          error: err.message || "Create failed",
+        });
+      }
+    }
+
+    // Spreadsheets: enrich-only when CPR PDFs are present (avoid double-counting CPR_Transactions)
+    for (const part of sheetParts) {
+      if (hasNonSheet && isPostexTxnSheet(part.parsed, part)) {
+        errors.push({
+          ok: false,
+          filename: part.filename,
+          skipped: true,
+          error: `Used “${part.filename}” only to attach ORDER_REF to CPR PDF lines (not a separate settlement).`,
+        });
+        continue;
+      }
+      try {
+        const created = await createBatchFromParsed(part.parsed, {
+          filename: part.filename,
           adminName,
           user,
           ip,
@@ -217,14 +287,14 @@ export async function POST(request) {
       } catch (err) {
         errors.push({
           ok: false,
-          filename: f.filename,
-          error: err.message || "Parse failed",
+          filename: part.filename,
+          error: err.message || "Create failed",
         });
       }
     }
 
     if (!results.length) {
-      const first = errors[0];
+      const first = errors.find((e) => !e.skipped) || errors[0];
       return NextResponse.json(
         {
           success: false,
@@ -250,6 +320,7 @@ export async function POST(request) {
       unmatchedCount: results.reduce((s, r) => s + (r.unmatchedCount || 0), 0),
       netTotal: results.reduce((s, r) => s + (Number(r.netTotal) || 0), 0),
       productCogsTotal: results.reduce((s, r) => s + (Number(r.productCogsTotal) || 0), 0),
+      returnFeesTotal: results.reduce((s, r) => s + (Number(r.returnFeesTotal) || 0), 0),
       profitTotal: results.reduce((s, r) => s + (Number(r.profitTotal) || 0), 0),
       source: results[0].source,
       courier: results[0].courier,

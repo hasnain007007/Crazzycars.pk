@@ -1,6 +1,6 @@
 /**
  * POST /api/finance/settlements/[id]/post
- * Write settlement onto matched Delivered orders; mark COD as paid.
+ * Write settlement onto matched Delivered orders; mark COD as paid + delivered.
  */
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
@@ -12,6 +12,15 @@ import { requestIp } from "@/lib/requestIp";
 import CourierSettlementBatch from "@/lib/models/CourierSettlementBatch.model";
 import CourierSettlementLine from "@/lib/models/CourierSettlementLine.model";
 import Order from "@/lib/models/Order.model";
+import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
+
+const PROMOTE_TO_DELIVERED = new Set([
+  "pending",
+  "confirmed",
+  "processing",
+  "packed",
+  "shipped",
+]);
 
 export async function POST(request, { params }) {
   try {
@@ -46,6 +55,7 @@ export async function POST(request, { params }) {
     const now = new Date();
     let updated = 0;
     let markedPaid = 0;
+    let markedDelivered = 0;
 
     for (const line of lines) {
       const order = await Order.findById(line.orderId);
@@ -68,8 +78,8 @@ export async function POST(request, { params }) {
       order.markModified("courierSettlement");
 
       if (line.status === "Delivered") {
-        const prev = String(order.paymentStatus || "").toLowerCase();
-        if (prev !== "paid") {
+        const prevPay = String(order.paymentStatus || "").toLowerCase();
+        if (prevPay !== "paid") {
           order.paymentStatus = "paid";
           if (!order.payment || typeof order.payment !== "object") order.payment = {};
           const total = Number(order.pricing?.total) || Number(line.codAmount) || 0;
@@ -86,6 +96,34 @@ export async function POST(request, { params }) {
           order.markModified("payment");
           order.markModified("paymentConfirmation");
           markedPaid += 1;
+        }
+
+        const prevStatus = String(order.orderStatus || "").toLowerCase();
+        if (PROMOTE_TO_DELIVERED.has(prevStatus)) {
+          order.orderStatus = "delivered";
+          if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
+          order.statusHistory.push({
+            status: "delivered",
+            changedBy: adminName,
+            changedAt: now,
+            note: `Settled via ${batch.cprNumber} — courier confirmed delivered`,
+          });
+          const statusInfo = ORDER_STATUS_TIMELINE_TITLES.delivered || {
+            title: "Order Delivered",
+            description: "",
+          };
+          if (!Array.isArray(order.timeline)) order.timeline = [];
+          order.timeline.push({
+            status: "delivered",
+            title: statusInfo.title,
+            description: `Settled via courier remittance ${batch.cprNumber}`,
+            timestamp: now,
+            by: "admin",
+          });
+          order.markModified("statusHistory");
+          order.markModified("timeline");
+          if (!order.deliveredAt) order.deliveredAt = now;
+          markedDelivered += 1;
         }
       }
 
@@ -104,7 +142,7 @@ export async function POST(request, { params }) {
       action: "finance.cpr_post",
       resource: "CourierSettlementBatch",
       resourceId: String(batch._id),
-      details: { cprNumber: batch.cprNumber, updated, markedPaid },
+      details: { cprNumber: batch.cprNumber, updated, markedPaid, markedDelivered },
       type: "update",
       ip: requestIp(request),
     });
@@ -113,6 +151,7 @@ export async function POST(request, { params }) {
       success: true,
       updated,
       markedPaid,
+      markedDelivered,
       batchId: String(batch._id),
       status: batch.status,
     });

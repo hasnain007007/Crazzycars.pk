@@ -447,6 +447,53 @@ export function SettlementDetail({ batchId }) {
         </div>
       </div>
 
+      <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Expense &amp; profit breakdown
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 text-sm">
+          <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
+            <span className="text-slate-500">Shipping</span>
+            <span className="font-semibold tabular-nums">{formatMoney(batch.shippingCharges)}</span>
+          </div>
+          <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
+            <span className="text-slate-500">GST</span>
+            <span className="font-semibold tabular-nums">{formatMoney(batch.gst)}</span>
+          </div>
+          <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
+            <span className="text-slate-500">4% tax</span>
+            <span className="font-semibold tabular-nums">{formatMoney(batch.deduction4pct)}</span>
+          </div>
+          <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
+            <span className="text-slate-500">Product cost (matched)</span>
+            <span className="font-semibold tabular-nums">{formatMoney(batch.productCogsTotal)}</span>
+          </div>
+          <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
+            <span className="text-slate-500">Return fees</span>
+            <span className="font-semibold tabular-nums text-rose-600">
+              {formatMoney(batch.returnFeesTotal)}
+            </span>
+          </div>
+          <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
+            <span className="text-slate-500">
+              {(Number(batch.profitTotal) || 0) < 0 ? "Net loss" : "Net profit"}
+            </span>
+            <span
+              className={[
+                "font-bold tabular-nums",
+                (Number(batch.profitTotal) || 0) < 0 ? "text-rose-600" : "text-[#1A7A4C]",
+              ].join(" ")}
+            >
+              {formatMoney(batch.profitTotal)}
+            </span>
+          </div>
+        </div>
+        <p className="mt-2 text-[11px] text-slate-400">
+          Remittance net already includes return fees. Profit = remittance net − matched product
+          cost. Post marks matched Delivered orders Paid + Delivered.
+        </p>
+      </div>
+
       {counts.returns > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/30">
           <div>
