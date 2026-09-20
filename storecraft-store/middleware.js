@@ -136,6 +136,7 @@ export async function middleware(request) {
       "/about",
       "/contact",
       "/faq",
+      "/cash-on-delivery",
       "/cart",
       "/search",
       "/account",

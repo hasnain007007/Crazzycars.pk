@@ -18,6 +18,7 @@ const STATIC_PAGE_PATHS = [
   "/sale",
   "/blogs",
   "/faq",
+  "/cash-on-delivery",
   "/contact",
   "/about",
   "/shipping-policy",
@@ -32,6 +33,7 @@ const RESERVED_PAGE_SLUGS = new Set([
   "blogs",
   "blog",
   "faq",
+  "cash-on-delivery",
   "contact",
   "about",
   "about-us",
@@ -131,6 +133,9 @@ function staticPageLastmod(path, { products, categories, vehicles, blogPosts, cm
       break;
     case "/faq":
       lastmod = maxDate(cmsBySlug.get("faq"), maxBlog);
+      break;
+    case "/cash-on-delivery":
+      lastmod = null;
       break;
     case "/contact":
       lastmod = cmsBySlug.get("contact") || cmsBySlug.get("contact-us");

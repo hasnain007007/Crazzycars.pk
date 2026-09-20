@@ -1245,7 +1245,10 @@ export function ProductDetailMedico({
             {!productAllowsCod(product) ? (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                 Cash on Delivery is not available for body kits. Pay with JazzCash, Meezan, or bank transfer
-                at checkout.
+                at checkout.{" "}
+                <Link href="/cash-on-delivery" className="font-semibold underline underline-offset-2">
+                  How COD works
+                </Link>
               </p>
             ) : Number(product?.advancePercentRequired) > 0 ? (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">

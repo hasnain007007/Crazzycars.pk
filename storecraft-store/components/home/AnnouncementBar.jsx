@@ -7,7 +7,7 @@ import { sanitizeAnnouncementItems, standardDeliveryFeeShort } from "@/lib/store
 const DEFAULT_ITEMS = [
   {
     text: `🚗 COD Available Nationwide | ${standardDeliveryFeeShort()}`,
-    link: "/shipping-policy",
+    link: "/cash-on-delivery",
     enabled: true,
   },
 ];

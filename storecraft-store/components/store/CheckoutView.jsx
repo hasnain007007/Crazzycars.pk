@@ -1292,7 +1292,10 @@ export function CheckoutView() {
                     codBlockedNames.length > 3 ? ` (+${codBlockedNames.length - 3} more)` : ""
                   }.`
                 : " one or more items in your cart."}{" "}
-              Body kits need JazzCash, Meezan, or bank transfer.
+              Body kits need JazzCash, Meezan, or bank transfer.{" "}
+              <Link href="/cash-on-delivery" className="font-semibold underline underline-offset-2">
+                Cash on Delivery details
+              </Link>
             </p>
           ) : null}
           <div

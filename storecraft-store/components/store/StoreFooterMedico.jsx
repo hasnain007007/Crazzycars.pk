@@ -17,6 +17,7 @@ const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "My Account", href: "/account" },
   { label: "Order Tracking", href: "/track-order" },
   { label: "FAQ", href: "/faq" },
+  { label: "Cash on Delivery", href: "/cash-on-delivery" },
   { label: "Contact", href: "/contact" },
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Terms & Conditions", href: "/terms-conditions" },

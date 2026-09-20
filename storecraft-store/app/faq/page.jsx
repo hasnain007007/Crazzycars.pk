@@ -38,7 +38,14 @@ export default function FaqPage() {
           </article>
         ))}
       </div>
-      <Link className="mt-10 inline-block font-semibold text-red-700" href="/contact">
+      <p className="mt-8 text-gray-700">
+        More detail on how COD works, body-kit exceptions, and refunds:{" "}
+        <Link className="font-semibold text-red-700" href="/cash-on-delivery">
+          Cash on Delivery
+        </Link>
+        .
+      </p>
+      <Link className="mt-6 inline-block font-semibold text-red-700" href="/contact">
         Still need help? Contact us
       </Link>
     </section>
