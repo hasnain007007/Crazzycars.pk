@@ -5,7 +5,7 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: false,
-  serverExternalPackages: ["pdf-parse", "tesseract.js", "sharp"],
+  serverExternalPackages: ["pdf-parse", "tesseract.js", "sharp", "xlsx"],
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },

@@ -114,7 +114,12 @@ export function FinancePage() {
         toast.error(json.error || "Upload failed.");
         return;
       }
-      const src = json.source === "screenshot" ? "screenshot" : "PDF";
+      const src =
+        json.source === "screenshot"
+          ? "screenshot"
+          : json.source === "excel"
+            ? "Excel"
+            : "PDF";
       toast.success(
         `Uploaded ${json.cprNumber} (${src}): ${json.matchedCount}/${json.lineCount} matched`
       );
@@ -183,16 +188,16 @@ export function FinancePage() {
         ].join(" ")}
       >
         <p className="text-sm font-semibold text-slate-900 dark:text-white">
-          Drop PostEx CPR PDF or Run Courier screenshot
+          Drop PostEx CPR, Run Courier Excel, or screenshot
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          PDF or PNG/JPG screenshots · multi-page shots OK · matches order # + GW / PostEx tracking
+          PDF · Excel (.xlsx/.xls) · CSV · PNG/JPG screenshots · matches order # + tracking
         </p>
         <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#185a96]">
-          {uploading ? "Reading upload…" : "Choose PDF or screenshots"}
+          {uploading ? "Reading upload…" : "Choose PDF, Excel, or screenshots"}
           <input
             type="file"
-            accept="application/pdf,.pdf,image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp"
+            accept="application/pdf,.pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls,.csv,text/csv,image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp"
             multiple
             className="hidden"
             disabled={uploading}
@@ -300,8 +305,8 @@ export function FinancePage() {
               {batches.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-3 py-8 text-center text-slate-500">
-                    No settlements yet — drop a PostEx CPR PDF or Run Courier payment screenshot
-                    above.
+                    No settlements yet — drop a PostEx CPR PDF, Run Courier Excel/CSV, or payment
+                    screenshot above.
                   </td>
                 </tr>
               ) : (

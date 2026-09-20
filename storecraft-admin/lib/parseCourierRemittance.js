@@ -1,5 +1,5 @@
 /**
- * Auto-detect courier remittance PDF or screenshot and parse.
+ * Auto-detect courier remittance PDF, screenshot, or Excel/CSV and parse.
  */
 import { extractPdfText, parsePostexCprText } from "@/lib/postexCprParse";
 import { looksLikeRunCourierRemit, parseRunCourierRemitText } from "@/lib/runCourierRemitParse";
@@ -8,6 +8,10 @@ import {
   isRemittanceImage,
   normalizeOcrRemittanceText,
 } from "@/lib/extractScreenshotText";
+import {
+  isRemittanceSpreadsheet,
+  parseRemittanceSpreadsheet,
+} from "@/lib/parseRemittanceSpreadsheet";
 
 function isPdf(meta = {}) {
   const name = String(meta.filename || meta.name || "").toLowerCase();
@@ -16,11 +20,15 @@ function isPdf(meta = {}) {
 }
 
 /**
- * Parse a single remittance buffer (PDF or image).
+ * Parse a single remittance buffer (PDF, image, or Excel/CSV).
  * @param {Buffer} buffer
  * @param {{ filename?: string, mimeType?: string, name?: string, type?: string }} [meta]
  */
 export async function parseCourierRemittance(buffer, meta = {}) {
+  if (isRemittanceSpreadsheet(meta)) {
+    return parseRemittanceSpreadsheet(buffer, meta);
+  }
+
   let text = "";
   let source = "pdf";
 
@@ -28,13 +36,9 @@ export async function parseCourierRemittance(buffer, meta = {}) {
     source = "screenshot";
     text = await extractScreenshotText(buffer);
   } else if (isPdf(meta) || (!meta.filename && !meta.mimeType)) {
-    // Default / PDF path
     source = "pdf";
     text = await extractPdfText(buffer);
-  } else if (isPdf(meta)) {
-    text = await extractPdfText(buffer);
   } else {
-    // Try image OCR as fallback when mime is odd (clipboard paste, etc.)
     try {
       source = "screenshot";
       text = await extractScreenshotText(buffer);
@@ -59,7 +63,7 @@ export async function parseCourierRemittance(buffer, meta = {}) {
   throw new Error(
     source === "screenshot"
       ? `Screenshot OCR found no tracking IDs (GW… / PostEx CN). Make sure the CN column is visible and sharp. OCR preview: “${preview}…”`
-      : "Unrecognized file. Upload a PostEx CPR PDF, Run Courier remittance PDF, or a clear screenshot of the Run Courier payment list."
+      : "Unrecognized file. Upload a PostEx CPR PDF, Run Courier Excel/CSV, remittance PDF, or a clear screenshot."
   );
 }
 
@@ -69,7 +73,7 @@ export async function parseCourierRemittancePdf(buffer) {
 }
 
 /**
- * Merge multiple screenshot/PDF parses into one batch (dedupe by tracking).
+ * Merge multiple remittance files into one batch (dedupe by tracking).
  * @param {Array<{ buffer: Buffer, filename?: string, mimeType?: string }>} files
  */
 export async function parseCourierRemittanceFiles(files) {
@@ -97,7 +101,7 @@ export async function parseCourierRemittanceFiles(files) {
   }
   const lines = [...lineByTn.values()];
   if (!lines.length) {
-    throw new Error("No tracking lines found across the uploaded screenshots.");
+    throw new Error("No tracking lines found across the uploaded files.");
   }
 
   const primary = parsedParts[0];
@@ -107,10 +111,14 @@ export async function parseCourierRemittanceFiles(files) {
     Math.round(arr.reduce((s, l) => s + (Number(l[key]) || 0), 0) * 100) / 100;
 
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const sources = new Set(parsedParts.map((p) => p.source || "pdf"));
+  const source =
+    sources.size === 1 ? [...sources][0] : sources.has("excel") ? "excel" : "mixed";
+
   const cprNumber =
     primary.cprNumber && !/^RC-\d{8}-/i.test(primary.cprNumber)
       ? primary.cprNumber
-      : `RC-SHOT-${stamp}-${lines.length}`;
+      : `RC-MULTI-${stamp}-${lines.length}`;
 
   return {
     cprNumber,
@@ -124,7 +132,7 @@ export async function parseCourierRemittanceFiles(files) {
     deduction4pct: sum(lines, "deduction4pct"),
     netTotal: sum(delivered, "netAmount"),
     lines,
-    source: "screenshot",
-    screenshotCount: list.length,
+    source,
+    fileCount: list.length,
   };
 }

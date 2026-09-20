@@ -13,14 +13,15 @@ import CourierSettlementLine from "@/lib/models/CourierSettlementLine.model";
 import { parseCourierRemittanceFiles } from "@/lib/parseCourierRemittance";
 import { enrichLinesWithMatches } from "@/lib/matchSettlementLine";
 import { isRemittanceImage } from "@/lib/extractScreenshotText";
+import { isRemittanceSpreadsheet } from "@/lib/parseRemittanceSpreadsheet";
 
 export const runtime = "nodejs";
-/** OCR can take a while on multi-page screenshot batches */
+/** OCR / large sheets can take a while */
 export const maxDuration = 120;
 
 function collectUploadFiles(formData) {
   const out = [];
-  for (const key of ["file", "files", "screenshot", "screenshots", "image"]) {
+  for (const key of ["file", "files", "screenshot", "screenshots", "image", "excel", "sheet"]) {
     for (const entry of formData.getAll(key)) {
       if (!entry || typeof entry === "string") continue;
       out.push(entry);
@@ -34,6 +35,7 @@ function isAllowedUpload(file) {
   const type = String(file.type || "");
   if (type === "application/pdf" || /\.pdf$/i.test(name)) return true;
   if (isRemittanceImage({ filename: name, mimeType: type })) return true;
+  if (isRemittanceSpreadsheet({ filename: name, mimeType: type })) return true;
   return false;
 }
 
@@ -48,7 +50,7 @@ export async function POST(request) {
     const rawFiles = collectUploadFiles(formData);
     if (!rawFiles.length) {
       return NextResponse.json(
-        { success: false, error: "Missing file. Drop a PDF or Run Courier screenshot." },
+        { success: false, error: "Missing file. Drop a PDF, Excel/CSV, or Run Courier screenshot." },
         { status: 400 }
       );
     }
@@ -59,7 +61,7 @@ export async function POST(request) {
         return NextResponse.json(
           {
             success: false,
-            error: `Unsupported file “${file.name || "upload"}”. Use PDF, PNG, JPG, or WEBP.`,
+            error: `Unsupported file “${file.name || "upload"}”. Use PDF, Excel (.xlsx/.xls), CSV, PNG, JPG, or WEBP.`,
           },
           { status: 400 }
         );
