@@ -258,7 +258,12 @@ export function SettlementDetail({ batchId }) {
         toast.error(json.error || "Rematch failed.");
         return;
       }
-      toast.success(`Matched ${json.matchedCount}/${json.lineCount}`);
+      toast.success(
+        `Matched ${json.matchedCount}/${json.lineCount}` +
+          (Number.isFinite(Number(json.profitTotal))
+            ? ` · ${(Number(json.profitTotal) || 0) < 0 ? "Loss" : "Profit"} ${formatMoney(json.profitTotal)}`
+            : "")
+      );
       await load();
     } catch {
       toast.error("Network error.");
@@ -386,7 +391,7 @@ export function SettlementDetail({ batchId }) {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
           <p className="text-xs font-semibold uppercase text-slate-500">COD total</p>
           <p className="mt-1 text-lg font-bold tabular-nums">{formatMoney(batch.codTotal)}</p>
@@ -405,6 +410,39 @@ export function SettlementDetail({ batchId }) {
           <p className="text-xs font-semibold uppercase text-slate-500">Total received</p>
           <p className="mt-1 text-lg font-bold tabular-nums text-[#1A7A4C]">
             {formatMoney(batch.netTotal)}
+          </p>
+        </div>
+        <div
+          className={[
+            "rounded-xl border p-4",
+            (Number(batch.profitTotal) || 0) < -0.005
+              ? "border-rose-200 bg-rose-50 dark:border-rose-900/40 dark:bg-rose-950/30"
+              : (Number(batch.profitTotal) || 0) > 0.005
+                ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/40 dark:bg-emerald-950/30"
+                : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900",
+          ].join(" ")}
+        >
+          <p className="text-xs font-semibold uppercase text-slate-500">
+            {(Number(batch.profitTotal) || 0) < -0.005
+              ? "Loss"
+              : (Number(batch.profitTotal) || 0) > 0.005
+                ? "Profit"
+                : "P/L"}
+          </p>
+          <p
+            className={[
+              "mt-1 text-lg font-bold tabular-nums",
+              (Number(batch.profitTotal) || 0) < -0.005
+                ? "text-rose-600"
+                : (Number(batch.profitTotal) || 0) > 0.005
+                  ? "text-[#1A7A4C]"
+                  : "text-slate-900 dark:text-white",
+            ].join(" ")}
+          >
+            {formatMoney(batch.profitTotal)}
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            Net − product cost ({formatMoney(batch.productCogsTotal)})
           </p>
         </div>
       </div>

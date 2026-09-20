@@ -56,6 +56,16 @@ async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) 
     (l) => l.matchStatus === "matched" || l.matchStatus === "manual"
   ).length;
   const unmatchedCount = enriched.filter((l) => l.matchStatus === "unmatched").length;
+  const productCogsTotal = Math.round(
+    enriched
+      .filter((l) => l.status === "Delivered" && (l.matchStatus === "matched" || l.matchStatus === "manual"))
+      .reduce((s, l) => s + (Number(l.productCogs) || 0), 0) * 100
+  ) / 100;
+  const profitTotal = Math.round(
+    enriched
+      .filter((l) => l.status === "Delivered" && (l.matchStatus === "matched" || l.matchStatus === "manual"))
+      .reduce((s, l) => s + (Number(l.lineProfit) || 0), 0) * 100
+  ) / 100;
 
   const batch = await CourierSettlementBatch.create({
     cprNumber: parsed.cprNumber,
@@ -74,6 +84,8 @@ async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) 
     lineCount: enriched.length,
     matchedCount,
     unmatchedCount,
+    productCogsTotal,
+    profitTotal,
   });
 
   if (enriched.length) {
@@ -129,6 +141,8 @@ async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) 
     matchedCount,
     unmatchedCount,
     returnedCount: parsed.returnedCount || enriched.filter((l) => l.status === "Return").length,
+    productCogsTotal,
+    profitTotal,
     netTotal: parsed.netTotal,
   };
 }

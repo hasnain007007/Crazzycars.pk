@@ -32,23 +32,29 @@ function todayPkt() {
   }).format(new Date());
 }
 
-function StatCard({ title, value, subtitle, accent }) {
+function StatCard({ title, value, subtitle, accent, tone }) {
+  const valueClass =
+    tone === "loss"
+      ? "text-rose-600 dark:text-rose-400"
+      : tone === "profit" || accent
+        ? "text-[#1A7A4C]"
+        : "text-slate-900 dark:text-white";
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {title}
       </p>
-      <p
-        className={[
-          "mt-2 text-xl font-bold tabular-nums",
-          accent ? "text-[#1A7A4C]" : "text-slate-900 dark:text-white",
-        ].join(" ")}
-      >
-        {value}
-      </p>
+      <p className={["mt-2 text-xl font-bold tabular-nums", valueClass].join(" ")}>{value}</p>
       {subtitle ? <p className="mt-1 text-xs text-slate-500">{subtitle}</p> : null}
     </div>
   );
+}
+
+function profitLabel(n) {
+  const v = Number(n) || 0;
+  if (v > 0.005) return { text: "Profit", tone: "profit" };
+  if (v < -0.005) return { text: "Loss", tone: "loss" };
+  return { text: "Break-even", tone: "" };
 }
 
 export function FinancePage() {
@@ -124,9 +130,17 @@ export function FinancePage() {
             : "PDF";
       toast.success(
         count > 1
-          ? `Uploaded ${count} settlements (${src}): ${json.matchedCount}/${json.lineCount} lines matched`
+          ? `Uploaded ${count} settlements (${src}): ${json.matchedCount}/${json.lineCount} matched`
           : `Uploaded ${json.cprNumber} (${src}): ${json.matchedCount}/${json.lineCount} matched`
       );
+      const profit = Number(json.profitTotal ?? json.batches?.[0]?.profitTotal);
+      if (Number.isFinite(profit) && json.matchedCount > 0) {
+        const tag = profitLabel(profit);
+        toast(
+          `${tag.text}: ${formatMoney(profit)} (after product cost)`,
+          { icon: tag.tone === "loss" ? "📉" : "📈" }
+        );
+      }
       if (json.errors?.length) {
         toast.error(`${json.errors.length} file(s) skipped — see details in console.`);
         console.warn("Settlement upload skips", json.errors);
@@ -321,9 +335,10 @@ export function FinancePage() {
             subtitle={`Ship ${formatMoney(summary?.shippingFees)} · GST ${formatMoney(summary?.gst)} · 4% ${formatMoney(summary?.codTax)}`}
           />
           <StatCard
-            title="Cash profit"
+            title={profitLabel(summary?.cashProfit).text}
             value={formatMoney(summary?.cashProfit)}
             subtitle={`Remittance − product cost (${formatMoney(summary?.productCogs)})`}
+            tone={profitLabel(summary?.cashProfit).tone}
             accent
           />
         </div>
@@ -347,6 +362,7 @@ export function FinancePage() {
                 <th className="px-3 py-2 text-right">Ship</th>
                 <th className="px-3 py-2 text-right">Tax</th>
                 <th className="px-3 py-2 text-right">Net</th>
+                <th className="px-3 py-2 text-right">P/L</th>
                 <th className="px-3 py-2 text-right">Matched</th>
                 <th className="px-3 py-2 text-right">Returns</th>
               </tr>
@@ -354,13 +370,15 @@ export function FinancePage() {
             <tbody>
               {batches.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-3 py-8 text-center text-slate-500">
-                    No settlements yet — drop a PostEx CPR PDF, Run Courier Excel/CSV, or payment
-                    screenshot above.
+                  <td colSpan={11} className="px-3 py-8 text-center text-slate-500">
+                    No settlements yet — drop PostEx CPR PDFs / CPR_Transactions CSV / Run Courier
+                    sheets above. Orders match automatically.
                   </td>
                 </tr>
               ) : (
-                batches.map((b) => (
+                batches.map((b) => {
+                  const pl = profitLabel(b.profitTotal);
+                  return (
                   <tr
                     key={b.id}
                     className="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -401,6 +419,25 @@ export function FinancePage() {
                     <td className="px-3 py-2 text-right font-semibold tabular-nums">
                       {formatMoney(b.netTotal)}
                     </td>
+                    <td className="px-3 py-2 text-right">
+                      {(b.matchedCount || 0) > 0 ? (
+                        <span
+                          className={[
+                            "inline-flex flex-col items-end text-xs font-semibold tabular-nums",
+                            pl.tone === "loss"
+                              ? "text-rose-600"
+                              : pl.tone === "profit"
+                                ? "text-[#1A7A4C]"
+                                : "text-slate-600",
+                          ].join(" ")}
+                        >
+                          <span>{pl.text}</span>
+                          <span>{formatMoney(b.profitTotal)}</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
                     <td className="px-3 py-2 text-right tabular-nums">
                       {b.matchedCount}/{b.lineCount}
                     </td>
@@ -424,7 +461,8 @@ export function FinancePage() {
                       )}
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

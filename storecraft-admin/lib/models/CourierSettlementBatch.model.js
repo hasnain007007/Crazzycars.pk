@@ -28,6 +28,10 @@ const courierSettlementBatchSchema = new mongoose.Schema(
     lineCount: { type: Number, default: 0 },
     matchedCount: { type: Number, default: 0 },
     unmatchedCount: { type: Number, default: 0 },
+    /** Sum of matched Delivered line product COGS */
+    productCogsTotal: { type: Number, default: 0 },
+    /** Sum of matched Delivered line profit (net − COGS); negative = loss */
+    profitTotal: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

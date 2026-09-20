@@ -65,6 +65,8 @@ export async function GET(request) {
         lineCount: b.lineCount,
         matchedCount: b.matchedCount,
         unmatchedCount: b.unmatchedCount,
+        productCogsTotal: b.productCogsTotal || 0,
+        profitTotal: b.profitTotal || 0,
         uploadedBy: b.uploadedBy,
         postedAt: b.postedAt,
         createdAt: b.createdAt,

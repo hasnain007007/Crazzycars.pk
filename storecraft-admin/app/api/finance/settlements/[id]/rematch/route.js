@@ -103,6 +103,26 @@ export async function POST(request, { params }) {
     batch.matchedCount = matchedCount;
     batch.unmatchedCount = unmatchedCount;
     batch.lineCount = all.length;
+
+    const profitAgg = await CourierSettlementLine.aggregate([
+      {
+        $match: {
+          batchId: batch._id,
+          status: "Delivered",
+          matchStatus: { $in: ["matched", "manual"] },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          productCogsTotal: { $sum: "$productCogs" },
+          profitTotal: { $sum: "$lineProfit" },
+        },
+      },
+    ]);
+    batch.productCogsTotal =
+      Math.round((Number(profitAgg[0]?.productCogsTotal) || 0) * 100) / 100;
+    batch.profitTotal = Math.round((Number(profitAgg[0]?.profitTotal) || 0) * 100) / 100;
     await batch.save();
 
     const adminName = user?.name || user?.email || "Admin";
@@ -112,7 +132,12 @@ export async function POST(request, { params }) {
       action: "finance.cpr_rematch",
       resource: "CourierSettlementBatch",
       resourceId: String(batch._id),
-      details: { matchedCount, unmatchedCount, returnsPending },
+      details: {
+        matchedCount,
+        unmatchedCount,
+        returnsPending,
+        profitTotal: batch.profitTotal,
+      },
       type: "update",
       ip: requestIp(request),
     });
@@ -123,6 +148,8 @@ export async function POST(request, { params }) {
       unmatchedCount,
       lineCount: all.length,
       returnsPending,
+      productCogsTotal: batch.productCogsTotal,
+      profitTotal: batch.profitTotal,
     });
   } catch (e) {
     console.error("Settlement rematch failed:", e);

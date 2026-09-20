@@ -49,6 +49,8 @@ export async function GET(request, { params }) {
         lineCount: batch.lineCount,
         matchedCount: batch.matchedCount,
         unmatchedCount: batch.unmatchedCount,
+        productCogsTotal: batch.productCogsTotal || 0,
+        profitTotal: batch.profitTotal || 0,
         uploadedBy: batch.uploadedBy,
         postedAt: batch.postedAt,
         postedBy: batch.postedBy,
