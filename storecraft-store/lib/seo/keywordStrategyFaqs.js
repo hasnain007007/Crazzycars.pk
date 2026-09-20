@@ -3,12 +3,21 @@
  * Answers reuse storePolicyCopy; do not invent fitment or GTINs.
  * CC-0004 intentionally omitted (securityHold).
  */
+import { STORE_POLICY } from "../../config/store-policy.js";
 import {
   deliveryEtaSummary,
+  formatPkrAmount,
   getFaqItems,
   returnsFaqAnswer,
   standardDeliveryFeeStatement,
 } from "../storePolicyCopy.js";
+
+function feeAmounts() {
+  return {
+    regular: formatPkrAmount(STORE_POLICY.shipping.standardFeePKR),
+    bulky: formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500),
+  };
+}
 
 /** @param {{ question: string, answer: string }[]} items */
 export function faqPageJsonLd(items) {
@@ -135,9 +144,8 @@ const CATEGORY_FAQ_EXTRAS = {
     name: "Splitters & Side Skirts",
     extras: [
       {
-        question: "Why is delivery sometimes Rs. 500?",
-        answer:
-          "Delivery is Rs. 250 for regular items, or Rs. 500 when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). Shipping is paid in advance; the rest is Cash on Delivery where eligible.",
+        question: "Why is delivery sometimes higher for bulky items?",
+        answer: standardDeliveryFeeStatement(),
       },
     ],
   },
@@ -146,8 +154,10 @@ const CATEGORY_FAQ_EXTRAS = {
     extras: [
       {
         question: "Are spoiler delivery fees different?",
-        answer:
-          "Roof or trunk spoilers use a special courier fee shown at checkout. Carts that include bulky items (including many spoilers) are charged Rs. 500 delivery instead of Rs. 250.",
+        answer: (() => {
+          const { regular, bulky } = feeAmounts();
+          return `Roof or trunk spoilers use a special courier fee shown at checkout. Carts that include bulky items (including many spoilers) are charged ${bulky} delivery instead of ${regular}.`;
+        })(),
       },
     ],
   },
@@ -442,30 +452,34 @@ const PRODUCT_FAQ_BY_SKU = {
         "The product description states an OEM-style fit that installs without modification. Follow the listing notes; WhatsApp us if your year is unclear.",
     },
   ],
-  "CC-0203": () => [
-    {
-      question: "Is this a universal fit?",
-      answer:
-        "Yes. It is listed as a universal 3-piece Batman-style front bumper splitter (front lip kit only — not side skirts or a rear diffuser).",
-    },
-    {
-      question: "Why might delivery be Rs. 500?",
-      answer:
-        "This item is flagged bulky. Delivery is Rs. 500 when the cart includes bulky items (splitters, side skirts, spoilers, floor mats, etc.), or Rs. 250 for regular-only carts.",
-    },
-  ],
-  "CC-0204": () => [
-    {
-      question: "Is this a universal fit?",
-      answer:
-        "Yes. It is a universal cut-style rear bumper splitter / rear lip in ABS, per the product description.",
-    },
-    {
-      question: "Why might delivery be Rs. 500?",
-      answer:
-        "This item is flagged bulky. Delivery is Rs. 500 when the cart includes bulky items, or Rs. 250 for regular-only carts.",
-    },
-  ],
+  "CC-0203": () => {
+    const { regular, bulky } = feeAmounts();
+    return [
+      {
+        question: "Is this a universal fit?",
+        answer:
+          "Yes. It is listed as a universal 3-piece Batman-style front bumper splitter (front lip kit only — not side skirts or a rear diffuser).",
+      },
+      {
+        question: "Why might delivery be higher for this item?",
+        answer: `This item is flagged bulky. Delivery is ${bulky} when the cart includes bulky items (splitters, side skirts, spoilers, floor mats, etc.), or ${regular} for regular-only carts.`,
+      },
+    ];
+  },
+  "CC-0204": () => {
+    const { regular, bulky } = feeAmounts();
+    return [
+      {
+        question: "Is this a universal fit?",
+        answer:
+          "Yes. It is a universal cut-style rear bumper splitter / rear lip in ABS, per the product description.",
+      },
+      {
+        question: "Why might delivery be higher for this item?",
+        answer: `This item is flagged bulky. Delivery is ${bulky} when the cart includes bulky items, or ${regular} for regular-only carts.`,
+      },
+    ];
+  },
   "CC-0112": () => [
     {
       question: "Which Civic does this fit?",
@@ -514,23 +528,25 @@ const PRODUCT_FAQ_BY_SKU = {
         "Yes. The listing is a pair of carbon-style side mirror covers, per the product title.",
     },
   ],
-  "CC-UNI-EXT-BKT-BTM-GB-BTM": () => [
-    {
-      question: "Can I use Cash on Delivery on this body kit?",
-      answer:
-        "No. This is a body kit, so Cash on Delivery is not available. Pay the full order with JazzCash, Meezan, or bank transfer at checkout, then send your payment screenshot on WhatsApp. See our Cash on Delivery page for details.",
-    },
-    {
-      question: "What is included in the kit?",
-      answer:
-        "The listing includes a front splitter, side skirts (pair), and back bumper lip — these three pieces only, per the product description.",
-    },
-    {
-      question: "Why might delivery be Rs. 500?",
-      answer:
-        "Body kit / splitter packages are bulky. Delivery is Rs. 500 when the cart includes bulky items; the exact fee is shown at checkout.",
-    },
-  ],
+  "CC-UNI-EXT-BKT-BTM-GB-BTM": () => {
+    const { bulky } = feeAmounts();
+    return [
+      {
+        question: "Can I use Cash on Delivery on this body kit?",
+        answer:
+          "No. This is a body kit, so Cash on Delivery is not available. Pay the full order with JazzCash, Meezan, or bank transfer at checkout, then send your payment screenshot on WhatsApp. See our Cash on Delivery page for details.",
+      },
+      {
+        question: "What is included in the kit?",
+        answer:
+          "The listing includes a front splitter, side skirts (pair), and back bumper lip — these three pieces only, per the product description.",
+      },
+      {
+        question: "Why might delivery be higher for this item?",
+        answer: `Body kit / splitter packages are bulky. Delivery is ${bulky} when the cart includes bulky items; the exact fee is shown at checkout.`,
+      },
+    ];
+  },
   "CC-0154": () => [
     {
       question: "Which City years does this fit?",
@@ -555,18 +571,20 @@ const PRODUCT_FAQ_BY_SKU = {
         "The listing describes glossy carbon-style sections with Alcantara/suede grip areas, hand-sewn, per the product description.",
     },
   ],
-  "CC-EXT-201": () => [
-    {
-      question: "Is this a universal fit?",
-      answer:
-        "Yes. It is listed as a universal eyes-style spoiler kit with integrated running and brake LED lights (3 pieces), per the product title and description.",
-    },
-    {
-      question: "Why might delivery be higher?",
-      answer:
-        "Spoilers often use a special courier fee shown at checkout, and bulky carts are charged Rs. 500 delivery. Check the fee at checkout before paying.",
-    },
-  ],
+  "CC-EXT-201": () => {
+    const { bulky } = feeAmounts();
+    return [
+      {
+        question: "Is this a universal fit?",
+        answer:
+          "Yes. It is listed as a universal eyes-style spoiler kit with integrated running and brake LED lights (3 pieces), per the product title and description.",
+      },
+      {
+        question: "Why might delivery be higher?",
+        answer: `Spoilers often use a special courier fee shown at checkout, and bulky carts are charged ${bulky} delivery. Check the fee at checkout before paying.`,
+      },
+    ];
+  },
   "CC-0024": () => [
     {
       question: "Which Corolla does this fit?",
