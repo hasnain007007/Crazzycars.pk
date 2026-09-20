@@ -186,9 +186,9 @@ export function computeSettlementProfitTotals(enriched, batchNetTotal = null) {
 }
 
 /**
- * Amount to cut from remittance for profit.
- * Prefer merchant unitCost / costPerItem; if unset, use actual product price
- * (order unitPrice → salePrice → regularPrice).
+ * Amount cut from remittance for P/L:
+ * 1) merchant unitCost / costPerItem when set
+ * 2) else actual product price on the order (unitPrice)
  */
 export async function computeOrderCogs(order, costByProduct = null) {
   let map = costByProduct;
@@ -221,7 +221,6 @@ export async function computeOrderCogs(order, costByProduct = null) {
 
     let unit = Number(it.unitCost);
     if (!Number.isFinite(unit) || unit <= 0) unit = catalog.cost || 0;
-    // No merchant cost on file → cut the actual product selling price
     if (!Number.isFinite(unit) || unit <= 0) {
       unit =
         Number(it.unitPrice) ||
@@ -377,8 +376,13 @@ export async function enrichLinesWithMatches(lines) {
       productCogs = await computeOrderCogs(order, costByProduct);
     }
     const net = Number(line.netAmount) || 0;
+    // Cut product cost/price from positive remittance only (skip prepaid fee-only nets)
     const lineProfit =
-      line.status === "Delivered" ? Math.round((net - productCogs) * 100) / 100 : 0;
+      line.status === "Delivered" && net > 0
+        ? Math.round((net - productCogs) * 100) / 100
+        : line.status === "Delivered"
+          ? Math.round(net * 100) / 100
+          : 0;
     // Preserve original CN form (GW…) — prefer compact alphanumeric over digits-only
     const compact = compactTracking(line.trackingNumber);
     const storedTn = compact || String(line.trackingNumber || "").trim();

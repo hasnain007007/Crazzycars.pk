@@ -63,7 +63,11 @@ async function main() {
       const productCogs = await productCut(order, Product);
       const net = Number(line.netAmount) || 0;
       const lineProfit =
-        line.status === "Delivered" ? round2(net - productCogs) : 0;
+        line.status === "Delivered" && net > 0
+          ? round2(net - productCogs)
+          : line.status === "Delivered"
+            ? round2(net)
+            : 0;
       await Line.updateOne(
         { _id: line._id },
         { $set: { productCogs, lineProfit, updatedAt: new Date() } }

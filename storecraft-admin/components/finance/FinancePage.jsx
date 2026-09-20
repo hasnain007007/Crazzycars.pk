@@ -137,7 +137,7 @@ export function FinancePage() {
       if (Number.isFinite(profit) && json.matchedCount > 0) {
         const tag = profitLabel(profit);
         toast(
-          `${tag.text}: ${formatMoney(profit)} (after product cost)`,
+          `${tag.text}: ${formatMoney(profit)} (after product prices)`,
           { icon: tag.tone === "loss" ? "📉" : "📈" }
         );
       }
@@ -337,7 +337,7 @@ export function FinancePage() {
           <StatCard
             title={profitLabel(summary?.cashProfit).text}
             value={formatMoney(summary?.cashProfit)}
-            subtitle={`Remittance − product cost (${formatMoney(summary?.productCogs)})`}
+            subtitle={`Remittance − product prices (${formatMoney(summary?.productCogs)})`}
             tone={profitLabel(summary?.cashProfit).tone}
             accent
           />
