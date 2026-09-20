@@ -71,13 +71,27 @@ function extractOrderHint(raw) {
 function scoreHeader(h) {
   const n = normHeader(h);
   if (!n) return null;
-  // Exact PostEx CPR_Transactions headers first
+  // Exact PostEx / Run Courier headers first
   if (n === "tracking number" || n === "trackingnumber") return "tracking";
-  if (n === "order ref number" || n === "orderrefnumber") return "order";
+  // Run Courier "Order ID." and PostEx "ORDER_REF_NUMBER" are both the shop order number
+  if (
+    n === "order id" ||
+    n === "orderid" ||
+    n === "order ref number" ||
+    n === "orderrefnumber" ||
+    n === "order number" ||
+    n === "ordernumber" ||
+    n === "order no" ||
+    n === "orderno"
+  ) {
+    return "order";
+  }
   if (n === "cod amount" || n === "codamount") return "cod";
   if (n === "shipping charges" || n === "shippingcharges") return "ship";
+  if (n === "updated charges" || n === "updatedcharges") return "ship";
   if (n === "deduction 4%" || n === "deduction (4%)" || n === "deduction4%") return "tax";
   if (n === "net amount" || n === "netamount") return "net";
+  if (n === "balance") return "net";
   if (n === "delivery city" || n === "deliverycity") return "city";
   if (n === "origin city" || n === "origincity") return "origin";
   if (n === "order pickup date" || n === "orderpickupdate") return "bookDate";
@@ -93,10 +107,14 @@ function scoreHeader(h) {
   }
   if (/(status|state|result)/.test(n)) return "status";
   if (/(^cod$|cod\s*amount|collect|invoice\s*amount|goods\s*value)/.test(n)) return "cod";
-  if (/(shipping|freight|delivery\s*charge|courier\s*charge)/.test(n)) return "ship";
+  if (/(shipping|freight|delivery\s*charge|courier\s*charge|updated\s*charges)/.test(n)) {
+    return "ship";
+  }
   if (/(^gst$|sales\s*tax)/.test(n)) return "gst";
   if (/(deduction|wht|withhold|4\s*%|cod\s*tax)/.test(n)) return "tax";
-  if (/(^net$|net\s*(amount|pay|paid|total)|amount\s*paid|remit|payable)/.test(n)) return "net";
+  if (/(^net$|net\s*(amount|pay|paid|total)|amount\s*paid|remit|payable|^balance$)/.test(n)) {
+    return "net";
+  }
   if (/(delivery\s*city|destination)/.test(n)) return "city";
   if (/(^origin|origin\s*city)/.test(n)) return "origin";
   if (/(pickup|book(ing)?\s*date)/.test(n)) return "bookDate";
@@ -178,7 +196,20 @@ function detectColumns(matrix) {
       }
     }
     if (topCol >= 0 && topN >= 1) {
-      best = { headerRow: -1, map: { tracking: topCol }, score: topN };
+      // Still try to attach Order ID / order-number column from a nearby header row
+      const map = { tracking: topCol };
+      for (let r = 0; r < Math.min(30, matrix.length); r++) {
+        const row = matrix[r] || [];
+        for (let c = 0; c < row.length; c++) {
+          const role = scoreHeader(row[c]);
+          if (role && role !== "tracking" && map[role] == null) map[role] = c;
+        }
+        if (map.order != null) {
+          best = { headerRow: r, map, score: topN + 5 };
+          break;
+        }
+      }
+      if (!best) best = { headerRow: -1, map, score: topN };
     }
   }
   return best;
@@ -282,7 +313,15 @@ export function parseRemittanceSpreadsheet(buffer, meta = {}) {
 
       const orderHint =
         (map.order != null ? extractOrderHint(row[map.order]) : "") ||
-        extractOrderHint(row.map(cellStr).join(" "));
+        extractOrderHint(row.map(cellStr).join(" ")) ||
+        // Any ORD-… in the row is the order number (Run Courier Order ID. column)
+        (() => {
+          for (const cell of row) {
+            const m = cellStr(cell).toUpperCase().match(/\bORD-\d{4}-\d+\b/);
+            if (m) return m[0];
+          }
+          return "";
+        })();
 
       const weightKg =
         map.weight != null ? Math.abs(Number.parseFloat(cellStr(row[map.weight]))) || 0 : 0;

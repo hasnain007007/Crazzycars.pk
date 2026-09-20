@@ -124,11 +124,17 @@ export function parseRunCourierRemitText(text) {
         Math.round((codAmount - shippingCharges - gst - deduction4pct) * 100) / 100;
     }
 
-    // Order # immediately before this CN (same row), not a previous parcel's ORD
-    const peek = raw.slice(Math.max(0, index - 36), index);
+    // Order ID. column = shop order number (ORD-2026-00140). Prefer same-row / labeled hits.
+    const peek = raw.slice(Math.max(0, index - 80), index);
+    const labeled =
+      (peek.match(/Order\s*ID\.?\s*[:#]?\s*(ORD-\d{4}-\d+)/i) || [])[1] ||
+      (block.match(/Order\s*ID\.?\s*[:#]?\s*(ORD-\d{4}-\d+)/i) || [])[1] ||
+      "";
     const orderHint =
+      labeled ||
       (peek.match(/\b(ORD-\d{4}-\d+)\s*$/i) || [])[1] ||
       (block.match(/^\s*(ORD-\d{4}-\d+)\b/i) || [])[1] ||
+      (block.match(/\b(ORD-\d{4}-\d+)\b/i) || [])[1] ||
       "";
     const sheetOrderNumber = orderHint ? orderHint.toUpperCase() : "";
 
