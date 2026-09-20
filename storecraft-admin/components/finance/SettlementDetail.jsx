@@ -442,7 +442,7 @@ export function SettlementDetail({ batchId }) {
             {formatMoney(batch.profitTotal)}
           </p>
           <p className="mt-1 text-[11px] text-slate-500">
-            After cutting product prices ({formatMoney(batch.productCogsTotal)})
+            After Cost per item ({formatMoney(batch.productCogsTotal)})
           </p>
         </div>
       </div>
@@ -465,7 +465,7 @@ export function SettlementDetail({ batchId }) {
             <span className="font-semibold tabular-nums">{formatMoney(batch.deduction4pct)}</span>
           </div>
           <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
-            <span className="text-slate-500">Product prices cut</span>
+            <span className="text-slate-500">Purchase cost (Cost per item)</span>
             <span className="font-semibold tabular-nums">{formatMoney(batch.productCogsTotal)}</span>
           </div>
           <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
@@ -489,8 +489,8 @@ export function SettlementDetail({ batchId }) {
           </div>
         </div>
         <p className="mt-2 text-[11px] text-slate-400">
-          Profit = matched delivered remittance − product prices (merchant cost if set, otherwise
-          sale/order price). Return fees are already inside CPR net.
+          Profit = matched delivered remittance − purchase cost (product “Cost per item”). Set Cost
+          per item on products for accurate P/L.
         </p>
       </div>
 

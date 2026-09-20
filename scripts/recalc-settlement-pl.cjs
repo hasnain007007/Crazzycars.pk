@@ -1,6 +1,6 @@
 /**
- * Recalc settlement line product amounts (cost or sale price) + batch P/L.
- * Run in admin container: NODE_PATH=/app/node_modules node /tmp/recalc-settlement-pl.cjs
+ * Recalc settlement P/L using product Cost per item (purchase cost) only.
+ * NODE_PATH=/app/node_modules node /tmp/recalc-settlement-pl.cjs
  */
 const mongoose = require("mongoose");
 
@@ -8,32 +8,23 @@ function round2(n) {
   return Math.round((Number(n) || 0) * 100) / 100;
 }
 
-async function productCut(order, Product) {
+async function purchaseCost(order, Product) {
   let total = 0;
   const ids = (order.items || []).map((it) => it.productId).filter(Boolean);
   const products = ids.length
     ? await Product.find(
         { _id: { $in: ids } },
-        { projection: { "pricing.costPerItem": 1, "pricing.salePrice": 1, "pricing.regularPrice": 1 } }
+        { projection: { "pricing.costPerItem": 1 } }
       ).toArray()
     : [];
   const map = new Map(
-    products.map((p) => [
-      String(p._id),
-      {
-        cost: Number(p.pricing?.costPerItem) || 0,
-        sale: Number(p.pricing?.salePrice) || 0,
-        regular: Number(p.pricing?.regularPrice) || 0,
-      },
-    ])
+    products.map((p) => [String(p._id), Number(p.pricing?.costPerItem) || 0])
   );
   for (const it of order.items || []) {
     const qty = Math.max(1, Number(it.quantity) || 1);
-    const cat = it.productId ? map.get(String(it.productId)) || {} : {};
     let unit = Number(it.unitCost);
-    if (!Number.isFinite(unit) || unit <= 0) unit = cat.cost || 0;
     if (!Number.isFinite(unit) || unit <= 0) {
-      unit = Number(it.unitPrice) || Number(it.price) || cat.sale || cat.regular || 0;
+      unit = it.productId ? map.get(String(it.productId)) || 0 : 0;
     }
     total += Math.max(0, unit) * qty;
   }
@@ -60,7 +51,7 @@ async function main() {
         { projection: { items: 1 } }
       );
       if (!order) continue;
-      const productCogs = await productCut(order, Product);
+      const productCogs = await purchaseCost(order, Product);
       const net = Number(line.netAmount) || 0;
       const lineProfit =
         line.status === "Delivered" && net > 0
@@ -112,7 +103,7 @@ async function main() {
       JSON.stringify({
         cpr: b.cprNumber,
         matchedDelivered: matchedDelivered.length,
-        productPricesCut: productCogsTotal,
+        purchaseCostCut: productCogsTotal,
         profit: profitTotal,
       })
     );

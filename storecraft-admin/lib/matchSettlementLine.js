@@ -186,9 +186,8 @@ export function computeSettlementProfitTotals(enriched, batchNetTotal = null) {
 }
 
 /**
- * Amount cut from remittance for P/L:
- * 1) merchant unitCost / costPerItem when set
- * 2) else actual product price on the order (unitPrice)
+ * Purchase cost cut from remittance = Cost per item (admin).
+ * Order unitCost snapshot → product pricing.costPerItem. Never sale/unit price.
  */
 export async function computeOrderCogs(order, costByProduct = null) {
   let map = costByProduct;
@@ -199,14 +198,10 @@ export async function computeOrderCogs(order, costByProduct = null) {
     map = new Map();
     if (ids.length) {
       const products = await Product.find({ _id: { $in: ids } })
-        .select("pricing.costPerItem pricing.salePrice pricing.regularPrice")
+        .select("pricing.costPerItem")
         .lean();
       for (const p of products) {
-        map.set(String(p._id), {
-          cost: Number(p.pricing?.costPerItem) || 0,
-          sale: Number(p.pricing?.salePrice) || 0,
-          regular: Number(p.pricing?.regularPrice) || 0,
-        });
+        map.set(String(p._id), Number(p.pricing?.costPerItem) || 0);
       }
     }
   }
@@ -214,21 +209,12 @@ export async function computeOrderCogs(order, costByProduct = null) {
   for (const it of order?.items || []) {
     const qty = Math.max(1, Number(it.quantity) || 1);
     const meta = it.productId ? map.get(String(it.productId)) : null;
-    const catalog =
-      meta && typeof meta === "object" && ("cost" in meta || "sale" in meta)
-        ? meta
-        : { cost: Number(meta) || 0, sale: 0, regular: 0 };
-
+    const catalogCost =
+      meta && typeof meta === "object" && "cost" in meta
+        ? Number(meta.cost) || 0
+        : Number(meta) || 0;
     let unit = Number(it.unitCost);
-    if (!Number.isFinite(unit) || unit <= 0) unit = catalog.cost || 0;
-    if (!Number.isFinite(unit) || unit <= 0) {
-      unit =
-        Number(it.unitPrice) ||
-        Number(it.price) ||
-        catalog.sale ||
-        catalog.regular ||
-        0;
-    }
+    if (!Number.isFinite(unit) || unit <= 0) unit = catalogCost;
     total += Math.max(0, unit) * qty;
   }
   return Math.round(total * 100) / 100;
@@ -350,14 +336,10 @@ export async function enrichLinesWithMatches(lines) {
   const costByProduct = new Map();
   if (productIds.size) {
     const products = await Product.find({ _id: { $in: [...productIds] } })
-      .select("pricing.costPerItem pricing.salePrice pricing.regularPrice")
+      .select("pricing.costPerItem")
       .lean();
     for (const p of products) {
-      costByProduct.set(String(p._id), {
-        cost: Number(p.pricing?.costPerItem) || 0,
-        sale: Number(p.pricing?.salePrice) || 0,
-        regular: Number(p.pricing?.regularPrice) || 0,
-      });
+      costByProduct.set(String(p._id), Number(p.pricing?.costPerItem) || 0);
     }
   }
 

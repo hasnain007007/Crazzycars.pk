@@ -125,7 +125,11 @@ export async function PATCH(request, { params }) {
       line.matchStatus = "manual";
       line.productCogs = productCogs;
       line.lineProfit =
-        line.status === "Delivered" ? Math.round((net - productCogs) * 100) / 100 : 0;
+        line.status === "Delivered" && net > 0
+          ? Math.round((net - productCogs) * 100) / 100
+          : line.status === "Delivered"
+            ? Math.round(net * 100) / 100
+            : 0;
     } else {
       return NextResponse.json(
         { success: false, error: "Provide orderId, matchStatus, or returnReceivedStatus." },
