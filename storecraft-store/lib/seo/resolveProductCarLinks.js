@@ -81,8 +81,8 @@ export async function resolveProductCarLinks(product) {
     const modelN = norm(row.model);
     if (!makeN) continue;
 
-    // Chassis-code rows like E170–E210 → match Corolla E170 vehicle pages
-    const chassisHint = /e170|e210|e140/i.test(String(row.model || ""));
+    // Chassis-code rows like E170–E210 → match Corolla E170 vehicle pages (not E140)
+    const chassisHint = /e170|e210/i.test(String(row.model || ""));
 
     const matches = (vehicles || []).filter((v) => {
       if (norm(v.make) !== makeN) return false;
@@ -90,7 +90,7 @@ export async function resolveProductCarLinks(product) {
       const vm = norm(v.model);
       const vd = norm(v.displayName);
       if (modelN && (vm === modelN || vd.includes(modelN) || modelN.includes(vm))) return true;
-      if (chassisHint && /corolla/i.test(vd) && /e170|e210|e140/i.test(`${vm} ${vd} ${v.slug}`)) {
+      if (chassisHint && /corolla/i.test(vd) && /e170|e210/i.test(`${vm} ${vd} ${v.slug}`)) {
         return true;
       }
       return false;
