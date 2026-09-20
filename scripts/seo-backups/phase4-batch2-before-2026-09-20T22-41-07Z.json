@@ -1,0 +1,1132 @@
+{
+  "takenAt": "2026-09-20T22:41:10.282Z",
+  "categories": [
+    {
+      "_id": {
+        "$oid": "6a5e5e7189c0c8d16c695dcd"
+      },
+      "slug": "backlights-tail-lamps",
+      "description": "Backlights and tail lamp upgrades sharpen the rear lighting signature of your car. Lighting-style replacements and accents in this collection refresh dull factory lenses with a clearer, more modern look. Browse options for popular models when you want the rear end to read cleaner at night and in traffic.",
+      "name": "Backlights & Tail Lamps",
+      "seo": {
+        "metaTitle": "Backlights & Tail Lamps | CrazzyCars.pk",
+        "metaDescription": "LED tail lamp upgrades that modernize your rear end — brighter brake and reverse lighting for safer night driving. Cash on Delivery nationwide.",
+        "metaKeywords": [
+          "tail lamps pakistan",
+          "led backlight",
+          "rear light upgrade",
+          "brake light led",
+          "backlights & tail lamps",
+          "backlights & tail lamps pakistan",
+          "buy backlights & tail lamps online",
+          "backlights & tail lamps online pakistan",
+          "backlights & tail lamps price pakistan",
+          "backlights & tail lamps karachi",
+          "backlights & tail lamps lahore",
+          "backlights & tail lamps islamabad",
+          "led & lighting accessories",
+          "backlights & tail lamps led & lighting",
+          "car accessories pakistan"
+        ]
+      },
+      "shortDescription": "Backlights and tail lamp upgrades sharpen the rear lighting signature of your car. Lighting-style replacements and accents in this collection refresh du…",
+      "updatedAt": {
+        "$date": "2026-09-18T20:41:51.455Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5ccf34eb06d36eb2ac1aef"
+      },
+      "slug": "body-kits-extensions",
+      "description": "Shop complete body kits and extension pieces that reshape stance with front, skirt, and rear styling. This category collects unpainted ABS and fibreglass kits for popular Honda, Toyota, Suzuki, and other models sold in Pakistan. Start with a full kit or extension set when you want a clearer, more aggressive profile ready for paint and fitment.",
+      "name": "Body Kits & Extensions",
+      "seo": {
+        "metaTitle": "Body Kits & Extensions – Exterior | CrazzyCars.pk",
+        "metaDescription": "Complete body kit extensions for a wider, more aggressive stance — front lips, side extensions & rear add-ons built for Pakistani roads. Nationwide COD.",
+        "metaKeywords": [
+          "body kit pakistan",
+          "body kit extensions",
+          "car body kit online",
+          "wide body kit",
+          "car styling kit",
+          "body kits & extensions",
+          "body kits & extensions pakistan",
+          "buy body kits & extensions online",
+          "body kits & extensions online pakistan",
+          "body kits & extensions price pakistan",
+          "body kits & extensions karachi",
+          "body kits & extensions lahore",
+          "body kits & extensions islamabad",
+          "exterior accessories",
+          "body kits & extensions exterior"
+        ]
+      },
+      "shortDescription": "Shop complete body kits and extension pieces that reshape stance with front, skirt, and rear styling. This category collects unpainted ABS and fibreglas…",
+      "updatedAt": {
+        "$date": "2026-09-18T21:34:42.566Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5dd59389c0c8d16c693831"
+      },
+      "slug": "door-handle-covers",
+      "description": "Door handle covers add a quick exterior accent that dresses the factory handles without drilling. Carbon-style and gloss sets in this collection usually cover the outer handles for a matched left-right look. Choose a stick-on fit that follows the handle shape so the upgrade stays neat through washes and weather.",
+      "name": "Door Handle Covers",
+      "seo": {
+        "metaTitle": "Door Handle Covers | CrazzyCars.pk",
+        "metaDescription": "Carbon fiber and chrome-finish door handle covers that protect against scratches while sharpening your car's exterior details.",
+        "metaKeywords": [
+          "door handle cover pakistan",
+          "car door handle protector",
+          "carbon door handle",
+          "door handle covers",
+          "door handle covers pakistan",
+          "buy door handle covers online",
+          "door handle covers online pakistan",
+          "door handle covers price pakistan",
+          "door handle covers karachi",
+          "door handle covers lahore",
+          "door handle covers islamabad",
+          "exterior accessories",
+          "door handle covers exterior",
+          "car accessories pakistan",
+          "CrazzyCars"
+        ]
+      },
+      "shortDescription": "Door handle covers add a quick exterior accent that dresses the factory handles without drilling. Carbon-style and gloss sets in this collection usually…",
+      "updatedAt": {
+        "$date": "2026-09-18T20:41:46.280Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5dd59489c0c8d16c693832"
+      },
+      "slug": "front-grilles",
+      "description": "Front grilles change the face of the car with mesh, TRD-style, and LED accent designs. Replacement and style grilles here refresh a tired factory opening without a full bumper swap. Pick a finish and pattern that matches your bumper so the front end looks intentional from the kerb.",
+      "name": "Front Grilles",
+      "seo": {
+        "metaTitle": "Front Grilles | CrazzyCars.pk",
+        "metaDescription": "Direct-fit front grille upgrades that transform your car's face — mesh and honeycomb styles for popular Pakistani-market models.",
+        "metaKeywords": [
+          "car grille pakistan",
+          "front grille upgrade",
+          "mesh grille",
+          "honeycomb grille",
+          "front grilles",
+          "front grilles pakistan",
+          "buy front grilles online",
+          "front grilles online pakistan",
+          "front grilles price pakistan",
+          "front grilles karachi",
+          "front grilles lahore",
+          "front grilles islamabad",
+          "exterior accessories",
+          "front grilles exterior",
+          "car accessories pakistan"
+        ]
+      },
+      "shortDescription": "Front grilles change the face of the car with mesh, TRD-style, and LED accent designs. Replacement and style grilles here refresh a tired factory openin…",
+      "updatedAt": {
+        "$date": "2026-09-18T20:41:46.682Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5e5e6c89c0c8d16c695db1"
+      },
+      "slug": "gadgets",
+      "description": "Find practical car gadgets that make every trip easier without a full interior remodel. Phone holders, chargers, displays, and cabin extras are collected here for drivers who want useful upgrades that install quickly. Shop online for accessories that solve everyday annoyances—cables, mounts, and small electronics—well-suited to cars on the road in Pakistan.",
+      "name": "Gadgets",
+      "seo": {
+        "metaTitle": "Car Gadgets Online in Pakistan | CrazzyCars.pk",
+        "metaDescription": "Smart car gadgets — dash cams, jump starters, HUD displays, chargers and more for safer, smarter drives. Nationwide shipping with Cash on Delivery.",
+        "metaKeywords": [
+          "car gadgets pakistan",
+          "dash cam pakistan",
+          "car electronics",
+          "jump starter",
+          "gadgets",
+          "gadgets pakistan",
+          "buy gadgets online",
+          "gadgets online pakistan",
+          "gadgets price pakistan",
+          "gadgets karachi",
+          "gadgets lahore",
+          "gadgets islamabad",
+          "car accessories pakistan",
+          "CrazzyCars",
+          "CrazzyCars.pk"
+        ]
+      },
+      "shortDescription": "Find practical car gadgets that make every trip easier without a full interior remodel. Phone holders, chargers, displays, and cabin extras are collecte…",
+      "updatedAt": {
+        "$date": "2026-09-18T20:41:47.081Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5ccf35eb06d36eb2ac1afa"
+      },
+      "slug": "led-headlights-bulbs",
+      "description": "LED headlight bulbs and projector-style lighting upgrades aim for a clearer night beam. Bulbs, fog LEDs, and related headlight pieces live here—including projector assemblies moved into this shelf—so lighting upgrades stay in one place. Check base type and fitment carefully before ordering so the beam pattern matches your housing.",
+      "name": "LED Headlights & Bulbs",
+      "seo": {
+        "metaTitle": "LED Headlights & Bulbs | CrazzyCars.pk",
+        "metaDescription": "Brighter night drives with plug-and-play LED headlight bulbs — cooler running and clearer beam patterns for popular Pakistani cars. COD available.",
+        "metaKeywords": [
+          "led headlights pakistan",
+          "car led bulbs",
+          "h4 led bulb",
+          "headlight upgrade",
+          "led headlights & bulbs",
+          "led headlights & bulbs pakistan",
+          "buy led headlights & bulbs online",
+          "led headlights & bulbs online pakistan",
+          "led headlights & bulbs price pakistan",
+          "led headlights & bulbs karachi",
+          "led headlights & bulbs lahore",
+          "led headlights & bulbs islamabad",
+          "led & lighting accessories",
+          "led headlights & bulbs led & lighting",
+          "car accessories pakistan"
+        ]
+      },
+      "shortDescription": "LED headlight bulbs and projector-style lighting upgrades aim for a clearer night beam. Bulbs, fog LEDs, and related headlight pieces live here—includin…",
+      "updatedAt": {
+        "$date": "2026-09-18T20:41:44.676Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5ccf35eb06d36eb2ac1af9"
+      },
+      "slug": "sos-flasher-led-lights",
+      "description": "SOS and flasher LED lights add high-visibility warning and grille flash patterns. Red, blue, and amber strobe-style lights are grouped here for drivers who want a bold front-end signal look. Shop simple-wiring flashers when you need strong visibility accents for the grille or bumper area.",
+      "name": "SOS & Flasher LED Lights",
+      "seo": {
+        "metaTitle": "SOS & Flasher LED Lights | CrazzyCars.pk",
+        "metaDescription": "Police-style SOS strobes and grille flashers in red, blue and amber — high-visibility warning lights with simple wiring. Cash on Delivery nationwide.",
+        "metaKeywords": [
+          "sos flasher pakistan",
+          "police strobe lights",
+          "grille flasher led",
+          "emergency led lights",
+          "sos & flasher led lights",
+          "sos & flasher led lights pakistan",
+          "buy sos & flasher led lights online",
+          "sos & flasher led lights online pakistan",
+          "sos & flasher led lights price pakistan",
+          "sos & flasher led lights karachi",
+          "sos & flasher led lights lahore",
+          "sos & flasher led lights islamabad",
+          "led & lighting accessories",
+          "sos & flasher led lights led & lighting",
+          "car accessories pakistan"
+        ]
+      },
+      "shortDescription": "SOS and flasher LED lights add high-visibility warning and grille flash patterns. Red, blue, and amber strobe-style lights are grouped here for drivers…",
+      "updatedAt": {
+        "$date": "2026-09-18T20:41:43.781Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5ccf34eb06d36eb2ac1af0"
+      },
+      "slug": "splitters-side-skirts",
+      "description": "Front splitters, canards, and side skirts sharpen the lower body line without changing ride height. ABS kits and single pieces here help create a lower, sportier stance for popular cars on the road in Pakistan. Browse stick-on and bolt-on styles when you want a visible aero look that still works for daily driving.",
+      "name": "Splitters & Side Skirts",
+      "seo": {
+        "metaTitle": "Front Splitters & Side Skirts | CrazzyCars.pk",
+        "metaDescription": "ABS plastic front splitters and side skirt kits that lower your car's visual stance without touching ride height. Easy bolt-on fit, COD nationwide.",
+        "metaKeywords": [
+          "front splitter pakistan",
+          "side skirts pakistan",
+          "car lip kit",
+          "splitter kit online",
+          "splitters & side skirts",
+          "splitters & side skirts pakistan",
+          "buy splitters & side skirts online",
+          "splitters & side skirts online pakistan",
+          "splitters & side skirts price pakistan",
+          "splitters & side skirts karachi",
+          "splitters & side skirts lahore",
+          "splitters & side skirts islamabad",
+          "exterior accessories",
+          "splitters & side skirts exterior",
+          "car accessories pakistan"
+        ]
+      },
+      "shortDescription": "Front splitters, canards, and side skirts sharpen the lower body line without changing ride height. ABS kits and single pieces here help create a lower,…",
+      "updatedAt": {
+        "$date": "2026-09-18T21:34:43.745Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5ccf34eb06d36eb2ac1af1"
+      },
+      "slug": "spoilers-diffusers",
+      "description": "Rear spoilers and diffusers finish the back of the car with a cleaner, more aggressive profile. Trunk lips, roof spoilers, duck tails, and diffuser-style pieces are grouped here for common sedan and hatch fitments. Pick a single spoiler or diffuser accent when you want the rear end to read sharper in traffic and photos.",
+      "name": "Spoilers & Diffusers",
+      "seo": {
+        "metaTitle": "Car Spoilers & Rear Diffusers | CrazzyCars.pk",
+        "metaDescription": "Rear spoilers and diffusers that sharpen your car's rear profile — direct-fit kits for popular Honda & Toyota models. Cash on delivery across Pakistan.",
+        "metaKeywords": [
+          "car spoiler pakistan",
+          "rear diffuser",
+          "trunk spoiler",
+          "car rear styling",
+          "spoilers & diffusers",
+          "spoilers & diffusers pakistan",
+          "buy spoilers & diffusers online",
+          "spoilers & diffusers online pakistan",
+          "spoilers & diffusers price pakistan",
+          "spoilers & diffusers karachi",
+          "spoilers & diffusers lahore",
+          "spoilers & diffusers islamabad",
+          "exterior accessories",
+          "spoilers & diffusers exterior",
+          "car accessories pakistan"
+        ]
+      },
+      "shortDescription": "Rear spoilers and diffusers finish the back of the car with a cleaner, more aggressive profile. Trunk lips, roof spoilers, duck tails, and diffuser-styl…",
+      "updatedAt": {
+        "$date": "2026-09-18T20:41:40.691Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5ccf34eb06d36eb2ac1af5"
+      },
+      "slug": "steering-wheel-covers",
+      "description": "Upgrade grip and cabin style with steering wheel covers for everyday drives in Pakistan. Soft, anti-slip, and carbon-look wraps in this collection dress factory wheels without a full replacement. Choose a snug cover that stays comfortable in heat and city traffic.",
+      "name": "Steering Wheel Covers",
+      "seo": {
+        "metaTitle": "Steering Wheel Covers | CrazzyCars.pk",
+        "metaDescription": "Leather-finish steering wheel covers for better grip and a refreshed cabin look — universal sizing, easy self-fit. Cash on Delivery nationwide.",
+        "metaKeywords": [
+          "steering wheel cover pakistan",
+          "leather steering cover",
+          "car steering grip",
+          "steering wheel covers",
+          "steering wheel covers pakistan",
+          "buy steering wheel covers online",
+          "steering wheel covers online pakistan",
+          "steering wheel covers price pakistan",
+          "steering wheel covers karachi",
+          "steering wheel covers lahore",
+          "steering wheel covers islamabad",
+          "interior accessories",
+          "steering wheel covers interior",
+          "car accessories pakistan",
+          "CrazzyCars"
+        ]
+      },
+      "shortDescription": "Upgrade grip and cabin style with steering wheel covers for everyday drives in Pakistan. Soft, anti-slip, and carbon-look wraps in this collection dress…",
+      "updatedAt": {
+        "$date": "2026-09-18T20:41:42.172Z"
+      }
+    }
+  ],
+  "products": [
+    {
+      "_id": {
+        "$oid": "6a5d224689c0c8d16c691f9b"
+      },
+      "slug": "toyota-corolla-2014-2026-interior-door-handle-carbon-fiber-trims-4pcs",
+      "articleNo": "CC-0001",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1cd8"
+        }
+      ],
+      "metaTitle": "Toyota Corolla 2014-2026 Interior Door Handle Carbon Trims 4PCS | CrazzyCars.pk",
+      "name": "Toyota Corolla 2014-2026 Interior Door Handle Carbon Fiber Trims 4PCS",
+      "seo": {
+        "metaTitle": "Corolla Door Handle Carbon Trims 4PCS 2014–2026 | CrazzyCars",
+        "metaDescription": "Toyota Corolla 2014–2026 interior door handle carbon fiber trims — 4-piece set for all doors. Cash on Delivery nationwide on CrazzyCars.pk.",
+        "metaKeywords": [
+          "toyota corolla",
+          "corolla 2014 2026",
+          "car accessories pakistan",
+          "corolla gli xli grande altis",
+          "interior accessories pakistan",
+          "door handle trims",
+          "4 piece set",
+          "corolla interior",
+          "carbon fiber"
+        ]
+      },
+      "shortDescription": "Toyota Corolla 2014-2026 Interior Door Handle Carbon Fiber Trims — 4 Piece Set. Premium carbon fiber style covers for all 4 interior door pull handles. Peel-and-stick fit for GLi, XLi, Grande & Altis.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Toyota",
+            "model": "Corolla",
+            "yearFrom": 2014,
+            "yearTo": 2026,
+            "bodyStyle": "All",
+            "notes": "Toyota Corolla E170–E210 (2014–2026)"
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d224689c0c8d16c691f9e"
+      },
+      "slug": "toyota-corolla-carbon-fiber-gear-knob-cover-2014-2026",
+      "articleNo": "CC-0003",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1cd8"
+        }
+      ],
+      "metaTitle": "Toyota Corolla Carbon Fiber Gear Knob Cover | CrazzyCars",
+      "name": "Toyota Corolla Carbon Fiber Gear Knob Cover 2014-2026",
+      "seo": {
+        "metaTitle": "Toyota Corolla Carbon Fiber Gear Knob Cover | CrazzyCars",
+        "metaDescription": "Carbon-style ABS gear knob cover for Toyota Corolla 2014–2026. Peel-and-stick; no tools needed.",
+        "metaKeywords": [
+          "toyota corolla",
+          "corolla gear knob",
+          "corolla 2014 2026",
+          "gear knob pakistan",
+          "car gear knob online",
+          "car accessories pakistan",
+          "corolla gli xli grande altis",
+          "interior accessories pakistan",
+          "gear knob cover",
+          "corolla interior"
+        ]
+      },
+      "shortDescription": "Carbon-style ABS gear knob cover for Toyota Corolla 2014–2026. Peel-and-stick over the factory knob in minutes.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Toyota",
+            "model": "Corolla",
+            "yearFrom": 2014,
+            "yearTo": 2026,
+            "bodyStyle": "All",
+            "notes": "Toyota Corolla E170–E210 (2014–2026)",
+            "_id": {
+              "$oid": "6a6e6d0fa753ffe4aff54f76"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d224689c0c8d16c691f9f"
+      },
+      "slug": "toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair",
+      "articleNo": "CC-0004",
+      "compatibleVehicles": [],
+      "metaTitle": "Toyota Corolla 2017-2020 LED Side Mirror | CrazzyCars.pk",
+      "name": "Toyota Corolla 2015-2026 LED Side Mirror Neon Indicator Pair",
+      "seo": {
+        "metaTitle": "Corolla 2015–2026 Neon Side Mirror Indicator | CrazzyCars",
+        "metaDescription": "Toyota Corolla 2015–2026 LED side mirror neon indicator pair — neon style (not sequential). Cash on Delivery nationwide on CrazzyCars.pk.",
+        "metaKeywords": [
+          "toyota corolla",
+          "corolla neon indicator",
+          "side mirror neon",
+          "led mirror indicator",
+          "corolla 2015 2026",
+          "car accessories pakistan",
+          "neon side mirror"
+        ]
+      },
+      "shortDescription": "Toyota Corolla 2015–2026 LED Side Mirror Neon Indicator Pair. Premium neon-style side mirror turn signal upgrade — full pair. Plug-and-play fitment. Cash on Delivery nationwide.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Toyota",
+            "model": "E170–E210",
+            "yearFrom": 2014,
+            "yearTo": 2026,
+            "bodyStyle": "Sedan",
+            "notes": "Premium Toyota Corolla E170/E210 2014-2026 accessories in Pakistan — Grande body kits, side mirror covers, window louvers, LED upgrades. COD available.",
+            "_id": {
+              "$oid": "6aaaf64fb7ba94c5b0fb2846"
+            }
+          }
+        ]
+      },
+      "securityHold": true
+    },
+    {
+      "_id": {
+        "$oid": "6a5d224789c0c8d16c691fa3"
+      },
+      "slug": "toyota-corolla-2015-2024-carbon-fiber-gear-shifter-trim",
+      "articleNo": "CC-0008",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1cd8"
+        }
+      ],
+      "metaTitle": "Toyota Corolla Carbon Gear Shifter Trim | CrazzyCars.pk",
+      "name": "Toyota Corolla 2015-2024 Carbon Fiber Gear Shifter Trim",
+      "seo": {
+        "metaTitle": "Toyota Corolla Carbon Gear Shifter Trim | CrazzyCars.pk",
+        "metaDescription": "Carbon-style gear shifter surround trim for Toyota Corolla 2015–2024. Stick-on ABS interior upgrade.",
+        "metaKeywords": [
+          "toyota corolla",
+          "corolla 2015 2024",
+          "car accessories pakistan",
+          "gear shifter trim",
+          "corolla interior",
+          "carbon fiber"
+        ]
+      },
+      "shortDescription": "Carbon-style ABS gear shifter trim for Toyota Corolla 2015–2024. Stick-on surround upgrade; no drilling.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Toyota",
+            "model": "Corolla",
+            "yearFrom": 2014,
+            "yearTo": 2026,
+            "bodyStyle": "All",
+            "notes": "Toyota Corolla E170–E210 (2014–2026)",
+            "_id": {
+              "$oid": "6a6e6d0fa753ffe4aff54f80"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d224889c0c8d16c691fb0"
+      },
+      "slug": "hand-sewing-top-alcantara-suede-with-glossy-carbon-fiber-steering-wheel-cover",
+      "articleNo": "CC-0020",
+      "compatibleVehicles": [],
+      "metaTitle": "Alcantara + Gloss Carbon Steering Cover | CrazzyCars.pk",
+      "name": "Hand Sewing Top Alcantara / Suede With Glossy Carbon Fiber Steering Wheel Cover",
+      "seo": {
+        "metaTitle": "Alcantara + Gloss Carbon Steering Cover | CrazzyCars.pk",
+        "metaDescription": "Hand-stitched steering cover with glossy carbon-style top/bottom and Alcantara/suede side grips. Universal fit for most steering wheels.",
+        "metaKeywords": [
+          "steering wheel cover",
+          "carbon fiber",
+          "hand sewing",
+          "alcantara",
+          "interior",
+          "glossy",
+          "luxury",
+          "sporty"
+        ]
+      },
+      "shortDescription": "Hand-stitched steering wheel cover: glossy carbon-style at 12 and 6 o’clock, Alcantara/suede grips at 3 and 9. Universal fit for most wheels.",
+      "vehicleCompatibility": {
+        "vehicles": []
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226489c0c8d16c691fb9"
+      },
+      "slug": "toyota-corolla-grande-steering-wheel-trim-in-carbon-fiber-multimedia",
+      "articleNo": "CC-0024",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1cd8"
+        }
+      ],
+      "metaTitle": "Corolla Grande Carbon Multimedia Steering Trim | CrazzyCars",
+      "name": "Toyota Corolla Grande Steering Wheel Trim in Carbon Fiber Multimedia",
+      "seo": {
+        "metaTitle": "Corolla Grande Carbon Multimedia Steering Trim | CrazzyCars",
+        "metaDescription": "Carbon-style multimedia steering wheel trim for Toyota Corolla Grande 2017–2021. Stick-on interior upgrade.",
+        "metaKeywords": [
+          "toyota corolla grande steering",
+          "car accessories pakistan",
+          "steering wheel",
+          "carbon fiber",
+          "multimedia",
+          "interior",
+          "corolla",
+          "grande",
+          "toyota",
+          "trim"
+        ]
+      },
+      "shortDescription": "Carbon-style multimedia steering wheel trim for Toyota Corolla Grande 2017–2021. Seamless cabin upgrade; straightforward install.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Toyota",
+            "model": "Corolla",
+            "yearFrom": 2014,
+            "yearTo": 2026,
+            "bodyStyle": "All",
+            "notes": "Toyota Corolla E170–E210 (2014–2026)",
+            "_id": {
+              "$oid": "6a6e6d10a753ffe4aff54f9a"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226a89c0c8d16c692002"
+      },
+      "slug": "honda-civic-reborn-2006-2011-carbon-gear-shift-panel-cover",
+      "articleNo": "CC-0097",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1cdc"
+        }
+      ],
+      "metaTitle": "Civic Reborn Carbon Gear Shift Panel Cover | CrazzyCars",
+      "name": "Honda Civic Reborn 2006-2011 Carbon Gear Shift Panel Cover",
+      "seo": {
+        "metaTitle": "Civic Reborn Carbon Gear Shift Panel Cover | CrazzyCars",
+        "metaDescription": "Carbon-texture center console gear shift panel cover for Civic Reborn 2006–2011. ABS overlay, peel-and-stick install.",
+        "metaKeywords": [
+          "honda civic reborn",
+          "civic reborn 2006 2011",
+          "car accessories pakistan",
+          "carbon fiber gear shift panel",
+          "honda civic reborn accessories",
+          "carbon fiber interior trim",
+          "civic reborn interior",
+          "civic reborn 2006"
+        ]
+      },
+      "shortDescription": "Carbon-texture center console gear shift panel cover for Honda Civic Reborn 2006–2011. ABS plastic; peel-and-stick, scratch-resistant.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Honda",
+            "model": "Civic",
+            "yearFrom": 2006,
+            "yearTo": 2012,
+            "bodyStyle": "All",
+            "notes": "Honda Civic Reborn (2006–2012)",
+            "_id": {
+              "$oid": "6a6e6d14a753ffe4aff55006"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226b89c0c8d16c692009"
+      },
+      "slug": "universal-car-anti-rust-door-lock-cover-premium-protection-cap",
+      "articleNo": "CC-0104",
+      "compatibleVehicles": [],
+      "metaTitle": "Universal Anti-Rust Door Lock Covers | CrazzyCars.pk",
+      "name": "Universal Car Anti-Rust Door Lock Cover – Premium Protection Cap",
+      "seo": {
+        "metaTitle": "Universal Anti-Rust Door Lock Covers | CrazzyCars.pk",
+        "metaDescription": "Universal anti-rust door lock protection caps. Fit over lock pins to block rust, dust, and wear — compatible with most cars in Pakistan.",
+        "metaKeywords": [
+          "car door lock protection",
+          "anti rust door lock",
+          "universal car accessories",
+          "car accessories pakistan",
+          "door lock cover",
+          "door lock cap",
+          "universal fit"
+        ]
+      },
+      "shortDescription": "Universal anti-rust door lock covers that cap your lock pins against rust, dust, and damage. Compatible with most cars; keeps the lock area cleaner longer.",
+      "vehicleCompatibility": {
+        "vehicles": []
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226c89c0c8d16c692011"
+      },
+      "slug": "honda-civic-x-2016-2021-carbon-fiber-gear-shift-lever-knob-cover-trim-3pc",
+      "articleNo": "CC-0112",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1cde"
+        }
+      ],
+      "metaTitle": "Civic X Gear Shift Lever Trim 3PC 2016–2021 | CrazzyCars",
+      "name": "Honda Civic X 2016-2021 Carbon Gear Shift Knob Trim 3PC",
+      "seo": {
+        "metaTitle": "Civic X Gear Shift Lever Trim 3PC 2016–2021 | CrazzyCars",
+        "metaDescription": "3-piece carbon-texture gear shift lever and knob trim set for Civic X 2016–2021. ABS plastic covers the shifter area; peel-and-stick install.",
+        "metaKeywords": [
+          "honda civic x",
+          "civic x 2016 2021",
+          "car accessories pakistan",
+          "honda civic x accessories",
+          "gear shift lever trim",
+          "civic x carbon fiber",
+          "civic 2016 accessories",
+          "carbon fiber interior"
+        ]
+      },
+      "shortDescription": "3-piece carbon-texture gear shift lever/knob trim for Honda Civic X 2016–2021. ABS plastic set covering the shifter area with peel-and-stick installation.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Honda",
+            "model": "Civic",
+            "yearFrom": 2016,
+            "yearTo": 2021,
+            "bodyStyle": "All",
+            "notes": "Honda Civic X (2016–2021)",
+            "_id": {
+              "$oid": "6a6e6d15a753ffe4aff55022"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226c89c0c8d16c692012"
+      },
+      "slug": "honda-civic-x-2016-2021-carbon-fiber-gear-knob-cover",
+      "articleNo": "CC-0113",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1cde"
+        }
+      ],
+      "metaTitle": "Honda Civic X Carbon Fiber Gear Knob Cover | CrazzyCars",
+      "name": "Honda Civic X 2016-2021 Carbon Fiber Gear Knob Cover",
+      "seo": {
+        "metaTitle": "Honda Civic X Carbon Fiber Gear Knob Cover | CrazzyCars",
+        "metaDescription": "Carbon-texture gear knob cover for Honda Civic X 2016–2021. ABS plastic snaps over the existing knob — Type-R inspired, no tools.",
+        "metaKeywords": [
+          "honda civic x",
+          "civic x gear knob",
+          "civic x 2016 2021",
+          "gear knob pakistan",
+          "car gear knob online",
+          "car accessories pakistan",
+          "honda civic x accessories",
+          "civic x carbon fiber",
+          "civic 2016 accessories",
+          "carbon fiber interior"
+        ]
+      },
+      "shortDescription": "Carbon-texture gear knob cover for Honda Civic X 2016–2021. ABS plastic snaps over the existing knob; Type-R inspired look, no tools needed.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Honda",
+            "model": "Civic",
+            "yearFrom": 2016,
+            "yearTo": 2021,
+            "bodyStyle": "All",
+            "notes": "Honda Civic X (2016–2021)",
+            "_id": {
+              "$oid": "6a6e6d16a753ffe4aff55024"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227089c0c8d16c692041"
+      },
+      "slug": "honda-city-2020-2026-carbon-window-quarter-covers-abs",
+      "articleNo": "CC-0154",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1ce1"
+        }
+      ],
+      "metaTitle": "City 2020–2026 Carbon Window Quarter Covers | CrazzyCars",
+      "name": "Honda City 2020-2026 Carbon Window Quarter Covers",
+      "seo": {
+        "metaTitle": "City 2020–2026 Carbon Window Quarter Covers | CrazzyCars",
+        "metaDescription": "Carbon-style window quarter covers for Honda City 2020–2026. ABS plastic (not fiber), durable OEM-style fit for a sportier rear profile.",
+        "metaKeywords": [
+          "honda city",
+          "city 2020 2026",
+          "car accessories pakistan",
+          "car window quarter cover pakistan",
+          "city accessories pakistan",
+          "city aftermarket parts",
+          "city 2020 accessories",
+          "city 2021 accessories",
+          "city 2022 accessories",
+          "city 2023 accessories"
+        ]
+      },
+      "shortDescription": "Carbon-style window quarter covers for Honda City 2020–2026. Made from ABS plastic (not fiber); durable, flexible, OEM-style rear-quarter fit.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Honda",
+            "model": "City",
+            "yearFrom": 2021,
+            "yearTo": 2026,
+            "bodyStyle": "All",
+            "notes": "Honda City (2021–Present)",
+            "_id": {
+              "$oid": "6a6e6d17a753ffe4aff55054"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227189c0c8d16c69204d"
+      },
+      "slug": "toyota-corolla-e140-2009-2012-carbon-side-mirror-cover",
+      "articleNo": "CC-0165",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43ceb06d36eb2ac1cd7"
+        }
+      ],
+      "metaTitle": "Corolla E140 Carbon Mirror Covers 2009–12 | CrazzyCars",
+      "name": "Toyota Corolla E140 2009–2012 Carbon Style Side Mirror Cover (Pair)",
+      "seo": {
+        "metaTitle": "Corolla E140 Carbon Mirror Covers 2009–12 | CrazzyCars",
+        "metaDescription": "Carbon-style side mirror covers (pair) for Toyota Corolla E140 2009–2012. ABS texture plastic, clip-on OEM-style fit — no tools.",
+        "metaKeywords": [
+          "toyota corolla e140",
+          "corolla e140 side mirror",
+          "corolla e140 2009 2012",
+          "side mirror pakistan",
+          "car side mirror online",
+          "car accessories pakistan",
+          "carbon fiber door handle cover toyota",
+          "carbon fiber mirror cover toyota",
+          "car door handle cover pakistan",
+          "corolla 2009 door handle cover"
+        ]
+      },
+      "shortDescription": "Carbon-style side mirror covers for Toyota Corolla E140 2009–2012. Pair of ABS texture caps; clip-on install, durable, no tools needed.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Toyota",
+            "model": "Corolla",
+            "yearFrom": 2009,
+            "yearTo": 2014,
+            "bodyStyle": "All",
+            "notes": "Toyota Corolla E140 (2009–2014)",
+            "_id": {
+              "$oid": "6a5d2f4e25ec78283a50449b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227189c0c8d16c692053"
+      },
+      "slug": "honda-civic-11th-gen-2022-present-carbon-window-quarter-covers-pair",
+      "articleNo": "CC-0171",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1cdf"
+        }
+      ],
+      "metaTitle": "Civic 11th Gen Carbon Window Quarter Covers | CrazzyCars",
+      "name": "Honda Civic 11th Gen 2022 Carbon Window Quarter Covers",
+      "seo": {
+        "metaTitle": "Civic 11th Gen Carbon Window Quarter Covers | CrazzyCars",
+        "metaDescription": "Carbon-style window quarter covers for Honda Civic 11th Gen 2022–Present. OEM-style fit for a sharper rear-quarter exterior look.",
+        "metaKeywords": [
+          "honda civic 11th gen",
+          "car accessories pakistan",
+          "carbon exterior upgrade civic 11th gen",
+          "civic 11th gen carbon exterior parts",
+          "civic 11th gen accessories pakistan",
+          "car window quarter cover pakistan",
+          "carbon fiber quarter cover honda",
+          "civic 11th gen aftermarket parts",
+          "carbon quarter cover civic 2022",
+          "civic 11th gen car modification"
+        ]
+      },
+      "shortDescription": "Carbon-style window quarter covers for Honda Civic 11th Gen 2022–Present. Precision OEM-style fit to sharpen rear exterior styling.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Honda",
+            "model": "Civic",
+            "yearFrom": 2022,
+            "yearTo": 2026,
+            "bodyStyle": "All",
+            "notes": "Honda Civic 11th Gen (2022–Present)",
+            "_id": {
+              "$oid": "6aaad71491b9504f004be685"
+            }
+          }
+        ]
+      },
+      "securityHold": false
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227289c0c8d16c69205c"
+      },
+      "slug": "honda-civic-reborn-2006-2012-carbon-window-quarter-covers-pair-1",
+      "articleNo": "CC-0177",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5cd43deb06d36eb2ac1cdc"
+        }
+      ],
+      "metaTitle": "Civic Reborn Carbon Window Quarter Covers | CrazzyCars",
+      "name": "Honda Civic Reborn 2006-2012 Carbon Window Quarter Covers",
+      "seo": {
+        "metaTitle": "Civic Reborn Carbon Window Quarter Covers | CrazzyCars",
+        "metaDescription": "Carbon-style window quarter covers for Honda Civic Reborn 2006–2012. ABS texture plastic, OEM-style fit — no drilling.",
+        "metaKeywords": [
+          "honda civic reborn",
+          "civic reborn 2006 2012",
+          "car accessories pakistan",
+          "car window quarter cover pakistan",
+          "carbon fiber quarter cover honda",
+          "car exterior modification pakistan",
+          "civic reborn accessories pakistan",
+          "civic reborn exterior accessories",
+          "civic reborn carbon accessories",
+          "civic reborn aftermarket parts"
+        ]
+      },
+      "shortDescription": "Carbon-style window quarter covers for Honda Civic Reborn 2006–2012. High-quality ABS with OEM-style fit; installs without modification.",
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Honda",
+            "model": "Civic",
+            "yearFrom": 2006,
+            "yearTo": 2012,
+            "bodyStyle": "All",
+            "notes": "Honda Civic Reborn (2006–2012)",
+            "_id": {
+              "$oid": "6a6e6d19a753ffe4aff55080"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227389c0c8d16c692063"
+      },
+      "slug": "deal-5-complete-body-kit-deal-front-splitter-side-skirts-back-bumper-lip",
+      "articleNo": "CC-UNI-EXT-BKT-BTM-GB-BTM",
+      "compatibleVehicles": [],
+      "metaTitle": "Complete Body Kit Front Skirts Rear Lip | CrazzyCars.pk",
+      "name": "Complete Body Kit – Front Splitter Side Skirts Rear Lip",
+      "seo": {
+        "metaTitle": "Complete Body Kit Front Skirts Rear Lip | CrazzyCars.pk",
+        "metaDescription": "Complete body kit deal: front splitter, side skirts (pair), and back bumper lip. Sporty lowered look in one package — three documented pieces only.",
+        "metaKeywords": [
+          "rear bumper lip pakistan",
+          "cheap body kit pakistan",
+          "body kit deal pakistan",
+          "complete body kit deal",
+          "car body kit pakistan",
+          "car modification pakistan",
+          "car accessories pakistan",
+          "front splitter pakistan"
+        ]
+      },
+      "shortDescription": "Complete body kit deal including front splitter, side skirts (pair), and back bumper lip. Aggressive lowered look; package is these three pieces only.",
+      "vehicleCompatibility": {
+        "vehicles": []
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227589c0c8d16c69207f"
+      },
+      "slug": "car-front-bumper-splitter-abs-plastic-3pcs",
+      "articleNo": "CC-0203",
+      "compatibleVehicles": [],
+      "metaTitle": "Batman Style Front Bumper Splitter ABS 3PCS | CrazzyCars",
+      "name": "Batman Style Front Bumper Splitter ABS 3PCS",
+      "seo": {
+        "metaTitle": "Batman Style Front Bumper Splitter ABS 3PCS | CrazzyCars",
+        "metaDescription": "3-piece Batman-style front bumper lip kit in gloss black ABS. Universal fit for most cars; DIY install with included hardware — front lip only.",
+        "metaKeywords": [
+          "abs plastic bumper splitter",
+          "car front bumper splitter",
+          "car front lip pakistan",
+          "car front lip kit",
+          "auto exterior accessories",
+          "aggressive car styling",
+          "car exterior splitter",
+          "car exterior upgrade"
+        ]
+      },
+      "shortDescription": "3-piece Batman-style front bumper splitter in gloss black ABS plastic. Universal fit; installs with included hardware. Front lip kit only — not side skirts or a rear diffuser.",
+      "vehicleCompatibility": {
+        "vehicles": []
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227589c0c8d16c692080"
+      },
+      "slug": "car-rear-bumper-splitter-cut-style-universal",
+      "articleNo": "CC-0204",
+      "compatibleVehicles": [],
+      "metaTitle": "Universal Cut-Style Rear Bumper Splitter Lip | CrazzyCars",
+      "name": "Car Rear Bumper Splitter Cut Style Universal Lip",
+      "seo": {
+        "metaTitle": "Universal Cut-Style Rear Bumper Splitter Lip | CrazzyCars",
+        "metaDescription": "Gloss-black cut-style rear bumper splitter in ABS plastic. Universal fit for popular Pakistani cars; mounts with adhesive tape for a lowered rear look.",
+        "metaKeywords": [
+          "car rear exterior modification",
+          "car rear bumper splitter",
+          "car rear lip pakistan",
+          "car rear lip spoiler",
+          "auto exterior accessories",
+          "aggressive rear styling",
+          "car rear upgrade"
+        ]
+      },
+      "shortDescription": "Universal cut-style rear bumper splitter in durable ABS plastic with a gloss black finish. Adds a lowered, aggressive rear lip look and installs with adhesive tape.",
+      "vehicleCompatibility": {
+        "vehicles": []
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227689c0c8d16c692084"
+      },
+      "slug": "grill-led-police-light-red-blue",
+      "articleNo": "CC-UNI-LGT-POL-4X4R",
+      "compatibleVehicles": [],
+      "metaTitle": "Grill LED Red/Blue Emergency Strobe Light | CrazzyCars",
+      "name": "Grill LED Police Light Red Blue Emergency Strobe",
+      "seo": {
+        "metaTitle": "Grill LED Red/Blue Emergency Strobe Light | CrazzyCars",
+        "metaDescription": "Red and blue grill-mount emergency strobe LED with multiple flash patterns. Front-grill install; configurations include 3x4, 4x4, and 6x4.",
+        "metaKeywords": [
+          "car exterior lighting accessories",
+          "car police warning lights",
+          "car night safety lights",
+          "car grill led lights",
+          "auto exterior lighting",
+          "car emergency lighting",
+          "emergency car lights"
+        ]
+      },
+      "shortDescription": "Red & blue grill LED emergency strobe with multiple flash patterns. Mounts on the front grill; available in 3x4, 4x4, and 6x4 configurations.",
+      "vehicleCompatibility": {
+        "vehicles": []
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227689c0c8d16c69208b"
+      },
+      "slug": "car-rgb-atmosphere-light-interior-footwell-led-lights-4-pcs",
+      "articleNo": "CC-UNI-LGT-RGB-APP",
+      "compatibleVehicles": [],
+      "metaTitle": "RGB Footwell Atmosphere Lights 4PCS | CrazzyCars.pk",
+      "name": "Car RGB Atmosphere Light – Interior Footwell LED Lights 4 PCS",
+      "seo": {
+        "metaTitle": "RGB Footwell Atmosphere Lights 4PCS | CrazzyCars.pk",
+        "metaDescription": "4-piece RGB footwell LED kit with app or remote control. Full color modes plus music sync — universal install for most cars.",
+        "metaKeywords": [
+          "car atmosphere lights pakistan",
+          "car interior upgrade pakistan",
+          "car ambient lights pakistan",
+          "led car interior lights",
+          "app control car lights",
+          "car accessories pakistan",
+          "interior footwell lights",
+          "rgb car lights"
+        ]
+      },
+      "shortDescription": "4-piece RGB footwell atmosphere LED kit with app or remote control. Full color spectrum, music sync mode, and universal fit for most cars.",
+      "vehicleCompatibility": {
+        "vehicles": []
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a633a60d40b29d18ad3ce66"
+      },
+      "name": "Universal Car Eyes Spoiler With Running Brake LED Lights (3Pcs)",
+      "slug": "universal-car-eyes-spoiler-with-running-brake-led-lights-3pcs",
+      "articleNo": "CC-EXT-201",
+      "shortDescription": "Universal Car Eyes Spoiler With Running Brake LED Lights (3Pcs) — premium fitment, direct upgrade part.",
+      "seo": {
+        "metaTitle": "Universal Car Eyes Spoiler With Running | CrazzyCars.pk",
+        "metaDescription": "Buy Universal Car Eyes Spoiler With Running Brake LED Lights (3Pcs) online in Pakistan at CrazzyCars.pk. Universal fitment, eye-shaped design with integrated ru",
+        "metaKeywords": [
+          "brake",
+          "car",
+          "eyes",
+          "running",
+          "spoiler",
+          "universal",
+          "pakistan",
+          "crazzycars.pk"
+        ]
+      },
+      "compatibleVehicles": [],
+      "metaTitle": "Universal Car Eyes Spoiler With Running | CrazzyCars.pk",
+      "vehicleCompatibility": {
+        "vehicles": []
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a71072c3261f3cfd4c75532"
+      },
+      "name": "Toyota Raize 2025 Batman Style Side Mirror Cover",
+      "slug": "toyota-raize-batman-style-side-mirror-cover",
+      "articleNo": "CC-RAI-MIR-BAT",
+      "shortDescription": "Batman-style side mirror covers for Toyota Raize 2019–Present / 2025+. Bold exterior upgrade. COD nationwide.",
+      "seo": {
+        "metaTitle": "Toyota Raize 2025 Batman Style Side Mirror | CrazzyCars",
+        "metaDescription": "Buy Toyota Raize 2025 Batman Style Side Mirror Cover online in Pakistan. Cash on Delivery nationwide at CrazzyCars.pk.",
+        "metaKeywords": [
+          "batman",
+          "side mirror cover",
+          "toyota raize"
+        ]
+      },
+      "metaTitle": "Toyota Raize 2025 Batman Style Side Mirror | CrazzyCars",
+      "compatibleVehicles": [
+        {
+          "$oid": "6a5ea45889c0c8d16c696452"
+        }
+      ],
+      "vehicleCompatibility": {
+        "vehicles": [
+          {
+            "make": "Toyota",
+            "model": "Raize",
+            "yearFrom": 2019,
+            "yearTo": 2026,
+            "bodyStyle": "All",
+            "notes": "Toyota Raize (2019–present)",
+            "_id": {
+              "$oid": "6aa4040af6cce7c024acaf2b"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

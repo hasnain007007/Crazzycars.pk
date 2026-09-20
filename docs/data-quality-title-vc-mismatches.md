@@ -10,5 +10,7 @@
 | **CC-RAI-MIR-BAT** | Title says **2025**; VC / shortDescription **2019–present** | FAQ discloses table/years on page as source of truth | Align title to 2019–present (or 2025+ only if supplier confirms) |
 | **CC-0157** | Title years **2015–2026**; VC table **2014–2026** (Corolla E170) | FAQ discloses “table is source of truth” | Align product `name` / slug / meta years with VC (or confirm 2015+ only with supplier) |
 | **CC-UNI-INT-GKN-TOY** | Title says **universal**; VC has specific Honda/Toyota rows | FAQ discloses use the VC table | Retitle to match VC (drop false “universal”) or clear VC rows if truly universal |
+| **CC-0154** | Title years **2020–2026**; VC **2021–present** (Honda City) | FAQ discloses “table is source of truth” | Align title years with VC (or confirm 2020 start with supplier) |
+| **CC-0024** | Short copy cites Grande **2017–2021**; VC Corolla **2014–2026** | FAQ discloses table + photos as source of truth | Align shortDescription / title years with VC or Grande-specific row |
 
 Do not clear `securityHold` on CC-0004 as part of SEO work.
