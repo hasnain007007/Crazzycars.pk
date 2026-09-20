@@ -1,5 +1,6 @@
 /**
- * Orders list table: compact single-line rows, sticky header, pagination.
+ * Orders list table: Shopify Polaris density, sticky header, pagination.
+ * All columns and bulk actions retained.
  */
 "use client";
 
@@ -23,25 +24,39 @@ function startOfLocalDay(value) {
   return d;
 }
 
-/** Relative day labels for recent dates; no time. */
+/** Shopify-style relative datetime: "Today at 9:17 pm". */
 function formatDate(d) {
   if (!d) return "—";
   try {
     const date = new Date(d);
     if (Number.isNaN(date.getTime())) return "—";
+    const time = date
+      .toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", hour12: true })
+      .toLowerCase();
     const diffDays = Math.round(
       (startOfLocalDay(date).getTime() - startOfLocalDay(new Date()).getTime()) / 86_400_000
     );
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Tomorrow";
-    if (diffDays === -1) return "Yesterday";
+    if (diffDays === 0) return `Today at ${time}`;
+    if (diffDays === -1) return `Yesterday at ${time}`;
+    if (diffDays === 1) return `Tomorrow at ${time}`;
     if (Math.abs(diffDays) <= 4) {
-      return date.toLocaleDateString(undefined, { weekday: "long" });
+      const weekday = date.toLocaleDateString(undefined, { weekday: "long" });
+      return `${weekday} at ${time}`;
     }
-    return date.toLocaleDateString(undefined, { dateStyle: "medium" });
+    return date.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   } catch {
     return "—";
   }
+}
+
+function orderDisplayNumber(n) {
+  const s = String(n || "").trim();
+  if (!s) return "—";
+  return s.startsWith("#") ? s : `#${s}`;
 }
 
 function SortHeader({ label, active, dir, onClick }) {
@@ -49,18 +64,16 @@ function SortHeader({ label, active, dir, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 uppercase tracking-wide hover:opacity-80"
-      style={{ color: "inherit" }}
+      className="inline-flex items-center gap-1 hover:opacity-80"
+      style={{ color: "inherit", background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}
     >
       {label}
-      <span className="text-[10px] opacity-70" aria-hidden>
+      <span style={{ fontSize: 10, opacity: 0.7 }} aria-hidden>
         {active ? (dir === "asc" ? "↑" : "↓") : "↕"}
       </span>
     </button>
   );
 }
-
-const CELL = "px-3 py-2"; // ~44–48px row with single-line content
 
 export function OrdersTable({
   orders,
@@ -76,6 +89,7 @@ export function OrdersTable({
   loading,
   onOrdersChanged,
   searchQuery = "",
+  embedded = false,
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState({});
@@ -158,28 +172,33 @@ export function OrdersTable({
 
   if (!loading && (!orders || !orders.length)) {
     const q = String(searchQuery || "").trim();
-    const trackingHint = /^[A-Za-z]{0,4}\d{8,}$/.test(q.replace(/[\s_-]/g, "")) || /^(GW|PE|PX)/i.test(q);
+    const trackingHint =
+      /^[A-Za-z]{0,4}\d{8,}$/.test(q.replace(/[\s_-]/g, "")) || /^(GW|PE|PX)/i.test(q);
     return (
-      <div
-        className="rounded-xl border border-dashed p-12 text-center"
-        style={{
-          background: "var(--bg-panel)",
-          borderColor: "var(--border-hairline)",
-          color: "var(--text-primary)",
-        }}
-      >
-        <p className="text-sm font-medium">No orders found</p>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
-          {trackingHint
-            ? `No order is linked to tracking “${q}”. Check the CN on the courier label, or open the order and confirm tracking was saved.`
-            : "Try adjusting filters or date range."}
-        </p>
+      <div>
+        <BulkActionBar
+          selectedIds={selectedIds}
+          selectedCount={selectedCount}
+          onClear={clearSelection}
+          onUpdated={onOrdersChanged}
+          getStoreSettings={getStoreSettings}
+        />
+        <div className="op-footer" style={{ borderTop: embedded ? "1px solid var(--p-border)" : undefined }}>
+          <div style={{ width: "100%", textAlign: "center", padding: "40px 16px" }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 550 }}>No orders found</p>
+            <p className="op-muted" style={{ margin: "4px 0 0" }}>
+              {trackingHint
+                ? `No order is linked to tracking “${q}”. Check the CN on the courier label, or open the order and confirm tracking was saved.`
+                : "Try adjusting filters or date range."}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div>
       <BulkActionBar
         selectedIds={selectedIds}
         selectedCount={selectedCount}
@@ -188,355 +207,296 @@ export function OrdersTable({
         getStoreSettings={getStoreSettings}
       />
 
-      <div
-        className="overflow-hidden rounded-xl border shadow-none"
-        style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
-      >
-        <div className="max-h-[min(70vh,720px)] overflow-auto">
-          <table className="min-w-[1260px] w-full text-left text-sm">
-            <thead
-              className="sticky top-0 z-20 border-b text-xs font-semibold uppercase tracking-wide"
-              style={{
-                borderColor: "var(--border-hairline)",
-                background: "color-mix(in srgb, var(--bg-base) 65%, var(--bg-panel))",
-                color: "var(--text-muted)",
-                boxShadow: "0 1px 0 var(--border-hairline)",
-              }}
-            >
-              <tr>
-                <th className={`w-10 ${CELL}`}>
-                  <input
-                    ref={headerRef}
-                    type="checkbox"
-                    checked={allOnPageSelected && pageIds.length > 0}
-                    onChange={toggleAllPage}
-                    onClick={(e) => e.stopPropagation()}
-                    className="h-4 w-4 rounded"
-                    style={{ accentColor: "var(--accent-line)" }}
-                    aria-label="Select all on this page"
-                  />
-                </th>
-                <th className={CELL}>Order #</th>
-                <th className={CELL}>
-                  <SortHeader
-                    label="Date"
-                    active={sortKey === "date"}
-                    dir={sortDir}
-                    onClick={() => onSortChange?.("date")}
-                  />
-                </th>
-                <th className={CELL}>Days pending</th>
-                <th className={CELL}>Customer</th>
-                <th className={CELL}>Location</th>
-                <th className={CELL}>Items</th>
-                <th className={CELL}>
-                  <SortHeader
-                    label="Total"
-                    active={sortKey === "total"}
-                    dir={sortDir}
-                    onClick={() => onSortChange?.("total")}
-                  />
-                </th>
-                <th className={CELL}>Status</th>
-                <th className={CELL}>Customer confirm</th>
-                <th className={CELL}>Courier</th>
-                <th className={`${CELL} text-right`}>Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y" style={{ borderColor: "var(--border-hairline)" }}>
-              {loading
-                ? Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i}>
-                      <td colSpan={12} className={CELL}>
-                        <div
-                          className="h-3.5 animate-pulse rounded"
-                          style={{ background: "var(--border-hairline)" }}
+      <div className="op-table-wrap">
+        <table className="op-table">
+          <thead>
+            <tr>
+              <th style={{ width: 40 }}>
+                <input
+                  ref={headerRef}
+                  type="checkbox"
+                  checked={allOnPageSelected && pageIds.length > 0}
+                  onChange={toggleAllPage}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Select all on this page"
+                />
+              </th>
+              <th>Order</th>
+              <th>
+                <SortHeader
+                  label="Date"
+                  active={sortKey === "date"}
+                  dir={sortDir}
+                  onClick={() => onSortChange?.("date")}
+                />
+              </th>
+              <th>Days pending</th>
+              <th>Customer</th>
+              <th>Location</th>
+              <th>Items</th>
+              <th>
+                <SortHeader
+                  label="Total"
+                  active={sortKey === "total"}
+                  dir={sortDir}
+                  onClick={() => onSortChange?.("total")}
+                />
+              </th>
+              <th>Payment status</th>
+              <th>Fulfillment status</th>
+              <th>Customer confirm</th>
+              <th>Delivery status</th>
+              <th style={{ textAlign: "right" }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i}>
+                    <td colSpan={13}>
+                      <div
+                        style={{
+                          height: 12,
+                          borderRadius: 4,
+                          background: "#ebebeb",
+                          animation: "pulse 1.2s ease-in-out infinite",
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ))
+              : (orders || []).map((o) => {
+                  const isRowSel = !!selected[o.id];
+                  const age = pendingAgeBadge(o.createdAt, o.orderStatus, o.paymentStatus);
+                  const customer = formatCustomerListMeta({
+                    name: o.customerName,
+                    email: o.customerEmail,
+                    phone: o.customerPhone,
+                  });
+                  const phoneInline = formatPhoneDisplay(customer.phone || o.customerPhone);
+                  const tags = Array.isArray(o.tags) ? o.tags : [];
+                  const stale =
+                    o.isStale || isStaleOrder(o.orderStatus, o.paymentStatus, o.createdAt);
+                  const courierLabel = o.liveStatus
+                    ? o.liveStatus
+                    : o.trackingNumber
+                      ? "Tracking added"
+                      : "—";
+                  return (
+                    <tr
+                      key={o.id}
+                      role="link"
+                      tabIndex={0}
+                      className={isRowSel ? "is-selected" : undefined}
+                      onClick={() => router.push(`/orders/${o.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          router.push(`/orders/${o.id}`);
+                        }
+                      }}
+                    >
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isRowSel}
+                          onChange={(e) => toggleRow(o.id, e)}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Select order ${o.orderNumber}`}
                         />
                       </td>
-                    </tr>
-                  ))
-                : (orders || []).map((o) => {
-                    const isRowSel = !!selected[o.id];
-                    const age = pendingAgeBadge(o.createdAt, o.orderStatus, o.paymentStatus);
-                    const customer = formatCustomerListMeta({
-                      name: o.customerName,
-                      email: o.customerEmail,
-                      phone: o.customerPhone,
-                    });
-                    const phoneInline = formatPhoneDisplay(customer.phone || o.customerPhone);
-                    const tags = Array.isArray(o.tags) ? o.tags : [];
-                    const stale =
-                      o.isStale || isStaleOrder(o.orderStatus, o.paymentStatus, o.createdAt);
-                    const courierLabel = o.liveStatus
-                      ? o.liveStatus
-                      : o.trackingNumber
-                        ? "Not refreshed"
-                        : "—";
-                    return (
-                      <tr
-                        key={o.id}
-                        role="link"
-                        tabIndex={0}
-                        onClick={() => router.push(`/orders/${o.id}`)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            router.push(`/orders/${o.id}`);
-                          }
-                        }}
-                        className="cursor-pointer"
-                        style={{
-                          height: 46,
-                          background: isRowSel
-                            ? "color-mix(in srgb, var(--accent-line) 8%, var(--bg-panel))"
-                            : undefined,
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isRowSel) {
-                            e.currentTarget.style.background =
-                              "color-mix(in srgb, var(--bg-base) 55%, var(--bg-panel))";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = isRowSel
-                            ? "color-mix(in srgb, var(--accent-line) 8%, var(--bg-panel))"
-                            : "";
-                        }}
-                      >
-                        <td className={CELL} onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={isRowSel}
-                            onChange={(e) => toggleRow(o.id, e)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="h-4 w-4 rounded"
-                            style={{ accentColor: "var(--accent-line)" }}
-                            aria-label={`Select order ${o.orderNumber}`}
-                          />
-                        </td>
-                        <td
-                          className={`${CELL} max-w-[9rem] font-mono text-xs font-medium`}
-                          style={{ color: "var(--text-primary)" }}
-                        >
-                          <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
-                            <span className="truncate">{o.orderNumber}</span>
-                            {tags.slice(0, 1).map((t) => (
-                              <span
-                                key={t}
-                                className="inline-flex shrink-0 rounded px-1 py-0 text-[9px] font-semibold"
-                                style={{
-                                  background:
-                                    "color-mix(in srgb, var(--accent-money) 12%, transparent)",
-                                  color: "var(--accent-money)",
-                                }}
-                                title={tags.join(", ")}
-                              >
-                                {t}
-                                {tags.length > 1 ? ` +${tags.length - 1}` : ""}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td
-                          className={`${CELL} whitespace-nowrap text-xs`}
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          {formatDate(o.createdAt)}
-                        </td>
-                        <td className={`${CELL} whitespace-nowrap`}>
-                          <div className="inline-flex items-center gap-1">
-                            {age ? (
-                              <span
-                                title={`Age bracket ${age.bracket} days`}
-                                className="inline-flex rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
-                                style={age.style}
-                              >
-                                {age.label}
-                              </span>
-                            ) : (
-                              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                                —
-                              </span>
-                            )}
-                            {stale ? (
-                              <span
-                                className="inline-flex rounded-md px-1.5 py-0.5 text-[10px] font-bold tabular-nums"
-                                style={{
-                                  background:
-                                    "color-mix(in srgb, var(--accent-attention) 16%, transparent)",
-                                  color: "var(--accent-attention)",
-                                }}
-                                title="Pending + unpaid for 10+ days — needs human triage"
-                              >
-                                Stale
-                              </span>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className={`${CELL} max-w-[14rem]`}>
-                          <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
-                            <span
-                              className="truncate font-medium"
-                              style={{ color: "var(--text-primary)" }}
-                              title={
-                                customer.isGuest
-                                  ? `Guest checkout${phoneInline ? ` · ${phoneInline}` : ""}`
-                                  : customer.primary
-                              }
-                            >
-                              {customer.primary}
-                            </span>
-                            {phoneInline ? (
-                              <span
-                                className="shrink-0 text-[11px] tabular-nums"
-                                style={{ color: "var(--text-muted)" }}
-                              >
-                                · {phoneInline}
-                              </span>
-                            ) : null}
-                            {o.isRepeatToday ? (
-                              <span
-                                className="inline-flex shrink-0 rounded px-1 py-0 text-[10px] font-bold tabular-nums"
-                                style={{
-                                  background:
-                                    "color-mix(in srgb, var(--accent-attention) 14%, transparent)",
-                                  color: "var(--accent-attention)",
-                                }}
-                                title={`${o.ordersLast24h || 0} orders from this phone in the last 24h`}
-                              >
-                                {o.ordersLast24h || 2} today
-                              </span>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className={`${CELL} max-w-[8rem]`}>
-                          <span
-                            className="block truncate text-xs whitespace-nowrap"
-                            style={{ color: "var(--text-muted)" }}
-                            title={
-                              o.shippingCity
-                                ? `${o.shippingCity}${o.shippingCountry ? `, ${o.shippingCountry}` : ""}`
-                                : undefined
-                            }
-                          >
-                            {o.shippingCity || "—"}
-                          </span>
-                        </td>
-                        <td
-                          className={`${CELL} whitespace-nowrap text-xs`}
-                          style={{ color: "var(--text-primary)" }}
-                        >
-                          {o.lineCount}·{o.itemCount}
-                        </td>
-                        <td
-                          className={`${CELL} whitespace-nowrap font-medium tabular-nums`}
-                          style={{ color: "var(--text-primary)" }}
-                        >
-                          {formatMoney(o.total)}
-                        </td>
-                        <td className={CELL} onClick={(e) => e.stopPropagation()}>
-                          <OrderStatusBadges order={o} />
-                        </td>
-                        <td className={`${CELL} whitespace-nowrap`}>
-                          <CustomerConfirmBadge order={o} compact />
-                        </td>
-                        <td className={`${CELL} max-w-[7rem]`}>
-                          <span
-                            className="block truncate text-[11px] whitespace-nowrap"
-                            style={{
-                              color: o.liveStatus ? "var(--accent-line)" : "var(--text-muted)",
-                              fontWeight: o.liveStatus ? 600 : 400,
-                            }}
-                            title={
-                              o.liveStatus
-                                ? [o.liveStatus, o.liveLocation].filter(Boolean).join(" · ")
-                                : o.trackingNumber
-                                  ? "Courier not refreshed"
-                                  : "No tracking booked yet"
-                            }
-                          >
-                            {courierLabel}
-                          </span>
-                        </td>
-                        <td className={`${CELL} text-right`} onClick={(e) => e.stopPropagation()}>
+                      <td>
+                        <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
                           <Link
                             href={`/orders/${o.id}`}
-                            className="inline-flex min-h-[28px] min-w-[44px] items-center justify-center rounded-md border px-2.5 py-1 text-xs font-semibold"
-                            style={{
-                              borderColor: "var(--border-hairline)",
-                              background: "var(--bg-panel)",
-                              color: "var(--accent-line)",
-                            }}
+                            className="op-order-link"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            View
+                            {orderDisplayNumber(o.orderNumber)}
                           </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-            </tbody>
-          </table>
-        </div>
+                          {tags.slice(0, 1).map((t) => (
+                            <span
+                              key={t}
+                              className="op-pill"
+                              style={{
+                                background: "#E4E5E7",
+                                color: "#4A4A4A",
+                                maxWidth: "5rem",
+                                height: 18,
+                                fontSize: 11,
+                              }}
+                              title={tags.join(", ")}
+                            >
+                              {t}
+                              {tags.length > 1 ? ` +${tags.length - 1}` : ""}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="op-muted whitespace-nowrap">{formatDate(o.createdAt)}</span>
+                      </td>
+                      <td>
+                        <div className="inline-flex items-center gap-1">
+                          {age ? (
+                            <span
+                              title={`Age bracket ${age.bracket} days`}
+                              className="op-pill"
+                              style={age.style}
+                            >
+                              {age.label}
+                            </span>
+                          ) : (
+                            <span className="op-muted">—</span>
+                          )}
+                          {stale ? (
+                            <span
+                              className="op-pill"
+                              style={{ background: "#FED3D1", color: "#8E1F0B" }}
+                              title="Pending + unpaid for 10+ days — needs human triage"
+                            >
+                              Stale
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td style={{ maxWidth: "14rem" }}>
+                        <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
+                          <span
+                            style={{ fontWeight: 550, overflow: "hidden", textOverflow: "ellipsis" }}
+                            title={
+                              customer.isGuest
+                                ? `Guest checkout${phoneInline ? ` · ${phoneInline}` : ""}`
+                                : customer.primary
+                            }
+                          >
+                            {customer.primary}
+                          </span>
+                          {phoneInline ? (
+                            <span className="op-muted" style={{ fontSize: 12, flexShrink: 0 }}>
+                              · {phoneInline}
+                            </span>
+                          ) : null}
+                          {o.isRepeatToday ? (
+                            <span
+                              className="op-pill"
+                              style={{ background: "#FED3D1", color: "#8E1F0B", height: 18, fontSize: 11 }}
+                              title={`${o.ordersLast24h || 0} orders from this phone in the last 24h`}
+                            >
+                              {o.ordersLast24h || 2} today
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td style={{ maxWidth: "8rem" }}>
+                        <span
+                          className="op-muted block truncate whitespace-nowrap"
+                          title={
+                            o.shippingCity
+                              ? `${o.shippingCity}${o.shippingCountry ? `, ${o.shippingCountry}` : ""}`
+                              : undefined
+                          }
+                        >
+                          {o.shippingCity || "—"}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap">
+                        {o.itemCount === 1 ? "1 item" : `${o.itemCount || 0} items`}
+                      </td>
+                      <td className="whitespace-nowrap" style={{ fontWeight: 550, fontVariantNumeric: "tabular-nums" }}>
+                        {formatMoney(o.total)}
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <OrderStatusBadges order={o} mode="payment" />
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <OrderStatusBadges order={o} mode="fulfillment" />
+                      </td>
+                      <td className="whitespace-nowrap">
+                        <CustomerConfirmBadge order={o} compact />
+                      </td>
+                      <td style={{ maxWidth: "9rem" }}>
+                        <span
+                          className="op-pill"
+                          style={{
+                            background: o.liveStatus || o.trackingNumber ? "#E4E5E7" : "transparent",
+                            color: o.liveStatus ? "#0C5132" : "#616161",
+                            maxWidth: "8.5rem",
+                          }}
+                          title={
+                            o.liveStatus
+                              ? [o.liveStatus, o.liveLocation].filter(Boolean).join(" · ")
+                              : o.trackingNumber
+                                ? "Courier not refreshed"
+                                : "No tracking booked yet"
+                          }
+                        >
+                          {courierLabel}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+                        <Link href={`/orders/${o.id}`} className="op-btn op-btn-secondary" style={{ minHeight: 28, padding: "4px 10px" }}>
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+          </tbody>
+        </table>
+      </div>
 
-        <div
-          className="flex flex-col gap-3 border-t px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
-          style={{ borderColor: "var(--border-hairline)" }}
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <span style={{ color: "var(--text-muted)" }}>
-              Showing{" "}
-              <span className="tabular-nums font-medium" style={{ color: "var(--text-primary)" }}>
-                {rangeFrom}–{rangeTo}
-              </span>{" "}
-              of{" "}
-              <span className="tabular-nums font-medium" style={{ color: "var(--text-primary)" }}>
-                {total}
-              </span>
+      <div className="op-footer">
+        <div className="flex flex-wrap items-center gap-3">
+          <span>
+            Showing{" "}
+            <span style={{ fontWeight: 550, color: "var(--p-text)", fontVariantNumeric: "tabular-nums" }}>
+              {rangeFrom}–{rangeTo}
+            </span>{" "}
+            of{" "}
+            <span style={{ fontWeight: 550, color: "var(--p-text)", fontVariantNumeric: "tabular-nums" }}>
+              {total}
             </span>
-            <label className="inline-flex items-center gap-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-              Rows
-              <select
-                value={limit}
-                onChange={(e) => onLimitChange?.(Number(e.target.value))}
-                className="rounded-md border px-2 py-1 text-xs font-semibold"
-                style={{
-                  borderColor: "var(--border-hairline)",
-                  background: "var(--bg-base)",
-                  color: "var(--text-primary)",
-                }}
-                aria-label="Rows per page"
-              >
-                {[25, 50, 100].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={page <= 1 || loading}
-              onClick={() => onPageChange(page - 1)}
-              className="rounded-md border px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
-              style={{ borderColor: "var(--border-hairline)", color: "var(--text-primary)" }}
+          </span>
+          <label className="inline-flex items-center gap-1.5" style={{ fontSize: 12 }}>
+            Rows
+            <select
+              value={limit}
+              onChange={(e) => onLimitChange?.(Number(e.target.value))}
+              className="op-select"
+              style={{ minHeight: 28, padding: "2px 8px" }}
+              aria-label="Rows per page"
             >
-              Previous
-            </button>
-            <span className="tabular-nums text-xs" style={{ color: "var(--text-muted)" }}>
-              Page {page} of {Math.max(1, totalPages)}
-            </span>
-            <button
-              type="button"
-              disabled={page >= totalPages || loading || totalPages <= 1}
-              onClick={() => onPageChange(page + 1)}
-              className="rounded-md border px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
-              style={{ borderColor: "var(--border-hairline)", color: "var(--text-primary)" }}
-            >
-              Next
-            </button>
-          </div>
+              {[25, 50, 100].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={page <= 1 || loading}
+            onClick={() => onPageChange(page - 1)}
+            className="op-btn op-btn-secondary"
+            style={{ minHeight: 28, padding: "4px 10px" }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: 12, fontVariantNumeric: "tabular-nums" }}>
+            Page {page} of {Math.max(1, totalPages)}
+          </span>
+          <button
+            type="button"
+            disabled={page >= totalPages || loading || totalPages <= 1}
+            onClick={() => onPageChange(page + 1)}
+            className="op-btn op-btn-secondary"
+            style={{ minHeight: 28, padding: "4px 10px" }}
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

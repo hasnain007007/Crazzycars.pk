@@ -20,29 +20,34 @@ export const FULFILLMENT_STATUSES = [
 /** Statuses that mean “still needs fulfillment work”. */
 export const UNFULFILLED_STATUSES = ["pending", "confirmed", "processing", "packed"];
 
-/** Shopify Polaris-ish badge tone tokens (light admin UI). */
+/** Shopify Polaris badge tone tokens (match Admin Orders pills). */
 const SHOPIFY_TONES = {
   // Unfulfilled — yellow / attention
-  attention: { background: "#FFF5D6", color: "#5C4400" },
+  attention: { background: "#FFEA8A", color: "#4F4700", dot: "#8A7C00" },
   // Confirmed / in progress — blue / info
-  info: { background: "#E0F0FF", color: "#003A5A" },
+  info: { background: "#E0F0FF", color: "#003A5A", dot: "#005BD3" },
   // Processing — stronger blue
-  infoStrong: { background: "#C8E1FF", color: "#002B4D" },
+  infoStrong: { background: "#C8E1FF", color: "#002B4D", dot: "#005BD3" },
   // Packed — indigo
-  indigo: { background: "#E4E5FF", color: "#2C2E6B" },
+  indigo: { background: "#E4E5FF", color: "#2C2E6B", dot: "#5C6AC4" },
   // Shipped / fulfilled-in-transit — teal
-  teal: { background: "#D0F5F0", color: "#085041" },
+  teal: { background: "#A4E8F2", color: "#003D4D", dot: "#0096B3" },
   // Delivered / paid — green / success
-  success: { background: "#CDFEE1", color: "#0C5132" },
-  // Partial payment / caution
-  warning: { background: "#FFEBDB", color: "#7A2E0B" },
+  success: { background: "#AEE9D1", color: "#0C5132", dot: "#29845A" },
+  // Partial / payment pending — peach
+  warning: { background: "#FFD6A4", color: "#5E4200", dot: "#B98900" },
   // Returned / disputed
-  caution: { background: "#FFE6C5", color: "#6B3A00" },
+  caution: { background: "#FFC96B", color: "#5E4200", dot: "#B98900" },
   // Unpaid / cancelled / failed — critical
-  critical: { background: "#FEE9E8", color: "#8E1F0B" },
-  // Refunded / neutral
-  neutral: { background: "#E4E5E7", color: "#202223" },
+  critical: { background: "#FED3D1", color: "#8E1F0B", dot: "#D72C0D" },
+  // Refunded / fulfilled / neutral
+  neutral: { background: "#E4E5E7", color: "#4A4A4A", dot: "#8A8A8A" },
 };
+
+/** Dot color for Polaris-style status pills. */
+export function badgeDotColor(style) {
+  return style?.dot || "#8A8A8A";
+}
 
 export function fulfillmentLabel(status) {
   const s = String(status || "").toLowerCase();
@@ -91,8 +96,8 @@ export function fulfillmentBadgeStyle(status) {
 export function paymentBadgeStyle(status) {
   const s = String(status || "").toLowerCase();
   if (s === "paid") return SHOPIFY_TONES.success;
-  if (s === "partial") return SHOPIFY_TONES.warning;
-  if (s === "unpaid" || s === "failed") return SHOPIFY_TONES.critical;
+  if (s === "partial" || s === "unpaid") return SHOPIFY_TONES.warning;
+  if (s === "failed") return SHOPIFY_TONES.critical;
   if (s === "refunded") return SHOPIFY_TONES.neutral;
   return SHOPIFY_TONES.neutral;
 }

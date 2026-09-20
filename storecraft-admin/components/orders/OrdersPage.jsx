@@ -1,16 +1,18 @@
 /**
  * Orders list page client: stats, saved views, filters, table, export.
+ * Visual chrome matches Shopify Admin Orders (Polaris); all features kept.
  */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { OrderFilters } from "./OrderFilters";
 import { OrdersTable } from "./OrdersTable";
-import { InstrumentStatCard } from "@/components/ui/InstrumentStatCard";
 import { formatAdminPrice } from "@/lib/currency";
 import { looksLikeTrackingId } from "@/lib/orderSearch";
+import "@/app/orders-polaris.css";
 
 function formatMoney(n) {
   return formatAdminPrice(n);
@@ -25,6 +27,24 @@ const SAVED_VIEWS = [
   { key: "needsAttention", label: "Needs Attention" },
   { key: "today", label: "Today" },
 ];
+
+function StatCard({ label, value, hint, tone }) {
+  const valueClass =
+    tone === "line"
+      ? "op-stat-value is-success"
+      : tone === "attention"
+        ? "op-stat-value is-critical"
+        : tone === "money"
+          ? "op-stat-value is-money"
+          : "op-stat-value";
+  return (
+    <div className="op-stat">
+      <p className="op-stat-label">{label}</p>
+      <p className={valueClass}>{value}</p>
+      {hint ? <p className="op-stat-hint">{hint}</p> : null}
+    </div>
+  );
+}
 
 export function OrdersPage() {
   const router = useRouter();
@@ -275,94 +295,74 @@ export function OrdersPage() {
   }
 
   return (
-    <div
-      className="orders-instrument -mx-4 -my-5 min-h-[calc(100vh-3.5rem)] space-y-6 px-4 py-5 md:-mx-6 md:-my-6 md:px-6 md:py-6"
-      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="orders-polaris -mx-4 -my-5 min-h-[calc(100vh-3.5rem)] space-y-4 px-4 py-5 md:-mx-6 md:-my-6 md:px-6 md:py-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-            Orders
-          </h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
-            {total} orders match filters
-          </p>
+          <h1 className="op-title">Orders</h1>
+          <p className="op-subtitle">{total.toLocaleString()} orders match filters</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            disabled={liveSyncBusy}
-            onClick={() => void syncAllLiveOrders()}
-            className="shrink-0 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-sm disabled:opacity-60"
-            style={{
-              background: liveSyncBusy ? "var(--text-muted)" : "#008060",
-              minWidth: "14rem",
-            }}
-            title="Refresh PostEx + Run Courier tracking for all in-transit orders and auto-set Delivered / Returned"
+            onClick={exportCsv}
+            className="op-btn op-btn-secondary"
           >
-            {liveSyncProgress || "↻ Update all live orders"}
+            Export
           </button>
           <button
             type="button"
-            onClick={exportCsv}
-            className="shrink-0 rounded-lg border px-4 py-2 text-sm font-semibold shadow-none hover:opacity-90"
-            style={{
-              background: "var(--bg-panel)",
-              borderColor: "var(--border-hairline)",
-              color: "var(--text-primary)",
-            }}
+            disabled={liveSyncBusy}
+            onClick={() => void syncAllLiveOrders()}
+            className="op-btn op-btn-secondary"
+            title="Refresh PostEx + Run Courier tracking for all in-transit orders and auto-set Delivered / Returned"
           >
-            Export CSV
+            {liveSyncProgress || "Update live orders"}
           </button>
+          <Link href="/orders/new" className="op-btn op-btn-primary">
+            Create order
+          </Link>
         </div>
       </div>
 
       {liveSyncSummary ? (
-        <div
-          className="rounded-xl border px-4 py-3"
-          style={{
-            background: "color-mix(in srgb, #008060 8%, var(--bg-panel))",
-            borderColor: "var(--border-hairline)",
-          }}
-        >
+        <div className="op-banner">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#008060" }}>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 650, color: "#008060" }}>
                 Live sync results
               </p>
-              <p className="mt-1 text-sm" style={{ color: "var(--text-primary)" }}>
+              <p className="op-muted" style={{ margin: "4px 0 0" }}>
                 Checked {liveSyncSummary.scanned ?? 0} · refreshed {liveSyncSummary.okCount ?? 0} ·
                 status synced {liveSyncSummary.syncedCount ?? 0} · failed {liveSyncSummary.failCount ?? 0}
               </p>
             </div>
             <button
               type="button"
-              className="text-xs font-semibold hover:underline"
-              style={{ color: "#008060" }}
+              className="op-btn op-btn-secondary"
+              style={{ minHeight: 28, padding: "4px 10px" }}
               onClick={() => setLiveSyncSummary(null)}
             >
               Dismiss
             </button>
           </div>
           {(liveSyncSummary.results || []).some((r) => r.orderStatusSynced) ? (
-            <ul className="mt-2 max-h-40 space-y-1 overflow-auto text-xs" style={{ color: "var(--text-primary)" }}>
+            <ul
+              className="mt-2 max-h-40 space-y-1 overflow-auto"
+              style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 12, color: "var(--p-text)" }}
+            >
               {(liveSyncSummary.results || [])
                 .filter((r) => r.orderStatusSynced)
                 .slice(0, 40)
                 .map((r) => {
                   const to = String(r.orderStatusSynced?.to || r.orderStatusSynced || "").toLowerCase();
-                  const color = to === "returned" ? "#E67E22" : to === "delivered" ? "#008060" : "#008060";
+                  const color = to === "returned" ? "#E67E22" : "#008060";
                   return (
-                  <li key={r.orderId}>
-                    <span className="font-bold">{r.orderNumber}</span>
-                    {" → "}
-                    <span style={{ color }}>
-                      {r.orderStatusSynced.to || r.orderStatusSynced}
-                    </span>
-                    {r.status ? (
-                      <span style={{ color: "var(--text-muted)" }}> ({r.status})</span>
-                    ) : null}
-                  </li>
+                    <li key={r.orderId}>
+                      <span style={{ fontWeight: 650 }}>{r.orderNumber}</span>
+                      {" → "}
+                      <span style={{ color }}>{r.orderStatusSynced.to || r.orderStatusSynced}</span>
+                      {r.status ? <span className="op-muted"> ({r.status})</span> : null}
+                    </li>
                   );
                 })}
             </ul>
@@ -371,187 +371,135 @@ export function OrdersPage() {
       ) : null}
 
       {productId ? (
-        <div
-          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3"
-          style={{
-            background: "color-mix(in srgb, var(--accent-line) 8%, var(--bg-panel))",
-            borderColor: "var(--border-hairline)",
-          }}
-        >
+        <div className="op-banner flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-              Filtered by product
-            </p>
-            <p className="truncate text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            <p className="op-stat-label">Filtered by product</p>
+            <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 550 }}>
               {productFilter?.name || "Selected product"}
               {productFilter?.articleNo ? (
-                <span className="ml-2 font-normal" style={{ color: "var(--text-muted)" }}>
+                <span className="op-muted" style={{ marginLeft: 8, fontWeight: 400 }}>
                   ({productFilter.articleNo})
                 </span>
               ) : null}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a
-              href={`/catalog/products/${productId}`}
-              className="rounded-lg border px-3 py-1.5 text-xs font-semibold hover:opacity-90"
-              style={{
-                background: "var(--bg-panel)",
-                borderColor: "var(--border-hairline)",
-                color: "var(--text-primary)",
-              }}
-            >
+            <a href={`/catalog/products/${productId}`} className="op-btn op-btn-secondary">
               Open product
             </a>
-            <button
-              type="button"
-              onClick={clearProductFilter}
-              className="rounded-lg border px-3 py-1.5 text-xs font-semibold hover:opacity-90"
-              style={{
-                background: "var(--bg-panel)",
-                borderColor: "var(--border-hairline)",
-                color: "var(--text-primary)",
-              }}
-            >
+            <button type="button" onClick={clearProductFilter} className="op-btn op-btn-secondary">
               Clear product filter
             </button>
           </div>
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
-        <InstrumentStatCard label="Total orders" value={stats.totalOrders} />
-        <InstrumentStatCard label="Pending" value={stats.pending} />
-        <InstrumentStatCard label="Processing" value={stats.processing} />
-        <InstrumentStatCard
+      <div className="op-stats">
+        <StatCard label="Orders" value={stats.totalOrders} />
+        <StatCard label="Pending" value={stats.pending} />
+        <StatCard label="Processing" value={stats.processing} />
+        <StatCard
           label="Delivery ratio"
           value={stats.deliveryRatio != null ? `${stats.deliveryRatio}%` : "—"}
           tone="line"
-          hint={`${stats.delivered || 0} delivered · of settled`}
+          hint={`${stats.delivered || 0} delivered of settled`}
         />
-        <InstrumentStatCard
+        <StatCard
           label="Return ratio"
           value={stats.returnRatio != null ? `${stats.returnRatio}%` : "—"}
           tone="attention"
-          hint={`${stats.returned || 0} returned · of settled`}
+          hint={`${stats.returned || 0} returned of settled`}
         />
-        <InstrumentStatCard
+        <StatCard
           label="Pending value at risk"
           value={formatMoney(stats.pendingValueAtRisk || 0)}
           tone="attention"
-          money
           hint="Pending + unpaid order totals"
         />
-        <InstrumentStatCard
-          label="Today's revenue"
-          value={formatMoney(stats.todayRevenue)}
-          tone="money"
-          money
-        />
+        <StatCard label="Today's revenue" value={formatMoney(stats.todayRevenue)} tone="money" />
       </div>
 
       {(stats.courierSettled || 0) > 0 ? (
-        <div
-          className="rounded-xl border px-4 py-3"
-          style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
-        >
+        <div className="op-banner">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
-              Courier portion (all-time settled)
-            </p>
-            <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-              {stats.delivered || 0} delivered · {stats.returned || 0} returned · {stats.courierSettled} settled
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 550 }}>Courier portion (all-time settled)</p>
+            <p className="op-muted" style={{ margin: 0, fontSize: 11 }}>
+              {stats.delivered || 0} delivered · {stats.returned || 0} returned · {stats.courierSettled}{" "}
+              settled
             </p>
           </div>
-          <div
-            className="mt-2 h-2.5 w-full overflow-hidden rounded-full"
-            style={{ background: "color-mix(in srgb, var(--text-muted) 12%, transparent)" }}
-          >
+          <div className="op-courier-bar" style={{ marginTop: 8 }}>
             <div className="flex h-full w-full">
               <div
                 className="h-full"
-                style={{
-                  width: `${stats.deliveryRatio || 0}%`,
-                  background: "#008060",
-                }}
+                style={{ width: `${stats.deliveryRatio || 0}%`, background: "#008060" }}
               />
               <div
                 className="h-full"
-                style={{
-                  width: `${stats.returnRatio || 0}%`,
-                  background: "#E67E22",
-                }}
+                style={{ width: `${stats.returnRatio || 0}%`, background: "#E67E22" }}
               />
             </div>
           </div>
         </div>
       ) : null}
 
-      <div
-        className="flex flex-wrap gap-1 rounded-xl border p-1.5"
-        style={{ background: "var(--bg-panel)", borderColor: "var(--border-hairline)" }}
-        role="tablist"
-        aria-label="Saved views"
-      >
-        {SAVED_VIEWS.map((v) => {
-          const active = view === v.key;
-          const count = views[v.key] ?? 0;
-          return (
-            <button
-              key={v.key}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => selectView(v.key)}
-              className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
-              style={
-                active
-                  ? {
-                      background: "color-mix(in srgb, var(--accent-line) 14%, transparent)",
-                      color: "var(--accent-line)",
-                    }
-                  : { color: "var(--text-muted)" }
-              }
-            >
-              {v.label}
-              <span className="ml-1.5 tabular-nums opacity-80">({count})</span>
-            </button>
-          );
-        })}
+      <div className="op-card">
+        <div className="op-card-pad">
+          <div className="op-tabs" role="tablist" aria-label="Saved views">
+            {SAVED_VIEWS.map((v) => {
+              const active = view === v.key;
+              const count = views[v.key] ?? 0;
+              return (
+                <button
+                  key={v.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => selectView(v.key)}
+                  className="op-tab"
+                >
+                  {v.label}
+                  <span className="op-tab-count">{count.toLocaleString()}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <OrderFilters
+            search={search}
+            onSearchChange={setSearch}
+            status={status}
+            onStatusChange={onStatusChange}
+            paymentStatus={paymentStatus}
+            onPaymentStatusChange={onPaymentStatusChange}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
+            tag={tag}
+            onTagChange={setTag}
+            customerConfirm={customerConfirm}
+            onCustomerConfirmChange={onCustomerConfirmChange}
+          />
+        </div>
+
+        <OrdersTable
+          orders={orders}
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          limit={limit}
+          onPageChange={setPage}
+          onLimitChange={onLimitChange}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSortChange={onSortChange}
+          loading={loading}
+          onOrdersChanged={load}
+          searchQuery={debouncedSearch}
+          embedded
+        />
       </div>
-
-      <OrderFilters
-        search={search}
-        onSearchChange={setSearch}
-        status={status}
-        onStatusChange={onStatusChange}
-        paymentStatus={paymentStatus}
-        onPaymentStatusChange={onPaymentStatusChange}
-        dateFrom={dateFrom}
-        dateTo={dateTo}
-        onDateFromChange={setDateFrom}
-        onDateToChange={setDateTo}
-        tag={tag}
-        onTagChange={setTag}
-        customerConfirm={customerConfirm}
-        onCustomerConfirmChange={onCustomerConfirmChange}
-      />
-
-      <OrdersTable
-        orders={orders}
-        page={page}
-        totalPages={totalPages}
-        total={total}
-        limit={limit}
-        onPageChange={setPage}
-        onLimitChange={onLimitChange}
-        sortKey={sortKey}
-        sortDir={sortDir}
-        onSortChange={onSortChange}
-        loading={loading}
-        onOrdersChanged={load}
-        searchQuery={debouncedSearch}
-      />
     </div>
   );
 }

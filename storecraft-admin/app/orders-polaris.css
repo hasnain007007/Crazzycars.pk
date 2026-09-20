@@ -1,0 +1,370 @@
+/**
+ * Shopify Admin–inspired Orders list (Polaris density).
+ * Scoped under .orders-polaris — does not remove features, only visual chrome.
+ */
+.orders-polaris {
+  --p-bg: #f1f1f1;
+  --p-surface: #ffffff;
+  --p-border: #e3e3e3;
+  --p-border-hover: #c9cccf;
+  --p-text: #303030;
+  --p-text-sub: #616161;
+  --p-text-disabled: #8c9196;
+  --p-primary: #303030;
+  --p-interactive: #005bd3;
+  --p-success: #29845a;
+  --p-critical: #8e1f0b;
+  --p-warning-bg: #ffea8a;
+  --p-warning-text: #4f4700;
+  --p-pending-bg: #ffd6a4;
+  --p-pending-text: #5e4200;
+  --p-neutral-bg: #e4e5e7;
+  --p-neutral-text: #4a4a4a;
+  --p-selected: #f2f7fe;
+  --p-hover: #f7f7f7;
+  --p-radius: 8px;
+  --p-radius-sm: 6px;
+  --p-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  font-family: var(--p-font);
+  color: var(--p-text);
+  background: var(--p-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.orders-polaris * {
+  box-sizing: border-box;
+}
+
+.orders-polaris .op-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 24px;
+  letter-spacing: -0.2px;
+  color: var(--p-text);
+}
+
+.orders-polaris .op-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--p-text-sub);
+}
+
+.orders-polaris .op-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: var(--p-radius-sm);
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 16px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.orders-polaris .op-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.orders-polaris .op-btn-primary {
+  background: var(--p-primary);
+  color: #fff;
+  border-color: var(--p-primary);
+}
+
+.orders-polaris .op-btn-primary:hover:not(:disabled) {
+  background: #1a1a1a;
+}
+
+.orders-polaris .op-btn-secondary {
+  background: var(--p-surface);
+  color: var(--p-text);
+  border-color: var(--p-border-hover);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+.orders-polaris .op-btn-secondary:hover:not(:disabled) {
+  background: var(--p-hover);
+}
+
+.orders-polaris .op-btn-success {
+  background: #008060;
+  color: #fff;
+  border-color: #008060;
+}
+
+.orders-polaris .op-btn-success:hover:not(:disabled) {
+  background: #006e52;
+}
+
+.orders-polaris .op-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.orders-polaris .op-stat {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  padding: 12px 14px;
+  min-height: 76px;
+}
+
+.orders-polaris .op-stat-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 16px;
+  color: var(--p-text-sub);
+}
+
+.orders-polaris .op-stat-value {
+  margin: 6px 0 0;
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 24px;
+  letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-text);
+}
+
+.orders-polaris .op-stat-value.is-success {
+  color: var(--p-success);
+}
+.orders-polaris .op-stat-value.is-critical {
+  color: var(--p-critical);
+}
+.orders-polaris .op-stat-value.is-money {
+  color: #8a6116;
+}
+
+.orders-polaris .op-stat-hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-text-disabled);
+}
+
+.orders-polaris .op-card {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.orders-polaris .op-card-pad {
+  padding: 12px 12px 0;
+}
+
+.orders-polaris .op-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  background: #f7f7f7;
+  border-radius: var(--p-radius);
+}
+
+.orders-polaris .op-tab {
+  min-height: 28px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: var(--p-radius-sm);
+  background: transparent;
+  color: var(--p-text-sub);
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.orders-polaris .op-tab[aria-selected="true"] {
+  background: var(--p-surface);
+  color: var(--p-text);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.orders-polaris .op-tab-count {
+  margin-left: 4px;
+  color: var(--p-text-disabled);
+  font-variant-numeric: tabular-nums;
+}
+
+.orders-polaris .op-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 12px 0;
+}
+
+.orders-polaris .op-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.orders-polaris .op-field-label {
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 16px;
+  color: var(--p-text-sub);
+}
+
+.orders-polaris .op-input,
+.orders-polaris .op-select {
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid var(--p-border-hover);
+  border-radius: var(--p-radius-sm);
+  background: var(--p-surface);
+  color: var(--p-text);
+  font-size: 13px;
+  line-height: 20px;
+  outline: none;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+.orders-polaris .op-input:focus,
+.orders-polaris .op-select:focus {
+  border-color: var(--p-interactive);
+  box-shadow: 0 0 0 1px var(--p-interactive);
+}
+
+.orders-polaris .op-search {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.orders-polaris .op-table-wrap {
+  overflow: auto;
+  max-height: min(70vh, 720px);
+}
+
+.orders-polaris .op-table {
+  width: 100%;
+  min-width: 1280px;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.orders-polaris .op-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 36px;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--p-text-sub);
+  background: #f7f7f7;
+  border-bottom: 1px solid var(--p-border);
+  white-space: nowrap;
+}
+
+.orders-polaris .op-table tbody td {
+  height: 44px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--p-border);
+  vertical-align: middle;
+  color: var(--p-text);
+}
+
+.orders-polaris .op-table tbody tr {
+  background: var(--p-surface);
+  cursor: pointer;
+}
+
+.orders-polaris .op-table tbody tr:hover {
+  background: var(--p-hover);
+}
+
+.orders-polaris .op-table tbody tr.is-selected {
+  background: var(--p-selected);
+}
+
+.orders-polaris .op-order-link {
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--p-interactive);
+  text-decoration: none;
+}
+
+.orders-polaris .op-order-link:hover {
+  text-decoration: underline;
+}
+
+.orders-polaris .op-muted {
+  color: var(--p-text-sub);
+  font-size: 13px;
+}
+
+/* Pills used on Orders list + Order detail — not scoped to page wrapper */
+.op-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 9.5rem;
+  height: 20px;
+  padding: 0 8px 0 6px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+}
+
+.op-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.orders-polaris .op-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--p-border);
+  font-size: 13px;
+  color: var(--p-text-sub);
+}
+
+.orders-polaris .op-banner {
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  background: var(--p-surface);
+  padding: 12px 14px;
+}
+
+.orders-polaris .op-courier-bar {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #ebebeb;
+}
+
+.orders-polaris input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #005bd3;
+}

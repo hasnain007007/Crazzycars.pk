@@ -5,6 +5,7 @@
 "use client";
 
 import {
+  badgeDotColor,
   customerConfirmBadgeStyle,
   customerConfirmKind,
   customerConfirmLabel,
@@ -31,15 +32,18 @@ export function CustomerConfirmBadge({ order, compact = false }) {
           ? "Customer cancelled via WhatsApp No link"
           : "No customer Yes/No — cancelled or refunded by staff";
 
+  const style = customerConfirmBadgeStyle(kind);
+  if (kind === "na") {
+    return (
+      <span className="op-muted" title={title}>
+        —
+      </span>
+    );
+  }
+
   return (
-    <span
-      className={[
-        "inline-flex whitespace-nowrap rounded-md px-2 py-0.5 font-semibold",
-        compact ? "text-[11px]" : "text-xs",
-      ].join(" ")}
-      style={customerConfirmBadgeStyle(kind)}
-      title={title}
-    >
+    <span className="op-pill" style={{ background: style.background, color: style.color }} title={title}>
+      <span className="op-pill-dot" style={{ background: badgeDotColor(style) }} aria-hidden />
       {label}
     </span>
   );
