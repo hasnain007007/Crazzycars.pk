@@ -1,6 +1,7 @@
 /**
  * POST /api/finance/settlements/upload
- * Accepts PostEx CPR PDF, Run Courier remittance PDF, or screenshot image(s).
+ * Accepts PostEx CPR PDFs, CPR_Transactions CSV/Excel, Run Courier sheets, screenshots.
+ * Multiple CPR PDFs → one settlement batch each.
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -10,14 +11,13 @@ import { logActivity } from "@/lib/auth";
 import { requestIp } from "@/lib/requestIp";
 import CourierSettlementBatch from "@/lib/models/CourierSettlementBatch.model";
 import CourierSettlementLine from "@/lib/models/CourierSettlementLine.model";
-import { parseCourierRemittanceFiles } from "@/lib/parseCourierRemittance";
+import { parseCourierRemittance } from "@/lib/parseCourierRemittance";
 import { enrichLinesWithMatches } from "@/lib/matchSettlementLine";
 import { isRemittanceImage } from "@/lib/extractScreenshotText";
 import { isRemittanceSpreadsheet } from "@/lib/parseRemittanceSpreadsheet";
 
 export const runtime = "nodejs";
-/** OCR / large sheets can take a while */
-export const maxDuration = 120;
+export const maxDuration = 180;
 
 function collectUploadFiles(formData) {
   const out = [];
@@ -39,6 +39,99 @@ function isAllowedUpload(file) {
   return false;
 }
 
+async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) {
+  const existing = await CourierSettlementBatch.findOne({ cprNumber: parsed.cprNumber }).lean();
+  if (existing) {
+    return {
+      ok: false,
+      conflict: true,
+      cprNumber: parsed.cprNumber,
+      batchId: String(existing._id),
+      error: `Sheet ${parsed.cprNumber} was already uploaded.`,
+    };
+  }
+
+  const enriched = await enrichLinesWithMatches(parsed.lines || []);
+  const matchedCount = enriched.filter(
+    (l) => l.matchStatus === "matched" || l.matchStatus === "manual"
+  ).length;
+  const unmatchedCount = enriched.filter((l) => l.matchStatus === "unmatched").length;
+
+  const batch = await CourierSettlementBatch.create({
+    cprNumber: parsed.cprNumber,
+    cprDate: parsed.cprDate,
+    courier: parsed.courier || "PostEx",
+    filename: String(filename || "").slice(0, 200),
+    deliveredCount: parsed.deliveredCount,
+    returnedCount: parsed.returnedCount,
+    codTotal: parsed.codTotal,
+    shippingCharges: parsed.shippingCharges,
+    gst: parsed.gst,
+    deduction4pct: parsed.deduction4pct,
+    netTotal: parsed.netTotal,
+    status: "draft",
+    uploadedBy: adminName,
+    lineCount: enriched.length,
+    matchedCount,
+    unmatchedCount,
+  });
+
+  if (enriched.length) {
+    await CourierSettlementLine.insertMany(
+      enriched.map((l) => ({
+        batchId: batch._id,
+        trackingNumber: l.trackingNumber,
+        status: l.status,
+        codAmount: l.codAmount,
+        shippingCharges: l.shippingCharges,
+        gst: l.gst,
+        deduction4pct: l.deduction4pct,
+        netAmount: l.netAmount,
+        originCity: l.originCity,
+        destinationCity: l.destinationCity,
+        weightKg: l.weightKg,
+        bookingDate: l.bookingDate,
+        deliveryReturnDate: l.deliveryReturnDate,
+        orderId: l.orderId || null,
+        orderNumber: l.orderNumber || "",
+        matchStatus: l.matchStatus,
+        productCogs: l.productCogs,
+        lineProfit: l.lineProfit,
+        returnReceivedStatus: "pending",
+      }))
+    );
+  }
+
+  await logActivity({
+    user: user?.id || user?._id,
+    userName: adminName,
+    action: "finance.cpr_upload",
+    resource: "CourierSettlementBatch",
+    resourceId: String(batch._id),
+    details: {
+      cprNumber: parsed.cprNumber,
+      courier: parsed.courier,
+      source: parsed.source || "pdf",
+      lines: enriched.length,
+      matched: matchedCount,
+    },
+    type: "create",
+    ip,
+  });
+
+  return {
+    ok: true,
+    batchId: String(batch._id),
+    cprNumber: parsed.cprNumber,
+    courier: parsed.courier,
+    source: parsed.source || "pdf",
+    lineCount: enriched.length,
+    matchedCount,
+    unmatchedCount,
+    netTotal: parsed.netTotal,
+  };
+}
+
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
@@ -50,7 +143,10 @@ export async function POST(request) {
     const rawFiles = collectUploadFiles(formData);
     if (!rawFiles.length) {
       return NextResponse.json(
-        { success: false, error: "Missing file. Drop a PDF, Excel/CSV, or Run Courier screenshot." },
+        {
+          success: false,
+          error: "Missing file. Drop PostEx CPR PDF(s), CPR_Transactions CSV, Excel, or screenshots.",
+        },
         { status: 400 }
       );
     }
@@ -61,7 +157,7 @@ export async function POST(request) {
         return NextResponse.json(
           {
             success: false,
-            error: `Unsupported file “${file.name || "upload"}”. Use PDF, Excel (.xlsx/.xls), CSV, PNG, JPG, or WEBP.`,
+            error: `Unsupported file “${file.name || "upload"}”. Use PostEx CPR PDF, CPR_Transactions CSV/Excel, or PNG/JPG.`,
           },
           { status: 400 }
         );
@@ -85,113 +181,62 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Empty file." }, { status: 400 });
     }
 
-    let parsed;
-    try {
-      parsed = await parseCourierRemittanceFiles(files);
-    } catch (err) {
-      return NextResponse.json(
-        { success: false, error: err.message || "Could not parse remittance upload." },
-        { status: 400 }
-      );
+    const adminName = user?.name || user?.email || "Admin";
+    const ip = requestIp(request);
+    const results = [];
+    const errors = [];
+
+    // Each CPR PDF / sheet becomes its own settlement batch (do not merge different CPR numbers)
+    for (const f of files) {
+      try {
+        const parsed = await parseCourierRemittance(f.buffer, f);
+        // Screenshots without unique CPR: allow merge-style id from parser
+        const created = await createBatchFromParsed(parsed, {
+          filename: f.filename,
+          adminName,
+          user,
+          ip,
+        });
+        if (created.ok) results.push(created);
+        else errors.push(created);
+      } catch (err) {
+        errors.push({
+          ok: false,
+          filename: f.filename,
+          error: err.message || "Parse failed",
+        });
+      }
     }
 
-    const existing = await CourierSettlementBatch.findOne({ cprNumber: parsed.cprNumber }).lean();
-    if (existing) {
+    if (!results.length) {
+      const first = errors[0];
       return NextResponse.json(
         {
           success: false,
-          error: `Sheet ${parsed.cprNumber} was already uploaded.`,
-          batchId: String(existing._id),
+          error: first?.error || "Could not parse remittance upload.",
+          errors,
         },
-        { status: 409 }
+        { status: first?.conflict ? 409 : 400 }
       );
     }
 
-    const enriched = await enrichLinesWithMatches(parsed.lines);
-    const matchedCount = enriched.filter(
-      (l) => l.matchStatus === "matched" || l.matchStatus === "manual"
-    ).length;
-    const unmatchedCount = enriched.filter((l) => l.matchStatus === "unmatched").length;
-
-    const adminName = user?.name || user?.email || "Admin";
-    const filenameLabel =
-      files.length === 1
-        ? files[0].filename
-        : `${files.length} screenshots (${files.map((f) => f.filename).join(", ")})`.slice(0, 200);
-
-    const batch = await CourierSettlementBatch.create({
-      cprNumber: parsed.cprNumber,
-      cprDate: parsed.cprDate,
-      courier: parsed.courier || "PostEx",
-      filename: filenameLabel,
-      deliveredCount: parsed.deliveredCount,
-      returnedCount: parsed.returnedCount,
-      codTotal: parsed.codTotal,
-      shippingCharges: parsed.shippingCharges,
-      gst: parsed.gst,
-      deduction4pct: parsed.deduction4pct,
-      netTotal: parsed.netTotal,
-      status: "draft",
-      uploadedBy: adminName,
-      lineCount: enriched.length,
-      matchedCount,
-      unmatchedCount,
-    });
-
-    if (enriched.length) {
-      await CourierSettlementLine.insertMany(
-        enriched.map((l) => ({
-          batchId: batch._id,
-          trackingNumber: l.trackingNumber,
-          status: l.status,
-          codAmount: l.codAmount,
-          shippingCharges: l.shippingCharges,
-          gst: l.gst,
-          deduction4pct: l.deduction4pct,
-          netAmount: l.netAmount,
-          originCity: l.originCity,
-          destinationCity: l.destinationCity,
-          weightKg: l.weightKg,
-          bookingDate: l.bookingDate,
-          deliveryReturnDate: l.deliveryReturnDate,
-          orderId: l.orderId || null,
-          orderNumber: l.orderNumber || "",
-          matchStatus: l.matchStatus,
-          productCogs: l.productCogs,
-          lineProfit: l.lineProfit,
-          returnReceivedStatus: "pending",
-        }))
-      );
-    }
-
-    await logActivity({
-      user: user?.id || user?._id,
-      userName: adminName,
-      action: "finance.cpr_upload",
-      resource: "CourierSettlementBatch",
-      resourceId: String(batch._id),
-      details: {
-        cprNumber: parsed.cprNumber,
-        courier: parsed.courier,
-        source: parsed.source || "pdf",
-        files: files.length,
-        lines: enriched.length,
-        matched: matchedCount,
-      },
-      type: "create",
-      ip: requestIp(request),
-    });
+    const totalMatched = results.reduce((s, r) => s + (r.matchedCount || 0), 0);
+    const totalLines = results.reduce((s, r) => s + (r.lineCount || 0), 0);
 
     return NextResponse.json({
       success: true,
-      batchId: String(batch._id),
-      cprNumber: parsed.cprNumber,
-      courier: parsed.courier,
-      source: parsed.source || "pdf",
-      lineCount: enriched.length,
-      matchedCount,
-      unmatchedCount,
-      netTotal: parsed.netTotal,
+      batchId: results[0].batchId,
+      batchIds: results.map((r) => r.batchId),
+      cprNumber: results[0].cprNumber,
+      batches: results,
+      errors: errors.length ? errors : undefined,
+      lineCount: totalLines,
+      matchedCount: totalMatched,
+      unmatchedCount: results.reduce((s, r) => s + (r.unmatchedCount || 0), 0),
+      netTotal: results.reduce((s, r) => s + (Number(r.netTotal) || 0), 0),
+      source: results[0].source,
+      courier: results[0].courier,
+      count: results.length,
     });
   } catch (e) {
     console.error("CPR upload failed:", e);

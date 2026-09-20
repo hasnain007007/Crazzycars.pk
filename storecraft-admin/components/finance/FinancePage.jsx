@@ -115,15 +115,22 @@ export function FinancePage() {
         toast.error(json.error || "Upload failed.");
         return;
       }
+      const count = json.count || json.batchIds?.length || 1;
       const src =
         json.source === "screenshot"
           ? "screenshot"
           : json.source === "excel"
-            ? "Excel"
+            ? "Excel/CSV"
             : "PDF";
       toast.success(
-        `Uploaded ${json.cprNumber} (${src}): ${json.matchedCount}/${json.lineCount} matched`
+        count > 1
+          ? `Uploaded ${count} settlements (${src}): ${json.matchedCount}/${json.lineCount} lines matched`
+          : `Uploaded ${json.cprNumber} (${src}): ${json.matchedCount}/${json.lineCount} matched`
       );
+      if (json.errors?.length) {
+        toast.error(`${json.errors.length} file(s) skipped — see details in console.`);
+        console.warn("Settlement upload skips", json.errors);
+      }
       await load();
       if (json.batchId) {
         window.location.href = `/finance/settlements/${json.batchId}`;
@@ -221,10 +228,10 @@ export function FinancePage() {
           Drag &amp; drop files here
         </p>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          PostEx CPR PDF · Run Courier Excel (.xlsx / .xls / CSV) · screenshots (PNG / JPG)
+          PostEx CPR PDF · CPR_Transactions CSV/Excel · Run Courier sheet · screenshots
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          Auto-matches order # + tracking · opens Delivered / Returns checklist
+          Tip: use PostEx “CPR Transactions” CSV (TRACKING_NUMBER column) or drop multiple CPR PDFs at once
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#1d6fb8] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#185a96]">
