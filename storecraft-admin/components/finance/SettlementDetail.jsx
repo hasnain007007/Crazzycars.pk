@@ -442,7 +442,7 @@ export function SettlementDetail({ batchId }) {
             {formatMoney(batch.profitTotal)}
           </p>
           <p className="mt-1 text-[11px] text-slate-500">
-            Net − product cost ({formatMoney(batch.productCogsTotal)})
+            After cutting product prices ({formatMoney(batch.productCogsTotal)})
           </p>
         </div>
       </div>
@@ -465,7 +465,7 @@ export function SettlementDetail({ batchId }) {
             <span className="font-semibold tabular-nums">{formatMoney(batch.deduction4pct)}</span>
           </div>
           <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
-            <span className="text-slate-500">Product cost (matched)</span>
+            <span className="text-slate-500">Product prices cut</span>
             <span className="font-semibold tabular-nums">{formatMoney(batch.productCogsTotal)}</span>
           </div>
           <div className="flex justify-between gap-2 border-b border-slate-100 py-1.5 dark:border-slate-800">
@@ -489,8 +489,8 @@ export function SettlementDetail({ batchId }) {
           </div>
         </div>
         <p className="mt-2 text-[11px] text-slate-400">
-          Remittance net already includes return fees. Profit = remittance net − matched product
-          cost. Post marks matched Delivered orders Paid + Delivered.
+          Profit = matched delivered remittance − product prices (merchant cost if set, otherwise
+          sale/order price). Return fees are already inside CPR net.
         </p>
       </div>
 

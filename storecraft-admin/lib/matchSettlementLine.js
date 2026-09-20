@@ -146,6 +146,7 @@ export function mergeOrderRefsByTracking(lines, refMap) {
 
 /**
  * Batch-level COGS / return fees / profit from enriched lines + optional CPR net.
+ * Profit = sum of matched Delivered (line net − product prices/costs), not full CPR net.
  */
 export function computeSettlementProfitTotals(enriched, batchNetTotal = null) {
   const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
@@ -160,6 +161,9 @@ export function computeSettlementProfitTotals(enriched, batchNetTotal = null) {
   const matchedLineProfit = round2(
     matchedDelivered.reduce((s, l) => s + (Number(l.lineProfit) || 0), 0)
   );
+  const matchedNet = round2(
+    matchedDelivered.reduce((s, l) => s + (Number(l.netAmount) || 0), 0)
+  );
   const returnFeesTotal = round2(
     (enriched || [])
       .filter((l) => l.status === "Return")
@@ -169,22 +173,23 @@ export function computeSettlementProfitTotals(enriched, batchNetTotal = null) {
         return s + (Number(l.shippingCharges) || 0) + (Number(l.gst) || 0);
       }, 0)
   );
-  const net =
-    batchNetTotal != null && Number.isFinite(Number(batchNetTotal))
-      ? Number(batchNetTotal)
-      : round2(
-          matchedDelivered.reduce((s, l) => s + (Number(l.netAmount) || 0), 0)
-        );
-  // Authoritative: CPR net (already nets return fees) − matched product cost
-  const profitTotal = round2(net - productCogsTotal);
+  void batchNetTotal;
+  // Cut product prices/costs from matched remittance only
+  const profitTotal = matchedLineProfit;
   return {
     productCogsTotal,
     returnFeesTotal,
     matchedLineProfit,
+    matchedNet,
     profitTotal,
   };
 }
 
+/**
+ * Amount to cut from remittance for profit.
+ * Prefer merchant unitCost / costPerItem; if unset, use actual product price
+ * (order unitPrice → salePrice → regularPrice).
+ */
 export async function computeOrderCogs(order, costByProduct = null) {
   let map = costByProduct;
   if (!map) {
@@ -194,23 +199,40 @@ export async function computeOrderCogs(order, costByProduct = null) {
     map = new Map();
     if (ids.length) {
       const products = await Product.find({ _id: { $in: ids } })
-        .select("pricing.costPerItem")
+        .select("pricing.costPerItem pricing.salePrice pricing.regularPrice")
         .lean();
       for (const p of products) {
-        map.set(String(p._id), Number(p.pricing?.costPerItem) || 0);
+        map.set(String(p._id), {
+          cost: Number(p.pricing?.costPerItem) || 0,
+          sale: Number(p.pricing?.salePrice) || 0,
+          regular: Number(p.pricing?.regularPrice) || 0,
+        });
       }
     }
   }
-  let cost = 0;
+  let total = 0;
   for (const it of order?.items || []) {
     const qty = Math.max(1, Number(it.quantity) || 1);
-    let unitCost = Number(it.unitCost);
-    if (!Number.isFinite(unitCost) || unitCost <= 0) {
-      unitCost = it.productId ? map.get(String(it.productId)) || 0 : 0;
+    const meta = it.productId ? map.get(String(it.productId)) : null;
+    const catalog =
+      meta && typeof meta === "object" && ("cost" in meta || "sale" in meta)
+        ? meta
+        : { cost: Number(meta) || 0, sale: 0, regular: 0 };
+
+    let unit = Number(it.unitCost);
+    if (!Number.isFinite(unit) || unit <= 0) unit = catalog.cost || 0;
+    // No merchant cost on file → cut the actual product selling price
+    if (!Number.isFinite(unit) || unit <= 0) {
+      unit =
+        Number(it.unitPrice) ||
+        Number(it.price) ||
+        catalog.sale ||
+        catalog.regular ||
+        0;
     }
-    cost += Math.max(0, unitCost) * qty;
+    total += Math.max(0, unit) * qty;
   }
-  return Math.round(cost * 100) / 100;
+  return Math.round(total * 100) / 100;
 }
 
 /**
@@ -329,10 +351,14 @@ export async function enrichLinesWithMatches(lines) {
   const costByProduct = new Map();
   if (productIds.size) {
     const products = await Product.find({ _id: { $in: [...productIds] } })
-      .select("pricing.costPerItem")
+      .select("pricing.costPerItem pricing.salePrice pricing.regularPrice")
       .lean();
     for (const p of products) {
-      costByProduct.set(String(p._id), Number(p.pricing?.costPerItem) || 0);
+      costByProduct.set(String(p._id), {
+        cost: Number(p.pricing?.costPerItem) || 0,
+        sale: Number(p.pricing?.salePrice) || 0,
+        regular: Number(p.pricing?.regularPrice) || 0,
+      });
     }
   }
 
