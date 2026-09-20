@@ -43,6 +43,15 @@ const courierSettlementLineSchema = new mongoose.Schema(
     },
     productCogs: { type: Number, default: 0 },
     lineProfit: { type: Number, default: 0 },
+    /** Manual checklist: did we physically receive the returned parcel? */
+    returnReceivedStatus: {
+      type: String,
+      enum: ["pending", "received", "not_received"],
+      default: "pending",
+      index: true,
+    },
+    returnReceivedAt: { type: Date, default: null },
+    returnReceivedBy: { type: String, default: "", trim: true },
   },
   { timestamps: true }
 );

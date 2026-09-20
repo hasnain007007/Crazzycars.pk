@@ -1,6 +1,6 @@
 /**
  * PATCH /api/finance/settlements/[id]/lines/[lineId]
- * Body: { orderId } | { matchStatus: "ignored" | "unmatched" }
+ * Body: { orderId } | { matchStatus } | { returnReceivedStatus }
  */
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
@@ -11,6 +11,8 @@ import CourierSettlementBatch from "@/lib/models/CourierSettlementBatch.model";
 import CourierSettlementLine from "@/lib/models/CourierSettlementLine.model";
 import Order from "@/lib/models/Order.model";
 import { computeOrderCogs } from "@/lib/matchSettlementLine";
+
+const RETURN_STATUSES = new Set(["pending", "received", "not_received"]);
 
 async function refreshBatchCounts(batchId) {
   const lines = await CourierSettlementLine.find({ batchId }).select("matchStatus").lean();
@@ -45,12 +47,6 @@ export async function PATCH(request, { params }) {
     if (!batch) {
       return NextResponse.json({ success: false, error: "Batch not found." }, { status: 404 });
     }
-    if (batch.status === "posted") {
-      return NextResponse.json(
-        { success: false, error: "Posted batches cannot be edited. Void first if needed." },
-        { status: 400 }
-      );
-    }
 
     const line = await CourierSettlementLine.findOne({ _id: lineId, batchId: batch._id });
     if (!line) {
@@ -58,6 +54,47 @@ export async function PATCH(request, { params }) {
     }
 
     const body = await request.json().catch(() => ({}));
+    const adminName = user?.name || user?.email || "Admin";
+
+    // Return checklist can be updated even after the batch is posted
+    if (body.returnReceivedStatus != null) {
+      const next = String(body.returnReceivedStatus || "").trim().toLowerCase();
+      if (!RETURN_STATUSES.has(next)) {
+        return NextResponse.json(
+          { success: false, error: "returnReceivedStatus must be pending, received, or not_received." },
+          { status: 400 }
+        );
+      }
+      if (line.status !== "Return") {
+        return NextResponse.json(
+          { success: false, error: "Only Return lines have a received-back checklist." },
+          { status: 400 }
+        );
+      }
+      line.returnReceivedStatus = next;
+      line.returnReceivedAt = next === "pending" ? null : new Date();
+      line.returnReceivedBy = next === "pending" ? "" : adminName;
+      await line.save();
+      return NextResponse.json({
+        success: true,
+        line: {
+          id: String(line._id),
+          returnReceivedStatus: line.returnReceivedStatus,
+          returnReceivedAt: line.returnReceivedAt,
+          returnReceivedBy: line.returnReceivedBy,
+        },
+      });
+    }
+
+    if (batch.status === "posted") {
+      return NextResponse.json(
+        { success: false, error: "Posted batches cannot edit matches. Void first if needed." },
+        { status: 400 }
+      );
+    }
+    if (batch.status === "void") {
+      return NextResponse.json({ success: false, error: "Batch is void." }, { status: 400 });
+    }
 
     if (body.matchStatus === "ignored") {
       line.matchStatus = "ignored";
@@ -91,7 +128,7 @@ export async function PATCH(request, { params }) {
         line.status === "Delivered" ? Math.round((net - productCogs) * 100) / 100 : 0;
     } else {
       return NextResponse.json(
-        { success: false, error: "Provide orderId or matchStatus." },
+        { success: false, error: "Provide orderId, matchStatus, or returnReceivedStatus." },
         { status: 400 }
       );
     }
@@ -108,6 +145,7 @@ export async function PATCH(request, { params }) {
         orderNumber: line.orderNumber,
         productCogs: line.productCogs,
         lineProfit: line.lineProfit,
+        returnReceivedStatus: line.returnReceivedStatus,
       },
     });
   } catch (e) {

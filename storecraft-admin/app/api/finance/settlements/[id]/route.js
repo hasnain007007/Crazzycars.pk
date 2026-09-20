@@ -73,6 +73,9 @@ export async function GET(request, { params }) {
         matchStatus: l.matchStatus,
         productCogs: l.productCogs,
         lineProfit: l.lineProfit,
+        returnReceivedStatus: l.returnReceivedStatus || "pending",
+        returnReceivedAt: l.returnReceivedAt || null,
+        returnReceivedBy: l.returnReceivedBy || "",
       })),
     });
   } catch (e) {

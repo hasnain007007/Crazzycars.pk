@@ -1,11 +1,39 @@
 /**
- * Match CPR lines to Orders by tracking CN; compute COGS + line profit.
+ * Match settlement lines to Orders by tracking CN (PostEx digits + Run Courier GW…)
+ * or printed order number; compute COGS + line profit.
  */
 import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 
-export function normalizeTracking(raw) {
+/** Digits only — PostEx CN style. */
+export function normalizeTrackingDigits(raw) {
   return String(raw || "").replace(/\D/g, "");
+}
+
+/** Alphanumeric compact uppercase — Run Courier GW… style. */
+export function compactTracking(raw) {
+  return String(raw || "")
+    .trim()
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toUpperCase();
+}
+
+/** @deprecated use normalizeTrackingDigits — kept for callers */
+export function normalizeTracking(raw) {
+  return normalizeTrackingDigits(raw);
+}
+
+/**
+ * All lookup keys for a tracking token (digit + compact).
+ * @returns {string[]}
+ */
+export function trackingLookupKeys(raw) {
+  const keys = new Set();
+  const compact = compactTracking(raw);
+  const digits = normalizeTrackingDigits(raw);
+  if (compact) keys.add(compact);
+  if (digits) keys.add(digits);
+  return [...keys];
 }
 
 export async function computeOrderCogs(order, costByProduct = null) {
@@ -37,20 +65,45 @@ export async function computeOrderCogs(order, costByProduct = null) {
 }
 
 /**
- * Find orders for a list of tracking numbers.
+ * Find orders for a list of tracking numbers (PostEx + GW).
+ * Map keys are every lookup key that resolved to that order.
  * @returns {Map<string, object>}
  */
 export async function findOrdersByTracking(trackingNumbers) {
-  const norms = [...new Set(trackingNumbers.map(normalizeTracking).filter(Boolean))];
   const map = new Map();
-  if (!norms.length) return map;
+  const compactSet = new Set();
+  const digitSet = new Set();
+  for (const tn of trackingNumbers || []) {
+    for (const k of trackingLookupKeys(tn)) {
+      if (/^\d+$/.test(k)) digitSet.add(k);
+      else compactSet.add(k);
+    }
+  }
+  if (!compactSet.size && !digitSet.size) return map;
 
-  const orders = await Order.find({
-    $or: [
-      { trackingNumber: { $in: norms } },
-      { "tracking.number": { $in: norms } },
-    ],
-  })
+  const or = [];
+  const compactList = [...compactSet];
+  const digitList = [...digitSet];
+  if (compactList.length) {
+    or.push({ trackingNumber: { $in: compactList } });
+    or.push({ "tracking.number": { $in: compactList } });
+    // Case variants stored lowercase
+    or.push({ trackingNumber: { $in: compactList.map((s) => s.toLowerCase()) } });
+    or.push({ "tracking.number": { $in: compactList.map((s) => s.toLowerCase()) } });
+  }
+  if (digitList.length) {
+    or.push({ trackingNumber: { $in: digitList } });
+    or.push({ "tracking.number": { $in: digitList } });
+    // Regex suffix for "GW" + digits stored as full CN when query is digits-only
+    for (const d of digitList) {
+      if (d.length >= 8) {
+        or.push({ trackingNumber: new RegExp(`${d}$`, "i") });
+        or.push({ "tracking.number": new RegExp(`${d}$`, "i") });
+      }
+    }
+  }
+
+  const orders = await Order.find({ $or: or })
     .select(
       "orderNumber trackingNumber tracking.number items.productId items.quantity items.unitCost paymentStatus paymentMethod pricing.total"
     )
@@ -58,9 +111,9 @@ export async function findOrdersByTracking(trackingNumbers) {
 
   for (const o of orders) {
     const keys = [
-      normalizeTracking(o.trackingNumber),
-      normalizeTracking(o.tracking?.number),
-    ].filter(Boolean);
+      ...trackingLookupKeys(o.trackingNumber),
+      ...trackingLookupKeys(o.tracking?.number),
+    ];
     for (const k of keys) {
       if (!map.has(k)) map.set(k, o);
     }
@@ -68,10 +121,54 @@ export async function findOrdersByTracking(trackingNumbers) {
   return map;
 }
 
+/**
+ * Find orders by printed order numbers (ORD-2026-00xxx).
+ * @returns {Map<string, object>} keyed by uppercased orderNumber
+ */
+export async function findOrdersByOrderNumbers(orderNumbers) {
+  const map = new Map();
+  const nums = [
+    ...new Set(
+      (orderNumbers || [])
+        .map((n) => String(n || "").trim().toUpperCase())
+        .filter((n) => n.length >= 5)
+    ),
+  ];
+  if (!nums.length) return map;
+
+  const orders = await Order.find({
+    orderNumber: { $in: nums },
+  })
+    .select(
+      "orderNumber trackingNumber tracking.number items.productId items.quantity items.unitCost paymentStatus paymentMethod pricing.total"
+    )
+    .lean();
+
+  for (const o of orders) {
+    const key = String(o.orderNumber || "").trim().toUpperCase();
+    if (key && !map.has(key)) map.set(key, o);
+  }
+  return map;
+}
+
+function resolveOrderFromMaps(line, orderByTracking, orderByNumber) {
+  for (const k of trackingLookupKeys(line.trackingNumber)) {
+    const hit = orderByTracking.get(k);
+    if (hit) return hit;
+  }
+  const on = String(line.orderNumberHint || line.sheetOrderNumber || "").trim().toUpperCase();
+  if (on && orderByNumber.has(on)) return orderByNumber.get(on);
+  return null;
+}
+
 export async function enrichLinesWithMatches(lines) {
-  const orderMap = await findOrdersByTracking(lines.map((l) => l.trackingNumber));
+  const orderByTracking = await findOrdersByTracking(lines.map((l) => l.trackingNumber));
+  const orderByNumber = await findOrdersByOrderNumbers(
+    lines.map((l) => l.orderNumberHint || l.sheetOrderNumber || "")
+  );
+
   const productIds = new Set();
-  for (const o of orderMap.values()) {
+  for (const o of [...orderByTracking.values(), ...orderByNumber.values()]) {
     for (const it of o.items || []) {
       if (it?.productId) productIds.add(String(it.productId));
     }
@@ -88,8 +185,7 @@ export async function enrichLinesWithMatches(lines) {
 
   const out = [];
   for (const line of lines) {
-    const key = normalizeTracking(line.trackingNumber);
-    const order = orderMap.get(key);
+    const order = resolveOrderFromMaps(line, orderByTracking, orderByNumber);
     let productCogs = 0;
     let matchStatus = "unmatched";
     let orderId = null;
@@ -103,14 +199,19 @@ export async function enrichLinesWithMatches(lines) {
     const net = Number(line.netAmount) || 0;
     const lineProfit =
       line.status === "Delivered" ? Math.round((net - productCogs) * 100) / 100 : 0;
+    // Preserve original CN form (GW…) — prefer compact alphanumeric over digits-only
+    const compact = compactTracking(line.trackingNumber);
+    const storedTn = compact || String(line.trackingNumber || "").trim();
     out.push({
       ...line,
-      trackingNumber: key || line.trackingNumber,
+      trackingNumber: storedTn,
       orderId,
       orderNumber,
       matchStatus,
       productCogs,
       lineProfit,
+      returnReceivedStatus:
+        line.status === "Return" ? line.returnReceivedStatus || "pending" : "pending",
     });
   }
   return out;

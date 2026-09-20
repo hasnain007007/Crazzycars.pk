@@ -58,6 +58,7 @@ export function FinancePage() {
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const query = useMemo(() => {
     const p = new URLSearchParams();
@@ -96,9 +97,7 @@ export function FinancePage() {
     void load();
   }, [load]);
 
-  async function onUpload(e) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+  async function uploadFile(file) {
     if (!file) return;
     setUploading(true);
     try {
@@ -128,6 +127,19 @@ export function FinancePage() {
     }
   }
 
+  async function onUpload(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    await uploadFile(file);
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) void uploadFile(file);
+  }
+
   function setThisMonth() {
     setFrom(monthStartPkt());
     setTo(todayPkt());
@@ -149,11 +161,33 @@ export function FinancePage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Finance</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Date-range remittance, COD tax, and cash profit after courier CPR upload.
+            Drop a courier payment PDF — we match orders, shipping, GST, and net received.
           </p>
         </div>
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#185a96]">
-          {uploading ? "Uploading…" : "Upload PostEx CPR PDF"}
+      </div>
+
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        className={[
+          "rounded-xl border-2 border-dashed p-6 text-center transition-colors",
+          dragOver
+            ? "border-[#1d6fb8] bg-[#1d6fb8]/5"
+            : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900",
+        ].join(" ")}
+      >
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+          Drop PostEx CPR or Run Courier remittance PDF
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          Auto-detects courier · matches PostEx + GW tracking · returns checklist after upload
+        </p>
+        <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#185a96]">
+          {uploading ? "Uploading…" : "Choose PDF"}
           <input
             type="file"
             accept="application/pdf,.pdf"
@@ -248,12 +282,13 @@ export function FinancePage() {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800/80">
               <tr>
-                <th className="px-3 py-2">CPR</th>
+                <th className="px-3 py-2">Sheet</th>
+                <th className="px-3 py-2">Courier</th>
                 <th className="px-3 py-2">Date</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2 text-right">COD</th>
                 <th className="px-3 py-2 text-right">Ship</th>
-                <th className="px-3 py-2 text-right">4%</th>
+                <th className="px-3 py-2 text-right">Tax</th>
                 <th className="px-3 py-2 text-right">Net</th>
                 <th className="px-3 py-2 text-right">Matched</th>
               </tr>
@@ -261,8 +296,8 @@ export function FinancePage() {
             <tbody>
               {batches.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center text-slate-500">
-                    No settlements yet — upload a PostEx Cash Payment Receipt PDF.
+                  <td colSpan={9} className="px-3 py-8 text-center text-slate-500">
+                    No settlements yet — drop a PostEx CPR or Run Courier remittance PDF above.
                   </td>
                 </tr>
               ) : (
@@ -279,6 +314,7 @@ export function FinancePage() {
                         {b.cprNumber}
                       </Link>
                     </td>
+                    <td className="px-3 py-2 text-slate-600">{b.courier || "—"}</td>
                     <td className="px-3 py-2 tabular-nums text-slate-600">
                       {b.cprDate
                         ? new Date(b.cprDate).toLocaleDateString("en-GB", {
@@ -295,7 +331,9 @@ export function FinancePage() {
                       {formatMoney(b.shippingCharges)}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">
-                      {formatMoney(b.deduction4pct)}
+                      {formatMoney(
+                        (Number(b.gst) || 0) + (Number(b.deduction4pct) || 0)
+                      )}
                     </td>
                     <td className="px-3 py-2 text-right font-semibold tabular-nums">
                       {formatMoney(b.netTotal)}

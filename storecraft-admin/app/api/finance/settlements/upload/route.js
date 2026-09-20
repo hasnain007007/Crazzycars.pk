@@ -9,7 +9,7 @@ import { logActivity } from "@/lib/auth";
 import { requestIp } from "@/lib/requestIp";
 import CourierSettlementBatch from "@/lib/models/CourierSettlementBatch.model";
 import CourierSettlementLine from "@/lib/models/CourierSettlementLine.model";
-import { parsePostexCprPdf } from "@/lib/postexCprParse";
+import { parseCourierRemittancePdf } from "@/lib/parseCourierRemittance";
 import { enrichLinesWithMatches } from "@/lib/matchSettlementLine";
 
 export const runtime = "nodejs";
@@ -27,10 +27,10 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Missing PDF file." }, { status: 400 });
     }
 
-    const name = String(file.name || "cpr.pdf");
+    const name = String(file.name || "remittance.pdf");
     if (!/\.pdf$/i.test(name) && file.type !== "application/pdf") {
       return NextResponse.json(
-        { success: false, error: "Upload a PostEx CPR PDF file." },
+        { success: false, error: "Upload a courier remittance PDF (PostEx CPR or Run Courier)." },
         { status: 400 }
       );
     }
@@ -45,10 +45,10 @@ export async function POST(request) {
 
     let parsed;
     try {
-      parsed = await parsePostexCprPdf(buffer);
+      parsed = await parseCourierRemittancePdf(buffer);
     } catch (err) {
       return NextResponse.json(
-        { success: false, error: err.message || "Could not parse CPR PDF." },
+        { success: false, error: err.message || "Could not parse remittance PDF." },
         { status: 400 }
       );
     }
@@ -58,7 +58,7 @@ export async function POST(request) {
       return NextResponse.json(
         {
           success: false,
-          error: `CPR ${parsed.cprNumber} was already uploaded.`,
+          error: `Sheet ${parsed.cprNumber} was already uploaded.`,
           batchId: String(existing._id),
         },
         { status: 409 }
@@ -67,7 +67,7 @@ export async function POST(request) {
 
     const enriched = await enrichLinesWithMatches(parsed.lines);
     const matchedCount = enriched.filter((l) => l.matchStatus === "matched" || l.matchStatus === "manual").length;
-    const unmatchedCount = enriched.length - matchedCount;
+    const unmatchedCount = enriched.filter((l) => l.matchStatus === "unmatched").length;
 
     const adminName = user?.name || user?.email || "Admin";
     const batch = await CourierSettlementBatch.create({
@@ -110,6 +110,7 @@ export async function POST(request) {
           matchStatus: l.matchStatus,
           productCogs: l.productCogs,
           lineProfit: l.lineProfit,
+          returnReceivedStatus: l.status === "Return" ? "pending" : "pending",
         }))
       );
     }
@@ -120,7 +121,12 @@ export async function POST(request) {
       action: "finance.cpr_upload",
       resource: "CourierSettlementBatch",
       resourceId: String(batch._id),
-      details: { cprNumber: parsed.cprNumber, lines: enriched.length, matched: matchedCount },
+      details: {
+        cprNumber: parsed.cprNumber,
+        courier: parsed.courier,
+        lines: enriched.length,
+        matched: matchedCount,
+      },
       type: "create",
       ip: requestIp(request),
     });
@@ -129,6 +135,7 @@ export async function POST(request) {
       success: true,
       batchId: String(batch._id),
       cprNumber: parsed.cprNumber,
+      courier: parsed.courier,
       lineCount: enriched.length,
       matchedCount,
       unmatchedCount,
