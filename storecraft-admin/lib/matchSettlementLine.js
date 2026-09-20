@@ -1,6 +1,6 @@
 /**
  * Match settlement lines to Orders by tracking CN (PostEx digits + Run Courier GW…)
- * or printed order number; compute COGS + line profit.
+ * or order reference / order number; compute COGS + line profit.
  */
 import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
@@ -34,6 +34,57 @@ export function trackingLookupKeys(raw) {
   if (compact) keys.add(compact);
   if (digits) keys.add(digits);
   return [...keys];
+}
+
+/**
+ * PostEx ORDER_REF_NUMBER is the shop order number (e.g. ORD-2026-00136 or #CC.PK2080).
+ * Expand variants for DB lookup.
+ * @returns {string[]}
+ */
+export function orderNumberLookupKeys(raw) {
+  const keys = new Set();
+  let s = String(raw || "")
+    .trim()
+    .replace(/^\uFEFF/, "")
+    .replace(/^#+/, "")
+    .trim();
+  if (!s) return [];
+
+  const upper = s.toUpperCase();
+  keys.add(upper);
+  keys.add(upper.replace(/\s+/g, ""));
+
+  // ORD-2026-00136 / ORD202600136 / ORD-2026-136
+  const ord = upper.match(/ORD-?\s*(\d{4})-?\s*(\d{1,6})/);
+  if (ord) {
+    const year = ord[1];
+    const seq = ord[2].padStart(5, "0");
+    keys.add(`ORD-${year}-${seq}`);
+    keys.add(`ORD-${year}-${ord[2]}`);
+    keys.add(`ORD${year}${seq}`);
+  }
+
+  // #CC.PK2080 / CC.PK2080 / CCPK2080
+  const pk = upper.match(/^([A-Z]{1,4})\.?PK\.?(\d+)$/);
+  if (pk) {
+    keys.add(`${pk[1]}.PK${pk[2]}`);
+    keys.add(`${pk[1]}PK${pk[2]}`);
+    keys.add(`#${pk[1]}.PK${pk[2]}`);
+  }
+
+  return [...keys].filter((k) => k.length >= 3);
+}
+
+/** Best display form of a sheet order ref. */
+export function displayOrderRef(raw) {
+  const keys = orderNumberLookupKeys(raw);
+  const ord = keys.find((k) => /^ORD-\d{4}-\d+$/.test(k));
+  if (ord) return ord;
+  const cleaned = String(raw || "")
+    .trim()
+    .replace(/^#+/, "")
+    .trim();
+  return cleaned || "";
 }
 
 export async function computeOrderCogs(order, costByProduct = null) {
@@ -122,22 +173,20 @@ export async function findOrdersByTracking(trackingNumbers) {
 }
 
 /**
- * Find orders by printed order numbers (ORD-2026-00xxx).
- * @returns {Map<string, object>} keyed by uppercased orderNumber
+ * Find orders by PostEx ORDER_REF_NUMBER / printed order number.
+ * @returns {Map<string, object>} keyed by every lookup variant that hit
  */
 export async function findOrdersByOrderNumbers(orderNumbers) {
   const map = new Map();
-  const nums = [
-    ...new Set(
-      (orderNumbers || [])
-        .map((n) => String(n || "").trim().toUpperCase())
-        .filter((n) => n.length >= 5)
-    ),
-  ];
-  if (!nums.length) return map;
+  const nums = new Set();
+  for (const raw of orderNumbers || []) {
+    for (const k of orderNumberLookupKeys(raw)) nums.add(k);
+  }
+  if (!nums.size) return map;
 
+  const list = [...nums];
   const orders = await Order.find({
-    orderNumber: { $in: nums },
+    orderNumber: { $in: list },
   })
     .select(
       "orderNumber trackingNumber tracking.number items.productId items.quantity items.unitCost paymentStatus paymentMethod pricing.total"
@@ -145,8 +194,11 @@ export async function findOrdersByOrderNumbers(orderNumbers) {
     .lean();
 
   for (const o of orders) {
-    const key = String(o.orderNumber || "").trim().toUpperCase();
-    if (key && !map.has(key)) map.set(key, o);
+    const stored = String(o.orderNumber || "").trim().toUpperCase();
+    for (const k of orderNumberLookupKeys(stored)) {
+      if (!map.has(k)) map.set(k, o);
+    }
+    if (stored && !map.has(stored)) map.set(stored, o);
   }
   return map;
 }
@@ -156,8 +208,11 @@ function resolveOrderFromMaps(line, orderByTracking, orderByNumber) {
     const hit = orderByTracking.get(k);
     if (hit) return hit;
   }
-  const on = String(line.orderNumberHint || line.sheetOrderNumber || "").trim().toUpperCase();
-  if (on && orderByNumber.has(on)) return orderByNumber.get(on);
+  const hint = line.orderNumberHint || line.sheetOrderNumber || "";
+  for (const k of orderNumberLookupKeys(hint)) {
+    const hit = orderByNumber.get(k);
+    if (hit) return hit;
+  }
   return null;
 }
 
@@ -189,11 +244,12 @@ export async function enrichLinesWithMatches(lines) {
     let productCogs = 0;
     let matchStatus = "unmatched";
     let orderId = null;
-    let orderNumber = "";
+    const sheetRef = displayOrderRef(line.orderNumberHint || line.sheetOrderNumber || "");
+    let orderNumber = sheetRef;
     if (order) {
       matchStatus = "matched";
       orderId = order._id;
-      orderNumber = order.orderNumber || "";
+      orderNumber = order.orderNumber || sheetRef;
       productCogs = await computeOrderCogs(order, costByProduct);
     }
     const net = Number(line.netAmount) || 0;

@@ -53,14 +53,19 @@ export function extractTracking(raw) {
 function extractOrderHint(raw) {
   const s = cellStr(raw).trim();
   if (!s) return "";
-  const ord = s.toUpperCase().match(/ORD-?\d{4}-?\d+/);
+  // PostEx ORDER_REF_NUMBER is the shop order number
+  const ord = s.toUpperCase().match(/ORD-?\s*\d{4}-?\s*\d+/);
   if (ord) {
-    return ord[0].replace(/^ORD(\d)/, "ORD-$1").replace(/ORD-(\d{4})(\d+)/, "ORD-$1-$2");
+    return ord[0]
+      .replace(/\s+/g, "")
+      .replace(/^ORD(\d)/, "ORD-$1")
+      .replace(/ORD-(\d{4})(\d+)/, "ORD-$1-$2");
   }
-  // PostEx merchant refs like #CC.PK2080
+  // Older merchant refs like #CC.PK2080 — still an order number
   const ref = s.match(/#?[A-Z]{1,4}\.?PK\.?\d+/i);
-  if (ref) return ref[0].toUpperCase();
-  return s.length <= 40 ? s : "";
+  if (ref) return ref[0].replace(/^#/, "").toUpperCase();
+  // Anything else in the order-ref column (≤40 chars) is the order number as-is
+  return s.length <= 40 ? s.replace(/^#/, "").trim() : "";
 }
 
 function scoreHeader(h) {

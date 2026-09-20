@@ -405,6 +405,10 @@ export function SettlementDetail({ batchId }) {
                         >
                           {l.orderNumber || "Order"}
                         </Link>
+                      ) : l.orderNumber ? (
+                        <span className="font-medium text-slate-700 dark:text-slate-200">
+                          {l.orderNumber}
+                        </span>
                       ) : (
                         <span className="text-slate-400">—</span>
                       )}
