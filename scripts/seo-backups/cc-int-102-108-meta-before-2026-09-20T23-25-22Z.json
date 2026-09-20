@@ -1,0 +1,55 @@
+{
+  "takenAt": "2026-09-20T23:25:25.132Z",
+  "products": [
+    {
+      "_id": {
+        "$oid": "6a5ea46f086726a54a151373"
+      },
+      "name": "Toyota Corolla 2014-2026 Velvet Dashboard Mat",
+      "slug": "toyota-corolla-2014-2026-velvet-dashboard-mat",
+      "articleNo": "CC-INT-102",
+      "seo": {
+        "metaTitle": "Toyota Corolla Velvet Dashboard Mat | CrazzyCars.pk",
+        "metaDescription": "Dashboard Mat for Toyota Corolla 2014-2026 — premium quality, easy installation, Cash on Delivery across Pakistan. Cash on Delivery nationwide.",
+        "metaKeywords": [
+          "toyota corolla",
+          "corolla dashboard mat",
+          "corolla 2014 2026",
+          "dashboard mat pakistan",
+          "car dashboard mat online",
+          "car accessories pakistan",
+          "dashboard mats",
+          "new arrival",
+          "toyota"
+        ]
+      },
+      "metaTitle": "Toyota Corolla Velvet Dashboard Mat | CrazzyCars.pk",
+      "metaDescription": "Dashboard Mat for Toyota Corolla 2014-2026 — premium quality, easy installation, Cash on Delivery across Pakistan. Cash on Delivery nationwide."
+    },
+    {
+      "_id": {
+        "$oid": "6a5ea470086726a54a151379"
+      },
+      "name": "Toyota Corolla 2008-2013 Velvet Dashboard Mat",
+      "slug": "toyota-corolla-2008-2013-velvet-dashboard-mat",
+      "articleNo": "CC-INT-108",
+      "seo": {
+        "metaTitle": "Toyota Corolla Velvet Dashboard Mat | CrazzyCars.pk",
+        "metaDescription": "Dashboard Mat for Toyota Corolla 2008-2013 — premium quality, easy installation, Cash on Delivery across Pakistan. Cash on Delivery nationwide.",
+        "metaKeywords": [
+          "toyota corolla",
+          "corolla dashboard mat",
+          "corolla 2008 2013",
+          "dashboard mat pakistan",
+          "car dashboard mat online",
+          "car accessories pakistan",
+          "dashboard mats",
+          "new arrival",
+          "toyota"
+        ]
+      },
+      "metaTitle": "Toyota Corolla Velvet Dashboard Mat | CrazzyCars.pk",
+      "metaDescription": "Dashboard Mat for Toyota Corolla 2008-2013 — premium quality, easy installation, Cash on Delivery across Pakistan. Cash on Delivery nationwide."
+    }
+  ]
+}
