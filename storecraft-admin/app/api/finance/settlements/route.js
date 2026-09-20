@@ -22,6 +22,29 @@ export async function GET(request) {
       .limit(limit)
       .lean();
 
+    const ids = batches.map((b) => b._id);
+    let pendingByBatch = new Map();
+    if (ids.length) {
+      const CourierSettlementLine = (await import("@/lib/models/CourierSettlementLine.model"))
+        .default;
+      const pending = await CourierSettlementLine.aggregate([
+        {
+          $match: {
+            batchId: { $in: ids },
+            status: "Return",
+            $or: [
+              { returnReceivedStatus: "pending" },
+              { returnReceivedStatus: { $exists: false } },
+              { returnReceivedStatus: null },
+              { returnReceivedStatus: "" },
+            ],
+          },
+        },
+        { $group: { _id: "$batchId", n: { $sum: 1 } } },
+      ]);
+      pendingByBatch = new Map(pending.map((p) => [String(p._id), p.n]));
+    }
+
     return NextResponse.json({
       success: true,
       batches: batches.map((b) => ({
@@ -33,6 +56,7 @@ export async function GET(request) {
         status: b.status,
         deliveredCount: b.deliveredCount,
         returnedCount: b.returnedCount,
+        returnsPending: pendingByBatch.get(String(b._id)) || 0,
         codTotal: b.codTotal,
         shippingCharges: b.shippingCharges,
         gst: b.gst,

@@ -133,7 +133,13 @@ export function FinancePage() {
       }
       await load();
       if (json.batchId) {
-        window.location.href = `/finance/settlements/${json.batchId}`;
+        const returns = Number(json.batches?.[0]?.returnedCount ?? json.returnedCount) || 0;
+        // Prefer opening the return confirmation boxes when the sheet has returns
+        const hash =
+          returns > 0 || (json.batches || []).some((b) => (b.returnedCount || 0) > 0)
+            ? "?tab=returns"
+            : "";
+        window.location.href = `/finance/settlements/${json.batchId}${hash}`;
       }
     } catch {
       toast.error("Upload network error.");
@@ -342,12 +348,13 @@ export function FinancePage() {
                 <th className="px-3 py-2 text-right">Tax</th>
                 <th className="px-3 py-2 text-right">Net</th>
                 <th className="px-3 py-2 text-right">Matched</th>
+                <th className="px-3 py-2 text-right">Returns</th>
               </tr>
             </thead>
             <tbody>
               {batches.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center text-slate-500">
+                  <td colSpan={10} className="px-3 py-8 text-center text-slate-500">
                     No settlements yet — drop a PostEx CPR PDF, Run Courier Excel/CSV, or payment
                     screenshot above.
                   </td>
@@ -360,7 +367,11 @@ export function FinancePage() {
                   >
                     <td className="px-3 py-2">
                       <Link
-                        href={`/finance/settlements/${b.id}`}
+                        href={
+                          b.returnsPending > 0
+                            ? `/finance/settlements/${b.id}?tab=returns`
+                            : `/finance/settlements/${b.id}`
+                        }
                         className="font-mono text-sm font-semibold text-[#1d6fb8] hover:underline"
                       >
                         {b.cprNumber}
@@ -392,6 +403,25 @@ export function FinancePage() {
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">
                       {b.matchedCount}/{b.lineCount}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {(b.returnedCount || 0) > 0 ? (
+                        <Link
+                          href={`/finance/settlements/${b.id}?tab=returns`}
+                          className={[
+                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+                            b.returnsPending > 0
+                              ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                              : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200",
+                          ].join(" ")}
+                        >
+                          {b.returnsPending > 0
+                            ? `${b.returnsPending} to confirm`
+                            : `${b.returnedCount} done`}
+                        </Link>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </td>
                   </tr>
                 ))

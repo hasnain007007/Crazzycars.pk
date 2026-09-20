@@ -128,6 +128,7 @@ async function createBatchFromParsed(parsed, { filename, adminName, user, ip }) 
     lineCount: enriched.length,
     matchedCount,
     unmatchedCount,
+    returnedCount: parsed.returnedCount || enriched.filter((l) => l.status === "Return").length,
     netTotal: parsed.netTotal,
   };
 }
