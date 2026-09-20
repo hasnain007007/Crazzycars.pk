@@ -198,6 +198,7 @@ export function productToMerchantItem(product, opts = {}) {
     : [];
   const { price, salePrice } = feedPrice(product);
 
+  // Only emit g:gtin when product.ean is a real digit string (≥8). Never invent GTINs.
   // Meta rejects many items when identifier_exists=yes without a real GTIN.
   // Only claim identifiers when we have a GTIN; still send MPN when available.
   const identifierExists = gtin.length >= 8 ? "yes" : "no";

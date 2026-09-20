@@ -110,6 +110,21 @@ Active products are listed in the sitemap and the product feed. Each product pag
 - For accurate catalog sync, use ${site}/feed/products.xml (id, title, description, link, image_link, price, availability, brand, condition).
 - Do not invent prices or stock — fetch the product page or feed.
 
+## Returns & exchanges
+
+- Returns window: 7 days from delivery.
+- Full refund: item arrived defective, or we shipped the wrong item.
+- Change of mind: exchange for a different product or size only — not a cash refund.
+- Vehicle-specific parts ordered against the fitment listed on the product page are not returnable for “does not fit” unless we listed the wrong vehicle.
+- Start a claim: WhatsApp 03284010007 or email info@crazzycars.pk — see ${site}/returns-policy
+
+## Shipping fees (summary)
+
+- Standard delivery: Rs. 250. Bulky carts (splitters, side skirts, spoilers, floor mats, etc.): Rs. 500.
+- Delivery charges are paid in advance; remaining product amount may be Cash on Delivery where eligible.
+- There is no free-delivery threshold by order value.
+- Lahore ETA: 2–3 business days. Other cities: confirmed at checkout.
+
 ## Optional
 
 - Vehicle fitment pages: ${site}/cars (index) and ${site}/cars/{slug}

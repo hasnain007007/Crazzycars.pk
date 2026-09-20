@@ -237,7 +237,11 @@ function AccordionSection({ id, title, icon, isOpen, onToggle, children, badge }
   );
 }
 
-export function ProductDetailMedico({ product: initialProduct = null, relatedProducts = null }) {
+export function ProductDetailMedico({
+  product: initialProduct = null,
+  relatedProducts = null,
+  carLinks = null,
+}) {
   const { addItem } = useCart();
   const router = useRouter();
   const params = useParams();
@@ -1641,7 +1645,7 @@ export function ProductDetailMedico({ product: initialProduct = null, relatedPro
             )}
 
             <div className="mt-6">
-              <VehicleCompatibilitySection product={product} />
+              <VehicleCompatibilitySection product={product} carLinks={carLinks || []} />
             </div>
 
             <div className="product-accordions mt-6 border-t border-[#E5E5E5] pt-2 lg:mt-6">

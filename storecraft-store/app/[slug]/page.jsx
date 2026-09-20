@@ -23,6 +23,11 @@ import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import Review from "@/lib/models/Review.model";
+import {
+  buildProductKeywordFaqs,
+  faqPageJsonLd,
+} from "@/lib/seo/keywordStrategyFaqs";
+import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
 
 /**
  * ISR for product / CMS pages. Category slugs 308 to /categories/:slug.
@@ -175,6 +180,7 @@ const loadContent = cache(async (slug) => {
       "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal compatibleVehicles compatibleCars vehicleCompatibility"
     )
     .populate("categories", "name slug")
+    .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")
     .populate({
       path: "recommendedProducts",
       match: { status: "active", securityHold: { $ne: true } },
@@ -199,6 +205,7 @@ const loadContent = cache(async (slug) => {
           "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal compatibleVehicles compatibleCars vehicleCompatibility"
         )
         .populate("categories", "name slug")
+        .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")
         .populate({
           path: "recommendedProducts",
           match: { status: "active", securityHold: { $ne: true } },
@@ -214,10 +221,17 @@ const loadContent = cache(async (slug) => {
       return { type: "redirect", to: `/${product.slug}` };
     }
     const relatedProducts = await loadRelatedProducts(product);
+    let carLinks = [];
+    try {
+      carLinks = await resolveProductCarLinks(product);
+    } catch (e) {
+      console.error("resolveProductCarLinks:", e);
+    }
     return {
       type: "product",
       data: serializeStoreProductDetail(product),
       relatedProducts,
+      carLinks,
     };
   }
 
@@ -461,7 +475,26 @@ export default async function ProductPage({ params, searchParams }) {
             })(),
           }}
         />
-        <ProductDetailMedico product={content.data} relatedProducts={content.relatedProducts || []} />
+        {(() => {
+          try {
+            const faqLd = faqPageJsonLd(buildProductKeywordFaqs(content.data));
+            if (!faqLd) return null;
+            return (
+              <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }}
+              />
+            );
+          } catch (e) {
+            console.error("product faq json-ld:", e);
+            return null;
+          }
+        })()}
+        <ProductDetailMedico
+          product={content.data}
+          relatedProducts={content.relatedProducts || []}
+          carLinks={content.carLinks || []}
+        />
       </>
     );
   }

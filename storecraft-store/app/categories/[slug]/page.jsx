@@ -19,6 +19,12 @@ import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
 import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
 import { resolveCollectionHandleToPath } from "@/lib/resolveCollectionHandle";
+import { getCategoryPriceExtent } from "@/lib/seo/categoryPriceExtent";
+import {
+  buildCategoryKeywordFaqs,
+  faqPageJsonLd,
+  isKeywordStrategyCategory,
+} from "@/lib/seo/keywordStrategyFaqs";
 
 /** ISR: prerender active categories at build; refresh every 2 minutes. */
 export const revalidate = 120;
@@ -76,7 +82,7 @@ const getCategoryMeta = cache(async (slugStr) =>
         .lean()
         .then((doc) => (doc ? JSON.parse(JSON.stringify(doc)) : null));
     },
-    ["category-meta-v1", slugStr],
+    ["category-meta-v2", slugStr],
     { revalidate: 120 }
   )()
 );
@@ -275,6 +281,14 @@ export default async function CategoryPage({ params, searchParams }) {
       isPartOfName: brand?.name || BRAND,
     });
 
+    let faqLd = null;
+    if (isKeywordStrategyCategory(data.category?.slug || slugStr)) {
+      const extent = await getCategoryPriceExtent(data.category?.slug || slugStr);
+      faqLd = faqPageJsonLd(
+        buildCategoryKeywordFaqs(data.category?.slug || slugStr, extent)
+      );
+    }
+
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
         <script
@@ -285,6 +299,12 @@ export default async function CategoryPage({ params, searchParams }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLd(collectionLd) }}
         />
+        {faqLd ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }}
+          />
+        ) : null}
         <CategoryPageChrome
           category={data.category}
           subcategories={data.subcategories}
