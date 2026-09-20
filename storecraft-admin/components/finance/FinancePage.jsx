@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 function formatMoney(n) {
@@ -59,6 +59,7 @@ export function FinancePage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const dragDepth = useRef(0);
 
   const query = useMemo(() => {
     const p = new URLSearchParams();
@@ -140,8 +141,30 @@ export function FinancePage() {
     await uploadFiles(list);
   }
 
+  function onDragEnter(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current += 1;
+    setDragOver(true);
+  }
+
+  function onDragOverZone(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+  }
+
+  function onDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDragOver(false);
+  }
+
   function onDrop(e) {
     e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current = 0;
     setDragOver(false);
     const list = e.dataTransfer?.files;
     if (list?.length) void uploadFiles(list);
@@ -168,42 +191,55 @@ export function FinancePage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Finance</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Drop a courier payment PDF — we match orders, shipping, GST, and net received.
+            Drag &amp; drop courier payment files — we match orders, shipping, GST, and net received.
           </p>
         </div>
       </div>
 
       <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
+        role="button"
+        tabIndex={0}
+        aria-label="Drag and drop remittance files here"
+        onDragEnter={onDragEnter}
+        onDragOver={onDragOverZone}
+        onDragLeave={onDragLeave}
         onDrop={onDrop}
         className={[
-          "rounded-xl border-2 border-dashed p-6 text-center transition-colors",
+          "relative rounded-xl border-2 border-dashed px-6 py-10 text-center transition-all",
+          uploading ? "pointer-events-none opacity-70" : "",
           dragOver
-            ? "border-[#1d6fb8] bg-[#1d6fb8]/5"
-            : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900",
+            ? "scale-[1.01] border-[#1d6fb8] bg-[#1d6fb8]/10 shadow-md"
+            : "border-slate-300 bg-white hover:border-[#1d6fb8]/70 dark:border-slate-600 dark:bg-slate-900",
         ].join(" ")}
       >
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">
-          Drop PostEx CPR, Run Courier Excel, or screenshot
+        {dragOver ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-[#1d6fb8]/15">
+            <p className="text-base font-bold text-[#1d6fb8]">Drop files to upload</p>
+          </div>
+        ) : null}
+        <p className="text-base font-semibold text-slate-900 dark:text-white">
+          Drag &amp; drop files here
+        </p>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          PostEx CPR PDF · Run Courier Excel (.xlsx / .xls / CSV) · screenshots (PNG / JPG)
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          PDF · Excel (.xlsx/.xls) · CSV · PNG/JPG screenshots · matches order # + tracking
+          Auto-matches order # + tracking · opens Delivered / Returns checklist
         </p>
-        <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#185a96]">
-          {uploading ? "Reading upload…" : "Choose PDF, Excel, or screenshots"}
-          <input
-            type="file"
-            accept="application/pdf,.pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls,.csv,text/csv,image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp"
-            multiple
-            className="hidden"
-            disabled={uploading}
-            onChange={onUpload}
-          />
-        </label>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#1d6fb8] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#185a96]">
+            {uploading ? "Reading upload…" : "Or browse files"}
+            <input
+              type="file"
+              accept="application/pdf,.pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls,.csv,text/csv,image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp"
+              multiple
+              className="hidden"
+              disabled={uploading}
+              onChange={onUpload}
+            />
+          </label>
+          <span className="text-xs text-slate-400">You can drop multiple files at once</span>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
