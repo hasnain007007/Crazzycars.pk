@@ -455,6 +455,7 @@ export function ProductEditor({ mode, productId }) {
   const [autoSaveState, setAutoSaveState] = useState("idle");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [neighbors, setNeighbors] = useState({ previous: null, next: null });
   const [uploadWatermarkEnabled, setUploadWatermarkEnabled] = useState(false);
   const [mediaEditorContext, setMediaEditorContext] = useState(() => ({
     usedInProducts: 1,
@@ -505,7 +506,9 @@ export function ProductEditor({ mode, productId }) {
     let cancelled = false;
     (async () => {
       try {
+        setLoading(true);
         setLoadError("");
+        autosaveReadyRef.current = false;
         const res = await fetch(`/api/products/${productId}`, { credentials: "include" });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || "Product not found");
@@ -533,6 +536,28 @@ export function ProductEditor({ mode, productId }) {
         }
       } finally {
         if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isEdit, productId]);
+
+  useEffect(() => {
+    if (!isEdit || !productId) {
+      setNeighbors({ previous: null, next: null });
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/products/${productId}/neighbors`, { credentials: "include" });
+        const json = await res.json();
+        if (!cancelled && res.ok && json.success) {
+          setNeighbors({ previous: json.previous || null, next: json.next || null });
+        }
+      } catch {
+        if (!cancelled) setNeighbors({ previous: null, next: null });
       }
     })();
     return () => {
@@ -736,13 +761,44 @@ export function ProductEditor({ mode, productId }) {
     );
   }
 
+  const navBtnClass =
+    "inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40";
+
   return (
     <div className="mx-auto max-w-7xl pb-16">
-      <div className="mb-6">
-        <Link href="/catalog/products" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-          ← Back to Products
-        </Link>
-        <h1 className="mt-1 text-xl font-semibold text-gray-900">{isEdit ? "Edit product" : "New product"}</h1>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <Link href="/catalog/products" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+            ← Back to Products
+          </Link>
+          <h1 className="mt-1 text-xl font-semibold text-gray-900">{isEdit ? "Edit product" : "New product"}</h1>
+        </div>
+        {isEdit ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className={navBtnClass}
+              disabled={!neighbors.previous}
+              title={neighbors.previous?.name || "No previous product"}
+              onClick={() => {
+                if (neighbors.previous?.id) router.push(`/catalog/products/${neighbors.previous.id}`);
+              }}
+            >
+              ← Previous
+            </button>
+            <button
+              type="button"
+              className={navBtnClass}
+              disabled={!neighbors.next}
+              title={neighbors.next?.name || "No next product"}
+              onClick={() => {
+                if (neighbors.next?.id) router.push(`/catalog/products/${neighbors.next.id}`);
+              }}
+            >
+              Next →
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-8">
