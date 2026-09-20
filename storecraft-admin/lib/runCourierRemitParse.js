@@ -38,6 +38,9 @@ export function looksLikeRunCourierRemit(text) {
   if (/Cash Payment Receipt|CPR-[A-Z0-9]+/i.test(raw)) return false;
   const gwCount = (raw.match(/\bGW\d{8,}\b/gi) || []).length;
   if (gwCount >= 1) return true;
+  // OCR often inserts spaces: G W 7543…
+  const gwLoose = (raw.match(/\bG[\s._-]*W[\s._-]*\d{8,}\b/gi) || []).length;
+  if (gwLoose >= 1) return true;
   if (/run\s*courier|leopard/i.test(raw) && /\b[A-Z]{2}\d{8,}\b/.test(raw)) return true;
   return false;
 }
@@ -46,7 +49,10 @@ export function looksLikeRunCourierRemit(text) {
  * @param {string} text
  */
 export function parseRunCourierRemitText(text) {
-  const raw = String(text || "").replace(/\u00a0/g, " ");
+  let raw = String(text || "").replace(/\u00a0/g, " ");
+  // Screenshot OCR often splits GW
+  raw = raw.replace(/\bG[\s._-]*W[\s._-]*(\d{8,})\b/gi, (_, d) => `GW${d}`);
+  raw = raw.replace(/\b[O0][\s._-]*W[\s._-]*(\d{8,})\b/gi, (_, d) => `GW${d}`);
   if (!looksLikeRunCourierRemit(raw)) {
     throw new Error("Not a Run Courier / Leopard remittance sheet (no GW… tracking IDs found).");
   }

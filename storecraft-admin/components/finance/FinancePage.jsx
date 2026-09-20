@@ -97,12 +97,13 @@ export function FinancePage() {
     void load();
   }, [load]);
 
-  async function uploadFile(file) {
-    if (!file) return;
+  async function uploadFiles(fileList) {
+    const files = [...(fileList || [])].filter(Boolean);
+    if (!files.length) return;
     setUploading(true);
     try {
       const fd = new FormData();
-      fd.append("file", file);
+      for (const file of files) fd.append("files", file);
       const res = await fetch("/api/finance/settlements/upload", {
         method: "POST",
         credentials: "include",
@@ -113,8 +114,9 @@ export function FinancePage() {
         toast.error(json.error || "Upload failed.");
         return;
       }
+      const src = json.source === "screenshot" ? "screenshot" : "PDF";
       toast.success(
-        `Uploaded ${json.cprNumber}: ${json.matchedCount}/${json.lineCount} matched`
+        `Uploaded ${json.cprNumber} (${src}): ${json.matchedCount}/${json.lineCount} matched`
       );
       await load();
       if (json.batchId) {
@@ -128,16 +130,16 @@ export function FinancePage() {
   }
 
   async function onUpload(e) {
-    const file = e.target.files?.[0];
+    const list = e.target.files;
     e.target.value = "";
-    await uploadFile(file);
+    await uploadFiles(list);
   }
 
   function onDrop(e) {
     e.preventDefault();
     setDragOver(false);
-    const file = e.dataTransfer?.files?.[0];
-    if (file) void uploadFile(file);
+    const list = e.dataTransfer?.files;
+    if (list?.length) void uploadFiles(list);
   }
 
   function setThisMonth() {
@@ -181,16 +183,17 @@ export function FinancePage() {
         ].join(" ")}
       >
         <p className="text-sm font-semibold text-slate-900 dark:text-white">
-          Drop PostEx CPR or Run Courier remittance PDF
+          Drop PostEx CPR PDF or Run Courier screenshot
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          Auto-detects courier · matches PostEx + GW tracking · returns checklist after upload
+          PDF or PNG/JPG screenshots · multi-page shots OK · matches order # + GW / PostEx tracking
         </p>
         <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#1d6fb8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#185a96]">
-          {uploading ? "Uploading…" : "Choose PDF"}
+          {uploading ? "Reading upload…" : "Choose PDF or screenshots"}
           <input
             type="file"
-            accept="application/pdf,.pdf"
+            accept="application/pdf,.pdf,image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp"
+            multiple
             className="hidden"
             disabled={uploading}
             onChange={onUpload}
@@ -297,7 +300,8 @@ export function FinancePage() {
               {batches.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-3 py-8 text-center text-slate-500">
-                    No settlements yet — drop a PostEx CPR or Run Courier remittance PDF above.
+                    No settlements yet — drop a PostEx CPR PDF or Run Courier payment screenshot
+                    above.
                   </td>
                 </tr>
               ) : (

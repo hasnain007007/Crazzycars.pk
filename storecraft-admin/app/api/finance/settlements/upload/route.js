@@ -1,5 +1,6 @@
 /**
- * POST /api/finance/settlements/upload — PostEx CPR PDF → draft batch + matched lines
+ * POST /api/finance/settlements/upload
+ * Accepts PostEx CPR PDF, Run Courier remittance PDF, or screenshot image(s).
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -9,10 +10,32 @@ import { logActivity } from "@/lib/auth";
 import { requestIp } from "@/lib/requestIp";
 import CourierSettlementBatch from "@/lib/models/CourierSettlementBatch.model";
 import CourierSettlementLine from "@/lib/models/CourierSettlementLine.model";
-import { parseCourierRemittancePdf } from "@/lib/parseCourierRemittance";
+import { parseCourierRemittanceFiles } from "@/lib/parseCourierRemittance";
 import { enrichLinesWithMatches } from "@/lib/matchSettlementLine";
+import { isRemittanceImage } from "@/lib/extractScreenshotText";
 
 export const runtime = "nodejs";
+/** OCR can take a while on multi-page screenshot batches */
+export const maxDuration = 120;
+
+function collectUploadFiles(formData) {
+  const out = [];
+  for (const key of ["file", "files", "screenshot", "screenshots", "image"]) {
+    for (const entry of formData.getAll(key)) {
+      if (!entry || typeof entry === "string") continue;
+      out.push(entry);
+    }
+  }
+  return out;
+}
+
+function isAllowedUpload(file) {
+  const name = String(file.name || "");
+  const type = String(file.type || "");
+  if (type === "application/pdf" || /\.pdf$/i.test(name)) return true;
+  if (isRemittanceImage({ filename: name, mimeType: type })) return true;
+  return false;
+}
 
 export async function POST(request) {
   try {
@@ -22,33 +45,50 @@ export async function POST(request) {
 
     await dbConnect();
     const formData = await request.formData();
-    const file = formData.get("file");
-    if (!file || typeof file === "string") {
-      return NextResponse.json({ success: false, error: "Missing PDF file." }, { status: 400 });
-    }
-
-    const name = String(file.name || "remittance.pdf");
-    if (!/\.pdf$/i.test(name) && file.type !== "application/pdf") {
+    const rawFiles = collectUploadFiles(formData);
+    if (!rawFiles.length) {
       return NextResponse.json(
-        { success: false, error: "Upload a courier remittance PDF (PostEx CPR or Run Courier)." },
+        { success: false, error: "Missing file. Drop a PDF or Run Courier screenshot." },
         { status: 400 }
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    if (!buffer.length) {
-      return NextResponse.json({ success: false, error: "Empty file." }, { status: 400 });
+    const files = [];
+    for (const file of rawFiles) {
+      if (!isAllowedUpload(file)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Unsupported file “${file.name || "upload"}”. Use PDF, PNG, JPG, or WEBP.`,
+          },
+          { status: 400 }
+        );
+      }
+      const buffer = Buffer.from(await file.arrayBuffer());
+      if (!buffer.length) continue;
+      if (buffer.length > 20 * 1024 * 1024) {
+        return NextResponse.json(
+          { success: false, error: `File too large: ${file.name} (max 20MB).` },
+          { status: 400 }
+        );
+      }
+      files.push({
+        buffer,
+        filename: String(file.name || "remittance").slice(0, 200),
+        mimeType: String(file.type || ""),
+      });
     }
-    if (buffer.length > 15 * 1024 * 1024) {
-      return NextResponse.json({ success: false, error: "PDF too large (max 15MB)." }, { status: 400 });
+
+    if (!files.length) {
+      return NextResponse.json({ success: false, error: "Empty file." }, { status: 400 });
     }
 
     let parsed;
     try {
-      parsed = await parseCourierRemittancePdf(buffer);
+      parsed = await parseCourierRemittanceFiles(files);
     } catch (err) {
       return NextResponse.json(
-        { success: false, error: err.message || "Could not parse remittance PDF." },
+        { success: false, error: err.message || "Could not parse remittance upload." },
         { status: 400 }
       );
     }
@@ -66,15 +106,22 @@ export async function POST(request) {
     }
 
     const enriched = await enrichLinesWithMatches(parsed.lines);
-    const matchedCount = enriched.filter((l) => l.matchStatus === "matched" || l.matchStatus === "manual").length;
+    const matchedCount = enriched.filter(
+      (l) => l.matchStatus === "matched" || l.matchStatus === "manual"
+    ).length;
     const unmatchedCount = enriched.filter((l) => l.matchStatus === "unmatched").length;
 
     const adminName = user?.name || user?.email || "Admin";
+    const filenameLabel =
+      files.length === 1
+        ? files[0].filename
+        : `${files.length} screenshots (${files.map((f) => f.filename).join(", ")})`.slice(0, 200);
+
     const batch = await CourierSettlementBatch.create({
       cprNumber: parsed.cprNumber,
       cprDate: parsed.cprDate,
       courier: parsed.courier || "PostEx",
-      filename: name.slice(0, 200),
+      filename: filenameLabel,
       deliveredCount: parsed.deliveredCount,
       returnedCount: parsed.returnedCount,
       codTotal: parsed.codTotal,
@@ -110,7 +157,7 @@ export async function POST(request) {
           matchStatus: l.matchStatus,
           productCogs: l.productCogs,
           lineProfit: l.lineProfit,
-          returnReceivedStatus: l.status === "Return" ? "pending" : "pending",
+          returnReceivedStatus: "pending",
         }))
       );
     }
@@ -124,6 +171,8 @@ export async function POST(request) {
       details: {
         cprNumber: parsed.cprNumber,
         courier: parsed.courier,
+        source: parsed.source || "pdf",
+        files: files.length,
         lines: enriched.length,
         matched: matchedCount,
       },
@@ -136,6 +185,7 @@ export async function POST(request) {
       batchId: String(batch._id),
       cprNumber: parsed.cprNumber,
       courier: parsed.courier,
+      source: parsed.source || "pdf",
       lineCount: enriched.length,
       matchedCount,
       unmatchedCount,
