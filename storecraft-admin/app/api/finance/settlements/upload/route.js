@@ -249,6 +249,8 @@ export async function POST(request) {
       matchedCount: totalMatched,
       unmatchedCount: results.reduce((s, r) => s + (r.unmatchedCount || 0), 0),
       netTotal: results.reduce((s, r) => s + (Number(r.netTotal) || 0), 0),
+      productCogsTotal: results.reduce((s, r) => s + (Number(r.productCogsTotal) || 0), 0),
+      profitTotal: results.reduce((s, r) => s + (Number(r.profitTotal) || 0), 0),
       source: results[0].source,
       courier: results[0].courier,
       count: results.length,
