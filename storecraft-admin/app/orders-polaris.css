@@ -247,13 +247,13 @@
 }
 
 .orders-polaris .op-table-wrap {
-  overflow: auto;
-  max-height: min(70vh, 720px);
+  overflow: visible;
+  width: 100%;
 }
 
 .orders-polaris .op-table {
   width: 100%;
-  min-width: 1280px;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 13px;
   line-height: 20px;
@@ -264,7 +264,7 @@
   top: 0;
   z-index: 2;
   height: 36px;
-  padding: 8px 12px;
+  padding: 8px 8px;
   text-align: left;
   font-size: 12px;
   font-weight: 550;
@@ -272,14 +272,73 @@
   background: #f7f7f7;
   border-bottom: 1px solid var(--p-border);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .orders-polaris .op-table tbody td {
   height: 44px;
-  padding: 8px 12px;
+  padding: 8px 8px;
   border-bottom: 1px solid var(--p-border);
   vertical-align: middle;
   color: var(--p-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.orders-polaris .op-table th:nth-child(1),
+.orders-polaris .op-table td:nth-child(1) {
+  width: 36px;
+  padding-left: 12px;
+  padding-right: 4px;
+}
+.orders-polaris .op-table th:nth-child(2),
+.orders-polaris .op-table td:nth-child(2) {
+  width: 9%;
+}
+.orders-polaris .op-table th:nth-child(3),
+.orders-polaris .op-table td:nth-child(3) {
+  width: 9%;
+}
+.orders-polaris .op-table th:nth-child(4),
+.orders-polaris .op-table td:nth-child(4) {
+  width: 6%;
+}
+.orders-polaris .op-table th:nth-child(5),
+.orders-polaris .op-table td:nth-child(5) {
+  width: 12%;
+}
+.orders-polaris .op-table th:nth-child(6),
+.orders-polaris .op-table td:nth-child(6) {
+  width: 7%;
+}
+.orders-polaris .op-table th:nth-child(7),
+.orders-polaris .op-table td:nth-child(7) {
+  width: 5%;
+}
+.orders-polaris .op-table th:nth-child(8),
+.orders-polaris .op-table td:nth-child(8) {
+  width: 7%;
+}
+.orders-polaris .op-table th:nth-child(9),
+.orders-polaris .op-table td:nth-child(9) {
+  width: 9%;
+}
+.orders-polaris .op-table th:nth-child(10),
+.orders-polaris .op-table td:nth-child(10) {
+  width: 11%;
+}
+.orders-polaris .op-table th:nth-child(11),
+.orders-polaris .op-table td:nth-child(11) {
+  width: 7%;
+}
+.orders-polaris .op-table th:nth-child(12),
+.orders-polaris .op-table td:nth-child(12) {
+  width: 8%;
+}
+.orders-polaris .op-table th:nth-child(13),
+.orders-polaris .op-table td:nth-child(13) {
+  width: 64px;
 }
 
 .orders-polaris .op-table tbody tr {
@@ -316,7 +375,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  max-width: 9.5rem;
+  max-width: 100%;
   height: 20px;
   padding: 0 8px 0 6px;
   border-radius: 8px;

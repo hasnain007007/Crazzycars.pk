@@ -306,10 +306,10 @@ export function OrdersTable({
                         />
                       </td>
                       <td>
-                        <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+                        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
                           <Link
                             href={`/orders/${o.id}`}
-                            className="op-order-link"
+                            className="op-order-link truncate"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {orderDisplayNumber(o.orderNumber)}
@@ -321,7 +321,7 @@ export function OrdersTable({
                               style={{
                                 background: "#E4E5E7",
                                 color: "#4A4A4A",
-                                maxWidth: "5rem",
+                                maxWidth: "4rem",
                                 height: 18,
                                 fontSize: 11,
                               }}
@@ -334,10 +334,10 @@ export function OrdersTable({
                         </div>
                       </td>
                       <td>
-                        <span className="op-muted whitespace-nowrap">{formatDate(o.createdAt)}</span>
+                        <span className="op-muted block truncate">{formatDate(o.createdAt)}</span>
                       </td>
                       <td>
-                        <div className="inline-flex items-center gap-1">
+                        <div className="inline-flex max-w-full items-center gap-1 overflow-hidden">
                           {age ? (
                             <span
                               title={`Age bracket ${age.bracket} days`}
@@ -360,10 +360,11 @@ export function OrdersTable({
                           ) : null}
                         </div>
                       </td>
-                      <td style={{ maxWidth: "14rem" }}>
-                        <div className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
+                      <td>
+                        <div className="flex min-w-0 flex-col gap-0 overflow-hidden">
                           <span
-                            style={{ fontWeight: 550, overflow: "hidden", textOverflow: "ellipsis" }}
+                            className="truncate"
+                            style={{ fontWeight: 550 }}
                             title={
                               customer.isGuest
                                 ? `Guest checkout${phoneInline ? ` · ${phoneInline}` : ""}`
@@ -373,8 +374,8 @@ export function OrdersTable({
                             {customer.primary}
                           </span>
                           {phoneInline ? (
-                            <span className="op-muted" style={{ fontSize: 12, flexShrink: 0 }}>
-                              · {phoneInline}
+                            <span className="op-muted truncate" style={{ fontSize: 12 }}>
+                              {phoneInline}
                             </span>
                           ) : null}
                           {o.isRepeatToday ? (
@@ -388,9 +389,9 @@ export function OrdersTable({
                           ) : null}
                         </div>
                       </td>
-                      <td style={{ maxWidth: "8rem" }}>
+                      <td>
                         <span
-                          className="op-muted block truncate whitespace-nowrap"
+                          className="op-muted block truncate"
                           title={
                             o.shippingCity
                               ? `${o.shippingCity}${o.shippingCountry ? `, ${o.shippingCountry}` : ""}`
@@ -400,10 +401,10 @@ export function OrdersTable({
                           {o.shippingCity || "—"}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap">
+                      <td className="truncate">
                         {o.itemCount === 1 ? "1 item" : `${o.itemCount || 0} items`}
                       </td>
-                      <td className="whitespace-nowrap" style={{ fontWeight: 550, fontVariantNumeric: "tabular-nums" }}>
+                      <td className="truncate" style={{ fontWeight: 550, fontVariantNumeric: "tabular-nums" }}>
                         {formatMoney(o.total)}
                       </td>
                       <td onClick={(e) => e.stopPropagation()}>
@@ -412,16 +413,16 @@ export function OrdersTable({
                       <td onClick={(e) => e.stopPropagation()}>
                         <OrderStatusBadges order={o} mode="fulfillment" />
                       </td>
-                      <td className="whitespace-nowrap">
+                      <td>
                         <CustomerConfirmBadge order={o} compact />
                       </td>
-                      <td style={{ maxWidth: "9rem" }}>
+                      <td>
                         <span
                           className="op-pill"
                           style={{
                             background: o.liveStatus || o.trackingNumber ? "#E4E5E7" : "transparent",
                             color: o.liveStatus ? "#0C5132" : "#616161",
-                            maxWidth: "8.5rem",
+                            maxWidth: "100%",
                           }}
                           title={
                             o.liveStatus
