@@ -4,6 +4,7 @@
  */
 
 import { formatAdminPrice } from "@/lib/currency";
+import { resolveInvoiceLogoUrl } from "@/lib/invoiceStoreMeta";
 
 function esc(s) {
   return String(s ?? "")
@@ -40,14 +41,26 @@ function measurementHtml(item) {
     .join("")}</div>`;
 }
 
+function logoImgHtml(logoUrl, name, { height = 56, maxWidth = 200 } = {}) {
+  const src = resolveInvoiceLogoUrl(logoUrl);
+  if (!src) {
+    return `<div style="font-size:20px;font-weight:800;color:#C41E1E;">${esc(name)}</div>`;
+  }
+  // No crossorigin=anonymous — storefront media has no ACAO and that breaks print logos.
+  // Same-origin rewrite via resolveInvoiceLogoUrl keeps admin print/PDF reliable.
+  return `<img src="${esc(src)}" alt="${esc(name)}" width="${maxWidth}" height="${height}" style="height:${height}px;max-height:${height}px;max-width:${maxWidth}px;width:auto;object-fit:contain;display:block;" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='block';" /><div style="display:none;font-size:20px;font-weight:800;color:#C41E1E;">${esc(name)}</div>`;
+}
+
 export function packingSlipInnerHtml(order, options = {}) {
-  const name = options.storeName || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+  const name = options.storeName || `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`;
   const logoUrl = options.logoUrl || "";
   const addr = formatAddrLines(order.shippingAddress);
   const items = order.items || [];
   const totalItems = items.reduce((s, i) => s + (i.quantity || 0), 0);
   const p = order.pricing || { total: 0 };
-  const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—";
+  const dateStr = order.createdAt
+    ? new Date(order.createdAt).toLocaleDateString(undefined, { dateStyle: "medium" })
+    : "—";
   const rows = items
     .map(
       (i) =>
@@ -61,11 +74,7 @@ export function packingSlipInnerHtml(order, options = {}) {
     <div class="slip">
       <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;">PACKING SLIP</div>
       <div style="text-align:center; margin-bottom:12px;">
-        ${
-          logoUrl
-            ? `<img src="${esc(logoUrl)}" height="40" style="object-fit:contain; max-width:180px;" />`
-            : `<div style="height:28px;width:28px;border:1px solid #111;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">LOGO</div>`
-        }
+        <div style="display:inline-block;text-align:center;">${logoImgHtml(logoUrl, name, { height: 40, maxWidth: 180 })}</div>
         <div style="font-size:18px;font-weight:700;margin-top:8px;">${esc(name)}</div>
       </div>
       <div style="margin-top:4px;font-size:13px;">Order: <strong>${esc(order.orderNumber)}</strong></div>
@@ -109,6 +118,13 @@ export function invoiceInnerHtml(order, options = {}) {
   const footerNote = options.footerNote || options.footerText || "Thank you for your business.";
   const p = order.pricing || { subtotal: 0, discount: 0, shippingCost: 0, total: 0 };
   const items = order.items || [];
+  // <10 line items: compact spacing so print stays on one A4 page
+  const compact =
+    options.compact != null ? Boolean(options.compact) : items.length > 0 && items.length < 10;
+  const mt = compact ? 14 : 28;
+  const boxPad = compact ? "10px 12px" : "14px 16px";
+  const rowPad = compact ? "6px 6px" : "10px 8px";
+  const logoH = compact ? 48 : 64;
   const invNo = order.invoiceNumber || order.orderNumber || "—";
   const dateStr = order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("en-PK", {
@@ -132,8 +148,7 @@ export function invoiceInnerHtml(order, options = {}) {
     stripe: "Card (Stripe)",
     paypal: "PayPal",
   };
-  const payMethod =
-    paymentMethodLabels[order.paymentMethod] || order.paymentMethod || "—";
+  const payMethod = paymentMethodLabels[order.paymentMethod] || order.paymentMethod || "—";
   const payStatus = String(order.paymentStatus || "—").toUpperCase();
 
   const rows = items
@@ -143,15 +158,15 @@ export function invoiceInnerHtml(order, options = {}) {
           ? Number(i.total)
           : Math.round((Number(i.quantity) || 0) * (Number(i.unitPrice) || 0) * 100) / 100;
       return `<tr>
-      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;color:#64748b;width:36px;">${idx + 1}</td>
-      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;">
+      <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;color:#64748b;width:36px;">${idx + 1}</td>
+      <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;">
         <div style="font-weight:600;color:#0f172a;">${esc(i.name)}</div>
         ${i.variation ? `<div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(i.variation)}</div>` : ""}
         ${measurementHtml(i)}
       </td>
-      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:center;">${i.quantity}</td>
-      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatMoney(i.unitPrice)}</td>
-      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;">${formatMoney(lineTotal)}</td>
+      <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;text-align:center;">${i.quantity}</td>
+      <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;text-align:right;">${formatMoney(i.unitPrice)}</td>
+      <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;">${formatMoney(lineTotal)}</td>
     </tr>`;
     })
     .join("");
@@ -161,7 +176,10 @@ export function invoiceInnerHtml(order, options = {}) {
     order.customer?.phone,
     order.customer?.email,
     order.shippingAddress?.street || order.billingAddress?.street,
-    [order.shippingAddress?.city || order.billingAddress?.city, order.shippingAddress?.country || order.billingAddress?.country]
+    [
+      order.shippingAddress?.city || order.billingAddress?.city,
+      order.shippingAddress?.country || order.billingAddress?.country,
+    ]
       .filter(Boolean)
       .join(", "),
   ].filter(Boolean);
@@ -171,8 +189,8 @@ export function invoiceInnerHtml(order, options = {}) {
 
   const bankBlock =
     bankName || bankAccountTitle || bankAccountNumber || bankIban
-      ? `<div style="margin-top:20px;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
-          <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:#64748b;margin-bottom:8px;">BANK DETAILS</div>
+      ? `<div class="inv-keep" style="margin-top:${compact ? 12 : 20}px;padding:${boxPad};background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:#64748b;margin-bottom:6px;">BANK DETAILS</div>
           ${bankName ? `<div style="font-size:12px;"><strong>Bank:</strong> ${esc(bankName)}</div>` : ""}
           ${bankAccountTitle ? `<div style="font-size:12px;"><strong>Title:</strong> ${esc(bankAccountTitle)}</div>` : ""}
           ${bankAccountNumber ? `<div style="font-size:12px;"><strong>Account:</strong> ${esc(bankAccountNumber)}</div>` : ""}
@@ -181,25 +199,21 @@ export function invoiceInnerHtml(order, options = {}) {
       : "";
 
   return `
-    <div class="inv" style="max-width:800px;margin:0 auto;color:#0f172a;">
-      <div style="height:6px;background:${esc(accent)};border-radius:4px 4px 0 0;margin:0 0 20px;"></div>
+    <div class="inv${compact ? " inv-compact" : ""}" style="max-width:800px;margin:0 auto;color:#0f172a;">
+      <div style="height:5px;background:${esc(accent)};border-radius:4px 4px 0 0;margin:0 0 ${compact ? 12 : 18}px;"></div>
 
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;">
         <div style="flex:1;min-width:220px;">
-          ${
-            logoUrl
-              ? `<img src="${esc(logoUrl)}" alt="${esc(name)}" crossorigin="anonymous" style="height:72px;max-height:72px;max-width:240px;width:auto;object-fit:contain;display:block;" />`
-              : `<div style="font-size:22px;font-weight:800;color:${esc(accent)};">${esc(name)}</div>`
-          }
-          ${logoUrl ? `<div style="margin-top:10px;font-size:16px;font-weight:800;">${esc(name)}</div>` : ""}
-          <div style="margin-top:8px;font-size:12px;line-height:1.55;color:#475569;">
+          ${logoImgHtml(logoUrl, name, { height: logoH, maxWidth: 220 })}
+          <div style="margin-top:${compact ? 6 : 10}px;font-size:${compact ? 14 : 16}px;font-weight:800;">${esc(name)}</div>
+          <div style="margin-top:6px;font-size:12px;line-height:1.45;color:#475569;">
             ${companyBits.map((l) => `<div>${esc(l)}</div>`).join("")}
             ${taxBits.length ? `<div style="margin-top:4px;">${taxBits.map(esc).join(" · ")}</div>` : ""}
           </div>
         </div>
         <div style="text-align:right;min-width:180px;">
           <div style="display:inline-block;background:${esc(accent)};color:#fff;font-size:11px;font-weight:800;letter-spacing:0.12em;padding:6px 14px;border-radius:999px;">INVOICE</div>
-          <div style="margin-top:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:800;">${esc(invNo)}</div>
+          <div style="margin-top:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:17px;font-weight:800;">${esc(invNo)}</div>
           <div style="margin-top:6px;font-size:12px;color:#64748b;">Date: <strong style="color:#0f172a;">${esc(dateStr)}</strong>${timeStr ? ` · ${esc(timeStr)}` : ""}</div>
           <div style="margin-top:8px;font-size:12px;">
             <span style="display:inline-block;padding:3px 10px;border-radius:999px;background:${payStatus === "PAID" ? "#ecfdf5" : "#fff7ed"};color:${payStatus === "PAID" ? "#047857" : "#c2410c"};font-weight:700;font-size:11px;">${esc(payStatus)}</span>
@@ -207,16 +221,16 @@ export function invoiceInnerHtml(order, options = {}) {
         </div>
       </div>
 
-      <div style="display:flex;gap:20px;margin-top:28px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:200px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:10px;">
+      <div style="display:flex;gap:14px;margin-top:${mt}px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;padding:${boxPad};border:1px solid #e2e8f0;border-radius:10px;">
           <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:${esc(accent)};">BILL TO</div>
-          <div style="margin-top:8px;font-size:13px;line-height:1.55;">
+          <div style="margin-top:6px;font-size:13px;line-height:1.45;">
             ${billLines.map((l, i) => `<div style="${i === 0 ? "font-weight:700;font-size:14px;" : ""}">${esc(l)}</div>`).join("") || "<div>—</div>"}
           </div>
         </div>
-        <div style="flex:1;min-width:200px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:10px;">
+        <div style="flex:1;min-width:200px;padding:${boxPad};border:1px solid #e2e8f0;border-radius:10px;">
           <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:${esc(accent)};">PAYMENT</div>
-          <div style="margin-top:8px;font-size:13px;line-height:1.7;">
+          <div style="margin-top:6px;font-size:13px;line-height:1.55;">
             <div><span style="color:#64748b;">Method:</span> <strong>${esc(payMethod)}</strong></div>
             <div><span style="color:#64748b;">Status:</span> <strong>${esc(payStatus)}</strong></div>
             <div><span style="color:#64748b;">Currency:</span> <strong>${esc(options.currency || order.currency || "PKR")}</strong></div>
@@ -224,33 +238,33 @@ export function invoiceInnerHtml(order, options = {}) {
         </div>
       </div>
 
-      <table style="width:100%;border-collapse:collapse;margin-top:28px;font-size:13px;">
+      <table style="width:100%;border-collapse:collapse;margin-top:${mt}px;font-size:13px;">
         <thead>
           <tr style="background:${esc(accent)};color:#fff;">
-            <th style="text-align:left;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">#</th>
-            <th style="text-align:left;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">DESCRIPTION</th>
-            <th style="text-align:center;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">QTY</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">UNIT</th>
-            <th style="text-align:right;padding:10px 8px;font-size:11px;letter-spacing:0.04em;">AMOUNT</th>
+            <th style="text-align:left;padding:${rowPad};font-size:11px;letter-spacing:0.04em;">#</th>
+            <th style="text-align:left;padding:${rowPad};font-size:11px;letter-spacing:0.04em;">DESCRIPTION</th>
+            <th style="text-align:center;padding:${rowPad};font-size:11px;letter-spacing:0.04em;">QTY</th>
+            <th style="text-align:right;padding:${rowPad};font-size:11px;letter-spacing:0.04em;">UNIT</th>
+            <th style="text-align:right;padding:${rowPad};font-size:11px;letter-spacing:0.04em;">AMOUNT</th>
           </tr>
         </thead>
         <tbody>${rows || `<tr><td colspan="5" style="padding:16px;text-align:center;color:#94a3b8;">No items</td></tr>`}</tbody>
       </table>
 
-      <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+      <div class="inv-keep" style="margin-top:${compact ? 12 : 18}px;display:flex;justify-content:flex-end;">
         <div style="width:300px;font-size:13px;">
-          <div style="display:flex;justify-content:space-between;padding:4px 0;color:#475569;"><span>Total</span><span>${formatMoney(p.subtotal)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;color:#475569;"><span>Invoice Discount</span><span>${formatMoney(p.discount || 0)}</span></div>
-          ${Number(p.shippingCost) > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#475569;"><span>Delivery</span><span>${formatMoney(p.shippingCost)}</span></div>` : ""}
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #e2e8f0;font-weight:700;"><span>Net Amount</span><span>${formatMoney(p.total)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;color:#047857;"><span>Received Amount</span><span>${formatMoney(order.amountPaid || 0)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;color:#c2410c;"><span>Invoice Balance</span><span>${formatMoney(
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#475569;"><span>Total</span><span>${formatMoney(p.subtotal)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#475569;"><span>Invoice Discount</span><span>${formatMoney(p.discount || 0)}</span></div>
+          ${Number(p.shippingCost) > 0 ? `<div style="display:flex;justify-content:space-between;padding:3px 0;color:#475569;"><span>Delivery</span><span>${formatMoney(p.shippingCost)}</span></div>` : ""}
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid #e2e8f0;font-weight:700;"><span>Net Amount</span><span>${formatMoney(p.total)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#047857;"><span>Received Amount</span><span>${formatMoney(order.amountPaid || 0)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#c2410c;"><span>Invoice Balance</span><span>${formatMoney(
             order.remainingBalance != null
               ? order.remainingBalance
               : Math.max(0, (Number(p.total) || 0) - (Number(order.amountPaid) || 0))
           )}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;color:#475569;"><span>Previous Balance</span><span>${formatMoney(order.previousBalance || 0)}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-top:8px;padding:12px 14px;background:${esc(accent)};color:#fff;border-radius:8px;font-size:14px;font-weight:800;">
+          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#475569;"><span>Previous Balance</span><span>${formatMoney(order.previousBalance || 0)}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;padding:10px 12px;background:${esc(accent)};color:#fff;border-radius:8px;font-size:14px;font-weight:800;">
             <span>Total Receivables</span><span>${formatMoney(
               order.totalReceivables != null
                 ? order.totalReceivables
@@ -272,27 +286,48 @@ export function invoiceInnerHtml(order, options = {}) {
 
       ${
         order.note
-          ? `<div style="margin-top:18px;font-size:12px;color:#475569;"><strong>Note:</strong> ${esc(order.note)}</div>`
+          ? `<div style="margin-top:12px;font-size:12px;color:#475569;"><strong>Note:</strong> ${esc(order.note)}</div>`
           : ""
       }
 
-      <div style="margin-top:28px;padding-top:16px;border-top:1px solid #e2e8f0;">
-        <div style="font-size:11px;color:#64748b;line-height:1.55;"><strong style="color:#334155;">Terms:</strong> ${esc(terms)}</div>
-        <div style="margin-top:14px;text-align:center;font-size:13px;font-weight:700;color:${esc(accent)};">${esc(footerNote)}</div>
-        <div style="margin-top:6px;text-align:center;font-size:10px;color:#94a3b8;">${esc(name)} · Computer-generated invoice</div>
+      <div class="inv-footer inv-keep" style="margin-top:${compact ? 14 : 22}px;padding-top:12px;border-top:1px solid #e2e8f0;">
+        <div style="font-size:11px;color:#64748b;line-height:1.45;"><strong style="color:#334155;">Terms:</strong> ${esc(terms)}</div>
+        <div style="margin-top:${compact ? 8 : 12}px;text-align:center;font-size:13px;font-weight:700;color:${esc(accent)};">${esc(footerNote)}</div>
+        <div style="margin-top:4px;text-align:center;font-size:10px;color:#94a3b8;">${esc(name)} · Computer-generated invoice</div>
       </div>
     </div>
   `;
 }
 
-/** Full HTML document string for iframe printing. */
-export function printDocumentShell(title, bodyInner) {
+/**
+ * Full HTML document string for iframe printing.
+ * @param {string} title
+ * @param {string} bodyInner
+ * @param {{ compact?: boolean }} [options]
+ */
+export function printDocumentShell(title, bodyInner, options = {}) {
+  const compact = Boolean(options.compact);
+  const pageMargin = compact ? "8mm" : "12mm";
+  const bodyPad = compact ? "4px 8px" : "10px 14px";
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${esc(title)}</title>
   <style>
-    @page { margin: 16mm; }
-    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #111; margin: 0; padding: 16px; }
+    @page { size: A4; margin: ${pageMargin}; }
+    html, body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: #111; margin: 0; padding: 0;
+      background: #fff;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body { padding: ${bodyPad}; }
     .page { page-break-after: always; }
     .page:last-child { page-break-after: auto; }
+    .inv-keep { page-break-inside: avoid; break-inside: avoid; }
+    .inv-footer { page-break-inside: avoid; break-inside: avoid; }
+    @media print {
+      html, body { height: auto !important; }
+      .inv-compact { font-size: 12.5px; }
+    }
   </style></head><body>${bodyInner}</body></html>`;
 }
 
@@ -318,11 +353,32 @@ export function printHtmlWithIframe(htmlContent) {
     iframe.remove();
     throw new Error("Could not access print window.");
   }
-  win.focus();
-  win.print();
-  setTimeout(() => {
-    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-  }, 1000);
+  const go = () => {
+    win.focus();
+    win.print();
+    setTimeout(() => {
+      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    }, 1000);
+  };
+  const imgs = Array.from(idoc.images || []);
+  if (!imgs.length) {
+    go();
+    return;
+  }
+  Promise.all(
+    imgs.map(
+      (img) =>
+        new Promise((resolve) => {
+          if (img.complete) {
+            resolve();
+            return;
+          }
+          img.addEventListener("load", resolve, { once: true });
+          img.addEventListener("error", resolve, { once: true });
+          setTimeout(resolve, 2500);
+        })
+    )
+  ).then(go);
 }
 
 export function wrapPages(slipsHtmlArray) {

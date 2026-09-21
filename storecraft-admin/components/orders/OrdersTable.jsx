@@ -13,6 +13,7 @@ import { CustomerConfirmBadge } from "./CustomerConfirmBadge";
 import { OrderStatusBadges } from "./OrderStatusBadges";
 import { BulkActionBar } from "./BulkActionBar";
 import { formatAdminPrice } from "@/lib/currency";
+import { resolveInvoiceLogoUrl } from "@/lib/invoiceStoreMeta";
 
 function formatMoney(n) {
   return formatAdminPrice(n);
@@ -143,7 +144,7 @@ export function OrdersTable({
         const appearance = settings.appearance || {};
         return {
           storeName: g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Store",
-          logoUrl: g.logoUrl || g.logo?.url || "",
+          logoUrl: resolveInvoiceLogoUrl(g.logoUrl || g.logo?.url || ""),
           phone: g.phone || "",
           email: g.email || "",
           website: g.website || "",

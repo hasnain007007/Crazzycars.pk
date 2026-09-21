@@ -8,8 +8,25 @@ import {
 } from "@/components/orders/printOrderDocuments";
 import { enrichOrderForInvoice } from "@/lib/orderInvoice";
 
+function itemCount(invoice) {
+  return Array.isArray(invoice?.items) ? invoice.items.length : 0;
+}
+
+/** Under 10 line items → compact print/PDF so the invoice stays on one A4 page. */
+function isCompactInvoice(invoice) {
+  const n = itemCount(invoice);
+  return n > 0 && n < 10;
+}
+
 function buildInvoiceBody(invoice, storeMeta = {}) {
-  return invoiceInnerHtml(enrichOrderForInvoice(invoice), storeMeta);
+  return invoiceInnerHtml(enrichOrderForInvoice(invoice), {
+    ...storeMeta,
+    compact: isCompactInvoice(invoice),
+  });
+}
+
+function shellOpts(invoice) {
+  return { compact: isCompactInvoice(invoice) };
 }
 
 function invoiceFileBase(invoice) {
@@ -61,7 +78,7 @@ function stripCrossOriginImages(root) {
 export function openInvoiceDocumentWindow(invoice, storeMeta = {}) {
   const body = buildInvoiceBody(invoice, storeMeta);
   const number = invoice.invoiceNumber || invoice.orderNumber || "invoice";
-  const html = printDocumentShell(`Invoice ${number}`, body);
+  const html = printDocumentShell(`Invoice ${number}`, body, shellOpts(invoice));
   const w = window.open("", "_blank", "noopener,noreferrer,width=920,height=1000");
   if (!w) {
     throw new Error("Popup blocked. Allow popups for admin.crazzycars.pk, then try again.");
@@ -77,7 +94,7 @@ export function openInvoiceDocumentWindow(invoice, storeMeta = {}) {
 export function printInvoice(invoice, storeMeta = {}) {
   const body = buildInvoiceBody(invoice, storeMeta);
   const number = invoice.invoiceNumber || invoice.orderNumber || "invoice";
-  const html = printDocumentShell(`Invoice ${number}`, body);
+  const html = printDocumentShell(`Invoice ${number}`, body, shellOpts(invoice));
 
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
@@ -125,6 +142,8 @@ export async function downloadInvoicePdf(invoice, storeMeta = {}) {
   ]);
 
   const body = buildInvoiceBody(invoice, storeMeta);
+  const compact = isCompactInvoice(invoice);
+  const rootPad = compact ? "8px 14px 10px" : "16px 20px 20px";
 
   // Isolated iframe — opacity:0 mounts inherit dark-mode and often export as B&W / blank.
   // Height is only a viewport hint; capture uses #invoice-root scrollHeight (not iframe height).
@@ -166,12 +185,13 @@ export async function downloadInvoicePdf(invoice, storeMeta = {}) {
       #invoice-root {
         display: block;
         width: 794px;
-        padding: 16px 20px 20px;
+        padding: ${rootPad};
         box-sizing: border-box;
         background: #ffffff;
         height: auto !important;
         min-height: 0 !important;
       }
+      ${compact ? ".inv-compact { font-size: 12.5px; }" : ""}
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       img { max-width: 100%; }
     </style>
@@ -253,8 +273,10 @@ export async function downloadInvoicePdf(invoice, storeMeta = {}) {
       return;
     }
 
-    // Case 2: only slightly over — scale down instead of a blank page 2
-    if (imgHeightMm <= usableHeight * 1.15) {
+    // Case 2: slightly over — scale down instead of a blank page 2.
+    // Compact invoices (<10 items) allow a bigger soft-scale to force one page.
+    const softMax = compact ? usableHeight * 1.35 : usableHeight * 1.15;
+    if (imgHeightMm <= softMax) {
       const scale = usableHeight / imgHeightMm;
       const w = usableWidth * scale;
       const h = usableHeight;

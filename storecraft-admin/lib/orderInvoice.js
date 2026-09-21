@@ -34,7 +34,10 @@ export function enrichOrderForInvoice(order) {
 }
 
 export function buildOrderInvoiceBodyHtml(order, storeMeta = {}) {
-  return invoiceInnerHtml(enrichOrderForInvoice(order), storeMeta);
+  const enriched = enrichOrderForInvoice(order);
+  const items = Array.isArray(enriched?.items) ? enriched.items : [];
+  const compact = items.length > 0 && items.length < 10;
+  return invoiceInnerHtml(enriched, { ...storeMeta, compact });
 }
 
 export function buildOrderInvoiceEmailHtml(order, storeMeta = {}, options = {}) {

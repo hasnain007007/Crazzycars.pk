@@ -13,9 +13,9 @@ import {
   wrapPages,
 } from "./printOrderDocuments";
 
-function printOrderDocument(title, bodyInner) {
+function printOrderDocument(title, bodyInner, shellOptions = {}) {
   try {
-    printHtmlWithIframe(printDocumentShell(title, bodyInner));
+    printHtmlWithIframe(printDocumentShell(title, bodyInner, shellOptions));
   } catch {
     toast.error("Print failed.");
   }
@@ -207,8 +207,11 @@ export function BulkActionBar({
         return;
       }
       const settings = (await getStoreSettings?.()) || {};
+      const allCompact = orders.every(
+        (o) => Array.isArray(o.items) && o.items.length > 0 && o.items.length < 10
+      );
       const inner = wrapPages(orders.map((o) => invoiceInnerHtml(o, settings)));
-      printOrderDocument("Invoices", inner);
+      printOrderDocument("Invoices", inner, { compact: allCompact });
     } catch {
       toast.error("Could not prepare invoices.");
     } finally {
