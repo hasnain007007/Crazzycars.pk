@@ -4579,6 +4579,26 @@ textarea::placeholder {
     padding: 18px 0 12px;
   }
 
+  .cat-showcase__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .cat-showcase__tabs {
+    max-width: 100%;
+    width: 100%;
+    padding: 4px;
+    border-radius: 11px;
+  }
+
+  .cat-showcase__tab {
+    height: 34px;
+    padding: 0 13px;
+    font-size: 11.5px;
+  }
+
   .cat-showcase__body {
     grid-template-columns: 1fr;
     gap: 12px;
