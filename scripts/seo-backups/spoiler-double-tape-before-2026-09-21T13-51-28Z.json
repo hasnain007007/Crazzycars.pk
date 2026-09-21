@@ -1,0 +1,677 @@
+{
+  "takenAt": "2026-09-21T13:51:30.424Z",
+  "count": 28,
+  "products": [
+    {
+      "_id": {
+        "$oid": "6a5d226489c0c8d16c691fbc"
+      },
+      "slug": "toyota-corolla-2008-2014-canadian-style-trunk-spoiler-with-led-light-abs",
+      "articleNo": "CC-0027",
+      "name": "Toyota Corolla 2008-2014 Canadian Style Trunk Spoiler with LED Light ABS",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226489c0c8d16c691fbd"
+      },
+      "slug": "toyota-corolla-2015-2023-ducktail-trunk-spoiler-abs-unpainted",
+      "articleNo": "CC-0028",
+      "name": "Toyota Corolla 2015-2023 Ducktail Trunk Spoiler ABS Unpainted",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226c89c0c8d16c692017"
+      },
+      "slug": "toyota-yaris-2020-2026-trunk-lip-spoiler-abs-plastic",
+      "articleNo": "CC-0118",
+      "name": "Toyota Yaris 2020-2026 Trunk Lip Spoiler – ABS Plastic",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6aa909dcf05a29e366164ff9"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6aa909dcf05a29e366164ffa"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226c89c0c8d16c692018"
+      },
+      "slug": "toyota-yaris-2020-2026-roof-spoiler-abs-plastic",
+      "articleNo": "CC-0119",
+      "name": "Toyota Yaris 2020-2026 Roof Spoiler – ABS Plastic",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226d89c0c8d16c69201d"
+      },
+      "slug": "honda-civic-reborn-2006-2012-abs-plastic-roof-spoiler",
+      "articleNo": "CC-0120",
+      "name": "Honda Civic Reborn 2006-2012 ABS Plastic Roof Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226d89c0c8d16c69201e"
+      },
+      "slug": "honda-civic-reborn-2006-2012-abs-roof-spoiler",
+      "articleNo": "CC-0121",
+      "name": "Honda Civic Reborn 2006-2012 ABS Roof Spoiler Rear Window",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226d89c0c8d16c69201f"
+      },
+      "slug": "toyota-corolla-2009-2013-ducktail-trunk-spoiler",
+      "articleNo": "CC-0122",
+      "name": "Toyota Corolla 2009-2013 Ducktail Trunk Spoiler – E140/E150 Model (ABS Plastic)",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226d89c0c8d16c692025"
+      },
+      "slug": "honda-city-2010-2020-trunk-lip-spoiler-mugen-style",
+      "articleNo": "CC-0128",
+      "name": "Honda City 2010-2020 Mugen Style Trunk Lip Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226e89c0c8d16c692027"
+      },
+      "slug": "suzuki-alto-rs-rear-roof-spoiler-2019-2026",
+      "articleNo": "CC-SAL-EXT-RFS-RS-19",
+      "name": "Suzuki Alto 2019-2026 RS Turbo Style Rear Roof Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227089c0c8d16c69203e"
+      },
+      "slug": "honda-civic-reborn-ducktail-spoiler",
+      "articleNo": "CC-0151",
+      "name": "Honda Civic Reborn 2006-2012 Ducktail Trunk Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227089c0c8d16c69203f"
+      },
+      "slug": "honda-civic-rebirth-ducktail-spoiler",
+      "articleNo": "CC-0152",
+      "name": "Honda Civic Rebirth 2012-2016 Ducktail Trunk Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227089c0c8d16c692046"
+      },
+      "slug": "toyota-corolla-2015-2026-roof-spoiler-abs-plastic",
+      "articleNo": "CC-0158",
+      "name": "Toyota Corolla 2015–2026 Roof Spoiler (High-Quality ABS Plastic)",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227089c0c8d16c692047"
+      },
+      "slug": "toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+      "articleNo": "CC-0159",
+      "name": "Toyota Corolla 2015–2026 RS Style Trunk Spoiler – ABS Plastic",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227089c0c8d16c692048"
+      },
+      "slug": "toyota-corolla-2015-2026-trunk-lip-spoiler-abs-plastic",
+      "articleNo": "CC-0160",
+      "name": "Toyota Corolla 2015–2026 Trunk Lip Spoiler (High-Quality ABS Plastic)",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227089c0c8d16c692049"
+      },
+      "slug": "toyota-corolla-2015-2026-trd-style-trunk-spoiler",
+      "articleNo": "CC-0161",
+      "name": "Toyota Corolla 2015–2026 TRD Style Trunk Spoiler – ABS Plastic",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227089c0c8d16c69204a"
+      },
+      "slug": "toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler",
+      "articleNo": "CC-0162",
+      "name": "Toyota Corolla E140 2009–2013 Ducktail Trunk Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        },
+        {
+          "name": "Extra Safe Box",
+          "price": 80,
+          "required": false
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227189c0c8d16c692051"
+      },
+      "slug": "honda-civic-11th-gen-2022-present-roof-spoiler",
+      "articleNo": "CC-0169",
+      "name": "Honda Civic 11th Gen 2022-Present Roof Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227189c0c8d16c692052"
+      },
+      "slug": "honda-civic-11th-gen-rs-style-trunk-spoiler-2022-present",
+      "articleNo": "CC-0170",
+      "name": "Honda Civic 11th Gen 2022 RS Style Trunk Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a5d227289c0c8d16c692056"
+      },
+      "slug": "honda-civic-x-rs-style-trunk-spoiler-2016-2021",
+      "articleNo": "CC-0172",
+      "name": "Honda Civic X 2016–2021 RS Style Trunk Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a6262760786ea8adbf05b08"
+      },
+      "name": "Hyundai Elantra Hybrid Rear Trunk Slim Style Spoiler 2026 Unpainted ABS",
+      "slug": "hyundai-elantra-hybrid-rear-trunk-slim-style-spoiler-2026-unpainted-abs",
+      "articleNo": "CC-EXT-111",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a62627b0786ea8adbf05b0e"
+      },
+      "name": "Mark X Spoiler Unpainted ABS 2004-2009",
+      "slug": "mark-x-spoiler-unpainted-abs-2004-2009",
+      "articleNo": "CC-EXT-130",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a62627f0786ea8adbf05b13"
+      },
+      "name": "Toyota Mark X ABS Roof Spoiler 2020-2022",
+      "slug": "toyota-mark-x-abs-roof-spoiler-2020-2022",
+      "articleNo": "CC-EXT-135",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145370"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a66721d60d664ab13145371"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a62627f0786ea8adbf05b14"
+      },
+      "name": "Toyota Mark X Duck tail Spoiler 2004-2009",
+      "slug": "toyota-mark-x-duck-tail-spoiler-2004-2009",
+      "articleNo": "CC-EXT-138",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6a76e1666e60dc61c6b86836"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6a76e1666e60dc61c6b86837"
+          }
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a633a60d40b29d18ad3ce66"
+      },
+      "name": "Universal Car Eyes Spoiler With Running Brake LED Lights (3Pcs)",
+      "slug": "universal-car-eyes-spoiler-with-running-brake-led-lights-3pcs",
+      "articleNo": "CC-EXT-201",
+      "addOns": [
+        {
+          "name": "Extra Safe Box",
+          "price": 80,
+          "required": false
+        }
+      ]
+    },
+    {
+      "_id": {
+        "$oid": "6a71072d3261f3cfd4c75536"
+      },
+      "name": "Honda Civic Reborn 2007-2011 Mugen RR Rear Trunk Spoiler Unpainted ABS",
+      "slug": "honda-civic-reborn-mugen-rr-rear-trunk-spoiler-2007-2011",
+      "articleNo": "CC-CIV-SPLR-MUG-RR",
+      "addOns": []
+    },
+    {
+      "_id": {
+        "$oid": "6a71072d3261f3cfd4c75537"
+      },
+      "name": "Honda Civic 2001-2005 Rear Trunk Spoiler Unpainted ABS",
+      "slug": "honda-civic-2001-2005-rear-trunk-spoiler-unpainted-abs",
+      "articleNo": "CC-CIV-SPLR-ES",
+      "addOns": []
+    },
+    {
+      "_id": {
+        "$oid": "6a71072f3261f3cfd4c75540"
+      },
+      "name": "Changan Alsvin Trunk Lip Spoiler",
+      "slug": "changan-alsvin-trunk-lip-spoiler",
+      "articleNo": "CC-ALS-SPLR-LIP",
+      "addOns": []
+    },
+    {
+      "_id": {
+        "$oid": "6a5d226e89c0c8d16c692026"
+      },
+      "slug": "honda-city-new-model-trunk-lip-spoiler-2021-2026",
+      "articleNo": "CC-0129",
+      "name": "Honda City 2021-2026 RS Style Trunk Lip Spoiler",
+      "addOns": [
+        {
+          "name": "Spoiler paint",
+          "price": 1500,
+          "required": false,
+          "_id": {
+            "$oid": "6aad87e6ba958bc36e065d0c"
+          }
+        },
+        {
+          "name": "Wrap",
+          "price": 1000,
+          "required": false,
+          "_id": {
+            "$oid": "6aad87e6ba958bc36e065d0d"
+          }
+        }
+      ]
+    }
+  ]
+}
