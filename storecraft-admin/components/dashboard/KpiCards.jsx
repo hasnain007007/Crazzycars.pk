@@ -119,6 +119,11 @@ function formatCount(n) {
   return (Number(n) || 0).toLocaleString("en-PK");
 }
 
+function formatRate(n) {
+  if (n == null || !Number.isFinite(Number(n))) return "—";
+  return `${Number(n).toLocaleString("en-PK", { maximumFractionDigits: 1 })}%`;
+}
+
 export function KpiCards({ data }) {
   const d = data || {};
   const margin = Number(d.profitMargin) || 0;
@@ -131,6 +136,9 @@ export function KpiCards({ data }) {
   const unpaidPeriod = Number(d.unpaidOrdersPeriod) || 0;
   const partialPeriod = Number(d.partialOrdersPeriod) || 0;
   const unpaidToday = Number(d.unpaidOrdersToday) || 0;
+  const periodVisitors = Number(d.periodVisitors) || 0;
+  const todayConv = d.todayConversionRate;
+  const periodConv = d.periodConversionRate;
 
   return (
     <div
@@ -161,7 +169,17 @@ export function KpiCards({ data }) {
         value={formatCount(d.todayVisitors)}
         trend={d.todayVisitorsGrowth}
         tone="line"
-        hint={`Unique sessions today · vs ${formatCount(d.yesterdayVisitors)} yesterday`}
+        hint={`Unique sessions today · ${formatRate(todayConv)} conversion · vs ${formatCount(d.yesterdayVisitors)} yesterday`}
+      />
+
+      <HeroCard
+        label="Conversion Rate"
+        value={formatRate(periodConv)}
+        trend={d.periodConversionGrowth}
+        tone="line"
+        hint={`${formatCount(periodOrders)} orders ÷ ${formatCount(periodVisitors)} visitors · ${rangeLabel}${
+          todayConv != null ? ` · today ${formatRate(todayConv)}` : ""
+        }`}
       />
 
       <HeroCard

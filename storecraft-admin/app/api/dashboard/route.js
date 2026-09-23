@@ -71,6 +71,40 @@ function pctChange(current, previous) {
   return Math.round(((c - p) / p) * 1000) / 10;
 }
 
+/** Orders ÷ unique visitors → conversion % (1 decimal). Null when no visitors. */
+function conversionRate(orders, visitors) {
+  const v = Number(visitors) || 0;
+  if (v <= 0) return null;
+  return Math.round(((Number(orders) || 0) / v) * 1000) / 10;
+}
+
+/** Inclusive Karachi dayKey list bounds for DailyVisitor queries. */
+function visitorDayKeyFilter(from, to, todayKey) {
+  const fromKey = from ? karachiDayKey(from) : null;
+  const toKey = to ? karachiDayKey(to) : todayKey;
+  if (!fromKey && !toKey) return {};
+  if (fromKey && toKey) return { dayKey: { $gte: fromKey, $lte: toKey } };
+  if (fromKey) return { dayKey: { $gte: fromKey } };
+  return { dayKey: { $lte: toKey } };
+}
+
+/** Prior window of equal length (for conversion trend). */
+function priorVisitorWindow(from, to, todayKey) {
+  if (!from || !to) return null;
+  const fromKey = karachiDayKey(from);
+  const toKey = karachiDayKey(to);
+  let days = 0;
+  for (let k = fromKey; k <= toKey; k = shiftDayKey(k, 1)) days += 1;
+  if (days < 1) return null;
+  const priorToKey = shiftDayKey(fromKey, -1);
+  const priorFromKey = shiftDayKey(priorToKey, -(days - 1));
+  return {
+    visitorFilter: { dayKey: { $gte: priorFromKey, $lte: priorToKey } },
+    orderFrom: karachiDayBounds(priorFromKey).start,
+    orderTo: karachiDayBounds(priorToKey).end,
+  };
+}
+
 function normalizePaymentKey(raw) {
   const s = String(raw || "").toLowerCase().trim();
   if (!s) return "other";
@@ -222,6 +256,9 @@ export async function GET(request) {
           }
         : { $gte: chartFrom, $lte: chartTo };
 
+    const priorWindow = priorVisitorWindow(range.from, range.to, todayKey);
+    const periodVisitorFilter = visitorDayKeyFilter(range.from, range.to, todayKey);
+
     const [
       periodSalesAgg,
       periodOrdersCount,
@@ -253,6 +290,9 @@ export async function GET(request) {
       weekdayOrders,
       todayVisitorCount,
       yesterdayVisitorCount,
+      periodVisitorCount,
+      priorPeriodVisitorCount,
+      priorPeriodOrderCount,
       unpaidOrdersPeriod,
       partialOrdersPeriod,
       unpaidOrdersToday,
@@ -390,6 +430,15 @@ export async function GET(request) {
         .lean(),
       DailyVisitor.countDocuments({ dayKey: todayKey }),
       DailyVisitor.countDocuments({ dayKey: yesterdayKey }),
+      DailyVisitor.countDocuments(periodVisitorFilter),
+      priorWindow
+        ? DailyVisitor.countDocuments(priorWindow.visitorFilter)
+        : Promise.resolve(0),
+      priorWindow
+        ? Order.countDocuments({
+            createdAt: { $gte: priorWindow.orderFrom, $lte: priorWindow.orderTo },
+          })
+        : Promise.resolve(0),
       Order.countDocuments({
         ...period,
         orderStatus: NOT_VOID,
@@ -611,6 +660,13 @@ export async function GET(request) {
         text: `Return ratio is ${retPct}% of settled courier orders (delivered + returned) in this period. Review returned SKUs and city patterns.`,
       });
     }
+    const periodConvInsight = conversionRate(periodOrdersCount, periodVisitorCount);
+    if (periodConvInsight != null && periodVisitorCount > 0) {
+      insights.push({
+        icon: "bolt",
+        text: `Conversion is ${periodConvInsight}% (${periodOrdersCount} orders ÷ ${periodVisitorCount} visitors) for ${range.label}.`,
+      });
+    }
     if (!insights.length) {
       insights.push({
         icon: "bolt",
@@ -645,6 +701,23 @@ export async function GET(request) {
       todayVisitors: todayVisitorCount,
       yesterdayVisitors: yesterdayVisitorCount,
       todayVisitorsGrowth: pctChange(todayVisitorCount, yesterdayVisitorCount),
+      periodVisitors: periodVisitorCount,
+      todayConversionRate: conversionRate(todayOrderCount, todayVisitorCount),
+      yesterdayConversionRate: conversionRate(yesterdayOrderCount, yesterdayVisitorCount),
+      todayConversionGrowth: (() => {
+        const cur = conversionRate(todayOrderCount, todayVisitorCount);
+        const prev = conversionRate(yesterdayOrderCount, yesterdayVisitorCount);
+        if (cur == null || prev == null) return null;
+        return pctChange(cur, prev);
+      })(),
+      periodConversionRate: conversionRate(periodOrdersCount, periodVisitorCount),
+      priorPeriodConversionRate: conversionRate(priorPeriodOrderCount, priorPeriodVisitorCount),
+      periodConversionGrowth: (() => {
+        const cur = conversionRate(periodOrdersCount, periodVisitorCount);
+        const prev = conversionRate(priorPeriodOrderCount, priorPeriodVisitorCount);
+        if (cur == null || prev == null) return null;
+        return pctChange(cur, prev);
+      })(),
       monthlyRevenue: thisMonthRevenue,
       lastMonthRevenue,
       monthlyGrowth: pctChange(thisMonthRevenue, lastMonthRevenue),
