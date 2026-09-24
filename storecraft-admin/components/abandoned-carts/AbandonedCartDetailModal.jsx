@@ -50,11 +50,22 @@ function Row({ label, children }) {
   );
 }
 
-export function AbandonedCartDetailModal({ cart, onClose, onWhatsApp, onEmail, onDismiss, onReopen }) {
+export function AbandonedCartDetailModal({
+  cart,
+  converting = false,
+  onClose,
+  onWhatsApp,
+  onEmail,
+  onConvert,
+  onDismiss,
+  onReopen,
+}) {
   if (!cart) return null;
 
   const items = Array.isArray(cart.items) ? cart.items : [];
   const reminders = Array.isArray(cart.reminders) ? cart.reminders : [];
+  const canConvert =
+    !cart.convertedOrderNumber && items.length > 0 && Boolean(cart.customer?.phone);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
@@ -276,6 +287,23 @@ export function AbandonedCartDetailModal({ cart, onClose, onWhatsApp, onEmail, o
         </div>
 
         <div className="flex flex-wrap gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3 dark:border-slate-700 dark:bg-slate-800/50">
+          {cart.convertedOrderNumber ? (
+            <a
+              href={`/orders?q=${encodeURIComponent(cart.convertedOrderNumber)}`}
+              className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+            >
+              View order {cart.convertedOrderNumber}
+            </a>
+          ) : canConvert ? (
+            <button
+              type="button"
+              disabled={converting}
+              onClick={() => onConvert?.(cart)}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+            >
+              {converting ? "Converting…" : "Convert to order"}
+            </button>
+          ) : null}
           {cart.customer?.phone ? (
             <button
               type="button"

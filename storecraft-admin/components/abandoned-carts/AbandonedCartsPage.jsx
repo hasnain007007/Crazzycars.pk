@@ -54,6 +54,7 @@ export function AbandonedCartsPage() {
   const [waSettings, setWaSettings] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
   const [viewCart, setViewCart] = useState(null);
+  const [convertingId, setConvertingId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -157,6 +158,60 @@ export function AbandonedCartsPage() {
       return;
     }
     await patchAction(cart.id, "log-whatsapp");
+  }
+
+  async function convertToOrder(cart) {
+    if (!cart?.id) return;
+    if (cart.convertedOrderNumber) {
+      window.location.href = `/orders?q=${encodeURIComponent(cart.convertedOrderNumber)}`;
+      return;
+    }
+    if (!(cart.items || []).length) {
+      toast.error("This cart has no items");
+      return;
+    }
+    if (!cart.customer?.phone) {
+      toast.error("Customer phone is required to create an order");
+      return;
+    }
+    const name = cart.customer?.name || "Guest";
+    const ok = window.confirm(
+      `Create a confirmed COD order for ${name} (${cart.customer.phone}) with ${(cart.items || []).length} item(s) totaling ${formatAdminPrice(cart.subtotal || 0)}?`
+    );
+    if (!ok) return;
+
+    setConvertingId(cart.id);
+    try {
+      const res = await fetch(`/api/abandoned-carts/${cart.id}/convert`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast.error(json.error || "Could not convert to order");
+        return;
+      }
+      const orderNumber = json.order?.orderNumber || "";
+      toast.success(
+        json.alreadyConverted
+          ? `Already converted to ${orderNumber}`
+          : `Order ${orderNumber} created`
+      );
+      if (json.cart) setViewCart(json.cart);
+      else setViewCart(null);
+      load();
+      if (orderNumber && !json.alreadyConverted) {
+        window.setTimeout(() => {
+          window.location.href = `/orders?q=${encodeURIComponent(orderNumber)}`;
+        }, 600);
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setConvertingId(null);
+    }
   }
 
   async function saveSettings() {
@@ -390,6 +445,23 @@ export function AbandonedCartsPage() {
                         >
                           View
                         </button>
+                        {cart.convertedOrderNumber ? (
+                          <a
+                            href={`/orders?q=${encodeURIComponent(cart.convertedOrderNumber)}`}
+                            className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-center text-[11px] font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                          >
+                            View order
+                          </a>
+                        ) : (cart.items || []).length > 0 && cart.customer?.phone ? (
+                          <button
+                            type="button"
+                            disabled={convertingId === cart.id}
+                            onClick={() => convertToOrder(cart)}
+                            className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
+                          >
+                            {convertingId === cart.id ? "Converting…" : "Convert to order"}
+                          </button>
+                        ) : null}
                         {cart.customer?.phone ? (
                           <button
                             type="button"
@@ -469,9 +541,11 @@ export function AbandonedCartsPage() {
       {viewCart ? (
         <AbandonedCartDetailModal
           cart={viewCart}
+          converting={convertingId === viewCart.id}
           onClose={() => setViewCart(null)}
           onWhatsApp={sendWhatsApp}
           onEmail={sendEmail}
+          onConvert={convertToOrder}
           onDismiss={(id) => patchAction(id, "dismiss")}
           onReopen={(id) => patchAction(id, "reopen")}
         />
