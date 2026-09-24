@@ -836,12 +836,26 @@ export async function POST(request) {
     const placedNote = statusNotes.length ? statusNotes.join(" | ") : "Order placed";
 
     let customerId = null;
-    let existing = email
-      ? await Customer.findOne({ email })
-      : await Customer.findOne({ phone });
-    if (!existing && customerRecordEmail) {
-      existing = await Customer.findOne({ email: customerRecordEmail });
+    const byEmail = email ? await Customer.findOne({ email }) : null;
+    const byPhone = phone ? await Customer.findOne({ phone }) : null;
+    const byGuestEmail =
+      !email && customerRecordEmail
+        ? await Customer.findOne({ email: customerRecordEmail })
+        : null;
+
+    let existing = byEmail || byPhone || byGuestEmail;
+    let skipPhoneUpdate = false;
+
+    // Real email + phone belong to different customer rows — do not steal the phone.
+    if (
+      byEmail &&
+      byPhone &&
+      String(byEmail._id) !== String(byPhone._id)
+    ) {
+      existing = byEmail;
+      skipPhoneUpdate = true;
     }
+
     if (existing?.isActive === false) {
       return NextResponse.json({ success: false, error: "This account cannot place orders." }, { status: 403 });
     }
@@ -873,21 +887,34 @@ export async function POST(request) {
       zip: shippingAddress.zip || "",
     };
 
-    if (existing) {
-      customerId = existing._id;
-      existing.name = name;
-      existing.phone = phone;
-      if (email) existing.email = email;
-      existing.address = legacyAddress;
-      if (!Array.isArray(existing.addresses)) existing.addresses = [];
-      const same = existing.addresses.find(
+    async function applyAddressBook(doc) {
+      doc.name = name;
+      doc.firstName = nameParts[0] || doc.firstName || "";
+      doc.lastName = nameParts.slice(1).join(" ") || doc.lastName || "";
+      if (email) doc.email = email;
+      if (!skipPhoneUpdate) {
+        const phoneTaken = await Customer.findOne({
+          phone,
+          _id: { $ne: doc._id },
+        }).select("_id");
+        if (!phoneTaken) doc.phone = phone;
+      }
+      doc.address = legacyAddress;
+      if (!Array.isArray(doc.addresses)) doc.addresses = [];
+      const same = doc.addresses.find(
         (a) =>
-          String(a.street || a.address || "").trim().toLowerCase() === shippingAddress.street.toLowerCase() &&
-          String(a.city || "").trim().toLowerCase() === shippingAddress.city.toLowerCase() &&
-          String(a.province || a.state || "").trim().toLowerCase() === shippingAddress.state.toLowerCase()
+          String(a.street || a.address || "")
+            .trim()
+            .toLowerCase() === shippingAddress.street.toLowerCase() &&
+          String(a.city || "")
+            .trim()
+            .toLowerCase() === shippingAddress.city.toLowerCase() &&
+          String(a.province || a.state || "")
+            .trim()
+            .toLowerCase() === shippingAddress.state.toLowerCase()
       );
       if (same) {
-        existing.addresses.forEach((a) => {
+        doc.addresses.forEach((a) => {
           a.isDefault = false;
         });
         same.isDefault = true;
@@ -898,14 +925,29 @@ export async function POST(request) {
         same.postcode = shippingAddress.zip || "";
         same.zip = shippingAddress.zip || "";
       } else {
-        existing.addresses.forEach((a) => {
+        doc.addresses.forEach((a) => {
           a.isDefault = false;
         });
-        if (!existing.addresses.length) addrBookEntry.isDefault = true;
-        existing.addresses.push(addrBookEntry);
+        if (!doc.addresses.length) addrBookEntry.isDefault = true;
+        doc.addresses.push(addrBookEntry);
       }
-      existing.markModified("addresses");
-      await existing.save();
+      doc.markModified("addresses");
+      doc.markModified("address");
+    }
+
+    if (existing) {
+      customerId = existing._id;
+      await applyAddressBook(existing);
+      try {
+        await existing.save();
+      } catch (saveErr) {
+        if (saveErr?.code === 11000) {
+          // Phone/email unique clash — keep the matched customer id and continue checkout.
+          console.error("Checkout customer save duplicate:", saveErr?.message || saveErr);
+        } else {
+          throw saveErr;
+        }
+      }
     } else {
       try {
         const created = await Customer.create({
@@ -919,16 +961,24 @@ export async function POST(request) {
         });
         customerId = created._id;
       } catch (custErr) {
-        // Unique email race on guest+phone — reuse the row that won.
-        if (custErr?.code === 11000 && customerRecordEmail) {
-          const raced = await Customer.findOne({ email: customerRecordEmail });
+        // Unique email or phone race — reuse whichever row won.
+        if (custErr?.code === 11000) {
+          const raced =
+            (customerRecordEmail
+              ? await Customer.findOne({ email: customerRecordEmail })
+              : null) ||
+            (phone ? await Customer.findOne({ phone }) : null) ||
+            (email ? await Customer.findOne({ email }) : null);
           if (raced) {
             customerId = raced._id;
-            raced.name = name;
-            raced.phone = phone;
-            raced.address = legacyAddress;
-            raced.markModified("address");
-            await raced.save().catch(() => {});
+            const otherOwnsPhone = phone
+              ? await Customer.findOne({ phone, _id: { $ne: raced._id } }).select("_id")
+              : null;
+            if (otherOwnsPhone) skipPhoneUpdate = true;
+            await applyAddressBook(raced);
+            await raced.save().catch((e) => {
+              console.error("Checkout raced customer save:", e?.message || e);
+            });
           } else {
             throw custErr;
           }
@@ -1297,7 +1347,22 @@ export async function POST(request) {
     });
   } catch (e) {
     if (e.code === 11000) {
-      return NextResponse.json({ success: false, error: "Could not save customer." }, { status: 400 });
+      const keys = e.keyPattern ? Object.keys(e.keyPattern).join(",") : "";
+      console.error("Checkout duplicate key:", keys || e.message, e.keyValue || "");
+      if (keys.includes("orderNumber")) {
+        return NextResponse.json(
+          { success: false, error: "Could not place order. Please try again." },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Could not save customer. This phone or email may already belong to another account — try again or leave email blank.",
+        },
+        { status: 400 }
+      );
     }
     return NextResponse.json({ success: false, error: e.message || "Checkout failed." }, { status: 500 });
   }
