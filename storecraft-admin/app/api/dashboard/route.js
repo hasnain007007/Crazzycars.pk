@@ -17,6 +17,7 @@ import DailyVisitor from "@/lib/models/DailyVisitor.model";
 import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
+import { orderOriginLabel } from "@/lib/orderOrigin";
 
 const TZ = "Asia/Karachi";
 const sumTotal = { $sum: { $ifNull: ["$pricing.total", { $ifNull: ["$total", 0] }] } };
@@ -298,6 +299,7 @@ export async function GET(request) {
       unpaidOrdersToday,
       unpaidValuePeriodAgg,
       unpaidValueTodayAgg,
+      originOrders,
     ] = await Promise.all([
       Order.aggregate([{ $match: paidMatch }, { $group: { _id: null, total: sumTotal } }]),
       Order.countDocuments(period),
@@ -474,6 +476,9 @@ export async function GET(request) {
         },
         { $group: { _id: null, total: sumTotal } },
       ]),
+      Order.find(period)
+        .select("attribution.label attribution.channel aiAttributedSource")
+        .lean(),
     ]);
 
     const periodSales = periodSalesAgg[0]?.total ?? 0;
@@ -581,6 +586,16 @@ export async function GET(request) {
         percent: paymentSum ? Math.round((count / paymentSum) * 1000) / 10 : 0,
       }))
       .sort((a, b) => b.count - a.count);
+
+    const originCounts = {};
+    for (const o of originOrders || []) {
+      const label = orderOriginLabel(o) || "Direct";
+      originCounts[label] = (originCounts[label] || 0) + 1;
+    }
+    const ordersByOrigin = Object.entries(originCounts)
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 12);
 
     const catSell = {};
     for (const o of categoryOrders) {
@@ -755,6 +770,7 @@ export async function GET(request) {
       lowStockProducts: lowStock,
       salesByCategory,
       paymentMethods,
+      ordersByOrigin,
       weekdayRevenueVsCost,
       insights,
     };

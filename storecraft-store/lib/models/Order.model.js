@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import { buildAttributionSchema } from "@/lib/attributionSchema";
+
+const attributionSchema = buildAttributionSchema(mongoose);
 
 const orderItemSchema = new mongoose.Schema(
   {
@@ -237,6 +240,11 @@ const orderSchema = new mongoose.Schema(
     },
     /** Timestamp of the first AI-referrer touch that attributed this order. */
     aiAttributedAt: { type: Date, default: null },
+    /**
+     * Full multi-channel attribution (first-touch + last-non-direct).
+     * Primary display label is attribution.label ("Organic: Google", "Direct", …).
+     */
+    attribution: { type: attributionSchema, default: null },
     /** Source walk-in Invoice when created via admin “Add to orders”. */
     invoiceId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -257,5 +265,7 @@ orderSchema.index({ "customer.phone": 1 });
 orderSchema.index({ whatsappNotified: 1 });
 orderSchema.index({ codConfirmed: 1 });
 orderSchema.index({ aiAttributedSource: 1, createdAt: -1 });
+orderSchema.index({ "attribution.channel": 1, createdAt: -1 });
+orderSchema.index({ "attribution.label": 1, createdAt: -1 });
 
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);

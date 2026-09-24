@@ -1698,7 +1698,22 @@ export function OrderDetail({ orderId }) {
                 </h1>
                 <OrderStatusBadges order={order} />
                 <CustomerConfirmBadge order={order} />
-                {order.aiAttributedSource ? (
+                {order.origin && order.origin !== "—" ? (
+                  <span
+                    className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800 dark:bg-violet-900/40 dark:text-violet-200"
+                    title={
+                      order.attribution?.firstTouch?.label
+                        ? `First touch: ${order.attribution.firstTouch.label}${
+                            order.attribution?.lastTouch?.label
+                              ? ` · Last: ${order.attribution.lastTouch.label}`
+                              : ""
+                          }`
+                        : "Traffic origin"
+                    }
+                  >
+                    {order.origin}
+                  </span>
+                ) : order.aiAttributedSource ? (
                   <span
                     className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800 dark:bg-violet-900/40 dark:text-violet-200"
                     title={
@@ -1861,6 +1876,62 @@ export function OrderDetail({ orderId }) {
           </div>
 
           <div className="min-w-0 space-y-3">
+            {order.origin && order.origin !== "—" ? (
+              <div className="rounded-xl border border-violet-200 bg-violet-50/60 p-3 shadow-sm dark:border-violet-900/50 dark:bg-violet-950/30">
+                <h2 className="text-sm font-semibold text-violet-950 dark:text-violet-100">Origin</h2>
+                <p className="mt-1 text-base font-bold text-violet-900 dark:text-violet-50">{order.origin}</p>
+                {order.attribution ? (
+                  <dl className="mt-2 space-y-1 text-xs text-violet-900/80 dark:text-violet-200/80">
+                    {order.attribution.source ? (
+                      <div className="flex justify-between gap-2">
+                        <dt>Source</dt>
+                        <dd className="font-medium">{order.attribution.source}</dd>
+                      </div>
+                    ) : null}
+                    {order.attribution.medium ? (
+                      <div className="flex justify-between gap-2">
+                        <dt>Medium</dt>
+                        <dd className="font-medium">{order.attribution.medium}</dd>
+                      </div>
+                    ) : null}
+                    {order.attribution.campaign ? (
+                      <div className="flex justify-between gap-2">
+                        <dt>Campaign</dt>
+                        <dd className="font-medium truncate" title={order.attribution.campaign}>
+                          {order.attribution.campaign}
+                        </dd>
+                      </div>
+                    ) : null}
+                    {order.attribution.referrerHost ? (
+                      <div className="flex justify-between gap-2">
+                        <dt>Referrer</dt>
+                        <dd className="font-medium">{order.attribution.referrerHost}</dd>
+                      </div>
+                    ) : null}
+                    {order.attribution.landingPath ? (
+                      <div className="flex justify-between gap-2">
+                        <dt>Landing</dt>
+                        <dd className="font-medium truncate" title={order.attribution.landingPath}>
+                          {order.attribution.landingPath}
+                        </dd>
+                      </div>
+                    ) : null}
+                    {order.attribution.firstTouch?.label ? (
+                      <div className="flex justify-between gap-2 border-t border-violet-200/60 pt-1 dark:border-violet-800/60">
+                        <dt>First touch</dt>
+                        <dd className="font-medium text-right">{order.attribution.firstTouch.label}</dd>
+                      </div>
+                    ) : null}
+                    {order.attribution.lastTouch?.label ? (
+                      <div className="flex justify-between gap-2">
+                        <dt>Last touch</dt>
+                        <dd className="font-medium text-right">{order.attribution.lastTouch.label}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                ) : null}
+              </div>
+            ) : null}
             <OrderStatusCard order={order} onUpdated={setOrder} />
             <PaymentStatusCard order={order} onUpdated={setOrder} orderTotalOverride={effectiveTotal} />
 

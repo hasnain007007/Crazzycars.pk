@@ -1,5 +1,39 @@
 import mongoose from "mongoose";
 
+const attributionTouchSchema = new mongoose.Schema(
+  {
+    channel: { type: String, default: "", trim: true },
+    label: { type: String, default: "", trim: true },
+    source: { type: String, default: "", trim: true },
+    medium: { type: String, default: "", trim: true },
+    campaign: { type: String, default: "", trim: true },
+    content: { type: String, default: "", trim: true },
+    term: { type: String, default: "", trim: true },
+    referrerHost: { type: String, default: "", trim: true },
+    landingPath: { type: String, default: "", trim: true },
+    detectedAt: { type: Date, default: null },
+    detection: { type: String, default: "", trim: true },
+    hasGclid: { type: Boolean, default: false },
+    hasFbclid: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
+const attributionSchema = new mongoose.Schema(
+  {
+    channel: { type: String, default: "", trim: true, index: true },
+    label: { type: String, default: "", trim: true, index: true },
+    source: { type: String, default: "", trim: true },
+    medium: { type: String, default: "", trim: true },
+    campaign: { type: String, default: "", trim: true },
+    referrerHost: { type: String, default: "", trim: true },
+    landingPath: { type: String, default: "", trim: true },
+    firstTouch: { type: attributionTouchSchema, default: null },
+    lastTouch: { type: attributionTouchSchema, default: null },
+  },
+  { _id: false }
+);
+
 const orderItemSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", default: null },
@@ -262,6 +296,11 @@ const orderSchema = new mongoose.Schema(
     },
     /** Timestamp of the first AI-referrer touch that attributed this order. */
     aiAttributedAt: { type: Date, default: null },
+    /**
+     * Full multi-channel attribution stamped at checkout.
+     * Display Origin = attribution.label (Organic: Google, Direct, Source: Chatgpt.com, …).
+     */
+    attribution: { type: attributionSchema, default: null },
     /** Source walk-in Invoice when created via “Add to orders”. */
     invoiceId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -282,6 +321,8 @@ orderSchema.index({ "customer.phone": 1 });
 orderSchema.index({ whatsappNotified: 1 });
 orderSchema.index({ codConfirmed: 1 });
 orderSchema.index({ aiAttributedSource: 1, createdAt: -1 });
+orderSchema.index({ "attribution.channel": 1, createdAt: -1 });
+orderSchema.index({ "attribution.label": 1, createdAt: -1 });
 orderSchema.index({ trackingNumber: 1 });
 orderSchema.index({ "tracking.number": 1 });
 orderSchema.index({ orderNumber: 1 });

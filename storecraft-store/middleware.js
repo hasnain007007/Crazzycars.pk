@@ -6,6 +6,7 @@ import {
 } from "@/lib/constants";
 import { classifyAiTraffic, shouldSkipAiVisitPath } from "@/lib/aiAgentTraffic";
 import { applyAiAttributionCookies } from "@/lib/aiAttribution";
+import { applyOrderAttributionCookies } from "@/lib/orderAttribution";
 import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
 import {
   PAID_TRAFFIC_COOKIE,
@@ -96,6 +97,7 @@ function setMetaFbcCookie(request, response) {
 function withPaidCookie(request, response) {
   setPaidTrafficCookie(request, response, paidSourceFromRequest(request));
   setMetaFbcCookie(request, response);
+  applyOrderAttributionCookies(request, response);
   return response;
 }
 
@@ -326,6 +328,7 @@ export async function middleware(request) {
   if (aiHit) {
     applyAiAttributionCookies(request, response, aiHit);
   }
+  applyOrderAttributionCookies(request, response);
 
   return response;
 }

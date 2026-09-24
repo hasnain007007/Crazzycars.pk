@@ -19,6 +19,7 @@ import {
   isBrokenCloudinaryUrl,
   productMainImageUrl,
 } from "@/lib/resolveLineItemImage";
+import { orderOriginLabel, serializeAttribution } from "@/lib/orderOrigin";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
@@ -143,6 +144,8 @@ function serializeOrder(doc, productImageById = null) {
     trackingUrl: o.trackingUrl || o.tracking?.url || "",
     aiAttributedSource: o.aiAttributedSource || "",
     aiAttributedAt: o.aiAttributedAt || null,
+    attribution: serializeAttribution(o.attribution),
+    origin: orderOriginLabel(o) || "—",
     hasPostexLabel: Boolean(o.postexLabel),
     hasRunCourierLabel: Boolean(o.runCourierLabel),
     runCourierApi: o.runCourierApi || "",

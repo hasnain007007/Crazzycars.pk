@@ -18,6 +18,7 @@ import { syncStockAlertForProduct } from "@/lib/productMutations";
 import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { dispatchOrderLifecycleEmails, sendTemplatedCustomerEmail } from "@/lib/customerLifecycleEmail";
 import { buildOrderSearchOr, looksLikeTrackingId } from "@/lib/orderSearch";
+import { orderOriginLabel, originFilterToMongo, serializeAttribution } from "@/lib/orderOrigin";
 
 const PAYMENT_METHODS = new Set([
   "cod",
@@ -142,6 +143,12 @@ export async function GET(request) {
           filter.orderStatus = { $nin: ["cancelled", "refunded"] };
         }
       }
+    }
+
+    const originParam = (searchParams.get("origin") || "").trim();
+    const originMongo = originFilterToMongo(originParam);
+    if (originMongo && !trackingLookup) {
+      filter.$and = [...(filter.$and || []), originMongo];
     }
 
     const productIdParam = (searchParams.get("productId") || "").trim();
@@ -323,6 +330,9 @@ export async function GET(request) {
         tags: Array.isArray(o.tags) ? o.tags : [],
         ordersLast24h,
         isRepeatToday: ordersLast24h > 1,
+        origin: orderOriginLabel(o) || "—",
+        attributionChannel: o.attribution?.channel || "",
+        aiAttributedSource: o.aiAttributedSource || "",
         // Computed at query time (OR8) — never stored on the order document
         isStale:
           String(o.orderStatus || "").toLowerCase() === "pending" &&

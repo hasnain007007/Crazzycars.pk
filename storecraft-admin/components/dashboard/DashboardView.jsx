@@ -12,6 +12,7 @@ import { DeliveryReturnRatioCard } from "./DeliveryReturnRatioCard";
 import { InventoryAlertsCard } from "./InventoryAlertsCard";
 import { KpiCards } from "./KpiCards";
 import { LiveUsersCard } from "./LiveUsersCard";
+import { OrdersByOriginCard } from "./OrdersByOriginCard";
 import { PaymentMethodsCard } from "./PaymentMethodsCard";
 import { QuickActions } from "./QuickActions";
 import { RecentOrdersTable } from "./RecentOrdersTable";
@@ -64,6 +65,7 @@ const emptyData = {
   lowStockProducts: [],
   salesByCategory: [],
   paymentMethods: [],
+  ordersByOrigin: [],
   weekdayRevenueVsCost: [],
   insights: [],
   range: { id: "last30", label: "Last 30 days", from: null, to: null },
@@ -218,13 +220,14 @@ export function DashboardView() {
           <CategorySalesDonut data={data.salesByCategory} />
         </div>
 
-        {/* Orders + actions + payments */}
+        {/* Orders + actions + payments + origin */}
         <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-12">
           <div className="lg:col-span-6">
             <RecentOrdersTable orders={data.recentOrders} />
           </div>
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 space-y-4">
             <QuickActions />
+            <OrdersByOriginCard data={data} rangeLabel={rangeLabel} />
           </div>
           <div className="lg:col-span-3">
             <PaymentMethodsCard methods={data.paymentMethods} />

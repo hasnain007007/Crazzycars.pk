@@ -245,6 +245,7 @@ export function OrdersTable({
               </th>
               <th>Payment status</th>
               <th>Fulfillment status</th>
+              <th>Origin</th>
               <th>Customer confirm</th>
               <th>Delivery status</th>
               <th style={{ textAlign: "right" }}>Actions</th>
@@ -254,7 +255,7 @@ export function OrdersTable({
             {loading
               ? Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={13}>
+                    <td colSpan={14}>
                       <div
                         style={{
                           height: 12,
@@ -413,6 +414,19 @@ export function OrdersTable({
                       </td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <OrderStatusBadges order={o} mode="fulfillment" />
+                      </td>
+                      <td>
+                        <span
+                          className="op-pill"
+                          style={{
+                            background: o.origin && o.origin !== "—" ? "#EDE9FE" : "transparent",
+                            color: o.origin && o.origin !== "—" ? "#5B21B6" : "#616161",
+                            maxWidth: "11rem",
+                          }}
+                          title={o.origin || "No attribution captured"}
+                        >
+                          {o.origin || "—"}
+                        </span>
                       </td>
                       <td>
                         <CustomerConfirmBadge order={o} compact />

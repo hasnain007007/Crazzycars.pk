@@ -60,6 +60,7 @@ export function OrdersPage() {
   const [tag, setTag] = useState("");
   const [debouncedTag, setDebouncedTag] = useState("");
   const [customerConfirm, setCustomerConfirm] = useState("all");
+  const [origin, setOrigin] = useState("all");
   const [view, setView] = useState("all");
   const [productId, setProductId] = useState(productIdFromUrl);
   const [productFilter, setProductFilter] = useState(null);
@@ -111,7 +112,8 @@ export function OrdersPage() {
     if (status !== "all") setStatus("all");
     if (paymentStatus !== "all") setPaymentStatus("all");
     if (customerConfirm !== "all") setCustomerConfirm("all");
-  }, [debouncedSearch, view, status, paymentStatus, customerConfirm]);
+    if (origin !== "all") setOrigin("all");
+  }, [debouncedSearch, view, status, paymentStatus, customerConfirm, origin]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedTag(tag.trim().toLowerCase()), 350);
@@ -131,6 +133,7 @@ export function OrdersPage() {
     view,
     limit,
     productId,
+    origin,
   ]);
 
   const queryString = useMemo(() => {
@@ -146,6 +149,7 @@ export function OrdersPage() {
     if (dateTo) p.set("to", dateTo);
     if (debouncedTag) p.set("tag", debouncedTag);
     if (customerConfirm !== "all") p.set("customerConfirm", customerConfirm);
+    if (origin !== "all") p.set("origin", origin);
     if (view && view !== "all") p.set("view", view);
     if (productId) p.set("productId", productId);
     return p.toString();
@@ -161,6 +165,7 @@ export function OrdersPage() {
     dateTo,
     debouncedTag,
     customerConfirm,
+    origin,
     view,
     productId,
   ]);
@@ -279,6 +284,11 @@ export function OrdersPage() {
     if (next !== "all") setView("all");
   }
 
+  function onOriginChange(next) {
+    setOrigin(next);
+    if (next !== "all") setView("all");
+  }
+
   function exportCsv() {
     const p = new URLSearchParams();
     if (debouncedSearch) p.set("search", debouncedSearch);
@@ -288,6 +298,7 @@ export function OrdersPage() {
     if (dateTo) p.set("to", dateTo);
     if (debouncedTag) p.set("tag", debouncedTag);
     if (customerConfirm !== "all") p.set("customerConfirm", customerConfirm);
+    if (origin !== "all") p.set("origin", origin);
     if (view && view !== "all") p.set("view", view);
     if (productId) p.set("productId", productId);
     const qs = p.toString();
@@ -480,6 +491,8 @@ export function OrdersPage() {
             onTagChange={setTag}
             customerConfirm={customerConfirm}
             onCustomerConfirmChange={onCustomerConfirmChange}
+            origin={origin}
+            onOriginChange={onOriginChange}
           />
         </div>
 

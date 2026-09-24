@@ -30,6 +30,11 @@ import { toKg } from "@/lib/shippingEstimate";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { allowsBackorder } from "@/lib/inventoryPolicy";
 import { readAiAttributionFromRequest } from "@/lib/aiAttribution";
+import {
+  aiSourceFromAttribution,
+  attributionForOrderDoc,
+  readOrderAttributionFromRequest,
+} from "@/lib/orderAttribution";
 import CartSession from "@/lib/models/CartSession.model";
 import {
   actionRateLimitKey,
@@ -379,6 +384,15 @@ export async function POST(request) {
     await dbConnect();
     const body = await request.json().catch(() => ({}));
     const aiAttribution = readAiAttributionFromRequest(request);
+    const orderAttribution = readOrderAttributionFromRequest(request);
+    const attributionDoc = attributionForOrderDoc(orderAttribution);
+    const aiFromAttr = aiSourceFromAttribution(orderAttribution);
+    const resolvedAiSource = aiAttribution?.source || aiFromAttr || "";
+    const resolvedAiAt =
+      aiAttribution?.firstTouchAt ||
+      orderAttribution?.firstTouch?.detectedAt ||
+      orderAttribution?.lastTouch?.detectedAt ||
+      null;
     const itemsIn = Array.isArray(body.items) ? body.items : [];
     if (!itemsIn.length) {
       return NextResponse.json({ success: false, error: "Cart is empty." }, { status: 400 });
@@ -977,10 +991,15 @@ export async function POST(request) {
             by: "customer",
           },
         ],
-        ...(aiAttribution
+        ...(resolvedAiSource
           ? {
-              aiAttributedSource: aiAttribution.source,
-              aiAttributedAt: aiAttribution.firstTouchAt,
+              aiAttributedSource: resolvedAiSource,
+              aiAttributedAt: resolvedAiAt || new Date(),
+            }
+          : {}),
+        ...(attributionDoc
+          ? {
+              attribution: attributionDoc,
             }
           : {}),
       });

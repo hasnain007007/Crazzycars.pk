@@ -3,6 +3,8 @@
  */
 "use client";
 
+import { ORIGIN_FILTER_OPTIONS } from "@/lib/orderOrigin";
+
 export function OrderFilters({
   search,
   onSearchChange,
@@ -18,6 +20,8 @@ export function OrderFilters({
   onTagChange,
   customerConfirm = "all",
   onCustomerConfirmChange,
+  origin = "all",
+  onOriginChange,
 }) {
   return (
     <div className="op-filters">
@@ -83,6 +87,21 @@ export function OrderFilters({
           <option value="all">All</option>
           <option value="yes">Customer said yes</option>
           <option value="waiting">Waiting for customer</option>
+        </select>
+      </div>
+      <div className="op-field" style={{ width: 160 }}>
+        <span className="op-field-label">Origin</span>
+        <select
+          value={origin}
+          onChange={(e) => onOriginChange?.(e.target.value)}
+          className="op-select"
+          title="Where the shopper came from"
+        >
+          {ORIGIN_FILTER_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
       <div className="op-field" style={{ width: 120 }}>
