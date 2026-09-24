@@ -236,6 +236,10 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [manualName, setManualName] = useState("");
+  const [manualQty, setManualQty] = useState("1");
+  const [manualPrice, setManualPrice] = useState("");
+  const [manualVariation, setManualVariation] = useState("");
   const [loadingMeta, setLoadingMeta] = useState({});
   const [failedMeta, setFailedMeta] = useState({});
   const [dirty, setDirty] = useState(false);
@@ -469,6 +473,49 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
     [loadProductMeta, repriceLine]
   );
 
+  const addManualItem = useCallback(() => {
+    const name = manualName.trim();
+    if (!name) {
+      toast.error("Enter a product name.");
+      return;
+    }
+    const quantity = Math.max(1, Math.min(999, Math.round(Number(manualQty) || 1)));
+    const unitPrice = roundRupees(Math.max(0, Number(manualPrice) || 0));
+    const variation = manualVariation.trim().slice(0, 200);
+    setDirty(true);
+    setLines((prev) => [
+      ...prev,
+      {
+        key: `manual-${Date.now()}`,
+        productId: null,
+        name: name.slice(0, 300),
+        image: "",
+        variation,
+        selectedOptions: {},
+        selectedAddOns: [],
+        quantity,
+        unitPrice,
+        basePrice: unitPrice,
+        catalog: null,
+        articleNo: "",
+        unitCost: 0,
+        selectedVariation: {
+          selectedOptions: {},
+          combinationId: null,
+          label: variation,
+        },
+      },
+    ]);
+    setManualName("");
+    setManualQty("1");
+    setManualPrice("");
+    setManualVariation("");
+    setShowAdd(false);
+    setSearch("");
+    setResults([]);
+    toast.success("Custom product added — edit price if needed, then save.");
+  }, [manualName, manualQty, manualPrice, manualVariation]);
+
   useEffect(() => {
     if (!showAdd) return undefined;
     const q = search.trim();
@@ -492,6 +539,11 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
   async function save() {
     if (!lines.length) {
       toast.error("Add at least one product.");
+      return;
+    }
+    const blankCustom = lines.find((l) => !l.productId && !String(l.name || "").trim());
+    if (blankCustom) {
+      toast.error("Custom products need a name.");
       return;
     }
     setSaving(true);
@@ -572,46 +624,104 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
       </div>
 
       {showAdd ? (
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800/60">
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-            Search catalog
-          </label>
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filter products (all active load automatically)"
-            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"
-            autoFocus
-          />
-          {searching ? <p className="mt-2 text-xs text-slate-500">Loading catalog…</p> : null}
-          {results.length > 0 ? (
-            <ul className="mt-2 max-h-64 overflow-y-auto divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-600 dark:bg-slate-900">
-              {results.map((product) => (
-                <li key={product._id || product.id}>
-                  <button
-                    type="button"
-                    onClick={() => addProduct(product)}
-                    className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
-                  >
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-slate-100 dark:bg-slate-800">
-                      {productImage(product) ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={productImage(product)} alt="" className="h-full w-full object-cover" />
-                      ) : null}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-slate-900 dark:text-white">{product.name}</p>
-                      <p className="text-xs text-slate-500">{formatMoney(productUnitPrice(product))}</p>
-                    </div>
-                    <span className="text-xs font-semibold text-[#1d6fb8]">Add</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : search.trim().length >= 2 && !searching ? (
-            <p className="mt-2 text-xs text-slate-500">No products found.</p>
-          ) : null}
+        <div className="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800/60">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              Search catalog
+            </label>
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filter products (all active load automatically)"
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"
+              autoFocus
+            />
+            {searching ? <p className="mt-2 text-xs text-slate-500">Loading catalog…</p> : null}
+            {results.length > 0 ? (
+              <ul className="mt-2 max-h-64 overflow-y-auto divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-600 dark:bg-slate-900">
+                {results.map((product) => (
+                  <li key={product._id || product.id}>
+                    <button
+                      type="button"
+                      onClick={() => addProduct(product)}
+                      className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-slate-100 dark:bg-slate-800">
+                        {productImage(product) ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={productImage(product)} alt="" className="h-full w-full object-cover" />
+                        ) : null}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-slate-900 dark:text-white">{product.name}</p>
+                        <p className="text-xs text-slate-500">{formatMoney(productUnitPrice(product))}</p>
+                      </div>
+                      <span className="text-xs font-semibold text-[#1d6fb8]">Add</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : search.trim().length >= 2 && !searching ? (
+              <p className="mt-2 text-xs text-slate-500">No products found.</p>
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3 dark:border-slate-600 dark:bg-slate-900">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Custom product (not on website)
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-400">
+              Use this when the item is not in the catalog — type the name and price, then save the order.
+            </p>
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-12">
+              <input
+                type="text"
+                value={manualName}
+                onChange={(e) => setManualName(e.target.value)}
+                placeholder="Product name *"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950 sm:col-span-5"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addManualItem();
+                  }
+                }}
+              />
+              <input
+                type="text"
+                value={manualVariation}
+                onChange={(e) => setManualVariation(e.target.value)}
+                placeholder="Variation (optional)"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950 sm:col-span-3"
+              />
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={manualQty}
+                onChange={(e) => setManualQty(e.target.value)}
+                placeholder="Qty"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950 sm:col-span-1"
+              />
+              <input
+                type="number"
+                min={0}
+                step="1"
+                value={manualPrice}
+                onChange={(e) => setManualPrice(e.target.value)}
+                placeholder="Price"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950 sm:col-span-2"
+              />
+              <button
+                type="button"
+                onClick={addManualItem}
+                className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 sm:col-span-1"
+              >
+                + Add
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -659,10 +769,27 @@ export function OrderItemsEditor({ order, onUpdated, onDraftPricingChange }) {
                     </div>
                   </td>
                   <td className="min-w-0 py-1.5 pr-1 text-xs font-medium text-slate-900 dark:text-white">
-                    {item.name}
-                    {item.variation ? (
-                      <p className="mt-0.5 text-[11px] font-normal text-slate-500">{item.variation}</p>
-                    ) : null}
+                    {item.productId ? (
+                      <>
+                        {item.name}
+                        {item.variation ? (
+                          <p className="mt-0.5 text-[11px] font-normal text-slate-500">{item.variation}</p>
+                        ) : null}
+                      </>
+                    ) : (
+                      <div className="space-y-1">
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(e) => updateLine(idx, { name: e.target.value })}
+                          placeholder="Product name"
+                          className="w-full rounded border border-slate-200 px-2 py-1 text-xs font-medium dark:border-slate-600 dark:bg-slate-800"
+                        />
+                        <span className="inline-block rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                          Custom
+                        </span>
+                      </div>
+                    )}
                   </td>
                   <td className="py-2 pr-2">
                     {metaLoading ? (
