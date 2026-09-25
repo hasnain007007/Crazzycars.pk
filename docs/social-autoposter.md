@@ -15,11 +15,24 @@ Module lives in **storecraft-admin** (Next.js API routes + Mongoose). Public ima
 ## Step status
 
 1. **Done** — Model, image service (sharp), public media path, health + draft/upload APIs  
-2. Pending — Facebook + Instagram publishers + dry-run + test-post script  
+1b. **Done** — Temporary admin UI at `/social/test` (create draft, upload, Check URLs)  
+2. Pending — Facebook + Instagram publishers + dry-run + test-post script *(wait for URL confirm)*  
 3. Pending — Scheduler + retries + alerts  
 4. Pending — Admin UI  
 5. Pending — Week-pack import  
 6. Pending — TikTok modes  
+
+## Temporary test UI
+
+Open **Admin → Content → Social Test** (`/social/test`):
+
+1. Confirm media is writable.
+2. **Create test post**.
+3. Choose 1–4 poster images → **Upload & process**.
+4. Click each public URL (must be `https://crazzycars.pk/media/social/.../n.jpg`) in a private/incognito window — no login.
+5. **Check URLs** — table must show status 200 and `image/jpeg`.
+
+Then reply OK so we continue with step 2 (Graph publish, dry-run default).
 
 ## Environment
 
