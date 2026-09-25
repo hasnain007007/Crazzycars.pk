@@ -5,7 +5,7 @@ import { getSocialConfig } from "@/lib/social/config";
 import { getMetaHaltState, haltMetaPublishing } from "@/lib/social/metaHalt";
 import { publishFacebookPost, postFacebookComment } from "@/lib/social/facebook";
 import { publishInstagramPost, postInstagramComment } from "@/lib/social/instagram";
-import { sortedImages } from "@/lib/social/captions";
+import { sortedImages, loadCaptionSettings } from "@/lib/social/captions";
 
 function pushLog(post, level, msg) {
   if (typeof post.pushLog === "function") post.pushLog(level, msg);
@@ -21,6 +21,14 @@ export async function publishSocialPost(post, opts = {}) {
   const force = Boolean(opts.force);
   const plannedAll = [];
   const warnings = [];
+
+  if (!post.__captionSettings) {
+    try {
+      post.__captionSettings = await loadCaptionSettings();
+    } catch {
+      post.__captionSettings = null;
+    }
+  }
 
   if (!sortedImages(post).length) {
     return { success: false, error: "Post has no images", dryRun };

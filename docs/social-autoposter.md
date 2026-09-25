@@ -8,31 +8,45 @@ Module lives in **storecraft-admin** (Next.js API routes + Mongoose). Public ima
 |-----------|-------------|-----|
 | Classic Express routers | Next.js App Router under `app/api/social/` | Matches this monorepo |
 | `SOCIAL_MEDIA_DIR=uploads/social` | Files at `{MEDIA_ROOT}/social/<postId>/n.jpg` | Shared Coolify volume; public URL `{PUBLIC_BASE_URL}/media/social/<postId>/n.jpg` |
-| In-process `node-cron` | **Planned for step 3:** HTTP cron `GET/POST /api/cron/social` (Coolify every minute) *plus* optional in-process tick. Atomic `findOneAndUpdate` lock either way | Matches existing abandoned-cart / blog crons; multi-instance safe |
+| In-process `node-cron` | HTTP cron `GET/POST /api/social/cron?key=CRON_SECRET` every minute (Coolify). Atomic `findOneAndUpdate` → `publishing` | Matches other admin crons; multi-instance safe |
 | Auth | Existing JWT cookie + `canManageContent` / `canManageSettings` | Same as other content tools |
 | Email alerts | Existing `lib/email.js` (Resend/SMTP) | No new mailer |
+
+## Owner weekly routine (5 minutes)
+
+1. Fill `public/templates/crazzycars_week_template.xlsx` (sheet **Week Posts**) — 14 rows, photos named `MON-AM-1.jpg` …
+2. Open **Admin → Social Posts → Import week** (`/social/import`)
+3. Drag the sheet + all photos (or one zip) → fix any red rows → **Schedule week**
+4. Check the calendar on `/social` (green = OK). Posts go out by themselves via cron.
+5. If something failed: **Needs attention** → Retry / Add photos. Undo a bad import under **Settings**.
+
+Developer tools (old test page): `/social/settings` → Developer tools → `/social/test`.
 
 ## Step status
 
 1. **Done** — Model, image service (sharp), public media path, health + draft/upload APIs  
-1b. **Done** — Temporary admin UI at `/social/test` (create draft, upload, Check URLs)  
-2. **Done** — Facebook + Instagram publishers, dry-run default, test-post script, OAuth halt banner  
-3. Pending — Scheduler + retries + alerts  
-4. Pending — Admin UI (full calendar / week pack)  
-5. Pending — Week-pack import  
-6. Pending — TikTok modes  
+1b. **Done** — Temporary admin UI at `/social/test`  
+2. **Done** — Facebook + Instagram publishers, dry-run default, test-post script, OAuth halt  
+3. **Done** — Scheduler cron `GET/POST /api/social/cron?key=CRON_SECRET` + retries  
+4. **Done** — Owner UI `/social` (calendar, drawer, PhotoDropzone, history, settings)  
+5. **Done** — Week import (preview → fix → commit + undo)  
+6. Pending — TikTok live modes (UI toggle ready; posting still off/metricool)
+
+## Sheet columns (Week Posts)
+
+`post_code`, `date`, `time`, `platforms`, `post_type`, `product_url`, `headline`, `caption`, `caption_tiktok`, `hashtags`, `first_comment`, `add_footer`, `status`, `notes`
+
+Photos: `<post_code>-<n>.jpg` or folder `<post_code>/…`.
 
 ## Temporary test UI
 
-Open **Admin → Content → Social Test** (`/social/test`):
+Open **Admin → Social Posts → Settings → Developer tools** (`/social/test`):
 
 1. Confirm media is writable.
 2. **Create test post**.
 3. Choose 1–4 poster images → **Upload & process**.
 4. Click each public URL (must be `https://crazzycars.pk/media/social/.../n.jpg`) in a private/incognito window — no login.
 5. **Check URLs** — table must show status 200 and `image/jpeg`.
-
-Then reply OK so we continue with step 2 (Graph publish, dry-run default).
 
 ## Step 2 — Facebook + Instagram publish
 

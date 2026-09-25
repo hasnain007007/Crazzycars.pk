@@ -9,34 +9,11 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessAnyCapability } from "@/lib/denyCapability";
 import SocialPost from "@/lib/models/SocialPost.model";
 import { warnSocialConfigOnce } from "@/lib/social/config";
+import { serializeSocialPost as serializePost, platformsFromInput } from "@/lib/social/serializePost";
+import { weekStartPkt, addDaysUtc } from "@/lib/social/pktTime";
+import { normalizeHashtagList } from "@/lib/social/captions";
 
 export const dynamic = "force-dynamic";
-
-function serializePost(doc) {
-  if (!doc) return null;
-  const o = typeof doc.toObject === "function" ? doc.toObject() : doc;
-  return {
-    id: String(o._id),
-    title: o.title,
-    product: o.product ? String(o.product) : null,
-    scheduledAt: o.scheduledAt || null,
-    platforms: o.platforms || {},
-    images: o.images || [],
-    captions: o.captions || {},
-    hashtags: o.hashtags || {},
-    firstComment: o.firstComment || "",
-    status: o.status,
-    results: o.results || {},
-    attempts: o.attempts || 0,
-    lastError: o.lastError || "",
-    logs: o.logs || [],
-    weekPackId: o.weekPackId || "",
-    nextRetryAt: o.nextRetryAt || null,
-    createdBy: o.createdBy ? String(o.createdBy) : null,
-    createdAt: o.createdAt,
-    updatedAt: o.updatedAt,
-  };
-}
 
 export async function GET(request) {
   try {
@@ -48,11 +25,29 @@ export async function GET(request) {
     warnSocialConfigOnce();
     const { searchParams } = new URL(request.url);
     const status = String(searchParams.get("status") || "").trim();
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20", 10) || 20));
+    const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit") || "20", 10) || 20));
     const filter = {};
-    if (status) filter.status = status;
+    if (status) {
+      if (status === "posting") filter.status = { $in: ["posting", "publishing"] };
+      else if (status === "posted") filter.status = { $in: ["posted", "published"] };
+      else filter.status = status;
+    }
+    const week = searchParams.get("week");
+    let from = searchParams.get("from") || searchParams.get("scheduledFrom");
+    let to = searchParams.get("to") || searchParams.get("scheduledTo");
+    if (week) {
+      const ws = weekStartPkt(new Date(week));
+      from = ws.toISOString();
+      to = addDaysUtc(ws, 7).toISOString();
+    }
+    if (from || to) {
+      filter.scheduledAt = {};
+      if (from) filter.scheduledAt.$gte = new Date(from);
+      if (to) filter.scheduledAt.$lte = new Date(to);
+    }
 
-    const rows = await SocialPost.find(filter).sort({ createdAt: -1 }).limit(limit).lean();
+    const sort = from || to ? { scheduledAt: 1 } : { createdAt: -1 };
+    const rows = await SocialPost.find(filter).sort(sort).limit(limit).lean();
     return NextResponse.json({
       success: true,
       posts: rows.map(serializePost),
@@ -69,35 +64,49 @@ export async function POST(request) {
     if (denied) return denied;
 
     const body = await request.json().catch(() => ({}));
-    const title = String(body.title || "").trim();
+    const title = String(body.title || body.headline || "").trim();
     if (!title) {
       return NextResponse.json({ success: false, error: "title is required" }, { status: 400 });
     }
 
     await dbConnect();
     const productId = String(body.productId || body.product || "").trim();
+    const platforms = Array.isArray(body.platforms)
+      ? platformsFromInput(body.platforms)
+      : {
+          facebook: body.platforms?.facebook !== false,
+          instagram: body.platforms?.instagram !== false,
+          tiktok: Boolean(body.platforms?.tiktok),
+        };
+    const caption = String(body.caption || body.captions?.instagram || "");
+    const hashtagList = normalizeHashtagList(body.hashtagList || body.hashtags || []);
+    const status =
+      body.status === "scheduled" && body.scheduledAt ? "scheduled" : "draft";
+
     const post = await SocialPost.create({
       title: title.slice(0, 200),
+      headline: String(body.headline || title).slice(0, 60),
       product:
         productId && mongoose.Types.ObjectId.isValid(productId) ? productId : null,
+      productUrl: String(body.productUrl || "").trim(),
       scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null,
-      platforms: {
-        facebook: body.platforms?.facebook !== false,
-        instagram: body.platforms?.instagram !== false,
-        tiktok: body.platforms?.tiktok !== false,
-      },
+      platforms,
+      caption,
+      captionTiktok: String(body.captionTiktok || ""),
       captions: {
-        facebook: String(body.captions?.facebook || ""),
-        instagram: String(body.captions?.instagram || ""),
-        tiktok: String(body.captions?.tiktok || ""),
+        facebook: caption || String(body.captions?.facebook || ""),
+        instagram: caption || String(body.captions?.instagram || ""),
+        tiktok: String(body.captionTiktok || body.captions?.tiktok || caption),
       },
+      hashtagList,
       hashtags: {
-        facebook: String(body.hashtags?.facebook || ""),
-        instagram: String(body.hashtags?.instagram || ""),
-        tiktok: String(body.hashtags?.tiktok || ""),
+        facebook: hashtagList.join(" "),
+        instagram: hashtagList.join(" "),
+        tiktok: hashtagList.join(" "),
       },
       firstComment: String(body.firstComment || "").slice(0, 2000),
-      status: "draft",
+      addFooter: body.addFooter !== false,
+      status,
       createdBy: user.userId || user.id || user._id || null,
     });
     post.pushLog("info", "Draft created");

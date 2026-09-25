@@ -22,7 +22,7 @@ const PATH_TITLES = [
   { prefix: "/coupons", title: "Coupons" },
   { prefix: "/blog-manager/new", title: "New Blog" },
   { prefix: "/blog-manager", title: "Blog" },
-  { prefix: "/social/test", title: "Social Test" },
+  { prefix: "/social", title: "Social Posts" },
   { prefix: "/pages-manager", title: "Pages" },
   { prefix: "/banners", title: "Banners" },
   { prefix: "/product-options", title: "Product Options" },

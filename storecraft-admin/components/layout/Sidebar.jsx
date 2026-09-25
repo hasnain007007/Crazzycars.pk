@@ -42,7 +42,7 @@ const NAV = [
       { href: "/pages", label: "Pages", icon: "page" },
       { href: "/featured-media", label: "Featured Media", icon: "playCircle" },
       { href: "/banners", label: "Banners", icon: "image" },
-      { href: "/social/test", label: "Social Test", icon: "image" },
+      { href: "/social", label: "Social Posts", icon: "image" },
     ],
   },
   {

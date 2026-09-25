@@ -1,13 +1,17 @@
 /**
- * GET /api/social/health — config status (no secrets) + optional image URL probe.
+ * GET /api/social/health — config status (no secrets) + next post + mode.
  * POST /api/social/health — probe image URLs: { urls: string[] }
  */
 import { NextResponse } from "next/server";
+import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessAnyCapability } from "@/lib/denyCapability";
 import { getSocialConfigPublic, warnSocialConfigOnce } from "@/lib/social/config";
 import { probePublicImageUrl } from "@/lib/social/imageService";
 import { mediaRootWritable } from "@/lib/mediaStorage";
+import { getEffectiveSocialMode } from "@/lib/social/mode";
+import { getMetaHaltState } from "@/lib/social/metaHalt";
+import SocialPost from "@/lib/models/SocialPost.model";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +22,47 @@ export async function GET(request) {
     if (denied) return denied;
 
     warnSocialConfigOnce();
+    await dbConnect();
     const config = getSocialConfigPublic();
     const writable = await mediaRootWritable();
+    const mode = await getEffectiveSocialMode();
+    const halt = await getMetaHaltState();
+
+    const next = await SocialPost.findOne({
+      status: "scheduled",
+      scheduledAt: { $gte: new Date() },
+    })
+      .sort({ scheduledAt: 1 })
+      .select({ scheduledAt: 1, title: 1, headline: 1 })
+      .lean();
+
+    let nextPostIn = null;
+    if (next?.scheduledAt) {
+      const ms = new Date(next.scheduledAt).getTime() - Date.now();
+      const mins = Math.max(0, Math.round(ms / 60000));
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      nextPostIn = h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
 
     return NextResponse.json({
       success: true,
       config,
+      mode: {
+        dryRun: mode.dryRun,
+        locked: mode.locked,
+        lockReason: mode.lockReason,
+        tiktokMode: mode.tiktokMode,
+        metaReady: mode.metaReady,
+      },
+      facebook: { connected: Boolean(config.hasPageToken && config.pageId), ok: mode.metaReady && !halt.halted },
+      instagram: { connected: Boolean(config.hasPageToken && config.igUserId), ok: mode.metaReady && !halt.halted },
+      tiktok: { mode: mode.tiktokMode },
+      halted: halt.halted,
+      haltReason: halt.reason || "",
+      nextPostIn,
+      nextPostAt: next?.scheduledAt || null,
+      nextPostTitle: next?.headline || next?.title || "",
       media: {
         writable: writable.ok,
         root: writable.root,
