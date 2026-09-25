@@ -27,6 +27,7 @@ export { default as Review } from "./Review.model";
 export { default as Shipping } from "./Shipping.model";
 export { default as ShippingZone } from "./ShippingZone.model";
 export { default as Settings } from "./Settings.model";
+export { default as SocialPost } from "./SocialPost.model";
 export { default as StockAlert } from "./StockAlert.model";
 export { default as User } from "./User.model";
 export { default as Vehicle } from "./Vehicle.model";
