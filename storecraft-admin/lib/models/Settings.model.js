@@ -175,6 +175,14 @@ const settingsSchema = new mongoose.Schema(
       maxEmailReminders: { type: Number, default: 2 },
       reminderIntervalHours: { type: Number, default: 24 },
     },
+    /** Social Auto-Poster runtime flags (token halt, etc.) */
+    social: {
+      schedulerEnabled: { type: Boolean, default: true },
+      metaPublishingHalted: { type: Boolean, default: false },
+      metaHaltReason: { type: String, default: "" },
+      metaHaltedAt: { type: Date, default: null },
+      lastTickAt: { type: Date, default: null },
+    },
     /** Professional invoice PDF / print branding extras */
     invoice: {
       ntn: { type: String, default: "" },

@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 
 export function SocialTestPage() {
   const [health, setHealth] = useState(null);
+  const [halt, setHalt] = useState(null);
   const [loadingHealth, setLoadingHealth] = useState(true);
   const [post, setPost] = useState(null);
   const [title, setTitle] = useState("Social test post");
@@ -16,18 +17,24 @@ export function SocialTestPage() {
   const [files, setFiles] = useState([]);
   const [probes, setProbes] = useState([]);
   const [uploadResult, setUploadResult] = useState(null);
+  const [publishResult, setPublishResult] = useState(null);
 
   const loadHealth = useCallback(async () => {
     setLoadingHealth(true);
     try {
-      const res = await fetch("/api/social/health", { credentials: "include" });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
+      const [hRes, mRes] = await Promise.all([
+        fetch("/api/social/health", { credentials: "include" }),
+        fetch("/api/social/meta", { credentials: "include" }),
+      ]);
+      const json = await hRes.json();
+      const meta = await mRes.json().catch(() => ({}));
+      if (!hRes.ok || !json.success) {
         toast.error(json.error || "Health check failed");
         setHealth(null);
         return;
       }
       setHealth(json);
+      if (meta.success) setHalt(meta.halt || null);
     } catch {
       toast.error("Network error loading health");
     } finally {
@@ -128,20 +135,110 @@ export function SocialTestPage() {
     }
   }
 
+  async function publishNow(dryRun) {
+    if (!post?.id) {
+      toast.error("Create a test post first");
+      return;
+    }
+    setBusy(dryRun ? "dry" : "live");
+    setPublishResult(null);
+    try {
+      const res = await fetch(`/api/social/posts/${post.id}/publish`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dryRun }),
+      });
+      const json = await res.json();
+      setPublishResult(json);
+      if (json.halted) {
+        setHalt({ halted: true, reason: json.error || "Token invalid" });
+        toast.error("Meta publishing halted — replace META_PAGE_TOKEN");
+        return;
+      }
+      if (!res.ok || !json.success) {
+        toast.error(json.error || "Publish failed");
+        return;
+      }
+      if (json.post) setPost((p) => ({ ...p, ...json.post, id: json.post.id || p.id }));
+      toast.success(dryRun ? "Dry-run OK — see planned Graph calls below" : "Published");
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function verifyToken() {
+    setBusy("verify");
+    try {
+      const res = await fetch("/api/social/meta", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify" }),
+      });
+      const json = await res.json();
+      if (json.halt) setHalt(json.halt);
+      if (!json.success) {
+        toast.error(json.verify?.error || json.error || "Token check failed");
+        return;
+      }
+      toast.success(
+        `Token OK · Page: ${json.verify?.page?.name || json.verify?.page?.id || "ok"}`
+      );
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function clearHalt() {
+    try {
+      const res = await fetch("/api/social/meta", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "clear-halt" }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setHalt(json.halt);
+        toast.success("Halt cleared");
+      }
+    } catch {
+      toast.error("Network error");
+    }
+  }
+
   const images = post?.images || [];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      {halt?.halted ? (
+        <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950/50 dark:text-red-100">
+          <p className="font-bold">Facebook token invalid – replace META_PAGE_TOKEN</p>
+          <p className="mt-1 text-xs">{halt.reason || "OAuth / permission error from Graph API."}</p>
+          <button
+            type="button"
+            onClick={clearHalt}
+            className="mt-2 rounded border border-red-300 px-2 py-1 text-xs font-semibold"
+          >
+            Clear halt (after rotating token)
+          </button>
+        </div>
+      ) : null}
+
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-          Temporary · Step 1 verification
+          Temporary · Step 1–2 verification
         </p>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Social media test</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          Create a draft, upload posters, then confirm each public URL opens on{" "}
-          <strong>crazzycars.pk</strong> without login (must be{" "}
-          <code className="text-xs">image/jpeg</code>). After that we continue with Facebook /
-          Instagram publish (step 2).
+          Create a draft, upload posters, confirm public URLs, then dry-run Facebook / Instagram
+          publish. Admin:{" "}
+          <code className="text-xs">admin.crazzycars.pk/social/test</code>
         </p>
       </div>
 
@@ -339,6 +436,69 @@ export function SocialTestPage() {
         ) : (
           <p className="mt-3 text-sm text-slate-500">No probe results yet.</p>
         )}
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+          4. Publish (Facebook + Instagram)
+        </h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Dry-run logs the exact Graph calls without posting. Live publish only when{" "}
+          <code>SOCIAL_DRY_RUN=false</code> in Coolify (or use the CLI{" "}
+          <code>--live</code> flag).
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={!post?.id || !images.length || Boolean(busy)}
+            onClick={() => publishNow(true)}
+            className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {busy === "dry" ? "Dry-run…" : "Dry-run publish"}
+          </button>
+          <button
+            type="button"
+            disabled={!post?.id || !images.length || Boolean(busy) || halt?.halted}
+            onClick={() => {
+              if (
+                !window.confirm(
+                  "Real publish to Facebook + Instagram? Only works if SOCIAL_DRY_RUN=false on the server."
+                )
+              ) {
+                return;
+              }
+              publishNow(false);
+            }}
+            className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {busy === "live" ? "Publishing…" : "Live publish"}
+          </button>
+          <button
+            type="button"
+            disabled={Boolean(busy)}
+            onClick={verifyToken}
+            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold dark:border-slate-600"
+          >
+            {busy === "verify" ? "Checking…" : "Verify Meta token"}
+          </button>
+        </div>
+        {publishResult ? (
+          <pre className="mt-3 max-h-80 overflow-auto rounded-lg bg-slate-950 p-3 text-[11px] text-slate-100">
+            {JSON.stringify(
+              {
+                dryRun: publishResult.dryRun,
+                status: publishResult.status,
+                facebook: publishResult.facebook,
+                instagram: publishResult.instagram,
+                warnings: publishResult.warnings,
+                plannedCount: publishResult.planned?.length,
+                planned: publishResult.planned,
+              },
+              null,
+              2
+            )}
+          </pre>
+        ) : null}
       </section>
     </div>
   );

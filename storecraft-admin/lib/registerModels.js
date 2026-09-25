@@ -29,6 +29,7 @@ import "./models/Receipt.model";
 import "./models/Review.model";
 import "./models/Shipping.model";
 import "./models/Settings.model";
+import "./models/SocialPost.model";
 import "./models/StockAlert.model";
 import "./models/User.model";
 import "./models/Vehicle.model";

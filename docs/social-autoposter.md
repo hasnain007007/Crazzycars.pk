@@ -16,9 +16,9 @@ Module lives in **storecraft-admin** (Next.js API routes + Mongoose). Public ima
 
 1. **Done** — Model, image service (sharp), public media path, health + draft/upload APIs  
 1b. **Done** — Temporary admin UI at `/social/test` (create draft, upload, Check URLs)  
-2. Pending — Facebook + Instagram publishers + dry-run + test-post script *(wait for URL confirm)*  
+2. **Done** — Facebook + Instagram publishers, dry-run default, test-post script, OAuth halt banner  
 3. Pending — Scheduler + retries + alerts  
-4. Pending — Admin UI  
+4. Pending — Admin UI (full calendar / week pack)  
 5. Pending — Week-pack import  
 6. Pending — TikTok modes  
 
@@ -33,6 +33,42 @@ Open **Admin → Content → Social Test** (`/social/test`):
 5. **Check URLs** — table must show status 200 and `image/jpeg`.
 
 Then reply OK so we continue with step 2 (Graph publish, dry-run default).
+
+## Step 2 — Facebook + Instagram publish
+
+### Behaviour
+- Graph API `META_GRAPH_VERSION` (default `v23.0`)
+- FB multi-photo: unpublished photos → `/{PAGE_ID}/feed` with `attached_media`
+- IG carousel: child containers → CAROUSEL → poll `status_code` → `media_publish` → permalink
+- `SOCIAL_DRY_RUN` defaults to **true** (env unset = dry-run). Live publish refused while dry-run is on.
+- OAuth errors (codes 190, 10, 200) halt Meta publishing and set a red banner on `/social/test`
+
+### Dry-run test (safe)
+
+**A) Admin UI** → [https://admin.crazzycars.pk/social/test](https://admin.crazzycars.pk/social/test)  
+Create post → upload images → **Dry-run publish** → expand planned Graph calls in the JSON panel.
+
+**B) CLI** (from `storecraft-admin`, with `MONGODB_URI` + Meta env in `.env.local` or Coolify shell):
+
+```bash
+cd storecraft-admin
+npm run social:test-post -- --id=POST_OBJECT_ID
+```
+
+Logs every planned `POST/GET` with `access_token: "[REDACTED]"`.
+
+### Real publish test
+
+1. Coolify admin env: set `SOCIAL_DRY_RUN=false` (keep token + page/IG ids), recreate/restart admin.
+2. Either:
+   - UI: **Live publish** on `/social/test`, or
+   - CLI: `npm run social:test-post -- --id=POST_OBJECT_ID --live`
+3. Confirm FB page post + IG permalink in the result JSON.
+4. Set `SOCIAL_DRY_RUN=true` again when done testing.
+
+### Verify token
+
+UI button **Verify Meta token**, or `POST /api/social/meta` `{ "action": "verify" }`.
 
 ## Environment
 

@@ -72,7 +72,7 @@ export function parseDefaultSlots(raw) {
 export function getSocialConfig() {
   const warnings = [];
   const enabled = envBool("SOCIAL_ENABLED", false);
-  const dryRun = envBool("SOCIAL_DRY_RUN", false);
+  const dryRun = envBool("SOCIAL_DRY_RUN", true);
   const timezone = envStr("SOCIAL_TIMEZONE", "Asia/Karachi");
   const defaultSlots = parseDefaultSlots(envStr("SOCIAL_DEFAULT_SLOTS", "10:00,18:00"));
   const graphVersion = envStr("META_GRAPH_VERSION", "v23.0");
