@@ -1070,6 +1070,17 @@ export async function fetchRunCourierCarriers({ settingsCourier } = {}) {
     unique.push(String(title));
   }
   if (!unique.some((x) => String(x).toLowerCase() === "auto")) unique.unshift("Auto");
+
+  // Portal Digi list often returns "leopard" / "bluex" / "Tcs" — not "Leopard2".
+  // Merge our canonical Select APIs so Leopard2, Trax, M&P, etc. always appear.
+  // "leopard" ≠ "leopard2" (different api_vendor); both can show.
+  for (const canonical of RUN_COURIER_APIS) {
+    const key = String(canonical).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(canonical);
+  }
+
   if (!unique.length) {
     return { success: true, carriers: [...RUN_COURIER_APIS], rows: [], source: "fallback" };
   }
