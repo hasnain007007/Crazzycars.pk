@@ -598,6 +598,11 @@ export function SettingsPage() {
           <Toggle label="Email on new order (admin inbox)" checked={n.emailOnNewOrder !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnNewOrder: v } })} />
           <Toggle label="Email customer when payment is received" checked={n.emailOnPaymentReceived !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnPaymentReceived: v } })} />
           <Toggle label="Email customer when tracking ID is added" checked={n.emailOnTrackingAdded !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnTrackingAdded: v } })} />
+          <p className="text-xs text-slate-500 -mt-2 mb-2">
+            Needs a real customer email (not guest checkout) and admin Coolify env{" "}
+            <code className="text-[11px]">RESEND_API_KEY</code> + <code className="text-[11px]">FROM_EMAIL</code>.
+            Also keep Courier → “Send tracking to customer” ON.
+          </p>
           <Toggle label="Email customer when order is delivered" checked={n.emailOnDelivered !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnDelivered: v } })} />
           <Toggle label="Email customer when order is cancelled" checked={n.emailOnCancelled !== false} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnCancelled: v } })} />
           <Toggle label="Email customer on other status changes (confirmed / processing / packed)" checked={!!n.emailOnStatusUpdate} onChange={(v) => setS({ ...s, notifications: { ...n, emailOnStatusUpdate: v } })} />

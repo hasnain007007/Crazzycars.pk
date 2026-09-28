@@ -229,6 +229,9 @@ export function BulkActionBar({
     setBusy(true);
     let okCount = 0;
     let failCount = 0;
+    let emailSent = 0;
+    let emailFail = 0;
+    let emailSkip = 0;
     const failures = [];
 
     for (let i = 0; i < ids.length; i++) {
@@ -244,6 +247,9 @@ export function BulkActionBar({
         const json = await res.json();
         if (res.ok && json.success) {
           okCount += 1;
+          if (json.trackingEmail === "sent") emailSent += 1;
+          else if (json.trackingEmail === "failed") emailFail += 1;
+          else if (json.trackingEmail === "skipped" || json.trackingEmail === "none") emailSkip += 1;
         } else {
           failCount += 1;
           const suggest =
@@ -259,7 +265,11 @@ export function BulkActionBar({
     }
 
     setBulkBookProgress("");
-    if (okCount) toast.success(`Postex booked ${okCount} order(s).`);
+    if (okCount) {
+      toast.success(
+        `Postex booked ${okCount}. Emails: ${emailSent} sent${emailFail ? `, ${emailFail} failed` : ""}${emailSkip ? `, ${emailSkip} skipped` : ""}.`
+      );
+    }
     if (failCount) {
       toast.error(`${failCount} failed. ${failures.slice(0, 2).join(" · ")}${failures.length > 2 ? "…" : ""}`);
     }
@@ -278,6 +288,9 @@ export function BulkActionBar({
     setBusy(true);
     let okCount = 0;
     let failCount = 0;
+    let emailSent = 0;
+    let emailFail = 0;
+    let emailSkip = 0;
     const failures = [];
 
     for (let i = 0; i < ids.length; i++) {
@@ -293,6 +306,9 @@ export function BulkActionBar({
         const json = await res.json();
         if (res.ok && json.success) {
           okCount += 1;
+          if (json.trackingEmail === "sent") emailSent += 1;
+          else if (json.trackingEmail === "failed") emailFail += 1;
+          else if (json.trackingEmail === "skipped" || json.trackingEmail === "none") emailSkip += 1;
         } else {
           failCount += 1;
           failures.push(`${json.order?.orderNumber || id}: ${json.error || "Failed"}`);
@@ -304,7 +320,11 @@ export function BulkActionBar({
     }
 
     setBulkBookProgress("");
-    if (okCount) toast.success(`Run Courier booked ${okCount} order(s).`);
+    if (okCount) {
+      toast.success(
+        `Run Courier booked ${okCount}. Emails: ${emailSent} sent${emailFail ? `, ${emailFail} failed` : ""}${emailSkip ? `, ${emailSkip} skipped` : ""}.`
+      );
+    }
     if (failCount) {
       toast.error(`${failCount} failed. ${failures.slice(0, 2).join(" · ")}${failures.length > 2 ? "…" : ""}`);
     }

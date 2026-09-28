@@ -10,6 +10,7 @@ import {
   DEFAULT_EMAIL_TEMPLATES,
   isSendableCustomerEmail,
   planOrderLifecycleEmails,
+  resolveCustomerEmail,
 } from "@/lib/orderEmailPlan";
 import { storefrontTrackingUrl } from "@/lib/publicTracking";
 
@@ -77,7 +78,7 @@ export function buildOrderEmailVars(order, settings = {}, extra = {}, formatPric
   const subtotal = Number(order?.pricing?.subtotal ?? order?.subtotal) || 0;
   const shipping = Number(order?.pricing?.shippingCost ?? order?.shippingCost) || 0;
   const total = Number(order?.pricing?.total ?? order?.total) || 0;
-  const email = String(order?.customer?.email || extra.email || "").trim();
+  const email = resolveCustomerEmail(order, extra.email);
   const phone = customerPhone(order);
   const totalFmt = formatPrice(total);
   return {
@@ -172,7 +173,7 @@ const HISTORY_BY_KEY = {
 };
 
 export async function sendTemplatedCustomerEmail(order, templateKey, settings, { force = false, extra } = {}) {
-  const to = String(order?.customer?.email || extra?.email || "").trim().toLowerCase();
+  const to = resolveCustomerEmail(order, extra?.email);
   if (!isSendableCustomerEmail(to)) {
     console.warn(
       `[email] skip ${templateKey} for ${order?.orderNumber || order?._id || "?"}: no real customer email`
@@ -184,7 +185,10 @@ export async function sendTemplatedCustomerEmail(order, templateKey, settings, {
     return { success: true, skipped: true, error: "Already sent" };
   }
   const runtime = settings && Object.keys(settings).length ? settings : await loadEmailRuntimeSettings();
-  const { subject, html } = resolveTemplatedEmail(templateKey, order, runtime, extra);
+  const { subject, html } = resolveTemplatedEmail(templateKey, order, runtime, {
+    ...(extra || {}),
+    email: to,
+  });
   const sent = await sendEmail({ to, subject, html });
   if (sent?.success && order?._id && historyType) {
     await recordEmailSent(order._id, historyType, subject, to);

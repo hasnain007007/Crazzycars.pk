@@ -4,6 +4,7 @@ import {
   applyTemplateVars,
   isSendableCustomerEmail,
   planOrderLifecycleEmails,
+  resolveCustomerEmail,
 } from "../storecraft-admin/lib/orderEmailPlan.js";
 
 describe("order email plan", () => {
@@ -84,5 +85,16 @@ describe("order email plan", () => {
   it("skips guest checkout addresses", () => {
     assert.equal(isSendableCustomerEmail("guest+03001234567@guest.checkout"), false);
     assert.equal(isSendableCustomerEmail("ali@example.com"), true);
+  });
+
+  it("resolveCustomerEmail prefers real email and skips guest", () => {
+    assert.equal(
+      resolveCustomerEmail({
+        customer: { email: "guest+0300@guest.checkout" },
+        shippingAddress: { email: "buyer@gmail.com" },
+      }),
+      "buyer@gmail.com"
+    );
+    assert.equal(resolveCustomerEmail({ customer: { email: "guest+1@guest.checkout" } }), "");
   });
 });

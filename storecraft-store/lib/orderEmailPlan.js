@@ -117,7 +117,7 @@ Order Status: {order_status}</p>
 <p>— {company.name}</p>`,
   },
   orderShipped: {
-    subject: "Order {order_id} : Tracking {tracking_number}",
+    subject: "Your {store_name} order #{order_id} is on its way! 🚚",
     body: `<p>Dear {customer.first_name},</p>
 <p>Your order is on the way.</p>
 <p>Order Number: {order_id}<br>
@@ -195,6 +195,22 @@ export function isSendableCustomerEmail(email) {
   if (!to.includes("@")) return false;
   if (to.includes("@guest.")) return false;
   return true;
+}
+
+/** Best customer email on an order (skips guest placeholders). */
+export function resolveCustomerEmail(order, extraEmail = "") {
+  const candidates = [
+    extraEmail,
+    order?.customer?.email,
+    order?.shippingAddress?.email,
+    order?.billingAddress?.email,
+    order?.email,
+  ];
+  for (const raw of candidates) {
+    const to = String(raw || "").trim().toLowerCase();
+    if (isSendableCustomerEmail(to)) return to;
+  }
+  return "";
 }
 
 const GENERIC_STATUS = new Set(["confirmed", "processing", "packed", "returned", "refunded"]);

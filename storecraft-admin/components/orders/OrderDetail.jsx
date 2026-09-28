@@ -1107,6 +1107,15 @@ export function OrderDetail({ orderId }) {
       setOrder(json.order);
       setTrackingUrl(json.order?.trackingUrl || url);
       toast.success("Tracking saved.");
+      if (json.trackingEmail === "sent") {
+        toast.success("Tracking email sent to customer");
+      } else if (json.trackingEmail === "failed") {
+        toast.error(
+          json.trackingEmailError || "Tracking email failed — check RESEND_API_KEY on admin"
+        );
+      } else if (json.trackingEmail === "skipped") {
+        toast(json.trackingEmailError || "No customer email — tracking email skipped");
+      }
       if (isPostex || isRun) await fetchLiveCourierStatus(num, json.order);
     } catch {
       toast.error("Network error.");
@@ -1305,7 +1314,7 @@ export function OrderDetail({ orderId }) {
         toast.error(json.error || "Failed to send tracking email.");
         return;
       }
-      toast.success("Tracking email sent.");
+      toast.success(json.message || "Tracking email sent.");
       load();
     } catch {
       toast.error("Network error.");

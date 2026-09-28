@@ -14,7 +14,7 @@ import { roundRupees } from "@/lib/currency";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
-import { dispatchOrderLifecycleEmails } from "@/lib/customerLifecycleEmail";
+import { dispatchOrderLifecycleEmails, summarizeLifecycleEmailResults } from "@/lib/customerLifecycleEmail";
 import {
   isBrokenCloudinaryUrl,
   productMainImageUrl,
@@ -791,8 +791,13 @@ export async function PUT(request, context) {
 
     await order.save();
 
+    let emailSummary = {
+      trackingEmail: "none",
+      trackingEmailOk: false,
+      trackingEmailError: "",
+    };
     try {
-      await dispatchOrderLifecycleEmails(order, {
+      const emailResults = await dispatchOrderLifecycleEmails(order, {
         prevStatus,
         nextStatus: order.orderStatus,
         prevPayment,
@@ -800,8 +805,14 @@ export async function PUT(request, context) {
         prevTracking,
         nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
       });
+      emailSummary = summarizeLifecycleEmailResults(emailResults);
     } catch (e) {
       console.error("[email] order lifecycle:", e?.message || e);
+      emailSummary = {
+        trackingEmail: "failed",
+        trackingEmailOk: false,
+        trackingEmailError: e?.message || "Email failed",
+      };
     }
 
     await logActivity({
@@ -817,7 +828,12 @@ export async function PUT(request, context) {
 
     const lean = await Order.findById(id).populate("customer.customerId", "name email phone").lean();
     const imageMap = await productImageMapForOrder(lean);
-    return NextResponse.json({ success: true, order: serializeOrder(lean, imageMap), changed: true });
+    return NextResponse.json({
+      success: true,
+      order: serializeOrder(lean, imageMap),
+      changed: true,
+      ...emailSummary,
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Update failed." },
