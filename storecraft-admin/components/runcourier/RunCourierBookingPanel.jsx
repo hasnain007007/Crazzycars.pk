@@ -108,6 +108,13 @@ export default function RunCourierBookingPanel({
       }
       setSuccess(`Booked! Tracking: ${data.trackingNumber} (${data.selectedApi})`);
       toast.success(`Run Courier booked: ${data.trackingNumber}`);
+      if (data.trackingEmail === "sent") {
+        toast.success("Tracking email sent to customer");
+      } else if (data.trackingEmail === "failed") {
+        toast.error(data.trackingEmailError || "Tracking email failed — check RESEND_API_KEY on admin");
+      } else if (data.trackingEmail === "skipped") {
+        toast(data.trackingEmailError || "No customer email — tracking email skipped");
+      }
       // Auto-download airbill PDF on book (same as PostEx).
       const orderId = order.id || order._id;
       const tn = String(data.trackingNumber || "").trim();

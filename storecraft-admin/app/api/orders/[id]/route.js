@@ -727,8 +727,10 @@ export async function PUT(request, context) {
       };
 
       if (number) {
-        if (order.orderStatus === "processing") {
+        const shipFrom = new Set(["pending", "confirmed", "processing", "packed"]);
+        if (shipFrom.has(String(order.orderStatus || "")) && order.orderStatus !== "shipped") {
           order.orderStatus = "shipped";
+          if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
           order.statusHistory.push({
             status: "shipped",
             changedBy: adminName,
@@ -773,7 +775,7 @@ export async function PUT(request, context) {
         url,
         notifiedAt: order.tracking?.notifiedAt || null,
       };
-      if (number && order.orderStatus === "processing") {
+      if (number && ["pending", "confirmed", "processing", "packed"].includes(String(order.orderStatus || ""))) {
         order.orderStatus = "shipped";
         order.shippedAt = order.shippedAt || new Date();
         updates.push("orderStatus → shipped");
@@ -789,14 +791,18 @@ export async function PUT(request, context) {
 
     await order.save();
 
-    dispatchOrderLifecycleEmails(order, {
-      prevStatus,
-      nextStatus: order.orderStatus,
-      prevPayment,
-      nextPayment: order.paymentStatus,
-      prevTracking,
-      nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
-    }).catch((e) => console.error("[email] order lifecycle:", e?.message || e));
+    try {
+      await dispatchOrderLifecycleEmails(order, {
+        prevStatus,
+        nextStatus: order.orderStatus,
+        prevPayment,
+        nextPayment: order.paymentStatus,
+        prevTracking,
+        nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+      });
+    } catch (e) {
+      console.error("[email] order lifecycle:", e?.message || e);
+    }
 
     await logActivity({
       user: user.userId,

@@ -8,7 +8,7 @@ import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { orderGrandTotal } from "@/lib/orderFormat";
-import { dispatchOrderLifecycleEmails } from "@/lib/customerLifecycleEmail";
+import { dispatchOrderLifecycleEmails, summarizeLifecycleEmailResults } from "@/lib/customerLifecycleEmail";
 import {
   createRunCourierShipment,
   displayCourierName,
@@ -233,14 +233,25 @@ export async function POST(request) {
 
     await order.save();
 
-    dispatchOrderLifecycleEmails(order, {
-      prevStatus,
-      nextStatus: order.orderStatus,
-      prevPayment: order.paymentStatus,
-      nextPayment: order.paymentStatus,
-      prevTracking: existingTracking,
-      nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
-    }).catch((e) => console.error("[email] runcourier book:", e?.message || e));
+    let emailSummary = { trackingEmail: "none", trackingEmailOk: false, trackingEmailError: "" };
+    try {
+      const emailResults = await dispatchOrderLifecycleEmails(order, {
+        prevStatus,
+        nextStatus: order.orderStatus,
+        prevPayment: order.paymentStatus,
+        nextPayment: order.paymentStatus,
+        prevTracking: existingTracking,
+        nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+      });
+      emailSummary = summarizeLifecycleEmailResults(emailResults);
+    } catch (e) {
+      console.error("[email] runcourier book:", e?.message || e);
+      emailSummary = {
+        trackingEmail: "failed",
+        trackingEmailOk: false,
+        trackingEmailError: e?.message || "Email failed",
+      };
+    }
 
     await logActivity({
       user: user.userId,
@@ -284,6 +295,7 @@ export async function POST(request) {
       // Inline PDF so the browser can save the airbill immediately on book.
       ...(labelPdf ? { labelPdfBase64: labelPdf } : {}),
       labelDownloadUrl: `/api/runcourier/label?trackingNumber=${encodeURIComponent(result.trackingNumber)}&orderId=${encodeURIComponent(orderId)}&download=1`,
+      ...emailSummary,
       order: {
         id: order._id.toString(),
         orderNumber: order.orderNumber,

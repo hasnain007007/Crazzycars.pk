@@ -60,15 +60,32 @@ export function buildOrderEmailVars(order, settings = {}, extra = {}, formatMone
   const name = splitCustomerName(order);
   const store = storeNameFrom(settings);
   const trackingNumber = String(order?.trackingNumber || order?.tracking?.number || "").trim();
-  const trackingLink = String(order?.tracking?.url || order?.trackingUrl || "").trim();
+  let trackingLink = String(order?.tracking?.url || order?.trackingUrl || "").trim();
+  if (!trackingLink && trackingNumber) {
+    const base = String(
+      process.env.NEXT_PUBLIC_STORE_URL ||
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        "https://crazzycars.pk"
+    ).replace(/\/$/, "");
+    trackingLink = `${base}/track-order?tracking=${encodeURIComponent(trackingNumber)}`;
+  }
   const subtotal = Number(order?.pricing?.subtotal ?? order?.subtotal) || 0;
   const shipping = Number(order?.pricing?.shippingCost ?? order?.shippingCost) || 0;
   const total = Number(order?.pricing?.total ?? order?.total) || 0;
+  const email = String(order?.customer?.email || extra.email || "").trim();
+  const phone = String(
+    order?.shippingAddress?.phone || order?.customer?.phone || order?.billingAddress?.phone || ""
+  ).trim();
+  const totalFmt = formatMoney(total);
   return {
     customer_name: [name.first, name.last].filter(Boolean).join(" "),
     "customer.first_name": name.first,
     "customer.last_name": name.last,
-    "customer.email": String(order?.customer?.email || extra.email || "").trim(),
+    "customer.email": email,
+    customer_firstname: name.first,
+    customer_lastname: name.last,
+    customer_email: email,
+    customer_phone: phone,
     order_id: String(order?.orderNumber || order?._id || ""),
     order_datetime: formatWhen(order?.createdAt),
     order_status: String(order?.orderStatus || ""),
@@ -76,11 +93,12 @@ export function buildOrderEmailVars(order, settings = {}, extra = {}, formatMone
     order_items: itemsHtml(order, formatMoney),
     subtotal: formatMoney(subtotal),
     order_shipping: formatMoney(shipping),
-    order_total: formatMoney(total),
-    total: formatMoney(total),
+    order_total: totalFmt,
+    order_total_price: totalFmt,
+    total: totalFmt,
     tracking_number: trackingNumber,
     tracking_link: trackingLink,
-    courier: String(order?.tracking?.carrier || order?.courier || "Postex"),
+    courier: String(order?.tracking?.carrier || order?.courier || "Courier"),
     "company.name": store,
     "company.address": companyAddress(settings),
     store_name: store,

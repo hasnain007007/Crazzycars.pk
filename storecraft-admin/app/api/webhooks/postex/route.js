@@ -136,14 +136,18 @@ export async function POST(request) {
     const applied = applyPostexStatusToOrder(order, parsed);
     if (applied.changed) {
       await order.save();
-      dispatchOrderLifecycleEmails(order, {
-        prevStatus,
-        nextStatus: order.orderStatus,
-        prevPayment,
-        nextPayment: order.paymentStatus,
-        prevTracking,
-        nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
-      }).catch((e) => console.error("[email] postex webhook:", e?.message || e));
+      try {
+        await dispatchOrderLifecycleEmails(order, {
+          prevStatus,
+          nextStatus: order.orderStatus,
+          prevPayment,
+          nextPayment: order.paymentStatus,
+          prevTracking,
+          nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+        });
+      } catch (e) {
+        console.error("[email] postex webhook:", e?.message || e);
+      }
     }
 
     const wa = buildWhatsAppWouldNotify(order, settingsDoc, parsed.orderStatus);

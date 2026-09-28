@@ -606,18 +606,24 @@ export async function POST(request) {
       ip: requestIp(request),
     });
 
-    sendTemplatedCustomerEmail(order, "orderConfirmation").catch((e) =>
-      console.error("[email] admin invoice confirmation:", e?.message || e)
-    );
+    try {
+      await sendTemplatedCustomerEmail(order, "orderConfirmation");
+    } catch (e) {
+      console.error("[email] admin invoice confirmation:", e?.message || e);
+    }
     if (paymentStatus === "paid") {
-      dispatchOrderLifecycleEmails(order, {
-        prevStatus: "confirmed",
-        nextStatus: "confirmed",
-        prevPayment: "unpaid",
-        nextPayment: "paid",
-        prevTracking: "",
-        nextTracking: "",
-      }).catch((e) => console.error("[email] admin invoice payment:", e?.message || e));
+      try {
+        await dispatchOrderLifecycleEmails(order, {
+          prevStatus: "confirmed",
+          nextStatus: "confirmed",
+          prevPayment: "unpaid",
+          nextPayment: "paid",
+          prevTracking: "",
+          nextTracking: "",
+        });
+      } catch (e) {
+        console.error("[email] admin invoice payment:", e?.message || e);
+      }
     }
 
     return NextResponse.json({

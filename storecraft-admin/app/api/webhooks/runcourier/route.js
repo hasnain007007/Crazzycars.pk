@@ -112,13 +112,21 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
     }
 
+    const prevStatus = order.orderStatus;
+    const prevPayment = order.paymentStatus;
+    const prevTracking = String(order.trackingNumber || order.tracking?.number || "").trim();
+
     const applied = applyRunCourierStatusToOrder(order, parsed);
     if (applied.changed) {
       await order.save();
       try {
         await dispatchOrderLifecycleEmails(order, {
-          previousStatus: null,
-          forceStatuses: applied.mappedOrderStatus ? [applied.mappedOrderStatus] : [],
+          prevStatus,
+          nextStatus: order.orderStatus,
+          prevPayment,
+          nextPayment: order.paymentStatus,
+          prevTracking,
+          nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
         });
       } catch (e) {
         console.warn("[runcourier-webhook] lifecycle email:", e?.message || e);

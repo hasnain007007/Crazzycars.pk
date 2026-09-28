@@ -54,6 +54,33 @@ describe("order email plan", () => {
     assert.deepEqual(jobs, ["orderDelivered"]);
   });
 
+  it("sends tracking email when status becomes shipped with existing CN", () => {
+    const jobs = planOrderLifecycleEmails({
+      prevStatus: "packed",
+      nextStatus: "shipped",
+      prevPayment: "unpaid",
+      nextPayment: "unpaid",
+      prevTracking: "PX123",
+      nextTracking: "PX123",
+      paymentMethod: "cod",
+    });
+    assert.deepEqual(jobs, ["orderShipped"]);
+  });
+
+  it("respects sendTrackingToCustomer=false", () => {
+    const jobs = planOrderLifecycleEmails({
+      prevStatus: "processing",
+      nextStatus: "shipped",
+      prevPayment: "unpaid",
+      nextPayment: "unpaid",
+      prevTracking: "",
+      nextTracking: "PX123",
+      paymentMethod: "cod",
+      sendTrackingToCustomer: false,
+    });
+    assert.deepEqual(jobs, []);
+  });
+
   it("skips guest checkout addresses", () => {
     assert.equal(isSendableCustomerEmail("guest+03001234567@guest.checkout"), false);
     assert.equal(isSendableCustomerEmail("ali@example.com"), true);

@@ -89,14 +89,18 @@ export async function PUT(request) {
         });
         order.markModified("timeline");
         await order.save();
-        dispatchOrderLifecycleEmails(order, {
-          prevStatus,
-          nextStatus: order.orderStatus,
-          prevPayment,
-          nextPayment: order.paymentStatus,
-          prevTracking,
-          nextTracking: prevTracking,
-        }).catch((e) => console.error("[email] bulk status:", e?.message || e));
+        try {
+          await dispatchOrderLifecycleEmails(order, {
+            prevStatus,
+            nextStatus: order.orderStatus,
+            prevPayment,
+            nextPayment: order.paymentStatus,
+            prevTracking,
+            nextTracking: prevTracking,
+          });
+        } catch (e) {
+          console.error("[email] bulk status:", e?.message || e);
+        }
         updated += 1;
       }
     } else if (action === "addTags") {
@@ -137,14 +141,18 @@ export async function PUT(request) {
         const prevPayment = order.paymentStatus;
         order.paymentStatus = value;
         await order.save();
-        dispatchOrderLifecycleEmails(order, {
-          prevStatus: order.orderStatus,
-          nextStatus: order.orderStatus,
-          prevPayment,
-          nextPayment: order.paymentStatus,
-          prevTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
-          nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
-        }).catch((e) => console.error("[email] bulk payment:", e?.message || e));
+        try {
+          await dispatchOrderLifecycleEmails(order, {
+            prevStatus: order.orderStatus,
+            nextStatus: order.orderStatus,
+            prevPayment,
+            nextPayment: order.paymentStatus,
+            prevTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+            nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+          });
+        } catch (e) {
+          console.error("[email] bulk payment:", e?.message || e);
+        }
         updated += 1;
       }
     }

@@ -1,6 +1,6 @@
 /**
  * Order / account email catalog, placeholder substitution, and trigger planner.
- * Keep in sync with storecraft-admin/lib/orderEmailPlan.js.
+ * Keep in sync with storecraft-store/lib/orderEmailPlan.js.
  */
 
 export const EMAIL_TEMPLATE_KEYS = [
@@ -20,7 +20,7 @@ export const EMAIL_TEMPLATE_KEYS = [
     id: "orderShipped",
     label: "Tracking ID added",
     historyType: "shipping_notification",
-    when: "Sent when a tracking number is saved or a PostEx shipment is booked.",
+    when: "Sent when a tracking number is saved or a PostEx / Run Courier shipment is booked.",
   },
   {
     id: "orderDelivered",
@@ -64,6 +64,10 @@ export const EMAIL_VAR_CHIPS = [
   "{customer.first_name}",
   "{customer.last_name}",
   "{customer.email}",
+  "{customer_firstname}",
+  "{customer_lastname}",
+  "{customer_email}",
+  "{customer_phone}",
   "{customer_name}",
   "{order_id}",
   "{order_datetime}",
@@ -73,6 +77,7 @@ export const EMAIL_VAR_CHIPS = [
   "{subtotal}",
   "{order_shipping}",
   "{order_total}",
+  "{order_total_price}",
   "{total}",
   "{tracking_number}",
   "{tracking_link}",

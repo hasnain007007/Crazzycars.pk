@@ -1206,6 +1206,15 @@ export function OrderDetail({ orderId }) {
         setTrackingUrl(data.trackingUrl || postexPublicTrackingUrl(data.trackingNumber));
         setHasLabel(Boolean(data.hasLabel));
         toast.success(`Shipment booked: ${data.trackingNumber}`);
+        if (data.trackingEmail === "sent") {
+          toast.success("Tracking email sent to customer");
+        } else if (data.trackingEmail === "failed") {
+          toast.error(
+            data.trackingEmailError || "Tracking email failed — check RESEND_API_KEY on admin"
+          );
+        } else if (data.trackingEmail === "skipped") {
+          toast(data.trackingEmailError || "No customer email — tracking email skipped");
+        }
         // Auto-download shipping slip PDF (PostEx demo slip)
         const labelUrl =
           data.labelDownloadUrl ||
@@ -1296,7 +1305,7 @@ export function OrderDetail({ orderId }) {
         toast.error(json.error || "Failed to send tracking email.");
         return;
       }
-      toast.success("Tracking email logged.");
+      toast.success("Tracking email sent.");
       load();
     } catch {
       toast.error("Network error.");

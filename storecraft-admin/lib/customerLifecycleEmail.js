@@ -11,6 +11,7 @@ import {
   isSendableCustomerEmail,
   planOrderLifecycleEmails,
 } from "@/lib/orderEmailPlan";
+import { storefrontTrackingUrl } from "@/lib/publicTracking";
 
 function storeNameFrom(settings) {
   return (
@@ -56,19 +57,38 @@ function companyAddress(settings) {
   return [a.street, a.city, a.country].map((x) => String(x || "").trim()).filter(Boolean).join(", ");
 }
 
+function customerPhone(order) {
+  return String(
+    order?.shippingAddress?.phone ||
+      order?.customer?.phone ||
+      order?.billingAddress?.phone ||
+      ""
+  ).trim();
+}
+
 export function buildOrderEmailVars(order, settings = {}, extra = {}, formatPrice = formatAdminPrice) {
   const name = splitCustomerName(order);
   const store = storeNameFrom(settings);
   const trackingNumber = String(order?.trackingNumber || order?.tracking?.number || "").trim();
-  const trackingLink = String(order?.tracking?.url || order?.trackingUrl || "").trim();
+  let trackingLink = String(order?.tracking?.url || order?.trackingUrl || "").trim();
+  if (!trackingLink && trackingNumber) {
+    trackingLink = storefrontTrackingUrl(trackingNumber);
+  }
   const subtotal = Number(order?.pricing?.subtotal ?? order?.subtotal) || 0;
   const shipping = Number(order?.pricing?.shippingCost ?? order?.shippingCost) || 0;
   const total = Number(order?.pricing?.total ?? order?.total) || 0;
+  const email = String(order?.customer?.email || extra.email || "").trim();
+  const phone = customerPhone(order);
+  const totalFmt = formatPrice(total);
   return {
     customer_name: [name.first, name.last].filter(Boolean).join(" "),
     "customer.first_name": name.first,
     "customer.last_name": name.last,
-    "customer.email": String(order?.customer?.email || extra.email || "").trim(),
+    "customer.email": email,
+    customer_firstname: name.first,
+    customer_lastname: name.last,
+    customer_email: email,
+    customer_phone: phone,
     order_id: String(order?.orderNumber || order?._id || ""),
     order_datetime: formatWhen(order?.createdAt),
     order_status: String(order?.orderStatus || ""),
@@ -76,11 +96,12 @@ export function buildOrderEmailVars(order, settings = {}, extra = {}, formatPric
     order_items: itemsHtml(order, formatPrice),
     subtotal: formatPrice(subtotal),
     order_shipping: formatPrice(shipping),
-    order_total: formatPrice(total),
-    total: formatPrice(total),
+    order_total: totalFmt,
+    order_total_price: totalFmt,
+    total: totalFmt,
     tracking_number: trackingNumber,
     tracking_link: trackingLink,
-    courier: String(order?.tracking?.carrier || order?.courier || "Postex"),
+    courier: String(order?.tracking?.carrier || order?.courier || "Courier"),
     "company.name": store,
     "company.address": companyAddress(settings),
     store_name: store,
@@ -153,6 +174,9 @@ const HISTORY_BY_KEY = {
 export async function sendTemplatedCustomerEmail(order, templateKey, settings, { force = false, extra } = {}) {
   const to = String(order?.customer?.email || extra?.email || "").trim().toLowerCase();
   if (!isSendableCustomerEmail(to)) {
+    console.warn(
+      `[email] skip ${templateKey} for ${order?.orderNumber || order?._id || "?"}: no real customer email`
+    );
     return { success: false, skipped: true, error: "No customer email" };
   }
   const historyType = HISTORY_BY_KEY[templateKey];
@@ -165,8 +189,61 @@ export async function sendTemplatedCustomerEmail(order, templateKey, settings, {
   if (sent?.success && order?._id && historyType) {
     await recordEmailSent(order._id, historyType, subject, to);
     rememberSent(order, historyType, subject, to);
+    if (templateKey === "orderShipped") {
+      try {
+        const OrderMod = (await import("@/lib/models/Order.model")).default;
+        await OrderMod.updateOne(
+          { _id: order._id },
+          { $set: { "tracking.notifiedAt": new Date() } }
+        );
+        if (order.tracking) order.tracking.notifiedAt = new Date();
+      } catch (e) {
+        console.warn("[email] notifiedAt update failed:", e?.message || e);
+      }
+    }
+  } else if (!sent?.success) {
+    console.error(
+      `[email] ${templateKey} failed for ${order?.orderNumber || order?._id}:`,
+      sent?.error || "unknown"
+    );
   }
-  return sent;
+  return { ...sent, templateKey, to, subject };
+}
+
+/** Summarize lifecycle send results for API/UI. */
+export function summarizeLifecycleEmailResults(results = []) {
+  const list = Array.isArray(results) ? results : [];
+  const shipped = list.find((r) => r?.templateKey === "orderShipped");
+  if (!shipped) {
+    return {
+      trackingEmail: "none",
+      trackingEmailOk: false,
+      trackingEmailError: "",
+      results: list,
+    };
+  }
+  if (shipped.success && !shipped.skipped) {
+    return {
+      trackingEmail: "sent",
+      trackingEmailOk: true,
+      trackingEmailError: "",
+      results: list,
+    };
+  }
+  if (shipped.skipped) {
+    return {
+      trackingEmail: shipped.error === "Already sent" ? "already_sent" : "skipped",
+      trackingEmailOk: true,
+      trackingEmailError: shipped.error || "skipped",
+      results: list,
+    };
+  }
+  return {
+    trackingEmail: "failed",
+    trackingEmailOk: false,
+    trackingEmailError: shipped.error || "Failed to send tracking email",
+    results: list,
+  };
 }
 
 export async function dispatchOrderLifecycleEmails(order, change = {}, options = {}) {
@@ -175,12 +252,13 @@ export async function dispatchOrderLifecycleEmails(order, change = {}, options =
   const jobs =
     options.jobs ||
     planOrderLifecycleEmails({
-      prevStatus: change.prevStatus,
+      prevStatus: change.prevStatus ?? change.previousStatus,
       nextStatus: change.nextStatus ?? order.orderStatus,
       prevPayment: change.prevPayment,
       nextPayment: change.nextPayment ?? order.paymentStatus,
       prevTracking: change.prevTracking,
-      nextTracking: change.nextTracking ?? String(order.trackingNumber || order.tracking?.number || ""),
+      nextTracking:
+        change.nextTracking ?? String(order.trackingNumber || order.tracking?.number || ""),
       paymentMethod: order.paymentMethod,
       notifications: settings.notifications,
       sendTrackingToCustomer: settings.courier?.sendTrackingToCustomer,
@@ -191,7 +269,7 @@ export async function dispatchOrderLifecycleEmails(order, change = {}, options =
       out.push(await sendTemplatedCustomerEmail(order, key, settings, options));
     } catch (err) {
       console.error(`[email] ${key} failed:`, err?.message || err);
-      out.push({ success: false, error: err?.message || String(err) });
+      out.push({ success: false, error: err?.message || String(err), templateKey: key });
     }
   }
   return out;
