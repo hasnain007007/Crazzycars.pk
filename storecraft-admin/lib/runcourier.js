@@ -405,6 +405,23 @@ const RUN_COURIER_CITY_ALIASES = {
   karachi: "Karachi",
   islamabad: "Islamabad",
   rawalpindi: "Rawalpindi",
+  narowal: "Narowal",
+  "narowal city": "Narowal",
+  "narowal district": "Narowal",
+  sialkot: "Sialkot",
+  "sialkot cantt": "Sialkot",
+  faisalabad: "Faisalabad",
+  lyallpur: "Faisalabad",
+  multan: "Multan",
+  peshawar: "Peshawar",
+  quetta: "Quetta",
+  hyderabad: "Hyderabad",
+  bahawalpur: "Bahawalpur",
+  sargodha: "Sargodha",
+  gujrat: "Gujrat",
+  sheikhupura: "Sheikhupura",
+  jhelum: "Jhelum",
+  "jehlum": "Jhelum",
 };
 
 /**
@@ -470,6 +487,98 @@ export function matchRunCourierCity(rawCity, cityList = []) {
   }
 
   return raw;
+}
+
+/**
+ * Rank courier-list cities by similarity to a free-text order city.
+ * Used for audit suggestions when exact match fails.
+ */
+export function suggestRunCourierCities(rawCity, cityList = [], limit = 8) {
+  const raw = String(rawCity || "").trim().toLowerCase();
+  const compact = raw.replace(/[^a-z0-9]/g, "");
+  if (!raw || !cityList.length) return [];
+  const scored = [];
+  for (const c of cityList) {
+    const name = String(c || "").trim();
+    if (!name) continue;
+    const lower = name.toLowerCase();
+    const cpt = lower.replace(/[^a-z0-9]/g, "");
+    let score = 0;
+    if (lower === raw || cpt === compact) score = 1000;
+    else if (lower.startsWith(raw) || cpt.startsWith(compact)) score = 800 - Math.abs(lower.length - raw.length);
+    else if (raw.startsWith(lower) && lower.length >= 3) score = 700;
+    else if (lower.includes(raw) || cpt.includes(compact)) score = 500;
+    else if (raw.length >= 3 && (lower.includes(raw.slice(0, 3)) || cpt.includes(compact.slice(0, 3)))) {
+      score = 200;
+    } else continue;
+    scored.push({ name, score });
+  }
+  scored.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  const out = [];
+  const seen = new Set();
+  for (const row of scored) {
+    const key = row.name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(row.name);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+/**
+ * Audit an order/origin city against live GetCitiesList names.
+ * @returns {{ ok: boolean, raw: string, matched: string, inList: boolean|null, candidates: string[], reason: string }}
+ */
+export function auditRunCourierCity(rawCity, cityList = []) {
+  const raw = String(rawCity || "").trim();
+  if (!raw) {
+    return {
+      ok: false,
+      raw: "",
+      matched: "",
+      inList: false,
+      candidates: [],
+      reason: "empty",
+    };
+  }
+  if (!Array.isArray(cityList) || !cityList.length) {
+    const soft = matchRunCourierCity(raw, []);
+    return {
+      ok: true,
+      raw,
+      matched: soft || raw,
+      inList: null,
+      candidates: [],
+      reason: "no_list",
+    };
+  }
+  const matched = matchRunCourierCity(raw, cityList);
+  const inList = cityList.some(
+    (c) => String(c).toLowerCase() === String(matched || "").toLowerCase()
+  );
+  const candidates = inList
+    ? []
+    : suggestRunCourierCities(raw, cityList, 8);
+  return {
+    ok: inList,
+    raw,
+    matched: inList ? matched : "",
+    inList,
+    candidates,
+    reason: inList ? "ok" : "not_in_courier_list",
+  };
+}
+
+export function auditRunCourierLane({ origin, destination, cityList = [] } = {}) {
+  const originAudit = auditRunCourierCity(origin, cityList);
+  const destAudit = auditRunCourierCity(destination, cityList);
+  return {
+    ok: originAudit.ok && destAudit.ok,
+    origin: originAudit,
+    destination: destAudit,
+    cityCount: Array.isArray(cityList) ? cityList.length : 0,
+  };
 }
 
 /**
@@ -594,6 +703,11 @@ async function ensureCityList(settingsCourier) {
   }
   const loaded = await fetchRunCourierCities({ settingsCourier });
   return loaded.cities || [];
+}
+
+/** Public helper — always returns the latest cached/API city names. */
+export async function getRunCourierCityList(settingsCourier) {
+  return ensureCityList(settingsCourier);
 }
 
 export function buildRunCourierPayload(order, bookingOptions = {}, settingsCourier = {}, cityList = []) {
@@ -774,6 +888,66 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     return { success: false, error: "Destination city is required." };
   }
 
+  // Audit against raw order/settings cities (not already-matched names) so aliases
+  // that miss the live GetCitiesList fail before CreateOrder.
+  const destRawForAudit = String(
+    bookingOptions?.cityName ||
+      bookingOptions?.city ||
+      order?.shippingAddress?.city ||
+      built.destination ||
+      ""
+  ).trim();
+  const originRawForAudit = String(
+    bookingOptions?.originCity ||
+      settingsCourier.runCourierOriginCity ||
+      settingsCourier.originCity ||
+      built.origin ||
+      ""
+  ).trim();
+  const laneAudit = auditRunCourierLane({
+    origin: originRawForAudit,
+    destination: destRawForAudit,
+    cityList,
+  });
+
+  if (cityList.length && !laneAudit.destination.ok) {
+    const d = laneAudit.destination;
+    const tips = d.candidates.length
+      ? ` Try: ${d.candidates.slice(0, 5).join(", ")}`
+      : " Pick a city from the Run Courier availability list.";
+    return {
+      success: false,
+      error: `Destination "${d.raw}" is not in the Run Courier city list.${tips}`,
+      origin: built.origin,
+      destination: d.raw,
+      candidates: d.candidates,
+      cityAudit: laneAudit,
+    };
+  }
+  if (cityList.length && originRawForAudit && !laneAudit.origin.ok) {
+    const o = laneAudit.origin;
+    const tips = o.candidates.length
+      ? ` Try: ${o.candidates.slice(0, 5).join(", ")}`
+      : " Fix Settings → Run Courier origin city.";
+    return {
+      success: false,
+      error: `Origin "${o.raw}" is not in the Run Courier city list.${tips}`,
+      origin: o.raw,
+      destination: built.destination,
+      candidates: o.candidates,
+      cityAudit: laneAudit,
+    };
+  }
+
+  // Prefer exact list names from audit when available.
+  if (laneAudit.destination.matched) {
+    built.destination = laneAudit.destination.matched;
+    built.consigneeCity = laneAudit.destination.matched;
+  }
+  if (laneAudit.origin.matched) {
+    built.origin = laneAudit.origin.matched;
+  }
+
   const {
     selectedApi,
     orderRef,
@@ -834,6 +1008,8 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
       friendly = `Origin city "${apiBody.origin}" is not enabled for ${selectedApi}. Check Settings → Run Courier origin city (use Gujranwala, not Cantt).`;
     } else if (/Invalid charges calculation/i.test(upstream)) {
       friendly = `Run Courier could not price ${apiBody.origin} → ${apiBody.destination} via ${selectedApi}. Check city names or try another carrier.`;
+    } else if (/missing\s*Mappings/i.test(upstream)) {
+      friendly = `${selectedApi} has no service mapping for ${apiBody.origin} → ${apiBody.destination}. Pick another Select API (e.g. Trax / M&P / Leopard) or a city from the Run Courier list.`;
     } else if (apiBody.origin && apiBody.destination) {
       friendly = `${upstream} (${selectedApi}: ${apiBody.origin} → ${apiBody.destination})`;
     }

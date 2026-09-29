@@ -4,7 +4,7 @@
  * Standalone Run Courier booking panel for Order Detail.
  * Does not touch PostEx booking UI or handlers.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
   RUN_COURIER_APIS,
@@ -12,6 +12,7 @@ import {
   RUN_COURIER_PRODUCT_TYPES,
   RUN_COURIER_SERVICE_TYPES,
 } from "@/lib/runcourier";
+import RunCourierCitySelect from "@/components/runcourier/RunCourierCitySelect";
 
 function defaultCod(order, orderTotal) {
   const status = String(order?.paymentStatus || "").toLowerCase();
@@ -32,6 +33,10 @@ export default function RunCourierBookingPanel({
   onCancelForm,
 }) {
   const [carriers, setCarriers] = useState(RUN_COURIER_APIS);
+  const [cities, setCities] = useState([]);
+  const [cityName, setCityName] = useState("");
+  const [cityAudit, setCityAudit] = useState(null);
+  const [citiesLoading, setCitiesLoading] = useState(false);
   const [selectedApi, setSelectedApi] = useState(
     courierSettings.runCourierDefaultApi || order?.runCourierApi || RUN_COURIER_DEFAULT_API
   );
@@ -53,6 +58,14 @@ export default function RunCourierBookingPanel({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const originCity = useMemo(
+    () =>
+      String(
+        courierSettings.runCourierOriginCity || courierSettings.originCity || "Gujranwala"
+      ).trim(),
+    [courierSettings.runCourierOriginCity, courierSettings.originCity]
+  );
+
   useEffect(() => {
     fetch("/api/runcourier/carriers", { credentials: "include" })
       .then((r) => r.json())
@@ -60,6 +73,24 @@ export default function RunCourierBookingPanel({
         if (Array.isArray(json.carriers) && json.carriers.length) setCarriers(json.carriers);
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setCitiesLoading(true);
+    fetch("/api/runcourier/carriers?type=cities", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (Array.isArray(json.cities)) setCities(json.cities);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setCitiesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -74,10 +105,61 @@ export default function RunCourierBookingPanel({
     setSelectedApi(
       courierSettings.runCourierDefaultApi || order?.runCourierApi || RUN_COURIER_DEFAULT_API
     );
+    setCityName(String(order?.shippingAddress?.city || "").trim());
   }, [order, orderTotal, courierSettings.runCourierDefaultApi, order?.runCourierApi]);
+
+  // Live city audit against GetCitiesList whenever destination/origin changes.
+  useEffect(() => {
+    const dest = String(cityName || "").trim();
+    if (!dest) {
+      setCityAudit(null);
+      return;
+    }
+    const t = setTimeout(() => {
+      const qs = new URLSearchParams({
+        destination: dest,
+        origin: originCity,
+      });
+      fetch(`/api/runcourier/city-audit?${qs}`, { credentials: "include" })
+        .then((r) => r.json())
+        .then((json) => {
+          if (json?.success) setCityAudit(json);
+          else setCityAudit(null);
+        })
+        .catch(() => setCityAudit(null));
+    }, 280);
+    return () => clearTimeout(t);
+  }, [cityName, originCity]);
+
+  // Once per order, snap free-text order city to the exact GetCitiesList name.
+  const snappedRef = useRef("");
+  useEffect(() => {
+    const orderKey = String(order?.id || order?._id || "");
+    if (!orderKey || !cityAudit?.destination?.ok || !cityAudit.destination.matched) return;
+    if (snappedRef.current === orderKey) return;
+    if (cityAudit.destination.matched !== cityName) {
+      setCityName(cityAudit.destination.matched);
+    }
+    snappedRef.current = orderKey;
+  }, [cityAudit, cityName, order?.id, order?._id]);
 
   async function handleBook() {
     if (!order) return;
+    const dest = String(cityName || "").trim();
+    if (!dest) {
+      setError("Select a destination city from the Run Courier list.");
+      toast.error("Destination city required");
+      return;
+    }
+    if (cityAudit && cityAudit.destination && cityAudit.destination.ok === false) {
+      const tips = (cityAudit.destination.candidates || []).slice(0, 3).join(", ");
+      const msg = tips
+        ? `City "${dest}" is not in Run Courier list. Try: ${tips}`
+        : `City "${dest}" is not in the Run Courier availability list.`;
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
     setBooking(true);
     setError("");
     setSuccess("");
@@ -97,6 +179,7 @@ export default function RunCourierBookingPanel({
           weight,
           pieces,
           remarks,
+          cityName: dest,
           paymentMethod: cod > 0 ? "COD" : "Prepaid",
         }),
       });
@@ -179,6 +262,10 @@ export default function RunCourierBookingPanel({
     color: "#374151",
   };
 
+  const destOk = cityAudit?.destination?.ok;
+  const originOk = cityAudit?.origin?.ok;
+  const auditReady = cityAudit && destOk !== null;
+
   return (
     <div style={{ marginTop: 6 }}>
       {success ? (
@@ -241,11 +328,82 @@ export default function RunCourierBookingPanel({
             <strong>Phone:</strong> {order?.shippingAddress?.phone || order?.customer?.phone}
           </div>
           <div>
-            <strong>City:</strong> {order?.shippingAddress?.city}
-          </div>
-          <div>
             <strong>Address:</strong> {order?.shippingAddress?.street}
           </div>
+        </div>
+
+        {/* City audit from live GetCitiesList */}
+        <div
+          style={{
+            background: destOk === false ? "#FEF2F2" : destOk ? "#F0FDF4" : "#F8FAFC",
+            border: `1px solid ${destOk === false ? "#FECACA" : destOk ? "#BBF7D0" : "#E2E8F0"}`,
+            borderRadius: 6,
+            padding: "8px 10px",
+            marginBottom: 8,
+            fontSize: 12,
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: 4, color: "#065F46" }}>
+            City audit (Run Courier availability list)
+            {citiesLoading ? " · loading…" : cities.length ? ` · ${cities.length} cities` : ""}
+          </div>
+          <div style={{ color: "#374151", marginBottom: 6 }}>
+            Origin: <strong>{originCity}</strong>
+            {auditReady && originOk === false ? (
+              <span style={{ color: "#B91C1C" }}> — not in list</span>
+            ) : auditReady && originOk ? (
+              <span style={{ color: "#16A34A" }}>
+                {" "}
+                → {cityAudit.origin.matched || originCity} ✓
+              </span>
+            ) : null}
+            {" · "}
+            Destination:{" "}
+            {auditReady && destOk === false ? (
+              <span style={{ color: "#B91C1C" }}>
+                <strong>{cityName}</strong> not in courier list
+              </span>
+            ) : auditReady && destOk ? (
+              <span style={{ color: "#16A34A" }}>
+                <strong>{cityAudit.destination.matched || cityName}</strong> ✓
+              </span>
+            ) : (
+              <strong>{cityName || "—"}</strong>
+            )}
+          </div>
+          {destOk === false && (cityAudit?.destination?.candidates || []).length > 0 ? (
+            <div style={{ marginBottom: 6, color: "#9A3412" }}>
+              Suggestions:{" "}
+              {cityAudit.destination.candidates.slice(0, 6).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCityName(c)}
+                  style={{
+                    marginRight: 4,
+                    marginBottom: 2,
+                    border: "1px solid #FDBA74",
+                    background: "#FFF7ED",
+                    borderRadius: 4,
+                    padding: "2px 6px",
+                    fontSize: 11,
+                    cursor: "pointer",
+                    color: "#9A3412",
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <label style={labelStyle}>Destination city (from courier API) *</label>
+          <RunCourierCitySelect
+            cities={cities}
+            value={cityName}
+            onChange={setCityName}
+            placeholder={citiesLoading ? "Loading cities…" : "Search Run Courier city…"}
+            disabled={citiesLoading && !cities.length}
+          />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
@@ -338,17 +496,17 @@ export default function RunCourierBookingPanel({
         <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           <button
             type="button"
-            disabled={booking || !selectedApi}
+            disabled={booking || !selectedApi || destOk === false}
             onClick={handleBook}
             style={{
-              background: booking ? "#9CA3AF" : "#059669",
+              background: booking || destOk === false ? "#9CA3AF" : "#059669",
               color: "#fff",
               border: "none",
               borderRadius: 6,
               padding: "8px 14px",
               fontWeight: 700,
               fontSize: 13,
-              cursor: booking ? "wait" : "pointer",
+              cursor: booking ? "wait" : destOk === false ? "not-allowed" : "pointer",
             }}
           >
             {booking ? "Booking…" : rebook ? "Re-book with Run Courier" : "Book with Run Courier"}

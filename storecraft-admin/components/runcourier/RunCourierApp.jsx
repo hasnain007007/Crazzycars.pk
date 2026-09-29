@@ -9,6 +9,7 @@ import {
   RUN_COURIER_PRODUCT_TYPES,
   RUN_COURIER_SERVICE_TYPES,
 } from "@/lib/runcourier";
+import RunCourierCitySelect from "@/components/runcourier/RunCourierCitySelect";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard" },
@@ -169,6 +170,7 @@ export default function RunCourierApp() {
   const [selected, setSelected] = useState(() => new Set());
   const [busy, setBusy] = useState(false);
   const [carriers, setCarriers] = useState(RUN_COURIER_APIS);
+  const [cities, setCities] = useState([]);
   const [defaultApi, setDefaultApi] = useState(RUN_COURIER_DEFAULT_API);
   const [rowApi, setRowApi] = useState({});
   const [rows, setRows] = useState({});
@@ -303,6 +305,16 @@ export default function RunCourierApp() {
     }
   }
 
+  async function loadCities() {
+    try {
+      const res = await fetch("/api/runcourier/carriers?type=cities", { credentials: "include" });
+      const json = await res.json();
+      if (Array.isArray(json.cities)) setCities(json.cities);
+    } catch {
+      /* ignore */
+    }
+  }
+
   async function loadSettings() {
     try {
       const res = await fetch("/api/settings", { credentials: "include" });
@@ -361,6 +373,7 @@ export default function RunCourierApp() {
 
   useEffect(() => {
     loadCarriers();
+    loadCities();
     loadSettings();
   }, []);
 
@@ -886,12 +899,12 @@ export default function RunCourierApp() {
                               aria-label={`Address for ${o.orderNumber}`}
                             />
                           </td>
-                          <td className="px-2 py-2">
-                            <input
-                              className={`${CELL_INPUT} min-w-[8rem]`}
+                          <td className="px-2 py-2 min-w-[10rem]">
+                            <RunCourierCitySelect
+                              cities={cities}
                               value={row.city ?? o.city ?? ""}
-                              onChange={(e) => patchRow(o.id, { city: e.target.value })}
-                              aria-label={`City for ${o.orderNumber}`}
+                              onChange={(v) => patchRow(o.id, { city: v })}
+                              placeholder="Search city…"
                             />
                           </td>
                           <td className="px-2 py-2">
