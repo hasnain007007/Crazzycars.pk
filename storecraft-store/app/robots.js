@@ -61,12 +61,12 @@ export default async function robots() {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/llms.txt", "/feed/", "/ai/", "/.well-known/"],
         disallow,
       },
       ...AI_CRAWLERS.map((userAgent) => ({
         userAgent,
-        allow: "/",
+        allow: ["/", "/llms.txt", "/feed/", "/ai/", "/.well-known/"],
         disallow,
       })),
     ],

@@ -4,6 +4,8 @@
  */
 import { getSiteUrl } from "@/lib/siteUrl";
 import { toPlainText } from "@/lib/sanitizeHtml";
+import { productAllowsCod, isBodyKitProduct } from "@/lib/codEligibility";
+import { STORE_POLICY } from "@/config/store-policy";
 
 function escapeXml(value) {
   return String(value ?? "")
@@ -27,6 +29,14 @@ function cleanSite(siteUrl) {
 }
 
 function feedAvailability(product) {
+  const combos = Array.isArray(product?.variationCombinations) ? product.variationCombinations : [];
+  const hasComboStock = combos.some(
+    (c) => c?.stock !== undefined && c?.stock !== null && Number.isFinite(Number(c.stock))
+  );
+  if (hasComboStock) {
+    const qty = combos.reduce((s, c) => s + Math.max(0, Number(c.stock) || 0), 0);
+    return qty > 0 ? "in_stock" : "out_of_stock";
+  }
   const track = product?.inventory?.trackInventory !== false;
   const qty = Number(product?.inventory?.quantity) || 0;
   const backorder = product?.inventory?.allowBackorder === true;
@@ -204,10 +214,15 @@ export function productToMerchantItem(product, opts = {}) {
   const identifierExists = gtin.length >= 8 ? "yes" : "no";
 
   const shippingFee = Number(opts.shippingFeePKR);
+  const bulky = Boolean(product?.isBulky) || isBodyKitProduct(product);
+  const defaultFee = bulky
+    ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
+    : Number(STORE_POLICY?.shipping?.standardFeePKR) || 250;
   const shippingPrice =
     Number.isFinite(shippingFee) && shippingFee >= 0
       ? `${shippingFee.toFixed(2)} PKR`
-      : "250.00 PKR";
+      : `${Number(defaultFee).toFixed(2)} PKR`;
+  const cod = productAllowsCod(product);
 
   return {
     id,
@@ -228,10 +243,12 @@ export function productToMerchantItem(product, opts = {}) {
     identifier_exists: identifierExists,
     shipping: {
       country: "PK",
-      service: "Standard",
+      service: bulky ? "Bulky" : "Standard",
       price: shippingPrice,
     },
     return_policy_label: "7-day-returns",
+    custom_label_0: cod ? "cod_available" : "prepaid_only",
+    custom_label_1: bulky ? "bulky" : "standard",
   };
 }
 
@@ -268,6 +285,12 @@ export function buildMerchantRssXml(items, { title, link, description } = {}) {
         extras.push(
           `      <g:return_policy_label>${escapeXml(it.return_policy_label)}</g:return_policy_label>`
         );
+      }
+      if (it.custom_label_0) {
+        extras.push(`      <g:custom_label_0>${escapeXml(it.custom_label_0)}</g:custom_label_0>`);
+      }
+      if (it.custom_label_1) {
+        extras.push(`      <g:custom_label_1>${escapeXml(it.custom_label_1)}</g:custom_label_1>`);
       }
       if (it.shipping?.country && it.shipping?.price) {
         extras.push(`      <g:shipping>

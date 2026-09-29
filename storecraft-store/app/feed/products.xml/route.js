@@ -23,7 +23,7 @@ export async function GET() {
     await dbConnect();
     const products = await Product.find(STOREFRONT_PRODUCT_FILTER)
       .select(
-        "name slug articleNo ean partNumber condition vendor shortDescription longDescription seo media pricing inventory categories updatedAt"
+        "name slug articleNo ean partNumber condition vendor shortDescription longDescription seo media pricing inventory categories updatedAt variationCombinations codEnabled isBulky"
       )
       .populate("categories", "name slug")
       .sort({ updatedAt: -1 })

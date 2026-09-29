@@ -106,6 +106,8 @@ const SKIP_PATH_PREFIXES = [
   "/sitemap",
   "/feed/",
   "/llms.txt",
+  "/ai/",
+  "/.well-known/",
 ];
 
 export function shouldSkipAiVisitPath(pathname) {

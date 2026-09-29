@@ -7,6 +7,12 @@ import {
   buildOfferShippingDetails,
 } from "../schema/merchantReturnPolicy.mjs";
 import { resolveProductImageUrls } from "../productImages.js";
+import { productAllowsCod } from "../codEligibility.js";
+import {
+  fitmentVehiclesForSchema,
+  specAdditionalProperties,
+  specsFromProduct,
+} from "../product-specs.mjs";
 
 function site() {
   return getSiteUrl();
@@ -177,8 +183,12 @@ function buildMerchantOffer({
   includeSeller = false,
   priceValidUntil,
   validFrom,
+  codAvailable = true,
 } = {}) {
   const SITE = siteUrl || site();
+  const paymentMethods = codAvailable
+    ? ["https://schema.org/Cash", "https://schema.org/PaymentMethodCreditCard"]
+    : ["https://schema.org/PaymentMethodCreditCard"];
   const offer = {
     "@type": "Offer",
     url,
@@ -188,6 +198,7 @@ function buildMerchantOffer({
     priceValidUntil: priceValidUntil || resolvePriceValidUntil(),
     itemCondition: conditionUrl(condition),
     availability: availabilityUrl(stockMeta || {}),
+    acceptedPaymentMethod: paymentMethods,
     shippingDetails: buildOfferShippingDetails(),
     hasMerchantReturnPolicy: buildMerchantReturnPolicies(SITE),
   };
@@ -196,6 +207,7 @@ function buildMerchantOffer({
       "@type": "Organization",
       name: "CrazzyCars.pk",
       url: SITE,
+      telephone: "+92-328-4010007",
     };
   }
   return offer;
@@ -373,6 +385,7 @@ export function productJsonLd(p) {
       includeSeller: true,
       priceValidUntil: resolvePriceValidUntil(p),
       validFrom: resolveOfferValidFrom(p),
+      codAvailable: productAllowsCod(p),
     });
   }
 
@@ -380,7 +393,7 @@ export function productJsonLd(p) {
   if (!ld.mpn && ld.sku) ld.mpn = ld.sku;
   if (categoryName) ld.category = categoryName;
 
-  // Vehicle fitment — helps AI shopping agents match make/model recommendations.
+  // Vehicle fitment — PropertyValue + structured Car nodes when available.
   const fitmentProps = [];
   const vehicles =
     (Array.isArray(p.compatibleCars) && p.compatibleCars.length
@@ -404,15 +417,26 @@ export function productJsonLd(p) {
       value: `${make} ${model}${years}`.replace(/\s+/g, " ").trim(),
     });
   }
-  if (p.isUniversal || p.vehicleCompatibility?.fitmentType === "universal") {
+  if (p.isUniversal || p.vehicleCompatibility?.fitmentType === "universal" || p.fitment?.universal) {
     fitmentProps.push({
       "@type": "PropertyValue",
       name: "Vehicle Fitment",
       value: "Universal — fits most cars",
     });
   }
-  if (fitmentProps.length) {
-    ld.additionalProperty = fitmentProps;
+  fitmentProps.push({
+    "@type": "PropertyValue",
+    name: "Cash on Delivery",
+    value: productAllowsCod(p) ? "Available nationwide (Pakistan)" : "Not available — prepaid only",
+  });
+  const specProps = specAdditionalProperties(specsFromProduct(p));
+  const allProps = [...fitmentProps, ...specProps].slice(0, 24);
+  if (allProps.length) {
+    ld.additionalProperty = allProps;
+  }
+  const spareFor = fitmentVehiclesForSchema(p.fitment);
+  if (spareFor.length) {
+    ld.isAccessoryOrSparePartFor = spareFor.slice(0, 12);
   }
 
   const ratingValue = Number(p.ratingValue || p.averageRating || p.rating) || 0;
@@ -555,6 +579,23 @@ export function organizationJsonLd(overrides = {}) {
     logo: overrides.logo || `${SITE}/og-image.jpg`,
     email: overrides.email || "info@crazzycars.pk",
     telephone: overrides.telephone || "+92-328-4010007",
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "customer service",
+        telephone: "+92-328-4010007",
+        availableLanguage: ["en", "ur"],
+        areaServed: "PK",
+      },
+      {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        telephone: "+92-328-4010007",
+        url: "https://wa.me/923284010007",
+        availableLanguage: ["en", "ur"],
+        areaServed: "PK",
+      },
+    ],
     address: {
       "@type": "PostalAddress",
       addressLocality: "Gujranwala",
