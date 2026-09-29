@@ -1862,7 +1862,7 @@ textarea::placeholder {
 
   .product-info-col {
     width: 100% !important;
-    padding: 20px 16px !important;
+    padding: 12px 0 20px !important;
   }
 
   .product-title {
@@ -4760,35 +4760,42 @@ textarea::placeholder {
   .filter-by-car-card {
     max-width: 100%;
     border-radius: 14px;
-    padding: 10px 10px 12px;
+    padding: 12px 12px 14px;
   }
 
   .filter-by-car-title {
-    margin-bottom: 8px;
-    font-size: 15px;
+    margin-bottom: 10px;
+    font-size: 16px;
   }
 
   .filter-by-car-fields {
-    gap: 6px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 2px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    overflow: visible;
+    padding-bottom: 0;
   }
 
   .filter-by-car-select {
-    flex: 1 0 120px;
-    height: 40px;
-    padding: 0 28px 0 10px;
-    font-size: 11px;
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    padding: 0 30px 0 10px;
+    font-size: 12px;
     background-position: right 10px center;
   }
 
   .filter-by-car-btn {
-    flex: 0 0 auto;
-    min-width: 88px;
-    height: 40px;
+    grid-column: 1 / -1;
+    flex: none;
+    position: static;
+    width: 100%;
+    min-width: 0;
+    height: 44px;
     padding: 0 18px;
-    font-size: 11px;
+    font-size: 12px;
+    bottom: auto;
   }
 }
 
@@ -6214,13 +6221,54 @@ textarea::placeholder {
   }
 
   .product-main-viewer {
-    aspect-ratio: auto !important;
-    height: min(48vw, 220px) !important;
-    max-height: 220px !important;
+    /* Was min(48vw, 220px) — ~187px on iPhone; product looked postage-stamp sized */
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+  }
+
+  .product-images-col {
+    /* Full-bleed gallery past store-container side padding */
+    width: calc(100% + 28px) !important;
+    max-width: none !important;
+    margin-left: -14px !important;
+    margin-right: -14px !important;
+    gap: 10px !important;
+  }
+
+  .product-main-viewer {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  .product-main-viewer img {
+    object-fit: contain !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .product-thumbs-rail {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .product-thumbs-rail > button,
+  .product-thumb-btn {
+    width: 72px !important;
+    height: 72px !important;
+  }
+
+  .product-info-col {
+    /* Parent already has horizontal padding — avoid double inset */
+    padding: 10px 0 24px !important;
+    width: 100% !important;
   }
 
   .product-detail-grid {
-    gap: 16px !important;
+    gap: 12px !important;
   }
 
   .pdp-price {
@@ -6387,31 +6435,37 @@ textarea::placeholder {
   }
 
   .filter-by-car-card {
-    padding: 10px 10px 24px !important;
+    padding: 12px 12px 14px !important;
     border-radius: 14px !important;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   }
 
   .filter-by-car-select {
-    height: 36px !important;
-    font-size: 11px !important;
+    height: 44px !important;
+    font-size: 12px !important;
   }
 
   .filter-by-car-title {
-    font-size: 15px !important;
-    margin-bottom: 8px !important;
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
   }
 
   .filter-by-car-fields {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
+    overflow: visible !important;
   }
 
   .filter-by-car-btn {
-    min-width: 110px !important;
-    height: 34px !important;
-    padding: 0 22px !important;
-    font-size: 11px !important;
-    bottom: -13px !important;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 44px !important;
+    padding: 0 18px !important;
+    font-size: 12px !important;
+    position: static !important;
+    bottom: auto !important;
   }
 
   .store-footer {
@@ -6451,18 +6505,19 @@ textarea::placeholder {
 
   .pdp-add-btn,
   .pdp-buy-btn {
-    height: 44px !important;
-    font-size: 13px !important;
+    height: 48px !important;
+    font-size: 14px !important;
+    min-height: 48px !important;
   }
 
   .pdp-cta-row {
-    margin: 8px 0 !important;
-    gap: 8px !important;
+    margin: 10px 0 !important;
+    gap: 10px !important;
   }
 
   .product-thumb-btn {
-    width: 52px !important;
-    height: 52px !important;
+    width: 72px !important;
+    height: 72px !important;
   }
 
   .category-header-img {

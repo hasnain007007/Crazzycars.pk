@@ -972,9 +972,9 @@ export function ProductDetailMedico({
                   alt={selectedItem.altText || product.name}
                   watermark={productImageWatermark}
                   className="h-full w-full"
-                  width={720}
+                  width={900}
                   crop="limit"
-                  widths={[480, 720, 900]}
+                  widths={[640, 900, 1200]}
                   sizes="(max-width: 768px) 100vw, 420px"
                   loading={selectedIndex === 0 ? "eager" : "lazy"}
                   fetchPriority={selectedIndex === 0 ? "high" : "low"}

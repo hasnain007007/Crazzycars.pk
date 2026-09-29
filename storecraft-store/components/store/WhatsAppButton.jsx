@@ -51,7 +51,8 @@ export default function WhatsAppButton() {
       }`}
       style={{
         background: config.buttonColor,
-        bottom: "calc(4.6rem + env(safe-area-inset-bottom, 0px))",
+        /* Sit above mobile tab bar AND primary CTAs (Buy Now / Add to Cart) */
+        bottom: "calc(5.85rem + env(safe-area-inset-bottom, 0px))",
       }}
       aria-label="Chat with us on WhatsApp"
       title="Chat with us on WhatsApp"

@@ -269,10 +269,10 @@ export default function ShopByVehicle({ initialCatalog = null }) {
               ? Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={i}
-                    className="sbv-card flex w-[120px] shrink-0 flex-col items-center gap-1.5 md:w-[156px]"
+                    className="sbv-card flex w-[128px] shrink-0 flex-col items-center gap-1.5 md:w-[156px]"
                     aria-hidden
                   >
-                    <span className="sbv-ring block h-[108px] w-[108px] animate-pulse rounded-full bg-[#E8E8E8] md:h-[148px] md:w-[148px]" />
+                    <span className="sbv-ring block h-[118px] w-[118px] animate-pulse rounded-full bg-[#E8E8E8] md:h-[148px] md:w-[148px]" />
                     <span className="h-2 w-[70%] rounded bg-[#E8E8E8]" />
                     <span className="h-2 w-[45%] rounded bg-[#E8E8E8]" />
                   </div>
@@ -282,16 +282,16 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                     key={`${v.make}-${v.slug}`}
                     href={v.href}
                     data-vehicle-card
-                    className="sbv-card group flex w-[120px] shrink-0 flex-col items-center gap-1.5 text-inherit no-underline md:w-[156px]"
+                    className="sbv-card group flex w-[128px] shrink-0 flex-col items-center gap-1.5 text-inherit no-underline md:w-[156px]"
                     style={{ scrollSnapAlign: "start" }}
                   >
-                    <span className="sbv-ring relative flex h-[108px] w-[108px] items-center justify-center overflow-hidden rounded-full border-2 border-[#E8E8E8] bg-white transition group-hover:border-[#C41E1E] group-hover:shadow-[0_8px_18px_rgba(196,30,30,0.16)] md:h-[148px] md:w-[148px]">
+                    <span className="sbv-ring relative flex h-[118px] w-[118px] items-center justify-center overflow-hidden rounded-full border-2 border-[#E8E8E8] bg-white transition group-hover:border-[#C41E1E] group-hover:shadow-[0_8px_18px_rgba(196,30,30,0.16)] md:h-[148px] md:w-[148px]">
                       {v.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={v.image}
                           alt={`${v.make} ${v.model}`}
-                          className="h-full w-full object-contain object-center p-2 transition group-hover:scale-[1.04] md:p-2.5"
+                          className="h-full w-full object-cover object-center transition group-hover:scale-[1.04] md:object-contain md:p-2.5"
                           loading="lazy"
                           decoding="async"
                           fetchPriority="low"
