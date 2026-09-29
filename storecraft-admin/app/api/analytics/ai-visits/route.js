@@ -16,12 +16,26 @@ const SOURCE_LABELS = {
   deepseek: "DeepSeek",
   you: "You.com",
   google_extended: "Google Extended",
-  bing: "Bing",
+  bing: "Bingbot",
   apple: "Applebot",
   amazon: "Amazonbot",
   bytespider: "Bytespider",
   other_ai: "Other AI",
 };
+
+/** Sources that are crawler-UA-only (no human chat-UI referrer path). */
+const CRAWLER_ONLY_SOURCES = new Set([
+  "google_extended",
+  "bing",
+  "apple",
+  "amazon",
+  "bytespider",
+  "other_ai",
+]);
+
+function isShopperDetection(detection) {
+  return detection === "referrer" || detection === "utm";
+}
 
 const MAX_RANGE_DAYS = 366;
 const EXCLUDED_ORDER_STATUSES = ["cancelled", "refunded"];
@@ -132,13 +146,16 @@ export async function GET(request) {
       orderStatus: { $nin: EXCLUDED_ORDER_STATUSES },
     };
 
-    const [total, bySourceRows, recentQueries, attributedOrderRows, attributedOrderDocs] =
+    const [byDetectionSourceRows, recentQueries, attributedOrderRows, attributedOrderDocs] =
       await Promise.all([
-      AiAgentVisit.countDocuments(visitMatch),
       AiAgentVisit.aggregate([
         { $match: visitMatch },
-        { $group: { _id: "$source", count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
+        {
+          $group: {
+            _id: { source: "$source", detection: "$detection" },
+            count: { $sum: 1 },
+          },
+        },
       ]),
       AiAgentVisit.find({
         ...visitMatch,
@@ -186,28 +203,65 @@ export async function GET(request) {
     }
     attributedRevenue = Math.round(attributedRevenue * 100) / 100;
 
+    /** @type {Map<string, { crawler: number, shopper: number }>} */
+    const visitsBySource = new Map();
+    let crawlerVisits = 0;
+    let shopperVisits = 0;
+    for (const row of byDetectionSourceRows) {
+      const source = row._id?.source;
+      const detection = row._id?.detection || "";
+      if (!source) continue;
+      const n = row.count || 0;
+      const bucket = visitsBySource.get(source) || { crawler: 0, shopper: 0 };
+      if (isShopperDetection(detection)) {
+        bucket.shopper += n;
+        shopperVisits += n;
+      } else {
+        bucket.crawler += n;
+        crawlerVisits += n;
+      }
+      visitsBySource.set(source, bucket);
+    }
+
+    const total = crawlerVisits + shopperVisits;
+
     const sourceKeys = new Set([
-      ...bySourceRows.map((r) => r._id),
+      ...visitsBySource.keys(),
       ...ordersBySource.keys(),
     ]);
 
     const bySource = [...sourceKeys]
       .map((source) => {
-        const visitRow = bySourceRows.find((r) => r._id === source);
-        const visits = visitRow?.count || 0;
+        const bucket = visitsBySource.get(source) || { crawler: 0, shopper: 0 };
+        const visits = bucket.crawler + bucket.shopper;
         const attr = ordersBySource.get(source) || { orders: 0, revenue: 0 };
+        const shopperConv =
+          bucket.shopper > 0
+            ? Math.round((attr.orders / bucket.shopper) * 1000) / 10
+            : 0;
         const row = {
           source,
           label: SOURCE_LABELS[source] || source,
           count: visits,
           visits,
+          crawlerVisits: bucket.crawler,
+          shopperVisits: bucket.shopper,
+          crawlerOnly: CRAWLER_ONLY_SOURCES.has(source) || (bucket.shopper === 0 && bucket.crawler > 0),
           percent: total > 0 ? Math.round((visits / total) * 1000) / 10 : 0,
+          shopperPercent:
+            shopperVisits > 0 ? Math.round((bucket.shopper / shopperVisits) * 1000) / 10 : 0,
+          shopperConversionRate: shopperConv,
           orders: attr.orders,
         };
         if (showFinancials) row.revenue = attr.revenue;
         return row;
       })
-      .sort((a, b) => b.visits - a.visits || (showFinancials ? b.revenue - a.revenue : b.orders - a.orders));
+      .sort(
+        (a, b) =>
+          b.shopperVisits - a.shopperVisits ||
+          b.visits - a.visits ||
+          (showFinancials ? b.revenue - a.revenue : b.orders - a.orders)
+      );
 
     const attributedOrdersList = (attributedOrderDocs || []).map((o) => ({
       id: String(o._id),
@@ -223,6 +277,9 @@ export async function GET(request) {
       attributedAt: o.aiAttributedAt || null,
     }));
 
+    const shopperConversionRate =
+      shopperVisits > 0 ? Math.round((attributedOrders / shopperVisits) * 1000) / 10 : 0;
+
     const payload = {
       days,
       mode,
@@ -232,6 +289,9 @@ export async function GET(request) {
       fromYmd: ymdUtc(from),
       toYmd: ymdUtc(to),
       total,
+      crawlerVisits,
+      shopperVisits,
+      shopperConversionRate,
       attributedOrders,
       attributionWindowDays: 30,
       bySource,

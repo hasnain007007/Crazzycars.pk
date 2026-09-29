@@ -54,6 +54,18 @@ function formatPkr(n) {
   return `Rs. ${v.toLocaleString("en-PK")}`;
 }
 
+const EMPTY_DATA = {
+  total: 0,
+  crawlerVisits: 0,
+  shopperVisits: 0,
+  shopperConversionRate: 0,
+  attributedOrders: 0,
+  attributedRevenue: 0,
+  bySource: [],
+  recentQueries: [],
+  attributedOrdersList: [],
+};
+
 /**
  * AI traffic + estimated order/revenue attribution (30-day first-touch cookie).
  */
@@ -69,14 +81,7 @@ export function AiAgentTrafficCard() {
   const [periodLabel, setPeriodLabel] = useState("Last 30 days");
   const [selectedSource, setSelectedSource] = useState(null);
   const [windowDays, setWindowDays] = useState(30);
-  const [data, setData] = useState({
-    total: 0,
-    attributedOrders: 0,
-    attributedRevenue: 0,
-    bySource: [],
-    recentQueries: [],
-    attributedOrdersList: [],
-  });
+  const [data, setData] = useState(EMPTY_DATA);
 
   const queryString = useMemo(() => {
     if (preset === "custom") {
@@ -98,20 +103,16 @@ export function AiAgentTrafficCard() {
       const json = await res.json();
       if (!res.ok || !json.success) {
         setError(json.error || "Could not load AI traffic.");
-        setData({
-          total: 0,
-          attributedOrders: 0,
-          attributedRevenue: 0,
-          bySource: [],
-          recentQueries: [],
-          attributedOrdersList: [],
-        });
+        setData(EMPTY_DATA);
         return;
       }
       setPeriodLabel(json.data?.label || (preset === "custom" ? "Custom range" : `Last ${preset} days`));
       setWindowDays(Number(json.data?.attributionWindowDays) || 30);
       setData({
         total: Number(json.data?.total) || 0,
+        crawlerVisits: Number(json.data?.crawlerVisits) || 0,
+        shopperVisits: Number(json.data?.shopperVisits) || 0,
+        shopperConversionRate: Number(json.data?.shopperConversionRate) || 0,
         attributedOrders: Number(json.data?.attributedOrders) || 0,
         attributedRevenue: Number(json.data?.attributedRevenue) || 0,
         bySource: Array.isArray(json.data?.bySource) ? json.data.bySource : [],
@@ -122,14 +123,7 @@ export function AiAgentTrafficCard() {
       });
     } catch {
       setError("Could not load AI traffic.");
-      setData({
-        total: 0,
-        attributedOrders: 0,
-        attributedRevenue: 0,
-        bySource: [],
-        recentQueries: [],
-        attributedOrdersList: [],
-      });
+      setData(EMPTY_DATA);
     } finally {
       setLoading(false);
     }
@@ -177,9 +171,10 @@ export function AiAgentTrafficCard() {
         <div className="min-w-0 max-w-xl">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">AI agent traffic</h3>
           <p className="text-xs text-slate-400">
-            Estimated attribution based on a {windowDays}-day first-touch session window (chat
-            referrer or UTM) — not guaranteed. Loses accuracy if someone switches devices, clears
-            cookies, or buys after the window. Click a source with orders to see which orders.
+            Most “visits” here are AI crawlers indexing pages — they never check out. Only{" "}
+            <span className="font-medium text-slate-600 dark:text-slate-300">shopper clicks</span>{" "}
+            (chat referrer / UTM) can convert, via a {windowDays}-day first-touch cookie. Click a
+            source with orders to see which orders.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -244,11 +239,31 @@ export function AiAgentTrafficCard() {
         <p className="mt-4 text-sm text-red-600">{error}</p>
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2.5 dark:border-amber-900/40 dark:bg-amber-950/20">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/80">
+                Crawler hits
+              </p>
+              <p className="mt-0.5 text-2xl font-bold tabular-nums text-amber-950 dark:text-amber-100">
+                {loading && data.crawlerVisits === 0
+                  ? "…"
+                  : data.crawlerVisits.toLocaleString("en-PK")}
+              </p>
+              <p className="mt-0.5 text-[10px] text-amber-800/60 dark:text-amber-400/60">
+                Bots · cannot buy
+              </p>
+            </div>
             <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Visits</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                Shopper clicks
+              </p>
               <p className="mt-0.5 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
-                {loading && data.total === 0 ? "…" : data.total.toLocaleString("en-PK")}
+                {loading && data.shopperVisits === 0
+                  ? "…"
+                  : data.shopperVisits.toLocaleString("en-PK")}
+              </p>
+              <p className="mt-0.5 text-[10px] text-slate-400">
+                Conv {data.shopperConversionRate}%
               </p>
             </div>
             <button
@@ -257,7 +272,9 @@ export function AiAgentTrafficCard() {
               className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-left transition hover:border-emerald-200 dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-emerald-800"
               title="Show all attributed orders"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Orders</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                AI orders
+              </p>
               <p className="mt-0.5 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
                 {loading && data.attributedOrders === 0
                   ? "…"
@@ -266,14 +283,24 @@ export function AiAgentTrafficCard() {
             </button>
             <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/30">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700/70 dark:text-emerald-400/80">
-                Revenue
+                AI revenue
               </p>
               <p className="mt-0.5 text-xl font-bold tabular-nums text-emerald-900 dark:text-emerald-100 sm:text-2xl">
                 {loading && data.attributedRevenue === 0 ? "…" : formatPkr(data.attributedRevenue)}
               </p>
             </div>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-400">Period · {periodLabel}</p>
+          <p className="mt-1.5 text-[11px] text-slate-400">
+            Period · {periodLabel}
+            {data.total > 0 ? (
+              <>
+                {" "}
+                · {data.crawlerVisits.toLocaleString("en-PK")} of {data.total.toLocaleString("en-PK")}{" "}
+                hits are crawlers ({data.total ? Math.round((data.crawlerVisits / data.total) * 100) : 0}
+                %)
+              </>
+            ) : null}
+          </p>
 
           <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div>
@@ -286,7 +313,8 @@ export function AiAgentTrafficCard() {
                     <thead>
                       <tr className="text-[10px] uppercase tracking-wide text-slate-400">
                         <th className="pb-2 pr-2 font-medium">Source</th>
-                        <th className="pb-2 pr-2 text-right font-medium">Visits</th>
+                        <th className="pb-2 pr-2 text-right font-medium">Shoppers</th>
+                        <th className="pb-2 pr-2 text-right font-medium">Crawlers</th>
                         <th className="pb-2 pr-2 text-right font-medium">Orders</th>
                         <th className="pb-2 text-right font-medium">Revenue</th>
                       </tr>
@@ -295,6 +323,8 @@ export function AiAgentTrafficCard() {
                       {data.bySource.map((row) => {
                         const active = selectedSource === row.source;
                         const clickable = Number(row.orders) > 0;
+                        const shoppers = Number(row.shopperVisits) || 0;
+                        const crawlers = Number(row.crawlerVisits) || 0;
                         return (
                           <tr
                             key={row.source}
@@ -317,7 +347,9 @@ export function AiAgentTrafficCard() {
                                 title={
                                   clickable
                                     ? `Show ${row.orders} order(s) from ${row.label}`
-                                    : undefined
+                                    : row.crawlerOnly
+                                      ? "Crawler / bot traffic — cannot convert"
+                                      : undefined
                                 }
                               >
                                 <span
@@ -328,6 +360,11 @@ export function AiAgentTrafficCard() {
                                 />
                                 <span className="font-medium text-slate-800 dark:text-slate-100">
                                   {row.label}
+                                  {row.crawlerOnly && shoppers === 0 ? (
+                                    <span className="ml-1 text-[10px] font-normal text-amber-700">
+                                      bot
+                                    </span>
+                                  ) : null}
                                   {clickable ? (
                                     <span className="ml-1 text-[10px] font-normal text-emerald-700">
                                       view orders →
@@ -339,14 +376,28 @@ export function AiAgentTrafficCard() {
                                 <div
                                   className="h-full rounded-full"
                                   style={{
-                                    width: `${Math.min(100, Math.max(row.percent > 0 ? 2 : 0, row.percent))}%`,
+                                    width: `${Math.min(
+                                      100,
+                                      Math.max(
+                                        shoppers > 0
+                                          ? Math.max(2, row.shopperPercent || 0)
+                                          : row.percent > 0
+                                            ? 2
+                                            : 0,
+                                        shoppers > 0 ? row.shopperPercent || 0 : row.percent || 0
+                                      )
+                                    )}%`,
                                     background: BAR_COLORS[row.source] || BAR_COLORS.other_ai,
+                                    opacity: shoppers > 0 ? 1 : 0.35,
                                   }}
                                 />
                               </div>
                             </td>
-                            <td className="py-2.5 pr-2 text-right tabular-nums text-slate-700 dark:text-slate-200">
-                              {(row.visits ?? row.count ?? 0).toLocaleString("en-PK")}
+                            <td className="py-2.5 pr-2 text-right tabular-nums font-medium text-slate-900 dark:text-white">
+                              {shoppers.toLocaleString("en-PK")}
+                            </td>
+                            <td className="py-2.5 pr-2 text-right tabular-nums text-slate-400">
+                              {crawlers.toLocaleString("en-PK")}
                             </td>
                             <td className="py-2.5 pr-2 text-right tabular-nums text-slate-700 dark:text-slate-200">
                               <button
