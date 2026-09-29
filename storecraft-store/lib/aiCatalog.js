@@ -5,6 +5,7 @@
  */
 import { productAllowsCod, isBodyKitProduct } from "@/lib/codEligibility";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
+import { returnsRefundRules } from "@/lib/storePolicyCopy";
 
 /** Known AI utm_source values that stamp first-touch attribution cookies. */
 export const AI_UTM_SOURCES = [
@@ -194,7 +195,7 @@ export function aiStoreManifest(siteUrl) {
     },
     returns: {
       window_days: STORE_POLICY.returns.windowDays,
-      summary: "7-day returns for defective or wrong item; change of mind is exchange-only.",
+      summary: returnsRefundRules(),
     },
     how_to_recommend: {
       instruction:
