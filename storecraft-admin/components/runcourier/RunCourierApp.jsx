@@ -8,6 +8,7 @@ import {
   RUN_COURIER_DEFAULT_API,
   RUN_COURIER_PRODUCT_TYPES,
   RUN_COURIER_SERVICE_TYPES,
+  auditRunCourierCity,
 } from "@/lib/runcourier";
 import RunCourierCitySelect from "@/components/runcourier/RunCourierCitySelect";
 
@@ -214,6 +215,39 @@ export default function RunCourierApp() {
 
   function patchRow(id, partial) {
     setRows((prev) => ({ ...prev, [id]: { ...prev[id], ...partial } }));
+  }
+
+  function cityAuditFor(raw) {
+    return auditRunCourierCity(raw, cities);
+  }
+
+  /** Snap all loaded booking rows to exact GetCitiesList names where possible. */
+  function auditFixCities() {
+    if (!cities.length) {
+      toast.error("City list not loaded yet — wait a moment and retry");
+      return;
+    }
+    let fixed = 0;
+    let bad = 0;
+    const next = { ...rows };
+    for (const o of orders) {
+      const cur = String(next[o.id]?.city ?? o.city ?? "").trim();
+      if (!cur) {
+        bad += 1;
+        continue;
+      }
+      const audit = auditRunCourierCity(cur, cities);
+      if (audit.ok && audit.matched) {
+        if (audit.matched !== cur) fixed += 1;
+        next[o.id] = { ...(next[o.id] || { name: o.name, phone: o.phone, address: o.address, cod: o.codAmount }), city: audit.matched };
+      } else {
+        bad += 1;
+      }
+    }
+    setRows(next);
+    if (fixed) toast.success(`Fixed ${fixed} cit${fixed === 1 ? "y" : "ies"} from courier list`);
+    if (bad) toast.error(`${bad} cit${bad === 1 ? "y" : "ies"} still not in Run Courier list`);
+    if (!fixed && !bad) toast.success("All cities already match the courier list");
   }
 
   function patchSettings(partial) {
@@ -539,6 +573,25 @@ export default function RunCourierApp() {
     );
     const api = selectedApi || rowApi[id] || base.suggestedApi || defaultApi || RUN_COURIER_DEFAULT_API;
 
+    if (!city) {
+      return { ok: false, error: "Destination city required" };
+    }
+    let cityForBook = city;
+    if (cities.length) {
+      const audit = auditRunCourierCity(city, cities);
+      if (!audit.ok) {
+        const tips = (audit.candidates || []).slice(0, 3).join(", ");
+        return {
+          ok: false,
+          error: tips
+            ? `"${city}" not in Run Courier list. Try: ${tips}`
+            : `"${city}" is not in the Run Courier availability list`,
+        };
+      }
+      cityForBook = audit.matched || city;
+      if (cityForBook !== city) patchRow(id, { city: cityForBook });
+    }
+
     const res = await fetch("/api/runcourier/create-shipment", {
       method: "POST",
       credentials: "include",
@@ -548,7 +601,7 @@ export default function RunCourierApp() {
         selectedApi: api,
         customerName: name,
         customerPhone: phone,
-        cityName: city,
+        cityName: cityForBook,
         deliveryAddress: address,
         codAmount: cod,
         paymentMethod: cod > 0 ? "COD" : "Prepaid",
@@ -559,7 +612,7 @@ export default function RunCourierApp() {
         shippingAddress: {
           name,
           phone,
-          city,
+          city: cityForBook,
           street: address,
           address,
         },
@@ -586,14 +639,22 @@ export default function RunCourierApp() {
     setBusy(true);
     let ok = 0;
     let fail = 0;
+    const errors = [];
     for (const id of ids) {
       const order = orders.find((o) => o.id === id);
       const r = await bookOne(order || id, rowApi[id] || defaultApi);
       if (r.ok) ok += 1;
-      else fail += 1;
+      else {
+        fail += 1;
+        if (errors.length < 3) {
+          errors.push(`${order?.orderNumber || id}: ${r.error}`);
+        }
+      }
     }
     if (ok) toast.success(`Booked ${ok}`);
-    if (fail) toast.error(`${fail} failed`);
+    if (fail) {
+      toast.error(`${fail} failed${errors.length ? ` — ${errors[0]}` : ""}`);
+    }
     setBusy(false);
     loadOrders("unbooked");
   }
@@ -713,6 +774,15 @@ export default function RunCourierApp() {
                   className="h-9 rounded-lg border border-slate-300 px-3 text-sm font-semibold dark:border-slate-600"
                 >
                   Search
+                </button>
+                <button
+                  type="button"
+                  disabled={!cities.length || !orders.length}
+                  onClick={auditFixCities}
+                  title="Match every city to the live Run Courier GetCitiesList"
+                  className="h-9 rounded-lg border border-amber-400 bg-amber-50 px-3 text-sm font-semibold text-amber-900 disabled:opacity-50 dark:border-amber-600 dark:bg-amber-950 dark:text-amber-100"
+                >
+                  Audit cities{cities.length ? ` (${cities.length})` : ""}
                 </button>
                 <button
                   type="button"
@@ -899,13 +969,55 @@ export default function RunCourierApp() {
                               aria-label={`Address for ${o.orderNumber}`}
                             />
                           </td>
-                          <td className="px-2 py-2 min-w-[10rem]">
-                            <RunCourierCitySelect
-                              cities={cities}
-                              value={row.city ?? o.city ?? ""}
-                              onChange={(v) => patchRow(o.id, { city: v })}
-                              placeholder="Search city…"
-                            />
+                          <td className="px-2 py-2 min-w-[11rem]">
+                            {(() => {
+                              const cur = String(row.city ?? o.city ?? "").trim();
+                              const audit = cities.length ? cityAuditFor(cur) : null;
+                              const invalid = Boolean(cur && audit && audit.ok === false);
+                              return (
+                                <div className="space-y-1">
+                                  <RunCourierCitySelect
+                                    cities={cities}
+                                    value={cur}
+                                    onChange={(v) => patchRow(o.id, { city: v })}
+                                    placeholder={
+                                      cities.length
+                                        ? "Search courier city…"
+                                        : "Loading cities…"
+                                    }
+                                    invalid={invalid}
+                                    inputClassName={`${CELL_INPUT} min-w-[8rem] pr-6 ${
+                                      invalid
+                                        ? "border-rose-400 bg-rose-50 dark:border-rose-500 dark:bg-rose-950"
+                                        : audit?.ok
+                                          ? "border-emerald-400 dark:border-emerald-600"
+                                          : ""
+                                    }`}
+                                  />
+                                  {invalid ? (
+                                    <div className="flex flex-wrap gap-1">
+                                      <span className="text-[10px] font-semibold text-rose-600">
+                                        Not in list
+                                      </span>
+                                      {(audit.candidates || []).slice(0, 3).map((c) => (
+                                        <button
+                                          key={c}
+                                          type="button"
+                                          onClick={() => patchRow(o.id, { city: c })}
+                                          className="rounded border border-amber-300 bg-amber-50 px-1 text-[10px] font-semibold text-amber-900"
+                                        >
+                                          {c}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  ) : audit?.ok ? (
+                                    <span className="text-[10px] font-semibold text-emerald-600">
+                                      ✓ courier list
+                                    </span>
+                                  ) : null}
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td className="px-2 py-2">
                             <input
@@ -964,7 +1076,11 @@ export default function RunCourierApp() {
                         {tab === "booking" ? (
                           <button
                             type="button"
-                            disabled={busy}
+                            disabled={
+                              busy ||
+                              (cities.length > 0 &&
+                                !cityAuditFor(String(row.city ?? o.city ?? "").trim()).ok)
+                            }
                             className="rounded bg-emerald-600 px-2 py-1 font-semibold text-white disabled:opacity-50"
                             onClick={async () => {
                               setBusy(true);

@@ -12,6 +12,8 @@ export default function RunCourierCitySelect({
   placeholder = "Search Run Courier city…",
   disabled = false,
   style = {},
+  inputClassName = "",
+  invalid = false,
 }) {
   const rootRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -54,6 +56,18 @@ export default function RunCourierCitySelect({
   }, []);
 
   const display = open ? query : value || "";
+  const defaultInputStyle = inputClassName
+    ? undefined
+    : {
+        width: "100%",
+        padding: "6px 28px 6px 8px",
+        border: `1px solid ${invalid ? "#FCA5A5" : "#E5E7EB"}`,
+        borderRadius: 6,
+        fontSize: 13,
+        background: disabled ? "#F9FAFB" : invalid ? "#FEF2F2" : "#fff",
+        color: "#111827",
+        boxSizing: "border-box",
+      };
 
   return (
     <div ref={rootRef} style={{ position: "relative", ...style }}>
@@ -87,16 +101,8 @@ export default function RunCourierCitySelect({
             }
           }
         }}
-        style={{
-          width: "100%",
-          padding: "6px 28px 6px 8px",
-          border: "1px solid #E5E7EB",
-          borderRadius: 6,
-          fontSize: 13,
-          background: disabled ? "#F9FAFB" : "#fff",
-          color: "#111827",
-          boxSizing: "border-box",
-        }}
+        className={inputClassName || undefined}
+        style={defaultInputStyle}
       />
       {value && !open && !disabled ? (
         <button
@@ -107,44 +113,15 @@ export default function RunCourierCitySelect({
             onChange?.("");
             setOpen(true);
           }}
-          style={{
-            position: "absolute",
-            right: 4,
-            top: "50%",
-            transform: "translateY(-50%)",
-            border: "none",
-            background: "transparent",
-            color: "#9CA3AF",
-            fontSize: 11,
-            fontWeight: 700,
-            cursor: "pointer",
-            padding: "2px 4px",
-          }}
+          className="absolute right-1 top-1/2 -translate-y-1/2 px-1 text-[10px] font-bold text-slate-400 hover:text-rose-600"
         >
           ×
         </button>
       ) : null}
       {open && !disabled ? (
-        <ul
-          style={{
-            position: "absolute",
-            zIndex: 40,
-            left: 0,
-            right: 0,
-            top: "100%",
-            margin: "2px 0 0",
-            padding: 0,
-            listStyle: "none",
-            maxHeight: 220,
-            overflowY: "auto",
-            background: "#fff",
-            border: "1px solid #D1D5DB",
-            borderRadius: 6,
-            boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-          }}
-        >
+        <ul className="absolute left-0 right-0 top-full z-40 mt-0.5 max-h-[220px] list-none overflow-y-auto rounded-md border border-slate-300 bg-white p-0 shadow-lg dark:border-slate-600 dark:bg-slate-900">
           {list.length === 0 ? (
-            <li style={{ padding: "8px 10px", fontSize: 12, color: "#6B7280" }}>
+            <li className="px-2.5 py-2 text-xs text-slate-500">
               No matching cities in Run Courier list
             </li>
           ) : (
@@ -157,17 +134,9 @@ export default function RunCourierCitySelect({
                     setOpen(false);
                     setQuery("");
                   }}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textAlign: "left",
-                    border: "none",
-                    background: name === value ? "#ECFDF5" : "transparent",
-                    padding: "7px 10px",
-                    fontSize: 12,
-                    color: "#111827",
-                    cursor: "pointer",
-                  }}
+                  className={`block w-full px-2.5 py-1.5 text-left text-xs text-slate-900 hover:bg-emerald-50 dark:text-slate-100 dark:hover:bg-slate-800 ${
+                    name === value ? "bg-emerald-50 font-semibold dark:bg-slate-700" : "bg-transparent"
+                  }`}
                 >
                   {name}
                 </button>
