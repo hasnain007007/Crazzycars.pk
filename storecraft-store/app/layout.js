@@ -5,6 +5,7 @@ import AnalyticsScripts from "@/components/store/AnalyticsScripts";
 import AnnouncementBar from "@/components/store/AnnouncementBar";
 import { ClientOnlyWidgets, LivePresenceClient } from "@/components/store/ClientOnlyWidgets";
 import MobileBottomNav from "@/components/store/MobileBottomNav";
+import ScrollToTop from "@/components/store/ScrollToTop";
 import ThemeInjector from "@/components/store/ThemeInjector";
 import { StoreFooter } from "@/components/store/StoreFooter";
 import { StoreHeader } from "@/components/store/StoreHeader";
@@ -278,9 +279,15 @@ export default async function RootLayout({ children }) {
       return true;
     }catch(e){return false;}
   }
-  var s=document.getElementById('merchantWidgetScript');
-  if(s){s.addEventListener('load',start);}
-  if(!start()){var n=0,t=setInterval(function(){n++;if(start()||n>50)clearInterval(t);},200);}
+  function boot(){
+    var s=document.getElementById('merchantWidgetScript');
+    if(s){s.addEventListener('load',function(){setTimeout(start,700);});}
+    setTimeout(function(){
+      var n=0,t=setInterval(function(){n++;if(start()||n>50)clearInterval(t);},200);
+    },700);
+  }
+  if(document.readyState==='complete'){boot();}
+  else{window.addEventListener('load',boot);}
 })();`,
           }}
         />
@@ -300,6 +307,9 @@ export default async function RootLayout({ children }) {
         <CustomerProvider>
           <StoreProviders settings={settings} shopifyEnabled={isShopifyEnabled()}>
             <AnnouncementBar />
+            <Suspense fallback={null}>
+              <ScrollToTop />
+            </Suspense>
             <Suspense fallback={null}>
               <StoreHeader initialCategoryTree={categoryTree} />
             </Suspense>

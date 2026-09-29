@@ -410,7 +410,14 @@ body {
 }
 
 html {
-  scroll-behavior: smooth;
+  /* Smooth scroll breaks App Router navigation on iOS — pages often land mid/footer. */
+  scroll-behavior: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
 }
 
 body::before {
@@ -795,12 +802,12 @@ a {
 .product-main-viewer {
   aspect-ratio: 1 / 1;
   width: 100%;
-  max-width: 420px;
+  max-width: 560px;
 }
 
 @media (min-width: 1024px) {
   .product-main-viewer {
-    max-height: 420px;
+    max-height: 560px;
   }
 }
 
@@ -6221,12 +6228,12 @@ textarea::placeholder {
   }
 
   .product-main-viewer {
-    /* Was min(48vw, 220px) — ~187px on iPhone; product looked postage-stamp sized */
+    /* Kill any leftover 220px phone-density cap — force a large square hero */
     aspect-ratio: 1 / 1 !important;
     width: 100% !important;
     height: auto !important;
     max-height: none !important;
-    min-height: 0 !important;
+    min-height: min(100vw, 420px) !important;
   }
 
   .product-images-col {
@@ -6245,7 +6252,8 @@ textarea::placeholder {
   }
 
   .product-main-viewer img {
-    object-fit: contain !important;
+    object-fit: cover !important;
+    object-position: center !important;
     width: 100% !important;
     height: 100% !important;
   }

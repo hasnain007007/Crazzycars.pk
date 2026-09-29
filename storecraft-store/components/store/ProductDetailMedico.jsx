@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
@@ -283,6 +283,18 @@ export function ProductDetailMedico({
       })
       .catch(() => {});
   }, []);
+
+  /** Always land at the top of the PDP — soft nav + smooth scroll otherwise hit the footer. */
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const html = document.documentElement;
+    const prev = html.style.scrollBehavior;
+    html.style.scrollBehavior = "auto";
+    window.scrollTo(0, 0);
+    html.scrollTop = 0;
+    document.body.scrollTop = 0;
+    html.style.scrollBehavior = prev;
+  }, [slug, product?.slug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -904,15 +916,15 @@ export function ProductDetailMedico({
         </div>
       </div>
 
-      <div className="mx-auto mt-3 max-w-7xl px-4 md:mt-8">
+      <div className="mx-auto mt-0 max-w-7xl px-4 md:mt-8">
         <div
-          className="product-detail-grid grid items-start gap-5 md:gap-8 lg:grid-cols-[minmax(260px,420px)_minmax(0,1fr)] lg:gap-10"
+          className="product-detail-grid grid items-start gap-3 md:gap-8 lg:grid-cols-[minmax(280px,560px)_minmax(0,1fr)] lg:gap-10"
           style={{ alignItems: "flex-start" }}
         >
-          <div className="product-images-col min-w-0">
+          <div className="product-images-col min-w-0 -mx-4 w-[calc(100%+2rem)] max-w-none md:mx-0 md:w-auto md:max-w-[560px]">
             <div
-              className="product-main-viewer overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#F8F8F8]"
-              style={{ width: "100%" }}
+              className="product-main-viewer aspect-square w-full max-h-none overflow-hidden rounded-none border-0 border-b border-[#E5E5E5] bg-[#F8F8F8] md:rounded-lg md:border md:border-[#E5E5E5]"
+              style={{ width: "100%", minHeight: "min(100vw, 420px)" }}
             >
               {!selectedItem ? (
                 <div
@@ -981,13 +993,13 @@ export function ProductDetailMedico({
                   imgStyle={{
                     width: "100%",
                     height: "100%",
-                    objectFit: "contain",
+                    objectFit: "cover",
                     objectPosition: "center",
                   }}
                 />
               )}
             </div>
-            <div className="product-thumbs-rail">
+            <div className="product-thumbs-rail px-4 md:px-0">
               {galleryItems.map((item, index) => (
                 <button
                   key={`${item.type}-${item.url}-${index}`}
