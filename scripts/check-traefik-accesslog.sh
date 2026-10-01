@@ -20,9 +20,11 @@ for flag in \
   '--accesslog=true' \
   '--accesslog.filepath=/traefik/logs/access.log' \
   '--accesslog.format=json' \
-  '--accesslog.bufferingSize=100'
+  '--accesslog.bufferingSize=100' \
+  '--accesslog.fields.headers.defaultmode=drop' \
+  '--accesslog.fields.headers.names.User-Agent=keep'
 do
-  if ! printf '%s' "$CMD" | grep -Fq "$flag"; then
+  if ! printf '%s' "$CMD" | grep -Fq -- "$flag"; then
     echo "${STAMP} ALERT missing Traefik flag: $flag"
     MISSING=1
   fi

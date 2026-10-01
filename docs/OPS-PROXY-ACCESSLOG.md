@@ -13,11 +13,15 @@ Add under `command:` in `/data/coolify/proxy/docker-compose.yml`:
 - '--accesslog.filepath=/traefik/logs/access.log'
 - '--accesslog.format=json'
 - '--accesslog.bufferingSize=100'
+- '--accesslog.fields.headers.defaultmode=drop'
+- '--accesslog.fields.headers.names.User-Agent=keep'
 ```
 
 Host path (bind mount `/data/coolify/proxy/:/traefik`):
 
 `/data/coolify/proxy/logs/access.log`
+
+JSON lines include `DownstreamStatus`, `RequestPath`, and `request_User-Agent` (bots / 404s auditable).
 
 ## Host prep + logrotate
 
