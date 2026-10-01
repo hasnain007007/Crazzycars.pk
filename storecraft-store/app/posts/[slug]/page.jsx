@@ -108,6 +108,13 @@ export default async function BlogPostPage({ params }) {
       notFound();
     }
 
+    const articleSection = Array.isArray(post.categories)
+      ? post.categories.map((c) => String(c).trim()).filter(Boolean)
+      : [];
+    const keywords = Array.isArray(post.tags)
+      ? post.tags.map((t) => String(t).trim()).filter(Boolean)
+      : [];
+
     const jsonLd = {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
@@ -132,6 +139,8 @@ export default async function BlogPostPage({ params }) {
         "@type": "WebPage",
         "@id": `${BASE_URL}/blogs/${post.slug}`,
       },
+      ...(articleSection.length ? { articleSection } : {}),
+      ...(keywords.length ? { keywords: keywords.join(", ") } : {}),
     };
 
     return (

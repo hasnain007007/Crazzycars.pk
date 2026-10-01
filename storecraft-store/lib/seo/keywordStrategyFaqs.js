@@ -1,5 +1,5 @@
 /**
- * FAQPage JSON-LD + grounded Q&A for keyword Phase 4 / Batches 1–3 categories & PDPs.
+ * FAQPage JSON-LD + grounded Q&A for keyword Phase 4 / Batches 1–3 + next-tier 29 PDPs.
  * Answers reuse storePolicyCopy; do not invent fitment or GTINs.
  * CC-0004 intentionally omitted (securityHold).
  * Batch 3 drops hub umbrellas exterior / interior / led-lighting (cannibalization).
@@ -896,6 +896,341 @@ const PRODUCT_FAQ_BY_SKU = {
       question: "What is included?",
       answer:
         "Multimedia steering control buttons with spiral cable in glossy black for volume, media, calls, and navigation from the wheel, per the product description.",
+    },
+  ],
+
+  // --- Next-tier 29 (Phase 2 Batch F) ---
+  "CC-UNI-EXT-FBL-4PC-BK": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is listed as a universal ABS front bumper splitter set (4 pieces). Confirm look and install method on the product photos before ordering.",
+    },
+    {
+      question: "Why might delivery be Rs. 500?",
+      answer:
+        "This item is flagged bulky. Carts that include bulky items are charged the bulky delivery fee instead of the regular fee; the exact amount is shown at checkout.",
+    },
+  ],
+  "CC-0180": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is listed as a universal rear windshield “Devil Eye” LED light with multiple modes. Check the listing for power/wiring notes.",
+    },
+    {
+      question: "Does it need professional install?",
+      answer:
+        "Most rear windshield LED strips are DIY with adhesive and a power tap. Follow the product guide; WhatsApp us if your wiring setup is unclear.",
+    },
+  ],
+  "CC-0096": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer:
+        "The vehicle compatibility table lists Honda Civic Reborn 2006–2012. The product title lists 2007–2011 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "It is sold as a forged carbon-style gear knob cover (ABS/texture finish unless the description says otherwise). Read the product description for the exact material.",
+    },
+  ],
+  "CC-UNI-LGT-REV-T15": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "These are W16W / T15 LED reverse bulbs (4-pack). They only fit cars that use that bulb base — confirm your reverse-light socket before ordering.",
+    },
+    {
+      question: "Are they plug-and-play?",
+      answer:
+        "Most T15 LED reverse bulbs are drop-in replacements for halogen T15/W16W. If your car throws bulb errors, WhatsApp us with your model year.",
+    },
+  ],
+  "CC-0130": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer: "Honda Civic X 2016–2021 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is this a full kit or single trim?",
+      answer:
+        "It is listed as a carbon fiber-style interior trim kit for Civic X (multi-piece). Check the product photos and description for exactly which panels are included.",
+    },
+  ],
+  "CC-0231": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is a USB-powered roof star / galaxy projector for cars. Plug into a USB port and aim at the headliner per the listing.",
+    },
+    {
+      question: "Does it drain the battery?",
+      answer:
+        "It runs from USB. Use a switched USB port or unplug when the car is off if you want to avoid draining a constant-power outlet.",
+    },
+  ],
+  "CC-0111": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer: "Honda Civic X 2016–2021 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. It is ABS with a carbon-style finish unless the description says otherwise. Peel-and-stick style install — follow the product notes.",
+    },
+  ],
+  "CC-FG-3CLR-H11": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "These are H11 fog LED bulbs (2 pcs) with switchback colors. They fit vehicles that use H11 fog sockets — confirm your fog bulb type before ordering.",
+    },
+    {
+      question: "What colors are included?",
+      answer:
+        "The listing describes multi-color / switchback fog LEDs (see product title and photos for the exact modes). Check the description for the controller/wiring notes.",
+    },
+  ],
+  "CC-0143": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer: "Honda Civic Reborn 2006–2012 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Do I need to drill?",
+      answer:
+        "Many quarter louvers are designed for OEM-style fit without body modification. Follow the install notes on this product page; WhatsApp us with your year if unsure.",
+    },
+  ],
+  "CC-0119": () => [
+    {
+      question: "Which Yaris does this fit?",
+      answer: "Toyota Yaris 2020–Present per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Spoilers are often bulky. Carts with bulky items use the bulky delivery fee; the amount is shown at checkout.",
+    },
+  ],
+  "CC-0164": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla E140 2009–2014. The product title lists 2009–2012 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. It is ABS with a carbon-style texture per typical listing language — confirm on the product description.",
+    },
+  ],
+  "CC-0192": () => [
+    {
+      question: "Is this a universal fit?",
+      answer: "Yes. It is a dashboard perfume / air freshener ornament — not vehicle-specific.",
+    },
+    {
+      question: "How long does the scent last?",
+      answer:
+        "Scent life varies with heat and cabin airflow. See the product description for refill/replace notes.",
+    },
+  ],
+  "CC-0150": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is listed as a universal Angel Wings RGB decorative LED light. Check power and mount notes on the listing.",
+    },
+    {
+      question: "Is install DIY?",
+      answer:
+        "Most decorative LED kits are DIY with adhesive mounts and a power connection. Use a trusted installer if you are not comfortable with wiring.",
+    },
+  ],
+  "CC-0002": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "Toyota Corolla 2014–2026 (E170–E210) per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it plug-and-play?",
+      answer:
+        "The listing describes plug-and-play ambient LED AC vent trims. Follow the product install notes for your year.",
+    },
+  ],
+  "CC-UNI-LGT-AGL-YL": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. These are universal amber LED grill lights (4 pcs) for front grilles. Mounting depends on your grille style — check the photos.",
+    },
+    {
+      question: "Are they road-legal in Pakistan?",
+      answer:
+        "Decorative grill lights may be restricted depending on how they are used while driving. Use responsibly and follow local traffic rules.",
+    },
+  ],
+  "CC-0158": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla 2014–2026 (E170–E210). The title lists 2015–2026 — use the table as the source of truth.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Spoilers are often bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-TYR-EXT-WQL-GB-20": () => [
+    {
+      question: "Which Yaris does this fit?",
+      answer: "Toyota Yaris 2020–Present per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Do I need to drill?",
+      answer:
+        "Many louvers are designed for OEM-style fit without drilling. Follow this product’s install notes; WhatsApp us if unsure.",
+    },
+  ],
+  "CC-0190": () => [
+    {
+      question: "Is this a universal fit?",
+      answer: "Yes. It hangs from the rear-view mirror — not vehicle-specific.",
+    },
+    {
+      question: "How is scent replaced?",
+      answer: "Hang cards are typically replaced when the scent fades. See the listing for pack contents.",
+    },
+  ],
+  "CC-0148": () => [
+    {
+      question: "Which Alto does this fit?",
+      answer: "Suzuki Alto 2020–Present per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Do I need to drill?",
+      answer:
+        "Follow the install notes on this listing; many louvers avoid body drilling. WhatsApp us with a photo of your Alto’s rear glass corners if unsure.",
+    },
+  ],
+  "CC-0110": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer: "Honda Civic X 2016–2021 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. Carbon-style ABS finish unless the description says otherwise. Check the photos for how many pieces are in the full set.",
+    },
+  ],
+  "CC-0210": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is listed as a 5-point interior ambient light kit for dashboard and doors. Check included lengths and controller notes on the listing.",
+    },
+    {
+      question: "Does install require removing trim?",
+      answer:
+        "Ambient kits usually need routing wires and placing strips along trim. Use a trusted installer if you are not comfortable with interior work.",
+    },
+  ],
+  "CC-0138": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla 2014–2026 (E170–E210). The product title lists 2014–2018 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. ABS with carbon-style texture per typical listing language — confirm on the product description.",
+    },
+  ],
+  "CC-0123": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. These are listed as universal carbon-style side air-flow fender vent trims (pair). Mounting depends on your fender — check the photos.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer: "No. ABS with carbon-style finish unless the description says otherwise.",
+    },
+  ],
+  "CC-INT-153": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer:
+        "The vehicle compatibility table lists Honda Civic Reborn 2006–2012. The title lists 2007–2011 — use the table as the source of truth.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Floor mats are often bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-0205": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is listed as a universal gloss black ABS side skirt / side splitter kit (4 pcs). Confirm length and look against your car in the photos.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Side skirts are bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-HCX-INT-STC-CF": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer: "Honda Civic X 2016–2021 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer: "No. Carbon-style ABS cover unless the description says otherwise.",
+    },
+  ],
+  "CC-YXC-MIR-BAT": () => [
+    {
+      question: "Which Yaris Cross does this fit?",
+      answer: "Toyota Yaris Cross 2020–2026 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "How does it install?",
+      answer:
+        "Batman-style covers are typically clip-on ABS over the factory mirror housing. Follow the product photos; WhatsApp us if your mirror shape differs.",
+    },
+  ],
+  "CC-0184": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is a universal ABS side skirt kit with red line (4 pcs). Confirm style against your car in the photos.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Side skirts are bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-SWF-DHC-CF": () => [
+    {
+      question: "Which Swift does this fit?",
+      answer:
+        "The vehicle compatibility table lists Suzuki Swift 2018–2024 and 2025–Present. The product title lists 2022–2025 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer: "No. ABS with carbon-style finish unless the description says otherwise.",
     },
   ],
 };

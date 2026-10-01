@@ -1,7 +1,7 @@
 # Data-quality backlog — master list (canonical)
 
 **Opened:** 2026-09-21  
-**Last updated:** 2026-09-21 (meta-title fix CC-INT-102/108 + consolidation)  
+**Last updated:** 2026-10-02 (Batch F FAQ-disclose +7 title/VC mismatches)  
 **Purpose:** Single reference for every title / VC / hold mismatch found during the keyword/AEO rounds. Prefer this file over scattered notes in batch review docs.
 
 **Rules (unchanged):**
@@ -20,10 +20,10 @@
 | Bucket | Count |
 |--------|------:|
 | Held (`securityHold`) — awaiting supplier | **3** |
-| FAQ-disclosed only (live interim) | **15** |
-| Noted in Batch 3 alternates (not yet FAQ-wired) | **3** |
+| FAQ-disclosed only (live interim) | **22** |
+| Noted in Batch 3 alternates (not yet FAQ-wired) | **2** |
 | Related live SKU (not a mismatch; decision dependency) | **1** (`CC-COR-MIRROR-3`) |
-| **Total tracked rows below** | **22** |
+| **Total tracked rows below** | **28** |
 
 ---
 
@@ -60,6 +60,13 @@ These have honest FAQ copy live (Batches 1–3). Titles/VC not silently patched.
 | **CC-0155** | Honda City 2020-2026 Carbon Door Handle Cover Set | Title **2020–2026** vs VC **2021–present** | FAQ-disclosed | Align title (same pattern as CC-0154) |
 | **CC-0127** | Toyota Corolla 2012 Top AC Panel … 2008-2013 | Title mixes **2012** / **2008–2013** vs VC E140 **2009–2014** | FAQ-disclosed | Clean title years to match VC |
 | **CC-INT-108** | Toyota Corolla 2008-2013 Velvet Dashboard Mat | Title/name **2008–2013** vs VC E140 **2009–2014** | FAQ not required for this; **meta title now distinct** from CC-INT-102 (2026-09-21 fix) | Align title years with VC **or** confirm 2008 start with supplier |
+| **CC-0096** | Honda Civic Reborn 2007-2011 Forged Carbon Gear Knob Cover | Title **2007–2011** vs VC Reborn **2006–2012** | FAQ-disclosed (Batch F) | Align title **or** supplier |
+| **CC-0143** | Honda Civic Reborn Front Quarter Louver 2007-2012 | Title **2007–2012** vs VC Reborn **2006–2012** | FAQ-disclosed (Batch F); close years — table is SoT | Align start year **or** supplier confirms 2007+ |
+| **CC-0164** | Toyota Corolla E140 Carbon Door Handle Cover | Title **2009–2012** vs VC E140 **2009–2014** | FAQ-disclosed (Batch F) | Align title end year with VC |
+| **CC-0158** | Toyota Corolla 2015-2026 Roof Spoiler | Title **2015–2026** vs VC E170–E210 **2014–2026** | FAQ-disclosed (Batch F) | Align title start year with VC |
+| **CC-0138** | Carbon Gear Shift Console Trim Corolla 2014-2018 E170 | Title **2014–2018** vs VC Corolla **2014–2026** | FAQ-disclosed (Batch F) | Align title **or** supplier confirms narrower band |
+| **CC-INT-153** | Honda Civic 2007-2011 TPE Floor Mats Premium | Title **2007–2011** vs VC Reborn **2006–2012** | FAQ-disclosed (Batch F) | Align title years with VC |
+| **CC-SWF-DHC-CF** | Suzuki Swift 2022-2025 Carbon Fiber Door Handles Cover | Title **2022–2025** vs VC Swift **2018–2024** and **2025–Present** | FAQ-disclosed (Batch F) | Align title to VC generations **or** supplier confirms narrower band |
 
 ---
 
@@ -69,7 +76,6 @@ Logged during Batch 3 scoping; not in `keywordStrategyFaqs.js` product FAQ set y
 
 | SKU | Product name | Conflict | Current state | Resolves with |
 |-----|--------------|----------|---------------|---------------|
-| **CC-0096** | Honda Civic Reborn 2007-2011 Forged Carbon Gear Knob Cover | Title **2007–2011** vs VC Reborn **2006–2012** | Active; no keyword FAQ yet | Title align **or** supplier; optional FAQ if product enters a later batch |
 | **CC-0196** | Toyota Corolla 2015–2026 Door Handle Covers | Title **2015–2026** vs VC E170 **2014–2026** | Active; no keyword FAQ yet | Title align **or** supplier |
 | **CC-EXT-139** | Honda Civic Side Markers Fender Indicator Lights 2016-2021 | Title years **2016–2021**; **VC empty** | Active; no safe `/cars` links | Supplier VC row before inventing fitment links |
 
@@ -97,6 +103,7 @@ Logged during Batch 3 scoping; not in `keywordStrategyFaqs.js` product FAQ set y
 |--------|------|
 | Phase 3 / Batch 1 | CC-0004, CC-0157, CC-UNI-INT-GKN-TOY |
 | Batch 2 | CC-0008, CC-RAI-MIR-BAT, CC-0154, CC-0024 |
-| Batch 3 | CC-0095, CC-0007, CC-0147, CC-0118, CC-0146, CC-0088, CC-0155, CC-0127; alternates CC-0096, CC-0196, CC-EXT-139 |
+| Batch 3 | CC-0095, CC-0007, CC-0147, CC-0118, CC-0146, CC-0088, CC-0155, CC-0127; alternates remaining CC-0196, CC-EXT-139 |
 | Held-product pack | CC-0168, CC-0019 (+ CC-0004) |
 | Meta-title fix | CC-INT-108 (year vs VC); CC-INT-102 duplicate-title issue **closed** |
+| Batch F (2026-10-02) | CC-0096 (moved from alternates), CC-0143, CC-0164, CC-0158, CC-0138, CC-INT-153, CC-SWF-DHC-CF |
