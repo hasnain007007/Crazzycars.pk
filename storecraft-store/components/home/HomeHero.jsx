@@ -243,6 +243,7 @@ function HeroSlidePanel({
   const meta = slideMeta(slide, settings);
   const {
     bgImage,
+    bgImageMobile,
     designedArtwork,
     clickThroughOnly,
     display,
