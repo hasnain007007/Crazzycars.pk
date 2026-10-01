@@ -17,6 +17,8 @@ Parents (`exterior`, `interior`, `led-lighting`, `carbon-fiber`) were excluded b
 
 **Category expansion closed after Batch 4:** **29 FAQ-covered leaves / 30** active non-parent leaves with SKUs (deferred only: `rear-reflectors`, `sun-shades`). No further leaf-category SEO rounds unless new leaves/SKU density appear.
 
+**Ops note (2026-10-02):** Traefik `empty-category-merges-redirect.yaml` had been 301’ing `/categories/hanging-perfumes` → `air-freshener-decoration` (empty-shelf merge from 2026-08). That middleware/router was **removed** so Batch 4’s hanging-perfumes money page can resolve. Other fragrance/mat merges left intact.
+
 **Related:** WhatsApp copy for the 3 held SKUs → `docs/supplier-whatsapp-held-products.md`  
 **Legacy tracker (superseded by this file):** `docs/data-quality-title-vc-mismatches.md`  
 **Batch 4 copy (shipped):** `docs/keyword-strategy-batch4-copy-review.md`
@@ -110,7 +112,7 @@ These have honest FAQ copy live (Batches 1–3 / F / **4**). Titles/VC not silen
 | Item | Resolution |
 |------|------------|
 | Duplicate meta title **CC-INT-102** / **CC-INT-108** | Fixed 2026-09-21: distinct year-based `metaTitle` / `seo.metaTitle` bases; metaDescription left unchanged |
-| **CC-EXT-107** Civic SI grille vs Aqua VC | **2026-10-02:** briefly `securityHold` (misleading Aqua Shop-by-car); removed Toyota Aqua row; set VC to **Honda Civic X 2016–2021** matching title + photos; hold cleared; `securityHold=false`. **No Batch 4 FAQ/SEO.** Re-verify Shop-by-car shows Civic, not Aqua. |
+| **CC-EXT-107** Civic SI grille vs Aqua VC | **2026-10-02:** briefly `securityHold` (misleading Aqua Shop-by-car); removed Toyota Aqua from `vehicleCompatibility` **and** `compatibleCars` / `compatibleVehicles`; set Honda Civic X **2016–2021**; hold cleared. Live Shop-by-car → `/cars/honda-civic-x-2016-2021`. **No Batch 4 FAQ/SEO.** |
 
 ---
 
