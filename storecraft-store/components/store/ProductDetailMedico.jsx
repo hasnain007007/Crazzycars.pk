@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { resolveProductContentId, trackViewContent } from "@/lib/metaPixel";
+import { ga4AddToCart, ga4ViewItem } from "@/lib/ga4";
 import { ProductCard } from "./ProductCard";
 import { CountdownTimer } from "./CountdownTimer";
 import { RecommendedProductsQuickAdd } from "./RecommendedProductsQuickAdd";
@@ -691,15 +692,17 @@ export function ProductDetailMedico({
     : baseStock;
   const quantityForDisplay = usesCombinationStock ? availableStock : baseStock;
 
-  /** Meta Pixel ViewContent — product identity + current display price. */
+  /** Meta Pixel ViewContent + GA4 view_item — product identity + current display price. */
   useEffect(() => {
     if (!product) return;
     const contentId = resolveProductContentId(product);
-    if (!contentId) return;
-    trackViewContent({
-      contentIds: [contentId],
-      value: displayPrice,
-    });
+    if (contentId) {
+      trackViewContent({
+        contentIds: [contentId],
+        value: displayPrice,
+      });
+    }
+    ga4ViewItem(product, displayPrice);
   }, [
     product?._id,
     product?.id,
@@ -797,6 +800,7 @@ export function ProductDetailMedico({
       ),
       openCart,
     });
+    ga4AddToCart(product, { quantity: qty, price: finalUnitPrice });
     return true;
   }
   function handleAddToCart() {
@@ -1284,6 +1288,7 @@ export function ProductDetailMedico({
               </details>
             ) : null}
 
+            <div className="pdp-purchase-actions">
             <div
               className="pdp-cta-row"
               style={{
@@ -1448,6 +1453,7 @@ export function ProductDetailMedico({
             >
               Buy Now
             </button>
+            </div>
 
             <div
               style={{

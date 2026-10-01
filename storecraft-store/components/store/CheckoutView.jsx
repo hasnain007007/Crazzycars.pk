@@ -36,6 +36,7 @@ import { formatPrice } from "@/lib/currency";
 import { useCustomer } from "@/lib/customerAuth";
 import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
 import { resolveProductContentId, trackInitiateCheckout, getMetaClickIds, newMetaEventId } from "@/lib/metaPixel";
+import { ga4BeginCheckout } from "@/lib/ga4";
 import { standardDeliveryFeeStatement } from "@/lib/storePolicyCopy";
 import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
 import { cartHasBulkyItem } from "@/lib/shippingTier";
@@ -398,7 +399,7 @@ export function CheckoutView() {
       .catch(() => {});
   }, []);
 
-  /** Meta Pixel InitiateCheckout — once when checkout opens with a non-empty cart. */
+  /** Meta Pixel InitiateCheckout + GA4 begin_checkout — once when checkout opens with a non-empty cart. */
   useEffect(() => {
     if (initiateCheckoutFired.current || !items.length) return;
     initiateCheckoutFired.current = true;
@@ -409,6 +410,7 @@ export function CheckoutView() {
       value: subtotal,
       numItems,
     });
+    ga4BeginCheckout(items, subtotal);
   }, [items, subtotal]);
 
   const phonePlaceholder = "+92 3XX XXXXXXX";
@@ -1598,17 +1600,22 @@ export function CheckoutView() {
                 </p>
               ) : null}
               <div className="flex justify-between border-b border-zinc-100 pb-1.5">
-                <span className="text-zinc-700">Shipping</span>
+                <span className="text-zinc-700">
+                  {!addr.state && !calculatingShipping ? "Est. shipping" : "Shipping"}
+                </span>
                 <span className="text-sm font-semibold tabular-nums text-zinc-900">
                   {calculatingShipping ? (
                     <span className="font-normal text-zinc-400">Calculating…</span>
-                  ) : !addr.state ? (
-                    <span className="font-normal text-zinc-500">Select province</span>
                   ) : (
                     <span className="price">{formatPrice(displayShippingCost)}</span>
                   )}
                 </span>
               </div>
+              {!addr.state && !calculatingShipping ? (
+                <p className="text-[11px] text-zinc-500">
+                  Estimated delivery fee. Final delivery is confirmed once you select province.
+                </p>
+              ) : null}
               {addr.state && shippingData?.estimatedDays && !calculatingShipping ? (
                 <p className="text-xs text-zinc-500">
                   Estimated delivery: {shippingData.estimatedDays}

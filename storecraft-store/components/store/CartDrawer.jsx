@@ -29,6 +29,8 @@ export function CartDrawer() {
   const [openMeasurements, setOpenMeasurements] = useState({});
   const hasBulky = cartHasBulkyItem(items);
   const estimatedShipping = items.length > 0 ? shippingFloorPKR(hasBulky) : 0;
+  const estimatedTotal =
+    Math.round((Number(subtotal) + Number(estimatedShipping || 0)) * 100) / 100;
 
   useEffect(() => {
     if (!open) return;
@@ -223,9 +225,14 @@ export function CartDrawer() {
             <p className="mt-1 text-xs text-zinc-500">{checkoutMessages.shippingNote}</p>
           ) : null}
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-base font-semibold">Order Total</span>
-            <span className="price text-xl font-bold">{formatPrice(subtotal)}</span>
+            <span className="text-base font-semibold">Est. total</span>
+            <span className="price text-xl font-bold">{formatPrice(estimatedTotal)}</span>
           </div>
+          {estimatedShipping > 0 ? (
+            <p className="mt-1 text-xs text-zinc-500">
+              Includes estimated delivery. Final delivery is confirmed at checkout.
+            </p>
+          ) : null}
           {checkoutUrl ? (
             <a href={checkoutUrl} onClick={() => setOpen(false)} className="mt-4 block w-full rounded-xl py-3.5 text-center text-base font-semibold transition hover:opacity-90" style={{ background: "#111111", color: "#FFFFFF" }}>
               Checkout →

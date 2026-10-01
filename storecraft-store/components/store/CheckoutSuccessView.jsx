@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCheckoutMessages } from "@/context/StoreSettingsContext";
 import { formatPrice } from "@/lib/currency";
 import { oncePerSession, resolveProductContentId, trackPurchase } from "@/lib/metaPixel";
+import { ga4ItemFromProduct, ga4Purchase } from "@/lib/ga4";
 import {
   applyWhatsAppPlaceholder,
   formatAdvancePaymentMessage,
@@ -170,7 +171,7 @@ export default function CheckoutSuccessView() {
       .finally(() => setLoading(false));
   }, [orderId, accessToken]);
 
-  /** Purchase — real order grand total (pricing.total), once per order per session. */
+  /** Purchase — Meta Pixel + GA4 (real order grand total), once per order per session. */
   useEffect(() => {
     if (!order) return;
     const orderKey = String(order._id || orderId || order.orderNumber || "").trim();
@@ -201,6 +202,30 @@ export default function CheckoutSuccessView() {
         eventId: String(order.metaPurchaseEventId || "").trim() || undefined,
         // Server already sent CAPI Purchase at checkout with this event_id.
         skipCapi: true,
+      });
+    });
+
+    oncePerSession(`ga4_purchase_${orderKey}`, () => {
+      const items = (Array.isArray(order.items) ? order.items : []).map((it) =>
+        ga4ItemFromProduct(
+          {
+            articleNo: it.articleNo,
+            sku: it.sku,
+            name: it.name,
+            id: it.productId,
+          },
+          {
+            quantity: it.quantity,
+            price: it.unitPrice ?? it.price,
+          }
+        )
+      );
+      ga4Purchase({
+        transactionId: order.orderNumber || orderKey,
+        value,
+        shipping: order.pricing?.shipping ?? order.shipping,
+        tax: order.pricing?.tax ?? order.tax,
+        items,
       });
     });
   }, [order, orderId]);

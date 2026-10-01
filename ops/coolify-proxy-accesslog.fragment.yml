@@ -1,0 +1,19 @@
+# Reference fragment for Coolify Traefik (coolify-proxy).
+# Live file on VPS: /data/coolify/proxy/docker-compose.yml
+# Coolify proxy UI re-saves can overwrite that file — keep these flags in sync.
+# Full runbook: docs/OPS-PROXY-ACCESSLOG.md
+#
+# Under the traefik service `command:` list, ensure these four entries exist:
+
+# - '--accesslog=true'
+# - '--accesslog.filepath=/traefik/logs/access.log'
+# - '--accesslog.format=json'
+# - '--accesslog.bufferingSize=100'
+
+services:
+  traefik:
+    command:
+      - '--accesslog=true'
+      - '--accesslog.filepath=/traefik/logs/access.log'
+      - '--accesslog.format=json'
+      - '--accesslog.bufferingSize=100'

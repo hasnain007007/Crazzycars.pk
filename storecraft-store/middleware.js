@@ -124,6 +124,16 @@ export async function middleware(request) {
 
   const lower = pathname.toLowerCase();
 
+  // Homepage ignores ?q= — SearchSuggest / JSON-LD SearchAction use /shop?q=
+  if (lower === "/") {
+    const q = String(request.nextUrl.searchParams.get("q") || "").trim();
+    if (q) {
+      const dest = new URL("/shop", request.nextUrl.origin);
+      dest.searchParams.set("q", q);
+      return withPaidCookie(request, NextResponse.redirect(dest, 308));
+    }
+  }
+
   // Linux hosts are case-sensitive — Google indexes /Categories/Exterior etc.
   if (pathname !== lower) {
     const caseSensitivePrefixes = [

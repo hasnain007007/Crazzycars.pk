@@ -269,6 +269,9 @@ function HeroSlidePanel({
     >
       {bgImage ? (
         <picture className="home-hero__media">
+          {bgImageMobile && bgImageMobile !== bgImage ? (
+            <source media="(max-width: 767px)" srcSet={bgImageMobile} />
+          ) : null}
           {/* eslint-disable-next-line @next/next/no-img-element -- LCP hero; direct /media WebP */}
           <img
             src={bgImage}

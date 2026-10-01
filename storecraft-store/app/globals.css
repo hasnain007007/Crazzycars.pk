@@ -6511,6 +6511,17 @@ textarea::placeholder {
     padding: 24px 0 28px !important;
   }
 
+  /* Stick ATC/Buy Now above MobileBottomNav (h-14 + safe-area) so taps hit CTAs, not nav. */
+  .pdp-purchase-actions {
+    position: sticky;
+    bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    z-index: 40;
+    background: #ffffff;
+    padding: 8px 0 10px;
+    margin: 0 0 4px;
+    box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.06);
+  }
+
   .pdp-add-btn,
   .pdp-buy-btn {
     height: 48px !important;
