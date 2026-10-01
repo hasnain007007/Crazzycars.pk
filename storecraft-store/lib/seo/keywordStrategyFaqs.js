@@ -1,8 +1,9 @@
 /**
- * FAQPage JSON-LD + grounded Q&A for keyword Phase 4 / Batches 1–3 + next-tier 29 PDPs.
+ * FAQPage JSON-LD + grounded Q&A for keyword Phase 4 / Batches 1–4 (+ Batch F PDPs).
  * Answers reuse storePolicyCopy; do not invent fitment or GTINs.
- * CC-0004 intentionally omitted (securityHold).
- * Batch 3 drops hub umbrellas exterior / interior / led-lighting (cannibalization).
+ * CC-0004 / CC-EXT-107 intentionally omitted (securityHold / listing integrity).
+ * Parents exterior / interior / led-lighting / carbon-fiber stay out (cannibalization).
+ * Category expansion closed after Batch 4 (29/30 non-parent leaves with SKUs).
  */
 import { STORE_POLICY } from "../../config/store-policy.js";
 import {
@@ -96,6 +97,7 @@ function formatPkr(n) {
  *   name: string,
  *   priceMode?: 'range' | 'fromMin' | 'rangeHighEnd' | 'flat',
  *   priceQuestion?: string,
+ *   priceFromMinClause?: string,
  *   extras?: { question: string, answer: string }[],
  * }} CategoryFaqConfig
  */
@@ -235,6 +237,94 @@ const CATEGORY_FAQ_EXTRAS = {
     name: "Fender Light",
     priceQuestion: "What do fender lights cost on CrazzyCars?",
   },
+  // Batch 4 — last leaf-category expansion round (parents still excluded)
+  "emergency-safety": {
+    name: "Emergency & Safety",
+    extras: [
+      {
+        question: 'What counts as “emergency & safety” here?',
+        answer:
+          "This leaf currently lists portable power (for example a multi-port fast car charger) and emergency inflation tools (air compressors). Open each product for what’s in the box.",
+      },
+      {
+        question: "Why do some items also appear under Universal Accessories?",
+        answer:
+          "A few SKUs are dual-categorized. Use this page when you are browsing chargers and compressors; always confirm the product title and photos before ordering.",
+      },
+    ],
+  },
+  "hanging-perfumes": {
+    name: "Hanging Perfumes",
+    priceQuestion: "What price range do hanging car perfumes sell for on CrazzyCars?",
+    extras: [
+      {
+        question: "Are these vehicle-specific?",
+        answer:
+          "No. Hanging perfumes and fragrance cards here are universal cabin accessories unless a listing says otherwise.",
+      },
+      {
+        question: "How is this different from Air Fresheners & Decor?",
+        answer:
+          "This leaf is hanging-only. Dashboard ornaments and other décor live under Air Fresheners & Decor — check the product type on each listing.",
+      },
+    ],
+  },
+  utility: {
+    name: "Utility",
+    priceQuestion: "What price range do Utility tools sell for on CrazzyCars?",
+    extras: [
+      {
+        question: "What is listed in Utility right now?",
+        answer:
+          "This category currently lists portable air-compressor kits for tyre inflation. Confirm voltage, hose, and whether a carry case is included on the product page.",
+      },
+    ],
+  },
+  "air-press": {
+    name: "Air Press / Window Visors",
+    priceQuestion: "What price range do air press / window visors sell for on CrazzyCars?",
+    extras: [
+      {
+        question: "Will this fit my car?",
+        answer:
+          "These are vehicle-specific. Open the product and check the vehicle compatibility table (make/model/years) before ordering — titles can be narrower or broader than the table.",
+      },
+      {
+        question: "Do I need to drill?",
+        answer:
+          "Most air-press / visor kits are designed for OEM-style door-frame fit. Follow the listing install notes; WhatsApp us with your year if unsure.",
+      },
+    ],
+  },
+  "exhaust-systems-tips": {
+    name: "Exhaust Tips & Systems",
+    priceMode: "fromMin",
+    priceQuestion: "What do exhaust tips and systems cost on CrazzyCars?",
+    priceFromMinClause: "Full cut-off kits are higher",
+    extras: [
+      {
+        question: "Do tip-only upgrades change performance?",
+        answer:
+          "Tip-only accessories are mainly for look and sound character. They do not replace a full exhaust system — read the product description for what is included.",
+      },
+    ],
+  },
+  "car-care-cleaning": {
+    name: "Car Care & Cleaning",
+    priceQuestion: "What price range do Car Care & Cleaning products sell for on CrazzyCars?",
+    extras: [
+      {
+        question: "What is listed here right now?",
+        answer:
+          "This category currently includes microfiber towels and a universal steering-wheel cover. Open each product for size, material, and use notes — the shelf is small and changes with stock.",
+      },
+      {
+        question: "Are these vehicle-specific?",
+        answer:
+          "The products currently listed here are universal. Follow the label and install notes on the product page.",
+      },
+    ],
+  },
 };
 
 /**
@@ -254,9 +344,11 @@ export function buildCategoryKeywordFaqs(slug, range = {}) {
   const mode = cfg.priceMode || "range";
 
   if (mode === "fromMin" && minLabel) {
+    const fromMinClause =
+      cfg.priceFromMinClause || "Full projector headlight assemblies are higher";
     items.push({
       question: cfg.priceQuestion || `What do ${cfg.name} cost on CrazzyCars?`,
-      answer: `Prices on this category currently start from ${minLabel}. Full projector headlight assemblies are higher — always check the product card for the live price. Prices change with stock and deals.`,
+      answer: `Prices on this category currently start from ${minLabel}. ${fromMinClause} — always check the product card for the live price. Prices change with stock and deals.`,
     });
   } else if (mode === "flat" && minLabel) {
     items.push({
@@ -1231,6 +1323,285 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "Is it real carbon fiber?",
       answer: "No. ABS with carbon-style finish unless the description says otherwise.",
+    },
+  ],
+  // Batch 4 — 24 products (CC-EXT-107 excluded: listing integrity / securityHold)
+  "CC-0022": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla 2014–2026 (E170–E210). The short description mentions Corolla X 2022 only — use the table on this page as the fitment source of truth, and confirm against the product photos for your bumper.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Body/diffuser pieces are often bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-0134": () => [
+    {
+      question: "Which Elantra does this fit?",
+      answer:
+        "Hyundai Elantra Hybrid 2025–Present per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer: "No. ABS with a carbon-style finish unless the description says otherwise.",
+    },
+  ],
+  "CC-0181": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is a 12V car charger with USB/Type-C leads — not vehicle-specific. Confirm plug type and cable set on the listing.",
+    },
+    {
+      question: "Does it charge phones and tablets?",
+      answer:
+        "It is sold as a multi-port 45W fast car charger (see wattage and ports on the product page). Use the cable/port combo your device supports.",
+    },
+  ],
+  "CC-0145": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla 2014–2026 (E170–E210). The title highlights Grande / Grande X E210 styling — use the table plus the product photos as the fitment source of truth for your trim.",
+    },
+    {
+      question: "Is it plug-and-play?",
+      answer:
+        "Rear bumper reflector LEDs are typically OEM-style replacements. Follow the listing wiring notes; WhatsApp us with your year/trim if unsure.",
+    },
+  ],
+  "CC-0221": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer:
+        "Honda Civic Reborn 2006–2011 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer: "No. Carbon-style ABS trim unless the description says otherwise.",
+    },
+  ],
+  "CC-0034": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is a universal 3-piece ABS ground-style front splitter. Confirm look and install method against your bumper in the photos.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Splitters are often bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-0121": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer:
+        "Honda Civic Reborn 2006–2012 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Spoilers are often bulky / special-courier. The fee is shown at checkout.",
+    },
+  ],
+  "CC-SPO-MIR-BAT": () => [
+    {
+      question: "Which Sportage does this fit?",
+      answer: "KIA Sportage 2019–2024 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "How does it install?",
+      answer:
+        "Batman-style covers are typically clip-on ABS over the factory mirror housing. Follow the product photos; WhatsApp us if your mirror shape differs.",
+    },
+  ],
+  "CC-0098": () => [
+    {
+      question: "Which City does this fit?",
+      answer:
+        "The vehicle compatibility table lists Honda City 2009–2020. The product title lists 2015–2020 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer: "No. ABS with a carbon-style finish unless the description says otherwise.",
+    },
+  ],
+  "CC-0196": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla 2014–2026 (E170–E210). The product title lists 2015–2026 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer:
+        "No. ABS with a carbon-style / glossy black finish unless the description says otherwise.",
+    },
+  ],
+  "CC-TCR-EXT-SMC-CF-15": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla 2014–2026 (E170–E210). The product title lists 2015–2022 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "How does it install?",
+      answer:
+        "Batman-style covers are typically clip-on ABS over the factory mirror housing. Follow the product photos.",
+    },
+  ],
+  "CC-0129": () => [
+    {
+      question: "Which City does this fit?",
+      answer:
+        "Honda City 2021–2026 (2021–Present) per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Spoilers are often bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-TYR-EXT-SMC-CF": () => [
+    {
+      question: "Which Yaris does this fit?",
+      answer: "Toyota Yaris 2020–2026 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "How does it install?",
+      answer:
+        "Batman-style covers are typically clip-on ABS over the factory mirror housing. Follow the product photos.",
+    },
+  ],
+  "CC-COR-BBL-E120": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "Toyota Corolla E120 2002–2008 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is install DIY?",
+      answer:
+        "Bumper LED kits usually need a power tap and mounting along the rear bumper. Follow the listing; use a trusted installer if you are not comfortable with wiring.",
+    },
+  ],
+  "CC-0211": () => [
+    {
+      question: "Is this a universal fit?",
+      answer:
+        "Yes. It is a universal dashboard ambient LED strip set (2 pcs). Check length and adhesive notes on the listing.",
+    },
+    {
+      question: "Does install require removing trim?",
+      answer:
+        "Most strips need routing and sticking along the dash edge. Use a trusted installer if you are not comfortable with interior work.",
+    },
+  ],
+  "CC-INT-155": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla E140 2009–2014. The title lists 2008–2013 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Floor mats are often bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-INT-102": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "Toyota Corolla 2014–2026 (E170–E210) per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it universal?",
+      answer:
+        "No. It is a vehicle-specific dashboard mat — confirm your year against the table before ordering.",
+    },
+  ],
+  "CC-0159": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla 2014–2026 (E170–E210). The title lists 2015–2026 — use the table as the source of truth.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Spoilers are often bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-0175": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer:
+        "The vehicle compatibility table lists Honda Civic Rebirth 2012–2016. The product title lists 2012–2015 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer: "No. ABS with a carbon-style finish unless the description says otherwise.",
+    },
+  ],
+  "CC-0176": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer:
+        "The vehicle compatibility table lists Honda Civic Rebirth 2012–2016. The product title lists 2012–2015 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer: "No. ABS with a carbon-style finish unless the description says otherwise.",
+    },
+  ],
+  "CC-0120": () => [
+    {
+      question: "Which Civic does this fit?",
+      answer:
+        "Honda Civic Reborn 2006–2012 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer: "Spoilers are often bulky. The fee is shown at checkout.",
+    },
+  ],
+  "CC-0223": () => [
+    {
+      question: "Which City does this fit?",
+      answer: "Honda City 2021–2026 per the vehicle compatibility table on this page.",
+    },
+    {
+      question: "Is it real carbon fiber?",
+      answer: "No. Carbon-style ABS trim unless the description says otherwise.",
+    },
+  ],
+  "CC-0040": () => [
+    {
+      question: "Which Corolla does this fit?",
+      answer:
+        "The vehicle compatibility table lists Toyota Corolla 2014–Present (E170–E210). The product title lists 2015–2024 — use the table on this page as the fitment source of truth.",
+    },
+    {
+      question: "Why might delivery be higher?",
+      answer:
+        "Splitters/canards are often bulky. Bulky carts use the bulky delivery fee shown at checkout.",
+    },
+  ],
+  "CC-LGT-203": () => [
+    {
+      question: "Which City does this fit?",
+      answer:
+        "The vehicle compatibility table lists Honda Classic 2009–2020 (classic City generation). The product title says Honda City — use the table on this page as the fitment source of truth and confirm your mirror housing against the photos before ordering.",
+    },
+    {
+      question: "Is install DIY?",
+      answer:
+        "Mirror indicator LEDs usually need opening the mirror housing and a signal tap. Use a trusted installer if you are not comfortable with mirror wiring.",
     },
   ],
 };
