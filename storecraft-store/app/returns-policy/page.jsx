@@ -16,6 +16,12 @@ export default function ReturnsPolicyPage() {
       path="/returns-policy"
       intro={page.intro}
       sections={page.sections}
+      relatedLinks={[
+        {
+          title: "Returns & wrong-item plain guide",
+          href: "/blogs/car-accessories-returns-wrong-item-pakistan-crazzycars",
+        },
+      ]}
     />
   );
 }

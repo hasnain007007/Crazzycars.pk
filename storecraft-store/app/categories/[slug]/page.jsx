@@ -62,7 +62,7 @@ const loadCachedCategoryDetail = (slugStr, page, pageSize, sort) =>
       if (!detail) return null;
       return JSON.parse(JSON.stringify(detail));
     },
-    ["category-detail-v7", slugStr, String(page), String(pageSize), String(sort)],
+    ["category-detail-v8", slugStr, String(page), String(pageSize), String(sort)],
     { revalidate: 120 }
   )();
 

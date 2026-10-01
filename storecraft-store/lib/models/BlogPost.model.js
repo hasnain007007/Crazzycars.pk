@@ -33,6 +33,16 @@ const BlogPostSchema = new mongoose.Schema(
       metaDescription: { type: String, default: "" },
       metaKeywords: [{ type: String }],
     },
+    /** Optional FAQPage JSON-LD source (also mirrored as HTML in content). */
+    faq: {
+      type: [
+        {
+          question: { type: String, default: "", trim: true },
+          answer: { type: String, default: "", trim: true },
+        },
+      ],
+      default: [],
+    },
     allowComments: { type: Boolean, default: true },
     isFeatured: { type: Boolean, default: false },
     relatedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],

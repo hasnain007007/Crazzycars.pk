@@ -94,7 +94,7 @@ Buying body kits, trims, and lights online only works if returns rules are clear
 Within **7 days** of delivery, if the item arrives **defective** or we shipped the **wrong item**, you are eligible for a **full refund**. In those cases we cover return shipping as stated in our returns policy.
 
 **Change of mind**  
-If the part is correct and undamaged but you changed your mind (wrong colour preference, ordered two styles, etc.), we offer an **exchange** for a different product or size—**not** a cash refund. That matches how many specialty accessory shops in Pakistan operate on COD orders.
+If the part is correct and undamaged but you changed your mind (wrong colour preference, ordered two styles, etc.), we offer an **exchange** for a different product or size—**not** a cash refund.
 
 **Fitment mistakes vs wrong item**  
 Ordering the wrong year/generation when the listing’s vehicle table was clear is usually **not** “wrong item shipped.” Use the compatibility table (and, once live, our year/variant matching guide) before you confirm COD. If we sent a different SKU than you paid for, that **is** wrong-item territory.
@@ -379,7 +379,7 @@ Listings are typically velvet / anti-slip fabric—follow the product page for t
 
 ### Body
 
-Air press (window visors) deflect rain and reduce window-down turbulence. On CrazzyCars they live under [Air Press](/categories/air-press) as **vehicle-specific** kits (e.g. Corolla E140-era, Civic X 2016–2021, City 2021–2026 TXR-style).
+Air press (window visors) deflect rain and reduce window-down turbulence. On CrazzyCars they live under [Air Press](/categories/air-press) as **vehicle-specific** kits. VC-verified examples: Corolla E140 **2009–2014** (title may say 2008–2013 — table wins), Civic X **2016–2021**, City 7th Gen / TXR-style **2021–2026**.
 
 **Fitment**  
 Open the product and read the vehicle compatibility table. Titles can be narrower or broader than the table—**table wins**.

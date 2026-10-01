@@ -190,7 +190,21 @@ export default function CashOnDeliveryPage() {
         <Link href="/returns-policy" className="font-semibold text-red-700 underline-offset-2 hover:underline">
           Returns Policy
         </Link>{" "}
-        for full details.
+        or the{" "}
+        <Link
+          href="/blogs/car-accessories-returns-wrong-item-pakistan-crazzycars"
+          className="font-semibold text-red-700 underline-offset-2 hover:underline"
+        >
+          returns &amp; wrong-item guide
+        </Link>
+        . Delivery fee details:{" "}
+        <Link
+          href="/blogs/crazzycars-delivery-charges-regular-vs-bulky-pakistan"
+          className="font-semibold text-red-700 underline-offset-2 hover:underline"
+        >
+          regular vs bulky charges
+        </Link>
+        .
       </p>
 
       <h2 className="mt-10 text-xl font-semibold text-zinc-900">Frequently asked questions</h2>

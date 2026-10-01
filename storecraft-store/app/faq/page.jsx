@@ -43,6 +43,14 @@ export default function FaqPage() {
         <Link className="font-semibold text-red-700" href="/cash-on-delivery">
           Cash on Delivery
         </Link>
+        . Plain-language guides:{" "}
+        <Link className="font-semibold text-red-700" href="/blogs/car-accessories-returns-wrong-item-pakistan-crazzycars">
+          returns &amp; wrong-item
+        </Link>
+        {" · "}
+        <Link className="font-semibold text-red-700" href="/blogs/crazzycars-delivery-charges-regular-vs-bulky-pakistan">
+          delivery charges (regular vs bulky)
+        </Link>
         .
       </p>
       <Link className="mt-6 inline-block font-semibold text-red-700" href="/contact">

@@ -64,6 +64,19 @@ const categorySchema = new mongoose.Schema(
       metaDescription: { type: String, default: "" },
       metaKeywords: { type: [String], default: [] },
     },
+    /**
+     * Crawlable “Related guide” strip on category pages.
+     * Populated incrementally when a matching blog post goes live (Mongo write).
+     */
+    relatedGuides: {
+      type: [
+        {
+          title: { type: String, default: "", trim: true },
+          href: { type: String, default: "", trim: true },
+        },
+      ],
+      default: [],
+    },
     /** Shopify collection mapping (migration) */
     shopifyHandle: { type: String, default: "" },
     shopifyId: { type: String, default: "" },

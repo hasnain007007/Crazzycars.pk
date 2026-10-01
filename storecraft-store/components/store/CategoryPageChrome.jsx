@@ -75,6 +75,13 @@ export function CategoryPageChrome({
   const description =
     plainText(category?.shortDescription) || plainText(category?.description) || "";
 
+  const relatedGuides = (Array.isArray(category?.relatedGuides) ? category.relatedGuides : [])
+    .map((g) => ({
+      title: String(g?.title || "").trim(),
+      href: String(g?.href || "").trim(),
+    }))
+    .filter((g) => g.title && g.href.startsWith("/"));
+
   const trail =
     Array.isArray(crumbs) && crumbs.length
       ? crumbs
@@ -111,6 +118,21 @@ export function CategoryPageChrome({
           <hr className="cat-hero-divider" />
           <p className="cat-desc">{description}</p>
         </>
+      ) : null}
+
+      {relatedGuides.length ? (
+        <nav className="cat-related-guides" aria-label="Related guides" style={{ marginTop: 12, marginBottom: 8 }}>
+          <p className="cat-desc" style={{ marginBottom: 6 }}>
+            <strong>Related guides</strong>
+          </p>
+          <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+            {relatedGuides.map((g) => (
+              <li key={g.href}>
+                <Link href={g.href}>{g.title}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       ) : null}
 
       <CategorySubcategoryMarquee subcategories={subcategories} />

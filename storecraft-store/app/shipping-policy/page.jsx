@@ -19,6 +19,12 @@ export default function ShippingPolicyPage() {
       path="/shipping-policy"
       intro={SHIPPING_POLICY_INTRO}
       sections={getShippingPolicySections()}
+      relatedLinks={[
+        {
+          title: "Delivery charges: regular vs bulky",
+          href: "/blogs/crazzycars-delivery-charges-regular-vs-bulky-pakistan",
+        },
+      ]}
     />
   );
 }

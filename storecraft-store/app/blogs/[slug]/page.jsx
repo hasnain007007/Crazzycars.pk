@@ -9,6 +9,7 @@ import { withSafeMetadata, isNextNavigationError } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
 import { recordBlogPostPageView } from "@/lib/blogEngagement";
+import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
 const BASE_URL = getSiteUrl();
 
 function withClientId(doc) {
@@ -164,9 +165,20 @@ export default async function BlogPostPage({ params }) {
       ...(keywords.length ? { keywords: keywords.join(", ") } : {}),
     };
 
+    const faqItems = (Array.isArray(post.faq) ? post.faq : [])
+      .map((f) => ({
+        question: String(f?.question || "").trim(),
+        answer: String(f?.answer || "").trim(),
+      }))
+      .filter((f) => f.question && f.answer);
+    const faqLd = faqPageJsonLd(faqItems);
+
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
+        {faqLd ? (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }} />
+        ) : null}
         <BlogPostView initialPost={post} initialRecent={recentPosts} />
       </div>
     );

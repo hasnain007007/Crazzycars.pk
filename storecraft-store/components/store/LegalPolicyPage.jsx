@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export function LegalPolicyPage({ title, intro, sections = [] }) {
+export function LegalPolicyPage({ title, intro, sections = [], relatedLinks = [] }) {
   return (
     <article className="mx-auto max-w-3xl px-4 py-8 md:px-6 md:py-16">
       <nav className="mb-6 text-sm text-zinc-500">
@@ -31,6 +31,20 @@ export function LegalPolicyPage({ title, intro, sections = [] }) {
           </section>
         ))}
       </div>
+      {relatedLinks.length ? (
+        <p className="mt-10 text-zinc-700 leading-relaxed">
+          Related reading:{" "}
+          {relatedLinks.map((l, i) => (
+            <span key={l.href}>
+              {i > 0 ? " · " : null}
+              <Link href={l.href} className="font-semibold text-[var(--brand-primary,#b91c1c)]">
+                {l.title}
+              </Link>
+            </span>
+          ))}
+          .
+        </p>
+      ) : null}
       <p className="mt-12 text-sm text-zinc-500">
         Questions?{" "}
         <Link href="/contact" className="font-semibold text-[var(--brand-primary,#b91c1c)]">
