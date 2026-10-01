@@ -15,10 +15,14 @@ Car accessories store for the Pakistan market. A two-app Next.js ecommerce platf
 ## Prerequisites
 
 - **Node.js 20** (LTS recommended)
-- **MongoDB Atlas** (or compatible MongoDB URI)
+- **MongoDB** URI for local/dev only (workstation `.env.local` is **not** production — see [Production database](docs/OPS-PRODUCTION-DATABASE.md))
 - **Cloudinary** account (image/video uploads)
 - **Resend** account (transactional email)
 - **TinyMCE** API key (rich text in admin; optional until you add your key)
+
+### Production database (important)
+
+Live Coolify apps use Docker Mongo on the VPS (`sialkot-mongo:27017 / sialkot_motorsports`), reachable only inside the server’s Docker network via SSH. Do not treat laptop `.env.local` Mongo reads/writes as live `crazzycars.pk` data. Full rules: **[docs/OPS-PRODUCTION-DATABASE.md](docs/OPS-PRODUCTION-DATABASE.md)**.
 
 ## Local setup
 
