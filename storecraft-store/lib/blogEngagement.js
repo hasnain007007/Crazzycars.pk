@@ -43,7 +43,7 @@ export async function recordBlogPostPageView(BlogPost, slugStr) {
     { new: true }
   )
     .select(
-      "title slug excerpt content featuredImage publishedAt createdAt updatedAt categories tags readTime views author relatedProducts seo status"
+      "title slug excerpt content featuredImage publishedAt createdAt updatedAt categories tags readTime views author relatedProducts seo faq status"
     )
     .populate("relatedProducts", "name slug media pricing inventory")
     .lean();
