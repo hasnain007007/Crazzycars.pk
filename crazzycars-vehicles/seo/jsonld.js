@@ -71,7 +71,7 @@ function organizationJsonLd() {
       addressCountry: "PK",
     },
     sameAs: [
-      "https://www.facebook.com/share/1EDTxnjBzS/",
+      "https://www.facebook.com/crazzycars.pk",
       "https://www.instagram.com/crazzycars.pk",
       "https://www.tiktok.com/@crazzycars.pk",
     ],

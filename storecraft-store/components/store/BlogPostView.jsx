@@ -145,6 +145,95 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
       <div style={{ maxWidth: 820, margin: "0 auto", padding: "44px 20px", background: "#FFFFFF", color: "#222", fontSize: 18, lineHeight: 1.9 }}>
         <div className="article-content" dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(post.content) }} />
 
+        {Array.isArray(post.relatedProducts) && post.relatedProducts.length > 0 ? (
+          <div
+            style={{
+              marginTop: 40,
+              paddingTop: 28,
+              borderTop: "1px solid #EDEDED",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: 22,
+                fontWeight: 800,
+                color: "#111111",
+                margin: "0 0 18px",
+              }}
+            >
+              Related products
+            </h2>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {post.relatedProducts
+                .filter((p) => p && (p.slug || p.name))
+                .map((p) => {
+                  const href = p.slug ? `/${String(p.slug).replace(/^\//, "")}` : "/shop";
+                  const img =
+                    (Array.isArray(p.media?.images) &&
+                      (p.media.images.find((i) => i?.isMain)?.url || p.media.images[0]?.url)) ||
+                    "";
+                  const sale = Number(p.pricing?.salePrice);
+                  const regular = Number(p.pricing?.regularPrice);
+                  const price =
+                    Number.isFinite(sale) && sale > 0 && (!Number.isFinite(regular) || sale < regular)
+                      ? sale
+                      : Number.isFinite(regular) && regular > 0
+                        ? regular
+                        : null;
+                  const key = rowId(p) || p.slug || p.name;
+                  return (
+                    <Link
+                      key={key}
+                      href={href}
+                      style={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        border: "1px solid #E5E5E5",
+                        display: "block",
+                        background: "#fff",
+                      }}
+                    >
+                      <div style={{ height: 140, background: "#F8F8F8" }}>
+                        {img ? (
+                          <img
+                            src={img}
+                            alt={p.name || "Product"}
+                            loading="lazy"
+                            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                          />
+                        ) : null}
+                      </div>
+                      <div style={{ padding: "12px 14px" }}>
+                        <p
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: "#111",
+                            margin: "0 0 6px",
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {p.name}
+                        </p>
+                        {price != null ? (
+                          <p style={{ fontSize: 13, color: "#D72323", fontWeight: 700, margin: 0 }}>
+                            Rs. {price.toLocaleString("en-PK")}
+                          </p>
+                        ) : null}
+                      </div>
+                    </Link>
+                  );
+                })}
+            </div>
+          </div>
+        ) : null}
+
         {post.tags?.length > 0 ? (
           <div style={{ marginTop: 36, paddingTop: 22, borderTop: "1px solid #EDEDED", fontSize: 14, color: "#888" }}>
             <span style={{ fontWeight: 700, color: "#444" }}>Tags:</span>{" "}

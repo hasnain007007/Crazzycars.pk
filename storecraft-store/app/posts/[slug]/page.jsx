@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
@@ -7,6 +8,7 @@ import { getSiteUrl } from "@/lib/siteUrl";
 import { withSafeMetadata, isNextNavigationError } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
+import { recordBlogPostPageView } from "@/lib/blogEngagement";
 const BASE_URL = getSiteUrl();
 
 function withClientId(doc) {
@@ -15,15 +17,31 @@ function withClientId(doc) {
   return { ...doc, id: id != null ? String(id) : undefined };
 }
 
-async function loadBlogPost(slug) {
+/** Metadata-only read — must NOT increment views (metadata + page share one request). */
+const loadBlogPostForMeta = cache(async (slug) => {
   try {
     await dbConnect();
     const post = await BlogPost.findOne({
       slug: String(slug),
       status: "published",
     })
-      .populate("relatedProducts", "name slug media pricing inventory")
+      .select(
+        "title slug excerpt featuredImage publishedAt createdAt updatedAt categories tags author seo"
+      )
       .lean();
+    if (!post) return null;
+    return withClientId(JSON.parse(JSON.stringify(post)));
+  } catch (e) {
+    console.error("Blog post meta load error:", e);
+    return null;
+  }
+});
+
+/** Real page render — increments Mongo `views` once per request. */
+async function loadBlogPostAndCountView(slug) {
+  try {
+    await dbConnect();
+    const post = await recordBlogPostPageView(BlogPost, String(slug || "").trim());
     if (!post) return null;
     const plain = JSON.parse(JSON.stringify(post));
     return withClientId({ ...plain, content: sanitizeBlogHtml(plain.content) });
@@ -53,7 +71,7 @@ async function loadRecentPosts(excludeSlug) {
 
 export const generateMetadata = withSafeMetadata(async function postMetadata({ params }) {
   const { slug } = await params;
-  const post = await loadBlogPost(slug);
+  const post = await loadBlogPostForMeta(slug);
   if (!post) return { title: "Blog Not Found" };
   const metaTitle =
     post.seo?.metaTitle ||
@@ -102,7 +120,10 @@ export default async function BlogPostPage({ params }) {
       notFound();
     }
 
-    const [post, recentPosts] = await Promise.all([loadBlogPost(slugStr), loadRecentPosts(slugStr)]);
+    const [post, recentPosts] = await Promise.all([
+      loadBlogPostAndCountView(slugStr),
+      loadRecentPosts(slugStr),
+    ]);
 
     if (!post) {
       notFound();

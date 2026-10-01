@@ -11,6 +11,7 @@ export const CANONICAL_PHONE = "03284010007";
 export const CANONICAL_ADDRESS = "Gujranwala, Punjab, Pakistan";
 export const CANONICAL_INSTAGRAM = "https://www.instagram.com/crazzycars.pk";
 export const CANONICAL_TIKTOK = "https://www.tiktok.com/@crazzycars.pk";
+export const CANONICAL_FACEBOOK = "https://www.facebook.com/crazzycars.pk";
 export const CANONICAL_TAGLINE = "The original performance-parts shop in Gujranwala";
 export const CANONICAL_BRAND_SUBHEADING = "Splitters, kits, and carbon accents for Pakistani builds";
 /** Blocks any CMS/seed reintroduction of the shared sibling-store template opener. */
