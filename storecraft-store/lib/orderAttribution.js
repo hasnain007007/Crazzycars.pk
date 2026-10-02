@@ -41,6 +41,28 @@ const SOCIAL_HOSTS = [
   { key: "whatsapp", hosts: ["whatsapp.com", "wa.me", "api.whatsapp.com"], label: "WhatsApp" },
 ];
 
+/**
+ * Staff / ads-tool hosts that must NOT count as customer acquisition.
+ * e.g. browsing Meta Ads Manager then placing a WhatsApp order on the store
+ * was incorrectly labeling orders "Social: Facebook".
+ */
+const STAFF_TOOL_REFERRER_HOSTS = [
+  "adsmanager.facebook.com",
+  "business.facebook.com",
+  "developers.facebook.com",
+  "business.instagram.com",
+  "ads.google.com",
+  "analytics.google.com",
+  "tagmanager.google.com",
+  "admin.crazzycars.pk",
+];
+
+function isStaffToolReferrer(host) {
+  const h = normalizeHost(host);
+  if (!h) return false;
+  return STAFF_TOOL_REFERRER_HOSTS.some((b) => h === b || h.endsWith(`.${b}`));
+}
+
 const META_UTM = new Set(["facebook", "fb", "fbads", "meta", "instagram", "ig", "an", "igads"]);
 
 const AI_LABELS = {
@@ -372,8 +394,8 @@ export function classifyLandingHit({
     }
   }
 
-  // 4) Referrer-based
-  if (refHost && !isOwnHost(refHost)) {
+  // 4) Referrer-based (ignore staff/ads tools — not customer traffic)
+  if (refHost && !isOwnHost(refHost) && !isStaffToolReferrer(refHost)) {
     for (const engine of SEARCH_HOSTS) {
       if (engine.hosts.some((h) => hostMatches(refHost, h))) {
         return touchFromParts({
@@ -488,8 +510,12 @@ export function applyOrderAttributionCookies(request, response) {
  * Read attribution from request cookies for checkout stamping.
  */
 export function readOrderAttributionFromRequest(request) {
-  const ft = expandTouch(decodeTouch(request.cookies.get(ATTR_FT_COOKIE)?.value));
-  const lt = expandTouch(decodeTouch(request.cookies.get(ATTR_LT_COOKIE)?.value));
+  let ft = expandTouch(decodeTouch(request.cookies.get(ATTR_FT_COOKIE)?.value));
+  let lt = expandTouch(decodeTouch(request.cookies.get(ATTR_LT_COOKIE)?.value));
+
+  // Drop staff-tool touches left over in cookies (Ads Manager, admin, etc.).
+  if (ft && isStaffToolReferrer(ft.referrerHost)) ft = null;
+  if (lt && isStaffToolReferrer(lt.referrerHost)) lt = null;
 
   // Preferred display origin: last non-direct, else first-touch, else Direct
   const primary = (!lt || lt.channel === "direct") && ft && ft.channel !== "direct" ? ft : lt || ft;

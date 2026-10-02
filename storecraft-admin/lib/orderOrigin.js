@@ -22,6 +22,13 @@ const AI_LABELS = {
 };
 
 export function orderOriginLabel(order) {
+  // Staff-placed channels win over browser cookies (WhatsApp / invoice / manual).
+  const src = String(order?.orderSource || "").trim().toLowerCase();
+  if (src === "whatsapp") return "WhatsApp";
+  if (src === "invoice") return "Admin: Invoice";
+  if (src === "manual") return "Admin: Manual";
+  if (src === "resend") return "Admin: Resend";
+
   const label = String(order?.attribution?.label || "").trim();
   if (label) return label;
   const ai = String(order?.aiAttributedSource || "").trim();
