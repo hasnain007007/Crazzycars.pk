@@ -38,6 +38,16 @@ export async function POST(request) {
     await dbConnect();
     let doc = await CartSession.findOne({ sessionId });
     if (!doc) {
+      // Do not create empty sessions — every page load used to insert an "active"
+      // row with 0 items and inflate the Active Carts metric.
+      if (items.length === 0) {
+        return NextResponse.json({
+          success: true,
+          status: "active",
+          itemCount: 0,
+          subtotal: 0,
+        });
+      }
       doc = new CartSession({ sessionId });
     }
 
@@ -83,9 +93,13 @@ export async function POST(request) {
         doc.abandonedAt = null;
       }
     } else if (doc.status === "abandoned" && hasContact(doc.customer)) {
-      // Customer came back and is shopping again — re-activate.
+      // Customer came back and is shopping again — re-activate and start a fresh
+      // reminder cycle (otherwise emailReminderCount stays at the old cap).
       doc.status = "active";
       doc.abandonedAt = null;
+      doc.emailReminderCount = 0;
+      doc.lastEmailReminderAt = null;
+      doc.reminders = [];
     }
 
     await doc.save();

@@ -27,6 +27,8 @@ export async function GET(request) {
 
     const filter = {};
     if (status && status !== "all") filter.status = status;
+    // Active metric/tab: only carts with ≥1 item (empty sync rows are not active carts).
+    if (status === "active") filter.itemCount = { $gt: 0 };
     if (q) {
       const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
       filter.$or = [
@@ -44,7 +46,17 @@ export async function GET(request) {
         {
           $group: {
             _id: "$status",
-            count: { $sum: 1 },
+            count: {
+              $sum: {
+                $cond: [
+                  {
+                    $or: [{ $ne: ["$status", "active"] }, { $gt: ["$itemCount", 0] }],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
             value: { $sum: "$subtotal" },
           },
         },
