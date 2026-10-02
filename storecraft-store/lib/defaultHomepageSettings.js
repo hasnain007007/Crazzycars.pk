@@ -14,7 +14,7 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
   whyChooseUs: [
     { icon: "🚚", title: "Nationwide Delivery", description: "We ship across Pakistan", isActive: true },
     { icon: "💰", title: "Cash on Delivery", description: "Pay when your order arrives", isActive: true },
-    { icon: "🔄", title: "Returns, done honestly", description: "Refund if defective or wrong — exchange if you change your mind", isActive: true },
+    { icon: "🔄", title: "Returns, done honestly", description: "Refund if defective or wrong — no change-of-mind returns", isActive: true },
     { icon: "✅", title: "Quality Checked", description: "Products checked before dispatch", isActive: true },
   ],
   brands: [

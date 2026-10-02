@@ -236,9 +236,13 @@ function applyCanonicalFieldFixes(settings) {
     for (const item of why) {
       if (!item || typeof item !== "object") continue;
       const blob = `${item.title || ""} ${item.description || ""}`;
-      if (/no questions asked/i.test(blob) || /hassle[\s-]*free/i.test(blob)) {
+      if (
+        /no questions asked/i.test(blob) ||
+        /hassle[\s-]*free/i.test(blob) ||
+        /exchange if you change your mind/i.test(blob)
+      ) {
         item.title = "Returns, done honestly";
-        item.description = "Refund if defective or wrong — exchange if you change your mind";
+        item.description = "Refund if defective or wrong — no change-of-mind returns";
       }
     }
   }
@@ -254,7 +258,7 @@ function applyCanonicalFieldFixes(settings) {
       }
       if (/return policy/i.test(question) && (/30 days/i.test(answer) || looksLikeForeignBrand(answer))) {
         item.answer =
-          "Within our returns window: full refund if the item arrived defective or we shipped the wrong item. Change-of-mind requests are exchange-only (not a cash refund). Message us on WhatsApp or email info@crazzycars.pk to start a claim.";
+          "Within our returns window: full refund if the item arrived defective or we shipped the wrong item. Change of mind is not eligible for return, refund, or exchange. Message us on WhatsApp or email info@crazzycars.pk to start a claim.";
       }
     }
   }

@@ -43,10 +43,10 @@ export const STORE_POLICY = {
   returns: {
     /** CONFIRMED — refund eligible reasons only. */
     eligibleReasons: ["defective", "wrong-item-shipped"] as const,
-    /** CONFIRMED — change of mind is not refundable. */
+    /** CONFIRMED — change of mind is not eligible for return, refund, or exchange. */
     changeOfMindEligible: false,
-    /** CONFIRMED — change of mind may be exchanged, not refunded. */
-    changeOfMindRemedy: "exchange-only" as const,
+    /** CONFIRMED — no remedy for change of mind. */
+    changeOfMindRemedy: "none" as const,
     /** CONFIRMED — approved eligible returns receive a full refund. */
     validReturnRefundType: "full-refund" as const,
     /**

@@ -45,10 +45,10 @@ const POLICY_CORE = {
   returns: {
     /** CONFIRMED */
     eligibleReasons: ["defective", "wrong-item-shipped"],
-    /** CONFIRMED */
+    /** CONFIRMED — change of mind is not eligible for return, refund, or exchange. */
     changeOfMindEligible: false,
-    /** CONFIRMED */
-    changeOfMindRemedy: "exchange-only",
+    /** CONFIRMED — no remedy for change of mind. */
+    changeOfMindRemedy: "none",
     /** CONFIRMED */
     validReturnRefundType: "full-refund",
     /** CONFIRMED — store pays return shipping for eligible returns. */

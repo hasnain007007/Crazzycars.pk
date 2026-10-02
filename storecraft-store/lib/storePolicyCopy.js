@@ -91,7 +91,7 @@ export function looksLikeFeeOnlyAnnouncement(text) {
 
 export function returnsPolicyCanonical() {
   const days = STORE_POLICY.returns.windowDays;
-  return `Returns and refunds are accepted within ${days} days for items that arrive defective or if the wrong item was shipped. In these cases, you'll receive a full refund. For change-of-mind returns, we offer an exchange for a different product or size — cash refunds are not available for change-of-mind requests.`;
+  return `Returns and refunds are accepted within ${days} days only when an item arrives defective or we shipped the wrong item — in those cases you'll receive a full refund. Change of mind is not eligible for return, refund, or exchange.`;
 }
 
 /** Full policy statement — use on returns page intro and as the source of truth for shorter variants. */
@@ -102,7 +102,7 @@ export function returnsPolicySummary() {
 /** Two-path summary for PDP accordion and tight UI blocks. */
 export function returnsRefundRules() {
   const days = STORE_POLICY.returns.windowDays;
-  return `Within ${days} days of delivery: defective or wrong-item orders receive a full refund. Change-of-mind requests receive an exchange for a different product or size only — not a cash refund.`;
+  return `Within ${days} days of delivery: defective or wrong-item orders receive a full refund. Change of mind is not eligible for return, refund, or exchange.`;
 }
 
 export function returnsRefundPathStatement() {
@@ -111,21 +111,20 @@ export function returnsRefundPathStatement() {
 }
 
 export function returnsExchangePathStatement() {
-  const days = STORE_POLICY.returns.windowDays;
-  return `Change of mind: exchange for a different product or size within ${days} days — cash refunds not available.`;
+  return "Change of mind: not eligible for return, refund, or exchange.";
 }
 
 export function returnsTrustBadge() {
   const days = STORE_POLICY.returns.windowDays;
   return {
     text: `${days}-day returns window`,
-    subtext: "Full refund if defective/wrong item; exchange only for change of mind",
+    subtext: "Full refund if defective or wrong item — no change-of-mind returns",
   };
 }
 
 /** Homepage hero trust chip — short, no implied any-reason refund. */
 export function returnsHeroTrustChip() {
-  return "Refund for a defective or wrong part · exchange if you change your mind";
+  return "Refund for a defective or wrong part · no change-of-mind returns";
 }
 
 /** Homepage hero rail — same facts as other stores, Crazzycars wording only. */
@@ -139,7 +138,7 @@ export function homepageHeroTrustItems() {
 
 export function returnsPolicyMetaDescription() {
   const days = STORE_POLICY.returns.windowDays;
-  return `Within ${days} days: full refund for defective or wrong-item orders; exchange-only for change-of-mind returns at Crazzycars.pk.`;
+  return `Within ${days} days: full refund for defective or wrong-item orders only. No returns for change of mind at Crazzycars.pk.`;
 }
 
 export function returnsFaqAnswer() {
@@ -241,20 +240,21 @@ export function getReturnsPage() {
       {
         heading: "Change of mind",
         paragraphs: [
-          `Within ${days} days of delivery, you may request an exchange for a different product or size if the item is unused, uninstalled, and in original packaging. Change-of-mind returns are not eligible for a cash refund.`,
+          "Change of mind is not eligible for return, refund, or exchange. Please check fitment, photos, and product details carefully before you order.",
         ],
       },
       {
         heading: "Not eligible",
         paragraphs: [
+          "Change of mind, wrong size chosen, or ordered the wrong part by mistake.",
           "Installed, modified, damaged-by-use, or missing-parts items cannot be returned.",
           "Vehicle-specific parts ordered against the fitment listed on the product page are not returnable for “does not fit” unless we listed the wrong vehicle.",
         ],
       },
       {
-        heading: "How to start a return or exchange",
+        heading: "How to start a return",
         paragraphs: [
-          `Message WhatsApp or email ${STORE_POLICY.contact.email} with your order number, reason, and clear photos.`,
+          `Message WhatsApp or email ${STORE_POLICY.contact.email} with your order number, reason, and clear photos (defective or wrong-item claims only).`,
         ],
       },
       {

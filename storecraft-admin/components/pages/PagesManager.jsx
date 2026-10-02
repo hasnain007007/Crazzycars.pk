@@ -151,13 +151,13 @@ const PAGE_TEMPLATES = [
     title: "Returns Policy",
     slug: "returns-policy",
     template: "policy",
-    content: `<h2>Returns & Exchanges</h2>
+    content: `<h2>Returns Policy</h2>
 <h3>Returns window</h3>
-<p>Full refund if the item arrived defective or we shipped the wrong item. Change-of-mind requests are exchange-only (not a cash refund).</p>
+<p>Full refund if the item arrived defective or we shipped the wrong item. Change of mind is not eligible for return, refund, or exchange.</p>
 <h3>Hygiene Policy</h3>
 <p>Opened or installed accessories may not be eligible for return unless faulty — see product page for details.</p>
 <h3>How to Return</h3>
-<p>Contact our team at info@crazzycars.pk to start a return.</p>`,
+<p>Contact our team at info@crazzycars.pk to start a return (defective or wrong-item claims only).</p>`,
   },
   {
     title: "FAQ",

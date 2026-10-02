@@ -13,7 +13,7 @@ const DEFAULT_TRUST_BADGES = [
   {
     icon: "↩️",
     text: "Returns window",
-    subtext: "Refund if defective or wrong; exchange for change of mind",
+    subtext: "Refund if defective or wrong — no change-of-mind returns",
     enabled: true,
   },
   {

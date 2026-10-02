@@ -4,7 +4,8 @@
 import { STORE_POLICY } from "../../config/store-policy.js";
 
 /**
- * Two-path return policy: full refund for defective/wrong item; exchange for change of mind.
+ * Merchant return policy JSON-LD from STORE_POLICY.
+ * Defective / wrong-item only when change of mind is not eligible.
  * @param {string} siteUrl
  */
 export function buildMerchantReturnPolicies(siteUrl) {
@@ -20,7 +21,7 @@ export function buildMerchantReturnPolicies(siteUrl) {
     merchantReturnLink: link,
   };
 
-  return [
+  const policies = [
     {
       ...base,
       name: "Defective or wrong item shipped",
@@ -28,13 +29,18 @@ export function buildMerchantReturnPolicies(siteUrl) {
       returnFees: "https://schema.org/FreeReturn",
       itemDefectReturnFees: "https://schema.org/FreeReturn",
     },
-    {
+  ];
+
+  if (STORE_POLICY.returns.changeOfMindEligible && STORE_POLICY.returns.changeOfMindRemedy === "exchange-only") {
+    policies.push({
       ...base,
       name: "Change of mind",
       refundType: "https://schema.org/ExchangeRefund",
       returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
-    },
-  ];
+    });
+  }
+
+  return policies;
 }
 
 /** Flat nationwide delivery from STORE_POLICY (COD Pakistan). */

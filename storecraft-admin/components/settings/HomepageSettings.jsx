@@ -163,7 +163,7 @@ const DEFAULT_FORM = {
   whyChooseUs: [
     { icon: "🚚", title: "We Deliver Everywhere", description: "From Karachi to Khyber — COD nationwide", isActive: true },
     { icon: "💰", title: "Pay When It Arrives", description: "Cash on delivery — no card needed", isActive: true },
-    { icon: "🔄", title: "Returns, done honestly", description: "Refund if defective or wrong — exchange if you change your mind", isActive: true },
+    { icon: "🔄", title: "Returns, done honestly", description: "Refund if defective or wrong — no change-of-mind returns", isActive: true },
     { icon: "✅", title: "Real Products, Real Quality", description: "Every item tested before it reaches you", isActive: true },
   ],
   brands: [

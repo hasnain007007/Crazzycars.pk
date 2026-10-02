@@ -213,7 +213,7 @@ function applyCanonicalFieldFixes(settings) {
       }
       if (/return policy/i.test(question) && (/30 days/i.test(answer) || looksLikeForeignBrand(answer))) {
         item.answer =
-          "Within 7 days of delivery: full refund if the item arrived defective or we shipped the wrong item. Change-of-mind requests are exchange-only (not a cash refund). Message us on WhatsApp or email info@crazzycars.pk to start a claim.";
+          "Within 7 days of delivery: full refund if the item arrived defective or we shipped the wrong item. Change of mind is not eligible for return, refund, or exchange. Message us on WhatsApp or email info@crazzycars.pk to start a claim.";
       }
     }
   }
