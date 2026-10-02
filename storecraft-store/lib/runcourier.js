@@ -551,31 +551,43 @@ export async function fetchRunCourierTracking(trackingNumber, { settingsCourier 
     };
 
     try {
-      let result = await attemptPair();
-      // TrackOrder.php often flaps under load: busy, or a lone "New Booked" row.
-      const needsRetry =
-        !result.merged ||
-        isThinEarlyLifecycle(result.merged) ||
-        result.trackBusy ||
-        (result.statusBusy && !result.statusParsed);
+      let best = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await sleep(400 * attempt);
+        const result = await attemptPair();
+        const candidate = result.merged;
+        if (!candidate?.success) continue;
 
-      if (needsRetry) {
-        await sleep(450);
-        const retry = await attemptPair();
-        // Prefer non-thin / higher-rank result.
         if (
-          retry.merged &&
-          (!result.merged ||
-            statusRank(retry.merged.status) > statusRank(result.merged.status) ||
-            (retry.merged.events?.length || 0) > (result.merged.events?.length || 0))
+          !best ||
+          statusRank(candidate.status) > statusRank(best.status) ||
+          (candidate.events?.length || 0) > (best.events?.length || 0)
         ) {
-          result = retry;
-        } else if (!result.merged && retry.merged) {
-          result = retry;
+          best = candidate;
+        }
+        // Good enough — full history or a terminal/in-transit status.
+        if (!isThinEarlyLifecycle(best) && statusRank(best.status) >= 40) {
+          break;
         }
       }
 
-      if (result.merged?.success) return result.merged;
+      // Never trust a lone "New Booked" over the public portal when scans exist there.
+      if (!best || isThinEarlyLifecycle(best) || statusRank(best.status) < 40) {
+        const scraped = await scrapePortal(tn);
+        if (
+          scraped?.success &&
+          (!best ||
+            statusRank(scraped.status) > statusRank(best.status) ||
+            (scraped.events?.length || 0) > (best.events?.length || 0))
+        ) {
+          return scraped;
+        }
+      }
+
+      if (best?.success && !isThinEarlyLifecycle(best)) return best;
+      if (best?.success && statusRank(best.status) >= 40) return best;
+      // Last resort: still return thin booking only if portal had nothing better.
+      if (best?.success) return best;
     } catch {
       /* fall through to portal */
     }
