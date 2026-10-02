@@ -151,7 +151,9 @@ export function KpiCards({ data }) {
         trend={d.todaySalesGrowth}
         tone="money"
         money
-        hint={`Paid revenue today (PKT)${unpaidToday > 0 ? ` · ${formatCount(unpaidToday)} unpaid COD` : ""}`}
+        hint={`Order value today (PKT)${
+          Number(d.todayPaidSales) > 0 ? ` · ${formatAdminPrice(d.todayPaidSales)} paid` : ""
+        }${unpaidToday > 0 ? ` · ${formatCount(unpaidToday)} unpaid COD` : ""}`}
       />
 
       {/* Money first — order count is secondary */}
@@ -188,7 +190,9 @@ export function KpiCards({ data }) {
         trend={d.monthlyGrowth}
         tone="money"
         money
-        hint={`This month (PKT) · vs ${formatAdminPrice(d.lastMonthRevenue)} last month`}
+        hint={`Booked this month (PKT)${
+          Number(d.monthlyPaidRevenue) > 0 ? ` · ${formatAdminPrice(d.monthlyPaidRevenue)} paid` : " · none paid yet"
+        } · vs ${formatAdminPrice(d.lastMonthRevenue)} last month`}
       />
 
       {/* Period order count (not rupees) — follows Last 7 / 30 days / custom range */}
@@ -196,16 +200,16 @@ export function KpiCards({ data }) {
         label="Orders received"
         value={formatCount(periodOrders)}
         tone="line"
-        hint={`${formatCount(paidOrders)} paid · ${formatCount(unpaidPeriod)} unpaid · ${formatCount(partialPeriod)} partial · ${formatCount(pendingPeriod)} pending · ${rangeLabel}`}
+        hint={`Payment: ${formatCount(paidOrders)} paid · ${formatCount(unpaidPeriod)} unpaid · ${formatCount(partialPeriod)} partial · Status pending: ${formatCount(pendingPeriod)} · ${rangeLabel}`}
       />
 
       {/* Period: paid Rs is the glance figure */}
       <HeroCard
-        label="Period Revenue"
+        label="Paid collected"
         value={formatAdminPrice(d.periodSales)}
         tone={unpaidPeriod > 0 || pendingPeriod > 0 ? "attention" : "money"}
         money
-        hint={`Paid revenue · ${formatCount(periodOrders)} orders · ${rangeLabel}`}
+        hint={`Cash/mark-paid revenue · ${formatCount(paidOrders)} paid of ${formatCount(periodOrders)} orders · ${rangeLabel}`}
       />
 
       <HeroCard
@@ -222,7 +226,11 @@ export function KpiCards({ data }) {
         trend={d.profitGrowth ?? d.monthlyGrowth}
         tone="money"
         money
-        hint={`${margin}% margin on paid sales · ${rangeLabel}`}
+        hint={`${margin}% margin on paid sales${
+          Number(d.profitCostCoverage) < 80
+            ? ` · only ${Number(d.profitCostCoverage)}% have cost data`
+            : ""
+        } · ${rangeLabel}`}
       />
     </div>
   );

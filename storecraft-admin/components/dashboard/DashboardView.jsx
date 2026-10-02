@@ -23,6 +23,7 @@ import { CloudinaryAlertBanner } from "./CloudinaryAlertBanner";
 
 const emptyData = {
   todaySales: 0,
+  todayPaidSales: 0,
   todayOrders: 0,
   todayOrderValue: 0,
   todaySalesGrowth: 0,
@@ -38,7 +39,9 @@ const emptyData = {
   priorPeriodConversionRate: null,
   periodConversionGrowth: null,
   monthlyRevenue: 0,
+  monthlyPaidRevenue: 0,
   lastMonthRevenue: 0,
+  lastMonthPaidRevenue: 0,
   monthlyGrowth: 0,
   periodSales: 0,
   periodOrders: 0,
@@ -47,6 +50,7 @@ const emptyData = {
   totalProfit: 0,
   totalCost: 0,
   profitMargin: 0,
+  profitCostCoverage: 100,
   profitGrowth: 0,
   totalCustomers: 0,
   pendingOrders: 0,
@@ -207,8 +211,8 @@ export function DashboardView() {
               ))}
             </div>
             <p className="mt-3 text-[11px]" style={{ color: "var(--text-muted)" }}>
-              Use the calendar on Courier success to pick days. Dispatched = currently shipped; delivered / returned =
-              final courier outcomes in the selected period.
+              Dispatched = courier activity in this window (shipped, delivered, or returned dated here). Delivered /
+              returned can include parcels that left the warehouse before the selected from-date.
             </p>
           </div>
         </div>

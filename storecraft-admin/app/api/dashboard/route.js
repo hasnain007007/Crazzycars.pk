@@ -3,8 +3,10 @@
  * Extended for the modern ops dashboard (KPIs, category, payments, weekday, insights).
  *
  * Rules (PKT / Asia/Karachi):
- * - Paid revenue KPIs and Net Profit use the same paid, non-cancelled cohort.
- * - Range presets use Karachi day bounds (same as Today / Monthly cards).
+ * - Today / Monthly "sales" = booked order value (all non-void) — COD-friendly.
+ * - "Paid collected" (periodSales) = paymentStatus=paid only.
+ * - Net Profit uses paid, non-cancelled cohort (cost coverage flagged when thin).
+ * - Courier Dispatched = activity in window (ship / deliver / return), not "in transit only".
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -18,17 +20,18 @@ import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
 import { orderOriginLabel } from "@/lib/orderOrigin";
+import { withoutDemo } from "@/lib/orderDemoFilter";
 
 const TZ = "Asia/Karachi";
 const sumTotal = { $sum: { $ifNull: ["$pricing.total", { $ifNull: ["$total", 0] }] } };
 const NOT_VOID = { $nin: ["cancelled", "returned", "refunded"] };
 
 function dateMatch(from, to) {
-  if (!from && !to) return {};
+  if (!from && !to) return withoutDemo({});
   const createdAt = {};
   if (from) createdAt.$gte = from;
   if (to) createdAt.$lte = to;
-  return { createdAt };
+  return withoutDemo({ createdAt });
 }
 
 /** Build { $gte, $lte } date bounds when either end is set. */
@@ -48,9 +51,9 @@ function courierEventMatch(eventField, statuses, from, to) {
   const bounds = dateBounds(from, to);
   const statusFilter = Array.isArray(statuses) ? { $in: statuses } : statuses;
   if (!bounds) {
-    return { orderStatus: statusFilter };
+    return withoutDemo({ orderStatus: statusFilter });
   }
-  return {
+  return withoutDemo({
     $or: [
       { [eventField]: bounds },
       {
@@ -62,7 +65,47 @@ function courierEventMatch(eventField, statuses, from, to) {
         ],
       },
     ],
-  };
+  });
+}
+
+/**
+ * Parcels that had courier activity in the window (dispatch OR settle).
+ * Prevents Delivered > Dispatched when parcels shipped before the window deliver inside it.
+ */
+function courierDispatchedMatch(from, to) {
+  const bounds = dateBounds(from, to);
+  if (!bounds) {
+    return withoutDemo({ orderStatus: { $in: ["shipped", "delivered", "returned"] } });
+  }
+  return withoutDemo({
+    $or: [
+      { shippedAt: bounds },
+      { deliveredAt: bounds },
+      { orderStatus: "returned", updatedAt: bounds },
+      {
+        $and: [
+          { orderStatus: { $in: ["shipped", "delivered", "returned"] } },
+          {
+            $and: [
+              { $or: [{ shippedAt: null }, { shippedAt: { $exists: false } }] },
+              { $or: [{ deliveredAt: null }, { deliveredAt: { $exists: false } }] },
+            ],
+          },
+          { createdAt: bounds },
+        ],
+      },
+    ],
+  });
+}
+
+/** Returns finalized in the window (prefer updatedAt — when status flipped to returned). */
+function courierReturnedMatch(from, to) {
+  const bounds = dateBounds(from, to);
+  if (!bounds) return withoutDemo({ orderStatus: "returned" });
+  return withoutDemo({
+    orderStatus: "returned",
+    $or: [{ updatedAt: bounds }, { createdAt: bounds }],
+  });
 }
 
 function pctChange(current, previous) {
@@ -236,11 +279,11 @@ export async function GET(request) {
       paymentStatus: "paid",
       orderStatus: NOT_VOID,
     };
-    const priorPaidMatch = {
+    const priorPaidMatch = withoutDemo({
       createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
       paymentStatus: "paid",
       orderStatus: NOT_VOID,
-    };
+    });
 
     const chartFrom = range.from || karachiDayBounds(shiftDayKey(todayKey, -29)).start;
     const chartTo = range.to || todayEnd;
@@ -284,8 +327,11 @@ export async function GET(request) {
       todayOrderValueAgg,
       yesterdayPaidAgg,
       yesterdayOrderCount,
+      yesterdayOrderValueAgg,
       monthPaidAgg,
+      monthBookedAgg,
       lastMonthPaidAgg,
+      lastMonthBookedAgg,
       paymentAgg,
       categoryOrders,
       weekdayOrders,
@@ -306,20 +352,19 @@ export async function GET(request) {
       Order.countDocuments(paidMatch),
       Order.aggregate([{ $match: sellMatch }, { $group: { _id: null, total: sumTotal } }]),
       Customer.countDocuments(),
-      Order.countDocuments({ orderStatus: "pending" }),
+      Order.countDocuments(withoutDemo({ orderStatus: "pending" })),
       Order.countDocuments({ ...period, orderStatus: "pending" }),
-      Order.countDocuments({
-        orderStatus: "pending",
-        createdAt: { $gte: todayStart, $lte: todayEnd },
-      }),
-      Order.countDocuments(period),
-      // Dispatched in selected days (shippedAt), including parcels now delivered/returned.
       Order.countDocuments(
-        courierEventMatch("shippedAt", ["shipped", "delivered", "returned"], range.from, range.to)
+        withoutDemo({
+          orderStatus: "pending",
+          createdAt: { $gte: todayStart, $lte: todayEnd },
+        })
       ),
+      Order.countDocuments(period),
+      // Courier activity in selected days (dispatch or settle — not "currently shipped only").
+      Order.countDocuments(courierDispatchedMatch(range.from, range.to)),
       Order.countDocuments(courierEventMatch("deliveredAt", "delivered", range.from, range.to)),
-      // Returned: no returnedAt field — use createdAt window + current returned status.
-      Order.countDocuments({ ...period, orderStatus: "returned" }),
+      Order.countDocuments(courierReturnedMatch(range.from, range.to)),
       Order.find(period)
         .sort({ createdAt: -1 })
         .limit(10)
@@ -331,11 +376,11 @@ export async function GET(request) {
       ]),
       Order.aggregate([
         {
-          $match: {
+          $match: withoutDemo({
             paymentStatus: "paid",
             orderStatus: NOT_VOID,
             createdAt: trendCreatedAt,
-          },
+          }),
         },
         {
           $group: {
@@ -364,47 +409,69 @@ export async function GET(request) {
         .lean(),
       Order.aggregate([
         {
-          $match: {
+          $match: withoutDemo({
             paymentStatus: "paid",
             orderStatus: NOT_VOID,
             createdAt: { $gte: todayStart, $lte: todayEnd },
-          },
+          }),
         },
         { $group: { _id: null, total: sumTotal } },
       ]),
-      Order.countDocuments({ createdAt: { $gte: todayStart, $lte: todayEnd } }),
+      Order.countDocuments(withoutDemo({ createdAt: { $gte: todayStart, $lte: todayEnd } })),
       Order.aggregate([
-        { $match: { createdAt: { $gte: todayStart, $lte: todayEnd } } },
+        { $match: withoutDemo({ createdAt: { $gte: todayStart, $lte: todayEnd } }) },
         { $group: { _id: null, total: sumTotal } },
       ]),
       Order.aggregate([
         {
-          $match: {
+          $match: withoutDemo({
             paymentStatus: "paid",
             orderStatus: NOT_VOID,
             createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
-          },
+          }),
         },
         { $group: { _id: null, total: sumTotal } },
       ]),
-      Order.countDocuments({ createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } }),
+      Order.countDocuments(withoutDemo({ createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } })),
+      Order.aggregate([
+        { $match: withoutDemo({ createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } }) },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
       Order.aggregate([
         {
-          $match: {
+          $match: withoutDemo({
             paymentStatus: "paid",
             orderStatus: NOT_VOID,
             createdAt: { $gte: monthStart, $lte: todayEnd },
-          },
+          }),
         },
         { $group: { _id: null, total: sumTotal } },
       ]),
       Order.aggregate([
         {
-          $match: {
+          $match: withoutDemo({
+            orderStatus: NOT_VOID,
+            createdAt: { $gte: monthStart, $lte: todayEnd },
+          }),
+        },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
+      Order.aggregate([
+        {
+          $match: withoutDemo({
             paymentStatus: "paid",
             orderStatus: NOT_VOID,
             createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
-          },
+          }),
+        },
+        { $group: { _id: null, total: sumTotal } },
+      ]),
+      Order.aggregate([
+        {
+          $match: withoutDemo({
+            orderStatus: NOT_VOID,
+            createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
+          }),
         },
         { $group: { _id: null, total: sumTotal } },
       ]),
@@ -421,11 +488,13 @@ export async function GET(request) {
       Order.find(paidMatch)
         .select("items.productId items.quantity items.unitPrice items.name")
         .lean(),
-      Order.find({
-        paymentStatus: "paid",
-        orderStatus: NOT_VOID,
-        createdAt: { $gte: weekFrom, $lte: todayEnd },
-      })
+      Order.find(
+        withoutDemo({
+          paymentStatus: "paid",
+          orderStatus: NOT_VOID,
+          createdAt: { $gte: weekFrom, $lte: todayEnd },
+        })
+      )
         .select(
           "createdAt items.productId items.quantity items.unitPrice items.unitCost pricing.total total"
         )
@@ -437,9 +506,11 @@ export async function GET(request) {
         ? DailyVisitor.countDocuments(priorWindow.visitorFilter)
         : Promise.resolve(0),
       priorWindow
-        ? Order.countDocuments({
-            createdAt: { $gte: priorWindow.orderFrom, $lte: priorWindow.orderTo },
-          })
+        ? Order.countDocuments(
+            withoutDemo({
+              createdAt: { $gte: priorWindow.orderFrom, $lte: priorWindow.orderTo },
+            })
+          )
         : Promise.resolve(0),
       Order.countDocuments({
         ...period,
@@ -451,11 +522,13 @@ export async function GET(request) {
         orderStatus: NOT_VOID,
         paymentStatus: "partial",
       }),
-      Order.countDocuments({
-        orderStatus: NOT_VOID,
-        paymentStatus: "unpaid",
-        createdAt: { $gte: todayStart, $lte: todayEnd },
-      }),
+      Order.countDocuments(
+        withoutDemo({
+          orderStatus: NOT_VOID,
+          paymentStatus: "unpaid",
+          createdAt: { $gte: todayStart, $lte: todayEnd },
+        })
+      ),
       Order.aggregate([
         {
           $match: {
@@ -484,11 +557,14 @@ export async function GET(request) {
     const periodSales = periodSalesAgg[0]?.total ?? 0;
     const totalRevenue = periodSales;
     const totalSellOpen = totalSellAgg[0]?.total ?? 0;
-    const calendarTodaySales = todayPaidAgg[0]?.total ?? 0;
+    const calendarTodayPaid = todayPaidAgg[0]?.total ?? 0;
     const todayOrderValue = todayOrderValueAgg[0]?.total ?? 0;
-    const yesterdaySales = yesterdayPaidAgg[0]?.total ?? 0;
-    const thisMonthRevenue = monthPaidAgg[0]?.total ?? 0;
-    const lastMonthRevenue = lastMonthPaidAgg[0]?.total ?? 0;
+    void yesterdayPaidAgg; // paid-only kept for possible future paid-today trends
+    const yesterdayOrderValue = yesterdayOrderValueAgg[0]?.total ?? 0;
+    const thisMonthPaid = monthPaidAgg[0]?.total ?? 0;
+    const thisMonthBooked = monthBookedAgg[0]?.total ?? 0;
+    const lastMonthPaid = lastMonthPaidAgg[0]?.total ?? 0;
+    const lastMonthBooked = lastMonthBookedAgg[0]?.total ?? 0;
 
     const productIds = collectProductIds(profitOrders, priorProfitOrders, categoryOrders, weekdayOrders);
     const { costByProduct, categoryByProduct } = await loadCostAndCategoryMaps(productIds);
@@ -496,6 +572,13 @@ export async function GET(request) {
     const { totalProfit, totalCost, totalSell } = sumProfits(profitOrders, costByProduct);
     const { totalProfit: priorProfit } = sumProfits(priorProfitOrders, costByProduct);
     const profitMargin = totalSell > 0 ? Math.round((totalProfit / totalSell) * 1000) / 10 : 0;
+    let ordersWithCost = 0;
+    for (const o of profitOrders) {
+      const { cost } = computeOrderProfit(o, costByProduct);
+      if (cost > 0) ordersWithCost += 1;
+    }
+    const profitCostCoverage =
+      profitOrders.length > 0 ? Math.round((ordersWithCost / profitOrders.length) * 1000) / 10 : 100;
 
     const orderStatusCounts = {
       pending: 0,
@@ -654,7 +737,10 @@ export async function GET(request) {
     if (profitMargin > 0) {
       insights.push({
         icon: "bolt",
-        text: `Net margin is ${profitMargin}% on paid sales in this period. Keep cost-per-item updated for accurate profit.`,
+        text:
+          profitCostCoverage < 80
+            ? `Net margin shows ${profitMargin}% but only ${profitCostCoverage}% of paid orders have product cost filled — update cost-per-item for accurate profit.`
+            : `Net margin is ${profitMargin}% on paid sales in this period. Keep cost-per-item updated for accurate profit.`,
       });
     }
     const codShare = paymentMethods.find((p) => p.key === "cod")?.percent || 0;
@@ -708,10 +794,12 @@ export async function GET(request) {
       periodSales,
       periodOrders: periodOrdersCount,
       periodPaidOrders: periodPaidOrdersCount,
-      todaySales: calendarTodaySales,
+      // COD-first: big numbers = booked order value (all non-void), not only paymentStatus=paid.
+      todaySales: todayOrderValue,
+      todayPaidSales: calendarTodayPaid,
       todayOrders: todayOrderCount,
       todayOrderValue,
-      todaySalesGrowth: pctChange(calendarTodaySales, yesterdaySales),
+      todaySalesGrowth: pctChange(todayOrderValue, yesterdayOrderValue),
       todayOrdersGrowth: pctChange(todayOrderCount, yesterdayOrderCount),
       todayVisitors: todayVisitorCount,
       yesterdayVisitors: yesterdayVisitorCount,
@@ -733,9 +821,11 @@ export async function GET(request) {
         if (cur == null || prev == null) return null;
         return pctChange(cur, prev);
       })(),
-      monthlyRevenue: thisMonthRevenue,
-      lastMonthRevenue,
-      monthlyGrowth: pctChange(thisMonthRevenue, lastMonthRevenue),
+      monthlyRevenue: thisMonthBooked,
+      monthlyPaidRevenue: thisMonthPaid,
+      lastMonthRevenue: lastMonthBooked,
+      lastMonthPaidRevenue: lastMonthPaid,
+      monthlyGrowth: pctChange(thisMonthBooked, lastMonthBooked),
       timezone: TZ,
       todayKey,
       totalRevenue,
@@ -744,6 +834,7 @@ export async function GET(request) {
       totalProfit,
       totalCost,
       profitMargin,
+      profitCostCoverage,
       profitGrowth: pctChange(totalProfit, priorProfit),
       totalCustomers,
       pendingOrders: pendingOrdersToday,
