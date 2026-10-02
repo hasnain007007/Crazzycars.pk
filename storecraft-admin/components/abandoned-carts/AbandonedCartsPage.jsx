@@ -56,8 +56,9 @@ export function AbandonedCartsPage() {
   const [viewCart, setViewCart] = useState(null);
   const [convertingId, setConvertingId] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts = {}) => {
+    const silent = Boolean(opts.silent);
+    if (!silent) setLoading(true);
     try {
       const params = new URLSearchParams({
         status,
@@ -83,7 +84,7 @@ export function AbandonedCartsPage() {
     } catch {
       toast.error("Network error");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [status, page, q]);
 
@@ -106,7 +107,15 @@ export function AbandonedCartsPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [viewCart]);
 
-  async function patchAction(id, action) {
+  function mergeCartIntoUi(cart) {
+    if (!cart?.id) return;
+    setRows((prev) => prev.map((c) => (String(c.id) === String(cart.id) ? { ...c, ...cart } : c)));
+    setViewCart((prev) =>
+      prev && String(prev.id) === String(cart.id) ? { ...prev, ...cart } : prev
+    );
+  }
+
+  async function patchAction(id, action, { silent = false } = {}) {
     try {
       const res = await fetch("/api/abandoned-carts", {
         method: "PATCH",
@@ -117,13 +126,25 @@ export function AbandonedCartsPage() {
       const json = await res.json();
       if (!res.ok || !json.success) {
         toast.error(json.error || "Action failed");
-        return;
+        return false;
       }
-      toast.success("Updated");
-      if (action === "dismiss" || action === "reopen") setViewCart(null);
-      load();
+      if (json.cart) mergeCartIntoUi(json.cart);
+      if (action === "dismiss" || action === "reopen") {
+        setViewCart(null);
+        // Status filter may drop this row — soft reload keeps scroll (no Loading… flash).
+        await load({ silent: true });
+        toast.success("Updated");
+      } else if (action === "log-whatsapp") {
+        // Do not full-reload: Loading… replaces the table and jumps scroll to top.
+        toast.success("WhatsApp opened");
+      } else if (!silent) {
+        await load({ silent: true });
+        toast.success("Updated");
+      }
+      return true;
     } catch {
       toast.error("Network error");
+      return false;
     }
   }
 
@@ -139,13 +160,16 @@ export function AbandonedCartsPage() {
         return;
       }
       toast.success("Recovery email sent");
-      load();
+      if (json.cart) mergeCartIntoUi(json.cart);
+      else await load({ silent: true });
     } catch {
       toast.error("Network error");
     }
   }
 
-  async function sendWhatsApp(cart) {
+  async function sendWhatsApp(cart, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
     const phone = cart?.customer?.phone;
     if (!phone) {
       toast.error("No phone number on this cart");
@@ -157,7 +181,8 @@ export function AbandonedCartsPage() {
       toast.error("Could not open WhatsApp");
       return;
     }
-    await patchAction(cart.id, "log-whatsapp");
+    // Log in the background without collapsing the table / resetting scroll.
+    void patchAction(cart.id, "log-whatsapp", { silent: true });
   }
 
   async function convertToOrder(cart) {
@@ -465,7 +490,7 @@ export function AbandonedCartsPage() {
                         {cart.customer?.phone ? (
                           <button
                             type="button"
-                            onClick={() => sendWhatsApp(cart)}
+                            onClick={(e) => sendWhatsApp(cart, e)}
                             className="rounded-md bg-[#25D366] px-2 py-1 text-[11px] font-semibold text-white"
                           >
                             WhatsApp

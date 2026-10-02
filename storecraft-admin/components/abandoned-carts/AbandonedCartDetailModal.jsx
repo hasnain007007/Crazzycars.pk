@@ -307,7 +307,7 @@ export function AbandonedCartDetailModal({
           {cart.customer?.phone ? (
             <button
               type="button"
-              onClick={() => onWhatsApp?.(cart)}
+              onClick={(e) => onWhatsApp?.(cart, e)}
               className="rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white"
             >
               WhatsApp
