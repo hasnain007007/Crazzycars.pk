@@ -202,7 +202,7 @@ export default function CategoryGrid({
                         src={imageUrl}
                         alt={c.imageAlt || c.name}
                         title={c.imageTitle || c.name}
-                        loading={idx < 6 ? "eager" : "lazy"}
+                        loading="lazy"
                         decoding="async"
                         draggable={false}
                         onError={(e) => {

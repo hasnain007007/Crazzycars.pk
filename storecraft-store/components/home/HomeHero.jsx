@@ -270,12 +270,13 @@ function HeroSlidePanel({
     >
       {bgImage ? (
         <picture className="home-hero__media">
+          {/* Mobile-first: img src is the LCP asset on phones; desktop via min-width source. */}
           {bgImageMobile && bgImageMobile !== bgImage ? (
-            <source media="(max-width: 767px)" srcSet={bgImageMobile} />
+            <source media="(min-width: 768px)" srcSet={bgImage} />
           ) : null}
           {/* eslint-disable-next-line @next/next/no-img-element -- LCP hero; direct /media WebP */}
           <img
-            src={bgImage}
+            src={bgImageMobile || bgImage}
             alt={
               String(slide.altText || slide.title || "").trim() ||
               `${BRAND} — Car Accessories Pakistan`

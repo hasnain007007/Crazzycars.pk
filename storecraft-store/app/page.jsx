@@ -57,12 +57,29 @@ export default async function Page() {
   }
 
   const desktopPreload = heroSlides[0]?.imageUrl || "";
+  const mobilePreload = heroSlides[0]?.imageUrlMobile || desktopPreload;
 
   return (
     <>
+      {mobilePreload ? (
+        // eslint-disable-next-line @next/next/no-head-element -- preload LCP hero (mobile)
+        <link
+          rel="preload"
+          as="image"
+          href={mobilePreload}
+          media="(max-width: 767px)"
+          fetchPriority="high"
+        />
+      ) : null}
       {desktopPreload ? (
-        // eslint-disable-next-line @next/next/no-head-element -- preload LCP hero
-        <link rel="preload" as="image" href={desktopPreload} fetchPriority="high" />
+        // eslint-disable-next-line @next/next/no-head-element -- preload LCP hero (desktop)
+        <link
+          rel="preload"
+          as="image"
+          href={desktopPreload}
+          media="(min-width: 768px)"
+          fetchPriority="high"
+        />
       ) : null}
       <HomePage
         initialBestSellers={bestSellers}
