@@ -20,6 +20,7 @@ export const PAKISTAN_PROVINCES = [
   "Balochistan",
   "Gilgit-Baltistan",
   "AJK",
+  "Islamabad",
 ];
 
 /** Checkout city dropdown (Pakistan). */

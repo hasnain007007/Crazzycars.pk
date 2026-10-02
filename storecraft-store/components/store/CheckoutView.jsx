@@ -241,6 +241,8 @@ export function CheckoutView() {
     showLoginPrompt: true,
   });
   const [customer, setCustomer] = useState({ firstName: "", lastName: "", email: "", phone: "" });
+  /** Raw name field value — avoids trim-on-keystroke which blocked typing spaces. */
+  const [nameDraft, setNameDraft] = useState("");
   const [addr, setAddr] = useState({
     street: "",
     street2: "",
@@ -332,10 +334,8 @@ export function CheckoutView() {
         }));
         replaceItems(restored);
         if (data.customer?.email || data.customer?.phone || data.customer?.name) {
-          const parts = String(data.customer.name || "")
-            .trim()
-            .split(/\s+/)
-            .filter(Boolean);
+          const restoredName = String(data.customer.name || "").trim();
+          const parts = restoredName.split(/\s+/).filter(Boolean);
           setCustomer((f) => ({
             ...f,
             firstName: f.firstName || parts[0] || "",
@@ -343,6 +343,9 @@ export function CheckoutView() {
             email: f.email || data.customer.email || "",
             phone: f.phone || data.customer.phone || "",
           }));
+          if (restoredName) {
+            setNameDraft((prev) => prev || restoredName);
+          }
         }
         toast.success("Your cart was restored — complete checkout below.");
         params.delete("recover");
@@ -463,14 +466,20 @@ export function CheckoutView() {
       .then((j) => {
         if (!j.success || !j.customer) return;
         const c = j.customer;
+        const firstName = String(c.firstName || "").trim() || "";
+        const lastName = String(c.lastName || "").trim() || "";
         const full = String(c.name || "").trim();
         const parts = full.split(/\s+/).filter(Boolean);
+        const nextFirst = firstName || parts[0] || "";
+        const nextLast = lastName || parts.slice(1).join(" ") || "";
         setCustomer({
-          firstName: String(c.firstName || "").trim() || parts[0] || "",
-          lastName: String(c.lastName || "").trim() || parts.slice(1).join(" ") || "",
+          firstName: nextFirst,
+          lastName: nextLast,
           email: c.email || "",
           phone: c.phone || "",
         });
+        const composed = `${nextFirst} ${nextLast}`.trim() || full;
+        if (composed) setNameDraft((prev) => prev || composed);
         const list = Array.isArray(c.addresses) ? c.addresses : [];
         setSavedAddresses(list);
         const def =
@@ -496,11 +505,13 @@ export function CheckoutView() {
           setCustomer((f) => ({ ...f, phone: f.phone || def.phone }));
         }
         if (def.firstName || def.lastName) {
-          setCustomer((f) => ({
-            ...f,
-            firstName: f.firstName || def.firstName || "",
-            lastName: f.lastName || def.lastName || "",
-          }));
+          setCustomer((f) => {
+            const firstName = f.firstName || def.firstName || "";
+            const lastName = f.lastName || def.lastName || "";
+            const composed = `${firstName} ${lastName}`.trim();
+            if (composed) setNameDraft((prev) => prev || composed);
+            return { ...f, firstName, lastName };
+          });
         }
       })
       .catch(() => {});
@@ -524,11 +535,13 @@ export function CheckoutView() {
       if (entry.street2 || entry.line2) setShowStreet2(true);
       if (entry.phone) setCustomer((f) => ({ ...f, phone: entry.phone }));
       if (entry.firstName || entry.lastName) {
-        setCustomer((f) => ({
-          ...f,
-          firstName: entry.firstName || f.firstName,
-          lastName: entry.lastName || f.lastName,
-        }));
+        setCustomer((f) => {
+          const firstName = entry.firstName || f.firstName;
+          const lastName = entry.lastName || f.lastName;
+          const composed = `${firstName} ${lastName}`.trim();
+          if (composed) setNameDraft(composed);
+          return { ...f, firstName, lastName };
+        });
       }
     },
     []
@@ -714,10 +727,7 @@ export function CheckoutView() {
   );
   const totalWeightKg = useMemo(() => totalWeightGrams / 1000, [totalWeightGrams]);
 
-  const fullNameValue = useMemo(
-    () => `${String(customer.firstName || "").trim()} ${String(customer.lastName || "").trim()}`.trim(),
-    [customer.firstName, customer.lastName]
-  );
+  const fullNameValue = useMemo(() => nameDraft.trim(), [nameDraft]);
 
   const detailsComplete = useMemo(
     () =>
@@ -1103,9 +1113,11 @@ export function CheckoutView() {
               <input
                 type="text"
                 autoComplete="name"
-                value={fullNameValue}
+                value={nameDraft}
                 onChange={(e) => {
-                  const parts = e.target.value.trim().split(/\s+/).filter(Boolean);
+                  const raw = e.target.value;
+                  setNameDraft(raw);
+                  const parts = raw.trim().split(/\s+/).filter(Boolean);
                   setCustomer((f) => ({
                     ...f,
                     firstName: parts[0] || "",

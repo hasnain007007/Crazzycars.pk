@@ -110,6 +110,7 @@ const SHIPPING_PROVINCES = [
   "Balochistan",
   "Gilgit-Baltistan",
   "AJK",
+  "Islamabad",
 ];
 
 function shippingInstructionsFromOrder(order) {

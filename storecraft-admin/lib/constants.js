@@ -32,6 +32,7 @@ export const PAKISTAN_PROVINCES = [
   "Balochistan",
   "Gilgit-Baltistan",
   "AJK",
+  "Islamabad",
 ];
 
 export const STORE_PHONE_PREFIX = "+92";
