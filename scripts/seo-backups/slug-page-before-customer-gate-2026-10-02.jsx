@@ -419,13 +419,8 @@ export default async function ProductPage({ params, searchParams }) {
       await dbConnect();
       const productId = content.data?.id || content.data?._id;
       if (productId) {
-        // JSON-LD only: genuine customer reviews. PDP widget still uses /api/reviews (all approved).
-        approvedReviews = await Review.find({
-          product: productId,
-          status: "approved",
-          source: "customer",
-        })
-          .select("reviewer.name rating title body createdAt source status")
+        approvedReviews = await Review.find({ product: productId, status: "approved" })
+          .select("reviewer.name rating title body createdAt")
           .sort({ featured: -1, createdAt: -1 })
           .limit(8)
           .lean();

@@ -351,14 +351,9 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
   ]);
 
   const productIds = (products || []).map((p) => p._id).filter(Boolean);
-  // Attached for JSON-LD ItemList only (customer-sourced). Cards still use Product.reviewCount.
   const reviewDocs = productIds.length
-    ? await Review.find({
-        product: { $in: productIds },
-        status: "approved",
-        source: "customer",
-      })
-        .select("product reviewer.name rating title body createdAt featured source status")
+    ? await Review.find({ product: { $in: productIds }, status: "approved" })
+        .select("product reviewer.name rating title body createdAt featured")
         .sort({ featured: -1, createdAt: -1 })
         .lean()
     : [];

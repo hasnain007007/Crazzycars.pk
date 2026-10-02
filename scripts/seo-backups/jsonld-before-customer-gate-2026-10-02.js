@@ -231,26 +231,9 @@ function resolveStockMeta(p) {
   };
 }
 
-/**
- * Schema.org review/aggregateRating may only use genuine customer-sourced reviews.
- * Seeded/manual/import corpus must not appear in Google structured data.
- * On-page PDP widgets are unaffected (they query /api/reviews separately).
- */
-function isCustomerSourcedReview(r) {
-  if (!r || typeof r !== "object") return false;
-  if (String(r.source || "").trim().toLowerCase() !== "customer") return false;
-  const status = String(r.status || "approved").trim().toLowerCase();
-  return status === "approved";
-}
-
-/** Customer-sourced approved rows only (for JSON-LD). */
-function customerReviewsForSchema(reviews) {
-  return (Array.isArray(reviews) ? reviews : []).filter(isCustomerSourcedReview);
-}
-
 /** Map stored Review docs into schema.org Review nodes for Product JSON-LD. */
 function mapReviewsToJsonLd(reviews, limit = 8) {
-  const rows = customerReviewsForSchema(reviews);
+  const rows = Array.isArray(reviews) ? reviews : [];
   return rows.slice(0, Math.max(0, limit)).map((r) => {
     const authorName =
       String(r?.reviewer?.name || r?.author || r?.name || "Customer").trim() || "Customer";
@@ -278,19 +261,6 @@ function mapReviewsToJsonLd(reviews, limit = 8) {
   });
 }
 
-/** Aggregate from customer-sourced rows only — never Product.reviewCount (includes seed). */
-function aggregateFromCustomerReviews(reviews) {
-  const rows = customerReviewsForSchema(reviews);
-  if (!rows.length) return null;
-  const sum = rows.reduce((s, r) => s + (Number(r?.rating) || 0), 0);
-  const avg = sum / rows.length;
-  if (!(avg > 0)) return null;
-  return {
-    ratingValue: Math.round(avg * 10) / 10,
-    reviewCount: rows.length,
-  };
-}
-
 /**
  * Build a Google-valid Product node for ItemList, or null if incomplete.
  * Bare Product (name/url only) triggers GSC: "Either offers, review, or aggregateRating…".
@@ -302,11 +272,10 @@ function buildCollectionProductNode(p) {
   const path = p.urlPath || `/${slug}`;
   const itemUrl = absoluteProductUrl(path);
   const priceNum = resolveOfferPrice(p);
-  // Customer-sourced reviews only for schema; Product.reviewCount may include seed data.
-  const schemaAgg = aggregateFromCustomerReviews(p.reviews);
-  const reviewLd = mapReviewsToJsonLd(p.reviews, 2);
-  const hasSchemaReviews = Boolean(schemaAgg && reviewLd.length);
-  if (priceNum == null && !hasSchemaReviews) return null;
+  const ratingValue = Number(p.ratingValue || p.averageRating || p.ratingAverage || p.rating) || 0;
+  const reviewCount = Number(p.reviewCount || p.numReviews || p.totalReviews) || 0;
+  const hasRating = ratingValue > 0 && reviewCount > 0;
+  if (priceNum == null && !hasRating) return null;
 
   const productNode = {
     "@type": "Product",
@@ -333,15 +302,20 @@ function buildCollectionProductNode(p) {
     });
   }
 
-  if (hasSchemaReviews) {
-    productNode.aggregateRating = {
-      "@type": "AggregateRating",
-      ratingValue: String(schemaAgg.ratingValue),
-      reviewCount: String(schemaAgg.reviewCount),
-      bestRating: "5",
-      worstRating: "1",
-    };
-    productNode.review = reviewLd;
+  if (hasRating) {
+    // Only emit aggregateRating when we also have Review nodes — otherwise GSC
+    // reports optional "Missing field review" on every listing Product.
+    const reviewLd = mapReviewsToJsonLd(p.reviews, 2);
+    if (reviewLd.length) {
+      productNode.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: String(ratingValue),
+        reviewCount: String(reviewCount),
+        bestRating: "5",
+        worstRating: "1",
+      };
+      productNode.review = reviewLd;
+    }
   }
 
   if (!productHasRichResultSignal(productNode)) return null;
@@ -465,19 +439,33 @@ export function productJsonLd(p) {
     ld.isAccessoryOrSparePartFor = spareFor.slice(0, 12);
   }
 
-  // Customer-sourced approved reviews only — ignore Product aggregates (seed/manual/import).
+  const ratingValue = Number(p.ratingValue || p.averageRating || p.rating) || 0;
+  const reviewCount = Number(p.reviewCount || p.numReviews) || 0;
   const reviewRows = Array.isArray(p.reviews) ? p.reviews : [];
   const reviewLd = mapReviewsToJsonLd(reviewRows, 8);
-  const schemaAgg = aggregateFromCustomerReviews(reviewRows);
-  if (reviewLd.length && schemaAgg) {
+  // Emit ratings only with real Review nodes (avoids GSC optional "Missing field review").
+  if (reviewLd.length && ratingValue > 0 && reviewCount > 0) {
     ld.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: String(schemaAgg.ratingValue),
-      reviewCount: String(schemaAgg.reviewCount),
+      ratingValue: String(ratingValue),
+      reviewCount: String(Math.max(reviewCount, reviewLd.length)),
       bestRating: "5",
       worstRating: "1",
     };
     ld.review = reviewLd;
+  } else if (reviewLd.length) {
+    ld.review = reviewLd;
+    const avg =
+      reviewRows.reduce((s, r) => s + (Number(r?.rating) || 0), 0) / reviewLd.length;
+    if (avg > 0) {
+      ld.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: String(Math.round(avg * 10) / 10),
+        reviewCount: String(reviewLd.length),
+        bestRating: "5",
+        worstRating: "1",
+      };
+    }
   }
 
   return ld;
