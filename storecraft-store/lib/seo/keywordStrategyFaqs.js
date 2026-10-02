@@ -1617,6 +1617,38 @@ function liveProductPrice(product) {
 }
 
 /**
+ * Default PDP FAQ when no SKU-specific builder exists.
+ * Grounded in store policy only — no fabricated fitment claims.
+ */
+export function defaultProductFaqs() {
+  const fees = feeAmounts();
+  return [
+    {
+      question: "Do you offer Cash on Delivery?",
+      answer:
+        "Yes. Cash on Delivery is available nationwide on eligible orders. For COD, pay the delivery charges in advance after placing your order and send the payment screenshot on WhatsApp. The product amount is collected when your order arrives.",
+    },
+    {
+      question: "How much is delivery?",
+      answer: `Standard delivery is a flat ${fees.regular} on every order. Roof/trunk spoilers and Express (Daewoo) use a different courier rate shown at checkout. Bulky carts use the bulky fee shown at checkout.`,
+    },
+    {
+      question: "How do I know if this part fits my car?",
+      answer:
+        "Check the vehicle compatibility table on this product page (make, model, and years). You can also browse Shop by Vehicle. If you are unsure, WhatsApp us your exact year and model before ordering — we will not invent fitment that is not listed here.",
+    },
+    {
+      question: "What is your returns policy?",
+      answer: returnsFaqAnswer(),
+    },
+    {
+      question: "How long does delivery take?",
+      answer: `Most orders ship within 1–2 business days after payment confirmation (or COD delivery-charge confirmation). ${deliveryEtaSummary()}`,
+    },
+  ];
+}
+
+/**
  * @param {object} product
  * @returns {{ question: string, answer: string }[]}
  */
@@ -1624,7 +1656,7 @@ export function buildProductKeywordFaqs(product) {
   const sku = String(product?.articleNo || "").trim();
   if (!sku || sku === "CC-0004") return [];
   const builder = PRODUCT_FAQ_BY_SKU[sku];
-  if (!builder) return [];
+  if (!builder) return defaultProductFaqs();
 
   const shared = sharedPolicyFaqs({ includeFitment: false, includeDeliveryTime: false });
   const base = shared.length
@@ -1637,5 +1669,6 @@ export function buildProductKeywordFaqs(product) {
 
 export function hasProductKeywordFaqs(articleNo) {
   const sku = String(articleNo || "").trim();
-  return Boolean(sku && sku !== "CC-0004" && PRODUCT_FAQ_BY_SKU[sku]);
+  // Defaults cover the catalog; SKU builders still override when present.
+  return Boolean(sku && sku !== "CC-0004");
 }
