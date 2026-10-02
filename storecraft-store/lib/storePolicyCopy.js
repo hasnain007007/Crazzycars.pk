@@ -127,12 +127,11 @@ export function returnsHeroTrustChip() {
   return "Refund for a defective or wrong part · no change-of-mind returns";
 }
 
-/** Homepage hero rail — same facts as other stores, Crazzycars wording only. */
+/** Homepage hero rail — COD + courier only (no returns claims on the hero strip). */
 export function homepageHeroTrustItems() {
   return [
     "Pay cash when the courier arrives",
     `Flat ${formatPkrAmount(STORE_POLICY.shipping.standardFeePKR)} courier on every order`,
-    returnsHeroTrustChip(),
   ];
 }
 
