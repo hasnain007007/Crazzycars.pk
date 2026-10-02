@@ -99,7 +99,11 @@ export default function OrderTrackingView() {
   const dest = useMemo(() => friendlyCity(data?.destination), [data]);
   const events = data?.events || [];
   const step = useMemo(() => (data ? pipelineStep(data.status, events) : 0), [data, events]);
-  const nowAt = data?.currentLocation || events[0]?.status || data?.status || "";
+  const nowAt =
+    data?.currentLocation ||
+    data?.status ||
+    events[0]?.status ||
+    "";
   const destLabel = data?.destinationReceivedLabel || (dest ? `Heading to ${dest}` : "");
   const destOk = Boolean(data?.destinationReceived);
 

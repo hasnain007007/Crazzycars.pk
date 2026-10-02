@@ -5,6 +5,11 @@
 
 export const RUN_COURIER_DEFAULT_BASE = "https://portal.runcourier.com";
 export const RUN_COURIER_DEFAULT_TRACK_PATH = "/API/TrackOrder.php";
+export const RUN_COURIER_DEFAULT_STATUS_PATH = "/API/CurrentStatus.php";
+
+/** TrackOrder.php under load sometimes returns only the original booking row. */
+const EARLY_LIFECYCLE_STATUS =
+  /^(new\s+)?booked$|^created$|^unbook|^pickup\s*pending$|^order\s*placed$/i;
 
 const RUN_COURIER_CARRIER_HINTS = [
   "run courier",
@@ -64,6 +69,41 @@ function resolveTrackPath(settingsCourier) {
   const custom = String(settingsCourier?.runCourierTrackPath || "").trim();
   if (custom) return custom.startsWith("/") ? custom : `/${custom}`;
   return RUN_COURIER_DEFAULT_TRACK_PATH;
+}
+
+function resolveStatusPath(settingsCourier) {
+  const custom = String(settingsCourier?.runCourierStatusPath || "").trim();
+  if (custom) return custom.startsWith("/") ? custom : `/${custom}`;
+  return RUN_COURIER_DEFAULT_STATUS_PATH;
+}
+
+function statusRank(status) {
+  const s = String(status || "").toLowerCase();
+  if (/deliver/.test(s) && !/out for|attempt|waiting/.test(s)) return 80;
+  if (/out for|enroute|waiting for delivery|attempt/.test(s)) return 60;
+  if (/transit|hub|depart|arriv|dispatch|received|picked|assigned/.test(s)) return 40;
+  if (EARLY_LIFECYCLE_STATUS.test(s.trim())) return 10;
+  if (s) return 20;
+  return 0;
+}
+
+function isBusyPayload(json, text = "") {
+  if (json && typeof json === "object" && !Array.isArray(json) && json.busy) return true;
+  const blob = `${typeof json === "string" ? json : JSON.stringify(json || {})}\n${text || ""}`;
+  return /busy|One moment|Retrying automatically|system is busy/i.test(blob);
+}
+
+function isThinEarlyLifecycle(parsed) {
+  if (!parsed?.success) return true;
+  const events = Array.isArray(parsed.events) ? parsed.events : [];
+  if (events.length === 0) return true;
+  if (events.length > 1) return false;
+  const only = String(events[0]?.status || parsed.status || "").trim();
+  return EARLY_LIFECYCLE_STATUS.test(only);
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 function pick(obj, ...keys) {
@@ -253,9 +293,97 @@ export function parseRunCourierPortalHtml(html, trackingNumber) {
   };
 }
 
+function parseRunCourierArrayTrack(rows, trackingNumber) {
+  if (!Array.isArray(rows) || !rows.length) return null;
+  const events = rows
+    .map((entry, idx) => {
+      if (!entry || typeof entry !== "object") return null;
+      const when = entry.created || entry.date || entry.timestamp || entry.created_at || "";
+      const { date, time } = splitDateTime(when);
+      const status = pick(entry, "status", "orderStatus", "transactionStatus") || "Update";
+      const reason = pick(entry, "reason", "remarks", "comment");
+      const location = pick(entry, "location", "city", "hub", "station");
+      const sortAt = (() => {
+        const d = new Date(when);
+        if (!Number.isNaN(d.getTime())) return d.getTime();
+        return Date.now() - idx;
+      })();
+      return {
+        date,
+        time,
+        status,
+        location,
+        description: reason ? `${status} — ${reason}` : status,
+        sortAt,
+      };
+    })
+    .filter(Boolean);
+  if (!events.length) return null;
+  events.sort((a, b) => (b.sortAt || 0) - (a.sortAt || 0));
+  const clean = events.map(({ date, time, status, location, description }) => ({
+    date,
+    time,
+    status,
+    location,
+    description,
+  }));
+  const status = clean[0]?.status || "Unknown";
+  return {
+    success: true,
+    trackingNumber:
+      pick(rows[0], "tracking_no", "trackingNumber", "trackingNo", "cn") ||
+      String(trackingNumber || "").trim(),
+    status,
+    statusCode: status.slice(0, 2).toUpperCase(),
+    courier: "Run Courier",
+    events: clean,
+    estimatedDelivery: "",
+    origin: "",
+    destination: pick(rows[0], "destination", "deliveryCity", "consigneeCity") || "",
+    currentLocation: clean[0]?.location || "",
+    destinationReceived: false,
+    source: "api",
+  };
+}
+
 function parseRunCourierTrackingJson(json, trackingNumber) {
+  if (Array.isArray(json)) return parseRunCourierArrayTrack(json, trackingNumber);
+  if (Array.isArray(json?.data)) return parseRunCourierArrayTrack(json.data, trackingNumber);
+
   const dist = extractTrackPayload(json);
-  if (!dist) return null;
+  if (!dist) {
+    // CurrentStatus often returns a flat { status, ... } object.
+    if (json && typeof json === "object") {
+      const status = pick(json, "status", "orderStatus", "currentStatus", "transactionStatus");
+      if (!status) return null;
+      const reason = pick(json, "reason", "remarks");
+      return {
+        success: true,
+        trackingNumber:
+          pick(json, "tracking_no", "trackingNumber", "trackingNo", "cn") ||
+          String(trackingNumber || "").trim(),
+        status,
+        statusCode: status.slice(0, 2).toUpperCase(),
+        courier: pick(json, "thirdparty_name", "courier", "carrier", "api_name") || "Run Courier",
+        events: [
+          {
+            date: "",
+            time: "",
+            status,
+            location: pick(json, "location", "city", "hub") || "",
+            description: reason ? `${status} — ${reason}` : status,
+          },
+        ],
+        estimatedDelivery: pick(json, "expectedDeliveryDate", "edd", "deliveryDate"),
+        origin: pick(json, "originCity", "pickupCity"),
+        destination: pick(json, "deliveryCity", "destinationCity", "consigneeCity"),
+        currentLocation: pick(json, "location", "currentLocation", "city") || "",
+        destinationReceived: false,
+        source: "api",
+      };
+    }
+    return null;
+  }
   const tn =
     pick(dist, "trackingNumber", "trackingNo", "cn", "consignmentNo", "awb", "code") ||
     String(trackingNumber || "").trim();
@@ -286,6 +414,87 @@ function parseRunCourierTrackingJson(json, trackingNumber) {
   };
 }
 
+function mergeRunCourierTrackResults(trackParsed, statusParsed) {
+  const candidates = [trackParsed, statusParsed].filter((p) => p?.success);
+  if (!candidates.length) return null;
+  if (candidates.length === 1) return candidates[0];
+
+  const byEvents = [...candidates].sort(
+    (a, b) => (b.events?.length || 0) - (a.events?.length || 0)
+  );
+  const richest = byEvents[0];
+  const byRank = [...candidates].sort(
+    (a, b) => statusRank(b.status) - statusRank(a.status)
+  );
+  const ahead = byRank[0];
+
+  // Prefer the richest scan history; lift status from CurrentStatus when TrackOrder is stale.
+  const merged = {
+    ...richest,
+    status: statusRank(ahead.status) > statusRank(richest.status) ? ahead.status : richest.status,
+    statusCode: (
+      statusRank(ahead.status) > statusRank(richest.status) ? ahead.status : richest.status
+    )
+      .slice(0, 2)
+      .toUpperCase(),
+    courier: ahead.courier || richest.courier || "Run Courier",
+    origin: richest.origin || ahead.origin || "",
+    destination: richest.destination || ahead.destination || "",
+    currentLocation:
+      richest.currentLocation ||
+      ahead.currentLocation ||
+      richest.events?.[0]?.location ||
+      "",
+    estimatedDelivery: richest.estimatedDelivery || ahead.estimatedDelivery || "",
+    source: "api",
+  };
+
+  // If TrackOrder was thin but CurrentStatus is ahead, keep ahead status on top of history.
+  if (isThinEarlyLifecycle(richest) && statusRank(ahead.status) > statusRank(richest.status)) {
+    const top = {
+      date: ahead.events?.[0]?.date || "",
+      time: ahead.events?.[0]?.time || "",
+      status: ahead.status,
+      location: ahead.currentLocation || ahead.events?.[0]?.location || "",
+      description: ahead.events?.[0]?.description || ahead.status,
+    };
+    const rest = (richest.events || []).filter(
+      (e) => String(e.status || "").toLowerCase() !== String(top.status).toLowerCase()
+    );
+    merged.events = [top, ...rest];
+    merged.status = ahead.status;
+    merged.statusCode = ahead.status.slice(0, 2).toUpperCase();
+    merged.currentLocation = top.location || merged.currentLocation;
+  }
+
+  return merged;
+}
+
+async function postRunCourierApi(path, { base, apiKey, clientCode, trackingNumber }) {
+  const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      auth_key: apiKey,
+      client_code: clientCode,
+      tracking_no: trackingNumber,
+    }),
+    cache: "no-store",
+  });
+  const text = await res.text();
+  let json = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = null;
+  }
+  return { res, text, json };
+}
+
 async function scrapePortal(tn) {
   try {
     const res = await fetch(
@@ -310,61 +519,63 @@ export async function fetchRunCourierTracking(trackingNumber, { settingsCourier 
   const clientCode = resolveClientCode(settingsCourier);
   if (apiKey && clientCode) {
     const base = resolveBaseUrl(settingsCourier);
-    const path = resolveTrackPath(settingsCourier);
-    const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
+    const trackPath = resolveTrackPath(settingsCourier);
+    const statusPath = resolveStatusPath(settingsCourier);
+
+    const attemptPair = async () => {
+      const [trackRes, statusRes] = await Promise.all([
+        postRunCourierApi(trackPath, { base, apiKey, clientCode, trackingNumber: tn }),
+        postRunCourierApi(statusPath, { base, apiKey, clientCode, trackingNumber: tn }),
+      ]);
+
+      const trackBusy = isBusyPayload(trackRes.json, trackRes.text);
+      const statusBusy = isBusyPayload(statusRes.json, statusRes.text);
+
+      let trackParsed = null;
+      if (trackRes.res.ok && trackRes.json && !trackBusy) {
+        trackParsed = parseRunCourierTrackingJson(trackRes.json, tn);
+      }
+
+      let statusParsed = null;
+      if (statusRes.res.ok && statusRes.json && !statusBusy) {
+        statusParsed = parseRunCourierTrackingJson(statusRes.json, tn);
+      }
+
+      return {
+        merged: mergeRunCourierTrackResults(trackParsed, statusParsed),
+        trackParsed,
+        statusParsed,
+        trackBusy,
+        statusBusy,
+      };
+    };
+
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          auth_key: apiKey,
-          client_code: clientCode,
-          tracking_no: tn,
-        }),
-        cache: "no-store",
-      });
-      const text = await res.text();
-      let json = null;
-      try {
-        json = JSON.parse(text);
-      } catch {
-        json = null;
-      }
-      if (res.ok && json && typeof json !== "string") {
-        if (Array.isArray(json) && json.length) {
-          const events = json.map((entry, idx) => {
-            const status = String(entry.status || "Update").trim();
-            return {
-              date: "",
-              time: "",
-              status,
-              location: "",
-              description: status,
-              sortAt: Date.now() - idx,
-            };
-          });
-          const status = events[0]?.status || "Unknown";
-          return {
-            success: true,
-            trackingNumber: tn,
-            status,
-            statusCode: status.slice(0, 2).toUpperCase(),
-            courier: "Run Courier",
-            events,
-            estimatedDelivery: "",
-            origin: "",
-            destination: "",
-            currentLocation: "",
-            destinationReceived: false,
-            source: "api",
-          };
+      let result = await attemptPair();
+      // TrackOrder.php often flaps under load: busy, or a lone "New Booked" row.
+      const needsRetry =
+        !result.merged ||
+        isThinEarlyLifecycle(result.merged) ||
+        result.trackBusy ||
+        (result.statusBusy && !result.statusParsed);
+
+      if (needsRetry) {
+        await sleep(450);
+        const retry = await attemptPair();
+        // Prefer non-thin / higher-rank result.
+        if (
+          retry.merged &&
+          (!result.merged ||
+            statusRank(retry.merged.status) > statusRank(result.merged.status) ||
+            (retry.merged.events?.length || 0) > (result.merged.events?.length || 0))
+        ) {
+          result = retry;
+        } else if (!result.merged && retry.merged) {
+          result = retry;
         }
-        const parsed = parseRunCourierTrackingJson(json, tn);
-        if (parsed?.success) return parsed;
       }
+
+      if (result.merged?.success) return result.merged;
     } catch {
       /* fall through to portal */
     }

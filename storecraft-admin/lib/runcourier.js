@@ -1065,17 +1065,94 @@ export async function fetchRunCourierTracking(trackingNumber, { settingsCourier 
   const clientCode = resolveRunCourierClientCode(settingsCourier);
 
   if (apiKey && clientCode) {
-    for (const key of ["track", "status"]) {
+    const fetchOne = async (key) => {
       const path = resolveRunCourierPath(settingsCourier, key);
       const res = await runCourierFetch(path, {
         method: "POST",
         settingsCourier,
         body: { tracking_no: tn },
       });
-      if (!res.ok) continue;
-      const parsed = parseTrackResponse(res.json, tn);
-      if (parsed?.success) return { ...parsed, raw: res.json };
+      if (!res.ok) return null;
+      return parseTrackResponse(res.json, tn);
+    };
+
+    const isThin = (parsed) => {
+      if (!parsed?.success) return true;
+      const events = Array.isArray(parsed.events) ? parsed.events : [];
+      if (events.length > 1) return false;
+      const only = String(events[0]?.status || parsed.status || "").trim();
+      return /^(new\s+)?booked$|^created$|^unbook|^pickup\s*pending$/i.test(only);
+    };
+
+    const rank = (status) => {
+      const s = String(status || "").toLowerCase();
+      if (/deliver/.test(s) && !/out for|attempt|waiting/.test(s)) return 80;
+      if (/out for|enroute|waiting for delivery|attempt/.test(s)) return 60;
+      if (/transit|hub|depart|arriv|dispatch|received|picked|assigned/.test(s)) return 40;
+      if (/^(new\s+)?booked$|^created$/i.test(s.trim())) return 10;
+      return s ? 20 : 0;
+    };
+
+    const merge = (a, b) => {
+      const list = [a, b].filter((p) => p?.success);
+      if (!list.length) return null;
+      if (list.length === 1) return list[0];
+      const richest = [...list].sort((x, y) => (y.events?.length || 0) - (x.events?.length || 0))[0];
+      const ahead = [...list].sort((x, y) => rank(y.status) - rank(x.status))[0];
+      const out = {
+        ...richest,
+        status: rank(ahead.status) > rank(richest.status) ? ahead.status : richest.status,
+        statusCode: (
+          rank(ahead.status) > rank(richest.status) ? ahead.status : richest.status
+        )
+          .slice(0, 2)
+          .toUpperCase(),
+        courier: ahead.courier || richest.courier || "Run Courier",
+        origin: richest.origin || ahead.origin || "",
+        destination: richest.destination || ahead.destination || "",
+        currentLocation:
+          richest.currentLocation || ahead.currentLocation || richest.events?.[0]?.location || "",
+      };
+      if (isThin(richest) && rank(ahead.status) > rank(richest.status)) {
+        const top = {
+          date: ahead.events?.[0]?.date || "",
+          time: ahead.events?.[0]?.time || "",
+          status: ahead.status,
+          location: ahead.currentLocation || ahead.events?.[0]?.location || "",
+          description: ahead.events?.[0]?.description || ahead.status,
+        };
+        out.events = [
+          top,
+          ...(richest.events || []).filter(
+            (e) => String(e.status || "").toLowerCase() !== String(top.status).toLowerCase()
+          ),
+        ];
+        out.status = ahead.status;
+        out.statusCode = ahead.status.slice(0, 2).toUpperCase();
+      }
+      return out;
+    };
+
+    let track = await fetchOne("track");
+    let status = await fetchOne("status");
+    let merged = merge(track, status);
+
+    if (!merged || isThin(merged)) {
+      await new Promise((r) => setTimeout(r, 450));
+      track = (await fetchOne("track")) || track;
+      status = (await fetchOne("status")) || status;
+      const retry = merge(track, status);
+      if (
+        retry &&
+        (!merged ||
+          rank(retry.status) > rank(merged.status) ||
+          (retry.events?.length || 0) > (merged.events?.length || 0))
+      ) {
+        merged = retry;
+      }
     }
+
+    if (merged?.success) return { ...merged, raw: { track, status } };
   }
 
   const scraped = await scrapeRunCourierPortal(tn);
@@ -1094,49 +1171,78 @@ export async function fetchRunCourierTracking(trackingNumber, { settingsCourier 
 function parseTrackResponse(json, trackingNumber) {
   const rows = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : null;
   if (rows?.length) {
-    const events = rows.map((entry, idx) => {
-      const { date, time } = splitDateTime(entry.created || entry.date || entry.timestamp || "");
-      const status = pick(entry, "status", "orderStatus", "transactionStatus") || "Update";
-      return {
-        date,
-        time,
-        status,
-        location: pick(entry, "location", "city", "hub"),
-        description: status,
-        sortAt: Date.now() - idx,
-      };
-    });
-    const status = events[0]?.status || "Unknown";
+    const events = rows
+      .map((entry, idx) => {
+        if (!entry || typeof entry !== "object") return null;
+        const when = entry.created || entry.date || entry.timestamp || "";
+        const { date, time } = splitDateTime(when);
+        const status = pick(entry, "status", "orderStatus", "transactionStatus") || "Update";
+        const reason = pick(entry, "reason", "remarks", "comment");
+        const location = pick(entry, "location", "city", "hub", "station");
+        const sortAt = (() => {
+          const d = new Date(when);
+          if (!Number.isNaN(d.getTime())) return d.getTime();
+          return Date.now() - idx;
+        })();
+        return {
+          date,
+          time,
+          status,
+          location,
+          description: reason ? `${status} — ${reason}` : status,
+          sortAt,
+        };
+      })
+      .filter(Boolean);
+    events.sort((a, b) => (b.sortAt || 0) - (a.sortAt || 0));
+    const clean = events.map(({ date, time, status, location, description }) => ({
+      date,
+      time,
+      status,
+      location,
+      description,
+    }));
+    const status = clean[0]?.status || "Unknown";
     return {
       success: true,
       trackingNumber: pick(rows[0], "tracking_no", "trackingNumber") || trackingNumber,
       status,
       statusCode: status.slice(0, 2).toUpperCase(),
       courier: "Run Courier",
-      events,
+      events: clean,
       estimatedDelivery: "",
       origin: "",
       destination: "",
-      currentLocation: events[0]?.location || "",
+      currentLocation: clean[0]?.location || "",
       destinationReceived: false,
       source: "api",
     };
   }
 
   if (json && typeof json === "object" && !Array.isArray(json)) {
+    if (json.busy) return null;
     const status = pick(json, "status", "orderStatus", "currentStatus");
     if (!status) return null;
+    const reason = pick(json, "reason", "remarks");
     return {
       success: true,
       trackingNumber: pick(json, "tracking_no", "trackingNumber") || trackingNumber,
       status,
       statusCode: status.slice(0, 2).toUpperCase(),
       courier: pick(json, "thirdparty_name", "courier") || "Run Courier",
-      events: [{ date: "", time: "", status, location: "", description: status }],
+      events: [
+        {
+          date: "",
+          time: "",
+          status,
+          location: pick(json, "location", "city", "hub") || "",
+          description: reason ? `${status} — ${reason}` : status,
+        },
+      ],
       estimatedDelivery: "",
       origin: "",
-      destination: "",
-      currentLocation: "",
+      destination: pick(json, "deliveryCity", "destinationCity", "consigneeCity") || "",
+      currentLocation: pick(json, "location", "city") || "",
       destinationReceived: false,
       source: "api",
     };

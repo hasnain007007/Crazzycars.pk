@@ -16,7 +16,9 @@ async function findOrderByTrackingNumber(trackingNumber) {
   return Order.findOne({
     $or: [{ trackingNumber: tn }, { "tracking.number": tn }],
   })
-    .select("orderNumber courier trackingNumber tracking runCourierApi runCourierLabel")
+    .select(
+      "orderNumber courier trackingNumber tracking runCourierApi runCourierLabel shippingAddress.city shippingAddress.cityName"
+    )
     .lean();
 }
 
@@ -64,10 +66,15 @@ export async function resolvePublicTracking(trackingNumber, { settingsCourier } 
     return toPublicTrackingPayload(live || { success: false, error: "Invalid tracking number" });
   }
 
+  const orderCity = String(
+    order.shippingAddress?.city || order.shippingAddress?.cityName || ""
+  ).trim();
+
   return toPublicTrackingPayload(
     {
       ...live,
       courier: live.courier || order.courier || live.courier,
+      destination: live.destination || orderCity || "",
     },
     { orderNumber: order.orderNumber || "" }
   );

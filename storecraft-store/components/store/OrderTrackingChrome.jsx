@@ -6,7 +6,7 @@ export function OrderTrackingChrome() {
     <div className="cc-track__top-copy" style={{ marginBottom: 12 }}>
       <p className="cc-track__eyebrow">
         <span className="cc-track__live" aria-hidden />
-        Live Postex
+        Live tracking
       </p>
       <h1 className="cc-track__title">Track order</h1>
     </div>
