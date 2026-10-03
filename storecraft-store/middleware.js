@@ -215,8 +215,10 @@ export async function middleware(request) {
   // Prefix strip and `-crazzycars-pk` suffix strip happen together so Meta
   // `/products/{handle}-crazzycars-pk?utm_…` does not 308 twice.
   // Cookie captures fbclid/utm before redirectPath strips them.
-  if (lower.startsWith("/products/")) {
-    const rest = lower.slice("/products/".length).replace(/\/+$/, "");
+  // Also accept mistaken `/product/{slug}` (singular) — same canonical target.
+  if (lower.startsWith("/products/") || lower.startsWith("/product/")) {
+    const prefix = lower.startsWith("/products/") ? "/products/" : "/product/";
+    const rest = lower.slice(prefix.length).replace(/\/+$/, "");
     if (rest && !rest.includes("/")) {
       const dest = stripBrandSuffix(rest) || rest;
       return withPaidCookie(request, redirectPath(request, `/${dest}`, 308));
