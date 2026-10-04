@@ -1350,7 +1350,7 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
             fbp,
             fbc,
             clientIpAddress: requestIp(request),
-            clientUserAgent: request.headers.get("user-agent") || "",
+            clientUserAgent: request?.headers?.get?.("user-agent") || "",
           }),
           customData: buildPurchaseCustomData({
             value: total,

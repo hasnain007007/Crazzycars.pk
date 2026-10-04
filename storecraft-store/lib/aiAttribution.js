@@ -66,9 +66,18 @@ export function applyAiAttributionCookies(request, response, hit) {
  * Read valid in-window attribution from an incoming request (checkout).
  * @returns {{ source: string, firstTouchAt: Date } | null}
  */
+function cookieGet(request, name) {
+  try {
+    return request?.cookies?.get?.(name)?.value;
+  } catch {
+    return undefined;
+  }
+}
+
 export function readAiAttributionFromRequest(request) {
-  const source = String(request.cookies.get(AI_ATTR_SOURCE_COOKIE)?.value || "").trim();
-  const ts = Number(request.cookies.get(AI_ATTR_FIRST_TOUCH_COOKIE)?.value);
+  // Plain Request (mobile synthetic) has no Next.js cookies API — treat as no attribution.
+  const source = String(cookieGet(request, AI_ATTR_SOURCE_COOKIE) || "").trim();
+  const ts = Number(cookieGet(request, AI_ATTR_FIRST_TOUCH_COOKIE));
   if (!isAllowedAiSource(source) || !Number.isFinite(ts)) return null;
   if (Date.now() - ts > AI_ATTRIBUTION_WINDOW_MS) return null;
   return { source, firstTouchAt: new Date(ts) };
