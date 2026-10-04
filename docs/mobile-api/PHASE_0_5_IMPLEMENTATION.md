@@ -491,6 +491,27 @@ curl -sS -i -X POST "$BASE/cart/quote" -H 'Content-Type: application/json' -d "{
 # expect 200 (not COD_NOT_AVAILABLE)
 ```
 
+### (4c) Home sections + fitment + delivery ETA
+
+```bash
+# Home — same sources as website SSR (hotDeals / bestSellers / brands)
+curl -sS "$BASE/home" | python3 -c "import json,sys; d=json.load(sys.stdin); assert 'hotDeals' in d and 'bestSellers' in d and 'brands' in d; print(d['hotDeals'].get('title'), len(d['hotDeals'].get('products') or []), len(d['bestSellers'].get('products') or []), len(d['brands'].get('items') or []))"
+# hotDeals.flashSaleEndTime may be null (FlashSale settings field)
+
+# Config delivery policy (Lahore ETA confirmed; other cities neutral)
+curl -sS "$BASE/config" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['delivery']['etaSummary']); print(d['delivery']['feeShort'])"
+
+# Products that fit a vehicle (web /cars filter). Every card has fitsVehicle:true
+curl -sS "$BASE/products?vehicle=$VEHICLE_SLUG&limit=5" | python3 -c "import json,sys; d=json.load(sys.stdin); assert all(p.get('fitsVehicle') is True for p in d['products']); print('ok', len(d['products']), d.get('vehicle'))"
+
+# Product detail fitment flag
+curl -sS "$BASE/products/$PRODUCT_SLUG?vehicle=$VEHICLE_SLUG" | python3 -c "import json,sys; d=json.load(sys.stdin); print('fitsVehicle=', d['product'].get('fitsVehicle'))"
+
+# Order detail items include slug/image (historical orders get slug from productId lookup)
+curl -sS "$BASE/orders/$GUEST_ORDER_ID" -H "X-Order-Access-Token: $GUEST_ORDER_TOKEN" \
+  | python3 -c "import json,sys; o=json.load(sys.stdin)['order']; print([(i.get('slug'), bool(i.get('image')), i.get('variantId')) for i in o['items']])"
+```
+
 ### (5) Price tamper / min-order / oversell (no partial stock decrement)
 
 **Fake client price/total ignored — charged DB price**
