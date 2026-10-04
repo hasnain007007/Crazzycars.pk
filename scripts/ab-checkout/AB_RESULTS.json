@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-04T18:50:18.757Z",
+  "generatedAt": "2026-10-04T20:29:06.608Z",
   "note": "Resend + Meta CAPI env vars cleared for both sides; Settings.seo CAPI tokens empty in fixture. Confirms order creation succeeds when unconfigured.",
   "results": [
     {
@@ -27,6 +27,18 @@
       "diffs": [],
       "a": "Cash on Delivery is not available for: Honda Civic Body Kit D1. Choose advance payment instead.",
       "b": "Cash on Delivery is not available for: Honda Civic Body Kit D1. Choose advance payment instead."
+    },
+    {
+      "name": "body_kit_bank_transfer",
+      "status": "PASS",
+      "reason": "order docs match (ids/timestamps/orderNumber/tokens ignored)",
+      "diffs": []
+    },
+    {
+      "name": "cod_with_advance_charge",
+      "status": "PASS",
+      "reason": "order docs match (ids/timestamps/orderNumber/tokens ignored)",
+      "diffs": []
     },
     {
       "name": "variant_low_stock",

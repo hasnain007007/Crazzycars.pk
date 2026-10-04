@@ -1,7 +1,6 @@
 /**
- * POST /api/mobile/v1/orders
- * Place an order. Requires Idempotency-Key header.
- * Auth: optional Bearer (links order to customer if present).
+ * GET  /api/mobile/v1/orders — Bearer, own orders only, paginated (max 50).
+ * POST /api/mobile/v1/orders — Place order (Idempotency-Key). Optional Bearer.
  * Enforces minimum order amount (enforceMinOrder:true) — web checkout unchanged.
  * Maps web {success:false,error} to mobile { error: { code, message } }.
  */
@@ -9,11 +8,27 @@ import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import IdempotencyKey from "@/lib/models/IdempotencyKey.model";
+import Order from "@/lib/models/Order.model";
+import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { createStoreOrderFromRequest } from "@/lib/checkout/createStoreOrder";
-import { optionalMobileAuth } from "@/lib/mobile/auth";
+import { optionalMobileAuth, requireMobileAuth } from "@/lib/mobile/auth";
+import { buildOrderPaymentInstructions } from "@/lib/mobile/paymentInstructions";
 import { mobileError } from "@/lib/mobile/response";
+import { serializeMobileOrderSummary } from "@/lib/mobile/serializeMobileOrder";
 
 export const dynamic = "force-dynamic";
+
+const ORDERS_LIST_MAX = 50;
+const ORDERS_LIST_DEFAULT = 20;
+
+function parseOrdersListPagination(searchParams) {
+  const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
+  const limit = Math.min(
+    ORDERS_LIST_MAX,
+    Math.max(1, parseInt(searchParams.get("limit"), 10) || ORDERS_LIST_DEFAULT)
+  );
+  return { page, limit, skip: (page - 1) * limit };
+}
 
 function hashBody(text) {
   return createHash("sha256").update(String(text || "")).digest("hex");
@@ -26,7 +41,46 @@ function mapWebErrorCode(message, webCode) {
   if (m.includes("minimum order")) return "MIN_ORDER_NOT_MET";
   if (m.includes("insufficient stock")) return "OUT_OF_STOCK";
   if (m.includes("rate") || m.includes("too many")) return "RATE_LIMITED";
+  if (m.includes("payment method is not available")) return "PAYMENT_METHOD_UNAVAILABLE";
   return "ORDER_ERROR";
+}
+
+export async function GET(request) {
+  let authCtx;
+  try {
+    authCtx = await requireMobileAuth(request);
+  } catch (err) {
+    return mobileError(err.code || "UNAUTHORIZED", err.message, { status: err.statusCode || 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const { page, limit, skip } = parseOrdersListPagination(searchParams);
+  const customerId = authCtx.customer._id;
+
+  await dbConnect();
+  const filter = { "customer.customerId": customerId };
+  const [rows, total] = await Promise.all([
+    Order.find(filter)
+      .select(
+        "orderNumber orderStatus paymentStatus paymentMethod pricing items createdAt shippingAddress trackingNumber tracking"
+      )
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Order.countDocuments(filter),
+  ]);
+
+  return NextResponse.json({
+    orders: rows.map(serializeMobileOrderSummary),
+    pagination: {
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit) || 0,
+      hasNext: page * limit < total,
+    },
+  });
 }
 
 export async function POST(request) {
@@ -135,13 +189,41 @@ export async function POST(request) {
     );
   }
 
+  const settingsDoc =
+    (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
+    (await Settings.findOne({}).lean());
+
+  let orderLean = null;
+  try {
+    orderLean = await Order.findById(webBody.orderId)
+      .select(
+        "orderNumber orderStatus paymentStatus paymentMethod pricing items payment shippingAddress publicAccessToken createdAt"
+      )
+      .lean();
+  } catch {
+    /* non-fatal — fall back to webBody fields */
+  }
+
+  const paymentInstructions = buildOrderPaymentInstructions(
+    orderLean || {
+      orderNumber: webBody.orderNumber,
+      paymentMethod: orderLean?.paymentMethod || "cod",
+      pricing: webBody.order?.pricing || { total: webBody.total },
+      total: webBody.total,
+      payment: orderLean?.payment,
+    },
+    settingsDoc
+  );
+
   const responseBody = {
     orderId: webBody.orderId,
     orderNumber: webBody.orderNumber,
     accessToken: webBody.accessToken,
     total: webBody.total,
     paymentStatus: webBody.paymentStatus,
+    paymentMethod: orderLean?.paymentMethod || paymentInstructions.paymentMethod,
     pricing: webBody.order?.pricing || null,
+    paymentInstructions,
   };
 
   await IdempotencyKey.updateOne(

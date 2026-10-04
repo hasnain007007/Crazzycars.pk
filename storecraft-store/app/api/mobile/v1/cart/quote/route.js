@@ -23,6 +23,7 @@ import { applyShippingRules, normalizeShippingRules } from "@/lib/freeDelivery";
 import { computeCouponDiscount } from "@/lib/couponCompute";
 import { buildCodUnavailableMessage, productAllowsCod } from "@/lib/codEligibility";
 import { toKg } from "@/lib/shippingEstimate";
+import { isPaymentMethodEnabled } from "@/lib/mobile/paymentInstructions";
 import { mobileError } from "@/lib/mobile/response";
 import { isOfflinePakistaniPayment, normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 
@@ -97,9 +98,13 @@ export async function POST(request) {
   }
 
   const couponCodeRaw = String(body.couponCode || "").trim().toUpperCase();
-  const paymentMethod = isOfflinePakistaniPayment(String(body.paymentMethod || "cod").trim())
-    ? String(body.paymentMethod || "cod").trim()
-    : "cod";
+  const requestedPayment = String(body.paymentMethod || "cod").trim() || "cod";
+  if (!isOfflinePakistaniPayment(requestedPayment)) {
+    return mobileError("PAYMENT_METHOD_UNAVAILABLE", "Selected payment method is not available.", {
+      status: 400,
+    });
+  }
+  const paymentMethod = requestedPayment;
   const city = String(body.shippingAddress?.city || "").trim();
   const province = String(body.shippingAddress?.state || body.shippingAddress?.province || "").trim();
   const country = String(body.shippingAddress?.country || "Pakistan").trim() || "Pakistan";
@@ -201,6 +206,12 @@ export async function POST(request) {
 
   const storePayment = normalizeShippingRules(settingsDoc?.storePayment);
   const pakMethods = normalizePakistaniPaymentMethods(settingsDoc?.pakistaniPaymentMethods);
+
+  if (!isPaymentMethodEnabled(paymentMethod, settingsDoc)) {
+    return mobileError("PAYMENT_METHOD_UNAVAILABLE", "Selected payment method is not available.", {
+      status: 400,
+    });
+  }
 
   // Min order (soft warning for quote; hard fail only on POST /orders)
   const minOrderAmount = Math.max(0, Number(settingsDoc?.storePayment?.minimumOrderAmount) || 0);

@@ -1,13 +1,13 @@
 /**
  * GET /api/mobile/v1/config
- * App configuration: min versions, maintenance, shipping floors, payment methods, currency.
+ * App configuration: min versions, maintenance, shipping floors, payment methods (+ details), currency.
  * Public — no auth required.
  */
 import { NextResponse } from "next/server";
 import { STORE_CONTACT } from "@/config/store-policy";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
-import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
+import { buildConfigPaymentMethods } from "@/lib/mobile/paymentInstructions";
 import { shippingFloorPKR } from "@/lib/shippingTier";
 
 export const dynamic = "force-dynamic";
@@ -20,23 +20,21 @@ export async function GET() {
       (await Settings.findOne({}).lean());
 
     const mobileApp = settingsDoc?.mobileApp || {};
-    const pakMethods = normalizePakistaniPaymentMethods(settingsDoc?.pakistaniPaymentMethods);
-
-    // App UI is COD-only in v1; still expose all enabled methods for future releases.
-    const enabledPaymentMethods = Object.entries(pakMethods)
-      .filter(([, v]) => v?.enabled === true)
-      .map(([key, v]) => ({
-        key,
-        label: v.label || key,
-        icon: v.icon || key,
-      }));
+    const { enabledPaymentMethods, whatsapp: waContact } = buildConfigPaymentMethods(settingsDoc);
 
     const whatsapp =
-      String(settingsDoc?.whatsapp?.number || "").trim() || STORE_CONTACT.whatsapp || STORE_CONTACT.phone;
+      waContact.number ||
+      String(settingsDoc?.whatsapp?.number || "").trim() ||
+      STORE_CONTACT.whatsapp ||
+      STORE_CONTACT.phone;
     const storePhone =
       String(settingsDoc?.general?.phone || "").trim() || STORE_CONTACT.phone;
     const storeEmail =
       String(settingsDoc?.general?.email || "").trim() || STORE_CONTACT.email;
+
+    const defaultPaymentMethod = enabledPaymentMethods.some((m) => m.key === "cod")
+      ? "cod"
+      : enabledPaymentMethods[0]?.key || "cod";
 
     return NextResponse.json({
       minVersionIos: mobileApp.minVersionIos || "1.0.0",
@@ -50,15 +48,19 @@ export async function GET() {
       shippingFloorStandard: shippingFloorPKR(false),
       shippingFloorBulky: shippingFloorPKR(true),
       enabledPaymentMethods,
-      defaultPaymentMethod: "cod",
+      defaultPaymentMethod,
       contact: {
         phone: storePhone,
         whatsapp,
         email: storeEmail,
       },
+      whatsapp: {
+        number: waContact.number,
+        display: waContact.display,
+        waMeDigits: waContact.waMeDigits,
+      },
       storeName: settingsDoc?.general?.storeName || "Crazzycars.pk",
       storePhone,
-      whatsapp,
     });
   } catch (err) {
     console.error("[mobile/config]", err);

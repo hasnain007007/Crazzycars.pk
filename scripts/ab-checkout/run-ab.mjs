@@ -302,6 +302,35 @@ async function main() {
       skip: !fixture.bodyKitId,
     },
     {
+      name: "body_kit_bank_transfer",
+      body: baseCartBody({
+        productId: fixture.bodyKitId,
+        email: "ab-kit-bank@example.com",
+        phone: "03001234575",
+        paymentMethod: "bankTransfer",
+      }),
+      expectHttp: 200,
+      skip: !fixture.bodyKitId,
+    },
+    {
+      name: "cod_with_advance_charge",
+      body: baseCartBody({
+        productId: fixture.simpleId,
+        email: "ab-cod-adv@example.com",
+        phone: "03001234576",
+        paymentMethod: "cod",
+      }),
+      expectHttp: 200,
+      assertOrder: (doc) => {
+        const adv = Number(doc?.payment?.advanceRequired) || 0;
+        const ship = Number(doc?.pricing?.shippingCost) || 0;
+        if (ship > 0 && adv < ship) {
+          return `expected advanceRequired >= shippingCost (${adv} < ${ship})`;
+        }
+        return null;
+      },
+    },
+    {
       name: "variant_low_stock",
       body: baseCartBody({
         productId: fixture.variantId,
@@ -385,11 +414,16 @@ async function main() {
     const sa = stripVolatile(a.orderDoc);
     const sb = stripVolatile(b.orderDoc);
     const diffs = deepDiff(sa, sb);
+    let assertFail = null;
+    if (typeof c.assertOrder === "function") {
+      assertFail = c.assertOrder(a.orderDoc) || c.assertOrder(b.orderDoc);
+    }
     results.push({
       name: c.name,
-      status: diffs.length === 0 ? "PASS" : "DIFF",
-      reason:
-        diffs.length === 0
+      status: diffs.length === 0 && !assertFail ? "PASS" : "DIFF",
+      reason: assertFail
+        ? assertFail
+        : diffs.length === 0
           ? "order docs match (ids/timestamps/orderNumber/tokens ignored)"
           : `${diffs.length} field difference(s)`,
       diffs,

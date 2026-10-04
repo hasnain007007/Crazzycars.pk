@@ -138,7 +138,33 @@ export async function seedAbFixture(uri) {
     },
     pakistaniPaymentMethods: {
       cod: { enabled: true, label: "Cash on Delivery" },
+      bankTransfer: {
+        enabled: true,
+        label: "Bank Transfer",
+        bankName: "Meezan Bank",
+        accountNumber: "0123456789",
+        accountTitle: "Crazzycars",
+        iban: "PK00MEZN0000000000000000",
+      },
+      meezan: {
+        enabled: true,
+        label: "Meezan Bank",
+        bankName: "Meezan Bank",
+        accountNumber: "0123456789",
+        accountTitle: "Crazzycars",
+        iban: "PK00MEZN0000000000000000",
+      },
     },
+    whatsapp: { number: "03284010007", enabled: true },
+    storefront: {
+      checkoutSuccess: {
+        paymentConfirmedMessage:
+          "Your payment has been confirmed. Please send a screenshot of your full payment to our WhatsApp at {whatsapp}.",
+        codAdvanceNote:
+          "Thank you for your order! Please send a screenshot of your advance payment to our WhatsApp at {whatsapp}.",
+      },
+    },
+
     orderNumber: {
       prefix: "AB",
       separator: "-",
