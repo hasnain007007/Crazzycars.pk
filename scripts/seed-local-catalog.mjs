@@ -136,6 +136,8 @@ async function main() {
     "mobiledevices",
     "idempotencykeys",
     "loginattempts",
+    "blogposts",
+    "pages",
   ];
   for (const c of cols) {
     try {
@@ -521,6 +523,77 @@ async function main() {
     appliesTo: "all",
     categoryIds: [],
   });
+
+  // Blog posts + CMS pages for Phase 5 mobile content screens
+  const now = new Date();
+  await db.collection("blogposts").insertMany([
+    {
+      title: "Local Verify: Civic Exterior Tips",
+      slug: "local-verify-civic-exterior-tips",
+      excerpt: "Fake blog post for local mobile API verification only.",
+      content:
+        "<p>Welcome to the <strong>local verify</strong> blog.</p><p>No scripts here.</p><ul><li>Tip one</li><li>Tip two</li></ul>",
+      featuredImage: { url: PLACEHOLDER_IMG, altText: "Verify blog" },
+      status: "published",
+      publishedAt: now,
+      readTime: 3,
+      author: { name: "Local Verify" },
+      categories: ["Guides"],
+      tags: ["verify"],
+      views: 0,
+    },
+    {
+      title: "Local Verify: Delivery FAQ Notes",
+      slug: "local-verify-delivery-faq-notes",
+      excerpt: "Another fake article with a short read time.",
+      content: "<h2>Delivery</h2><p>Rs.250 regular · Rs.500 bulky. Fake content only.</p>",
+      featuredImage: { url: PLACEHOLDER_IMG, altText: "Delivery" },
+      status: "published",
+      publishedAt: now,
+      readTime: 2,
+      author: { name: "Local Verify" },
+      categories: ["FAQ"],
+      tags: ["verify"],
+      views: 0,
+    },
+    {
+      title: "Local Verify: Fitment Basics",
+      slug: "local-verify-fitment-basics",
+      excerpt: "How fitment works in the verify catalog.",
+      content: "<p>Pick your car in the garage, then browse with fit filter on.</p>",
+      featuredImage: { url: PLACEHOLDER_IMG, altText: "Fitment" },
+      status: "published",
+      publishedAt: now,
+      readTime: 4,
+      author: { name: "Local Verify" },
+      categories: ["Guides"],
+      tags: ["verify"],
+      views: 0,
+    },
+  ]);
+
+  const pageDocs = [
+    ["faq", "FAQ", "faq", "<p><strong>Q:</strong> Is this real?</p><p><strong>A:</strong> No — local verify only.</p>"],
+    ["about", "About", "about", "<p>CrazzyCars local verify storefront.</p>"],
+    ["shipping-policy", "Shipping Policy", "policy", "<p>Delivery Rs.250 regular · Rs.500 bulky.</p>"],
+    ["returns-policy", "Returns Policy", "policy", "<p>Fake returns copy for local verify.</p>"],
+    ["privacy-policy", "Privacy Policy", "policy", "<p>Fake privacy policy for local verify.</p>"],
+    ["terms-conditions", "Terms & Conditions", "policy", "<p>Fake terms for local verify.</p>"],
+    ["cash-on-delivery", "Cash on Delivery", "policy", "<p>COD advance delivery fee applies. Fake copy.</p>"],
+  ];
+  await db.collection("pages").insertMany(
+    pageDocs.map(([slug, title, template, content], i) => ({
+      title,
+      slug,
+      content,
+      template,
+      status: "published",
+      showInNav: false,
+      showInFooter: true,
+      sortOrder: i,
+    })),
+  );
+
   const bodyKit = products.find((p) => p.slug === "honda-civic-body-kit-d1");
   const simple = products.find((p) => p.slug === "led-headlight-bulb-h4");
   const variant = products.find((p) => p.slug === "side-mirror-led-cover");
