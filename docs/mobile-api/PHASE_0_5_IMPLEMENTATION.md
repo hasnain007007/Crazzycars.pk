@@ -46,8 +46,8 @@ No `MOBILE_REFRESH_SECRET` (refresh tokens are opaque; only sha256 hashes stored
 ## New Mongo collections / indexes
 
 ### `customerrefreshtokens`
-- Fields: `customerId`, `tokenHash` (unique), `expiresAt`, `isRevoked`, `revokedAt`, `createdAt`
-- Indexes: unique `tokenHash`; `{ expiresAt: 1 }` TTL `expireAfterSeconds: 0`; `{ customerId: 1, isRevoked: 1 }`
+- Fields: `customerId`, `tokenHash` (unique), `expiresAt`, `isRevoked`, `revokedAt`, `replacedByTokenHash`, `graceExpiresAt`, `graceRetryCount`, `createdAt`
+- Indexes: unique `tokenHash`; `{ expiresAt: 1 }` TTL `expireAfterSeconds: 0`; `{ customerId: 1, isRevoked: 1 }`; index on `replacedByTokenHash`
 
 ### `mobiledevices`
 - Fields: `token` (unique), `platform`, `appVersion`, `customerId?`, timestamps
@@ -119,7 +119,7 @@ Web checkout still enforces `storePayment.minimumOrderAmount` **only in the clie
 3. `GET /api/mobile/v1/me` with `Authorization: Bearer <access>` → profile.
 4. Cookie `customer_token` as Bearer → **401**.
 5. Mobile access token is not usable as web cookie session.
-6. `POST /auth/refresh` rotates; reuse old refresh → all sessions revoked.
+6. `POST /auth/refresh` rotates with **30s grace** (unused child → issue NEW child, cap 3); after window / used child / cap → `TOKEN_REUSED` + revoke all.
 7. `DELETE /me` → anonymized; refresh fails; orders still in DB.
 
 ### C. Cart / orders / tracking
@@ -146,17 +146,393 @@ Web checkout still enforces `storePayment.minimumOrderAmount` **only in the clie
 ## Suggested local verify commands
 
 ```bash
-# Unit tests (no Mongo)
-cd /Users/mac/Desktop/CCSMS
-node --experimental-strip-types --test \
-  tests/checkout-characterization.test.js \
-  tests/cod-eligibility.test.ts \
-  tests/shipping-advance.test.js \
-  tests/mobile-auth-claims.test.js
-
-# From storecraft-store (for jsonwebtoken resolution if needed)
-cd storecraft-store && NODE_PATH=./node_modules node --test ../tests/mobile-auth-claims.test.js
+# Unit tests (no Mongo) + refresh grace (memory Mongo)
+cd /Users/mac/Desktop/CCSMS-mobile-api
+node --test tests/checkout-characterization.test.js
+node --import ./scripts/ab-checkout/alias-loader-register.mjs --test \
+  storecraft-store/tests/mobile-auth-claims.test.mjs \
+  tests/mobile-refresh-grace.test.mjs
 
 # Build (uses local env; do not point at prod Mongo for runtime smoke)
 cd storecraft-store && npm run build
 ```
+
+---
+
+## Preview curl checklist (expanded)
+
+Prerequisites: preview HTTPS URL, catalog restored + secrets scrubbed, `NEXT_PUBLIC_INDEXABLE=false`.
+
+```bash
+export PREVIEW=https://mobile-preview.crazzycars.pk
+export BASE=$PREVIEW/api/mobile/v1
+export EMAIL="preview.tester+$(date +%s)@example.com"
+export PHONE="03001234567"
+export PASS='TestPass123!'
+# Fill from catalog:
+export PRODUCT_ID='<active-simple-productId>'
+export LOW_STOCK_ID='<product with trackInventory + low inventory.quantity>'
+export BODY_KIT_ID='<body-kit productId>'
+```
+
+### Setup: register / login
+
+```bash
+curl -sS -X POST "$BASE/auth/register" -H 'Content-Type: application/json' -d "{
+  \"firstName\":\"Preview\",\"lastName\":\"Tester\",
+  \"email\":\"$EMAIL\",\"phone\":\"$PHONE\",\"password\":\"$PASS\"
+}" | tee /tmp/reg.json
+
+curl -sS -X POST "$BASE/auth/login" -H 'Content-Type: application/json' -d "{
+  \"email\":\"$EMAIL\",\"password\":\"$PASS\"
+}" | tee /tmp/login.json
+
+export ACCESS=$(python3 -c "import json;print(json.load(open('/tmp/login.json'))['accessToken'])")
+export REFRESH=$(python3 -c "import json;print(json.load(open('/tmp/login.json'))['refreshToken'])")
+export CUSTOMER_ID=$(python3 -c "import json;print(json.load(open('/tmp/login.json'))['customer']['id'])")
+```
+
+### (1) Idempotency: different body + concurrent same key
+
+**Same key, different body → 409 `IDEMPOTENCY_KEY_REUSED`**
+
+```bash
+export IDEM_DIFF="idem-diff-$(date +%s)"
+BODY_A=$(cat <<EOF
+{"items":[{"productId":"$PRODUCT_ID","quantity":1}],
+ "customer":{"name":"A","phone":"$PHONE","email":"$EMAIL"},
+ "shippingAddress":{"street":"1 Test St","city":"Lahore","state":"Punjab","province":"Punjab","country":"Pakistan"},
+ "paymentMethod":"cod"}
+EOF
+)
+BODY_B=$(cat <<EOF
+{"items":[{"productId":"$PRODUCT_ID","quantity":2}],
+ "customer":{"name":"B","phone":"$PHONE","email":"$EMAIL"},
+ "shippingAddress":{"street":"1 Test St","city":"Lahore","state":"Punjab","province":"Punjab","country":"Pakistan"},
+ "paymentMethod":"cod"}
+EOF
+)
+
+curl -sS -i -X POST "$BASE/orders" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $IDEM_DIFF" -d "$BODY_A" | tee /tmp/idem-a.txt
+
+curl -sS -i -X POST "$BASE/orders" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $IDEM_DIFF" -d "$BODY_B"
+# expect HTTP 409, error.code = IDEMPOTENCY_KEY_REUSED
+```
+
+**Two concurrent requests, one key → one order**
+
+```bash
+export IDEM_RACE="idem-race-$(date +%s)"
+BODY_RACE="$BODY_A"
+
+curl -sS -o /tmp/race1.json -w '%{http_code}' -X POST "$BASE/orders" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $IDEM_RACE" -d "$BODY_RACE" &
+PID1=$!
+curl -sS -o /tmp/race2.json -w '%{http_code}' -X POST "$BASE/orders" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $IDEM_RACE" -d "$BODY_RACE" &
+PID2=$!
+wait $PID1; echo " r1"
+wait $PID2; echo " r2"
+echo '--- bodies ---'; cat /tmp/race1.json; echo; cat /tmp/race2.json; echo
+# One response should be 201 (or completed replay); the other 201 identical replay
+# or 409 DUPLICATE_REQUEST while pending — never two different orderIds.
+```
+
+**mongosh (preview DB only) — one order for that idempotency key’s orderNumber**
+
+```bash
+# On VPS — crazzycars_mobile_preview ONLY
+docker exec sialkot-mongo mongosh crazzycars_mobile_preview --quiet --eval '
+const key = "'"$(python3 -c "import json; d=json.load(open(\"/tmp/race1.json\")); print(d.get(\"orderNumber\") or json.load(open(\"/tmp/race2.json\")).get(\"orderNumber\",\"\"))" 2>/dev/null || true)"'";
+// Prefer: count by phone + recent window, or by orderIds from both JSON files:
+'
+# Simpler: extract orderIds from both responses and count distinct
+python3 - <<'PY'
+import json
+ids=set()
+for p in ("/tmp/race1.json","/tmp/race2.json"):
+  try:
+    d=json.load(open(p))
+    if d.get("orderId"): ids.add(d["orderId"])
+  except Exception: pass
+print("distinct orderIds from race responses:", ids, "count=", len(ids))
+# expect count == 1 (or 0 if both 409 — retry once serially)
+PY
+
+docker exec sialkot-mongo mongosh crazzycars_mobile_preview --quiet --eval '
+const phone = "03001234567";
+const n = db.orders.countDocuments({
+  "customer.phone": phone,
+  orderSource: "mobile",
+  createdAt: { $gte: new Date(Date.now() - 10*60*1000) }
+});
+print("mobile orders last 10m for phone:", n);
+'
+```
+
+### (2) Refresh grace + cross-token rejection
+
+Immediate replay of the parent refresh now hits the **grace path** (not family revoke). Use these cases:
+
+**(a) Grace retry → 200 with a different valid refresh; lost child no longer works**
+
+```bash
+# Fresh login so REFRESH is unused
+curl -sS -X POST "$BASE/auth/login" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" | tee /tmp/login-g.json
+export PARENT=$(python3 -c "import json;print(json.load(open('/tmp/login-g.json'))['refreshToken'])")
+
+curl -sS -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$PARENT\"}" | tee /tmp/ref-lost.json
+export LOST_CHILD=$(python3 -c "import json;print(json.load(open('/tmp/ref-lost.json'))['refreshToken'])")
+
+# Simulate lost response: retry PARENT within 30s
+curl -sS -i -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$PARENT\"}" | tee /tmp/ref-grace.json
+# expect HTTP 200; refreshToken DIFFERENT from LOST_CHILD
+export GRACE_CHILD=$(python3 -c "import json;print(json.load(open('/tmp/ref-grace.json'))['refreshToken'])")
+python3 - <<'PY'
+import json
+lost=json.load(open("/tmp/ref-lost.json"))["refreshToken"]
+grace=json.load(open("/tmp/ref-grace.json"))["refreshToken"]
+assert lost != grace, "grace must issue a NEW opaque refresh (hashes only in DB)"
+print("ok: grace child differs from lost child")
+PY
+
+# Lost child must fail; grace child must still work
+curl -sS -i -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$LOST_CHILD\"}"
+# expect 401 TOKEN_INVALID (superseded unused child — no family revoke)
+
+curl -sS -i -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$GRACE_CHILD\"}" | tee /tmp/ref-grace2.json
+# expect 200
+```
+
+**(b) Rotate the child first, then replay the original → 401 TOKEN_REUSED + all sessions revoked**
+
+```bash
+curl -sS -X POST "$BASE/auth/login" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" | tee /tmp/login-b.json
+export PARENT=$(python3 -c "import json;print(json.load(open('/tmp/login-b.json'))['refreshToken'])")
+
+curl -sS -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$PARENT\"}" | tee /tmp/ref-b1.json
+export CHILD=$(python3 -c "import json;print(json.load(open('/tmp/ref-b1.json'))['refreshToken'])")
+
+# Client received child and rotated again
+curl -sS -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$CHILD\"}" | tee /tmp/ref-b2.json
+
+# Replay original parent → family revoke
+curl -sS -i -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$PARENT\"}"
+# expect 401 TOKEN_REUSED
+
+export GRAND=$(python3 -c "import json;print(json.load(open('/tmp/ref-b2.json'))['refreshToken'])")
+curl -sS -i -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$GRAND\"}"
+# expect 401 (session dead)
+```
+
+**(c) Replay after `sleep 31` → 401 TOKEN_REUSED**
+
+```bash
+curl -sS -X POST "$BASE/auth/login" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" | tee /tmp/login-c.json
+export PARENT=$(python3 -c "import json;print(json.load(open('/tmp/login-c.json'))['refreshToken'])")
+
+curl -sS -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$PARENT\"}" >/tmp/ref-c1.json
+
+sleep 31
+curl -sS -i -X POST "$BASE/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$PARENT\"}"
+# expect 401 TOKEN_REUSED
+```
+
+**Refresh token as Bearer → 401**
+
+```bash
+curl -sS -i "$BASE/me" -H "Authorization: Bearer $REFRESH"
+# expect 401 TOKEN_INVALID (opaque refresh is not a JWT / wrong typ)
+```
+
+**Mobile access token as web `customer_token` cookie → rejected**
+
+```bash
+curl -sS -i "$PREVIEW/api/customer/me" \
+  -H "Cookie: customer_token=$ACCESS"
+# expect 401 / unauthenticated — cookie verified with JWT_SECRET + store claims, not MOBILE_JWT_SECRET
+```
+
+(Also keep the reverse: cookie JWT as mobile Bearer → 401, from the earlier checklist.)
+
+### (3) Rate limit + track privacy
+
+**Repeated bad logins until 429** (5 / 10 min per email+IP)
+
+```bash
+for i in 1 2 3 4 5 6; do
+  echo "attempt $i"
+  curl -sS -o /tmp/bad$i.json -w ' HTTP %{http_code}\n' -X POST "$BASE/auth/login" \
+    -H 'Content-Type: application/json' \
+    -d "{\"email\":\"$EMAIL\",\"password\":\"WrongPassword!!!\"}"
+done
+# 6th (or first after limit) → 429, error.code RATE_LIMITED, Retry-After header
+```
+
+**Track: wrong phone vs nonexistent orderNumber — identical body**
+
+```bash
+# Use a real orderNumber from a prior successful place-order if you have one:
+export REAL_ORDER='ORD-....'   # or from /tmp/idem-a success JSON
+
+curl -sS -D /tmp/h1.txt -o /tmp/t1.json \
+  "$BASE/orders/track?orderNumber=${REAL_ORDER}&phone=03999999999"
+
+curl -sS -D /tmp/h2.txt -o /tmp/t2.json \
+  "$BASE/orders/track?orderNumber=ORD-DOES-NOT-EXIST-999&phone=$PHONE"
+
+diff -u /tmp/t1.json /tmp/t2.json
+# expect empty diff; both HTTP 404, {"error":{"code":"NOT_FOUND","message":"Order not found."}}
+```
+
+### (4) Guest order (no Authorization)
+
+```bash
+export IDEM_GUEST="idem-guest-$(date +%s)"
+curl -sS -i -X POST "$BASE/orders" \
+  -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $IDEM_GUEST" \
+  -d "{
+    \"items\":[{\"productId\":\"$PRODUCT_ID\",\"quantity\":1}],
+    \"customer\":{\"name\":\"Guest Only\",\"phone\":\"03009876543\",\"email\":\"\"},
+    \"shippingAddress\":{\"street\":\"9 Guest Rd\",\"city\":\"Lahore\",\"state\":\"Punjab\",\"province\":\"Punjab\",\"country\":\"Pakistan\"},
+    \"paymentMethod\":\"cod\"
+  }"
+# expect 201; orderSource mobile; no linked customer required
+```
+
+### (5) Price tamper / min-order / oversell (no partial stock decrement)
+
+**Fake client price/total ignored — charged DB price**
+
+```bash
+export IDEM_PRICE="idem-price-$(date +%s)"
+curl -sS -X POST "$BASE/orders" \
+  -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $IDEM_PRICE" \
+  -d "{
+    \"items\":[{\"productId\":\"$PRODUCT_ID\",\"quantity\":1,\"unitPrice\":1,\"price\":1}],
+    \"total\":1,\"subtotal\":1,\"shippingCost\":0,
+    \"customer\":{\"name\":\"Tamper\",\"phone\":\"03001110001\",\"email\":\"tamper@example.com\"},
+    \"shippingAddress\":{\"street\":\"1 St\",\"city\":\"Lahore\",\"state\":\"Punjab\",\"province\":\"Punjab\",\"country\":\"Pakistan\"},
+    \"paymentMethod\":\"cod\"
+  }" | tee /tmp/tamper.json
+# response.total / pricing must match server catalog + shipping floors — not 1
+```
+
+**Below minimumOrderAmount → 400 `MIN_ORDER_NOT_MET`**
+
+```bash
+# Preview Settings: set a high floor for the test, then restore
+docker exec sialkot-mongo mongosh crazzycars_mobile_preview --quiet --eval '
+db.settings.updateOne({singletonKey:"default"},{$set:{"storePayment.minimumOrderAmount":999999}})
+'
+
+export IDEM_MIN="idem-min-$(date +%s)"
+curl -sS -i -X POST "$BASE/orders" \
+  -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $IDEM_MIN" \
+  -d "{
+    \"items\":[{\"productId\":\"$PRODUCT_ID\",\"quantity\":1}],
+    \"customer\":{\"name\":\"Min\",\"phone\":\"03001110002\",\"email\":\"min@example.com\"},
+    \"shippingAddress\":{\"street\":\"1 St\",\"city\":\"Lahore\",\"state\":\"Punjab\",\"province\":\"Punjab\",\"country\":\"Pakistan\"},
+    \"paymentMethod\":\"cod\"
+  }"
+# expect 400 MIN_ORDER_NOT_MET
+
+docker exec sialkot-mongo mongosh crazzycars_mobile_preview --quiet --eval '
+db.settings.updateOne({singletonKey:"default"},{$set:{"storePayment.minimumOrderAmount":0}})
+'
+```
+
+**Quantity above stock → error; stock unchanged**
+
+```bash
+docker exec sialkot-mongo mongosh crazzycars_mobile_preview --quiet --eval '
+const id = ObjectId("'"$LOW_STOCK_ID"'");
+const p = db.products.findOne({_id:id},{name:1,"inventory.quantity":1,"inventory.trackInventory":1});
+printjson(p);
+'
+
+export QTY_BEFORE=$(docker exec sialkot-mongo mongosh crazzycars_mobile_preview --quiet --eval \
+  'print(db.products.findOne({_id:ObjectId("'"$LOW_STOCK_ID"'")}).inventory.quantity)')
+
+export IDEM_STOCK="idem-stock-$(date +%s)"
+curl -sS -i -X POST "$BASE/orders" \
+  -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $IDEM_STOCK" \
+  -d "{
+    \"items\":[{\"productId\":\"$LOW_STOCK_ID\",\"quantity\":9999}],
+    \"customer\":{\"name\":\"Oversell\",\"phone\":\"03001110003\",\"email\":\"stock@example.com\"},
+    \"shippingAddress\":{\"street\":\"1 St\",\"city\":\"Lahore\",\"state\":\"Punjab\",\"province\":\"Punjab\",\"country\":\"Pakistan\"},
+    \"paymentMethod\":\"cod\"
+  }"
+# expect 400 OUT_OF_STOCK / Insufficient stock — no 201
+
+docker exec sialkot-mongo mongosh crazzycars_mobile_preview --quiet --eval '
+const q = db.products.findOne({_id:ObjectId("'"$LOW_STOCK_ID"'")}).inventory.quantity;
+print("qty after failed oversell:", q, "before was '"$QTY_BEFORE"'");
+'
+# expect unchanged
+```
+
+### (6) Account deletion — mongosh verify
+
+```bash
+# Place at least one authed order first so orders exist for CUSTOMER_ID / email.
+curl -sS -i -X DELETE "$BASE/me" -H "Authorization: Bearer $ACCESS"
+
+docker exec sialkot-mongo mongosh crazzycars_mobile_preview --quiet --eval '
+const id = ObjectId("'"$CUSTOMER_ID"'");
+const c = db.customers.findOne({_id:id},{email:1,phone:1,name:1,firstName:1,lastName:1,isActive:1,wishlist:1,password:1,passwordHash:1});
+print("customer:", JSON.stringify(c));
+// expect: isActive false; email like deleted+<id>@deleted.local; phone ""; names ""; wishlist []; passwords empty
+
+print("orders kept:", db.orders.countDocuments({
+  $or: [
+    {"customer.customerId": id},
+    {"customer.email": /deleted\+/}
+  ]
+}));
+// or by pre-delete email if you stored it — orders must remain
+
+print("devices:", db.mobiledevices.countDocuments({customerId: id}));
+// expect 0
+
+print("refresh tokens still active:", db.customerrefreshtokens.countDocuments({customerId: id, isRevoked: {$ne: true}}));
+// expect 0
+'
+```
+
+---
+
+## Refresh-token grace window (implemented)
+
+Only **hashes** are stored — we never return “the same” opaque refresh.
+
+On normal rotate: revoke parent, issue child, set `replacedByTokenHash`, `graceExpiresAt = now+30s`, `graceRetryCount = 0`.
+
+On parent retry within 30s with **unused** child (`!child.isRevoked`), and `graceRetryCount < 3`: revoke that child (supersede), issue a **NEW** child, update `replacedByTokenHash` / `graceExpiresAt`, increment `graceRetryCount`. **No family revoke.**
+
+Otherwise (child already used, window passed, or cap hit): `401 TOKEN_REUSED` + revoke all sessions for the customer.
+
+Unit tests: `tests/mobile-refresh-grace.test.mjs`.

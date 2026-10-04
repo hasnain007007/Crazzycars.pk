@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-04T18:22:16.329Z",
+  "generatedAt": "2026-10-04T18:50:18.757Z",
   "note": "Resend + Meta CAPI env vars cleared for both sides; Settings.seo CAPI tokens empty in fixture. Confirms order creation succeeds when unconfigured.",
   "results": [
     {

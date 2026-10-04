@@ -38,6 +38,19 @@ export async function resolve(specifier, context, nextResolve) {
     if (hit) return nextResolve(pathToFileURL(hit).href, context);
   }
 
+  // Prefer storecraft-store deps for bare imports used by tests / checkout harness
+  if (specifier === "mongoose" || specifier.startsWith("mongoose/")) {
+    const hit =
+      tryFile(path.join(storeNm, specifier, "index.js")) ||
+      tryFile(path.join(storeNm, specifier + ".js")) ||
+      tryFile(path.join(storeNm, specifier));
+    if (hit && !hit.endsWith("mongoose")) {
+      return nextResolve(pathToFileURL(hit).href, context);
+    }
+    const index = path.join(storeNm, "mongoose/index.js");
+    if (existsSync(index)) return nextResolve(pathToFileURL(index).href, context);
+  }
+
   try {
     return await nextResolve(specifier, context);
   } catch (err) {

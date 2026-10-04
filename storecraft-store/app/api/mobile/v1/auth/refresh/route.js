@@ -2,7 +2,8 @@
  * POST /api/mobile/v1/auth/refresh
  * Rotate refresh token and issue a new access token.
  * Body: { refreshToken: string }
- * Replay of a revoked token revokes ALL sessions for the customer.
+ * Lost-response grace (~30s): unused child → issue NEW child (cap 3).
+ * Outside grace / used child / cap → TOKEN_REUSED + revoke all sessions.
  */
 import { NextResponse } from "next/server";
 import Customer from "@/lib/models/Customer.model";

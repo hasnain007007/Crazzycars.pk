@@ -6,7 +6,7 @@ Models declare indexes in schema files:
 
 | Collection (approx.) | Source | Indexes |
 |----------------------|--------|---------|
-| `customerrefreshtokens` | `CustomerRefreshToken.model.js` | unique `tokenHash`; TTL `{ expiresAt: 1 }` `expireAfterSeconds: 0`; `{ customerId: 1, isRevoked: 1 }` (+ `customerId` from `index: true`) |
+| `customerrefreshtokens` | `CustomerRefreshToken.model.js` | unique `tokenHash`; TTL `{ expiresAt: 1 }` `expireAfterSeconds: 0`; `{ customerId: 1, isRevoked: 1 }`; `replacedByTokenHash`; grace fields `graceExpiresAt` / `graceRetryCount` |
 | `mobiledevices` | `MobileDevice.model.js` | unique `token`; `{ customerId: 1 }` |
 | `idempotencykeys` | `IdempotencyKey.model.js` | unique `{ key: 1, scope: 1 }`; TTL `{ createdAt: 1 }` `expireAfterSeconds: 86400` |
 
