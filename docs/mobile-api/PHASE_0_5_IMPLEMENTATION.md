@@ -442,6 +442,34 @@ curl -sS -i "$BASE/orders/$GUEST_ORDER_ID" -H "X-Order-Access-Token: wrong-token
 curl -sS -i "$BASE/orders/000000000000000000000000" -H "X-Order-Access-Token: $GUEST_ORDER_TOKEN"
 # both: {"error":{"code":"NOT_FOUND","message":"Order not found."}}
 
+# --- IDOR: all three must match nonexistent-id body ---
+# Capture baseline (nonexistent)
+curl -sS -o /tmp/idor-base.json -w "%{http_code}" \
+  "$BASE/orders/000000000000000000000000"
+# expect 404 {"error":{"code":"NOT_FOUND","message":"Order not found."}}
+
+# (1) User B Bearer on User A's order id
+curl -sS -o /tmp/idor-1.json -w "%{http_code}" \
+  "$BASE/orders/$ORDER_A_ID" -H "Authorization: Bearer $ACCESS_B"
+diff -u /tmp/idor-base.json /tmp/idor-1.json
+# expect empty diff
+
+# (2) Guest token for order A used on order B
+curl -sS -o /tmp/idor-2.json -w "%{http_code}" \
+  "$BASE/orders/$ORDER_B_ID" -H "X-Order-Access-Token: $GUEST_ORDER_TOKEN"
+diff -u /tmp/idor-base.json /tmp/idor-2.json
+# expect empty diff
+
+# (3) No auth and no token
+curl -sS -o /tmp/idor-3.json -w "%{http_code}" \
+  "$BASE/orders/$GUEST_ORDER_ID"
+diff -u /tmp/idor-base.json /tmp/idor-3.json
+# expect empty diff
+
+# List is own-orders only (Bearer A must not include B's orderNumber)
+curl -sS "$BASE/orders?page=1&limit=50" -H "Authorization: Bearer $ACCESS" \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); ids={o['id'] for o in d['orders']}; assert '$ORDER_B_ID' not in ids if '$ORDER_B_ID' else True; print('ok', len(d['orders']))"
+
 # Courier tracking (mobile envelope)
 curl -sS -i "$BASE/tracking?trackingNumber=INVALID1"
 # expect 404 NOT_FOUND or 503 TRACKING_UNAVAILABLE (never 500 when courier keys missing)
