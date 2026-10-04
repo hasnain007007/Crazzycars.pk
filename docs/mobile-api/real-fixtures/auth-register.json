@@ -1,0 +1,16 @@
+{
+  "customer": {
+    "id": "6ac2c721e8107da9613b55ff",
+    "name": "Verify Alpha",
+    "firstName": "Verify",
+    "lastName": "Alpha",
+    "email": "verify.a+1791149856797@example.com",
+    "phone": "03019856797",
+    "isVerified": false,
+    "createdAt": "2026-10-04T21:37:37.098Z"
+  },
+  "accessToken": "[REDACTED]",
+  "refreshToken": "[REDACTED]",
+  "expiresIn": 900,
+  "tokenType": "[REDACTED]"
+}

@@ -396,6 +396,11 @@ async function main() {
   await db.collection("settings").insertOne({
     singletonKey: "default",
     storeName: "CrazzyCars Local Verify",
+    general: {
+      storeName: "CrazzyCars Local Verify",
+      phone: "03000000000",
+      email: "local-verify@example.com",
+    },
     storePayment: {
       codEnabled: true,
       minimumOrderAmount: 0,

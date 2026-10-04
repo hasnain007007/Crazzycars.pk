@@ -1,0 +1,93 @@
+{
+  "minVersionIos": "1.0.0",
+  "minVersionAndroid": "1.0.0",
+  "maintenanceMode": false,
+  "maintenanceMessage": "App is under maintenance. Please try again later.",
+  "iosStoreUrl": "",
+  "androidStoreUrl": "",
+  "currency": "PKR",
+  "shippingFloorStandard": 250,
+  "shippingFloorBulky": 500,
+  "enabledPaymentMethods": [
+    {
+      "key": "cod",
+      "label": "Cash on Delivery",
+      "icon": "cod",
+      "details": {},
+      "accountLines": []
+    },
+    {
+      "key": "jazzcash",
+      "label": "JazzCash",
+      "icon": "jazzcash",
+      "details": {
+        "accountNumber": "03000000000",
+        "accountName": "LOCAL VERIFY FAKE"
+      },
+      "accountLines": [
+        {
+          "label": "Account number",
+          "value": "03000000000"
+        },
+        {
+          "label": "Account name",
+          "value": "LOCAL VERIFY FAKE"
+        }
+      ]
+    },
+    {
+      "key": "bankTransfer",
+      "label": "Bank Transfer",
+      "icon": "bank",
+      "details": {
+        "bankName": "Fake Meezan Local",
+        "accountNumber": "00000000000000",
+        "accountTitle": "LOCAL VERIFY FAKE",
+        "iban": "PK00FAKE0000000000000000"
+      },
+      "accountLines": [
+        {
+          "label": "Bank",
+          "value": "Fake Meezan Local"
+        },
+        {
+          "label": "Account",
+          "value": "00000000000000"
+        },
+        {
+          "label": "Title",
+          "value": "LOCAL VERIFY FAKE"
+        },
+        {
+          "label": "IBAN",
+          "value": "PK00FAKE0000000000000000"
+        }
+      ]
+    }
+  ],
+  "defaultPaymentMethod": "cod",
+  "contact": {
+    "phone": "03000000000",
+    "whatsapp": "03000000000",
+    "email": "local-verify@example.com"
+  },
+  "whatsapp": {
+    "number": "03000000000",
+    "display": "03000000000",
+    "waMeDigits": "923000000000"
+  },
+  "storeName": "CrazzyCars Local Verify",
+  "storePhone": "03000000000",
+  "delivery": {
+    "feeShort": "Delivery Rs. 250 regular · Rs. 500 bulky",
+    "feeStatement": "Delivery is Rs. 250 for regular items, or Rs. 500 when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). Shipping is paid in advance; the rest is Cash on Delivery. There is no order-value waiver for delivery.",
+    "etaSummary": "Lahore: 2–3 business days (confirmed). Other cities: delivery time will be confirmed at checkout.",
+    "lahore": {
+      "minDays": 2,
+      "maxDays": 3,
+      "text": "Lahore: 2–3 business days (confirmed)"
+    },
+    "otherCitiesText": "Other cities: delivery time will be confirmed at checkout",
+    "shipNote": "Most orders ship within 1–2 business days after payment confirmation."
+  }
+}

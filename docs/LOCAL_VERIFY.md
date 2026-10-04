@@ -2,12 +2,16 @@
 
 Use this to run the storefront against a **local MongoDB** and hit it from the Expo app on your phone (same Wi‑Fi). Never point these steps at `crazzycars.pk`.
 
+**HTTP over LAN is for Expo Go / local development only.** Release / TestFlight / Play builds must use **HTTPS** (a public or tunneled URL), not `http://<LAN-IP>:3000`.
+
 ## 1. Start local Mongo
 
 ```bash
 docker run -d --name crazzycars-mongo-local-verify \
   -p 27028:27017 mongo:7
 ```
+
+If the container already exists: `docker start crazzycars-mongo-local-verify`.
 
 Database name: `crazzycars_local_verify` (must contain `local` or `verify`).
 
@@ -55,9 +59,18 @@ MONGODB_URI=mongodb://127.0.0.1:27028/crazzycars_local_verify \
   node scripts/verify-mobile-api.mjs
 ```
 
-Optional 31s refresh case: `VERIFY_SLOW=1`.
+Optional 31s refresh case:
 
-Redacted bodies land in `docs/mobile-api/REAL_RESPONSES.md`.
+```bash
+VERIFY_SLOW=1 BASE_URL=http://127.0.0.1:3000 \
+MONGODB_URI=mongodb://127.0.0.1:27028/crazzycars_local_verify \
+  node scripts/verify-mobile-api.mjs
+```
+
+Outputs:
+
+- `docs/mobile-api/REAL_RESPONSES.md` (PASS/FAIL + redacted samples)
+- `docs/mobile-api/real-fixtures/*.json` (same bodies as JSON fixtures)
 
 ## 6. Find your Mac’s LAN IP
 
@@ -84,7 +97,15 @@ EXPO_PUBLIC_API_MODE=live
 EXPO_PUBLIC_API_BASE_URL=http://192.168.1.3:3000
 ```
 
-Restart Expo (`npx expo start -c`). Phone and Mac must be on the **same Wi‑Fi**. iOS may block cleartext HTTP — if so, use a tunnel or enable ATS exception for local LAN only.
+Replace `192.168.1.3` with your Mac’s LAN IP from step 6.
+
+Restart Expo (`npx expo start -c`). Phone and Mac must be on the **same Wi‑Fi**.
+
+Notes:
+
+- This **HTTP** LAN URL is **dev / Expo Go only**.
+- **Release builds need HTTPS** (do not ship `http://` LAN URLs in production binaries).
+- iOS may block cleartext HTTP — if so, use a tunnel or an ATS exception for local LAN only while developing.
 
 ## 8. Mobile contract smoke
 

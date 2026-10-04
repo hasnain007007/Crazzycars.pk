@@ -1,0 +1,33 @@
+{
+  "items": [
+    {
+      "productId": "6ac2c71efdf15f953bf2aa70",
+      "name": "Honda Civic Body Kit D1",
+      "slug": "honda-civic-body-kit-d1",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "unitPrice": 39999,
+      "quantity": 1,
+      "total": 39999,
+      "isBulky": true
+    }
+  ],
+  "subtotal": 39999,
+  "discount": 0,
+  "couponCode": "",
+  "afterCoupon": 39999,
+  "shippingCost": 500,
+  "shippingEstimated": false,
+  "total": 40499,
+  "totalWeightGrams": 0,
+  "hasBulky": true,
+  "minOrderAmount": 0,
+  "meetsMinOrder": true,
+  "codAvailable": true,
+  "codUnavailableMessage": null,
+  "enabledPaymentMethods": [
+    "cod",
+    "jazzcash",
+    "bankTransfer"
+  ],
+  "currency": "PKR"
+}

@@ -1,0 +1,1936 @@
+{
+  "banners": [
+    {
+      "id": "6ac2c71efdf15f953bf2aa9a",
+      "title": "Local Verify Banner",
+      "subtitle": "Fake data only",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "link": "/categories/lights",
+      "cta": "Shop",
+      "isActive": true
+    }
+  ],
+  "hotDeals": {
+    "title": "Hot Deals",
+    "subtitle": "Local verify deals",
+    "products": [
+      {
+        "id": "6ac2c71efdf15f953bf2aa70",
+        "name": "Honda Civic Body Kit D1",
+        "slug": "honda-civic-body-kit-d1",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Honda Civic Body Kit D1"
+            }
+          ]
+        },
+        "price": 39999,
+        "regularPrice": 45000,
+        "salePrice": 39999,
+        "compareAt": 45000,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": false,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa68",
+            "name": "Body Kits & Extensions",
+            "slug": "body-kits-extensions"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 7,
+        "quantity": 7,
+        "quantityAvailable": 7,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 7,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa76",
+        "name": "LED Headlight Bulb H4",
+        "slug": "led-headlight-bulb-h4",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "LED Headlight Bulb H4"
+            }
+          ]
+        },
+        "price": 2499,
+        "regularPrice": 2999,
+        "salePrice": 2499,
+        "compareAt": 2999,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa65",
+            "name": "Lights",
+            "slug": "lights"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 16,
+        "quantity": 16,
+        "quantityAvailable": 16,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 16,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa72",
+        "name": "Trunk Lip Spoiler ABS",
+        "slug": "trunk-lip-spoiler-abs",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Trunk Lip Spoiler ABS"
+            }
+          ]
+        },
+        "price": 4499,
+        "regularPrice": 5500,
+        "salePrice": 4499,
+        "compareAt": 5500,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": false,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa66",
+            "name": "Exterior",
+            "slug": "exterior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 12,
+        "quantity": 12,
+        "quantityAvailable": 12,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 12,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa73",
+        "name": "Side Mirror LED Cover",
+        "slug": "side-mirror-led-cover",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Side Mirror LED Cover"
+            }
+          ]
+        },
+        "price": 2999,
+        "regularPrice": 3499,
+        "salePrice": 2999,
+        "compareAt": 3499,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa6a",
+            "name": "Mirrors",
+            "slug": "mirrors"
+          },
+          {
+            "id": "6ac2c71efdf15f953bf2aa66",
+            "name": "Exterior",
+            "slug": "exterior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 40,
+        "quantity": 40,
+        "quantityAvailable": 40,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 40,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa77",
+        "name": "LED Tail Light Strip",
+        "slug": "led-tail-light-strip",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "LED Tail Light Strip"
+            }
+          ]
+        },
+        "price": 1999,
+        "regularPrice": 2499,
+        "salePrice": 1999,
+        "compareAt": 2499,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": false,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa65",
+            "name": "Lights",
+            "slug": "lights"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 22,
+        "quantity": 22,
+        "quantityAvailable": 22,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 22,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa78",
+        "name": "DRL Fog Lamp Set",
+        "slug": "drl-fog-lamp-set",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "DRL Fog Lamp Set"
+            }
+          ]
+        },
+        "price": 3200,
+        "regularPrice": 3700,
+        "salePrice": 3200,
+        "compareAt": 3700,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa65",
+            "name": "Lights",
+            "slug": "lights"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 23,
+        "quantity": 23,
+        "quantityAvailable": 23,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 23,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa79",
+        "name": "Carbon Steering Cover",
+        "slug": "carbon-steering-cover",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Carbon Steering Cover"
+            }
+          ]
+        },
+        "price": 2800,
+        "regularPrice": 3300,
+        "salePrice": 2800,
+        "compareAt": 3300,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa67",
+            "name": "Interior",
+            "slug": "interior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 24,
+        "quantity": 24,
+        "quantityAvailable": 24,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 24,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa7a",
+        "name": "Gear Knob Carbon Style",
+        "slug": "gear-knob-carbon-style",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Gear Knob Carbon Style"
+            }
+          ]
+        },
+        "price": 999,
+        "regularPrice": 1499,
+        "salePrice": 999,
+        "compareAt": 1499,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": false,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa67",
+            "name": "Interior",
+            "slug": "interior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 15,
+        "quantity": 15,
+        "quantityAvailable": 15,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 15,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa7c",
+        "name": "Front Grille Mesh",
+        "slug": "front-grille-mesh",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Front Grille Mesh"
+            }
+          ]
+        },
+        "price": 4500,
+        "regularPrice": 5000,
+        "salePrice": 4500,
+        "compareAt": 5000,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa66",
+            "name": "Exterior",
+            "slug": "exterior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 17,
+        "quantity": 17,
+        "quantityAvailable": 17,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 17,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa81",
+        "name": "Seat Cover Premium",
+        "slug": "seat-cover-premium",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Seat Cover Premium"
+            }
+          ]
+        },
+        "price": 8900,
+        "regularPrice": 9400,
+        "salePrice": 8900,
+        "compareAt": 9400,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa67",
+            "name": "Interior",
+            "slug": "interior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 22,
+        "quantity": 22,
+        "quantityAvailable": 22,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 22,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa84",
+        "name": "Side Skirt Extension",
+        "slug": "side-skirt-extension",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Side Skirt Extension"
+            }
+          ]
+        },
+        "price": 7200,
+        "regularPrice": 7700,
+        "salePrice": 7200,
+        "compareAt": 7700,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa66",
+            "name": "Exterior",
+            "slug": "exterior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 15,
+        "quantity": 15,
+        "quantityAvailable": 15,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 15,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa95",
+        "name": "Key Fob Shell Carbon",
+        "slug": "key-fob-shell-carbon",
+        "articleNo": "",
+        "shortDescription": "",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Key Fob Shell Carbon"
+            }
+          ]
+        },
+        "price": 1200,
+        "regularPrice": 1700,
+        "salePrice": 1200,
+        "compareAt": 1700,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa67",
+            "name": "Interior",
+            "slug": "interior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 22,
+        "quantity": 22,
+        "quantityAvailable": 22,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 22,
+          "allowBackorder": false,
+          "sku": ""
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      }
+    ],
+    "flashSaleEndTime": "2026-10-11T21:37:34.479Z"
+  },
+  "bestSellers": {
+    "title": "Best Sellers",
+    "products": [
+      {
+        "id": "6ac2c71efdf15f953bf2aa70",
+        "name": "Honda Civic Body Kit D1",
+        "slug": "honda-civic-body-kit-d1",
+        "articleNo": "LV-BK-D1",
+        "shortDescription": "Honda Civic Body Kit D1 — local verify SKU",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Honda Civic Body Kit D1"
+            }
+          ]
+        },
+        "price": 39999,
+        "regularPrice": 45000,
+        "salePrice": 39999,
+        "compareAt": 45000,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "LV-BK-D1",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": false,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa68",
+            "name": "Body Kits & Extensions",
+            "slug": "body-kits-extensions"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 7,
+        "quantity": 7,
+        "quantityAvailable": 7,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 7,
+          "allowBackorder": false,
+          "sku": "LV-BK-D1"
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa76",
+        "name": "LED Headlight Bulb H4",
+        "slug": "led-headlight-bulb-h4",
+        "articleNo": "LV-LED-HEADLIGHT-BULB-H4",
+        "shortDescription": "LED Headlight Bulb H4 — local verify SKU",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "LED Headlight Bulb H4"
+            }
+          ]
+        },
+        "price": 2499,
+        "regularPrice": 2999,
+        "salePrice": 2499,
+        "compareAt": 2999,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "LV-LED-HEADLIGHT-BULB-H4",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa65",
+            "name": "Lights",
+            "slug": "lights"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 16,
+        "quantity": 16,
+        "quantityAvailable": 16,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 16,
+          "allowBackorder": false,
+          "sku": "LV-LED-HEADLIGHT-BULB-H4"
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa73",
+        "name": "Side Mirror LED Cover",
+        "slug": "side-mirror-led-cover",
+        "articleNo": "LV-MIR-1",
+        "shortDescription": "Side Mirror LED Cover — local verify SKU",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Side Mirror LED Cover"
+            }
+          ]
+        },
+        "price": 2999,
+        "regularPrice": 3499,
+        "salePrice": 2999,
+        "compareAt": 3499,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "LV-MIR-1",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa6a",
+            "name": "Mirrors",
+            "slug": "mirrors"
+          },
+          {
+            "id": "6ac2c71efdf15f953bf2aa66",
+            "name": "Exterior",
+            "slug": "exterior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 40,
+        "quantity": 40,
+        "quantityAvailable": 40,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 40,
+          "allowBackorder": false,
+          "sku": "LV-MIR-1"
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa78",
+        "name": "DRL Fog Lamp Set",
+        "slug": "drl-fog-lamp-set",
+        "articleNo": "LV-DRL-FOG-LAMP-SET",
+        "shortDescription": "DRL Fog Lamp Set — local verify SKU",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "DRL Fog Lamp Set"
+            }
+          ]
+        },
+        "price": 3200,
+        "regularPrice": 3700,
+        "salePrice": 3200,
+        "compareAt": 3700,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "LV-DRL-FOG-LAMP-SET",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa65",
+            "name": "Lights",
+            "slug": "lights"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 23,
+        "quantity": 23,
+        "quantityAvailable": 23,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 23,
+          "allowBackorder": false,
+          "sku": "LV-DRL-FOG-LAMP-SET"
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa79",
+        "name": "Carbon Steering Cover",
+        "slug": "carbon-steering-cover",
+        "articleNo": "LV-CARBON-STEERING-COVER",
+        "shortDescription": "Carbon Steering Cover — local verify SKU",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Carbon Steering Cover"
+            }
+          ]
+        },
+        "price": 2800,
+        "regularPrice": 3300,
+        "salePrice": 2800,
+        "compareAt": 3300,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "LV-CARBON-STEERING-COVER",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa67",
+            "name": "Interior",
+            "slug": "interior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 24,
+        "quantity": 24,
+        "quantityAvailable": 24,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 24,
+          "allowBackorder": false,
+          "sku": "LV-CARBON-STEERING-COVER"
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa7c",
+        "name": "Front Grille Mesh",
+        "slug": "front-grille-mesh",
+        "articleNo": "LV-FRONT-GRILLE-MESH",
+        "shortDescription": "Front Grille Mesh — local verify SKU",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Front Grille Mesh"
+            }
+          ]
+        },
+        "price": 4500,
+        "regularPrice": 5000,
+        "salePrice": 4500,
+        "compareAt": 5000,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "LV-FRONT-GRILLE-MESH",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa66",
+            "name": "Exterior",
+            "slug": "exterior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 17,
+        "quantity": 17,
+        "quantityAvailable": 17,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 17,
+          "allowBackorder": false,
+          "sku": "LV-FRONT-GRILLE-MESH"
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa81",
+        "name": "Seat Cover Premium",
+        "slug": "seat-cover-premium",
+        "articleNo": "LV-SEAT-COVER-PREMIUM",
+        "shortDescription": "Seat Cover Premium — local verify SKU",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Seat Cover Premium"
+            }
+          ]
+        },
+        "price": 8900,
+        "regularPrice": 9400,
+        "salePrice": 8900,
+        "compareAt": 9400,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "LV-SEAT-COVER-PREMIUM",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa67",
+            "name": "Interior",
+            "slug": "interior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 22,
+        "quantity": 22,
+        "quantityAvailable": 22,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 22,
+          "allowBackorder": false,
+          "sku": "LV-SEAT-COVER-PREMIUM"
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa84",
+        "name": "Side Skirt Extension",
+        "slug": "side-skirt-extension",
+        "articleNo": "LV-SIDE-SKIRT-EXTENSION",
+        "shortDescription": "Side Skirt Extension — local verify SKU",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Side Skirt Extension"
+            }
+          ]
+        },
+        "price": 7200,
+        "regularPrice": 7700,
+        "salePrice": 7200,
+        "compareAt": 7700,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "LV-SIDE-SKIRT-EXTENSION",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa66",
+            "name": "Exterior",
+            "slug": "exterior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 15,
+        "quantity": 15,
+        "quantityAvailable": 15,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 15,
+          "allowBackorder": false,
+          "sku": "LV-SIDE-SKIRT-EXTENSION"
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa95",
+        "name": "Key Fob Shell Carbon",
+        "slug": "key-fob-shell-carbon",
+        "articleNo": "LV-KEY-FOB-SHELL-CARBON",
+        "shortDescription": "Key Fob Shell Carbon — local verify SKU",
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "images": [
+          "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+        ],
+        "media": {
+          "images": [
+            {
+              "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+              "isMain": true,
+              "altText": "Key Fob Shell Carbon"
+            }
+          ]
+        },
+        "price": 1200,
+        "regularPrice": 1700,
+        "salePrice": 1200,
+        "compareAt": 1700,
+        "saleSchedule": null,
+        "isOnSale": true,
+        "featured": true,
+        "newArrival": false,
+        "brand": "CrazzyCars.pk",
+        "sku": "LV-KEY-FOB-SHELL-CARBON",
+        "gtin": "",
+        "mpn": "",
+        "codEnabled": true,
+        "isBulky": false,
+        "advancePercentRequired": 0,
+        "createdAt": null,
+        "categories": [
+          {
+            "id": "6ac2c71efdf15f953bf2aa67",
+            "name": "Interior",
+            "slug": "interior"
+          }
+        ],
+        "tags": [],
+        "inStock": true,
+        "stock": 22,
+        "quantity": 22,
+        "quantityAvailable": 22,
+        "inventory": {
+          "trackInventory": true,
+          "quantity": 22,
+          "allowBackorder": false,
+          "sku": "LV-KEY-FOB-SHELL-CARBON"
+        },
+        "requiresOptions": false,
+        "rating": 0,
+        "averageRating": 0,
+        "ratingAverage": 0,
+        "reviewCount": 0,
+        "totalReviews": 0,
+        "numReviews": 0
+      }
+    ]
+  },
+  "brands": {
+    "title": "Trusted Brands",
+    "items": [
+      {
+        "name": "Honda",
+        "slug": "honda",
+        "isActive": true,
+        "order": 0
+      },
+      {
+        "name": "Toyota",
+        "slug": "toyota",
+        "isActive": true,
+        "order": 1
+      },
+      {
+        "name": "Suzuki",
+        "slug": "suzuki",
+        "isActive": true,
+        "order": 2
+      }
+    ]
+  },
+  "flashSaleEndTime": "2026-10-11T21:37:34.479Z",
+  "featured": [
+    {
+      "id": "6ac2c71efdf15f953bf2aa70",
+      "name": "Honda Civic Body Kit D1",
+      "slug": "honda-civic-body-kit-d1",
+      "articleNo": "LV-BK-D1",
+      "shortDescription": "Honda Civic Body Kit D1 — local verify SKU",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "images": [
+        "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+      ],
+      "media": {
+        "images": [
+          {
+            "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+            "isMain": true,
+            "altText": "Honda Civic Body Kit D1"
+          }
+        ]
+      },
+      "price": 39999,
+      "regularPrice": 45000,
+      "salePrice": 39999,
+      "compareAt": 45000,
+      "saleSchedule": null,
+      "isOnSale": true,
+      "featured": true,
+      "newArrival": false,
+      "brand": "CrazzyCars.pk",
+      "sku": "LV-BK-D1",
+      "gtin": "",
+      "mpn": "",
+      "codEnabled": false,
+      "isBulky": false,
+      "advancePercentRequired": 0,
+      "createdAt": null,
+      "categories": [
+        {
+          "id": "6ac2c71efdf15f953bf2aa68",
+          "name": "Body Kits & Extensions",
+          "slug": "body-kits-extensions"
+        }
+      ],
+      "tags": [],
+      "inStock": true,
+      "stock": 7,
+      "quantity": 7,
+      "quantityAvailable": 7,
+      "inventory": {
+        "trackInventory": true,
+        "quantity": 7,
+        "allowBackorder": false,
+        "sku": "LV-BK-D1"
+      },
+      "requiresOptions": false,
+      "rating": 0,
+      "averageRating": 0,
+      "ratingAverage": 0,
+      "reviewCount": 0,
+      "totalReviews": 0,
+      "numReviews": 0
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa76",
+      "name": "LED Headlight Bulb H4",
+      "slug": "led-headlight-bulb-h4",
+      "articleNo": "LV-LED-HEADLIGHT-BULB-H4",
+      "shortDescription": "LED Headlight Bulb H4 — local verify SKU",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "images": [
+        "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+      ],
+      "media": {
+        "images": [
+          {
+            "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+            "isMain": true,
+            "altText": "LED Headlight Bulb H4"
+          }
+        ]
+      },
+      "price": 2499,
+      "regularPrice": 2999,
+      "salePrice": 2499,
+      "compareAt": 2999,
+      "saleSchedule": null,
+      "isOnSale": true,
+      "featured": true,
+      "newArrival": false,
+      "brand": "CrazzyCars.pk",
+      "sku": "LV-LED-HEADLIGHT-BULB-H4",
+      "gtin": "",
+      "mpn": "",
+      "codEnabled": true,
+      "isBulky": false,
+      "advancePercentRequired": 0,
+      "createdAt": null,
+      "categories": [
+        {
+          "id": "6ac2c71efdf15f953bf2aa65",
+          "name": "Lights",
+          "slug": "lights"
+        }
+      ],
+      "tags": [],
+      "inStock": true,
+      "stock": 16,
+      "quantity": 16,
+      "quantityAvailable": 16,
+      "inventory": {
+        "trackInventory": true,
+        "quantity": 16,
+        "allowBackorder": false,
+        "sku": "LV-LED-HEADLIGHT-BULB-H4"
+      },
+      "requiresOptions": false,
+      "rating": 0,
+      "averageRating": 0,
+      "ratingAverage": 0,
+      "reviewCount": 0,
+      "totalReviews": 0,
+      "numReviews": 0
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa73",
+      "name": "Side Mirror LED Cover",
+      "slug": "side-mirror-led-cover",
+      "articleNo": "LV-MIR-1",
+      "shortDescription": "Side Mirror LED Cover — local verify SKU",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "images": [
+        "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+      ],
+      "media": {
+        "images": [
+          {
+            "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+            "isMain": true,
+            "altText": "Side Mirror LED Cover"
+          }
+        ]
+      },
+      "price": 2999,
+      "regularPrice": 3499,
+      "salePrice": 2999,
+      "compareAt": 3499,
+      "saleSchedule": null,
+      "isOnSale": true,
+      "featured": true,
+      "newArrival": false,
+      "brand": "CrazzyCars.pk",
+      "sku": "LV-MIR-1",
+      "gtin": "",
+      "mpn": "",
+      "codEnabled": true,
+      "isBulky": false,
+      "advancePercentRequired": 0,
+      "createdAt": null,
+      "categories": [
+        {
+          "id": "6ac2c71efdf15f953bf2aa6a",
+          "name": "Mirrors",
+          "slug": "mirrors"
+        },
+        {
+          "id": "6ac2c71efdf15f953bf2aa66",
+          "name": "Exterior",
+          "slug": "exterior"
+        }
+      ],
+      "tags": [],
+      "inStock": true,
+      "stock": 40,
+      "quantity": 40,
+      "quantityAvailable": 40,
+      "inventory": {
+        "trackInventory": true,
+        "quantity": 40,
+        "allowBackorder": false,
+        "sku": "LV-MIR-1"
+      },
+      "requiresOptions": false,
+      "rating": 0,
+      "averageRating": 0,
+      "ratingAverage": 0,
+      "reviewCount": 0,
+      "totalReviews": 0,
+      "numReviews": 0
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa78",
+      "name": "DRL Fog Lamp Set",
+      "slug": "drl-fog-lamp-set",
+      "articleNo": "LV-DRL-FOG-LAMP-SET",
+      "shortDescription": "DRL Fog Lamp Set — local verify SKU",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "images": [
+        "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+      ],
+      "media": {
+        "images": [
+          {
+            "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+            "isMain": true,
+            "altText": "DRL Fog Lamp Set"
+          }
+        ]
+      },
+      "price": 3200,
+      "regularPrice": 3700,
+      "salePrice": 3200,
+      "compareAt": 3700,
+      "saleSchedule": null,
+      "isOnSale": true,
+      "featured": true,
+      "newArrival": false,
+      "brand": "CrazzyCars.pk",
+      "sku": "LV-DRL-FOG-LAMP-SET",
+      "gtin": "",
+      "mpn": "",
+      "codEnabled": true,
+      "isBulky": false,
+      "advancePercentRequired": 0,
+      "createdAt": null,
+      "categories": [
+        {
+          "id": "6ac2c71efdf15f953bf2aa65",
+          "name": "Lights",
+          "slug": "lights"
+        }
+      ],
+      "tags": [],
+      "inStock": true,
+      "stock": 23,
+      "quantity": 23,
+      "quantityAvailable": 23,
+      "inventory": {
+        "trackInventory": true,
+        "quantity": 23,
+        "allowBackorder": false,
+        "sku": "LV-DRL-FOG-LAMP-SET"
+      },
+      "requiresOptions": false,
+      "rating": 0,
+      "averageRating": 0,
+      "ratingAverage": 0,
+      "reviewCount": 0,
+      "totalReviews": 0,
+      "numReviews": 0
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa79",
+      "name": "Carbon Steering Cover",
+      "slug": "carbon-steering-cover",
+      "articleNo": "LV-CARBON-STEERING-COVER",
+      "shortDescription": "Carbon Steering Cover — local verify SKU",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "images": [
+        "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+      ],
+      "media": {
+        "images": [
+          {
+            "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+            "isMain": true,
+            "altText": "Carbon Steering Cover"
+          }
+        ]
+      },
+      "price": 2800,
+      "regularPrice": 3300,
+      "salePrice": 2800,
+      "compareAt": 3300,
+      "saleSchedule": null,
+      "isOnSale": true,
+      "featured": true,
+      "newArrival": false,
+      "brand": "CrazzyCars.pk",
+      "sku": "LV-CARBON-STEERING-COVER",
+      "gtin": "",
+      "mpn": "",
+      "codEnabled": true,
+      "isBulky": false,
+      "advancePercentRequired": 0,
+      "createdAt": null,
+      "categories": [
+        {
+          "id": "6ac2c71efdf15f953bf2aa67",
+          "name": "Interior",
+          "slug": "interior"
+        }
+      ],
+      "tags": [],
+      "inStock": true,
+      "stock": 24,
+      "quantity": 24,
+      "quantityAvailable": 24,
+      "inventory": {
+        "trackInventory": true,
+        "quantity": 24,
+        "allowBackorder": false,
+        "sku": "LV-CARBON-STEERING-COVER"
+      },
+      "requiresOptions": false,
+      "rating": 0,
+      "averageRating": 0,
+      "ratingAverage": 0,
+      "reviewCount": 0,
+      "totalReviews": 0,
+      "numReviews": 0
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa7c",
+      "name": "Front Grille Mesh",
+      "slug": "front-grille-mesh",
+      "articleNo": "LV-FRONT-GRILLE-MESH",
+      "shortDescription": "Front Grille Mesh — local verify SKU",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "images": [
+        "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+      ],
+      "media": {
+        "images": [
+          {
+            "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+            "isMain": true,
+            "altText": "Front Grille Mesh"
+          }
+        ]
+      },
+      "price": 4500,
+      "regularPrice": 5000,
+      "salePrice": 4500,
+      "compareAt": 5000,
+      "saleSchedule": null,
+      "isOnSale": true,
+      "featured": true,
+      "newArrival": false,
+      "brand": "CrazzyCars.pk",
+      "sku": "LV-FRONT-GRILLE-MESH",
+      "gtin": "",
+      "mpn": "",
+      "codEnabled": true,
+      "isBulky": false,
+      "advancePercentRequired": 0,
+      "createdAt": null,
+      "categories": [
+        {
+          "id": "6ac2c71efdf15f953bf2aa66",
+          "name": "Exterior",
+          "slug": "exterior"
+        }
+      ],
+      "tags": [],
+      "inStock": true,
+      "stock": 17,
+      "quantity": 17,
+      "quantityAvailable": 17,
+      "inventory": {
+        "trackInventory": true,
+        "quantity": 17,
+        "allowBackorder": false,
+        "sku": "LV-FRONT-GRILLE-MESH"
+      },
+      "requiresOptions": false,
+      "rating": 0,
+      "averageRating": 0,
+      "ratingAverage": 0,
+      "reviewCount": 0,
+      "totalReviews": 0,
+      "numReviews": 0
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa81",
+      "name": "Seat Cover Premium",
+      "slug": "seat-cover-premium",
+      "articleNo": "LV-SEAT-COVER-PREMIUM",
+      "shortDescription": "Seat Cover Premium — local verify SKU",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "images": [
+        "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+      ],
+      "media": {
+        "images": [
+          {
+            "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+            "isMain": true,
+            "altText": "Seat Cover Premium"
+          }
+        ]
+      },
+      "price": 8900,
+      "regularPrice": 9400,
+      "salePrice": 8900,
+      "compareAt": 9400,
+      "saleSchedule": null,
+      "isOnSale": true,
+      "featured": true,
+      "newArrival": false,
+      "brand": "CrazzyCars.pk",
+      "sku": "LV-SEAT-COVER-PREMIUM",
+      "gtin": "",
+      "mpn": "",
+      "codEnabled": true,
+      "isBulky": false,
+      "advancePercentRequired": 0,
+      "createdAt": null,
+      "categories": [
+        {
+          "id": "6ac2c71efdf15f953bf2aa67",
+          "name": "Interior",
+          "slug": "interior"
+        }
+      ],
+      "tags": [],
+      "inStock": true,
+      "stock": 22,
+      "quantity": 22,
+      "quantityAvailable": 22,
+      "inventory": {
+        "trackInventory": true,
+        "quantity": 22,
+        "allowBackorder": false,
+        "sku": "LV-SEAT-COVER-PREMIUM"
+      },
+      "requiresOptions": false,
+      "rating": 0,
+      "averageRating": 0,
+      "ratingAverage": 0,
+      "reviewCount": 0,
+      "totalReviews": 0,
+      "numReviews": 0
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa84",
+      "name": "Side Skirt Extension",
+      "slug": "side-skirt-extension",
+      "articleNo": "LV-SIDE-SKIRT-EXTENSION",
+      "shortDescription": "Side Skirt Extension — local verify SKU",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "images": [
+        "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+      ],
+      "media": {
+        "images": [
+          {
+            "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+            "isMain": true,
+            "altText": "Side Skirt Extension"
+          }
+        ]
+      },
+      "price": 7200,
+      "regularPrice": 7700,
+      "salePrice": 7200,
+      "compareAt": 7700,
+      "saleSchedule": null,
+      "isOnSale": true,
+      "featured": true,
+      "newArrival": false,
+      "brand": "CrazzyCars.pk",
+      "sku": "LV-SIDE-SKIRT-EXTENSION",
+      "gtin": "",
+      "mpn": "",
+      "codEnabled": true,
+      "isBulky": false,
+      "advancePercentRequired": 0,
+      "createdAt": null,
+      "categories": [
+        {
+          "id": "6ac2c71efdf15f953bf2aa66",
+          "name": "Exterior",
+          "slug": "exterior"
+        }
+      ],
+      "tags": [],
+      "inStock": true,
+      "stock": 15,
+      "quantity": 15,
+      "quantityAvailable": 15,
+      "inventory": {
+        "trackInventory": true,
+        "quantity": 15,
+        "allowBackorder": false,
+        "sku": "LV-SIDE-SKIRT-EXTENSION"
+      },
+      "requiresOptions": false,
+      "rating": 0,
+      "averageRating": 0,
+      "ratingAverage": 0,
+      "reviewCount": 0,
+      "totalReviews": 0,
+      "numReviews": 0
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa95",
+      "name": "Key Fob Shell Carbon",
+      "slug": "key-fob-shell-carbon",
+      "articleNo": "LV-KEY-FOB-SHELL-CARBON",
+      "shortDescription": "Key Fob Shell Carbon — local verify SKU",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "images": [
+        "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+      ],
+      "media": {
+        "images": [
+          {
+            "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+            "isMain": true,
+            "altText": "Key Fob Shell Carbon"
+          }
+        ]
+      },
+      "price": 1200,
+      "regularPrice": 1700,
+      "salePrice": 1200,
+      "compareAt": 1700,
+      "saleSchedule": null,
+      "isOnSale": true,
+      "featured": true,
+      "newArrival": false,
+      "brand": "CrazzyCars.pk",
+      "sku": "LV-KEY-FOB-SHELL-CARBON",
+      "gtin": "",
+      "mpn": "",
+      "codEnabled": true,
+      "isBulky": false,
+      "advancePercentRequired": 0,
+      "createdAt": null,
+      "categories": [
+        {
+          "id": "6ac2c71efdf15f953bf2aa67",
+          "name": "Interior",
+          "slug": "interior"
+        }
+      ],
+      "tags": [],
+      "inStock": true,
+      "stock": 22,
+      "quantity": 22,
+      "quantityAvailable": 22,
+      "inventory": {
+        "trackInventory": true,
+        "quantity": 22,
+        "allowBackorder": false,
+        "sku": "LV-KEY-FOB-SHELL-CARBON"
+      },
+      "requiresOptions": false,
+      "rating": 0,
+      "averageRating": 0,
+      "ratingAverage": 0,
+      "reviewCount": 0,
+      "totalReviews": 0,
+      "numReviews": 0
+    }
+  ],
+  "newArrivals": [],
+  "categories": [
+    {
+      "id": "6ac2c71efdf15f953bf2aa65",
+      "name": "Lights",
+      "slug": "lights",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa66",
+      "name": "Exterior",
+      "slug": "exterior",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa67",
+      "name": "Interior",
+      "slug": "interior",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa68",
+      "name": "Body Kits & Extensions",
+      "slug": "body-kits-extensions",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa69",
+      "name": "Floor Mats",
+      "slug": "floor-mats",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa6a",
+      "name": "Mirrors",
+      "slug": "mirrors",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg"
+    }
+  ],
+  "recentBlogs": []
+}

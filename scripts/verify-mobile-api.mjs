@@ -7,7 +7,9 @@
  *   MONGODB_URI=mongodb://127.0.0.1:27028/crazzycars_local_verify \
  *   node scripts/verify-mobile-api.mjs
  *
- * Refuses production hosts. Writes docs/mobile-api/REAL_RESPONSES.md (tokens redacted).
+ * Refuses production hosts. Writes:
+ *   docs/mobile-api/REAL_RESPONSES.md
+ *   docs/mobile-api/real-fixtures/*.json  (tokens redacted)
  */
 import { spawnSync } from "child_process";
 import fs from "fs";
@@ -27,9 +29,11 @@ const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://127.0.0.1:27028/crazzycars_local_verify";
 const MONGO_CONTAINER = process.env.MONGO_CONTAINER || "crazzycars-mongo-local-verify";
 const DB_NAME = "crazzycars_local_verify";
+const FIXTURES_DIR = path.join(root, "docs/mobile-api/real-fixtures");
 
 const results = [];
 const samples = [];
+const fixtures = {};
 
 function assertLocalBase(url) {
   const u = new URL(url);
@@ -42,18 +46,21 @@ function assertLocalBase(url) {
   }
 }
 
-function redact(value) {
+function redact(value, key = "") {
   if (value == null) return value;
   if (typeof value === "string") {
-    if (value.length > 20 && /^(eyJ|[A-Za-z0-9_-]{20,})/.test(value)) return "[REDACTED]";
-    return value.replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [REDACTED]");
+    if (/token|password|secret|authorization/i.test(key)) return "[REDACTED]";
+    if (value.startsWith("eyJ")) return "[REDACTED]";
+    if (/^Bearer\s+/i.test(value)) return "Bearer [REDACTED]";
+    // Keep SCREAMING_SNAKE error codes and short public ids.
+    if (/^[A-Z][A-Z0-9_]{2,}$/.test(value)) return value;
+    return value;
   }
-  if (Array.isArray(value)) return value.map(redact);
+  if (Array.isArray(value)) return value.map((v) => redact(v));
   if (typeof value === "object") {
     const out = {};
     for (const [k, v] of Object.entries(value)) {
-      if (/token|password|secret|authorization/i.test(k)) out[k] = "[REDACTED]";
-      else out[k] = redact(v);
+      out[k] = redact(v, k);
     }
     return out;
   }
@@ -90,8 +97,10 @@ function fail(name, detail = "") {
   results.push({ name, ok: false, detail });
   console.error(`FAIL  ${name}${detail ? ` — ${detail}` : ""}`);
 }
-function note(name, body) {
-  samples.push({ name, body: redact(body) });
+function note(name, body, fixtureKey) {
+  const redacted = redact(body);
+  samples.push({ name, body: redacted });
+  if (fixtureKey) fixtures[fixtureKey] = redacted;
 }
 
 function mongoshEval(js) {
@@ -171,12 +180,12 @@ async function main() {
       password: PASS,
     },
   });
-  note("POST /auth/register", r.json);
+  note("POST /auth/register", r.json, "auth-register");
   if (r.status === 200 || r.status === 201) pass("register", `status ${r.status}`);
   else fail("register", `${r.status} ${JSON.stringify(r.json)}`);
 
   r = await req("POST", "/auth/login", { body: { email: EMAIL, password: PASS } });
-  note("POST /auth/login", r.json);
+  note("POST /auth/login", r.json, "auth-login");
   const ACCESS = r.json?.accessToken;
   const REFRESH = r.json?.refreshToken;
   const CUSTOMER_ID = r.json?.customer?.id;
@@ -202,7 +211,7 @@ async function main() {
   const refLost = await req("POST", "/auth/refresh", { body: { refreshToken: PARENT } });
   const LOST_CHILD = refLost.json?.refreshToken;
   const refGrace = await req("POST", "/auth/refresh", { body: { refreshToken: PARENT } });
-  note("POST /auth/refresh (grace)", refGrace.json);
+  note("POST /auth/refresh (grace)", refGrace.json, "auth-refresh");
   const GRACE_CHILD = refGrace.json?.refreshToken;
   if (refGrace.status === 200 && GRACE_CHILD && GRACE_CHILD !== LOST_CHILD) {
     pass("refresh_grace_new_child", "grace issued different child");
@@ -269,6 +278,8 @@ async function main() {
   // Re-login for remaining authed tests
   const loginOk = await req("POST", "/auth/login", { body: { email: EMAIL, password: PASS } });
   const ACCESS_OK = loginOk.json?.accessToken;
+  const meOk = await req("GET", "/me", { headers: { Authorization: `Bearer ${ACCESS_OK}` } });
+  note("GET /me", meOk.json, "me");
 
   // --- Idempotency ---
   const orderBody = (qty, name = "A") => ({
@@ -283,7 +294,7 @@ async function main() {
     headers: { Authorization: `Bearer ${ACCESS_OK}`, "Idempotency-Key": IDEM_SAME },
     body: orderBody(1, "Same"),
   });
-  note("POST /orders (idem same body 1)", o1.json);
+  note("POST /orders (idem same body 1)", o1.json, "create-order");
   const o1b = await req("POST", "/orders", {
     headers: { Authorization: `Bearer ${ACCESS_OK}`, "Idempotency-Key": IDEM_SAME },
     body: orderBody(1, "Same"),
@@ -306,7 +317,7 @@ async function main() {
     headers: { Authorization: `Bearer ${ACCESS_OK}`, "Idempotency-Key": IDEM_DIFF },
     body: orderBody(2, "DiffB"),
   });
-  note("POST /orders IDEMPOTENCY_KEY_REUSED", d2.json);
+  note("POST /orders IDEMPOTENCY_KEY_REUSED", d2.json, "error-idempotency-reused");
   if (d2.status === 409 && d2.json?.error?.code === "IDEMPOTENCY_KEY_REUSED") {
     pass("idempotency_same_key_different_body", "");
   } else fail("idempotency_same_key_different_body", `${d2.status} ${JSON.stringify(d2.json)}`);
@@ -340,7 +351,7 @@ async function main() {
       paymentMethod: "cod",
     },
   });
-  note("POST /orders guest", guest.json);
+  note("POST /orders guest", guest.json, "create-order-guest");
   const GUEST_ORDER_ID = guest.json?.orderId;
   const GUEST_TOKEN = guest.json?.accessToken;
   if ((guest.status === 200 || guest.status === 201) && GUEST_ORDER_ID && GUEST_TOKEN) {
@@ -350,7 +361,7 @@ async function main() {
   const guestGet = await req("GET", `/orders/${GUEST_ORDER_ID}`, {
     headers: { "X-Order-Access-Token": GUEST_TOKEN },
   });
-  note("GET /orders/:id guest header", guestGet.json);
+  note("GET /orders/:id guest header", guestGet.json, "order-detail");
   if (guestGet.status === 200 && guestGet.json?.order) pass("guest_order_reopen_header", "");
   else fail("guest_order_reopen_header", `${guestGet.status}`);
 
@@ -382,7 +393,7 @@ async function main() {
   const listA = await req("GET", "/orders?page=1&limit=50", {
     headers: { Authorization: `Bearer ${ACCESS_OK}` },
   });
-  note("GET /orders list", { count: listA.json?.orders?.length, pagination: listA.json?.pagination });
+  note("GET /orders list", listA.json, "orders-list");
   if (listA.status === 200 && Array.isArray(listA.json?.orders)) pass("orders_list", `${listA.json.orders.length}`);
   else fail("orders_list", `${listA.status}`);
 
@@ -419,7 +430,7 @@ async function main() {
       paymentMethod: "cod",
     },
   });
-  note("POST /orders MIN_ORDER", minOrd.json);
+  note("POST /orders MIN_ORDER", minOrd.json, "error-min-order");
   if (minOrd.status === 400 && (minOrd.json?.error?.code === "MIN_ORDER_NOT_MET" || /minimum/i.test(minOrd.json?.error?.message || ""))) {
     pass("min_order_enforced", minOrd.json?.error?.code || "");
   } else fail("min_order_enforced", `${minOrd.status} ${JSON.stringify(minOrd.json)}`);
@@ -440,7 +451,7 @@ async function main() {
     },
   });
   const after = (await db.collection("products").findOne({ _id: low._id })).inventory.quantity;
-  note("POST /orders oversell", oversell.json);
+  note("POST /orders oversell", oversell.json, "error-out-of-stock");
   if (oversell.status >= 400 && after === before) pass("stock_oversell_blocked", `qty=${after}`);
   else fail("stock_oversell_blocked", `${oversell.status} before=${before} after=${after}`);
 
@@ -452,7 +463,7 @@ async function main() {
       shippingAddress: { city: "Lahore", state: "Punjab", country: "Pakistan" },
     },
   });
-  note("POST /cart/quote COD body kit", codBlock.json);
+  note("POST /cart/quote COD body kit", codBlock.json, "error-cod-blocked");
   if (codBlock.status === 400 && codBlock.json?.error?.code === "COD_NOT_AVAILABLE") {
     pass("body_kit_COD_blocked", codBlock.json.error.message.slice(0, 80));
   } else fail("body_kit_COD_blocked", `${codBlock.status}`);
@@ -464,7 +475,7 @@ async function main() {
       shippingAddress: { city: "Lahore", state: "Punjab", country: "Pakistan" },
     },
   });
-  note("POST /cart/quote bankTransfer body kit", bankOk.json);
+  note("POST /cart/quote bankTransfer body kit", bankOk.json, "cart-quote");
   if (bankOk.status === 200) pass("body_kit_non_COD_ok", `total=${bankOk.json?.total}`);
   else fail("body_kit_non_COD_ok", `${bankOk.status}`);
 
@@ -480,16 +491,46 @@ async function main() {
   if (bankOrder.status === 200 || bankOrder.status === 201) pass("body_kit_bank_order", bankOrder.json?.orderNumber);
   else fail("body_kit_bank_order", `${bankOrder.status} ${JSON.stringify(bankOrder.json)}`);
 
-  // Tracking unavailable (no PostEx keys)
-  const track = await req("GET", "/tracking?trackingNumber=INVALID1");
-  note("GET /tracking", track.json);
+  // Tracking: known consignment + no courier keys → 503; unknown → generic 404
+  const TRACK_TN = `LOCALVERIFY${String(ts).slice(-8)}`;
+  const trackOrderId = o1.json?.orderId || guest.json?.orderId;
+  if (trackOrderId) {
+    await db.collection("orders").updateOne(
+      { _id: new mongoose.Types.ObjectId(trackOrderId) },
+      {
+        $set: {
+          trackingNumber: TRACK_TN,
+          courier: "postex",
+          "tracking.number": TRACK_TN,
+          "tracking.courier": "Postex",
+        },
+      },
+    );
+  }
+  const trackUnavailable = await req("GET", `/tracking?trackingNumber=${TRACK_TN}`);
+  note("GET /tracking TRACKING_UNAVAILABLE", trackUnavailable.json, "tracking-unavailable");
   if (
-    track.status === 404 ||
-    track.status === 503 ||
-    ["NOT_FOUND", "TRACKING_UNAVAILABLE"].includes(track.json?.error?.code)
+    trackUnavailable.status === 503 &&
+    trackUnavailable.json?.error?.code === "TRACKING_UNAVAILABLE"
   ) {
-    pass("tracking_unavailable_or_not_found", `${track.status} ${track.json?.error?.code}`);
-  } else fail("tracking_unavailable_or_not_found", `${track.status}`);
+    pass("tracking_unavailable_no_keys", "503 TRACKING_UNAVAILABLE");
+  } else {
+    fail(
+      "tracking_unavailable_no_keys",
+      `${trackUnavailable.status} ${JSON.stringify(trackUnavailable.json)}`,
+    );
+  }
+
+  const trackUnknown = await req("GET", "/tracking?trackingNumber=UNKNOWNTRACK999XYZ");
+  note("GET /tracking NOT_FOUND", trackUnknown.json, "tracking-not-found");
+  if (trackUnknown.status === 404 && trackUnknown.json?.error?.code === "NOT_FOUND") {
+    pass("tracking_unknown_not_found", "404 NOT_FOUND");
+  } else {
+    fail(
+      "tracking_unknown_not_found",
+      `${trackUnknown.status} ${JSON.stringify(trackUnknown.json)}`,
+    );
+  }
 
   // Track privacy identical bodies
   const realOrder = guest.json?.orderNumber || o1.json?.orderNumber;
@@ -507,31 +548,30 @@ async function main() {
 
   // Home / fitment / config
   const home = await req("GET", "/home");
-  note("GET /home", {
-    hotDeals: home.json?.hotDeals?.products?.length,
-    bestSellers: home.json?.bestSellers?.products?.length,
-    brands: home.json?.brands?.items?.length,
-    flashSaleEndTime: home.json?.flashSaleEndTime,
-  });
+  note("GET /home", home.json, "home");
   if (home.json?.hotDeals && home.json?.bestSellers && home.json?.brands) pass("home_sections", "");
   else fail("home_sections", "");
 
   const cfg = await req("GET", "/config");
-  note("GET /config", {
-    methods: (cfg.json?.enabledPaymentMethods || []).map((m) => m.key),
-    delivery: cfg.json?.delivery,
-  });
+  note("GET /config", cfg.json, "config");
   if (cfg.json?.enabledPaymentMethods?.length >= 2) pass("config_payment_methods", "");
   else fail("config_payment_methods", "");
 
   const fit = await req("GET", `/products?vehicle=${VEHICLE_SLUG}&limit=5`);
+  note("GET /products?vehicle=", fit.json, "products-list");
   if (fit.status === 200 && (fit.json?.products || []).every((p) => p.fitsVehicle === true)) {
     pass("fitsVehicle_list", `${fit.json.products.length}`);
   } else fail("fitsVehicle_list", `${fit.status}`);
 
   const pdp = await req("GET", `/products/${PRODUCT_SLUG}?vehicle=${VEHICLE_SLUG}`);
+  note("GET /products/:slug", pdp.json, "product-detail");
   if (pdp.json?.product?.fitsVehicle === true) pass("fitsVehicle_detail", "");
   else fail("fitsVehicle_detail", String(pdp.json?.product?.fitsVehicle));
+
+  const cats = await req("GET", "/categories");
+  note("GET /categories", cats.json, "categories");
+  const vehicles = await req("GET", "/vehicles");
+  note("GET /vehicles", vehicles.json, "vehicles");
 
   // Rate limit (dedicated email)
   const RL_EMAIL = `ratelimit+${ts}@example.com`;
@@ -634,6 +674,30 @@ async function main() {
 
   await mongoose.disconnect();
 
+  // Write JSON fixtures (tokens redacted)
+  fs.mkdirSync(FIXTURES_DIR, { recursive: true });
+  for (const file of fs.readdirSync(FIXTURES_DIR)) {
+    if (file.endsWith(".json")) fs.unlinkSync(path.join(FIXTURES_DIR, file));
+  }
+  fs.writeFileSync(
+    path.join(FIXTURES_DIR, "_meta.json"),
+    JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        baseUrl: BASE_URL,
+        db: DB_NAME,
+        note: "Tokens and secrets redacted. Fake local-verify data only.",
+        files: Object.keys(fixtures).sort(),
+      },
+      null,
+      2,
+    ),
+  );
+  for (const [key, body] of Object.entries(fixtures)) {
+    fs.writeFileSync(path.join(FIXTURES_DIR, `${key}.json`), JSON.stringify(body, null, 2) + "\n");
+  }
+  console.log(`\nWrote ${Object.keys(fixtures).length} JSON fixtures → ${FIXTURES_DIR}`);
+
   // Write REAL_RESPONSES.md
   const outPath = path.join(root, "docs/mobile-api/REAL_RESPONSES.md");
   const lines = [
@@ -642,6 +706,8 @@ async function main() {
     `Generated: ${new Date().toISOString()}`,
     `Base: \`${BASE_URL}\``,
     `DB: \`${DB_NAME}\` (tokens redacted)`,
+    "",
+    "JSON fixtures: `docs/mobile-api/real-fixtures/`.",
     "",
     "## Results",
     "",
@@ -659,7 +725,7 @@ async function main() {
     lines.push(`### ${s.name}`, "", "```json", JSON.stringify(s.body, null, 2), "```", "");
   }
   fs.writeFileSync(outPath, lines.join("\n"));
-  console.log(`\nWrote ${outPath}`);
+  console.log(`Wrote ${outPath}`);
 
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} passed (${failed.length} failed)`);
