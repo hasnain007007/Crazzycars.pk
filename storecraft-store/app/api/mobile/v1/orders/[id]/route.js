@@ -9,8 +9,8 @@ import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { optionalMobileAuth } from "@/lib/mobile/auth";
+import { canAccessMobileOrder } from "@/lib/mobile/orderAccess";
 import { mobileError } from "@/lib/mobile/response";
-import { safeEqualString } from "@/lib/mobile/safeEqual";
 import { serializeMobileOrderDetail } from "@/lib/mobile/serializeMobileOrder";
 import { requestIp } from "@/lib/requestIp";
 import {
@@ -66,28 +66,17 @@ export async function GET(request, context) {
     return genericNotFound();
   }
 
-  let authorized = false;
-
-  if (guestToken) {
-    const stored = String(order.publicAccessToken || "").trim();
-    if (stored && safeEqualString(stored, guestToken)) {
-      authorized = true;
-    }
-  } else {
+  let customerId = null;
+  if (!guestToken) {
     try {
       const auth = await optionalMobileAuth(request);
-      if (auth?.customer?._id) {
-        const ownerId = String(order.customer?.customerId || "");
-        if (ownerId && ownerId === String(auth.customer._id)) {
-          authorized = true;
-        }
-      }
+      customerId = auth?.customer?._id ? String(auth.customer._id) : null;
     } catch {
-      /* treat as unauthorized */
+      customerId = null;
     }
   }
 
-  if (!authorized) {
+  if (!canAccessMobileOrder(order, { guestToken, customerId })) {
     return genericNotFound();
   }
 

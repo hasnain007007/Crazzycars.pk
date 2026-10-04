@@ -12,6 +12,7 @@ import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { createStoreOrderFromRequest } from "@/lib/checkout/createStoreOrder";
 import { optionalMobileAuth, requireMobileAuth } from "@/lib/mobile/auth";
+import { ownOrdersFilter } from "@/lib/mobile/orderAccess";
 import { buildOrderPaymentInstructions } from "@/lib/mobile/paymentInstructions";
 import { mobileError } from "@/lib/mobile/response";
 import { serializeMobileOrderSummary } from "@/lib/mobile/serializeMobileOrder";
@@ -58,7 +59,7 @@ export async function GET(request) {
   const customerId = authCtx.customer._id;
 
   await dbConnect();
-  const filter = { "customer.customerId": customerId };
+  const filter = ownOrdersFilter(customerId);
   const [rows, total] = await Promise.all([
     Order.find(filter)
       .select(

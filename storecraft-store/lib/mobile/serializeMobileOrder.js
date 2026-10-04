@@ -1,6 +1,37 @@
 import { orderGrandTotal, orderPricing } from "@/lib/orderFormat";
 import { buildOrderPaymentInstructions } from "@/lib/mobile/paymentInstructions";
 
+/**
+ * Line item for mobile order detail / reorder.
+ * productId + slug (when snapshotted), variant id/label, image URL.
+ */
+export function serializeMobileOrderItem(it) {
+  const selected = it?.selectedVariation && typeof it.selectedVariation === "object"
+    ? it.selectedVariation
+    : null;
+  const variantId =
+    String(it?.variantId || selected?.variantId || selected?.id || "").trim() || "";
+  const variationLabel =
+    String(
+      it?.variationLabel ||
+        it?.variation ||
+        selected?.label ||
+        ""
+    ).trim() || "";
+
+  return {
+    productId: it?.productId ? String(it.productId) : "",
+    slug: String(it?.slug || "").trim(),
+    name: String(it?.name || ""),
+    quantity: Math.max(1, Number(it?.quantity) || 1),
+    unitPrice: Math.max(0, Number(it?.unitPrice) || 0),
+    total: Math.max(0, Number(it?.total) || 0),
+    image: String(it?.image || ""),
+    variantId,
+    variationLabel,
+  };
+}
+
 export function serializeMobileOrderSummary(o) {
   return {
     id: String(o._id),
@@ -33,15 +64,7 @@ export function serializeMobileOrderDetail(o, settingsDoc) {
           total: pricing.total,
         }
       : null,
-    items: (o.items || []).map((it) => ({
-      productId: it.productId ? String(it.productId) : "",
-      name: String(it.name || ""),
-      quantity: Math.max(1, Number(it.quantity) || 1),
-      unitPrice: Math.max(0, Number(it.unitPrice) || 0),
-      total: Math.max(0, Number(it.total) || 0),
-      image: String(it.image || ""),
-      slug: String(it.slug || ""),
-    })),
+    items: (o.items || []).map(serializeMobileOrderItem),
     timeline: (o.timeline || []).map((t) => ({
       status: t.status || "",
       title: t.title || "",

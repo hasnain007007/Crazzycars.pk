@@ -59,7 +59,7 @@ describe("paymentInstructions", () => {
   it("COD advance uses shipping / payment.advanceRequired", () => {
     const instr = buildOrderPaymentInstructions(
       {
-        orderNumber: "AB-1",
+        orderNumber: "ORD-2026-00001",
         paymentMethod: "cod",
         pricing: { total: 1750, shippingCost: 250, subtotal: 1500, discount: 0 },
         payment: { advanceRequired: 250, remainingCod: 1500, advanceMode: "shipping" },
@@ -69,13 +69,13 @@ describe("paymentInstructions", () => {
     assert.equal(instr.amountDue, 250);
     assert.equal(instr.remainingOnDelivery, 1500);
     assert.ok(instr.whatsapp.waMeUrl.includes("wa.me/"));
-    assert.ok(instr.whatsapp.prefilledMessage.includes("AB-1"));
+    assert.ok(instr.whatsapp.prefilledMessage.includes("ORD-2026-00001"));
   });
 
   it("bankTransfer amountDue is full total", () => {
     const instr = buildOrderPaymentInstructions(
       {
-        orderNumber: "AB-2",
+        orderNumber: "ORD-2026-00002",
         paymentMethod: "bankTransfer",
         pricing: { total: 45500, shippingCost: 500 },
         payment: { advanceRequired: 0, remainingCod: 0 },
