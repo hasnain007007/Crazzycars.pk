@@ -132,8 +132,11 @@ Web checkout still enforces `storePayment.minimumOrderAmount` **only in the clie
 6. Same key + different body → 409.
 7. Order has `orderSource: "mobile"`; response includes `orderId`, `accessToken`, `orderNumber`.
 8. `GET /orders/track?orderNumber=&phone=` correct → minimal status; wrong phone → generic not found.
-9. Existing `GET /api/tracking?trackingNumber=` still works.
-10. `GET /api/orders/:id/public?t=` with saved accessToken works.
+9. `GET /tracking?trackingNumber=` (mobile) → unified envelope; missing courier keys → `TRACKING_UNAVAILABLE` (not 500). Web `/api/tracking` unchanged.
+10. `GET /orders/:id` with Bearer (owner) **or** header `X-Order-Access-Token` (guest). Wrong token / missing id → same generic 404. Do **not** put token in query string.
+11. `GET /orders` Bearer → paginated own orders (max 50).
+12. Quote/order with disabled payment method → `PAYMENT_METHOD_UNAVAILABLE`. Body-kit + enabled non-COD → success.
+13. `POST /orders` + `GET /orders/:id` include `paymentInstructions` (amountDue, accountLines, WhatsApp wa.me URL).
 
 ### D. Devices / config / catalog
 
@@ -416,8 +419,48 @@ curl -sS -i -X POST "$BASE/orders" \
     \"customer\":{\"name\":\"Guest Only\",\"phone\":\"03009876543\",\"email\":\"\"},
     \"shippingAddress\":{\"street\":\"9 Guest Rd\",\"city\":\"Lahore\",\"state\":\"Punjab\",\"province\":\"Punjab\",\"country\":\"Pakistan\"},
     \"paymentMethod\":\"cod\"
-  }"
-# expect 201; orderSource mobile; no linked customer required
+  }" | tee /tmp/guest-order.json
+# expect 201; orderSource mobile; response includes paymentInstructions + accessToken
+export GUEST_ORDER_ID=$(python3 -c "import json;print(json.load(open('/tmp/guest-order.json'))['orderId'])")
+export GUEST_ORDER_TOKEN=$(python3 -c "import json;print(json.load(open('/tmp/guest-order.json'))['accessToken'])")
+```
+
+### (4b) Order list / detail / courier tracking / payment validation
+
+```bash
+# Own orders list (Bearer)
+curl -sS "$BASE/orders?page=1&limit=20" -H "Authorization: Bearer $ACCESS"
+# expect { orders:[...], pagination:{ total, page, limit, pages, hasNext } }
+
+# Guest reopen via header (never query string)
+curl -sS -i "$BASE/orders/$GUEST_ORDER_ID" \
+  -H "X-Order-Access-Token: $GUEST_ORDER_TOKEN"
+# expect 200 + paymentInstructions
+
+# Wrong token → same generic 404 as missing id
+curl -sS -i "$BASE/orders/$GUEST_ORDER_ID" -H "X-Order-Access-Token: wrong-token"
+curl -sS -i "$BASE/orders/000000000000000000000000" -H "X-Order-Access-Token: $GUEST_ORDER_TOKEN"
+# both: {"error":{"code":"NOT_FOUND","message":"Order not found."}}
+
+# Courier tracking (mobile envelope)
+curl -sS -i "$BASE/tracking?trackingNumber=INVALID1"
+# expect 404 NOT_FOUND or 503 TRACKING_UNAVAILABLE (never 500 when courier keys missing)
+
+# Disabled / unknown payment method on quote
+curl -sS -i -X POST "$BASE/cart/quote" -H 'Content-Type: application/json' -d "{
+  \"items\":[{\"productId\":\"$PRODUCT_ID\",\"quantity\":1}],
+  \"paymentMethod\":\"stripe\",
+  \"shippingAddress\":{\"city\":\"Lahore\",\"state\":\"Punjab\",\"country\":\"Pakistan\"}
+}"
+# expect 400 PAYMENT_METHOD_UNAVAILABLE
+
+# Body-kit + enabled bankTransfer (set BODY_KIT_ID + ensure bankTransfer.enabled in preview Settings)
+curl -sS -i -X POST "$BASE/cart/quote" -H 'Content-Type: application/json' -d "{
+  \"items\":[{\"productId\":\"$BODY_KIT_ID\",\"quantity\":1}],
+  \"paymentMethod\":\"bankTransfer\",
+  \"shippingAddress\":{\"city\":\"Lahore\",\"state\":\"Punjab\",\"country\":\"Pakistan\"}
+}"
+# expect 200 (not COD_NOT_AVAILABLE)
 ```
 
 ### (5) Price tamper / min-order / oversell (no partial stock decrement)
