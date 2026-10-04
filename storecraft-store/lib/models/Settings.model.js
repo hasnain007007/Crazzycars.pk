@@ -758,6 +758,17 @@ Shukriya — Crazzycars.pk ✨`,
         playStore: { type: String, default: "" },
       },
     },
+    mobileApp: {
+      minVersionIos: { type: String, default: "1.0.0" },
+      minVersionAndroid: { type: String, default: "1.0.0" },
+      maintenanceMode: { type: Boolean, default: false },
+      maintenanceMessage: {
+        type: String,
+        default: "App is under maintenance. Please try again later.",
+      },
+      iosStoreUrl: { type: String, default: "" },
+      androidStoreUrl: { type: String, default: "" },
+    },
   },
   { timestamps: true }
 );

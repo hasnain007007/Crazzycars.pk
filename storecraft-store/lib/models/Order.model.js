@@ -271,6 +271,13 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
     invoiceNumber: { type: String, default: "", trim: true, index: true },
+
+    orderSource: {
+      type: String,
+      enum: ["site", "mobile", ""],
+      default: "site",
+      trim: true,
+    },
   },
   { timestamps: true }
 );
