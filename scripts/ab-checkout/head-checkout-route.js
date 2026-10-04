@@ -690,6 +690,10 @@ export async function POST(request) {
       subtotal += lineTotal;
       lineItems.push({
         productId: p._id,
+        slug: String(p.slug || "").trim(),
+        variantId:
+          variantDoc?._id ||
+          (variantIdStr && mongoose.Types.ObjectId.isValid(variantIdStr) ? variantIdStr : null),
         articleNo: String(p.articleNo || "").trim(),
         name: p.name,
         image: img,

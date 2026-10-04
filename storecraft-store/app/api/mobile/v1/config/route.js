@@ -4,11 +4,18 @@
  * Public — no auth required.
  */
 import { NextResponse } from "next/server";
-import { STORE_CONTACT } from "@/config/store-policy";
+import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { buildConfigPaymentMethods } from "@/lib/mobile/paymentInstructions";
 import { shippingFloorPKR } from "@/lib/shippingTier";
+import {
+  deliveryEtaSummary,
+  lahoreEtaStatement,
+  nonLahoreEtaStatement,
+  standardDeliveryFeeShort,
+  standardDeliveryFeeStatement,
+} from "@/lib/storePolicyCopy";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +68,19 @@ export async function GET() {
       },
       storeName: settingsDoc?.general?.storeName || "Crazzycars.pk",
       storePhone,
+      /** Confirmed policy copy from store-policy / storePolicyCopy (same as COD FAQ). */
+      delivery: {
+        feeShort: standardDeliveryFeeShort(),
+        feeStatement: standardDeliveryFeeStatement(),
+        etaSummary: deliveryEtaSummary(),
+        lahore: {
+          minDays: STORE_POLICY.shipping.cityETAs.lahore.minDays,
+          maxDays: STORE_POLICY.shipping.cityETAs.lahore.maxDays,
+          text: lahoreEtaStatement(),
+        },
+        otherCitiesText: nonLahoreEtaStatement(),
+        shipNote: "Most orders ship within 1–2 business days after payment confirmation.",
+      },
     });
   } catch (err) {
     console.error("[mobile/config]", err);

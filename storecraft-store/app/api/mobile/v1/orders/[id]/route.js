@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order.model";
+import Product from "@/lib/models/Product.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { optionalMobileAuth } from "@/lib/mobile/auth";
 import { canAccessMobileOrder } from "@/lib/mobile/orderAccess";
@@ -78,6 +79,22 @@ export async function GET(request, context) {
 
   if (!canAccessMobileOrder(order, { guestToken, customerId })) {
     return genericNotFound();
+  }
+
+  // Historical orders may lack slug/variantId snapshots — fill slug from Product.
+  const missingSlugIds = (order.items || [])
+    .filter((it) => it?.productId && !String(it.slug || "").trim())
+    .map((it) => it.productId);
+  if (missingSlugIds.length) {
+    const products = await Product.find({ _id: { $in: missingSlugIds } })
+      .select("slug")
+      .lean();
+    const slugById = new Map(products.map((p) => [String(p._id), String(p.slug || "")]));
+    order.items = (order.items || []).map((it) => {
+      if (String(it.slug || "").trim()) return it;
+      const slug = slugById.get(String(it.productId)) || "";
+      return slug ? { ...it, slug } : it;
+    });
   }
 
   const settingsDoc =

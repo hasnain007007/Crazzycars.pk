@@ -1,16 +1,21 @@
 /**
- * GET /api/mobile/v1/catalog/products
- * Product listing with filtering. Supports vehicle slug via ?vehicle= query.
- * Query params: q, category, sort, page, limit, vehicle, brand, inStock, maxPrice, minPrice
+ * GET /api/mobile/v1/products
+ * Query: q, category, sort, page, limit, vehicle, brand, inStock, maxPrice, minPrice, fitsOnly
+ *
+ * Fitment design:
+ * - `vehicle=<slug>` resolves a Vehicle, applies `buildVehiclePageProductFilter` (same as
+ *   website `/cars/[slug]`), and sets `fitsVehicle: true` on every card.
+ * - `fitsOnly=true` is the default when `vehicle` is set; pass `fitsOnly=false` only if
+ *   you want unfiltered results (no fitsVehicle annotation in that mode for v1).
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
 import Vehicle from "@/lib/models/Vehicle.model";
+import { fittingProductsFilter, markFitsVehicleTrue } from "@/lib/mobile/fitsVehicle";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
-import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
 
 export const dynamic = "force-dynamic";
 
@@ -33,42 +38,44 @@ export async function GET(request) {
     const inStockOnly = searchParams.get("inStock") === "true";
     const maxPriceRaw = searchParams.get("maxPrice");
     const minPriceRaw = searchParams.get("minPrice");
+    const fitsOnlyParam = searchParams.get("fitsOnly");
+    const fitsOnly =
+      fitsOnlyParam == null || fitsOnlyParam === ""
+        ? Boolean(vehicleSlug)
+        : fitsOnlyParam === "true" || fitsOnlyParam === "1";
 
     const filter = { ...STOREFRONT_PRODUCT_FILTER };
+    let vehicleDoc = null;
 
-    // Category filter
     if (categorySlug) {
       const cat = await Category.findOne({ slug: categorySlug }).select("_id").lean();
       if (cat) filter.categories = cat._id;
     }
 
-    // Vehicle slug filter
     if (vehicleSlug) {
-      const vehicle = await Vehicle.findOne({ slug: vehicleSlug }).lean();
-      if (vehicle) {
-        const orClauses = buildMakeModelProductOr ? buildMakeModelProductOr({ make: vehicle.make, model: vehicle.model, generation: vehicle.generation }) : [];
-        if (orClauses?.length) {
-          filter.$or = orClauses;
-        } else {
-          filter.compatibleVehicles = vehicle._id;
-        }
+      vehicleDoc = await Vehicle.findOne({ slug: vehicleSlug }).lean();
+      if (vehicleDoc && fitsOnly) {
+        Object.assign(filter, fittingProductsFilter(vehicleDoc));
+      } else if (!vehicleDoc && fitsOnly) {
+        filter._id = null;
       }
     }
 
-    // Text search
     if (q) {
       const re = new RegExp(escapeRegex(q), "i");
-      filter.$or = filter.$or
-        ? [...filter.$or, { name: re }, { slug: re }]
-        : [{ name: re }, { slug: re }, { articleNo: re }];
+      const textOr = [{ name: re }, { slug: re }, { articleNo: re }];
+      if (filter.$or) {
+        filter.$and = [...(filter.$and || []), { $or: filter.$or }, { $or: textOr }];
+        delete filter.$or;
+      } else {
+        filter.$or = textOr;
+      }
     }
 
-    // Brand filter
     if (brand) {
       filter.brand = new RegExp(`^${escapeRegex(brand)}$`, "i");
     }
 
-    // Price filter
     const priceFilter = {};
     if (maxPriceRaw) priceFilter.$lte = Number(maxPriceRaw);
     if (minPriceRaw) priceFilter.$gte = Number(minPriceRaw);
@@ -76,20 +83,22 @@ export async function GET(request) {
       filter["pricing.regularPrice"] = priceFilter;
     }
 
-    // Stock filter
     if (inStockOnly) {
       filter["inventory.quantity"] = { $gt: 0 };
     }
 
-    // Sort
     let sortSpec = { createdAt: -1 };
-    if (sort === "price-asc") sortSpec = { "pricing.regularPrice": 1 };
-    else if (sort === "price-desc") sortSpec = { "pricing.regularPrice": -1 };
-    else if (sort === "popular") sortSpec = { reviewCount: -1, createdAt: -1 };
+    if (sort === "price-asc" || sort === "price_asc") sortSpec = { "pricing.regularPrice": 1 };
+    else if (sort === "price-desc" || sort === "price_desc") sortSpec = { "pricing.regularPrice": -1 };
+    else if (sort === "popular" || sort === "name") {
+      sortSpec = sort === "name" ? { name: 1 } : { reviewCount: -1, createdAt: -1 };
+    }
 
     const [products, total] = await Promise.all([
       Product.find(filter)
-        .select("name slug articleNo media pricing inventory status categories featured newArrival simpleVariations variationCombinations codEnabled isBulky shortDescription")
+        .select(
+          "name slug articleNo media pricing inventory status categories featured newArrival simpleVariations variationCombinations codEnabled isBulky shortDescription"
+        )
         .sort(sortSpec)
         .skip(skip)
         .limit(limit)
@@ -97,7 +106,11 @@ export async function GET(request) {
       Product.countDocuments(filter),
     ]);
 
-    const data = products.map((p) => serializeStoreProductSummary(p));
+    const annotate = Boolean(vehicleDoc && fitsOnly);
+    const data = products.map((p) => {
+      const summary = serializeStoreProductSummary(p);
+      return annotate ? markFitsVehicleTrue(summary) : summary;
+    });
 
     return NextResponse.json({
       products: data,
@@ -105,12 +118,21 @@ export async function GET(request) {
         total,
         page,
         limit,
-        pages: Math.ceil(total / limit),
+        pages: Math.ceil(total / limit) || 0,
         hasNext: page * limit < total,
       },
+      vehicle: vehicleDoc
+        ? {
+            id: String(vehicleDoc._id),
+            slug: vehicleDoc.slug,
+            make: vehicleDoc.make,
+            model: vehicleDoc.model,
+            generation: vehicleDoc.generation || "",
+          }
+        : null,
     });
   } catch (err) {
-    console.error("[mobile/catalog/products]", err);
+    console.error("[mobile/products]", err);
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "Failed to load products." } },
       { status: 500 }
