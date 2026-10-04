@@ -26,6 +26,23 @@ async function findOrderByTrackingNumber(trackingNumber) {
     .lean();
 }
 
+/** True when a courier result should map to HTTP 503 TRACKING_UNAVAILABLE. */
+export function isTrackingUnavailableError(result) {
+  return /unavailable/i.test(String(result?.error || ""));
+}
+
+/**
+ * PostEx booked parcels with missing keys must not fall through to a RunCourier
+ * portal miss (which would incorrectly become a generic 404).
+ */
+export function shouldKeepPostexUnavailable(postexResult, preferRunCourier) {
+  return (
+    !postexResult?.success &&
+    isTrackingUnavailableError(postexResult) &&
+    !preferRunCourier
+  );
+}
+
 export async function resolvePublicTracking(trackingNumber, { settingsCourier } = {}) {
   const tn = normalizePublicTrackingNumber(trackingNumber);
   if (!tn) {
@@ -55,6 +72,9 @@ export async function resolvePublicTracking(trackingNumber, { settingsCourier } 
     }
   } else if (preferPostex) {
     live = await fetchPostexTracking(tn, { settingsCourier });
+    if (shouldKeepPostexUnavailable(live, preferRunCourier)) {
+      return toPublicTrackingPayload(live);
+    }
     if (!live?.success) {
       live = await fetchRunCourierTracking(tn, { settingsCourier });
     }
@@ -63,10 +83,19 @@ export async function resolvePublicTracking(trackingNumber, { settingsCourier } 
       fetchPostexTracking(tn, { settingsCourier }),
       fetchRunCourierTracking(tn, { settingsCourier }),
     ]);
-    live = px?.success ? px : rc;
+    live = px?.success
+      ? px
+      : rc?.success
+        ? rc
+        : isTrackingUnavailableError(px)
+          ? px
+          : rc;
   }
 
   if (!live?.success) {
+    if (isTrackingUnavailableError(live)) {
+      return toPublicTrackingPayload(live);
+    }
     return toPublicTrackingPayload(live || { success: false, error: "Invalid tracking number" });
   }
 
