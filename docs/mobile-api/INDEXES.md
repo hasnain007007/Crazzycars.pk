@@ -14,7 +14,13 @@ Models declare indexes in schema files:
 
 **Implication:** Indexes appear after the preview/prod process connects and first loads these models (any request that imports them, e.g. login or devices). They are not created by a separate migration script.
 
-Optional force sync (run against the **target** DB only):
+### WARNING — `syncIndexes()` on existing models
+
+**Never** run `syncIndexes()` across existing production models (`Order`, `Product`, `Customer`, …). Mongoose `syncIndexes()` **can drop** indexes that are present in MongoDB but absent from the current schema definition.
+
+**Only** call `syncIndexes()` on the **new** mobile collections (`CustomerRefreshToken`, `MobileDevice`, `IdempotencyKey`) if autoIndex did not create them. See `SERVER_DEPLOY_PLAN.md`.
+
+Optional force sync (run against the **target** DB only — **these three models only**):
 
 ```bash
 # From storecraft-store, with MONGODB_URI pointing at preview DB
