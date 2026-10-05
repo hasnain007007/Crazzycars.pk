@@ -1,6 +1,10 @@
 /**
  * Public multi-courier tracking for the storefront.
  * Only resolves consignments that belong to this store (no open courier proxy).
+ *
+ * Default behavior matches pre-423daf2 web `/api/tracking` (PostEx miss may fall
+ * through to RunCourier portal). Pass `keepPostexUnavailable: true` from the
+ * mobile wrapper so PostEx "Tracking unavailable" is not masked by a portal miss.
  */
 import Order from "@/lib/models/Order.model";
 import { fetchPostexTracking } from "@/lib/postex";
@@ -32,8 +36,8 @@ export function isTrackingUnavailableError(result) {
 }
 
 /**
- * PostEx booked parcels with missing keys must not fall through to a RunCourier
- * portal miss (which would incorrectly become a generic 404).
+ * When enabled (mobile only): PostEx booked parcels with missing keys must not
+ * fall through to a RunCourier portal miss (which would become a generic 404).
  */
 export function shouldKeepPostexUnavailable(postexResult, preferRunCourier) {
   return (
@@ -43,7 +47,32 @@ export function shouldKeepPostexUnavailable(postexResult, preferRunCourier) {
   );
 }
 
-export async function resolvePublicTracking(trackingNumber, { settingsCourier } = {}) {
+/**
+ * Pure PostEx-branch decision (unit-tested).
+ * Web: keepPostexUnavailable=false → always fall through to RunCourier on miss.
+ * Mobile: keepPostexUnavailable=true → early-return "Tracking unavailable".
+ */
+export function afterPostexAttempt(postexResult, preferRunCourier, keepPostexUnavailable) {
+  if (keepPostexUnavailable && shouldKeepPostexUnavailable(postexResult, preferRunCourier)) {
+    return { action: "return", result: postexResult };
+  }
+  if (postexResult?.success) {
+    return { action: "use", result: postexResult };
+  }
+  return { action: "fallback_runcourier" };
+}
+
+/**
+ * @param {string} trackingNumber
+ * @param {{
+ *   settingsCourier?: object,
+ *   keepPostexUnavailable?: boolean,
+ * }} [options]
+ */
+export async function resolvePublicTracking(
+  trackingNumber,
+  { settingsCourier, keepPostexUnavailable = false } = {},
+) {
   const tn = normalizePublicTrackingNumber(trackingNumber);
   if (!tn) {
     return { success: false, error: "Invalid tracking number" };
@@ -72,10 +101,13 @@ export async function resolvePublicTracking(trackingNumber, { settingsCourier } 
     }
   } else if (preferPostex) {
     live = await fetchPostexTracking(tn, { settingsCourier });
-    if (shouldKeepPostexUnavailable(live, preferRunCourier)) {
-      return toPublicTrackingPayload(live);
+    const decision = afterPostexAttempt(live, preferRunCourier, keepPostexUnavailable);
+    if (decision.action === "return") {
+      return toPublicTrackingPayload(decision.result);
     }
-    if (!live?.success) {
+    if (decision.action === "use") {
+      live = decision.result;
+    } else {
       live = await fetchRunCourierTracking(tn, { settingsCourier });
     }
   } else {
@@ -83,17 +115,22 @@ export async function resolvePublicTracking(trackingNumber, { settingsCourier } 
       fetchPostexTracking(tn, { settingsCourier }),
       fetchRunCourierTracking(tn, { settingsCourier }),
     ]);
-    live = px?.success
-      ? px
-      : rc?.success
-        ? rc
-        : isTrackingUnavailableError(px)
-          ? px
-          : rc;
+    if (keepPostexUnavailable) {
+      live = px?.success
+        ? px
+        : rc?.success
+          ? rc
+          : isTrackingUnavailableError(px)
+            ? px
+            : rc;
+    } else {
+      // Pre-423daf2 web behavior: prefer PostEx success, else RunCourier (even if PostEx said unavailable).
+      live = px?.success ? px : rc;
+    }
   }
 
   if (!live?.success) {
-    if (isTrackingUnavailableError(live)) {
+    if (keepPostexUnavailable && isTrackingUnavailableError(live)) {
       return toPublicTrackingPayload(live);
     }
     return toPublicTrackingPayload(live || { success: false, error: "Invalid tracking number" });

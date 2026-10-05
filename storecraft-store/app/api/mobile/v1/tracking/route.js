@@ -56,7 +56,11 @@ export async function GET(request) {
       /* env-only fallback */
     }
 
-    const result = await resolvePublicTracking(trackingNumber, { settingsCourier });
+    const result = await resolvePublicTracking(trackingNumber, {
+      settingsCourier,
+      // Mobile-only: do not mask PostEx "Tracking unavailable" with a RunCourier portal miss.
+      keepPostexUnavailable: true,
+    });
 
     if (result.success) {
       return NextResponse.json(
