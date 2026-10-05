@@ -761,6 +761,9 @@ Shukriya — Crazzycars.pk ✨`,
     mobileApp: {
       minVersionIos: { type: String, default: "1.0.0" },
       minVersionAndroid: { type: String, default: "1.0.0" },
+      /** Soft-update targets (optional). Empty = no soft prompt. */
+      recommendedVersionIos: { type: String, default: "" },
+      recommendedVersionAndroid: { type: String, default: "" },
       maintenanceMode: { type: Boolean, default: false },
       maintenanceMessage: {
         type: String,

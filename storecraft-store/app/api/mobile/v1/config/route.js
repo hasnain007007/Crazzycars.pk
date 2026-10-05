@@ -46,6 +46,8 @@ export async function GET() {
     return NextResponse.json({
       minVersionIos: mobileApp.minVersionIos || "1.0.0",
       minVersionAndroid: mobileApp.minVersionAndroid || "1.0.0",
+      recommendedVersionIos: String(mobileApp.recommendedVersionIos || "").trim(),
+      recommendedVersionAndroid: String(mobileApp.recommendedVersionAndroid || "").trim(),
       maintenanceMode: Boolean(mobileApp.maintenanceMode),
       maintenanceMessage:
         mobileApp.maintenanceMessage || "App is under maintenance. Please try again later.",
