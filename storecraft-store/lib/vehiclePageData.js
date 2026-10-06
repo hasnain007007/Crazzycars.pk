@@ -141,6 +141,98 @@ async function resolveFromCarCatalogSlug(slug) {
 }
 
 /**
+ * Merge Car Catalog SEO copy onto a Vehicle doc.
+ * Admin edits Description / Popular accessories / nickname on Car Catalog —
+ * Vehicle.metaDescription is a legacy short field and must not win over catalog copy.
+ */
+export async function enrichVehicleCatalogCopy(vehicle) {
+  if (!vehicle || typeof vehicle !== "object") return vehicle;
+
+  const slugs = [
+    ...new Set(
+      [vehicle.catalogModelSlug, vehicle.slug]
+        .map((s) => String(s || "").trim().toLowerCase())
+        .filter(Boolean)
+    ),
+  ];
+
+  let model = null;
+  for (const want of slugs) {
+    const make = await CarCatalog.findOne({
+      isActive: true,
+      "models.slug": want,
+    }).lean();
+    if (!make) continue;
+    model = (make.models || []).find(
+      (m) => String(m.slug || "").toLowerCase() === want && m.isActive !== false
+    );
+    if (model) break;
+  }
+
+  if (!model && vehicle.make) {
+    const make = await CarCatalog.findOne({
+      isActive: true,
+      name: new RegExp(`^${escapeRegex(vehicle.make)}$`, "i"),
+    }).lean();
+    if (make) {
+      const labels = [vehicle.model, vehicle.generation, vehicle.nickname, vehicle.displayName]
+        .map((x) => String(x || "").trim().toLowerCase())
+        .filter(Boolean);
+      const vFrom = Number(vehicle.yearFrom) || 0;
+      const vTo =
+        vehicle.yearTo != null && vehicle.yearTo !== ""
+          ? Number(vehicle.yearTo)
+          : 9999;
+      for (const m of make.models || []) {
+        if (m.isActive === false) continue;
+        const mLabels = [m.name, m.nickname, m.generation, m.slug]
+          .map((x) => String(x || "").trim().toLowerCase())
+          .filter(Boolean);
+        const nameHit = labels.some(
+          (l) =>
+            mLabels.includes(l) ||
+            mLabels.some((ml) => ml === l || (l.length >= 4 && (ml.includes(l) || l.includes(ml))))
+        );
+        if (!nameHit) continue;
+        const years = Array.isArray(m.years) ? m.years.map(Number).filter(Number.isFinite) : [];
+        const mFrom = Number(m.yearFrom) || (years.length ? Math.min(...years) : 0);
+        const mTo =
+          m.yearTo != null && m.yearTo !== ""
+            ? Number(m.yearTo)
+            : years.length
+              ? Math.max(...years)
+              : 9999;
+        if (Number.isFinite(mTo) && Number.isFinite(vTo) && (mTo < vFrom || mFrom > vTo)) {
+          continue;
+        }
+        model = m;
+        break;
+      }
+    }
+  }
+
+  if (!model) return vehicle;
+
+  const description = String(model.description || "").trim();
+  const popularAccessories = Array.isArray(model.popularAccessories)
+    ? model.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
+    : [];
+  const nickname = String(model.nickname || "").trim();
+
+  return {
+    ...vehicle,
+    description: description || String(vehicle.description || "").trim() || "",
+    popularAccessories: popularAccessories.length
+      ? popularAccessories
+      : Array.isArray(vehicle.popularAccessories)
+        ? vehicle.popularAccessories
+        : [],
+    nickname: nickname || String(vehicle.nickname || "").trim() || "",
+    image: String(vehicle.image || "").trim() || String(model.image || "").trim() || "",
+  };
+}
+
+/**
  * Existing vehicle only (no catalog auto-create). Used for Shopify-era root URLs.
  */
 export async function findExistingVehicleSlug(raw) {
@@ -170,25 +262,26 @@ export async function loadVehicleBySlug(slugStr) {
   if (!slug) return null;
 
   let vehicle = await Vehicle.findOne({ slug, isActive: true }).lean();
-  if (vehicle) return vehicle;
+  if (vehicle) return enrichVehicleCatalogCopy(vehicle);
 
   vehicle = await Vehicle.findOne({ catalogModelSlug: slug, isActive: true }).lean();
-  if (vehicle) return vehicle;
+  if (vehicle) return enrichVehicleCatalogCopy(vehicle);
 
   const handleCi = { $regex: `^${escapeRegex(slug)}$`, $options: "i" };
   vehicle = await Vehicle.findOne({
     isActive: { $ne: false },
     shopifyHandle: handleCi,
   }).lean();
-  if (vehicle) return vehicle;
+  if (vehicle) return enrichVehicleCatalogCopy(vehicle);
 
   const mapped = VEHICLE_HANDLE_ALIASES[slug];
   if (mapped && mapped !== slug) {
     vehicle = await Vehicle.findOne({ slug: mapped, isActive: { $ne: false } }).lean();
-    if (vehicle) return vehicle;
+    if (vehicle) return enrichVehicleCatalogCopy(vehicle);
   }
 
-  return resolveFromCarCatalogSlug(slug);
+  const fromCatalog = await resolveFromCarCatalogSlug(slug);
+  return fromCatalog ? enrichVehicleCatalogCopy(fromCatalog) : null;
 }
 
 /**

@@ -41,7 +41,10 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
       { brand: BRAND }
     );
     const title = titleMeta.absolute;
+    // Prefer Car Catalog Description (merged in loadVehicleBySlug) over legacy Vehicle.metaDescription.
+    const catalogDesc = String(vehicle.description || "").trim();
     const description =
+      catalogDesc ||
       (vehicle.metaDescription || "").trim() ||
       `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`;
     const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
@@ -127,11 +130,15 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     { name: vehicle.displayName, url: `/cars/${vehicle.slug}` },
   ];
   const breadcrumbLd = breadcrumbJsonLd(crumbs);
+  const catalogDesc = String(vehicle.description || "").trim();
+  const pageDescription =
+    catalogDesc ||
+    (vehicle.metaDescription || "").trim() ||
+    `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`;
+
   const collectionLd = collectionPageJsonLd({
     name: `${vehicle.displayName} Accessories`,
-    description:
-      (vehicle.metaDescription || "").trim() ||
-      `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`,
+    description: pageDescription,
     url: `/cars/${vehicle.slug}`,
     products,
     numberOfItems: total,
@@ -139,13 +146,14 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   });
 
   const heroDesc =
-    String(vehicle.description || "").trim() ||
+    catalogDesc ||
     (vehicle.metaDescription || "").trim() ||
     `Upgrade your ${vehicle.displayName} with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber. Cash on Delivery nationwide.`;
 
   const popularAccessories = Array.isArray(vehicle.popularAccessories)
     ? vehicle.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
     : [];
+  const nickname = String(vehicle.nickname || "").trim();
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
@@ -208,6 +216,21 @@ export default async function VehicleSlugPage({ params, searchParams }) {
               >
                 {vehicle.displayName}
               </h1>
+              {nickname &&
+              !String(vehicle.displayName || "")
+                .toLowerCase()
+                .includes(nickname.toLowerCase()) ? (
+                <p
+                  style={{
+                    margin: "6px 0 0",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "#F87171",
+                  }}
+                >
+                  {nickname}
+                </p>
+              ) : null}
               <p
                 style={{
                   margin: "6px 0 0",
