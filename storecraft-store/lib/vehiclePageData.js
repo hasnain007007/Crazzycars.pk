@@ -6,11 +6,22 @@ import Product from "@/lib/models/Product.model";
 import Vehicle from "@/lib/models/Vehicle.model";
 import { VEHICLE_HANDLE_ALIASES } from "@/lib/categoryHandleAliases";
 import {
+  findCatalogModelByExactId,
+  findCatalogModelByExactSlug,
+  mergeCatalogCopyOntoVehicle,
+} from "@/lib/carCatalogCopy";
+import {
   buildVehiclePageProductFilter,
   enrichVehicleCatalogGeneration,
 } from "@/lib/productVehicleQuery";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+
+export {
+  findCatalogModelByExactId,
+  findCatalogModelByExactSlug,
+  mergeCatalogCopyOntoVehicle,
+} from "@/lib/carCatalogCopy";
 
 function escapeRegex(s) {
   return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -142,94 +153,53 @@ async function resolveFromCarCatalogSlug(slug) {
 
 /**
  * Merge Car Catalog SEO copy onto a Vehicle doc.
- * Admin edits Description / Popular accessories / nickname on Car Catalog —
- * Vehicle.metaDescription is a legacy short field and must not win over catalog copy.
+ * Bind by public slug (preferred) or nested model ObjectId only — never make+base-model fuzzy join.
+ *
+ * @param {object} vehicle
+ * @param {{ preferredSlug?: string }} [opts] URL /cars/[slug] — wins over Vehicle.catalogModelSlug
  */
-export async function enrichVehicleCatalogCopy(vehicle) {
+export async function enrichVehicleCatalogCopy(vehicle, opts = {}) {
   if (!vehicle || typeof vehicle !== "object") return vehicle;
 
-  const slugs = [
+  const preferredSlug = String(opts.preferredSlug || "")
+    .trim()
+    .toLowerCase();
+  const slugCandidates = [
     ...new Set(
-      [vehicle.catalogModelSlug, vehicle.slug]
+      [preferredSlug, vehicle.catalogModelSlug, vehicle.slug]
         .map((s) => String(s || "").trim().toLowerCase())
         .filter(Boolean)
     ),
   ];
 
-  let model = null;
-  for (const want of slugs) {
+  let hit = null;
+  for (const want of slugCandidates) {
     const make = await CarCatalog.findOne({
       isActive: true,
       "models.slug": want,
     }).lean();
     if (!make) continue;
-    model = (make.models || []).find(
-      (m) => String(m.slug || "").toLowerCase() === want && m.isActive !== false
-    );
-    if (model) break;
+    hit = findCatalogModelByExactSlug([make], want);
+    if (hit) break;
   }
 
-  if (!model && vehicle.make) {
-    const make = await CarCatalog.findOne({
-      isActive: true,
-      name: new RegExp(`^${escapeRegex(vehicle.make)}$`, "i"),
-    }).lean();
-    if (make) {
-      const labels = [vehicle.model, vehicle.generation, vehicle.nickname, vehicle.displayName]
-        .map((x) => String(x || "").trim().toLowerCase())
-        .filter(Boolean);
-      const vFrom = Number(vehicle.yearFrom) || 0;
-      const vTo =
-        vehicle.yearTo != null && vehicle.yearTo !== ""
-          ? Number(vehicle.yearTo)
-          : 9999;
-      for (const m of make.models || []) {
-        if (m.isActive === false) continue;
-        const mLabels = [m.name, m.nickname, m.generation, m.slug]
-          .map((x) => String(x || "").trim().toLowerCase())
-          .filter(Boolean);
-        const nameHit = labels.some(
-          (l) =>
-            mLabels.includes(l) ||
-            mLabels.some((ml) => ml === l || (l.length >= 4 && (ml.includes(l) || l.includes(ml))))
-        );
-        if (!nameHit) continue;
-        const years = Array.isArray(m.years) ? m.years.map(Number).filter(Number.isFinite) : [];
-        const mFrom = Number(m.yearFrom) || (years.length ? Math.min(...years) : 0);
-        const mTo =
-          m.yearTo != null && m.yearTo !== ""
-            ? Number(m.yearTo)
-            : years.length
-              ? Math.max(...years)
-              : 9999;
-        if (Number.isFinite(mTo) && Number.isFinite(vTo) && (mTo < vFrom || mFrom > vTo)) {
-          continue;
-        }
-        model = m;
-        break;
-      }
+  if (!hit) {
+    const genId =
+      vehicle.catalogGenerationId ||
+      vehicle.catalogModelId ||
+      vehicle.generationId ||
+      null;
+    if (genId) {
+      const make = await CarCatalog.findOne({
+        isActive: true,
+        "models._id": genId,
+      }).lean();
+      if (make) hit = findCatalogModelByExactId([make], genId);
     }
   }
 
-  if (!model) return vehicle;
-
-  const description = String(model.description || "").trim();
-  const popularAccessories = Array.isArray(model.popularAccessories)
-    ? model.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
-    : [];
-  const nickname = String(model.nickname || "").trim();
-
-  return {
-    ...vehicle,
-    description: description || String(vehicle.description || "").trim() || "",
-    popularAccessories: popularAccessories.length
-      ? popularAccessories
-      : Array.isArray(vehicle.popularAccessories)
-        ? vehicle.popularAccessories
-        : [],
-    nickname: nickname || String(vehicle.nickname || "").trim() || "",
-    image: String(vehicle.image || "").trim() || String(model.image || "").trim() || "",
-  };
+  if (!hit?.model) return vehicle;
+  return mergeCatalogCopyOntoVehicle(vehicle, hit.model);
 }
 
 /**
@@ -261,27 +231,30 @@ export async function loadVehicleBySlug(slugStr) {
   const slug = String(slugStr || "").trim().toLowerCase();
   if (!slug) return null;
 
+  const withCopy = (vehicle) =>
+    vehicle ? enrichVehicleCatalogCopy(vehicle, { preferredSlug: slug }) : null;
+
   let vehicle = await Vehicle.findOne({ slug, isActive: true }).lean();
-  if (vehicle) return enrichVehicleCatalogCopy(vehicle);
+  if (vehicle) return withCopy(vehicle);
 
   vehicle = await Vehicle.findOne({ catalogModelSlug: slug, isActive: true }).lean();
-  if (vehicle) return enrichVehicleCatalogCopy(vehicle);
+  if (vehicle) return withCopy(vehicle);
 
   const handleCi = { $regex: `^${escapeRegex(slug)}$`, $options: "i" };
   vehicle = await Vehicle.findOne({
     isActive: { $ne: false },
     shopifyHandle: handleCi,
   }).lean();
-  if (vehicle) return enrichVehicleCatalogCopy(vehicle);
+  if (vehicle) return withCopy(vehicle);
 
   const mapped = VEHICLE_HANDLE_ALIASES[slug];
   if (mapped && mapped !== slug) {
     vehicle = await Vehicle.findOne({ slug: mapped, isActive: { $ne: false } }).lean();
-    if (vehicle) return enrichVehicleCatalogCopy(vehicle);
+    if (vehicle) return withCopy(vehicle);
   }
 
   const fromCatalog = await resolveFromCarCatalogSlug(slug);
-  return fromCatalog ? enrichVehicleCatalogCopy(fromCatalog) : null;
+  return withCopy(fromCatalog);
 }
 
 /**

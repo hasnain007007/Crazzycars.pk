@@ -16,7 +16,7 @@ import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "CrazzyCars.pk";
 
