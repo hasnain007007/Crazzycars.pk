@@ -1,13 +1,7 @@
 import Link from "next/link";
 import { CategoryHeroBanner } from "@/components/store/CategoryHeroBanner";
 import { categoryHref } from "@/lib/categories";
-
-function plainText(htmlOrText) {
-  return String(htmlOrText || "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 
 function CategorySubcategoryMarquee({ subcategories = [] }) {
   if (!subcategories.length) return null;
@@ -60,20 +54,58 @@ function CategorySubcategoryMarquee({ subcategories = [] }) {
 }
 
 /**
- * Server-rendered category chrome (breadcrumb + hero H1 + intro + subcategories).
- * Keep this outside any client island so crawlers always see one H1.
+ * Prefer full description HTML; fall back to shortDescription.
+ * Renders sanitized HTML (entities decoded) for crawlers and shoppers.
  */
+function resolveCategoryDescriptionHtml(category) {
+  const raw =
+    String(category?.description || "").trim() ||
+    String(category?.shortDescription || "").trim() ||
+    "";
+  return sanitizeCategoryHtml(raw);
+}
+
+/** Split intro paragraphs from H3/P FAQ-style pairs for layout. */
+export function splitCategoryDescriptionHtml(html) {
+  const safe = String(html || "").trim();
+  if (!safe) return { summaryHtml: "", remainderHtml: "", faqPairs: [] };
+  const faqPairs = [];
+  const re = /<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let m;
+  while ((m = re.exec(safe))) {
+    const q = String(m[1] || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const a = String(m[2] || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (q && a) faqPairs.push({ question: q, answer: a });
+  }
+  const firstH3 = safe.search(/<h3[\s>]/i);
+  if (firstH3 > 0) {
+    return {
+      summaryHtml: safe.slice(0, firstH3).trim(),
+      remainderHtml: safe.slice(firstH3).trim(),
+      faqPairs,
+    };
+  }
+  return { summaryHtml: safe, remainderHtml: "", faqPairs };
+}
+
 export function CategoryPageChrome({
   category,
   subcategories = [],
   products = [],
   brand = null,
   crumbs = [],
+  showFullDescription = true,
 }) {
   if (!category) return null;
 
-  const description =
-    plainText(category?.shortDescription) || plainText(category?.description) || "";
+  const descriptionHtml = resolveCategoryDescriptionHtml(category);
+  const { summaryHtml, remainderHtml } = splitCategoryDescriptionHtml(descriptionHtml);
 
   const relatedGuides = (Array.isArray(category?.relatedGuides) ? category.relatedGuides : [])
     .map((g) => ({
@@ -113,10 +145,13 @@ export function CategoryPageChrome({
         brand={brand}
       />
 
-      {description ? (
+      {summaryHtml ? (
         <>
           <hr className="cat-hero-divider" />
-          <p className="cat-desc">{description}</p>
+          <div
+            className="cat-desc cat-desc--html prose prose-neutral max-w-none"
+            dangerouslySetInnerHTML={{ __html: summaryHtml }}
+          />
         </>
       ) : null}
 
@@ -136,6 +171,14 @@ export function CategoryPageChrome({
       ) : null}
 
       <CategorySubcategoryMarquee subcategories={subcategories} />
+
+      {showFullDescription && remainderHtml ? (
+        <div
+          className="cat-desc cat-desc--html cat-desc--below prose prose-neutral max-w-none"
+          style={{ marginTop: 24 }}
+          dangerouslySetInnerHTML={{ __html: remainderHtml }}
+        />
+      ) : null}
     </div>
   );
 }

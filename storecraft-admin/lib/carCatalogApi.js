@@ -15,7 +15,9 @@ export function buildCatalogFromMakes(makes) {
         const yearTo = years[0] ?? null;
         const yearFrom = years.length ? years[years.length - 1] : null;
         return {
+          _id: m._id != null ? String(m._id) : null,
           model: m.name,
+          name: m.name,
           slug: m.slug,
           years,
           yearFrom: m.yearFrom ?? yearFrom,

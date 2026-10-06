@@ -27,6 +27,7 @@ import { getProductSalesBatch } from "@/lib/productSales";
 import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 import { revalidateStorefront, productRevalidatePaths } from "@/lib/revalidateStorefront";
+import { validateProductActivePublishGate } from "@/lib/productPublishGate";
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;
@@ -220,10 +221,21 @@ export async function POST(request) {
       );
     }
 
+    const org = normalizeProductOrganisation(body);
+    if (statusNext === "active") {
+      const publishGate = validateProductActivePublishGate({
+        name,
+        shortDescription: body.shortDescription,
+        longDescription: body.longDescription,
+        tags: org.tags,
+      });
+      if (!publishGate.ok) {
+        return NextResponse.json({ success: false, error: publishGate.error }, { status: 400 });
+      }
+    }
+
     let slug = await uniqueProductSlug(body.slug || name);
     const categories = normalizeProductCategoryIds(body.categories);
-
-    const org = normalizeProductOrganisation(body);
     const fitPayload = buildVehicleCompatibilityPayload(body.vehicleCompatibility);
     const compatibleVehicles = fitPayload.isUniversal
       ? []

@@ -59,8 +59,56 @@ describe("product JSON-LD", () => {
     assert.equal(ld.offers.priceCurrency, "PKR");
     assert.equal(ld.offers.shippingDetails["@type"], "OfferShippingDetails");
     assert.equal(ld.offers.shippingDetails.shippingRate.value, "250.00");
-    assert.equal(ld.offers.hasMerchantReturnPolicy.length, 2);
-    assert.match(ld.offers.hasMerchantReturnPolicy[0].refundType, /FullRefund$/);
-    assert.match(ld.offers.hasMerchantReturnPolicy[1].refundType, /ExchangeRefund$/);
+    assert.equal(ld.offers.acceptedPaymentMethod, undefined);
+    assert.equal(ld.offers.hasMerchantReturnPolicy, undefined);
+  });
+
+  test("bulky products emit Rs 500 shipping in Offer", () => {
+    const ld = productJsonLd({
+      name: "Body Kit",
+      slug: "test-body-kit",
+      isBulky: true,
+      media: {
+        images: [{ url: "https://crazzycars.pk/media/products/x.webp", isMain: true }],
+      },
+      price: 50000,
+      stock: 2,
+    });
+    assert.equal(ld.offers.shippingDetails.shippingRate.value, "500.00");
+  });
+
+  test("seed / empty-orderId reviews do not appear in AggregateRating", () => {
+    const ld = productJsonLd({
+      name: "Reviewed SKU",
+      slug: "reviewed-sku",
+      media: {
+        images: [{ url: "https://crazzycars.pk/media/products/x.webp", isMain: true }],
+      },
+      price: 1000,
+      stock: 1,
+      reviews: [
+        {
+          status: "approved",
+          source: "import",
+          orderId: "",
+          rating: 5,
+          body: "seed",
+          reviewer: { name: "Bot", email: "a@crazzycars.local" },
+        },
+        {
+          status: "approved",
+          source: "customer",
+          orderId: "ORD-1",
+          isSeed: false,
+          rating: 4,
+          body: "real",
+          reviewer: { name: "Ali" },
+          createdAt: "2026-10-01",
+        },
+      ],
+    });
+    assert.equal(ld.aggregateRating.reviewCount, "1");
+    assert.equal(ld.review.length, 1);
+    assert.match(ld.review[0].reviewBody, /real/);
   });
 });

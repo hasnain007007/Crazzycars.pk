@@ -2,55 +2,50 @@
  * Merchant listing JSON-LD helpers — keep aligned with STORE_POLICY.
  */
 import { STORE_POLICY } from "../../config/store-policy.js";
+import { shippingFeePkr } from "../shippingFee.js";
 
 /**
- * Merchant return policy JSON-LD from STORE_POLICY.
- * Defective / wrong-item only when change of mind is not eligible.
+ * Organization-level return policy (defective / wrong-item only).
+ * Do NOT put generic returnFees: FreeReturn — Google reads that as any-reason free returns.
+ * Prefer configuring Search Console / Merchant Center as the authoritative policy UI.
  * @param {string} siteUrl
  */
-export function buildMerchantReturnPolicies(siteUrl) {
+export function buildOrganizationReturnPolicy(siteUrl) {
   const site = String(siteUrl || "").replace(/\/+$/, "");
   const days = STORE_POLICY.returns.windowDays;
-  const link = site ? `${site}/returns-policy` : undefined;
-  const base = {
+  return {
     "@type": "MerchantReturnPolicy",
     applicableCountry: "PK",
     returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
     merchantReturnDays: days,
+    itemCondition: "https://schema.org/DamagedCondition",
     returnMethod: "https://schema.org/ReturnByMail",
-    merchantReturnLink: link,
+    itemDefectReturnFees: "https://schema.org/FreeReturn",
+    refundType: "https://schema.org/FullRefund",
+    merchantReturnLink: site ? `${site}/returns-policy` : undefined,
   };
-
-  const policies = [
-    {
-      ...base,
-      name: "Defective or wrong item shipped",
-      refundType: "https://schema.org/FullRefund",
-      returnFees: "https://schema.org/FreeReturn",
-      itemDefectReturnFees: "https://schema.org/FreeReturn",
-    },
-  ];
-
-  if (STORE_POLICY.returns.changeOfMindEligible && STORE_POLICY.returns.changeOfMindRemedy === "exchange-only") {
-    policies.push({
-      ...base,
-      name: "Change of mind",
-      refundType: "https://schema.org/ExchangeRefund",
-      returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
-    });
-  }
-
-  return policies;
 }
 
-/** Flat nationwide delivery from STORE_POLICY (COD Pakistan). */
-export function buildOfferShippingDetails() {
-  const fee = Number(STORE_POLICY.shipping.standardFeePKR) || 0;
+/**
+ * @deprecated Prefer buildOrganizationReturnPolicy at Organization level.
+ * Kept for callers that still expect an array; returns a single policy without
+ * generic returnFees: FreeReturn.
+ */
+export function buildMerchantReturnPolicies(siteUrl) {
+  return [buildOrganizationReturnPolicy(siteUrl)];
+}
+
+/**
+ * Offer shipping details — fee from product.isBulky / body-kit.
+ * @param {object} [product]
+ */
+export function buildOfferShippingDetails(product) {
+  const fee = shippingFeePkr(product);
   return {
     "@type": "OfferShippingDetails",
     shippingRate: {
       "@type": "MonetaryAmount",
-      value: fee.toFixed(2),
+      value: Number(fee).toFixed(2),
       currency: "PKR",
     },
     shippingDestination: {
@@ -65,7 +60,6 @@ export function buildOfferShippingDetails() {
         maxValue: 2,
         unitCode: "DAY",
       },
-      // Nationwide courier transit after dispatch (PKT business days).
       transitTime: {
         "@type": "QuantitativeValue",
         minValue: 2,

@@ -26,6 +26,8 @@ const BlogPostSchema = new mongoose.Schema(
     publishedAt: { type: Date },
     scheduledAt: { type: Date },
     views: { type: Number, default: 0 },
+    /** Last content edit — not bumped by page-view counters. */
+    contentUpdatedAt: { type: Date, default: null },
     readTime: { type: Number, default: 0 },
     seo: {
       metaTitle: { type: String, default: "" },
@@ -40,6 +42,14 @@ const BlogPostSchema = new mongoose.Schema(
 );
 
 BlogPostSchema.pre("save", async function beforeSave() {
+  if (
+    this.isModified("title") ||
+    this.isModified("content") ||
+    this.isModified("excerpt") ||
+    this.isModified("featuredImage")
+  ) {
+    this.contentUpdatedAt = new Date();
+  }
   if (this.isModified("title") && !this.slug) {
     this.slug = this.title
       .toLowerCase()

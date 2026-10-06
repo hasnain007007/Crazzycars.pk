@@ -223,16 +223,17 @@ function AccordionSection({ id, title, icon, isOpen, onToggle, children, badge }
         </svg>
       </button>
 
+      {/* Always mount panel bodies (CSS-only collapse) so crawlers see description/specs/reviews. */}
       <div
+        id={id ? `panel-${id}` : undefined}
         style={{
           maxHeight: isOpen ? "none" : "0",
           overflow: isOpen ? "visible" : "hidden",
           transition: isOpen ? undefined : "max-height 0.35s ease",
         }}
-        hidden={!isOpen}
         aria-hidden={!isOpen}
       >
-        {isOpen ? <div style={{ paddingBottom: 24 }}>{children}</div> : null}
+        <div style={{ paddingBottom: 24 }}>{children}</div>
       </div>
     </div>
   );
@@ -258,17 +259,9 @@ export function ProductDetailMedico({
   const [selectedOptions, setSelectedOptions] = useState({});
   const [matchedCombo, setMatchedCombo] = useState(null);
   const [selectedAddOns, setSelectedAddOns] = useState([]);
-  const [openSection, setOpenSection] = useState(null);
-  const [reviewCount, setReviewCount] = useState(() => {
-    const n = Number(
-      initialProduct?.reviewCount ?? initialProduct?.numReviews ?? initialProduct?.totalReviews ?? 0
-    );
-    return Number.isFinite(n) && n > 0 ? n : 0;
-  });
-  const [reviewAverage, setReviewAverage] = useState(() => {
-    const n = Number(initialProduct?.averageRating ?? initialProduct?.rating);
-    return Number.isFinite(n) && n > 0 ? n : null;
-  });
+  const [openSection, setOpenSection] = useState("description");
+  const [reviewCount, setReviewCount] = useState(0);
+  const [reviewAverage, setReviewAverage] = useState(null);
   const [productBadges, setProductBadges] = useState(null);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isCompared, setIsCompared] = useState(false);
@@ -382,12 +375,12 @@ export function ProductDetailMedico({
   }, [product?.slug, product?.categories?.[0]?.slug]);
 
   useEffect(() => {
-    const n = Number(product?.reviewCount ?? product?.numReviews ?? product?.totalReviews ?? 0);
-    setReviewCount(Number.isFinite(n) && n > 0 ? n : 0);
-    const avg = Number(product?.averageRating ?? product?.rating);
-    setReviewAverage(Number.isFinite(avg) && avg > 0 ? avg : null);
+    // Stars/counts come only from /api/reviews (genuine filter) via ProductReviews —
+    // never from product aggregates that may still include seed rows.
+    setReviewCount(0);
+    setReviewAverage(null);
     setSelectedIndex(0);
-  }, [product?.id, product?._id, product?.slug, product?.reviewCount, product?.numReviews, product?.totalReviews, product?.averageRating, product?.rating]);
+  }, [product?.id, product?._id, product?.slug]);
 
   useEffect(() => {
     const pid = product?._id ?? product?.id;

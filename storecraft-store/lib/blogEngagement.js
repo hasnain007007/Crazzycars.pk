@@ -40,10 +40,10 @@ export async function recordBlogPostPageView(BlogPost, slugStr) {
   return BlogPost.findOneAndUpdate(
     { _id: existing._id, status: "published" },
     { $inc: { views: 1 } },
-    { new: true }
+    { new: true, timestamps: false }
   )
     .select(
-      "title slug excerpt content featuredImage publishedAt createdAt updatedAt categories tags readTime views author relatedProducts seo faq status"
+      "title slug excerpt content featuredImage publishedAt contentUpdatedAt createdAt updatedAt categories tags readTime views author relatedProducts seo faq status"
     )
     .populate("relatedProducts", "name slug media pricing inventory")
     .lean();

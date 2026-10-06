@@ -20,6 +20,8 @@ export async function POST(request) {
       const reviews = await Review.find({
         product: product._id,
         status: "approved",
+        isSeed: { $ne: true },
+        orderId: { $exists: true, $nin: [null, ""] },
       })
         .select("rating")
         .lean();

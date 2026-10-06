@@ -1,7 +1,9 @@
+import { BRAND } from "../brand.js";
+
 const DEFAULT_BRAND =
   process.env.NEXT_PUBLIC_STORE_NAME ||
   process.env.NEXT_PUBLIC_APP_NAME ||
-  "CrazzyCars.pk";
+  BRAND;
 
 /** Strip a trailing `| CrazzyCars(.pk)` / dash-brand suffix (any casing). */
 export function stripTrailingBrand(raw) {

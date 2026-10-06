@@ -1,6 +1,11 @@
 /**
  * Product CSV column contract (import + export + template).
  * Pipe "|" separates lists (categories, keywords, tags, image URLs).
+ *
+ * Import match key (POST /api/products/csv): slug first (`slug` column or slugify(name)),
+ * then `articleNo` if no slug match. `sku` is not used for upsert matching today.
+ * On update, scalar columns present in the row overwrite the DB (blank cell clears
+ * that field). Exception: blank `imageUrls` keeps the existing gallery.
  */
 export const PRODUCT_CSV_HEADERS = [
   "name",

@@ -55,13 +55,15 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
         title,
         description,
         url: listingSeo.alternates.canonical,
-        images: vehicle.image ? [{ url: vehicle.image, alt: vehicle.displayName }] : [],
+        images: vehicle.image
+          ? [{ url: vehicle.image, alt: vehicle.displayName }]
+          : [{ url: "/og-image.jpg", width: 1200, height: 630, alt: `${vehicle.displayName} accessories` }],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: vehicle.image ? [vehicle.image] : [],
+        images: vehicle.image ? [vehicle.image] : ["/og-image.jpg"],
       },
     };
   } catch (err) {
@@ -137,8 +139,13 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   });
 
   const heroDesc =
+    String(vehicle.description || "").trim() ||
     (vehicle.metaDescription || "").trim() ||
     `Upgrade your ${vehicle.displayName} with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber. Cash on Delivery nationwide.`;
+
+  const popularAccessories = Array.isArray(vehicle.popularAccessories)
+    ? vehicle.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
+    : [];
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
@@ -218,10 +225,16 @@ export default async function VehicleSlugPage({ params, searchParams }) {
                   fontSize: 14,
                   lineHeight: 1.65,
                   color: "#D1D5DB",
+                  whiteSpace: "pre-line",
                 }}
               >
                 {heroDesc}
               </p>
+              {popularAccessories.length ? (
+                <p style={{ margin: "10px 0 0", fontSize: 13, color: "#9CA3AF" }}>
+                  Popular: {popularAccessories.slice(0, 8).join(" · ")}
+                </p>
+              ) : null}
               <div className="vehicle-hero-actions" style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 10 }}>
                 <Link
                   href="#compatible-products"

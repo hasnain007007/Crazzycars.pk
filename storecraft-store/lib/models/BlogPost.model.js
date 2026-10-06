@@ -26,6 +26,11 @@ const BlogPostSchema = new mongoose.Schema(
     publishedAt: { type: Date },
     scheduledAt: { type: Date },
     views: { type: Number, default: 0 },
+    /**
+     * Last time title/body/featured image changed.
+     * View counters must not bump this (see recordBlogPostPageView timestamps:false).
+     */
+    contentUpdatedAt: { type: Date, default: null },
     readTime: { type: Number, default: 0 },
     readTimeManual: { type: Boolean, default: false },
     seo: {

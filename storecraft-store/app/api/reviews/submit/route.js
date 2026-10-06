@@ -17,7 +17,14 @@ async function recalcProductRating(productId) {
   try {
     if (!productId || !mongoose.Types.ObjectId.isValid(String(productId))) return;
     await dbConnect();
-    const reviews = await Review.find({ product: productId, status: "approved" }).select("rating").lean();
+    const reviews = await Review.find({
+      product: productId,
+      status: "approved",
+      isSeed: { $ne: true },
+      orderId: { $exists: true, $nin: [null, ""] },
+    })
+      .select("rating")
+      .lean();
     const count = reviews.length;
     const avg = count > 0 ? reviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / count : 0;
     const rounded = Math.round(avg * 10) / 10;

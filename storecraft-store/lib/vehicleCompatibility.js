@@ -18,9 +18,13 @@ function normalizeVehicleRow(raw) {
   const bodyStyle = BODY_STYLES.includes(v.bodyStyle) ? v.bodyStyle : "All";
   const yearFrom = v.yearFrom != null && v.yearFrom !== "" ? Number(v.yearFrom) : null;
   const yearTo = v.yearTo != null && v.yearTo !== "" ? Number(v.yearTo) : CURRENT_YEAR;
+  const generationId =
+    v.generationId != null && v.generationId !== "" ? String(v.generationId) : null;
   return {
     make: String(v.make || "").trim(),
     model: String(v.model || "").trim(),
+    generationId,
+    generationLabel: String(v.generationLabel || v.generation || "").trim(),
     yearFrom: Number.isFinite(yearFrom) ? yearFrom : null,
     yearTo: Number.isFinite(yearTo) ? yearTo : CURRENT_YEAR,
     bodyStyle,
@@ -64,10 +68,12 @@ export function vehicleCompatibilityFromProduct(product) {
         normalizeVehicleRow({
           make: c.make,
           model: c.model,
+          generationId: c.generationId,
+          generationLabel: c.generationLabel || c.generation || "",
           yearFrom: c.yearFrom,
           yearTo: c.yearTo ?? CURRENT_YEAR,
           bodyStyle: "All",
-          notes: c.generation || "",
+          notes: "",
         })
       ),
       categories: [],

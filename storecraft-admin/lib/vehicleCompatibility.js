@@ -27,10 +27,14 @@ function normalizeVehicleRow(raw) {
   const bodyStyle = BODY_STYLES.includes(v.bodyStyle) ? v.bodyStyle : "All";
   const yearFrom = v.yearFrom != null && v.yearFrom !== "" ? Number(v.yearFrom) : null;
   const yearTo = v.yearTo != null && v.yearTo !== "" ? Number(v.yearTo) : CURRENT_YEAR;
+  const generationId =
+    v.generationId != null && v.generationId !== "" ? String(v.generationId) : null;
   return {
     _rowId: v._rowId || `row-${Math.random().toString(36).slice(2, 9)}`,
     make: String(v.make || "").trim(),
     model: String(v.model || "").trim(),
+    generationId,
+    generationLabel: String(v.generationLabel || "").trim(),
     yearFrom: Number.isFinite(yearFrom) ? yearFrom : null,
     yearTo: Number.isFinite(yearTo) ? yearTo : CURRENT_YEAR,
     bodyStyle,
@@ -66,6 +70,8 @@ function vehiclesFromLinkedRefs(product) {
     normalizeVehicleRow({
       make: v.make,
       model: v.model,
+      generationId: v.generationId || null,
+      generationLabel: v.generationLabel || v.generation || "",
       yearFrom: v.yearFrom,
       yearTo: v.yearTo ?? CURRENT_YEAR,
       bodyStyle: v.bodyType || "All",
@@ -82,6 +88,8 @@ function vehiclesFromLegacyCars(product) {
       normalizeVehicleRow({
         make: c.make,
         model: c.model,
+        generationId: c.generationId || null,
+        generationLabel: c.generationLabel || c.generation || "",
         yearFrom: c.yearFrom,
         yearTo: c.yearTo ?? CURRENT_YEAR,
         bodyStyle: "All",
@@ -163,6 +171,8 @@ export function stripVehicleRowIds(vehicles) {
   return (vehicles || []).map(({ _rowId, ...rest }) => ({
     make: rest.make,
     model: rest.model,
+    generationId: rest.generationId || null,
+    generationLabel: rest.generationLabel || "",
     yearFrom: rest.yearFrom,
     yearTo: rest.yearTo,
     bodyStyle: rest.bodyStyle || "All",
@@ -186,7 +196,10 @@ export function buildVehicleCompatibilityPayload(formVc) {
       ? vehicleCompatibility.vehicles.map((v) => ({
           make: v.make,
           model: v.model,
-          generation: v.notes || "",
+          /** Legacy display string — do not copy from notes. */
+          generation: v.generationLabel || "",
+          generationId: v.generationId || null,
+          generationLabel: v.generationLabel || "",
           yearFrom: v.yearFrom,
           yearTo: v.yearTo,
         }))

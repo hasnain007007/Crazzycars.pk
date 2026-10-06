@@ -60,6 +60,7 @@ const reviewSchema = new mongoose.Schema(
     },
     helpfulVotes: { type: Number, default: 0 },
     orderId: { type: String, default: "" },
+    isSeed: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );

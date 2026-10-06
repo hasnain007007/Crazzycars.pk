@@ -3,8 +3,8 @@
  */
 import { getSiteUrl } from "../siteUrl.js";
 import {
-  buildMerchantReturnPolicies,
   buildOfferShippingDetails,
+  buildOrganizationReturnPolicy,
 } from "../schema/merchantReturnPolicy.mjs";
 import { resolveProductImageUrls } from "../productImages.js";
 import { productAllowsCod } from "../codEligibility.js";
@@ -104,20 +104,30 @@ function productHasRichResultSignal(node) {
   return false;
 }
 
-/** Plain-text product description — never empty (Google treats "" as missing). */
+/** Plain-text product description — prefer long body text for AEO (never empty). */
 function resolveProductDescription(p, slug = "") {
   const name = String(p?.name || slug || "Product").trim();
-  const raw = String(
-    p?.metaDescription ||
-      p?.seo?.metaDescription ||
-      p?.shortDescription ||
-      p?.description ||
-      p?.longDescription ||
-      ""
-  )
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const candidates = [
+    p?.longDescription,
+    p?.descriptionHtml,
+    p?.description,
+    p?.shortDescription,
+    p?.metaDescription,
+    p?.seo?.metaDescription,
+  ];
+  let raw = "";
+  for (const c of candidates) {
+    const plain = String(c || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\*\*/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (plain.length > 40) {
+      raw = plain;
+      break;
+    }
+    if (!raw && plain) raw = plain;
+  }
   return (
     raw ||
     `${name} — shop online at CrazzyCars.pk with Cash on Delivery across Pakistan.`
@@ -172,7 +182,8 @@ function applyGtinMpn(node, p) {
 
 /**
  * Shared Offer block for PDP + collection ItemList Products.
- * Always includes shippingDetails + hasMerchantReturnPolicy (GSC merchant warnings).
+ * Shipping fee follows product.isBulky. No CreditCard. No per-Offer return policy
+ * (Organization-level policy only — avoids ~40 FreeReturn copies on category pages).
  */
 function buildMerchantOffer({
   url,
@@ -183,12 +194,9 @@ function buildMerchantOffer({
   includeSeller = false,
   priceValidUntil,
   validFrom,
-  codAvailable = true,
+  product = null,
 } = {}) {
   const SITE = siteUrl || site();
-  const paymentMethods = codAvailable
-    ? ["https://schema.org/Cash", "https://schema.org/PaymentMethodCreditCard"]
-    : ["https://schema.org/PaymentMethodCreditCard"];
   const offer = {
     "@type": "Offer",
     url,
@@ -198,13 +206,12 @@ function buildMerchantOffer({
     priceValidUntil: priceValidUntil || resolvePriceValidUntil(),
     itemCondition: conditionUrl(condition),
     availability: availabilityUrl(stockMeta || {}),
-    acceptedPaymentMethod: paymentMethods,
-    shippingDetails: buildOfferShippingDetails(),
-    hasMerchantReturnPolicy: buildMerchantReturnPolicies(SITE),
+    shippingDetails: buildOfferShippingDetails(product),
   };
   if (includeSeller) {
     offer.seller = {
       "@type": "Organization",
+      "@id": `${SITE}/#org`,
       name: "CrazzyCars.pk",
       url: SITE,
       telephone: "+92-328-4010007",
@@ -233,19 +240,34 @@ function resolveStockMeta(p) {
 
 /**
  * Schema.org review/aggregateRating may only use genuine customer-sourced reviews.
+ * Genuine = approved + non-empty orderId + not isSeed (and source customer when set).
  * Seeded/manual/import corpus must not appear in Google structured data.
- * On-page PDP widgets are unaffected (they query /api/reviews separately).
  */
-function isCustomerSourcedReview(r) {
+export function isGenuineReview(r) {
   if (!r || typeof r !== "object") return false;
-  if (String(r.source || "").trim().toLowerCase() !== "customer") return false;
+  if (r.isSeed === true) return false;
   const status = String(r.status || "approved").trim().toLowerCase();
-  return status === "approved";
+  if (status !== "approved") return false;
+  const orderId = String(r.orderId || "").trim();
+  if (!orderId) return false;
+  const source = String(r.source || "").trim().toLowerCase();
+  // Legacy rows may lack source; require customer when source is present.
+  if (source && source !== "customer") return false;
+  const email = String(r?.reviewer?.email || r?.email || "").toLowerCase();
+  if (email.endsWith("@seed-top100-bestsellers-v1.local") || email.endsWith("@crazzycars.local")) {
+    return false;
+  }
+  return true;
 }
 
-/** Customer-sourced approved rows only (for JSON-LD). */
-function customerReviewsForSchema(reviews) {
-  return (Array.isArray(reviews) ? reviews : []).filter(isCustomerSourcedReview);
+/** @deprecated use isGenuineReview */
+function isCustomerSourcedReview(r) {
+  return isGenuineReview(r);
+}
+
+/** Genuine approved rows only (for JSON-LD + on-page). */
+export function customerReviewsForSchema(reviews) {
+  return (Array.isArray(reviews) ? reviews : []).filter(isGenuineReview);
 }
 
 /** Map stored Review docs into schema.org Review nodes for Product JSON-LD. */
@@ -302,11 +324,8 @@ function buildCollectionProductNode(p) {
   const path = p.urlPath || `/${slug}`;
   const itemUrl = absoluteProductUrl(path);
   const priceNum = resolveOfferPrice(p);
-  // Customer-sourced reviews only for schema; Product.reviewCount may include seed data.
-  const schemaAgg = aggregateFromCustomerReviews(p.reviews);
-  const reviewLd = mapReviewsToJsonLd(p.reviews, 2);
-  const hasSchemaReviews = Boolean(schemaAgg && reviewLd.length);
-  if (priceNum == null && !hasSchemaReviews) return null;
+  // Never put review markup on category ItemList Product nodes.
+  if (priceNum == null) return null;
 
   const productNode = {
     "@type": "Product",
@@ -330,19 +349,11 @@ function buildCollectionProductNode(p) {
       siteUrl: SITE,
       priceValidUntil: resolvePriceValidUntil(p),
       validFrom: resolveOfferValidFrom(p),
+      product: p,
     });
   }
 
-  if (hasSchemaReviews) {
-    productNode.aggregateRating = {
-      "@type": "AggregateRating",
-      ratingValue: String(schemaAgg.ratingValue),
-      reviewCount: String(schemaAgg.reviewCount),
-      bestRating: "5",
-      worstRating: "1",
-    };
-    productNode.review = reviewLd;
-  }
+  // Reviews intentionally omitted on collection ItemList entries.
 
   if (!productHasRichResultSignal(productNode)) return null;
 
@@ -411,7 +422,7 @@ export function productJsonLd(p) {
       includeSeller: true,
       priceValidUntil: resolvePriceValidUntil(p),
       validFrom: resolveOfferValidFrom(p),
-      codAvailable: productAllowsCod(p),
+      product: p,
     });
   }
 
@@ -526,26 +537,15 @@ export function collectionPageJsonLd({
       if (!slug) return null;
       const path = p.urlPath || `/${slug}`;
       const itemUrl = absoluteProductUrl(path);
-      const listItem = {
+      // URL-only ItemList entries — no nested Offer/shipping blobs on category pages.
+      return {
         "@type": "ListItem",
         position: i + 1,
         url: itemUrl,
         name: p.name || slug,
       };
-      // Only attach Product when Google-complete — never emit bare name/url Product.
-      const productNode = buildCollectionProductNode(p);
-      if (productNode) listItem.item = productNode;
-      return listItem;
     })
-    .filter(Boolean)
-    // Safety net: if anything incomplete slipped through, drop the Product item.
-    .map((li) => {
-      if (li?.item?.["@type"] === "Product" && !productHasRichResultSignal(li.item)) {
-        const { item, ...rest } = li;
-        return rest;
-      }
-      return li;
-    });
+    .filter(Boolean);
 
   const total =
     Number.isFinite(Number(numberOfItems)) && Number(numberOfItems) >= 0
@@ -583,14 +583,21 @@ export function collectionPageJsonLd({
 /** AutoPartsStore — root layout once */
 export function organizationJsonLd(overrides = {}) {
   const SITE = site();
+  const orgId = `${SITE}/#org`;
   return {
     "@context": "https://schema.org",
     "@type": "AutoPartsStore",
+    "@id": orgId,
     name: overrides.name || "CrazzyCars.pk",
     url: SITE,
-    logo: overrides.logo || `${SITE}/og-image.jpg`,
+    logo: {
+      "@type": "ImageObject",
+      url: overrides.logo || `${SITE}/logo.png`,
+    },
+    image: overrides.image || overrides.ogImage || `${SITE}/og-image.jpg`,
     email: overrides.email || "info@crazzycars.pk",
     telephone: overrides.telephone || "+92-328-4010007",
+    hasMerchantReturnPolicy: buildOrganizationReturnPolicy(SITE),
     contactPoint: [
       {
         "@type": "ContactPoint",

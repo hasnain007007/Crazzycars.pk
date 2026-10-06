@@ -5,7 +5,10 @@ import CarCatalog from "@/lib/models/CarCatalog.model";
 import Product from "@/lib/models/Product.model";
 import Vehicle from "@/lib/models/Vehicle.model";
 import { VEHICLE_HANDLE_ALIASES } from "@/lib/categoryHandleAliases";
-import { buildVehiclePageProductFilter } from "@/lib/productVehicleQuery";
+import {
+  buildVehiclePageProductFilter,
+  enrichVehicleCatalogGeneration,
+} from "@/lib/productVehicleQuery";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
@@ -201,6 +204,8 @@ export async function loadProductsForVehicle(vehicleOrId, { limit = 200 } = {}) 
     vehicle = await Vehicle.findById(vehicleOrId).lean();
   }
   if (!vehicle?._id) return [];
+
+  vehicle = await enrichVehicleCatalogGeneration(vehicle);
 
   const products = await Product.find(buildVehiclePageProductFilter(vehicle))
     .select(

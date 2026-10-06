@@ -116,11 +116,18 @@ const customSizingSchema = new mongoose.Schema(
   { _id: false }
 );
 
+/**
+ * Legacy join rows — intended uniqueness after dedupe:
+ * make + model + yearFrom + yearTo + generationId (see backfill-fitment-generationId.mjs).
+ */
 const compatibleCarSchema = new mongoose.Schema(
   {
     make: { type: String, required: true, trim: true },
     model: { type: String, required: true, trim: true },
     generation: { type: String, default: "", trim: true },
+    /** Car Catalog nested model ObjectId — preferred generation key. */
+    generationId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    generationLabel: { type: String, default: "", trim: true },
     yearFrom: { type: Number, default: null },
     yearTo: { type: Number, default: null },
   },
@@ -131,6 +138,9 @@ const vehicleFitmentRowSchema = new mongoose.Schema(
   {
     make: { type: String, default: "" },
     model: { type: String, default: "" },
+    /** Car Catalog nested model ObjectId — preferred generation key. */
+    generationId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    generationLabel: { type: String, default: "", trim: true },
     yearFrom: { type: Number, default: null },
     yearTo: { type: Number, default: null },
     bodyStyle: {
@@ -304,6 +314,8 @@ productSchema.index({
   "vehicleCompatibility.vehicles.model": 1,
   status: 1,
 });
+productSchema.index({ "compatibleCars.generationId": 1, status: 1 });
+productSchema.index({ "vehicleCompatibility.vehicles.generationId": 1, status: 1 });
 // Typeahead / storefront search — weights favor product name & SKU.
 productSchema.index(
   {

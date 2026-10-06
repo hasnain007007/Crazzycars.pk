@@ -116,11 +116,26 @@ const customSizingSchema = new mongoose.Schema(
   { _id: false }
 );
 
+/**
+ * Legacy join rows synced from vehicleCompatibility.vehicles.
+ * Intended uniqueness (dedupe before enforcing in Mongo):
+ *   make + model + yearFrom + yearTo + generationId
+ * Example index (apply after backfill-fitment-generationId.mjs dedupes):
+ *   productSchema.index(
+ *     { _id: 1, "compatibleCars.make": 1, "compatibleCars.model": 1,
+ *       "compatibleCars.yearFrom": 1, "compatibleCars.yearTo": 1,
+ *       "compatibleCars.generationId": 1 },
+ *     { unique: true, sparse: true }
+ *   );
+ */
 const compatibleCarSchema = new mongoose.Schema(
   {
     make: { type: String, required: true, trim: true },
     model: { type: String, required: true, trim: true },
     generation: { type: String, default: "", trim: true },
+    /** Car Catalog nested model ObjectId — preferred generation key. */
+    generationId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    generationLabel: { type: String, default: "", trim: true },
     yearFrom: { type: Number, default: null },
     yearTo: { type: Number, default: null },
   },
@@ -131,6 +146,9 @@ const vehicleFitmentRowSchema = new mongoose.Schema(
   {
     make: { type: String, default: "" },
     model: { type: String, default: "" },
+    /** Car Catalog nested model ObjectId — preferred generation key. */
+    generationId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    generationLabel: { type: String, default: "", trim: true },
     yearFrom: { type: Number, default: null },
     yearTo: { type: Number, default: null },
     bodyStyle: {
@@ -300,5 +318,7 @@ productSchema.index({
   "vehicleCompatibility.vehicles.model": 1,
   status: 1,
 });
+productSchema.index({ "compatibleCars.generationId": 1, status: 1 });
+productSchema.index({ "vehicleCompatibility.vehicles.generationId": 1, status: 1 });
 
 export default mongoose.models.Product || mongoose.model("Product", productSchema);

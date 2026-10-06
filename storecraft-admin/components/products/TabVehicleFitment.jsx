@@ -13,6 +13,7 @@ import {
   vehiclesFromCsv,
   vehiclesToCsv,
 } from "@/lib/vehicleCompatibility";
+import { resolveGenerationFromRow } from "@/lib/fitmentGeneration";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_MIN = 1990;
@@ -56,12 +57,44 @@ function catalogModelLabel(entry, fallback = "") {
   return String(entry?.nickname || entry?.generation || entry?.model || fallback || "").trim();
 }
 
-function vehicleKey(make, model, yearFrom, yearTo) {
+function generationLabelForEntry(entry) {
+  return String(entry?.generation || entry?.nickname || entry?.model || "").trim();
+}
+
+function applyResolvedGeneration(row, catalogModels) {
+  const resolved = resolveGenerationFromRow(row, catalogModels);
+  if (resolved.unmatched || !resolved.generationId) {
+    return {
+      ...row,
+      generationId: null,
+      generationLabel: "",
+      _generationUnmatched: true,
+    };
+  }
+  return {
+    ...row,
+    generationId: resolved.generationId,
+    generationLabel: resolved.generationLabel || generationLabelForEntry(resolved.entry),
+    _generationUnmatched: false,
+  };
+}
+
+function findCatalogEntryForRow(row, carData) {
+  if (!row?.make) return null;
+  const list = carData?.[row.make] || [];
+  if (!list.length) return null;
+  const resolved = resolveGenerationFromRow(row, list);
+  if (resolved.entry) return resolved.entry;
+  return null;
+}
+
+function vehicleKey(make, model, yearFrom, yearTo, generationId = "") {
   return [
     String(make || "").trim().toLowerCase(),
     String(model || "").trim().toLowerCase(),
     yearFrom ?? "",
     yearTo ?? "",
+    generationId ? String(generationId) : "",
   ].join("|");
 }
 
@@ -193,21 +226,49 @@ export default function TabVehicleFitment({ value, onChange }) {
     setPreviewRowId(rowId);
     const vehicles = vc.vehicles.map((row) => {
       if (row._rowId !== rowId) return row;
-      const next = { ...row, [field]: val };
-      if (field === "make" || field === "model") {
-        const mk = field === "make" ? (val === "All Makes" ? "" : val) : next.make;
-        const md = field === "model" ? (val === "All Models" ? "" : val) : next.model;
-        const entry =
-          mk && md
-            ? catalog.carData[mk]?.find(
-                (m) =>
-                  m.model === md ||
-                  m.nickname === md ||
-                  formatModelOptionLabel({ name: m.model, ...m }) === md
-              )
-            : null;
-        if (entry?.bodyStyle && BODY_STYLES.includes(entry.bodyStyle)) {
-          next.bodyStyle = entry.bodyStyle;
+      let next = { ...row, [field]: val };
+      if (field === "make" || field === "model" || field === "yearFrom" || field === "yearTo") {
+        if (field === "make") {
+          next.make = val === "All Makes" ? "" : val;
+          next.model = "";
+          next.generationId = null;
+          next.generationLabel = "";
+        }
+        if (field === "model") {
+          next.model = val === "All Models" ? "" : val;
+        }
+        const mk = next.make;
+        const list = mk ? catalog.carData[mk] || [] : [];
+        if (field === "model" && mk && next.model) {
+          // Prefer resolving by selected option label → catalog entry id (never first gen)
+          const byOption = list.find(
+            (m) =>
+              formatModelOptionLabel({ name: m.model, ...m }) === next.model ||
+              m.model === next.model ||
+              m.nickname === next.model ||
+              m.generation === next.model
+          );
+          if (byOption?._id) {
+            next.generationId = String(byOption._id);
+            next.generationLabel = generationLabelForEntry(byOption);
+            next.model = catalogModelLabel(byOption, byOption.model);
+            if (byOption.bodyStyle && BODY_STYLES.includes(byOption.bodyStyle)) {
+              next.bodyStyle = byOption.bodyStyle;
+            }
+            if (byOption.yearFrom != null && field === "model") {
+              next.yearFrom = byOption.yearFrom;
+              next.yearTo = byOption.yearTo ?? CURRENT_YEAR;
+            }
+            next._generationUnmatched = false;
+          } else {
+            next = applyResolvedGeneration(next, list);
+          }
+        } else if (list.length) {
+          next = applyResolvedGeneration(next, list);
+        } else {
+          next.generationId = null;
+          next.generationLabel = "";
+          next._generationUnmatched = Boolean(next.make && next.model);
         }
       }
       return next;
@@ -219,14 +280,7 @@ export default function TabVehicleFitment({ value, onChange }) {
     if (!previewRowId) return null;
     const row = vc.vehicles.find((r) => r._rowId === previewRowId);
     if (!row?.make || !row?.model) return null;
-    return (
-      catalog.carData[row.make]?.find(
-        (m) =>
-          m.model === row.model ||
-          m.nickname === row.model ||
-          formatModelOptionLabel({ name: m.model, ...m }) === row.model
-      ) || null
-    );
+    return findCatalogEntryForRow(row, catalog.carData);
   }, [previewRowId, vc.vehicles, catalog.carData]);
 
   /** Flat searchable list of every catalog model. */
@@ -253,22 +307,32 @@ export default function TabVehicleFitment({ value, onChange }) {
 
   const addCatalogEntry = (make, entry) => {
     const modelVal = catalogModelLabel(entry, entry?.model || "");
-    const key = vehicleKey(make, modelVal, entry?.yearFrom, entry?.yearTo);
+    const genId = entry?._id != null ? String(entry._id) : null;
+    const key = vehicleKey(make, modelVal, entry?.yearFrom, entry?.yearTo, genId);
     const exists = vc.vehicles.some(
-      (v) => vehicleKey(v.make, v.model, v.yearFrom, v.yearTo) === key
+      (v) =>
+        vehicleKey(v.make, v.model, v.yearFrom, v.yearTo, v.generationId) === key ||
+        (genId && String(v.generationId || "") === genId)
     );
     if (exists) {
       toast.success(`${make} ${modelVal} already added`);
+      return;
+    }
+    if (!genId) {
+      toast.error(`Catalog entry for ${make} ${modelVal} has no generation id — not added`);
       return;
     }
     const row = {
       _rowId: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       make,
       model: modelVal,
+      generationId: genId,
+      generationLabel: generationLabelForEntry(entry),
       yearFrom: entry?.yearFrom ?? 1994,
       yearTo: entry?.yearTo ?? CURRENT_YEAR,
       bodyStyle: entry?.bodyStyle && BODY_STYLES.includes(entry.bodyStyle) ? entry.bodyStyle : "All",
       notes: entry?.description || entry?.generation || entry?.model || "",
+      _generationUnmatched: false,
     };
     patch({ vehicles: [...vc.vehicles, row] });
     setPreviewRowId(row._rowId);
@@ -279,39 +343,41 @@ export default function TabVehicleFitment({ value, onChange }) {
   const addVehicle = (preset) => {
     if (preset?.make && preset?.model) {
       const matches = findFamilyModels(catalog.carData, preset.make, preset.model);
-      const sources =
-        matches.length > 0
-          ? matches
-          : [
-              {
-                model: preset.model,
-                nickname: "",
-                yearFrom: 1994,
-                yearTo: CURRENT_YEAR,
-                bodyStyle: "All",
-                description: "",
-                generation: "",
-              },
-            ];
+      if (!matches.length) {
+        toast.error(`No catalog generations found for ${preset.make} ${preset.model}`);
+        return;
+      }
 
       const existing = new Set(
-        vc.vehicles.map((v) => vehicleKey(v.make, v.model, v.yearFrom, v.yearTo))
+        vc.vehicles.map((v) =>
+          vehicleKey(v.make, v.model, v.yearFrom, v.yearTo, v.generationId)
+        )
+      );
+      const existingIds = new Set(
+        vc.vehicles.map((v) => String(v.generationId || "")).filter(Boolean)
       );
       const newRows = [];
-      for (const entry of sources) {
+      for (const entry of matches) {
         const modelVal = catalogModelLabel(entry, preset.model);
-        const key = vehicleKey(preset.make, modelVal, entry.yearFrom, entry.yearTo);
+        const genId = entry?._id != null ? String(entry._id) : null;
+        if (!genId) continue;
+        if (existingIds.has(genId)) continue;
+        const key = vehicleKey(preset.make, modelVal, entry.yearFrom, entry.yearTo, genId);
         if (existing.has(key)) continue;
         existing.add(key);
+        existingIds.add(genId);
         newRows.push({
           _rowId: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           make: preset.make,
           model: modelVal,
+          generationId: genId,
+          generationLabel: generationLabelForEntry(entry),
           yearFrom: entry.yearFrom ?? 1994,
           yearTo: entry.yearTo ?? CURRENT_YEAR,
           bodyStyle:
             entry.bodyStyle && BODY_STYLES.includes(entry.bodyStyle) ? entry.bodyStyle : "All",
           notes: entry.description || entry.generation || entry.model || "",
+          _generationUnmatched: false,
         });
       }
 
@@ -334,10 +400,13 @@ export default function TabVehicleFitment({ value, onChange }) {
       _rowId: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       make: "",
       model: "",
+      generationId: null,
+      generationLabel: "",
       yearFrom: 1994,
       yearTo: CURRENT_YEAR,
       bodyStyle: "All",
       notes: "",
+      _generationUnmatched: false,
     };
     patch({ vehicles: [...vc.vehicles, row] });
     setPreviewRowId(row._rowId);
@@ -422,12 +491,27 @@ export default function TabVehicleFitment({ value, onChange }) {
       toast.error("Invalid years");
       return;
     }
-    const vehicles = vc.vehicles.map((row) =>
-      selected.has(row._rowId) ? { ...row, yearFrom, yearTo } : row
-    );
+    const vehicles = vc.vehicles.map((row) => {
+      if (!selected.has(row._rowId)) return row;
+      const next = { ...row, yearFrom, yearTo };
+      const list = next.make ? catalog.carData[next.make] || [] : [];
+      return list.length ? applyResolvedGeneration(next, list) : next;
+    });
     patch({ vehicles });
     toast.success("Year range updated");
   };
+
+  const unmatchedCount = useMemo(
+    () =>
+      vc.vehicles.filter((r) => {
+        if (!r.make || !r.model) return false;
+        if (r._generationUnmatched === true || !r.generationId) return true;
+        const list = catalog.carData[r.make] || [];
+        if (!list.length) return true;
+        return resolveGenerationFromRow(r, list).unmatched;
+      }).length,
+    [vc.vehicles, catalog.carData]
+  );
 
   return (
     <div className="space-y-6">
@@ -586,6 +670,17 @@ export default function TabVehicleFitment({ value, onChange }) {
             />
           </div>
 
+          {unmatchedCount > 0 ? (
+            <div
+              role="alert"
+              className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            >
+              <strong className="font-semibold">{unmatchedCount} fitment row(s)</strong> could not be
+              matched to a unique catalog generation. Fix years or pick the exact generation — we do
+              not default to the first catalog entry.
+            </div>
+          ) : null}
+
           {vc.vehicles.length > 3 ? (
             <div className="flex flex-wrap gap-2">
               <input
@@ -620,7 +715,12 @@ export default function TabVehicleFitment({ value, onChange }) {
               </div>
               <div className="min-w-0 text-sm">
                 <p className="text-base font-semibold text-[#111827]">
-                  {catalogPreview.model}
+                  {(() => {
+                    const row = vc.vehicles.find((r) => r._rowId === previewRowId);
+                    const mk = row?.make || "";
+                    const base = catalogPreview.model || row?.model || "";
+                    return `${mk} ${base}`.trim();
+                  })()}
                   {catalogPreview.nickname ? (
                     <span className="ml-2 text-sm font-medium text-[#6b7280]">
                       ({catalogPreview.nickname})
@@ -683,6 +783,7 @@ export default function TabVehicleFitment({ value, onChange }) {
                   </th>
                   <th className="px-2 py-2">Make</th>
                   <th className="px-2 py-2">Model</th>
+                  <th className="px-2 py-2">Generation</th>
                   <th className="px-2 py-2">Year from</th>
                   <th className="px-2 py-2">Year to</th>
                   <th className="px-2 py-2">Body</th>
@@ -693,7 +794,7 @@ export default function TabVehicleFitment({ value, onChange }) {
               <tbody>
                 {filteredVehicles.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-[#9ca3af]">
+                    <td colSpan={10} className="px-3 py-6 text-center text-[#9ca3af]">
                       No vehicles added. Use &quot;+ Add Vehicle&quot; or a quick-add button.
                     </td>
                   </tr>
@@ -707,17 +808,33 @@ export default function TabVehicleFitment({ value, onChange }) {
                           ) || []),
                         ]
                       : ["All Models"];
-                    const modelEntry = row.make
-                      ? catalog.carData[row.make]?.find(
-                          (m) => m.model === row.model || m.nickname === row.model
-                        )
-                      : null;
+                    const modelEntry = findCatalogEntryForRow(row, catalog.carData);
+                    const resolved = row.make
+                      ? resolveGenerationFromRow(row, catalog.carData[row.make] || [])
+                      : { unmatched: Boolean(row.make && row.model) };
+                    const isUnmatched =
+                      Boolean(row.make && row.model) &&
+                      (row._generationUnmatched === true ||
+                        resolved.unmatched ||
+                        !row.generationId);
                     const modelSelectValue = modelEntry
                       ? formatModelOptionLabel({ name: modelEntry.model, ...modelEntry })
                       : row.model;
-                    const years = yearsForModelFromCatalog(catalog.carData, row.make, row.model);
+                    const years = modelEntry
+                      ? yearsForModelFromCatalog(
+                          catalog.carData,
+                          row.make,
+                          modelEntry.slug || modelEntry.model
+                        )
+                      : yearsForModelFromCatalog(catalog.carData, row.make, row.model);
                     return (
-                      <tr key={row._rowId} className="border-t border-[#f3f4f6]">
+                      <tr
+                        key={row._rowId}
+                        className={[
+                          "border-t border-[#f3f4f6]",
+                          isUnmatched ? "bg-amber-50/80" : "",
+                        ].join(" ")}
+                      >
                         <td className="px-2 py-2">
                           <input
                             type="checkbox"
@@ -734,13 +851,8 @@ export default function TabVehicleFitment({ value, onChange }) {
                           <SearchableSelect
                             value={row.make}
                             onChange={(v) => {
-                              const vehicles = vc.vehicles.map((r) =>
-                                r._rowId === row._rowId
-                                  ? { ...r, make: v === "All Makes" ? "" : v, model: "" }
-                                  : r
-                              );
-                              patch({ vehicles });
                               setPreviewRowId(row._rowId);
+                              updateVehicle(row._rowId, "make", v);
                             }}
                             options={makeOptions}
                             placeholder="Make"
@@ -754,19 +866,51 @@ export default function TabVehicleFitment({ value, onChange }) {
                               if (v === "All Models") {
                                 patch({
                                   vehicles: vc.vehicles.map((r) =>
-                                    r._rowId === row._rowId ? { ...r, model: "" } : r
+                                    r._rowId === row._rowId
+                                      ? {
+                                          ...r,
+                                          model: "",
+                                          generationId: null,
+                                          generationLabel: "",
+                                          _generationUnmatched: false,
+                                        }
+                                      : r
                                   ),
                                 });
                                 return;
                               }
-                              const entry = catalog.carData[row.make]?.find(
+                              const list = catalog.carData[row.make] || [];
+                              const entry = list.find(
                                 (m) => formatModelOptionLabel({ name: m.model, ...m }) === v
                               );
-                              const modelVal = entry ? entry.nickname || entry.model : v;
+                              if (!entry) {
+                                // Do not default to first generation — mark unmatched
+                                patch({
+                                  vehicles: vc.vehicles.map((r) => {
+                                    if (r._rowId !== row._rowId) return r;
+                                    return applyResolvedGeneration(
+                                      { ...r, model: v, generationId: null, generationLabel: "" },
+                                      list
+                                    );
+                                  }),
+                                });
+                                toast.error(
+                                  `Could not resolve a unique catalog generation for “${v}”`
+                                );
+                                return;
+                              }
+                              const modelVal = catalogModelLabel(entry, entry.model);
+                              const genId = entry._id != null ? String(entry._id) : null;
                               patch({
                                 vehicles: vc.vehicles.map((r) => {
                                   if (r._rowId !== row._rowId) return r;
-                                  const next = { ...r, model: modelVal };
+                                  const next = {
+                                    ...r,
+                                    model: modelVal,
+                                    generationId: genId,
+                                    generationLabel: generationLabelForEntry(entry),
+                                    _generationUnmatched: !genId,
+                                  };
                                   if (entry?.bodyStyle && BODY_STYLES.includes(entry.bodyStyle)) {
                                     next.bodyStyle = entry.bodyStyle;
                                   }
@@ -782,6 +926,25 @@ export default function TabVehicleFitment({ value, onChange }) {
                             placeholder="Model"
                             disabled={!row.make || row.make === "All Makes"}
                           />
+                        </td>
+                        <td className="px-2 py-2 min-w-[120px]">
+                          {isUnmatched ? (
+                            <span
+                              className="inline-flex max-w-[180px] flex-col gap-0.5 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900"
+                              title="Pick a catalog generation or adjust years so one generation matches"
+                            >
+                              Unmatched
+                              <span className="font-normal text-amber-800">
+                                Not defaulting to first gen
+                              </span>
+                            </span>
+                          ) : row.generationLabel ? (
+                            <span className="text-xs font-medium text-[#374151]">{row.generationLabel}</span>
+                          ) : row.generationId ? (
+                            <span className="text-xs text-[#6b7280]">Linked</span>
+                          ) : (
+                            <span className="text-xs text-[#9ca3af]">—</span>
+                          )}
                         </td>
                         <td className="px-2 py-2 w-24">
                           {years.length ? (

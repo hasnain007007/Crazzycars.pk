@@ -60,6 +60,8 @@ const reviewSchema = new mongoose.Schema(
     },
     helpfulVotes: { type: Number, default: 0 },
     orderId: { type: String, default: "" },
+    /** Seed / import corpus — never use in AggregateRating or public star counts. */
+    isSeed: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );

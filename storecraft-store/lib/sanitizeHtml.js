@@ -49,14 +49,73 @@ export function decodeHtmlEntities(input) {
   return s;
 }
 
+/**
+ * Normalize imported / double-escaped descriptions before sanitize-html.
+ * - Decode entities (incl. &amp;lt;h1&amp;gt;)
+ * - Strip literal Markdown **
+ * - Unwrap a lone outer <ul><li>…</li></ul> when the inner text is still escaped tags
+ *   (common import bug: whole HTML dump treated as one bullet)
+ */
+export function normalizeProductHtmlInput(dirty) {
+  let s = decodeHtmlEntities(String(dirty || "").trim());
+  if (!s) return "";
+  s = s.replace(/\*\*/g, "");
+
+  // Single-bullet wrapper around escaped HTML → unwrap
+  const wrapped = s.match(/^\s*<ul>\s*<li>([\s\S]*)<\/li>\s*<\/ul>\s*$/i);
+  if (wrapped) {
+    const inner = decodeHtmlEntities(wrapped[1].trim());
+    if (/<[a-z][\s\S]*>/i.test(inner) || /&lt;[a-z]/i.test(wrapped[1])) {
+      s = decodeHtmlEntities(inner);
+    }
+  }
+
+  // One more decode pass if tags still look escaped
+  if (/&lt;[a-z]/i.test(s)) {
+    s = decodeHtmlEntities(s);
+  }
+  return s;
+}
+
 export function sanitizeProductHtml(dirty) {
-  const raw = decodeHtmlEntities(String(dirty || "").trim());
+  const raw = normalizeProductHtmlInput(dirty);
   if (!raw) return "";
   return sanitizeHtml(raw, {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: ALLOWED_ATTR,
     allowedSchemes: ["http", "https", "mailto"],
     // Drop Shopify/editor junk attributes (data-*, style, class, etc.)
+    allowedClasses: {},
+    transformTags: {
+      a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer" }),
+      h1: "h2",
+    },
+  });
+}
+
+/** Category / FAQ HTML — structural tags + details/summary for FAQ blocks. */
+export function sanitizeCategoryHtml(dirty) {
+  const raw = decodeHtmlEntities(String(dirty || "").trim());
+  if (!raw) return "";
+  return sanitizeHtml(raw, {
+    allowedTags: [
+      "h2",
+      "h3",
+      "p",
+      "ul",
+      "ol",
+      "li",
+      "strong",
+      "em",
+      "b",
+      "i",
+      "br",
+      "a",
+      "details",
+      "summary",
+    ],
+    allowedAttributes: ALLOWED_ATTR,
+    allowedSchemes: ["http", "https", "mailto"],
     allowedClasses: {},
     transformTags: {
       a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer" }),

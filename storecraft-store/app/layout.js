@@ -21,6 +21,8 @@ import { sanitizeMetadata, withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import { GOOGLE_MERCHANT_ID } from "@/lib/googleCustomerReviews";
+import { resolveStoreLogoUrl } from "@/lib/storeLogo";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 /** Cache HTML for 5 min — major TTFB win vs force-dynamic. */
@@ -232,14 +234,24 @@ export default async function RootLayout({ children }) {
     general.storeName ||
     process.env.NEXT_PUBLIC_APP_NAME ||
     process.env.NEXT_PUBLIC_STORE_NAME ||
-    "Crazzycars.pk";
+    BRAND;
   const baseUrl = getSiteUrl();
   const description =
     seo.metaDescription?.trim() || seo.defaultMetaDescription?.trim() || FALLBACK_DESCRIPTION;
 
+  const logoUrl =
+    resolveStoreLogoUrl(settings) ||
+    seo.logoUrl?.trim() ||
+    `${baseUrl}/logo.png`;
+  const orgImage =
+    seo.ogImage?.trim() ||
+    `${baseUrl}/og-image.jpg`;
+
   const organizationJsonLd = buildOrgLd({
     name: storeName,
-    logo: `${baseUrl}/og-image.jpg`,
+    logo: logoUrl,
+    image: orgImage,
+    ogImage: orgImage,
     email: general.email || undefined,
     telephone: general.phone || undefined,
     streetAddress: general.address || undefined,

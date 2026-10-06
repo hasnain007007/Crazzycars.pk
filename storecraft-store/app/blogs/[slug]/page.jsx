@@ -9,7 +9,9 @@ import { withSafeMetadata, isNextNavigationError } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
 import { recordBlogPostPageView } from "@/lib/blogEngagement";
+import { blogContentModifiedAt } from "@/lib/blogContentDate";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
+import { BRAND } from "@/lib/brand";
 const BASE_URL = getSiteUrl();
 
 function withClientId(doc) {
@@ -27,7 +29,7 @@ const loadBlogPostForMeta = cache(async (slug) => {
       status: "published",
     })
       .select(
-        "title slug excerpt featuredImage publishedAt createdAt updatedAt categories tags author seo"
+        "title slug excerpt featuredImage publishedAt contentUpdatedAt createdAt updatedAt categories tags author seo"
       )
       .lean();
     if (!post) return null;
@@ -74,16 +76,17 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
   const { slug } = await params;
   const post = await loadBlogPostForMeta(slug);
   if (!post) return { title: "Blog Not Found" };
+  const modified = blogContentModifiedAt(post);
   const metaTitle =
     post.seo?.metaTitle ||
-    `${post.title} | ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} Blog`;
+    `${post.title} | ${BRAND} Blog`;
   return {
     // Absolute so the root layout does not append the store name a second time.
     title: { absolute: metaTitle },
     description: post.seo?.metaDescription || post.excerpt || post.title,
-    authors: [{ name: post.author?.name || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk" }],
-    publishedTime: post.createdAt,
-    modifiedTime: post.updatedAt,
+    authors: [{ name: post.author?.name || BRAND }],
+    publishedTime: post.publishedAt || post.createdAt,
+    modifiedTime: modified,
     alternates: {
       canonical: `${BASE_URL}/blogs/${slug}`,
     },
@@ -91,9 +94,9 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
       title: post.seo?.metaTitle || post.title,
       description: post.seo?.metaDescription || post.excerpt || post.title,
       type: "article",
-      publishedTime: post.createdAt,
-      modifiedTime: post.updatedAt,
-      authors: [post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`],
+      publishedTime: post.publishedAt || post.createdAt,
+      modifiedTime: modified,
+      authors: [post.author?.name || BRAND],
       images: post.featuredImage?.url ? [{ url: post.featuredImage.url }] : [],
       url: `${BASE_URL}/blogs/${slug}`,
     },
@@ -137,21 +140,22 @@ export default async function BlogPostPage({ params }) {
       ? post.tags.map((t) => String(t).trim()).filter(Boolean)
       : [];
 
+    const modified = blogContentModifiedAt(post);
     const jsonLd = {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
       headline: post.title,
       description: post.excerpt || post.title,
       image: post.featuredImage?.url || "",
-      datePublished: post.createdAt,
-      dateModified: post.updatedAt,
+      datePublished: post.publishedAt || post.createdAt,
+      dateModified: modified,
       author: {
         "@type": "Person",
-        name: post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+        name: post.author?.name || BRAND,
       },
       publisher: {
         "@type": "Organization",
-        name: `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`,
+        name: BRAND,
         logo: {
           "@type": "ImageObject",
           url: `${BASE_URL}/logo.png`,

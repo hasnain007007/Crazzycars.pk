@@ -9,11 +9,15 @@
  *
  * Matching rules for generation pages / make-model filters:
  * 1. Prefer `compatibleVehicles` ObjectId links (generation-accurate).
- * 2. Legacy `compatibleCars` / `vehicleCompatibility` only when the product has
- *    no ObjectId links — require exact make + exact model + year-range overlap.
- * 3. Never substring-match model names (Corolla must not match Corolla Cross).
+ * 2. Prefer `generationId` on fitment rows when Car Catalog model id is known.
+ * 3. Legacy make+model only when the product has no ObjectId links — exclusive
+ *    year overlap (≥2 years or full containment / exclusive boundaries).
+ * 4. Never substring-match model names (Corolla must not match Corolla Cross).
  */
+import mongoose from "mongoose";
+import CarCatalog from "@/lib/models/CarCatalog.model";
 import Vehicle from "@/lib/models/Vehicle.model";
+import { exclusiveYearOverlap } from "@/lib/fitmentGeneration";
 
 export function activeProductStatusFilter() {
   return { status: { $regex: /^active$/i }, securityHold: { $ne: true } };
@@ -40,8 +44,42 @@ export function vehicleYearBounds(vehicle) {
 }
 
 /**
- * Mongo $elemMatch fragment: product year range overlaps [vFrom, vTo].
- * Missing yearTo is treated as "present" (open-ended).
+ * Exclusive year overlap for legacy fitment `$elemMatch` rows.
+ * ≥2 overlapping years OR full containment (exclusive-boundary single year).
+ * Open-ended product rows (null yearTo) only match when yearFrom starts inside the vehicle span.
+ * Adjacent gens that only share a boundary year do not match.
+ */
+export function exclusiveYearOverlapElemMatch(vFrom, vTo) {
+  return {
+    $or: [
+      {
+        yearFrom: { $lte: vTo - 1 },
+        yearTo: { $gte: vFrom + 1, $ne: null },
+      },
+      {
+        yearFrom: { $gte: vFrom },
+        yearTo: { $lte: vTo, $ne: null },
+      },
+      {
+        yearFrom: { $lte: vFrom },
+        yearTo: { $gte: vTo, $ne: null },
+      },
+      {
+        yearFrom: { $gte: vFrom, $lte: vTo },
+        $or: [{ yearTo: null }, { yearTo: { $exists: false } }],
+      },
+    ],
+  };
+}
+
+/** Alias used by callers / older docs. */
+export function strictYearOverlapElemMatch(vFrom, vTo) {
+  return exclusiveYearOverlapElemMatch(vFrom, vTo);
+}
+
+/**
+ * Loose overlap (includes single shared boundary year). Prefer exclusive helpers.
+ * @deprecated
  */
 export function yearOverlapElemMatch(vFrom, vTo) {
   return {
@@ -59,6 +97,24 @@ export function noCompatibleVehiclesClause() {
       { compatibleVehicles: { $size: 0 } },
     ],
   };
+}
+
+function toObjectId(id) {
+  if (id == null || id === "") return null;
+  if (id instanceof mongoose.Types.ObjectId) return id;
+  const s = String(id);
+  if (!mongoose.Types.ObjectId.isValid(s)) return null;
+  return new mongoose.Types.ObjectId(s);
+}
+
+function pushGenerationIdClauses(or, catalogGenId) {
+  const oid = toObjectId(catalogGenId);
+  if (!oid) return;
+  or.push({ compatibleCars: { $elemMatch: { generationId: oid } } });
+  or.push({
+    "vehicleCompatibility.fitmentType": { $in: ["specific", "semi-universal"] },
+    "vehicleCompatibility.vehicles": { $elemMatch: { generationId: oid } },
+  });
 }
 
 /**
@@ -88,9 +144,55 @@ function cleanModelLabel(makeName, modelName) {
   return model.replace(/\s+/g, " ").trim() || String(modelName || "").trim();
 }
 
+/** Map catalog model slugs → nested model ObjectId (Car Catalog). */
+export async function catalogGenerationIdsBySlugs(slugs) {
+  const want = [
+    ...new Set((slugs || []).map((s) => String(s || "").trim().toLowerCase()).filter(Boolean)),
+  ];
+  const map = new Map();
+  if (!want.length) return map;
+
+  const makes = await CarCatalog.find({
+    isActive: true,
+    "models.slug": { $in: want },
+  })
+    .select("models.slug models._id models.isActive")
+    .lean();
+
+  for (const make of makes) {
+    for (const m of make.models || []) {
+      if (m.isActive === false) continue;
+      const slug = String(m.slug || "").toLowerCase();
+      if (want.includes(slug) && m._id) {
+        map.set(slug, m._id);
+      }
+    }
+  }
+  return map;
+}
+
+/** Resolve Car Catalog nested model _id for a Vehicle (catalogModelSlug). */
+export async function catalogGenerationIdForVehicle(vehicle) {
+  if (!vehicle) return null;
+  const cached = vehicle.catalogGenerationId || vehicle.catalogModelId;
+  if (cached) return cached;
+  const slug = String(vehicle.catalogModelSlug || "").trim().toLowerCase();
+  if (!slug) return null;
+  const map = await catalogGenerationIdsBySlugs([slug]);
+  return map.get(slug) || null;
+}
+
+/** Attach catalogGenerationId / catalogModelId for fitment matching. */
+export async function enrichVehicleCatalogGeneration(vehicle) {
+  if (!vehicle || typeof vehicle !== "object") return vehicle;
+  const id = await catalogGenerationIdForVehicle(vehicle);
+  if (!id) return vehicle;
+  return { ...vehicle, catalogGenerationId: id, catalogModelId: id };
+}
+
 /**
  * Mongo filter for `/cars/[slug]` product grids.
- * Primary: compatibleVehicles ObjectId. Legacy make+model+year only if no ObjectIds.
+ * Primary: compatibleVehicles ObjectId. Then generationId. Legacy make+model+exclusive year.
  */
 export function buildVehiclePageProductFilter(vehicle) {
   if (!vehicle?._id) {
@@ -99,16 +201,24 @@ export function buildVehiclePageProductFilter(vehicle) {
 
   const { from: vFrom, to: vTo } = vehicleYearBounds(vehicle);
   const makeRx = exactFieldRegex(vehicle.make);
-  const yearPart = yearOverlapElemMatch(vFrom, vTo);
+  const yearPart = exclusiveYearOverlapElemMatch(vFrom, vTo);
   const noLinks = noCompatibleVehiclesClause();
   const or = [{ compatibleVehicles: vehicle._id }];
+
+  const catalogGenId = vehicle.catalogGenerationId || vehicle.catalogModelId;
+  if (catalogGenId) {
+    pushGenerationIdClauses(or, catalogGenId);
+  }
 
   if (makeRx) {
     for (const label of exactModelLabelsForVehicle(vehicle)) {
       const modelRx = exactFieldRegex(label);
       if (!modelRx) continue;
       or.push({
-        $and: [noLinks, { compatibleCars: { $elemMatch: { make: makeRx, model: modelRx, ...yearPart } } }],
+        $and: [
+          noLinks,
+          { compatibleCars: { $elemMatch: { make: makeRx, model: modelRx, ...yearPart } } },
+        ],
       });
       or.push({
         $and: [
@@ -137,7 +247,7 @@ export function productsForVehicleIdFilter(vehicleId) {
 
 /**
  * Resolve Vehicle docs for make/model/year, then build product $or for
- * compatibleVehicles ObjectIds (+ legacy string-specific fitment fields).
+ * compatibleVehicles ObjectIds (+ generationId + legacy string-specific fitment).
  * Does not include isUniversal / fitmentType "universal".
  */
 export async function buildMakeModelProductOr(make, model, year) {
@@ -149,20 +259,34 @@ export async function buildMakeModelProductOr(make, model, year) {
   if (mk) vehicleFilter.make = exactFieldRegex(mk);
   if (md) vehicleFilter.model = exactFieldRegex(md);
 
-  let vehicles = await Vehicle.find(vehicleFilter).select("_id make model yearFrom yearTo").lean();
+  let vehicles = await Vehicle.find(vehicleFilter)
+    .select("_id make model yearFrom yearTo catalogModelSlug generation displayName")
+    .lean();
   if (Number.isFinite(y)) {
     const now = new Date().getFullYear() + 1;
     vehicles = vehicles.filter((v) => y >= v.yearFrom && y <= (v.yearTo || now));
   }
   const vehicleIds = vehicles.map((v) => v._id);
 
+  const slugMap = await catalogGenerationIdsBySlugs(
+    vehicles.map((v) => v.catalogModelSlug).filter(Boolean)
+  );
+
   const or = [];
+  const noLinks = noCompatibleVehiclesClause();
 
   if (vehicleIds.length) {
     or.push({ compatibleVehicles: { $in: vehicleIds } });
   }
 
-  // Legacy rows: only products with no ObjectId links; exact model; year overlap when year given.
+  for (const v of vehicles) {
+    const slug = String(v.catalogModelSlug || "").toLowerCase();
+    const genId = slugMap.get(slug);
+    if (genId) {
+      pushGenerationIdClauses(or, genId);
+    }
+  }
+
   const mkRx = mk ? exactFieldRegex(mk) : null;
   const mdRx = md ? exactFieldRegex(md) : null;
   if (mkRx || mdRx) {
@@ -170,14 +294,17 @@ export async function buildMakeModelProductOr(make, model, year) {
     if (mkRx) elem.make = mkRx;
     if (mdRx) elem.model = mdRx;
     if (Number.isFinite(y)) {
-      Object.assign(elem, yearOverlapElemMatch(y, y));
+      Object.assign(elem, exclusiveYearOverlapElemMatch(y, y));
+    } else if (vehicles.length === 1) {
+      const { from, to } = vehicleYearBounds(vehicles[0]);
+      Object.assign(elem, exclusiveYearOverlapElemMatch(from, to));
     }
     const legacyCar = {
-      $and: [noCompatibleVehiclesClause(), { compatibleCars: { $elemMatch: elem } }],
+      $and: [noLinks, { compatibleCars: { $elemMatch: elem } }],
     };
     const legacyVc = {
       $and: [
-        noCompatibleVehiclesClause(),
+        noLinks,
         { "vehicleCompatibility.fitmentType": { $in: ["specific", "semi-universal"] } },
         { "vehicleCompatibility.vehicles": { $elemMatch: elem } },
       ],
@@ -185,10 +312,15 @@ export async function buildMakeModelProductOr(make, model, year) {
     or.push(legacyCar, legacyVc);
   }
 
-  // No matching vehicles and no make/model → empty $or would match everything; force no results.
   if (!or.length) {
     return { $or: [{ _id: null }], vehicleIds: [] };
   }
 
   return { $or: or, vehicleIds };
+}
+
+/** In-memory exclusive overlap check (tests / post-filters). */
+export function productRowExclusiveOverlapsVehicle(row, vehicle) {
+  const { from, to } = vehicleYearBounds(vehicle);
+  return exclusiveYearOverlap(row?.yearFrom, row?.yearTo, from, to).overlaps;
 }

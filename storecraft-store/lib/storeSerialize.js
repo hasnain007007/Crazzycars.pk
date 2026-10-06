@@ -4,6 +4,34 @@ import { serializeStoreOption } from "@/lib/variationOptions";
 import { combinationSignature } from "@/lib/variantMatrix";
 import { sanitizeProductHtml, toPlainText } from "@/lib/sanitizeHtml";
 
+/** Internal ops labels that must not appear on the public PDP. */
+const INTERNAL_NOTE_LABEL_RE =
+  /^(hub|price\s*status|market\s*reference|internal|ops|cost\s*note|supplier|wholesale|margin|sku\s*note)\b/i;
+
+function isInternalNoteLabel(label) {
+  return INTERNAL_NOTE_LABEL_RE.test(String(label || "").trim());
+}
+
+function filterPublicSpecRows(rows) {
+  return (Array.isArray(rows) ? rows : []).filter(
+    (s) => s?.label && s?.value != null && String(s.value).trim() && !isInternalNoteLabel(s.label)
+  );
+}
+
+function filterPublicFeatureList(features) {
+  return (Array.isArray(features) ? features : []).filter((f) => {
+    const text = typeof f === "string" ? f : f?.label || f?.text || f?.name || "";
+    return text && !isInternalNoteLabel(text);
+  });
+}
+
+function scrubFitmentNotes(notes) {
+  const s = String(notes || "").trim();
+  if (!s || isInternalNoteLabel(s)) return "";
+  if (/^(hub|price\s*status|market\s*reference)\b/i.test(s)) return "";
+  return s;
+}
+
 function productDocId(p) {
   if (p?._id != null) return String(p._id);
   if (p?.id != null) return String(p.id);
@@ -144,12 +172,13 @@ export function serializeStoreProductSummary(p, opts = {}) {
       sku: p?.inventory?.sku || p.articleNo || "",
     },
     requiresOptions: productRequiresOptions(p),
-    rating: Number(p?.rating) || 0,
-    averageRating: Number(p?.averageRating) || 0,
-    ratingAverage: Number(p?.ratingAverage) || 0,
-    reviewCount: Number(p?.reviewCount) || 0,
-    totalReviews: Number(p?.totalReviews) || 0,
-    numReviews: Number(p?.numReviews) || 0,
+    // Public cards: hide stars until genuine aggregates are recomputed (seed hygiene).
+    rating: 0,
+    averageRating: 0,
+    ratingAverage: 0,
+    reviewCount: 0,
+    totalReviews: 0,
+    numReviews: 0,
   };
 }
 
@@ -285,10 +314,11 @@ export function serializeStoreProductDetail(p) {
     shippingBaseWeight: Number(p.inventory?.weight) || 0,
     shippingBaseWeightUnit: p.inventory?.weightUnit || "kg",
     seo: p.seo || {},
-    averageRating: Number(p.averageRating) || Number(p.ratingAverage) || Number(p.rating) || 0,
-    reviewCount: Number(p.reviewCount) || Number(p.totalReviews) || Number(p.numReviews) || 0,
-    features: p.features || [],
-    specifications: Array.isArray(p.specifications) ? p.specifications.filter((s) => s.label && s.value) : [],
+    // PDP stars come from /api/reviews (genuine only); do not trust seed-polluted aggregates.
+    averageRating: 0,
+    reviewCount: 0,
+    features: filterPublicFeatureList(p.features),
+    specifications: filterPublicSpecRows(p.specifications),
     codEnabled: productAllowsCod(p),
     isBulky: p.isBulky === true,
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
@@ -327,6 +357,8 @@ export function serializeStoreProductDetail(p) {
           make: c?.make || "",
           model: c?.model || "",
           generation: c?.generation || "",
+          generationId: c?.generationId != null ? String(c.generationId) : null,
+          generationLabel: c?.generationLabel || "",
           yearFrom: c?.yearFrom ?? null,
           yearTo: c?.yearTo ?? null,
         }))
@@ -342,10 +374,12 @@ export function serializeStoreProductDetail(p) {
             ? p.vehicleCompatibility.vehicles.map((v) => ({
                 make: v?.make || "",
                 model: v?.model || "",
+                generationId: v?.generationId != null ? String(v.generationId) : null,
+                generationLabel: v?.generationLabel || "",
                 yearFrom: v?.yearFrom ?? null,
                 yearTo: v?.yearTo ?? null,
                 bodyStyle: v?.bodyStyle || "All",
-                notes: v?.notes || "",
+                notes: scrubFitmentNotes(v?.notes),
               }))
             : [],
         }

@@ -6,7 +6,7 @@ import Category from "@/lib/models/Category.model";
 import { getCategoryIdsWithProducts, loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { isEmptyCategoryTree } from "@/lib/emptyLeafCategory";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
-import { CategoryPageChrome } from "@/components/store/CategoryPageChrome";
+import { CategoryPageChrome, splitCategoryDescriptionHtml } from "@/components/store/CategoryPageChrome";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
@@ -25,13 +25,15 @@ import {
   faqPageJsonLd,
   isKeywordStrategyCategory,
 } from "@/lib/seo/keywordStrategyFaqs";
+import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
+import { BRAND as BRAND_CANONICAL } from "@/lib/brand";
 
-/** ISR: prerender active categories at build; refresh every 2 minutes. */
-export const revalidate = 120;
+/** ISR: catalog HTML edge-cache friendly; admin revalidate webhook still purges. */
+export const revalidate = 300;
 export const dynamicParams = true;
 
 const BASE_URL = getSiteUrl();
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Crazzycars.pk";
+const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || BRAND_CANONICAL;
 
 export async function generateStaticParams() {
   try {
@@ -63,7 +65,7 @@ const loadCachedCategoryDetail = (slugStr, page, pageSize, sort) =>
       return JSON.parse(JSON.stringify(detail));
     },
     ["category-detail-v8", slugStr, String(page), String(pageSize), String(sort)],
-    { revalidate: 120 }
+    { revalidate: 300 }
   )();
 
 const getCategoryDetail = cache(async (slugStr, page, pageSize, sort) =>
@@ -83,7 +85,7 @@ const getCategoryMeta = cache(async (slugStr) =>
         .then((doc) => (doc ? JSON.parse(JSON.stringify(doc)) : null));
     },
     ["category-meta-v4", slugStr],
-    { revalidate: 120 }
+    { revalidate: 300 }
   )()
 );
 
@@ -288,6 +290,15 @@ export default async function CategoryPage({ params, searchParams }) {
         buildCategoryKeywordFaqs(data.category?.slug || slugStr, extent)
       );
     }
+    if (!faqLd) {
+      const descHtml = sanitizeCategoryHtml(
+        String(data.category?.description || "").trim() ||
+          String(data.category?.shortDescription || "").trim() ||
+          ""
+      );
+      const { faqPairs } = splitCategoryDescriptionHtml(descHtml);
+      if (faqPairs.length) faqLd = faqPageJsonLd(faqPairs);
+    }
 
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
@@ -311,6 +322,7 @@ export default async function CategoryPage({ params, searchParams }) {
           products={data.products}
           brand={brand}
           crumbs={uniqueCrumbs}
+          showFullDescription={false}
         />
         <ProductListingSection
           pathname={listingPath}
@@ -323,6 +335,22 @@ export default async function CategoryPage({ params, searchParams }) {
           showTitle={false}
           emptyMessage="No products found in this category."
         />
+        {(() => {
+          const descHtml = sanitizeCategoryHtml(
+            String(data.category?.description || "").trim() ||
+              String(data.category?.shortDescription || "").trim() ||
+              ""
+          );
+          const { remainderHtml } = splitCategoryDescriptionHtml(descHtml);
+          if (!remainderHtml) return null;
+          return (
+            <div
+              className="store-container cat-desc cat-desc--html prose prose-neutral max-w-none"
+              style={{ padding: "24px 16px 40px" }}
+              dangerouslySetInnerHTML={{ __html: remainderHtml }}
+            />
+          );
+        })()}
       </div>
     );
   }

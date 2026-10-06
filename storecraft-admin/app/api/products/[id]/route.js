@@ -30,6 +30,7 @@ import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } fro
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 import { revalidateStorefront, productRevalidatePaths } from "@/lib/revalidateStorefront";
 import { denySecurityHoldMutation } from "@/lib/securityHold";
+import { validateProductActivePublishGate } from "@/lib/productPublishGate";
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;
@@ -405,6 +406,13 @@ export async function PUT(request, context) {
         { success: false, error: "Article number is required for Active products." },
         { status: 400 }
       );
+    }
+
+    if (existing.status === "active") {
+      const publishGate = validateProductActivePublishGate(existing);
+      if (!publishGate.ok) {
+        return NextResponse.json({ success: false, error: publishGate.error }, { status: 400 });
+      }
     }
 
     await existing.save();

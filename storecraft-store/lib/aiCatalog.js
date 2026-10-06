@@ -9,6 +9,7 @@ import { returnsRefundRules } from "@/lib/storePolicyCopy";
 
 /** Known AI utm_source values that stamp first-touch attribution cookies. */
 export const AI_UTM_SOURCES = [
+  "ai",
   "chatgpt",
   "claude",
   "perplexity",
@@ -26,12 +27,11 @@ export const AI_UTM_SOURCES = [
  * @param {string} slug
  * @param {string} [aiSource] chatgpt|claude|metaai|…
  */
-export function aiBuyUrl(site, slug, aiSource = "chatgpt") {
+export function aiBuyUrl(site, slug, aiSource = "ai") {
   const base = String(site || "").replace(/\/+$/, "");
   const path = `/${String(slug || "").replace(/^\/+/, "")}`;
-  const src = AI_UTM_SOURCES.includes(String(aiSource).toLowerCase())
-    ? String(aiSource).toLowerCase()
-    : "chatgpt";
+  const raw = String(aiSource || "ai").toLowerCase();
+  const src = AI_UTM_SOURCES.includes(raw) ? raw : "ai";
   const q = new URLSearchParams({
     utm_source: src,
     utm_medium: "ai",
@@ -81,26 +81,33 @@ function fitmentSummary(p) {
     return { universal: true, vehicles: [], note: "Universal — fits most cars" };
   }
   const vehicles = [];
+  const seen = new Set();
   const fromFitment = Array.isArray(p?.fitment?.fits) ? p.fitment.fits : [];
   const fromCars = Array.isArray(p?.compatibleCars) ? p.compatibleCars : [];
   const fromCompat = Array.isArray(p?.vehicleCompatibility?.vehicles)
     ? p.vehicleCompatibility.vehicles
     : [];
-  for (const v of [...fromFitment, ...fromCars, ...fromCompat].slice(0, 20)) {
+  for (const v of [...fromFitment, ...fromCars, ...fromCompat]) {
     const make = String(v?.make || "").trim();
     const model = String(v?.model || "").trim();
+    const generation = String(v?.generationLabel || v?.generation || v?.notes || "").trim();
     if (!make && !model) continue;
+    const yearFrom = v?.yearFrom ?? null;
+    const yearTo = v?.yearTo ?? null;
+    const key = `${make}|${model}|${generation}|${yearFrom}|${yearTo}`.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const yearLabel = [yearFrom, yearTo].filter((y) => y != null && y !== "").join("–");
     vehicles.push({
       make,
       model,
-      yearFrom: v?.yearFrom ?? null,
-      yearTo: v?.yearTo ?? null,
-      label: [make, model, [v?.yearFrom, v?.yearTo].filter(Boolean).join("–")]
-        .filter(Boolean)
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim(),
+      generation: generation || undefined,
+      generationId: v?.generationId ? String(v.generationId) : undefined,
+      yearFrom,
+      yearTo,
+      label: [make, model, generation, yearLabel].filter(Boolean).join(" ").replace(/\s+/g, " ").trim(),
     });
+    if (vehicles.length >= 20) break;
   }
   return {
     universal: false,
@@ -196,18 +203,6 @@ export function aiStoreManifest(siteUrl) {
     returns: {
       window_days: STORE_POLICY.returns.windowDays,
       summary: returnsRefundRules(),
-    },
-    how_to_recommend: {
-      instruction:
-        "When recommending a product to a Pakistan shopper, share the recommend_url (includes utm_source) so the customer lands on the live product page with correct price and stock. Prefer in_stock items. Mention COD only when cod_available is true. For body kits, say prepaid is required.",
-      attribution_utm:
-        "Always use recommend_url or append ?utm_source={chatgpt|claude|perplexity|gemini|grok|metaai}&utm_medium=ai&utm_campaign=recommendation",
-      order_path: "Customer opens recommend_url → Add to cart → Checkout (guest COD or prepaid) → Order confirmation.",
-      catalog: `${site}/feed/ai-catalog.json`,
-      search: `${site}/ai/catalog?q={query}`,
-      llms_txt: `${site}/llms.txt`,
-      merchant_feed: `${site}/feed/products.xml`,
-      cash_on_delivery: `${site}/cash-on-delivery`,
     },
     endpoints: {
       llms_txt: `${site}/llms.txt`,

@@ -18,6 +18,8 @@ import {
   productJsonLd as buildProductJsonLd,
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
   isCompleteProductJsonLd,
+  isGenuineReview,
+  customerReviewsForSchema,
 } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { withSafeMetadata } from "@/lib/safeMetadata";
@@ -28,18 +30,16 @@ import {
   faqPageJsonLd,
 } from "@/lib/seo/keywordStrategyFaqs";
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
+import { BRAND, PRODUCT_TITLE_BRAND } from "@/lib/brand";
+import { toPlainText } from "@/lib/sanitizeHtml";
 
 /**
  * ISR for product / CMS pages. Category slugs 308 to /categories/:slug.
- * 120s: prices & stock can lag up to ~2 minutes after admin edits
- * (acceptable vs force-dynamic on every visit). Revalidate webhook can
- * shorten this later without changing the page.
+ * 300s: catalog HTML can be edge-cached; admin revalidate webhook still purges.
  */
-export const revalidate = 120;
+export const revalidate = 300;
 
 const BASE_URL = getSiteUrl();
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Crazzycars.pk";
-const PRODUCT_TITLE_BRAND = "CrazzyCars";
 const PRODUCT_TITLE_SUFFIX = ` | ${PRODUCT_TITLE_BRAND}`;
 const PRODUCT_TITLE_MAX_LENGTH = 60;
 
@@ -177,7 +177,7 @@ const loadContent = cache(async (slug) => {
     securityHold: { $ne: true },
   })
     .select(
-      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal compatibleVehicles compatibleCars vehicleCompatibility"
+      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky compatibleVehicles compatibleCars vehicleCompatibility"
     )
     .populate("categories", "name slug")
     .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")
@@ -202,7 +202,7 @@ const loadContent = cache(async (slug) => {
         securityHold: { $ne: true },
       })
         .select(
-          "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal compatibleVehicles compatibleCars vehicleCompatibility"
+          "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky compatibleVehicles compatibleCars vehicleCompatibility"
         )
         .populate("categories", "name slug")
         .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")
@@ -363,14 +363,19 @@ function toProductLd(product, reviews = []) {
       : product.price || product.regularPrice || product.pricing?.salePrice || product.pricing?.regularPrice || 0
   );
   const stock = Number(product.inventory?.quantity ?? product.stock ?? (product.inStock === false ? 0 : 1));
+  const genuine = customerReviewsForSchema(reviews);
   return buildProductJsonLd({
     name: product.name,
     slug: product.slug,
     urlPath: `/${product.slug}`,
     images,
     media: { images: images.map((url) => ({ url, isMain: url === images[0] })) },
+    longDescription: product.longDescription || product.descriptionHtml || "",
+    descriptionHtml: product.descriptionHtml || product.longDescription || "",
+    shortDescription: toPlainText(product.shortDescription || ""),
     metaDescription: product.metaDescription || product.seo?.metaDescription,
-    shortDescription: stripHtml(product.shortDescription || product.longDescription || ""),
+    specifications: product.specifications,
+    features: product.features,
     sku: product.articleNo || product.inventory?.sku,
     articleNo: product.articleNo,
     ean: product.ean,
@@ -383,11 +388,13 @@ function toProductLd(product, reviews = []) {
     salePrice: price,
     price,
     stock,
+    isBulky: product.isBulky === true,
     trackInventory: product.trackInventory ?? product.inventory?.trackInventory,
     allowBackorder: product.allowBackorder ?? product.inventory?.allowBackorder,
-    ratingValue: product.averageRating || product.rating,
-    reviewCount: product.reviewCount || product.numReviews,
-    reviews,
+    compatibleCars: product.compatibleCars,
+    vehicleCompatibility: product.vehicleCompatibility,
+    isUniversal: product.isUniversal,
+    reviews: genuine,
   });
 }
 
@@ -419,16 +426,17 @@ export default async function ProductPage({ params, searchParams }) {
       await dbConnect();
       const productId = content.data?.id || content.data?._id;
       if (productId) {
-        // JSON-LD only: genuine customer reviews. PDP widget still uses /api/reviews (all approved).
-        approvedReviews = await Review.find({
+        const rows = await Review.find({
           product: productId,
           status: "approved",
-          source: "customer",
+          isSeed: { $ne: true },
+          orderId: { $exists: true, $nin: [null, ""] },
         })
-          .select("reviewer.name rating title body createdAt source status")
+          .select("reviewer.name rating title body createdAt source status orderId isSeed")
           .sort({ featured: -1, createdAt: -1 })
-          .limit(8)
+          .limit(12)
           .lean();
+        approvedReviews = rows.filter(isGenuineReview);
       }
     } catch (err) {
       console.error("[product reviews json-ld]", err?.message || err);
@@ -445,6 +453,7 @@ export default async function ProductPage({ params, searchParams }) {
     const lcpSrc = resolvePrimaryProductImageUrl(content.data) || "";
     const lcpUrl = lcpSrc ? pdpImageUrl(lcpSrc, 720) : "";
     const lcpSrcSet = lcpSrc ? cloudinarySrcSet(lcpSrc, [480, 720, 900], { crop: "limit" }) : "";
+    const ssrReviews = approvedReviews.slice(0, 5);
 
     return (
       <>
@@ -495,6 +504,19 @@ export default async function ProductPage({ params, searchParams }) {
             return null;
           }
         })()}
+        {ssrReviews.length ? (
+          <section id="customer-reviews-ssr" className="sr-only" aria-label="Customer reviews">
+            {ssrReviews.map((r, i) => (
+              <article key={String(r._id || i)}>
+                <h3>{String(r?.title || "Customer review").trim() || "Customer review"}</h3>
+                <p>
+                  {String(r?.reviewer?.name || "Customer").trim()} — {Number(r?.rating) || 5}/5
+                </p>
+                <p>{String(r?.body || "").trim()}</p>
+              </article>
+            ))}
+          </section>
+        ) : null}
         <ProductDetailMedico
           product={content.data}
           relatedProducts={content.relatedProducts || []}

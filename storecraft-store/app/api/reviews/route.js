@@ -15,8 +15,12 @@ export async function GET(request) {
     const featured = searchParams.get("featured");
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit"), 10) || 10));
 
-    // Public API: always approved only (?status=approved in URLs for clarity; never expose pending/rejected).
-    const query = { status: "approved" };
+    // Public API: approved + genuine only (orderId set, not seed).
+    const query = {
+      status: "approved",
+      isSeed: { $ne: true },
+      orderId: { $exists: true, $nin: [null, ""] },
+    };
 
     if (productParam) {
       const raw = String(productParam).trim();

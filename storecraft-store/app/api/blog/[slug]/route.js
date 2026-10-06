@@ -20,10 +20,10 @@ export async function GET(_request, context) {
     const post = await BlogPost.findOneAndUpdate(
       { slug, status: "published" },
       { $inc: { views: 1 } },
-      { new: true }
+      { new: true, timestamps: false }
     )
       .select(
-        "title slug excerpt content featuredImage publishedAt createdAt categories tags readTime views author relatedProducts seo status"
+        "title slug excerpt content featuredImage publishedAt contentUpdatedAt createdAt categories tags readTime views author relatedProducts seo status"
       )
       .populate("relatedProducts", "name slug media pricing inventory")
       .lean();

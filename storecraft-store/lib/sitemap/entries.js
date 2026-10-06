@@ -99,7 +99,10 @@ function maxDate(...values) {
 }
 
 function maxUpdatedAt(docs) {
-  return docs.reduce((max, doc) => maxDate(max, doc?.updatedAt, doc?.publishedAt), null);
+  return docs.reduce(
+    (max, doc) => maxDate(max, doc?.contentUpdatedAt, doc?.updatedAt, doc?.publishedAt),
+    null
+  );
 }
 
 /**
@@ -177,7 +180,7 @@ export async function fetchSitemapContext(headers) {
       categoryIdsWithProducts(),
       vehicleIdsWithProducts(),
       Page.find({ status: "published" }).select("slug updatedAt").lean(),
-      BlogPost.find({ status: "published" }).select("slug updatedAt publishedAt").lean(),
+      BlogPost.find({ status: "published" }).select("slug updatedAt publishedAt contentUpdatedAt").lean(),
     ]);
 
   const productSlugSet = new Set(
@@ -227,7 +230,13 @@ export async function fetchSitemapContext(headers) {
   const blogEntries = blogPosts
     .filter((post) => post.slug)
     .map((post) =>
-      toEntry(headers, `/blogs/${post.slug}`, post.updatedAt || post.publishedAt, "weekly", 0.6)
+      toEntry(
+        headers,
+        `/blogs/${post.slug}`,
+        post.contentUpdatedAt || post.publishedAt || post.updatedAt,
+        "weekly",
+        0.6
+      )
     );
 
   return {
