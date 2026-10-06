@@ -319,7 +319,7 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
       status: ACTIVE,
       $or: [{ parentCategory: catId }, { parents: catId }],
     })
-      .select("name slug image shortDescription level sortOrder")
+      .select("name slug image description shortDescription level sortOrder")
       .sort({ sortOrder: 1, name: 1 })
       .lean(),
     getActiveDescendantCategoryIds(catId),

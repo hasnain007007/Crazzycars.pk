@@ -39,8 +39,10 @@ function SEOFields({ form, updateFormData, previewUrl, metaWords }) {
         onChange={(v) => updateFormData("seo", { ...form.seo, metaTitle: v })}
       />
       <p className="mb-3 text-xs text-slate-500">
-        Brand <code className="text-[11px]">| CrazzyCars.pk</code> is appended automatically on the
-        storefront. Text after <code className="text-[11px]">|</code> is replaced.
+        Product titles append <code className="text-[11px]">| CrazzyCars</code> on the storefront
+        (not <code className="text-[11px]">.pk</code>). Anything after{" "}
+        <code className="text-[11px]">|</code> in this field is replaced. Keep the base ≤46 chars.
+        Categories use <code className="text-[11px]">| Crazzycars.pk</code> instead.
       </p>
       <SeoField
         type="description"

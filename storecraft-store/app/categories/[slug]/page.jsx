@@ -26,14 +26,14 @@ import {
   isKeywordStrategyCategory,
 } from "@/lib/seo/keywordStrategyFaqs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
-import { BRAND as BRAND_CANONICAL } from "@/lib/brand";
+import { CATEGORY_TITLE_BRAND } from "@/lib/brand";
 
 /** ISR: catalog HTML edge-cache friendly; admin revalidate webhook still purges. */
 export const revalidate = 300;
 export const dynamicParams = true;
 
 const BASE_URL = getSiteUrl();
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || BRAND_CANONICAL;
+const BRAND = CATEGORY_TITLE_BRAND;
 
 export async function generateStaticParams() {
   try {
@@ -64,7 +64,7 @@ const loadCachedCategoryDetail = (slugStr, page, pageSize, sort) =>
       if (!detail) return null;
       return JSON.parse(JSON.stringify(detail));
     },
-    ["category-detail-v8", slugStr, String(page), String(pageSize), String(sort)],
+    ["category-detail-v9", slugStr, String(page), String(pageSize), String(sort)],
     { revalidate: 300 }
   )();
 
@@ -84,7 +84,7 @@ const getCategoryMeta = cache(async (slugStr) =>
         .lean()
         .then((doc) => (doc ? JSON.parse(JSON.stringify(doc)) : null));
     },
-    ["category-meta-v4", slugStr],
+    ["category-meta-v5", slugStr],
     { revalidate: 300 }
   )()
 );
