@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { COD_ADVANCE_AMOUNT, PREPAID_DISCOUNT_PERCENT } from "@/config/checkout-money";
 import { STORE_CONTACT } from "@/config/store-policy";
+import { formatPkrAmount } from "@/lib/storePolicyCopy";
 import { editorialCoverUrl, editorialInsetUrl } from "@/lib/cloudinaryImage";
 
 function mediaUrl(field) {
@@ -56,6 +58,13 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
           Splitters, LED lighting, body kits, and carbon from our Gujranwala flagship —
           395+ accessories with year fitment on every listing. Cash on Delivery nationwide.
         </p>
+        <p className="shop-band__lead shop-band__lead--offer">
+          After you order on COD, send the {formatPkrAmount(COD_ADVANCE_AMOUNT)} booking /
+          confirmation amount on WhatsApp. That small payment confirms your order is real so we
+          can pack and dispatch quickly — it is deducted from your total and refunded if the item
+          doesn&apos;t fit. Prefer full payment? Get {PREPAID_DISCOUNT_PERCENT}% off with JazzCash
+          or bank transfer.
+        </p>
         <div className="shop-band__actions">
           <Link href="/shop" className="shop-band__btn shop-band__btn--primary">
             Shop accessories
@@ -67,7 +76,8 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
         </div>
         <p className="shop-band__chips">
           <span>Year-fit catalog</span>
-          <span>Cash on delivery</span>
+          <span>COD booking {formatPkrAmount(COD_ADVANCE_AMOUNT)}</span>
+          <span>{PREPAID_DISCOUNT_PERCENT}% off full pay</span>
           <span>From {city}</span>
         </p>
       </div>
