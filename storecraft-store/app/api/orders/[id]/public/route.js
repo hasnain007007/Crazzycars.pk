@@ -28,7 +28,7 @@ export async function GET(req, { params }) {
 
     const order = await Order.findById(id)
       .select(
-        "orderNumber publicAccessToken pricing paymentStatus paymentMethod orderStatus createdAt items.productId items.articleNo items.quantity items.unitPrice items.total items.name payment.advanceRequired payment.advanceMode payment.advanceMaxPercent payment.remainingCod metaPurchaseEventId customer.email shippingAddress.country shippingAddress.city"
+        "orderNumber publicAccessToken pricing paymentStatus paymentMethod orderStatus createdAt items.productId items.articleNo items.quantity items.unitPrice items.total items.name payment.advanceRequired payment.advanceMode payment.advanceMaxPercent payment.advancePolicyVersion payment.remainingCod metaPurchaseEventId customer.email shippingAddress.country shippingAddress.city"
       )
       .lean();
 
@@ -100,6 +100,7 @@ export async function GET(req, { params }) {
           advanceRequired: Number(order.payment?.advanceRequired) || 0,
           advanceMode: String(order.payment?.advanceMode || ""),
           advanceMaxPercent: Number(order.payment?.advanceMaxPercent) || 0,
+          advancePolicyVersion: Number(order.payment?.advancePolicyVersion) || 0,
           remainingCod: Number(order.payment?.remainingCod) || 0,
         },
         items,

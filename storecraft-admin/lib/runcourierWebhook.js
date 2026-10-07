@@ -5,6 +5,7 @@
 import crypto from "node:crypto";
 import { storefrontTrackingUrl, runCourierPublicTrackingUrl } from "@/lib/runcourier";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
+import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
 
 export const RUN_COURIER_WEBHOOK_HEADER = "x-webhook-secret";
 export const RAW_PAYLOAD_LOG_LIMIT = 20;
@@ -173,29 +174,34 @@ export function applyRunCourierStatusToOrder(order, parsed) {
 
   if (mapped && order.orderStatus !== mapped) {
     if (!(order.orderStatus === "delivered" && mapped === "shipped")) {
-      order.orderStatus = mapped;
-      changed = true;
-      if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
-      order.statusHistory.push({
-        status: mapped,
-        changedBy: actor,
-        changedAt: new Date(),
-        note: `Run Courier status "${statusLabel}" → ${mapped}`,
-      });
-      const info = ORDER_STATUS_TIMELINE_TITLES[mapped] || {
-        title: mapped,
-        description: "",
-      };
-      if (!Array.isArray(order.timeline)) order.timeline = [];
-      order.timeline.push({
-        status: mapped,
-        title: info.title,
-        description: `Updated via Run Courier webhook (${statusLabel})`,
-        timestamp: new Date(),
-        by: "runcourier-webhook",
-      });
-      order.markModified?.("timeline");
-      notes.push(`orderStatus → ${mapped}`);
+      const gate = assertCodAdvanceAllowsStatus(order, mapped);
+      if (!gate.ok) {
+        notes.push(`Blocked status → ${mapped}: ${gate.error}`);
+      } else {
+        order.orderStatus = mapped;
+        changed = true;
+        if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
+        order.statusHistory.push({
+          status: mapped,
+          changedBy: actor,
+          changedAt: new Date(),
+          note: `Run Courier status "${statusLabel}" → ${mapped}`,
+        });
+        const info = ORDER_STATUS_TIMELINE_TITLES[mapped] || {
+          title: mapped,
+          description: "",
+        };
+        if (!Array.isArray(order.timeline)) order.timeline = [];
+        order.timeline.push({
+          status: mapped,
+          title: info.title,
+          description: `Updated via Run Courier webhook (${statusLabel})`,
+          timestamp: new Date(),
+          by: "runcourier-webhook",
+        });
+        order.markModified?.("timeline");
+        notes.push(`orderStatus → ${mapped}`);
+      }
     }
   } else if (!mapped) {
     notes.push(`No fulfillment map for Run Courier status "${statusLabel}"`);

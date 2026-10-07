@@ -10,6 +10,7 @@ import {
 } from "@/lib/whatsappTemplates";
 import { storefrontTrackingUrl } from "@/lib/postex";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
+import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
 
 export const POSTEX_WEBHOOK_HEADER = "x-webhook-secret";
 export const RAW_PAYLOAD_LOG_LIMIT = 20;
@@ -128,29 +129,34 @@ export function applyPostexStatusToOrder(order, parsed) {
   if (mapped && order.orderStatus !== mapped) {
     // Never move backwards from delivered → shipped via webhook noise
     if (!(order.orderStatus === "delivered" && mapped === "shipped")) {
-      order.orderStatus = mapped;
-      changed = true;
-      if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
-      order.statusHistory.push({
-        status: mapped,
-        changedBy: actor,
-        changedAt: new Date(),
-        note: `Postex status "${postexLabel}" → ${mapped}`,
-      });
-      const info = ORDER_STATUS_TIMELINE_TITLES[mapped] || {
-        title: mapped,
-        description: "",
-      };
-      if (!Array.isArray(order.timeline)) order.timeline = [];
-      order.timeline.push({
-        status: mapped,
-        title: info.title,
-        description: `Updated via Postex webhook (${postexLabel})`,
-        timestamp: new Date(),
-        by: "postex-webhook",
-      });
-      order.markModified?.("timeline");
-      notes.push(`orderStatus → ${mapped}`);
+      const gate = assertCodAdvanceAllowsStatus(order, mapped);
+      if (!gate.ok) {
+        notes.push(`Blocked status → ${mapped}: ${gate.error}`);
+      } else {
+        order.orderStatus = mapped;
+        changed = true;
+        if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
+        order.statusHistory.push({
+          status: mapped,
+          changedBy: actor,
+          changedAt: new Date(),
+          note: `Postex status "${postexLabel}" → ${mapped}`,
+        });
+        const info = ORDER_STATUS_TIMELINE_TITLES[mapped] || {
+          title: mapped,
+          description: "",
+        };
+        if (!Array.isArray(order.timeline)) order.timeline = [];
+        order.timeline.push({
+          status: mapped,
+          title: info.title,
+          description: `Updated via Postex webhook (${postexLabel})`,
+          timestamp: new Date(),
+          by: "postex-webhook",
+        });
+        order.markModified?.("timeline");
+        notes.push(`orderStatus → ${mapped}`);
+      }
     }
   } else if (!mapped) {
     notes.push(`No fulfillment map for Postex status "${postexLabel}"`);

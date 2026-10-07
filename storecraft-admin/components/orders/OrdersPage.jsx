@@ -22,6 +22,7 @@ function formatMoney(n) {
 const SAVED_VIEWS = [
   { key: "all", label: "All" },
   { key: "awaitingCustomer", label: "Awaiting customer" },
+  { key: "advanceUnpaid", label: "Advance unpaid" },
   { key: "unfulfilled", label: "Unfulfilled" },
   { key: "unpaid", label: "Unpaid" },
   { key: "needsAttention", label: "Needs Attention" },
@@ -90,6 +91,7 @@ export function OrdersPage() {
     needsAttention: 0,
     today: 0,
     awaitingCustomer: 0,
+    advanceUnpaid: 0,
   });
   const [loading, setLoading] = useState(true);
   const [liveSyncBusy, setLiveSyncBusy] = useState(false);

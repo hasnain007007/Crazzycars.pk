@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { formatAdminPrice, roundRupees } from "@/lib/currency";
 import { orderStatusBadgeClass, paymentStatusBadgeClass } from "@/lib/orderUi";
+import { resolveAdvanceBadge } from "@/lib/advancePaymentBadge";
 
 const ORDER_STATUSES = [
   "pending",
@@ -137,6 +138,9 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
   const needsReference = String(next).toLowerCase() === "paid" || isPartial;
   const displayStatus = String(next).toLowerCase();
   const statusDirty = displayStatus !== savedStatus;
+  const advanceBadge = resolveAdvanceBadge(order);
+  const advanceRequired = Math.max(0, roundRupees(order.payment?.advanceRequired || 0));
+  const showMarkAdvanceReceived = advanceBadge?.kind === "pending" && advanceRequired > 0;
 
   useEffect(() => {
     const status = String(order.paymentStatus || "unpaid").toLowerCase();
@@ -200,6 +204,38 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
     const rem = Number(value);
     if (Number.isFinite(rem) && rem >= 0 && total > 0) {
       setPaidAmount(String(Math.max(0, total - roundRupees(rem))));
+    }
+  }
+
+  async function markAdvanceReceived() {
+    if (!showMarkAdvanceReceived) return;
+    setSaving(true);
+    try {
+      const paid = advanceRequired;
+      const remaining = Math.max(0, total - paid);
+      const body = {
+        paymentStatus: paid >= total && total > 0 ? "paid" : "partial",
+        paidAmount: paid,
+        remainingCod: remaining,
+        paymentReference: String(paymentReference || "").trim() || `Advance Rs. ${paid}`,
+      };
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast.error(json.error || "Could not mark advance received.");
+        return;
+      }
+      toast.success("Advance received — you can process / book shipment.");
+      onUpdated(json.order);
+    } catch {
+      toast.error("Network error.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -327,6 +363,22 @@ export function PaymentStatusCard({ order, onUpdated, orderTotalOverride }) {
                 : ""}
             </p>
           ) : null}
+        </div>
+      ) : null}
+
+      {showMarkAdvanceReceived ? (
+        <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 dark:border-rose-900/40 dark:bg-rose-950/30">
+          <p className="text-xs text-rose-900 dark:text-rose-100">
+            COD advance unpaid: <strong>{formatAdminPrice(advanceRequired)}</strong>
+          </p>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={markAdvanceReceived}
+            className="mt-2 rounded-lg bg-rose-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-800 disabled:opacity-50"
+          >
+            Mark advance received
+          </button>
         </div>
       ) : null}
 

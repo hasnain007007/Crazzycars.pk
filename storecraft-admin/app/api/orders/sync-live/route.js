@@ -9,6 +9,7 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
+import { withoutDemo } from "@/lib/orderDemoFilter";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { fetchPostexTracking } from "@/lib/postex";
 import {
@@ -20,6 +21,7 @@ import {
   isRunCourierDeliveredStatus,
 } from "@/lib/runcourierWebhook";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
+import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -118,6 +120,23 @@ async function syncOneOrder(order, { settings, userName }) {
   if (mapped && order.orderStatus !== mapped) {
     // Never demote delivered → shipped
     if (!(order.orderStatus === "delivered" && mapped === "shipped")) {
+      const gate = assertCodAdvanceAllowsStatus(order, mapped);
+      if (!gate.ok) {
+        // Still persist tracking fields below; only block fulfillment status change.
+        await order.save();
+        return {
+          orderId: String(order._id),
+          orderNumber: order.orderNumber,
+          trackingNumber,
+          success: true,
+          source,
+          status: live.status,
+          currentLocation: live.currentLocation || live.location || "",
+          orderStatus: order.orderStatus,
+          orderStatusSynced: null,
+          blocked: gate.error,
+        };
+      }
       const prev = order.orderStatus;
       order.orderStatus = mapped;
       if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
@@ -183,13 +202,15 @@ export async function POST(request) {
       (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
       (await Settings.findOne({}).lean());
 
-    const liveOrders = await Order.find({
-      orderStatus: { $in: LIVE_STATUSES },
-      $or: [
-        { trackingNumber: { $exists: true, $nin: [null, ""] } },
-        { "tracking.number": { $exists: true, $nin: [null, ""] } },
-      ],
-    })
+    const liveOrders = await Order.find(
+      withoutDemo({
+        orderStatus: { $in: LIVE_STATUSES },
+        $or: [
+          { trackingNumber: { $exists: true, $nin: [null, ""] } },
+          { "tracking.number": { $exists: true, $nin: [null, ""] } },
+        ],
+      })
+    )
       .select(
         "orderNumber orderStatus trackingNumber courier tracking paymentStatus paymentMethod runCourierApi runCourierLabel deliveredAt payment"
       )

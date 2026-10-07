@@ -5,11 +5,12 @@
 import { formatPrice, roundRupees } from "@/lib/currency";
 import { isAdvancePaymentMethod } from "@/lib/pakistaniPaymentMethods";
 import { STORE_POLICY } from "@/config/store-policy";
+import { PREPAID_DISCOUNT_PERCENT, COD_ADVANCE_AMOUNT } from "@/config/checkout-money";
 import { standardDeliveryFeeShort } from "@/lib/storePolicyCopy";
 import { shippingFloorPKR } from "@/lib/shippingTier";
 
 const DEFAULT_ADVANCE_MESSAGE =
-  "Your order is placed. To confirm dispatch, please pay the delivery charges of {amount} in advance and send the payment screenshot on WhatsApp: {whatsapp}\n\nProduct payment will be collected on delivery.";
+  "A Rs. {amount} booking amount is required to confirm your COD order. It is deducted from your total and fully refunded if the item doesn't fit or doesn't match your confirmed order.\n\nSend the payment screenshot on WhatsApp: {whatsapp}\n\nBalance is collected on delivery.";
 
 export const DEFAULT_FREE_SHIPPING_THRESHOLD = 0;
 
@@ -19,11 +20,11 @@ export const DEFAULT_SHIPPING_RULES = {
   freeShippingOnOrderAbove: 0,
   freeShippingOnOrderAboveEnabled: false,
   advancePaymentMessage: DEFAULT_ADVANCE_MESSAGE,
-  advancePaymentAmount: STORE_POLICY.shipping.standardFeePKR,
+  advancePaymentAmount: COD_ADVANCE_AMOUNT,
   advancePaymentMessageEnabled: true,
-  advancePaymentMessageTitle: "Confirm Your Order",
+  advancePaymentMessageTitle: "Pay booking amount to confirm COD",
   advancePaymentDiscountEnabled: true,
-  advancePaymentDiscountPercent: 3,
+  advancePaymentDiscountPercent: PREPAID_DISCOUNT_PERCENT,
   flatDeliveryCharge: STORE_POLICY.shipping.standardFeePKR,
 };
 
@@ -52,7 +53,10 @@ export function normalizeShippingRules(storePayment) {
         : true,
     advancePaymentDiscountPercent: Math.min(
       100,
-      Math.max(0, Number(p.advancePaymentDiscountPercent) || 3)
+      Math.max(
+        0,
+        Number(p.advancePaymentDiscountPercent) || PREPAID_DISCOUNT_PERCENT
+      )
     ),
     flatDeliveryCharge: STORE_POLICY.shipping.standardFeePKR,
   };
@@ -207,6 +211,8 @@ export function shouldShowAdvancePaymentMessage({ paymentMethod, shippingCost, s
   if (!sp.advancePaymentMessageEnabled) return false;
   const pm = String(paymentMethod || "cod").toLowerCase();
   if (pm !== "cod") return false;
+  // Booking rule (default): always prompt for COD advance; legacy: only when shipping > 0.
+  if (COD_ADVANCE_AMOUNT > 0) return true;
   return Math.max(0, Number(shippingCost) || 0) > 0;
 }
 

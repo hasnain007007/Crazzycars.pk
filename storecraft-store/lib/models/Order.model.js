@@ -142,6 +142,8 @@ const orderSchema = new mongoose.Schema(
       advanceRequired: { type: Number, default: 0, min: 0 },
       advanceMode: { type: String, default: "", trim: true },
       advanceMaxPercent: { type: Number, default: 0, min: 0, max: 100 },
+      /** 2 = COD booking rule (flat Rs booking vs product %). Omit/1 = legacy shipping/%. */
+      advancePolicyVersion: { type: Number, default: 0, min: 0 },
     },
     paymentConfirmation: {
       reference: { type: String, default: "", trim: true },

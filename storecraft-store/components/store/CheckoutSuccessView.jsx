@@ -30,12 +30,16 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   const advanceMaxPercent = Math.max(0, Number(order?.payment?.advanceMaxPercent) || 0);
   const remainingCod = Math.max(0, Number(order?.payment?.remainingCod) || 0);
   const showPercent = advanceMode === "percent" && advanceRequired > 0;
-  const showDelivery = shouldShowAdvancePaymentMessage({
-    paymentMethod: pm,
-    shippingCost: shipping,
-    storePayment: rules,
-  });
-  if (!showPercent && !showDelivery) {
+  const showBooking = advanceMode === "booking" && advanceRequired > 0;
+  const showDelivery =
+    !showPercent &&
+    !showBooking &&
+    shouldShowAdvancePaymentMessage({
+      paymentMethod: pm,
+      shippingCost: shipping,
+      storePayment: rules,
+    });
+  if (!showPercent && !showBooking && !showDelivery) {
     return null;
   }
 
@@ -43,13 +47,13 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   const waDisplay = formatWhatsAppDisplay(waNum || storePolicyWhatsApp());
   const amount = advanceRequired > 0
     ? advanceRequired
-    : showPercent
-      ? advanceRequired
-      : shipping || rules.advancePaymentAmount || 250;
+    : shipping || rules.advancePaymentAmount || 250;
   const messageBody = formatAdvancePaymentMessage(
     showPercent
       ? `Please pay at least {amount} in advance (${advanceMaxPercent}% of eligible items).\n\nRemaining on delivery: ${formatPrice(remainingCod)}.\n\nSend payment screenshot on WhatsApp: {whatsapp}`
-      : rules.advancePaymentMessage,
+      : showBooking
+        ? `${rules.advancePaymentMessage || "A Rs. {amount} booking amount is required to confirm your COD order."}\n\nRemaining on delivery: ${formatPrice(remainingCod)}.`
+        : rules.advancePaymentMessage,
     amount,
     waDisplay
   );
@@ -59,7 +63,7 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   const orderRef = String(order?.orderNumber || order?._id || "").trim();
   const waText = encodeURIComponent(
     [
-      `Hi CrazzyCars, I paid the delivery / advance charges for order ${orderRef || "(new order)"}.`,
+      `Hi CrazzyCars, I paid the COD booking / advance for order ${orderRef || "(new order)"}.`,
       `Amount: ${formatPrice(amount)}.`,
       "Sending payment screenshot now.",
     ].join("\n")
@@ -88,7 +92,9 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
       >
         {showPercent
           ? `Pay at least ${advanceMaxPercent}% advance`
-          : rules.advancePaymentMessageTitle || "Pay Delivery Charges to Confirm"}
+          : showBooking
+            ? rules.advancePaymentMessageTitle || "Pay booking amount to confirm COD"
+            : rules.advancePaymentMessageTitle || "Pay Delivery Charges to Confirm"}
       </p>
       <p
         style={{

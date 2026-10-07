@@ -16,6 +16,7 @@ import {
   isPrepaidOrder,
   storefrontTrackingUrl,
 } from "@/lib/postex";
+import { assertCodAdvanceAllowsDispatch } from "@/lib/codAdvanceGate";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
@@ -96,6 +97,11 @@ export async function POST(request) {
     const order = await Order.findById(orderId);
     if (!order) {
       return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
+    }
+
+    const advanceGate = assertCodAdvanceAllowsDispatch(order);
+    if (!advanceGate.ok) {
+      return NextResponse.json({ success: false, error: advanceGate.error }, { status: 409 });
     }
 
     const existingTracking = String(order.trackingNumber || order.tracking?.number || "").trim();

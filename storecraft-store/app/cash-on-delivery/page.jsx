@@ -112,9 +112,10 @@ export default function CashOnDeliveryPage() {
 
       <h1 className="text-2xl font-bold md:text-3xl text-zinc-900">Cash on Delivery across Pakistan</h1>
       <p className="mt-3 text-gray-700 leading-relaxed">
-        Yes — Cash on Delivery is available nationwide on eligible products. For COD orders, you pay
-        delivery charges in advance after placing your order and send the payment screenshot on
-        WhatsApp. The product amount is collected when your order arrives.
+        Yes — Cash on Delivery is available nationwide on eligible products. For COD orders, pay a
+        small booking advance (from Rs. 250, or more if the product requires a % advance) after
+        placing your order and send the screenshot on WhatsApp. It is deducted from your total and
+        refunded if the item doesn&apos;t fit. The balance is collected when your order arrives.
       </p>
 
       <h2 className="mt-10 text-xl font-semibold text-zinc-900">How COD works on CrazzyCars</h2>
@@ -124,17 +125,18 @@ export default function CashOnDeliveryPage() {
           (when the product allows it).
         </li>
         <li>
-          <strong>Pay delivery charges in advance</strong> — the rest is Cash on Delivery.
+          <strong>Pay the booking advance</strong> shown at checkout (from Rs. 250) — the rest is
+          Cash on Delivery.
         </li>
         <li>
           <strong>Send your payment screenshot on WhatsApp</strong> to{" "}
           <a className="font-semibold text-red-700 underline-offset-2 hover:underline" href={WA_HREF}>
             {WA_DISPLAY}
           </a>{" "}
-          so we can confirm delivery charges and process the order.
+          so we can confirm the booking and process the order.
         </li>
         <li>
-          <strong>Receive your parcel</strong> and pay the <strong>product amount</strong> to the
+          <strong>Receive your parcel</strong> and pay the <strong>remaining balance</strong> to the
           courier on delivery.
         </li>
       </ol>

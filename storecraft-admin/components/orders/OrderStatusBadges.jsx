@@ -31,7 +31,7 @@ export function OrderStatusBadges({ order, orderStatus, paymentStatus, mode = "a
             style={STYLES[advance.kind] || STYLES.pending}
             title={
               advance.kind === "pending"
-                ? "Customer still needs to pay shipping / advance before confirm"
+                ? "Customer still needs to pay COD booking / advance before processing"
                 : "Advance / shipping payment recorded (partial)"
             }
           />
@@ -50,7 +50,7 @@ export function OrderStatusBadges({ order, orderStatus, paymentStatus, mode = "a
           style={STYLES[advance.kind] || STYLES.pending}
           title={
             advance.kind === "pending"
-              ? "Customer still needs to pay shipping / advance before confirm"
+              ? "Customer still needs to pay COD booking / advance before processing"
               : "Advance / shipping payment recorded (partial)"
           }
         />

@@ -7,6 +7,7 @@ import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { fetchPostexTracking } from "@/lib/postex";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
+import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +111,20 @@ export async function POST(request) {
       let orderStatusSynced = null;
       const mapped = syncOrderStatus ? mapPostexToOrderStatus(live.status) : null;
       if (mapped && order.orderStatus !== mapped) {
+        const gate = assertCodAdvanceAllowsStatus(order, mapped);
+        if (!gate.ok) {
+          await order.save();
+          results.push({
+            orderId: String(order._id),
+            orderNumber: order.orderNumber,
+            trackingNumber,
+            status: live.status,
+            orderStatus: order.orderStatus,
+            orderStatusSynced: null,
+            blocked: gate.error,
+          });
+          continue;
+        }
         const prev = order.orderStatus;
         order.orderStatus = mapped;
         if (!Array.isArray(order.statusHistory)) order.statusHistory = [];

@@ -11,6 +11,7 @@ import Order from "@/lib/models/Order.model";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { requestIp } from "@/lib/requestIp";
 import { dispatchOrderLifecycleEmails } from "@/lib/customerLifecycleEmail";
+import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
 
 const MAX_IDS = 100;
 
@@ -47,6 +48,7 @@ export async function PUT(request) {
 
     const adminName = user.name || "Admin";
     let updated = 0;
+    const skipped = [];
 
     if (action === "updateStatus") {
       const allowed = [
@@ -68,6 +70,11 @@ export async function PUT(request) {
         const order = await Order.findById(id);
         if (!order) continue;
         if (order.orderStatus === value) continue;
+        const statusGate = assertCodAdvanceAllowsStatus(order, value);
+        if (!statusGate.ok) {
+          skipped.push({ id, orderNumber: order.orderNumber, error: statusGate.error });
+          continue;
+        }
         const prevStatus = order.orderStatus;
         const prevPayment = order.paymentStatus;
         const prevTracking = String(order.trackingNumber || order.tracking?.number || "").trim();
@@ -174,7 +181,14 @@ export async function PUT(request) {
       ip: requestIp(request),
     });
 
-    return NextResponse.json({ success: true, updated });
+    return NextResponse.json({
+      success: true,
+      updated,
+      skipped: skipped.length ? skipped : undefined,
+      error: skipped.length
+        ? `${skipped.length} order(s) skipped — COD advance unpaid.`
+        : undefined,
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Bulk update failed." },

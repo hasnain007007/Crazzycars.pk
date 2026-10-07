@@ -10,6 +10,7 @@ import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
 import { customerConfirmKind, customerConfirmLabel } from "@/lib/orderUi";
+import { withoutDemo } from "@/lib/orderDemoFilter";
 
 function utcStartOfDay(d) {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
@@ -89,6 +90,9 @@ export async function GET(request) {
     if (view === "awaitingCustomer") {
       filter.codConfirmed = { $ne: true };
       if (!filter.orderStatus) filter.orderStatus = "pending";
+    } else if (view === "advanceUnpaid") {
+      const { awaitingBookingAdvanceMongoFilter } = await import("@/lib/codAdvanceGate");
+      Object.assign(filter, awaitingBookingAdvanceMongoFilter());
     }
     const customerConfirm = (searchParams.get("customerConfirm") || "").trim().toLowerCase();
     if (customerConfirm === "yes") {
@@ -118,7 +122,7 @@ export async function GET(request) {
       ];
     }
 
-    const rows = await Order.find(filter).sort({ createdAt: -1 }).limit(5000).lean();
+    const rows = await Order.find(withoutDemo(filter)).sort({ createdAt: -1 }).limit(5000).lean();
 
     const header = [
       "Order#",

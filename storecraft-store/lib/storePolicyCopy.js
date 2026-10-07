@@ -54,7 +54,7 @@ export function deliveryEtaSummary() {
 export function standardDeliveryFeeStatement() {
   const regular = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
   const bulky = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
-  return `Delivery is ${regular} for regular items, or ${bulky} when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). Shipping is paid in advance; the rest is Cash on Delivery. There is no order-value waiver for delivery.`;
+  return `Delivery is ${regular} for regular items, or ${bulky} when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). COD orders require a booking advance (from Rs. 250) before processing; the balance is Cash on Delivery. There is no order-value waiver for delivery.`;
 }
 
 export function standardDeliveryFeeShort() {
@@ -65,17 +65,17 @@ export function standardDeliveryFeeShort() {
 
 /** Cart / checkout / PDP banner — English. Customer-facing: ask for advance only (no tier breakdown). */
 export function shippingAdvanceBannerEn() {
-  return `Please pay delivery charges in advance. The rest is Cash on Delivery.`;
+  return `COD orders need a small booking amount (from Rs. 250) before we process — deducted from your total, refunded if the item doesn't fit. Balance on delivery.`;
 }
 
 /** Cart / checkout / PDP banner — Urdu. Customer-facing: ask for advance only. */
 export function shippingAdvanceBannerUr() {
-  return `براہ کرم ڈیلیوری چارجز پہلے ادا کریں۔ باقی کیش آن ڈیلیوری۔`;
+  return `COD آرڈر پر کم از کم Rs. 250 بکنگ ایڈوانس درکار ہے — کل سے کٹے گی، فٹ نہ ہونے پر واپس۔ باقی ڈیلیوری پر۔`;
 }
 
 /** Site-wide top announcement bar — short advance-delivery ask (no tier breakdown). */
 export function announcementAdvanceDeliveryText() {
-  return "Delivery charges are paid in advance";
+  return "COD booking advance from Rs. 250";
 }
 
 /** Fee-only / bulky-tier lines that should not stay customer-facing in the top bar. */
@@ -182,7 +182,7 @@ export function getFaqItems() {
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
       answer:
-        "Yes. Cash on Delivery is available nationwide. For COD orders, pay delivery charges in advance after placing your order and send the payment screenshot on WhatsApp. The product amount is collected when your order arrives.",
+        "Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from Rs. 250, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.",
     },
     {
       question: "How much are delivery charges?",
@@ -286,7 +286,7 @@ export function getShippingPolicySections() {
     {
       heading: "Cash on Delivery",
       paragraphs: [
-        "COD is available on eligible products. Body kits cannot be ordered on Cash on Delivery — use JazzCash, Meezan, or bank transfer. Delivery charges may need to be paid in advance, with the product amount collected on delivery. Follow the checkout instructions and send your payment screenshot on WhatsApp.",
+        "COD is available on eligible products. Body kits cannot be ordered on Cash on Delivery — use JazzCash, Meezan, or bank transfer. COD orders need a booking advance (from Rs. 250) before we process; checkout shows the exact amount. Send your payment screenshot on WhatsApp; the balance is collected on delivery.",
       ],
     },
   ];

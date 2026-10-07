@@ -77,13 +77,13 @@ const settingsSchema = new mongoose.Schema(
       advancePaymentMessage: {
         type: String,
         default:
-          "To confirm your order, please pay delivery charges of {amount} in advance.\n\nSend payment screenshot on WhatsApp: {whatsapp}",
+          "A Rs. {amount} booking amount is required to confirm your COD order. It is deducted from your total and fully refunded if the item doesn't fit or doesn't match your confirmed order.\n\nSend payment screenshot on WhatsApp: {whatsapp}",
       },
       advancePaymentAmount: { type: Number, default: 250 },
       advancePaymentMessageEnabled: { type: Boolean, default: true },
-      advancePaymentMessageTitle: { type: String, default: "Confirm Your Order" },
+      advancePaymentMessageTitle: { type: String, default: "Pay booking amount to confirm COD" },
       advancePaymentDiscountEnabled: { type: Boolean, default: true },
-      advancePaymentDiscountPercent: { type: Number, default: 3 },
+      advancePaymentDiscountPercent: { type: Number, default: 5 },
       flatDeliveryCharge: { type: Number, default: 250 },
     },
     finance: {

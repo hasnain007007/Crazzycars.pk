@@ -107,7 +107,7 @@ export async function PUT(request) {
         !doc.storePayment.advancePaymentMessageTitle ||
         /pay delivery charges to confirm/i.test(String(doc.storePayment.advancePaymentMessageTitle || ""))
       ) {
-        doc.storePayment.advancePaymentMessageTitle = "Confirm Your Order";
+        doc.storePayment.advancePaymentMessageTitle = "Pay booking amount to confirm COD";
       }
       doc.markModified("storePayment");
     }

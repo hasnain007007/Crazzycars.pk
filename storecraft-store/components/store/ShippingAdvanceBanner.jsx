@@ -32,8 +32,8 @@ export function ShippingAdvanceBanner({ hasBulky = null, className = "" }) {
       </p>
       {showCartLine ? (
         <p className="mt-1.5 mb-0 text-[12px] font-semibold text-amber-950 sm:text-[13px]">
-          Advance delivery for this order: Rs.{" "}
-          {Number(cartFee).toLocaleString("en-PK")}
+          Delivery for this cart: Rs. {Number(cartFee).toLocaleString("en-PK")} (COD
+          booking advance is shown at checkout)
         </p>
       ) : null}
     </div>

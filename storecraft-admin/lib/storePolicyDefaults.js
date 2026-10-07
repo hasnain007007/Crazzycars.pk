@@ -21,7 +21,7 @@ export function bulkyFeePkr() {
 }
 
 export function standardDeliveryFeeStatement() {
-  return `Delivery is ${formatPkrAmount(STORE_POLICY_DEFAULTS.standardFeePKR)} for regular items, or ${formatPkrAmount(STORE_POLICY_DEFAULTS.bulkyFeePKR)} when the order includes bulky items. Shipping is paid in advance; the rest is Cash on Delivery.`;
+  return `Delivery is ${formatPkrAmount(STORE_POLICY_DEFAULTS.standardFeePKR)} for regular items, or ${formatPkrAmount(STORE_POLICY_DEFAULTS.bulkyFeePKR)} when the order includes bulky items. COD orders require a booking advance (from Rs. 250) before processing; the balance is Cash on Delivery.`;
 }
 
 export function standardDeliveryFeeShort() {
@@ -39,6 +39,5 @@ export function bulkyItemHelpText() {
 }
 
 export function advancePercentHelpText() {
-  const bulky = formatPkrAmount(STORE_POLICY_DEFAULTS.bulkyFeePKR);
-  return `Customer must pay at least this % of the item total before dispatch (e.g. 50%). COD advance is MAX(this %, shipping charge) — not stacked. Example: 40% of a Rs. 5,000 line vs bulky shipping ${bulky} → the higher amount wins.`;
+  return `Customer must pay at least this % of the item total before dispatch (e.g. 50%). New COD orders use booking advance: MAX(Rs. 250 flat booking, this %), capped at order total. Example: 40% of a Rs. 5,000 line = Rs. 2,000 → booking advance is Rs. 2,000 (higher than Rs. 250).`;
 }

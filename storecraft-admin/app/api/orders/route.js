@@ -19,6 +19,8 @@ import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { dispatchOrderLifecycleEmails, sendTemplatedCustomerEmail } from "@/lib/customerLifecycleEmail";
 import { buildOrderSearchOr, looksLikeTrackingId } from "@/lib/orderSearch";
 import { orderOriginLabel, originFilterToMongo, serializeAttribution } from "@/lib/orderOrigin";
+import { withoutDemo } from "@/lib/orderDemoFilter";
+import { awaitingBookingAdvanceMongoFilter } from "@/lib/codAdvanceGate";
 
 const PAYMENT_METHODS = new Set([
   "cod",
@@ -130,6 +132,8 @@ export async function GET(request) {
       } else if (view === "awaitingCustomer") {
         filter.codConfirmed = { $ne: true };
         filter.orderStatus = "pending";
+      } else if (view === "advanceUnpaid") {
+        Object.assign(filter, awaitingBookingAdvanceMongoFilter());
       }
     }
 
@@ -175,6 +179,9 @@ export async function GET(request) {
       };
     }
 
+    const includeDemo = searchParams.get("includeDemo") === "1";
+    const live = (f) => (includeDemo ? f : withoutDemo(f));
+
     const skip = (page - 1) * limit;
     const now = new Date();
     const dayStart = utcStartOfDay(now);
@@ -203,47 +210,59 @@ export async function GET(request) {
       viewNeedsAttention,
       viewToday,
       viewAwaitingCustomer,
+      viewAdvanceUnpaid,
       deliveredCount,
       returnedCount,
     ] = await Promise.all([
-      Order.find(filter)
+      Order.find(live(filter))
         .sort(sortSpec)
         .skip(skip)
         .limit(limit)
         .populate("customer.customerId", "name email phone")
         .lean(),
-      Order.countDocuments(filter),
-      Order.countDocuments({}),
-      Order.countDocuments({ orderStatus: "pending" }),
-      Order.countDocuments({ orderStatus: "processing" }),
-      Order.find({
-        paymentStatus: "paid",
-        createdAt: { $gte: dayStart, $lte: dayEnd },
-      })
+      Order.countDocuments(live(filter)),
+      Order.countDocuments(live({})),
+      Order.countDocuments(live({ orderStatus: "pending" })),
+      Order.countDocuments(live({ orderStatus: "processing" })),
+      Order.find(
+        live({
+          paymentStatus: "paid",
+          createdAt: { $gte: dayStart, $lte: dayEnd },
+        })
+      )
         .select("pricing total")
         .lean(),
-      Order.find({ orderStatus: "pending", paymentStatus: "unpaid" })
+      Order.find(live({ orderStatus: "pending", paymentStatus: "unpaid" }))
         .select("pricing total")
         .lean(),
-      Order.countDocuments({
-        orderStatus: { $in: ["pending", "confirmed", "processing", "packed"] },
-      }),
-      Order.countDocuments({
-        paymentStatus: "unpaid",
-        orderStatus: { $nin: ["cancelled", "refunded"] },
-      }),
-      Order.countDocuments({
-        orderStatus: "pending",
-        paymentStatus: "unpaid",
-        createdAt: { $lte: attentionCutoff },
-      }),
-      Order.countDocuments({ createdAt: { $gte: dayStart, $lte: dayEnd } }),
-      Order.countDocuments({
-        orderStatus: "pending",
-        codConfirmed: { $ne: true },
-      }),
-      Order.countDocuments({ orderStatus: "delivered" }),
-      Order.countDocuments({ orderStatus: "returned" }),
+      Order.countDocuments(
+        live({
+          orderStatus: { $in: ["pending", "confirmed", "processing", "packed"] },
+        })
+      ),
+      Order.countDocuments(
+        live({
+          paymentStatus: "unpaid",
+          orderStatus: { $nin: ["cancelled", "refunded"] },
+        })
+      ),
+      Order.countDocuments(
+        live({
+          orderStatus: "pending",
+          paymentStatus: "unpaid",
+          createdAt: { $lte: attentionCutoff },
+        })
+      ),
+      Order.countDocuments(live({ createdAt: { $gte: dayStart, $lte: dayEnd } })),
+      Order.countDocuments(
+        live({
+          orderStatus: "pending",
+          codConfirmed: { $ne: true },
+        })
+      ),
+      Order.countDocuments(live(awaitingBookingAdvanceMongoFilter())),
+      Order.countDocuments(live({ orderStatus: "delivered" })),
+      Order.countDocuments(live({ orderStatus: "returned" })),
     ]);
 
     const courierSettled = deliveredCount + returnedCount;
@@ -277,10 +296,12 @@ export async function GET(request) {
         { "shippingAddress.phone": new RegExp(d) },
         { "customer.email": new RegExp(`guest\\+${d}`, "i") },
       ]);
-      const recentSamePhone = await Order.find({
-        createdAt: { $gte: since24h },
-        $or: phoneOr,
-      })
+      const recentSamePhone = await Order.find(
+        live({
+          createdAt: { $gte: since24h },
+          $or: phoneOr,
+        })
+      )
         .select("customer.phone customer.email shippingAddress.phone createdAt")
         .lean();
       for (const row of recentSamePhone) {
@@ -319,6 +340,7 @@ export async function GET(request) {
           remainingCod: Number(o.payment?.remainingCod) || 0,
           advanceRequired: Number(o.payment?.advanceRequired) || 0,
           advanceMode: String(o.payment?.advanceMode || ""),
+          advancePolicyVersion: Number(o.payment?.advancePolicyVersion) || 0,
         },
         codConfirmed: Boolean(o.codConfirmed),
         whatsappNotified: Boolean(o.whatsappNotified),
@@ -374,6 +396,7 @@ export async function GET(request) {
         needsAttention: viewNeedsAttention,
         today: viewToday,
         awaitingCustomer: viewAwaitingCustomer,
+        advanceUnpaid: viewAdvanceUnpaid,
       },
     });
   } catch (error) {

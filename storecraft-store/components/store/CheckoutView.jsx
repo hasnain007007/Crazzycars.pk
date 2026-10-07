@@ -619,6 +619,17 @@ export function CheckoutView() {
     shippingCost: displayShippingCost,
     storePayment,
   });
+  const displayOrderTotal = useMemo(
+    () =>
+      Math.max(
+        0,
+        Math.round(
+          (Number(cartTotalAfterAllDiscounts) || 0) +
+            (displayShippingFree ? 0 : Number(displayShippingCost) || 0)
+        )
+      ),
+    [cartTotalAfterAllDiscounts, displayShippingCost, displayShippingFree]
+  );
   const productAdvanceDue = useMemo(
     () =>
       computeCodAdvanceDue({
@@ -627,19 +638,25 @@ export function CheckoutView() {
         shippingCost: displayShippingCost,
         storeAdvanceAmount: shippingRules.advancePaymentAmount,
         advanceMessageEnabled: shippingRules.advancePaymentMessageEnabled !== false,
+        orderTotal: displayOrderTotal,
+        bookingAmount: shippingRules.advancePaymentAmount,
       }),
-    [items, paymentMethod, displayShippingCost, shippingRules]
+    [items, paymentMethod, displayShippingCost, shippingRules, displayOrderTotal]
   );
   const effectiveAdvanceAmount =
     productAdvanceDue.amount > 0
       ? productAdvanceDue.amount
-      : displayShippingCost || 250;
+      : shippingRules.advancePaymentAmount || 250;
+  const showBookingAdvanceBox =
+    paymentMethod === "cod" && productAdvanceDue.mode === "booking" && productAdvanceDue.amount > 0;
   const showProductAdvanceBox =
     paymentMethod === "cod" && productAdvanceDue.mode === "percent" && productAdvanceDue.amount > 0;
   const advanceMessageBody = formatAdvancePaymentMessage(
     showProductAdvanceBox
       ? `To confirm after placing your order, please pay at least {amount} in advance (${productAdvanceDue.maxPercent}% of eligible items).\n\nSend payment screenshot on WhatsApp: {whatsapp}`
-      : shippingRules.advancePaymentMessage,
+      : showBookingAdvanceBox && productAdvanceDue.maxPercent > 0
+        ? `A booking amount of {amount} is required (higher of Rs. ${shippingRules.advancePaymentAmount || 250} or your product advance %). It is deducted from your total and refunded if the item doesn't fit.\n\nSend payment screenshot on WhatsApp: {whatsapp}`
+        : shippingRules.advancePaymentMessage,
     effectiveAdvanceAmount,
     whatsappDisplay
   );
@@ -1397,7 +1414,7 @@ export function CheckoutView() {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {shippingRules.advancePaymentDiscountPercent || 3}% OFF
+                          {shippingRules.advancePaymentDiscountPercent || 5}% OFF
                         </span>
                       ) : null}
                       {m.key === "cod" ? (
@@ -1413,7 +1430,7 @@ export function CheckoutView() {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          Delivery charges advance
+                          Booking advance
                         </span>
                       ) : null}
                     </span>
@@ -1453,7 +1470,7 @@ export function CheckoutView() {
               </p>
             ) : null}
 
-            {showAdvanceMessage || showProductAdvanceBox ? (
+            {showAdvanceMessage || showProductAdvanceBox || showBookingAdvanceBox ? (
               <div
                 style={{
                   marginTop: 10,
@@ -1467,12 +1484,14 @@ export function CheckoutView() {
                 <p style={{ margin: "0 0 6px", fontWeight: 700, fontSize: 13, color: "#92400E" }}>
                   {showProductAdvanceBox
                     ? `Pay at least ${productAdvanceDue.maxPercent}% advance`
-                    : shippingRules.advancePaymentMessageTitle}
+                    : showBookingAdvanceBox
+                      ? shippingRules.advancePaymentMessageTitle || "Pay booking amount to confirm COD"
+                      : shippingRules.advancePaymentMessageTitle}
                 </p>
                 <p style={{ margin: "0 0 8px", fontSize: 12, color: "#78350F", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
                   {advanceMessageBody}
                 </p>
-                {showProductAdvanceBox && productAdvanceDue.lines.length ? (
+                {(showProductAdvanceBox || showBookingAdvanceBox) && productAdvanceDue.lines.length ? (
                   <ul style={{ margin: "0 0 8px", paddingLeft: 16, fontSize: 12, color: "#78350F", lineHeight: 1.6 }}>
                     {productAdvanceDue.lines.map((line) => (
                       <li key={`${line.name}-${line.percent}`}>

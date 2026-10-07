@@ -20,6 +20,7 @@ import {
   productMainImageUrl,
 } from "@/lib/resolveLineItemImage";
 import { orderOriginLabel, serializeAttribution } from "@/lib/orderOrigin";
+import { assertCodAdvanceAllowsDispatch, assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
@@ -123,6 +124,7 @@ function serializeOrder(doc, productImageById = null) {
         advanceRequired: Number(plain.advanceRequired) || 0,
         advanceMode: String(plain.advanceMode || ""),
         advanceMaxPercent: Number(plain.advanceMaxPercent) || 0,
+        advancePolicyVersion: Number(plain.advancePolicyVersion) || 0,
       };
     })(),
     paymentConfirmation: (() => {
@@ -292,6 +294,10 @@ export async function PUT(request, context) {
       ];
       if (!allowed.includes(body.orderStatus)) {
         return NextResponse.json({ success: false, error: "Invalid order status." }, { status: 400 });
+      }
+      const statusGate = assertCodAdvanceAllowsStatus(order, body.orderStatus);
+      if (!statusGate.ok) {
+        return NextResponse.json({ success: false, error: statusGate.error }, { status: 409 });
       }
       const note = typeof body.statusChangeNote === "string" ? body.statusChangeNote.trim().slice(0, 2000) : "";
       order.orderStatus = body.orderStatus;
@@ -729,6 +735,10 @@ export async function PUT(request, context) {
       if (number) {
         const shipFrom = new Set(["pending", "confirmed", "processing", "packed"]);
         if (shipFrom.has(String(order.orderStatus || "")) && order.orderStatus !== "shipped") {
+          const shipGate = assertCodAdvanceAllowsDispatch(order);
+          if (!shipGate.ok) {
+            return NextResponse.json({ success: false, error: shipGate.error }, { status: 409 });
+          }
           order.orderStatus = "shipped";
           if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
           order.statusHistory.push({
@@ -776,6 +786,10 @@ export async function PUT(request, context) {
         notifiedAt: order.tracking?.notifiedAt || null,
       };
       if (number && ["pending", "confirmed", "processing", "packed"].includes(String(order.orderStatus || ""))) {
+        const shipGate = assertCodAdvanceAllowsDispatch(order);
+        if (!shipGate.ok) {
+          return NextResponse.json({ success: false, error: shipGate.error }, { status: 409 });
+        }
         order.orderStatus = "shipped";
         order.shippedAt = order.shippedAt || new Date();
         updates.push("orderStatus → shipped");

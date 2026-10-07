@@ -820,12 +820,20 @@ export async function POST(request) {
       shippingCost,
       storeAdvanceAmount: storePayment.advancePaymentAmount,
       advanceMessageEnabled: storePayment.advancePaymentMessageEnabled !== false,
+      orderTotal: total,
+      bookingAmount: Number(storePayment.advancePaymentAmount) || undefined,
     });
     const advanceRequired = Math.min(total, roundRupees(advanceDue.amount));
     const remainingCod =
       paymentMethod === "cod" ? Math.max(0, roundRupees(total - advanceRequired)) : 0;
 
-    if (advanceDue.mode === "percent" && advanceRequired > 0) {
+    if (advanceDue.mode === "booking" && advanceRequired > 0) {
+      statusNotes.push(
+        `COD booking advance Rs. ${advanceRequired}` +
+          (remainingCod > 0 ? ` (remaining COD Rs. ${remainingCod})` : "") +
+          (advanceDue.maxPercent > 0 ? ` — product % up to ${advanceDue.maxPercent}%` : "")
+      );
+    } else if (advanceDue.mode === "percent" && advanceRequired > 0) {
       statusNotes.push(
         `Pay at least ${advanceDue.maxPercent}% advance: Rs. ${advanceRequired}` +
           (remainingCod > 0 ? ` (remaining COD Rs. ${remainingCod})` : "")
@@ -1022,6 +1030,7 @@ export async function POST(request) {
           advanceRequired,
           advanceMode: advanceDue.mode || "",
           advanceMaxPercent: advanceDue.maxPercent || 0,
+          advancePolicyVersion: Number(advanceDue.policyVersion) || 0,
         },
         shippingAddress,
         couponCode,

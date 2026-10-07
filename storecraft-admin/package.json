@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "social:test-post": "tsx --tsconfig jsconfig.json scripts/social-test-post.mjs",
-    "test:social": "tsx --tsconfig jsconfig.json --test __tests__/social/*.test.mjs"
+    "test:social": "tsx --tsconfig jsconfig.json --test __tests__/social/*.test.mjs",
+    "test:cod-advance": "node --import ../tests/alias-loader.mjs --test ../tests/cod-booking-advance.test.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -2,6 +2,7 @@ import { normalizeHomepageSettings } from "@/lib/defaultHomepageSettings";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { STORE_POLICY } from "@/config/store-policy";
+import { PREPAID_DISCOUNT_PERCENT, COD_ADVANCE_AMOUNT } from "@/config/checkout-money";
 import { sanitizeSettingsDocument, sanitizeStoreName } from "@/lib/sanitizeForeignBrand";
 import { rewriteStorePath } from "@/lib/categoryHandleAliases";
 import {
@@ -102,12 +103,12 @@ export const DEFAULT_STORE_PAYMENT = {
   freeShippingOnOrderAbove: 0,
   freeShippingOnOrderAboveEnabled: false,
   advancePaymentMessage:
-    "Your order is placed. Please pay delivery charges of {amount} in advance and send the screenshot on WhatsApp: {whatsapp}",
-  advancePaymentAmount: STORE_POLICY.shipping.standardFeePKR,
+    "A Rs. {amount} booking amount is required to confirm your COD order. It is deducted from your total and fully refunded if the item doesn't fit or doesn't match your confirmed order. Send the screenshot on WhatsApp: {whatsapp}",
+  advancePaymentAmount: COD_ADVANCE_AMOUNT,
   advancePaymentMessageEnabled: true,
-  advancePaymentMessageTitle: "Next step — confirm delivery",
+  advancePaymentMessageTitle: "Pay booking amount to confirm COD",
   advancePaymentDiscountEnabled: true,
-  advancePaymentDiscountPercent: 3,
+  advancePaymentDiscountPercent: PREPAID_DISCOUNT_PERCENT,
   flatDeliveryCharge: STORE_POLICY.shipping.standardFeePKR,
 };
 
@@ -228,7 +229,7 @@ export function normalizeStorePayment(raw) {
     freeShippingOnOrderAbove: 0,
     freeShippingOnOrderAboveEnabled: false,
     advancePaymentAmount:
-      Number(p.advancePaymentAmount) || STORE_POLICY.shipping.standardFeePKR,
+      Number(p.advancePaymentAmount) || COD_ADVANCE_AMOUNT,
     advancePaymentMessageEnabled:
       p.advancePaymentMessageEnabled !== undefined
         ? Boolean(p.advancePaymentMessageEnabled)

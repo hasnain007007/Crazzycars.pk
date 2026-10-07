@@ -8,6 +8,7 @@ import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { fetchRunCourierTracking, isRunCourierOrder } from "@/lib/runcourier";
 import { mapRunCourierStatusToOrderStatus, isRunCourierDeliveredStatus } from "@/lib/runcourierWebhook";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
+import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +125,20 @@ export async function POST(request) {
       const mapped = syncOrderStatus ? mapRunCourierStatusToOrderStatus(live.status) : null;
       if (mapped && order.orderStatus !== mapped) {
         if (!(order.orderStatus === "delivered" && mapped === "shipped")) {
+          const gate = assertCodAdvanceAllowsStatus(order, mapped);
+          if (!gate.ok) {
+            await order.save();
+            results.push({
+              orderId: String(order._id),
+              orderNumber: order.orderNumber,
+              trackingNumber,
+              status: live.status,
+              orderStatus: order.orderStatus,
+              orderStatusSynced: null,
+              blocked: gate.error,
+            });
+            continue;
+          }
           const prev = order.orderStatus;
           order.orderStatus = mapped;
           if (!Array.isArray(order.statusHistory)) order.statusHistory = [];

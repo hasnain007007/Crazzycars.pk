@@ -252,14 +252,16 @@ export function SettingsPage() {
       advancePaymentMessageEnabled: raw.advancePaymentMessageEnabled !== false,
       advancePaymentMessageTitle: (() => {
         const t = String(raw.advancePaymentMessageTitle || "").trim();
-        if (!t || /pay delivery charges to confirm/i.test(t)) return "Confirm Your Order";
+        if (!t || /pay delivery charges to confirm/i.test(t)) {
+          return "Pay booking amount to confirm COD";
+        }
         return t;
       })(),
       advancePaymentMessage: String(raw.advancePaymentMessage || "").trim(),
       advancePaymentDiscountEnabled: raw.advancePaymentDiscountEnabled !== false,
       advancePaymentDiscountPercent: Math.min(
         100,
-        Math.max(0, Number(raw.advancePaymentDiscountPercent) || 3)
+        Math.max(0, Number(raw.advancePaymentDiscountPercent) || 5)
       ),
       flatDeliveryCharge: 250,
       majorCitiesDays: String(raw.majorCitiesDays || "2-3").trim(),
@@ -722,14 +724,14 @@ export function SettingsPage() {
                   min={0}
                   max={100}
                   step={0.5}
-                  value={sp.advancePaymentDiscountPercent ?? 3}
+                  value={sp.advancePaymentDiscountPercent ?? 5}
                   onChange={(e) =>
                     patchStorePayment("advancePaymentDiscountPercent", parseFloat(e.target.value) || 0)
                   }
                   className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 />
                 <p className="mt-1 text-xs text-slate-500">
-                  e.g. 3 = customer gets 3% off when paying via JazzCash / bank / Meezan (not COD)
+                  e.g. 5 = customer gets 5% off when paying via JazzCash / bank / Meezan (not COD)
                 </p>
               </div>
             </div>
@@ -744,22 +746,28 @@ export function SettingsPage() {
                 <label className="text-xs font-medium text-slate-600">Message Title</label>
                 <input
                   type="text"
-                  value={sp.advancePaymentMessageTitle ?? "Confirm Your Order"}
+                  value={sp.advancePaymentMessageTitle ?? "Pay booking amount to confirm COD"}
                   onChange={(e) => patchStorePayment("advancePaymentMessageTitle", e.target.value)}
-                  placeholder="Confirm Your Order"
+                  placeholder="Pay booking amount to confirm COD"
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-600">Minimum Advance Amount (Rs.)</label>
+                <label className="text-xs font-medium text-slate-600">
+                  COD booking advance floor (Rs.)
+                </label>
                 <input
                   type="number"
                   min={0}
                   step={1}
-                  value={sp.advancePaymentAmount ?? 500}
+                  value={sp.advancePaymentAmount ?? 250}
                   onChange={(e) => patchStorePayment("advancePaymentAmount", parseFloat(e.target.value) || 0)}
                   className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 />
+                <p className="mt-1 text-xs text-slate-500">
+                  New COD orders: advance = max(this floor, product % advance), capped at order total.
+                  Default Rs. 250.
+                </p>
               </div>
               <div>
                 <label className="text-xs font-medium text-slate-600">Message to Customer</label>
