@@ -6,6 +6,7 @@
  * Category expansion closed after Batch 4 (29/30 non-parent leaves with SKUs).
  */
 import { STORE_POLICY } from "../../config/store-policy.js";
+import { COD_ADVANCE_AMOUNT } from "../../config/checkout-money.js";
 import {
   deliveryEtaSummary,
   formatPkrAmount,
@@ -18,6 +19,7 @@ function feeAmounts() {
   return {
     regular: formatPkrAmount(STORE_POLICY.shipping.standardFeePKR),
     bulky: formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500),
+    booking: formatPkrAmount(COD_ADVANCE_AMOUNT),
   };
 }
 
@@ -60,11 +62,11 @@ function sharedPolicyFaqs({ includeFitment = true, includeDeliveryTime = true } 
 }
 
 function fallbackShared() {
+  const booking = formatPkrAmount(COD_ADVANCE_AMOUNT);
   return [
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
-      answer:
-        "Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from Rs. 250, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.",
+      answer: `Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from ${booking}, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
     },
     {
       question: "How much are delivery charges?",
@@ -1625,8 +1627,7 @@ export function defaultProductFaqs() {
   return [
     {
       question: "Do you offer Cash on Delivery?",
-      answer:
-        "Yes. Cash on Delivery is available nationwide on eligible orders. For COD, pay a small booking advance (from Rs. 250, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.",
+      answer: `Yes. Cash on Delivery is available nationwide on eligible orders. For COD, pay a small booking advance (from ${fees.booking}, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
     },
     {
       question: "How much is delivery?",
