@@ -18,6 +18,7 @@ import { EmailTemplatesSettings } from "@/components/settings/EmailTemplatesSett
 import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
 import WhatsAppTemplateSettings from "@/components/settings/WhatsAppTemplateSettings";
 import PakistaniPaymentSettings from "@/components/settings/PakistaniPaymentSettings";
+import { COD_ADVANCE_AMOUNT } from "@/config/checkout-money";
 import {
   deliveryChargesShort,
   formatPkrAmount,
@@ -760,13 +761,13 @@ export function SettingsPage() {
                   type="number"
                   min={0}
                   step={1}
-                  value={sp.advancePaymentAmount ?? 250}
+                  value={sp.advancePaymentAmount ?? COD_ADVANCE_AMOUNT}
                   onChange={(e) => patchStorePayment("advancePaymentAmount", parseFloat(e.target.value) || 0)}
                   className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 />
                 <p className="mt-1 text-xs text-slate-500">
                   New COD orders: advance = max(this floor, product % advance), capped at order total.
-                  Default Rs. 250.
+                  Default {formatPkrAmount(COD_ADVANCE_AMOUNT)}.
                 </p>
               </div>
               <div>
