@@ -4,6 +4,7 @@ import { buildCatalogFromMakes } from "@/lib/carCatalogApi";
 import { CAR_MAKES, CAR_DATA, QUICK_CAR_PILLS } from "@/lib/carCatalog";
 import CarCatalog from "@/lib/models/CarCatalog.model";
 import { vehicleSlugsWithStorefrontProducts } from "@/lib/vehiclePageData";
+import { mediaImageUrl } from "@/lib/carCatalogCopy";
 
 export const revalidate = 3600;
 
@@ -48,7 +49,7 @@ function buildPopularList(activeMakes) {
         yearFrom: mod.yearFrom ?? (years.length ? years[years.length - 1] : null),
         yearTo: mod.yearTo ?? (years.length ? years[0] : null),
         bodyStyle: mod.bodyStyle || "Sedan",
-        image: mod.image || "",
+        image: mediaImageUrl(mod.image),
         description: mod.description || "",
         popularAccessories: Array.isArray(mod.popularAccessories) ? mod.popularAccessories : [],
         generation: mod.generation || "",
@@ -78,7 +79,7 @@ function buildAllModelsList(activeMakes) {
         yearFrom: mod.yearFrom ?? (years.length ? years[years.length - 1] : null),
         yearTo: mod.yearTo ?? (years.length ? years[0] : null),
         bodyStyle: mod.bodyStyle || "Sedan",
-        image: mod.image || "",
+        image: mediaImageUrl(mod.image),
         description: mod.description || "",
         popularAccessories: Array.isArray(mod.popularAccessories) ? mod.popularAccessories : [],
         generation: mod.generation || "",

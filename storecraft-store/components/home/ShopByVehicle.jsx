@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCarCatalogClient, seedCarCatalogClient } from "@/lib/fetchCarCatalogClient";
 import { stripBrandPrefix } from "@/lib/carCatalogDisplay";
+import { mediaImageUrl } from "@/lib/carCatalogCopy";
 
 function yearLabel(v) {
   const from = v.yearFrom;
@@ -27,7 +28,7 @@ function mapCatalogToItems(data) {
         slug: p.slug,
         yearFrom: p.yearFrom,
         yearTo: p.yearTo,
-        image: p.image || "",
+        image: mediaImageUrl(p.image),
         href: `/cars/${p.slug}`,
         sortIndex: idx,
         isPopular: Boolean(p.isPopular),
@@ -46,7 +47,7 @@ function mapCatalogToItems(data) {
         slug: m.slug,
         yearFrom: m.yearFrom,
         yearTo: m.yearTo,
-        image: m.image || "",
+        image: mediaImageUrl(m.image),
         href: `/cars/${m.slug}`,
         sortIndex: flat.length,
         isPopular: Boolean(m.isPopular),

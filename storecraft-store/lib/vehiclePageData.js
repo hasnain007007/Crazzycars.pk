@@ -8,6 +8,7 @@ import { VEHICLE_HANDLE_ALIASES } from "@/lib/categoryHandleAliases";
 import {
   findCatalogModelByExactId,
   findCatalogModelByExactSlug,
+  mediaImageUrl,
   mergeCatalogCopyOntoVehicle,
 } from "@/lib/carCatalogCopy";
 import {
@@ -123,7 +124,7 @@ export async function ensureVehicleFromCatalog(make, model) {
       yearTo: yearToFinal,
       slug,
       catalogModelSlug,
-      image: model?.image || "",
+      image: mediaImageUrl(model?.image) || "",
       isActive: model?.isActive !== false,
       sortOrder: Number(model?.popularOrder) || 0,
     });
@@ -379,6 +380,6 @@ export async function loadShopByCarIndex() {
       yearTo: v.yearTo ?? null,
       generation: v.generation || "",
       nickname: v.nickname || "",
-      image: v.image || "",
+      image: mediaImageUrl(v.image),
     }));
 }

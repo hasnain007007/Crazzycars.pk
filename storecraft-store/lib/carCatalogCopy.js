@@ -3,6 +3,26 @@
  */
 
 /**
+ * Coerce vehicle/catalog image fields to a usable URL string.
+ * Vehicle.image is often `{ url, publicId, ... }`; String(obj) becomes "[object Object]".
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function mediaImageUrl(value) {
+  if (value == null) return "";
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s || s === "[object Object]") return "";
+    return s;
+  }
+  if (typeof value === "object") {
+    const u = value.url ?? value.secure_url ?? value.secureUrl;
+    return typeof u === "string" ? u.trim() : "";
+  }
+  return "";
+}
+
+/**
  * Exact Car Catalog model match by nested model.slug (case-insensitive).
  * Never matches on bare make/model/nickname — those collide across generations.
  * @param {Array<object>} makes
@@ -68,7 +88,7 @@ export function mergeCatalogCopyOntoVehicle(vehicle, model) {
         ? vehicle.popularAccessories
         : [],
     nickname: nickname || String(vehicle.nickname || "").trim() || "",
-    image: String(vehicle.image || "").trim() || String(model.image || "").trim() || "",
+    image: mediaImageUrl(vehicle.image) || mediaImageUrl(model.image) || "",
     catalogModelSlug:
       String(model.slug || "").trim().toLowerCase() ||
       String(vehicle.catalogModelSlug || "").trim().toLowerCase() ||

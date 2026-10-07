@@ -15,6 +15,7 @@ import { listingHref, listingMetadata, parseListingSearchParams } from "@/lib/li
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
+import { mediaImageUrl } from "@/lib/carCatalogCopy";
 
 export const revalidate = 60;
 
@@ -48,6 +49,7 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
       (vehicle.metaDescription || "").trim() ||
       `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`;
     const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
+    const ogImage = mediaImageUrl(vehicle.image);
 
     return {
       title: titleMeta,
@@ -58,15 +60,15 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
         title,
         description,
         url: listingSeo.alternates.canonical,
-        images: vehicle.image
-          ? [{ url: vehicle.image, alt: vehicle.displayName }]
+        images: ogImage
+          ? [{ url: ogImage, alt: vehicle.displayName }]
           : [{ url: "/og-image.jpg", width: 1200, height: 630, alt: `${vehicle.displayName} accessories` }],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: vehicle.image ? [vehicle.image] : ["/og-image.jpg"],
+        images: ogImage ? [ogImage] : ["/og-image.jpg"],
       },
     };
   } catch (err) {
@@ -154,6 +156,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     ? vehicle.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
     : [];
   const nickname = String(vehicle.nickname || "").trim();
+  const heroImage = mediaImageUrl(vehicle.image);
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
@@ -310,10 +313,10 @@ export default async function VehicleSlugPage({ params, searchParams }) {
                 boxShadow: "0 16px 40px rgba(0,0,0,0.35)",
               }}
             >
-              {vehicle.image ? (
+              {heroImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={vehicle.image}
+                  src={heroImage}
                   alt={`${vehicle.displayName} accessories in Pakistan`}
                   className="h-full w-full object-cover"
                 />
@@ -335,6 +338,15 @@ export default async function VehicleSlugPage({ params, searchParams }) {
           </div>
         </div>
       </section>
+
+      {/* Compact title when desktop hero is hidden on small screens */}
+      <div className="vehicle-mobile-heading store-container">
+        <p className="vehicle-mobile-heading__eyebrow">
+          {vehicle.make} · {yearLabel}
+        </p>
+        <h1 className="vehicle-mobile-heading__title">{vehicle.displayName}</h1>
+        <p className="vehicle-mobile-heading__sub">Accessories &amp; Body Kits</p>
+      </div>
 
       <section id="compatible-products" className="store-container py-8 md:py-10">
         <ProductListingSection
