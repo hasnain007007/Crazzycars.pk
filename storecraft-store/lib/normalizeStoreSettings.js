@@ -15,8 +15,12 @@ import {
 export const DEFAULT_ANNOUNCEMENT_BAR = {
   enabled: true,
   items: [
-    { text: announcementAdvanceDeliveryText(), link: "/shipping-policy", enabled: true },
-    { text: "Cash on Delivery Available", link: "/cash-on-delivery", enabled: true },
+    { text: announcementAdvanceDeliveryText(), link: "/checkout", enabled: true },
+    {
+      text: `${PREPAID_DISCOUNT_PERCENT}% off when you pay in full (JazzCash / bank)`,
+      link: "/checkout",
+      enabled: true,
+    },
   ],
   backgroundColor: "#111111",
   textColor: "#FFFFFF",

@@ -1,4 +1,8 @@
 import { STORE_POLICY } from "../config/store-policy.js";
+import {
+  COD_ADVANCE_AMOUNT,
+  PREPAID_DISCOUNT_PERCENT,
+} from "../config/checkout-money.js";
 
 export function formatPkrAmount(n) {
   return `Rs. ${Number(n).toLocaleString("en-PK")}`;
@@ -73,15 +77,27 @@ export function shippingAdvanceBannerUr() {
   return `COD آرڈر پر کم از کم Rs. 250 بکنگ ایڈوانس درکار ہے — کل سے کٹے گی، فٹ نہ ہونے پر واپس۔ باقی ڈیلیوری پر۔`;
 }
 
-/** Site-wide top announcement bar — short advance-delivery ask (no tier breakdown). */
+/** Site-wide top announcement bar — COD booking vs prepaid discount. */
 export function announcementAdvanceDeliveryText() {
-  return "COD booking advance from Rs. 250";
+  return `COD from Rs. ${COD_ADVANCE_AMOUNT} booking · or ${PREPAID_DISCOUNT_PERCENT}% off full payment`;
+}
+
+/** True for outdated top-bar lines we rewrite to the booking / prepaid offer. */
+export function looksLikeLegacyAdvanceAnnouncement(text) {
+  const t = String(text || "").trim();
+  if (!t) return false;
+  if (/delivery\s+charges?\s+(are\s+)?paid\s+in\s+advance/i.test(t)) return true;
+  if (/^pay\s+delivery\s+charges?\s+in\s+advance/i.test(t)) return true;
+  if (/shipping\s+is\s+paid\s+in\s+advance/i.test(t)) return true;
+  return false;
 }
 
 /** Fee-only / bulky-tier lines that should not stay customer-facing in the top bar. */
 export function looksLikeFeeOnlyAnnouncement(text) {
   const t = String(text || "").trim();
   if (!t) return false;
+  if (looksLikeLegacyAdvanceAnnouncement(t)) return true;
+  if (/booking|prepaid|full payment|% off/i.test(t)) return false;
   if (/advance/i.test(t)) return false;
   if (/^delivery\s+rs\.?\s*[\d,]+$/i.test(t)) return true;
   if (/regular\s*[·•|]\s*.*bulky/i.test(t)) return true;
@@ -127,9 +143,14 @@ export function returnsHeroTrustChip() {
   return "Refund for a defective or wrong part · no change-of-mind returns";
 }
 
-/** Homepage hero rail — empty (no policy claims under CTAs). */
+/** Homepage hero rail under CTAs — COD booking vs prepaid discount. */
 export function homepageHeroTrustItems() {
-  return [];
+  return [
+    `COD booking from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}`,
+    `${PREPAID_DISCOUNT_PERCENT}% off full payment (JazzCash / bank)`,
+    "Nationwide delivery",
+    "WhatsApp support",
+  ];
 }
 
 export function returnsPolicyMetaDescription() {
@@ -158,19 +179,28 @@ export function sanitizeAnnouncementItems(items) {
   const mapped = list.map((item) => {
     if (!item || typeof item !== "object") return item;
     const text = String(item.text || item.message || "").trim();
-    if (looksLikeFreeDeliveryCopy(text) || looksLikeFeeOnlyAnnouncement(text)) {
-      return { ...item, text: announcementAdvanceDeliveryText(), link: item.link || "/shipping-policy" };
+    if (
+      looksLikeFreeDeliveryCopy(text) ||
+      looksLikeFeeOnlyAnnouncement(text) ||
+      looksLikeLegacyAdvanceAnnouncement(text)
+    ) {
+      return {
+        ...item,
+        text: announcementAdvanceDeliveryText(),
+        link: item.link || "/checkout",
+        enabled: item.enabled !== false,
+      };
     }
     return item;
   });
-  const hasAdvance = mapped.some((item) =>
-    /advance/i.test(String(item?.text || item?.message || ""))
+  const hasOffer = mapped.some((item) =>
+    /booking|prepaid|% off|advance/i.test(String(item?.text || item?.message || ""))
   );
-  if (hasAdvance) return mapped;
+  if (hasOffer) return mapped;
   return [
     {
       text: announcementAdvanceDeliveryText(),
-      link: "/shipping-policy",
+      link: "/checkout",
       enabled: true,
     },
     ...mapped,
