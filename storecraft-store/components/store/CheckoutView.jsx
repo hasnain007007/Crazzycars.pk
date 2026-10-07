@@ -1637,9 +1637,7 @@ export function CheckoutView() {
                 </p>
               ) : null}
               <div className="flex justify-between border-b border-zinc-100 pb-1.5">
-                <span className="text-zinc-700">
-                  {!addr.state && !calculatingShipping ? "Est. shipping" : "Shipping"}
-                </span>
+                <span className="text-zinc-700">Shipping</span>
                 <span className="text-sm font-semibold tabular-nums text-zinc-900">
                   {calculatingShipping ? (
                     <span className="font-normal text-zinc-400">Calculating…</span>
@@ -1648,18 +1646,10 @@ export function CheckoutView() {
                   )}
                 </span>
               </div>
-              {!addr.state && !calculatingShipping ? (
-                <p className="text-[11px] text-zinc-500">
-                  Estimated delivery fee. Final delivery is confirmed once you select province.
-                </p>
-              ) : null}
               {addr.state && shippingData?.estimatedDays && !calculatingShipping ? (
                 <p className="text-xs text-zinc-500">
                   Estimated delivery: {shippingData.estimatedDays}
                 </p>
-              ) : null}
-              {addr.state && shippingZone && !calculatingShipping ? (
-                <p className="text-[11px] text-zinc-400">Zone: {shippingZone}</p>
               ) : null}
               <div className="flex justify-between border-t border-zinc-200 pt-2 text-sm font-bold">
                 <span>Total</span>
