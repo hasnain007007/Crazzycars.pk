@@ -1608,17 +1608,23 @@ export function CheckoutView() {
                   <span className="price">−{formatPrice(advanceDiscount, addr.country)}</span>
                 </div>
               ) : null}
-              {showProductAdvanceBox ? (
+              {showProductAdvanceBox || showBookingAdvanceBox ? (
                 <>
                   <div className="flex justify-between text-amber-800">
-                    <span>Advance due now ({productAdvanceDue.maxPercent}%)</span>
-                    <span className="price">{formatPrice(productAdvanceDue.amount, addr.country)}</span>
+                    <span>
+                      {showProductAdvanceBox
+                        ? `Advance due now (${productAdvanceDue.maxPercent}%)`
+                        : "Advance due now (booking)"}
+                    </span>
+                    <span className="price">
+                      {formatPrice(effectiveAdvanceAmount, addr.country)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-zinc-600">
-                    <span>Remaining on delivery</span>
+                    <span>Balance on delivery</span>
                     <span className="price">
                       {formatPrice(
-                        Math.max(0, total - productAdvanceDue.amount),
+                        Math.max(0, total - effectiveAdvanceAmount),
                         addr.country
                       )}
                     </span>
