@@ -96,7 +96,8 @@ body {
 .vehicle-page-hero a {
   color: inherit;
 }
-.vehicle-page-hero h1 {
+.vehicle-page-hero h1,
+.vehicle-page-hero .vehicle-hero-title {
   color: #ffffff !important;
 }
 

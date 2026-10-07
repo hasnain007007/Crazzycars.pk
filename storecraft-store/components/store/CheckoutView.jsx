@@ -133,7 +133,7 @@ function pakistaniPaymentInstructions(methodKey, config) {
   if (key === "cod") {
     return [
       { text: "Pay product amount in cash when your order arrives." },
-      { text: "After placing the order, pay delivery charges in advance and send the screenshot on WhatsApp so we can confirm dispatch." },
+      { text: "After placing the order, pay the booking advance shown at checkout and send the screenshot on WhatsApp so we can confirm dispatch." },
     ];
   }
   if (key === "jazzcash" || key === "easypaisa") {
@@ -271,7 +271,10 @@ export function CheckoutView() {
   const storePayment = useStorePayment();
   const settings = useStoreSettings();
   const shippingRules = useMemo(() => normalizeShippingRules(storePayment), [storePayment]);
-  const pakistaniPaymentRaw = usePakistaniPaymentMethods();
+  const pakistaniPaymentCtx = usePakistaniPaymentMethods();
+  const [paymentAccounts, setPaymentAccounts] = useState(null);
+  // Layout settings redact account numbers; checkout loads them on demand.
+  const pakistaniPaymentRaw = paymentAccounts || pakistaniPaymentCtx;
   const cartAllowsCod = useMemo(
     () => items.every((x) => productAllowsCod(x)),
     [items]
@@ -281,6 +284,21 @@ export function CheckoutView() {
     if (cartAllowsCod) return list;
     return list.filter((m) => String(m.key || "").toLowerCase() !== "cod");
   }, [pakistaniPaymentRaw, cartAllowsCod]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/settings?payments=1")
+      .then((r) => r.json())
+      .then((body) => {
+        if (cancelled) return;
+        const methods = body?.data?.pakistaniPaymentMethods;
+        if (methods && typeof methods === "object") setPaymentAccounts(methods);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (cartAllowsCod) return;
@@ -1514,7 +1532,7 @@ export function CheckoutView() {
                 </p>
                 <a
                   href={`https://wa.me/${whatsappWaMeDigits(whatsappNumber || storePolicyWhatsApp())}?text=${encodeURIComponent(
-                    "Hi CrazzyCars, I will send my delivery/advance payment screenshot after placing the order."
+                    "Hi CrazzyCars, I will send my COD booking / advance payment screenshot after placing the order."
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"

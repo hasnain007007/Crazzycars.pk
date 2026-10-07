@@ -148,7 +148,7 @@ export default function CheckoutSuccessView() {
   const showFailed = paymentFailed && !orderId;
 
   useEffect(() => {
-    fetch("/api/settings")
+    fetch("/api/settings?payments=1")
       .then((r) => r.json())
       .then((body) => {
         const s = body?.data || body;

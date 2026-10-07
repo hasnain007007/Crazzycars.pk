@@ -6,15 +6,21 @@ import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 /** Public storefront settings — short CDN cache; admin changes appear within ~60s. */
 export const revalidate = 60;
 
-export async function GET() {
+export async function GET(request) {
   try {
     await dbConnect();
     const settings =
       (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
       (await Settings.findOne({}).lean()) ||
       {};
-    // Never expose payment-provider secrets on this public endpoint.
-    const data = toPublicClientSettings(buildStoreSettingsPayload(settings));
+    const url = request?.nextUrl || new URL(request.url);
+    // Checkout / success need wallet + bank account lines; default payload redacts them.
+    const includePaymentAccounts =
+      url.searchParams.get("payments") === "1" ||
+      url.searchParams.get("includePayments") === "1";
+    const data = toPublicClientSettings(buildStoreSettingsPayload(settings), {
+      includePaymentAccounts,
+    });
     return NextResponse.json(
       {
         success: true,
@@ -31,7 +37,9 @@ export async function GET() {
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+          "Cache-Control": includePaymentAccounts
+            ? "private, no-store"
+            : "public, s-maxage=60, stale-while-revalidate=300",
         },
       }
     );

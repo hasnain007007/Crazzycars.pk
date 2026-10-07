@@ -22,7 +22,7 @@ const BRAND =
 
 const META_BASE = "Cash on Delivery (COD) in Pakistan";
 const META_DESCRIPTION =
-  "Cash on Delivery nationwide at CrazzyCars.pk. Pay delivery charges in advance, then pay for your car accessories when the parcel arrives. Body kits use JazzCash, Meezan, or bank transfer — not COD.";
+  "Cash on Delivery nationwide at CrazzyCars.pk. Pay a small booking advance (from Rs. 250) to confirm, then pay the balance when your car accessories arrive. Body kits use JazzCash, Meezan, or bank transfer — not COD.";
 
 const titleMeta = buildBrandedAbsoluteTitle(META_BASE, { brand: BRAND });
 
@@ -69,7 +69,7 @@ function codLandingFaqs() {
       {
         question: "Do you offer Cash on Delivery (COD) in Pakistan?",
         answer:
-          "Yes. Cash on Delivery is available nationwide. For COD orders, pay delivery charges in advance after placing your order and send the payment screenshot on WhatsApp. The product amount is collected when your order arrives.",
+          "Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from Rs. 250, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.",
       },
       {
         question: "How much are delivery charges?",
@@ -77,7 +77,7 @@ function codLandingFaqs() {
       },
       {
         question: "How long does delivery take?",
-        answer: `Most orders ship within 1–2 business days after payment confirmation (or COD delivery-charge confirmation). ${deliveryEtaSummary()}`,
+        answer: `Most orders ship within 1–2 business days after payment confirmation (or COD booking confirmation). ${deliveryEtaSummary()}`,
       },
       {
         question: "What is your return or exchange policy?",

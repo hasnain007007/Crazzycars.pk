@@ -475,11 +475,16 @@ export function applyOrderAttributionCookies(request, response) {
 
   const opts = cookieOpts(request);
   const existingFt = decodeTouch(request.cookies.get(ATTR_FT_COOKIE)?.value);
-  const existingLt = decodeTouch(request.cookies.get(ATTR_LT_COOKIE)?.value);
 
   let wrote = false;
 
-  // First-touch: keep if still in window
+  // Only write cookies for non-direct hits. Seeding Direct on every anonymous
+  // visit forced Set-Cookie → private, no-store on catalog HTML (TTFB).
+  // Checkout still labels missing cookies as Direct via readOrderAttributionFromRequest.
+  if (isDirectTouch(hit)) {
+    return false;
+  }
+
   if (!existingFt) {
     const encoded = encodeTouch(hit);
     if (encoded) {
@@ -488,19 +493,10 @@ export function applyOrderAttributionCookies(request, response) {
     }
   }
 
-  // Last-non-direct: update on non-direct hits; seed Direct only if empty
-  if (!isDirectTouch(hit)) {
-    const encoded = encodeTouch(hit);
-    if (encoded) {
-      response.cookies.set(ATTR_LT_COOKIE, encoded, opts);
-      wrote = true;
-    }
-  } else if (!existingLt) {
-    const encoded = encodeTouch(hit);
-    if (encoded) {
-      response.cookies.set(ATTR_LT_COOKIE, encoded, opts);
-      wrote = true;
-    }
+  const encoded = encodeTouch(hit);
+  if (encoded) {
+    response.cookies.set(ATTR_LT_COOKIE, encoded, opts);
+    wrote = true;
   }
 
   return wrote;

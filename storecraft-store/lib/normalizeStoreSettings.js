@@ -494,11 +494,48 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
   return data;
 }
 
+/** Drop bank / wallet account identifiers from public settings payloads. */
+export function redactPakistaniPaymentAccounts(methods) {
+  const src = methods && typeof methods === "object" ? methods : {};
+  const out = {};
+  for (const [key, raw] of Object.entries(src)) {
+    if (!raw || typeof raw !== "object") {
+      out[key] = raw;
+      continue;
+    }
+    const {
+      accountNumber: _a,
+      iban: _i,
+      accountTitle: _t,
+      accountName: _n,
+      ...safe
+    } = raw;
+    out[key] = {
+      ...safe,
+      accountNumber: "",
+      iban: "",
+      accountTitle: "",
+      accountName: "",
+      hasAccountDetails: Boolean(
+        String(raw.accountNumber || "").trim() ||
+          String(raw.iban || "").trim() ||
+          String(raw.accountTitle || "").trim() ||
+          String(raw.accountName || "").trim()
+      ),
+    };
+  }
+  return out;
+}
+
 /**
  * Strip secrets and heavy blobs before sending settings to the browser.
  * Keeps only what storefront UI needs.
+ * @param {object} full
+ * @param {{ includePaymentAccounts?: boolean }} [opts]
  */
-export function toPublicClientSettings(full = {}) {
+export function toPublicClientSettings(full = {}, opts = {}) {
+  const includePaymentAccounts = opts.includePaymentAccounts === true;
+  const methods = full.pakistaniPaymentMethods;
   return {
     announcementBar: full.announcementBar,
     homepageSettings: full.homepageSettings,
@@ -525,7 +562,9 @@ export function toPublicClientSettings(full = {}) {
       website: full.general?.website || full.website || "",
     },
     payment: {},
-    pakistaniPaymentMethods: full.pakistaniPaymentMethods,
+    pakistaniPaymentMethods: includePaymentAccounts
+      ? methods
+      : redactPakistaniPaymentAccounts(methods),
     seo: {
       googleAnalyticsId: full.seo?.googleAnalyticsId || "",
       facebookPixelId: full.seo?.facebookPixelId || "",

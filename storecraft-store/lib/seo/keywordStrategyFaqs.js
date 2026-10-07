@@ -64,7 +64,7 @@ function fallbackShared() {
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
       answer:
-        "Yes. Cash on Delivery is available nationwide. For COD orders, pay delivery charges in advance after placing your order and send the payment screenshot on WhatsApp. The product amount is collected when your order arrives.",
+        "Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from Rs. 250, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.",
     },
     {
       question: "How much are delivery charges?",
@@ -72,7 +72,7 @@ function fallbackShared() {
     },
     {
       question: "How long does delivery take?",
-      answer: `Most orders ship within 1–2 business days after payment confirmation (or COD delivery-charge confirmation). ${deliveryEtaSummary()}`,
+      answer: `Most orders ship within 1–2 business days after payment confirmation (or COD booking confirmation). ${deliveryEtaSummary()}`,
     },
     {
       question: "What is your return or exchange policy?",
@@ -1626,7 +1626,7 @@ export function defaultProductFaqs() {
     {
       question: "Do you offer Cash on Delivery?",
       answer:
-        "Yes. Cash on Delivery is available nationwide on eligible orders. For COD, pay the delivery charges in advance after placing your order and send the payment screenshot on WhatsApp. The product amount is collected when your order arrives.",
+        "Yes. Cash on Delivery is available nationwide on eligible orders. For COD, pay a small booking advance (from Rs. 250, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.",
     },
     {
       question: "How much is delivery?",

@@ -14,7 +14,6 @@ import {
   detectPaidSocialSource,
 } from "@/lib/paidTraffic";
 import { buildFbcFromFbclid } from "@/lib/metaClickIds";
-import { looksLikeProductSlug, slugFromPathname } from "@/lib/missingProductHelpers";
 import { stripBrandSuffix } from "@/lib/productSlugParam";
 
 function redirectPath(request, pathname, status = 308) {
@@ -262,8 +261,9 @@ export async function middleware(request) {
   let response = NextResponse.next({ request: { headers: requestHeaders } });
   setPaidTrafficCookie(request, response, paidSource);
   setMetaFbcCookie(request, response);
-  const pathSlug = slugFromPathname(pathname);
-  if (paidSource || looksLikeProductSlug(pathSlug)) {
+  // Only stamp path cookie for paid landings — setting it on every product slug
+  // forced Cache-Control: private, no-store on catalog HTML.
+  if (paidSource) {
     response.cookies.set("cc_path", pathname, {
       path: "/",
       maxAge: 120,

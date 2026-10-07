@@ -464,12 +464,12 @@ export function buildCodDeliveryChargeEmailSection(order, contact = {}) {
 
   return `
     <div style="margin-top:24px;padding:16px 20px;background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #F59E0B;border-radius:8px;font-size:14px;color:#374151;line-height:1.7;">
-      <p style="margin:0 0 12px;font-weight:700;color:#92400E;">📦 Delivery Charges Information</p>
-      <p style="margin:0 0 12px;">Your delivery charge is: <strong>${formatPrice(shipping)}</strong></p>
-      <p style="margin:0 0 8px;">To confirm your order faster, you can send the delivery charges in advance:</p>
+      <p style="margin:0 0 12px;font-weight:700;color:#92400E;">📦 COD booking advance</p>
+      <p style="margin:0 0 12px;">Your booking / delivery amount due now: <strong>${formatPrice(shipping)}</strong></p>
+      <p style="margin:0 0 8px;">To confirm your COD order, pay the booking advance and send the screenshot:</p>
       <ul style="margin:0 0 12px;padding-left:20px;">${lines.join("")}</ul>
       <p style="margin:0;font-size:13px;color:#6B7280;">
-        Note: This is optional. You can also pay the full amount (product + delivery) when your order arrives.
+        The booking amount is deducted from your total; the remaining balance is collected on delivery.
       </p>
     </div>
   `;

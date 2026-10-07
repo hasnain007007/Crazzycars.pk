@@ -23,6 +23,9 @@ const STATIC_PAGE_PATHS = [
   "/about",
   "/shipping-policy",
   "/returns-policy",
+  "/privacy-policy",
+  "/terms-conditions",
+  "/track-order",
 ];
 
 const RESERVED_PAGE_SLUGS = new Set([
@@ -53,6 +56,9 @@ const RESERVED_PAGE_SLUGS = new Set([
   "pages",
   "shipping-policy",
   "returns-policy",
+  "privacy-policy",
+  "terms-conditions",
+  "track-order",
 ]);
 
 async function categoryIdsWithProducts() {
@@ -151,6 +157,15 @@ function staticPageLastmod(path, { products, categories, vehicles, blogPosts, cm
       break;
     case "/returns-policy":
       lastmod = cmsBySlug.get("returns-policy");
+      break;
+    case "/privacy-policy":
+      lastmod = cmsBySlug.get("privacy-policy");
+      break;
+    case "/terms-conditions":
+      lastmod = cmsBySlug.get("terms-conditions");
+      break;
+    case "/track-order":
+      lastmod = catalogFloor;
       break;
     default:
       lastmod = null;

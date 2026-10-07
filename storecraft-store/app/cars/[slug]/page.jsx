@@ -207,7 +207,9 @@ export default async function VehicleSlugPage({ params, searchParams }) {
               >
                 {vehicle.make} · {yearLabel}
               </p>
-              <h1
+              {/* Desktop title only — single page <h1> lives in vehicle-mobile-heading (mobile-first SEO). */}
+              <p
+                className="vehicle-hero-title"
                 style={{
                   margin: "10px 0 0",
                   fontFamily: "var(--font-heading), Rajdhani, sans-serif",
@@ -218,7 +220,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
                 }}
               >
                 {vehicle.displayName}
-              </h1>
+              </p>
               {nickname &&
               !String(vehicle.displayName || "")
                 .toLowerCase()
