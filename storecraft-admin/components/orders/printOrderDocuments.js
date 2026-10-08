@@ -165,8 +165,8 @@ export function invoiceInnerHtml(order, options = {}) {
         ${measurementHtml(i)}
       </td>
       <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;text-align:center;">${i.quantity}</td>
-      <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;text-align:right;">${formatMoney(i.unitPrice)}</td>
-      <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;">${formatMoney(lineTotal)}</td>
+      <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap;">${formatMoney(i.unitPrice)}</td>
+      <td style="padding:${rowPad};border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;white-space:nowrap;">${formatMoney(lineTotal)}</td>
     </tr>`;
     })
     .join("");
@@ -253,19 +253,19 @@ export function invoiceInnerHtml(order, options = {}) {
 
       <div class="inv-keep" style="margin-top:${compact ? 12 : 18}px;display:flex;justify-content:flex-end;">
         <div style="width:300px;font-size:13px;">
-          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#475569;"><span>Total</span><span>${formatMoney(p.subtotal)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#475569;"><span>Invoice Discount</span><span>${formatMoney(p.discount || 0)}</span></div>
-          ${Number(p.shippingCost) > 0 ? `<div style="display:flex;justify-content:space-between;padding:3px 0;color:#475569;"><span>Delivery</span><span>${formatMoney(p.shippingCost)}</span></div>` : ""}
-          <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid #e2e8f0;font-weight:700;"><span>Net Amount</span><span>${formatMoney(p.total)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#047857;"><span>Received Amount</span><span>${formatMoney(order.amountPaid || 0)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#c2410c;"><span>Invoice Balance</span><span>${formatMoney(
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;color:#475569;"><span>Total</span><span style="white-space:nowrap;">${formatMoney(p.subtotal)}</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;color:#475569;"><span>Invoice Discount</span><span style="white-space:nowrap;">${formatMoney(p.discount || 0)}</span></div>
+          ${Number(p.shippingCost) > 0 ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;color:#475569;"><span>Delivery</span><span style="white-space:nowrap;">${formatMoney(p.shippingCost)}</span></div>` : ""}
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid #e2e8f0;font-weight:700;"><span>Net Amount</span><span style="white-space:nowrap;">${formatMoney(p.total)}</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;color:#047857;"><span>Received Amount</span><span style="white-space:nowrap;">${formatMoney(order.amountPaid || 0)}</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;color:#c2410c;"><span>Invoice Balance</span><span style="white-space:nowrap;">${formatMoney(
             order.remainingBalance != null
               ? order.remainingBalance
               : Math.max(0, (Number(p.total) || 0) - (Number(order.amountPaid) || 0))
           )}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#475569;"><span>Previous Balance</span><span>${formatMoney(order.previousBalance || 0)}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-top:6px;padding:10px 12px;background:${esc(accent)};color:#fff;border-radius:8px;font-size:14px;font-weight:800;">
-            <span>Total Receivables</span><span>${formatMoney(
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;color:#475569;"><span>Previous Balance</span><span style="white-space:nowrap;">${formatMoney(order.previousBalance || 0)}</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;margin-top:6px;padding:10px 12px;background:${esc(accent)};color:#fff;border-radius:8px;font-size:14px;font-weight:800;">
+            <span>Total Receivables</span><span style="white-space:nowrap;">${formatMoney(
               order.totalReceivables != null
                 ? order.totalReceivables
                 : Math.round(

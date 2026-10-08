@@ -10,5 +10,6 @@ export function roundRupees(amount) {
 
 export function formatAdminPrice(amount) {
   const num = roundRupees(amount);
-  return `Rs. ${num.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  // NBSP keeps "Rs." + amount on one line in narrow invoice columns / PDF.
+  return `Rs.\u00A0${num.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }

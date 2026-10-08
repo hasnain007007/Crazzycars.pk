@@ -89,8 +89,8 @@ export function PrintInvoice({ order, storeName, logoUrl }) {
               </td>
               <td className="py-2 pr-2 text-slate-600">{item.variation || "—"}</td>
               <td className="py-2 pr-2 text-right tabular-nums">{item.quantity}</td>
-              <td className="py-2 pr-2 text-right tabular-nums">{formatMoney(item.unitPrice)}</td>
-              <td className="py-2 text-right tabular-nums font-medium">{formatMoney(item.total)}</td>
+              <td className="py-2 pr-2 text-right tabular-nums whitespace-nowrap">{formatMoney(item.unitPrice)}</td>
+              <td className="py-2 text-right tabular-nums font-medium whitespace-nowrap">{formatMoney(item.total)}</td>
             </tr>
           ))}
         </tbody>
@@ -100,21 +100,21 @@ export function PrintInvoice({ order, storeName, logoUrl }) {
         <div className="w-full max-w-xs space-y-1 text-sm">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span className="tabular-nums">{formatMoney(p.subtotal)}</span>
+            <span className="tabular-nums whitespace-nowrap">{formatMoney(p.subtotal)}</span>
           </div>
           {p.discount > 0 ? (
             <div className="flex justify-between text-emerald-700">
               <span>Discount</span>
-              <span className="tabular-nums">−{formatMoney(p.discount)}</span>
+              <span className="tabular-nums whitespace-nowrap">−{formatMoney(p.discount)}</span>
             </div>
           ) : null}
           <div className="flex justify-between">
             <span>Shipping</span>
-            <span className="tabular-nums">{formatMoney(p.shippingCost)}</span>
+            <span className="tabular-nums whitespace-nowrap">{formatMoney(p.shippingCost)}</span>
           </div>
           <div className="mt-2 flex justify-between border-t border-black pt-2 text-base font-bold">
             <span>Total</span>
-            <span className="tabular-nums">{formatMoney(p.total)}</span>
+            <span className="tabular-nums whitespace-nowrap">{formatMoney(p.total)}</span>
           </div>
         </div>
       </div>

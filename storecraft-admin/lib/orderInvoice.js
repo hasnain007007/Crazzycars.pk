@@ -93,8 +93,8 @@ export function buildOrderInvoiceEmailHtml(order, storeMeta = {}, options = {}) 
           ${i.variation ? `<br><span style="font-size:12px;color:#64748b;">${escapeHtml(i.variation)}</span>` : ""}
         </td>
         <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:center;color:#0f172a;">${qty}</td>
-        <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;color:#0f172a;">${escapeHtml(formatMoney(i.unitPrice))}</td>
-        <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;color:#0f172a;">${escapeHtml(formatMoney(lineTotal))}</td>
+        <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;color:#0f172a;white-space:nowrap;">${escapeHtml(formatMoney(i.unitPrice))}</td>
+        <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;color:#0f172a;white-space:nowrap;">${escapeHtml(formatMoney(lineTotal))}</td>
       </tr>`;
     })
     .join("");
@@ -187,15 +187,15 @@ export function buildOrderInvoiceEmailHtml(order, storeMeta = {}, options = {}) 
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
                 <tr><td align="right">
                   <table role="presentation" width="280" cellpadding="0" cellspacing="0" style="font-size:13px;">
-                    <tr><td style="padding:4px 0;color:#475569;">Subtotal</td><td align="right" style="padding:4px 0;color:#475569;">${escapeHtml(formatMoney(pricing.subtotal))}</td></tr>
-                    ${Number(pricing.discount) > 0 ? `<tr><td style="padding:4px 0;color:#475569;">Discount</td><td align="right" style="padding:4px 0;color:#475569;">−${escapeHtml(formatMoney(pricing.discount))}</td></tr>` : ""}
-                    ${Number(pricing.shippingCost) > 0 ? `<tr><td style="padding:4px 0;color:#475569;">Delivery</td><td align="right" style="padding:4px 0;color:#475569;">${escapeHtml(formatMoney(pricing.shippingCost))}</td></tr>` : ""}
-                    <tr><td style="padding:8px 0;border-top:1px solid #e2e8f0;font-weight:700;">Total</td><td align="right" style="padding:8px 0;border-top:1px solid #e2e8f0;font-weight:700;">${escapeHtml(formatMoney(pricing.total))}</td></tr>
+                    <tr><td style="padding:4px 0;color:#475569;">Subtotal</td><td align="right" style="padding:4px 0;color:#475569;white-space:nowrap;">${escapeHtml(formatMoney(pricing.subtotal))}</td></tr>
+                    ${Number(pricing.discount) > 0 ? `<tr><td style="padding:4px 0;color:#475569;">Discount</td><td align="right" style="padding:4px 0;color:#475569;white-space:nowrap;">−${escapeHtml(formatMoney(pricing.discount))}</td></tr>` : ""}
+                    ${Number(pricing.shippingCost) > 0 ? `<tr><td style="padding:4px 0;color:#475569;">Delivery</td><td align="right" style="padding:4px 0;color:#475569;white-space:nowrap;">${escapeHtml(formatMoney(pricing.shippingCost))}</td></tr>` : ""}
+                    <tr><td style="padding:8px 0;border-top:1px solid #e2e8f0;font-weight:700;">Total</td><td align="right" style="padding:8px 0;border-top:1px solid #e2e8f0;font-weight:700;white-space:nowrap;">${escapeHtml(formatMoney(pricing.total))}</td></tr>
                     <tr><td colspan="2" style="padding-top:8px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${escapeHtml(accent)};color:#ffffff;border-radius:8px;">
                         <tr>
                           <td style="padding:12px 14px;font-size:14px;font-weight:800;">Amount</td>
-                          <td align="right" style="padding:12px 14px;font-size:14px;font-weight:800;">${escapeHtml(formatMoney(pricing.total))}</td>
+                          <td align="right" style="padding:12px 14px;font-size:14px;font-weight:800;white-space:nowrap;">${escapeHtml(formatMoney(pricing.total))}</td>
                         </tr>
                       </table>
                     </td></tr>
