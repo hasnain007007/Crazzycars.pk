@@ -14,7 +14,13 @@ const vehicleSchema = new mongoose.Schema(
     yearFrom: { type: Number, required: true },
     yearTo: { type: Number, default: null },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    image: { type: String, default: "" },
+    /** Links this Vehicle to CarCatalog.models[].slug when they differ. */
+    catalogModelSlug: { type: String, default: "", lowercase: true, trim: true, index: true },
+    /**
+     * Stored as a URL string in newer docs; older docs may still have
+     * `{ url, publicId, ... }` — coerce with mediaImageUrl() before render.
+     */
+    image: { type: mongoose.Schema.Types.Mixed, default: "" },
     metaTitle: { type: String, default: "" },
     metaDescription: { type: String, default: "" },
     shopifyHandle: { type: String, default: "" },

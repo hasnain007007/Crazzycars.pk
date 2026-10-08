@@ -5,6 +5,8 @@ import { dbConnect } from "@/lib/db";
 import { buildCatalogFromMakes } from "@/lib/carCatalogApi";
 import { CAR_MAKES, CAR_DATA, QUICK_CAR_PILLS } from "@/lib/carCatalog";
 import CarCatalog from "@/lib/models/CarCatalog.model";
+import { mediaImageUrl } from "@/lib/carCatalogCopy";
+import { vehicleSlugsWithStorefrontProducts } from "@/lib/vehiclePageData";
 
 function fallbackPayload() {
   const { makes, carData } = buildCatalogFromMakes(
@@ -49,7 +51,7 @@ function buildPopularList(activeMakes) {
         yearFrom: mod.yearFrom ?? (years.length ? years[years.length - 1] : null),
         yearTo: mod.yearTo ?? (years.length ? years[0] : null),
         bodyStyle: mod.bodyStyle || "Sedan",
-        image: mod.image || "",
+        image: mediaImageUrl(mod.image),
         description: mod.description || "",
         popularAccessories: Array.isArray(mod.popularAccessories) ? mod.popularAccessories : [],
         generation: mod.generation || "",
@@ -78,7 +80,7 @@ function buildAllModelsList(activeMakes) {
         yearFrom: mod.yearFrom ?? (years.length ? years[years.length - 1] : null),
         yearTo: mod.yearTo ?? (years.length ? years[0] : null),
         bodyStyle: mod.bodyStyle || "Sedan",
-        image: mod.image || "",
+        image: mediaImageUrl(mod.image),
         description: mod.description || "",
         popularAccessories: Array.isArray(mod.popularAccessories) ? mod.popularAccessories : [],
         generation: mod.generation || "",
@@ -95,8 +97,27 @@ function buildAllModelsList(activeMakes) {
   return [...popular, ...rest];
 }
 
-/** Full catalog payload matching GET /api/car-catalog (for SSR props). */
-export async function fetchCarCatalogServer() {
+function slimModel(m) {
+  return {
+    model: m.model,
+    slug: m.slug,
+    years: Array.isArray(m.years) ? m.years.slice(0, 12) : [],
+    yearFrom: m.yearFrom,
+    yearTo: m.yearTo,
+    image: mediaImageUrl(m.image),
+    isPopular: Boolean(m.isPopular),
+    popularOrder: Number(m.popularOrder) || 9999,
+    bodyStyle: m.bodyStyle || "",
+    generation: m.generation || "",
+    nickname: m.nickname || "",
+  };
+}
+
+/** Full catalog payload matching GET /api/car-catalog (for SSR props).
+ *  @param {{ lean?: boolean }} [opts] lean=true strips long text fields for homepage HTML weight.
+ */
+export async function fetchCarCatalogServer(opts = {}) {
+  const lean = Boolean(opts.lean);
   try {
     await dbConnect();
     const docs = await CarCatalog.find({ isActive: true }).sort({ order: 1, name: 1 }).lean();
@@ -126,16 +147,39 @@ export async function fetchCarCatalogServer() {
       if (carData[make]?.some((m) => m.model === model)) quickPills.push({ make, model });
     }
 
+    let vehicles = buildAllModelsList(activeMakes);
+    let popular = buildPopularList(activeMakes);
+    try {
+      const slugsWithProducts = await vehicleSlugsWithStorefrontProducts();
+      if (slugsWithProducts.size) {
+        const keep = (row) => slugsWithProducts.has(String(row?.slug || "").trim());
+        vehicles = vehicles.filter(keep);
+        popular = popular.filter(keep);
+      }
+    } catch {
+      // keep full lists if product lookup fails
+    }
+
+    let slimCarData = carData;
+    if (lean) {
+      vehicles = vehicles.map(slimModel);
+      popular = popular.map(slimModel);
+      slimCarData = {};
+      for (const [make, models] of Object.entries(carData || {})) {
+        slimCarData[make] = (models || []).map(slimModel);
+      }
+    }
+
     return JSON.parse(
       JSON.stringify({
         success: true,
         source: "database",
         makes,
-        carData,
-        makesMeta: makesMeta || {},
+        carData: slimCarData,
+        makesMeta: lean ? {} : makesMeta || {},
         quickPills: quickPills.length ? quickPills : QUICK_CAR_PILLS,
-        popular: buildPopularList(activeMakes),
-        vehicles: buildAllModelsList(activeMakes),
+        popular,
+        vehicles,
       })
     );
   } catch (err) {

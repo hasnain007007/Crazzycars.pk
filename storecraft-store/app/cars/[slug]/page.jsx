@@ -7,6 +7,7 @@ import {
   loadVehicleBySlug,
   serializeVehicleProduct,
 } from "@/lib/vehiclePageData";
+import { mediaImageUrl } from "@/lib/carCatalogCopy";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { formatPrice } from "@/lib/currency";
@@ -28,6 +29,7 @@ export async function generateMetadata({ params }) {
     const description =
       (vehicle.metaDescription || "").trim() ||
       `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`;
+    const ogImage = mediaImageUrl(vehicle.image);
 
     return {
       title,
@@ -37,13 +39,13 @@ export async function generateMetadata({ params }) {
         title,
         description,
         url: `${BASE_URL}/cars/${vehicle.slug}`,
-        images: vehicle.image ? [{ url: vehicle.image, alt: vehicle.displayName }] : [],
+        images: ogImage ? [{ url: ogImage, alt: vehicle.displayName }] : [],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: vehicle.image ? [vehicle.image] : [],
+        images: ogImage ? [ogImage] : [],
       },
     };
   } catch {
@@ -76,8 +78,10 @@ export default async function VehicleSlugPage({ params }) {
   const breadcrumbLd = breadcrumbJsonLd(crumbs);
 
   const heroDesc =
+    (vehicle.description || "").trim() ||
     (vehicle.metaDescription || "").trim() ||
     `Upgrade your ${vehicle.displayName} with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber. Cash on Delivery nationwide.`;
+  const heroImage = mediaImageUrl(vehicle.image);
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
@@ -209,14 +213,12 @@ export default async function VehicleSlugPage({ params }) {
                 boxShadow: "0 16px 40px rgba(0,0,0,0.35)",
               }}
             >
-              {vehicle.image ? (
-                <Image
-                  src={vehicle.image}
+              {heroImage ? (
+                // eslint-disable-next-line @next/next/no-img-element -- Vehicle.image may be {url}; mediaImageUrl coerces
+                <img
+                  src={heroImage}
                   alt={`${vehicle.displayName} accessories in Pakistan`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 440px"
-                  priority
+                  className="h-full w-full object-cover"
                 />
               ) : (
                 <div
