@@ -25,6 +25,7 @@ import {
   faqPageJsonLd,
   isKeywordStrategyCategory,
 } from "@/lib/seo/keywordStrategyFaqs";
+import { CATEGORY_KEYWORD_META } from "@/lib/seo/generationAliases";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { CATEGORY_TITLE_BRAND } from "@/lib/brand";
 
@@ -162,13 +163,14 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
     if (detail && listing.page > (Number(detail.totalPages) || 1)) notFound();
 
     if (category) {
+      const kwMeta = CATEGORY_KEYWORD_META[slugStr] || null;
       const titleMeta = buildBrandedAbsoluteTitle(
-        (category.seo?.metaTitle || "").trim() || category.name,
+        (kwMeta?.metaTitle || category.seo?.metaTitle || "").trim() || category.name,
         { brand: BRAND }
       );
       const title = titleMeta.absolute;
       const description =
-        (category.seo?.metaDescription || "").trim() ||
+        (kwMeta?.metaDescription || category.seo?.metaDescription || "").trim() ||
         `Shop ${category.name} at ${BRAND}. Premium car accessories with Cash on Delivery nationwide.`;
       const keywords = Array.isArray(category.seo?.metaKeywords)
         ? category.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
@@ -268,8 +270,9 @@ export default async function CategoryPage({ params, searchParams }) {
     });
 
     const breadcrumbLd = breadcrumbJsonLd(uniqueCrumbs);
+    const kwMetaBody = CATEGORY_KEYWORD_META[String(data.category?.slug || slugStr || "").trim()] || null;
     const categoryDescription =
-      String(data.category?.seo?.metaDescription || "").trim() ||
+      String(kwMetaBody?.metaDescription || data.category?.seo?.metaDescription || "").trim() ||
       String(data.category?.description || "").trim() ||
       String(data.category?.shortDescription || "").trim() ||
       undefined;

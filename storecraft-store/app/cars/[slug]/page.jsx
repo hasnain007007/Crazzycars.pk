@@ -16,6 +16,8 @@ import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
 import { mediaImageUrl } from "@/lib/carCatalogCopy";
+import { alsoKnownAsLine, vehicleMetaDescription } from "@/lib/seo/generationAliases";
+import { buildVehicleKeywordFaqs, faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
 
 export const revalidate = 60;
 
@@ -43,11 +45,10 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
     );
     const title = titleMeta.absolute;
     // Prefer Car Catalog Description (merged in loadVehicleBySlug) over legacy Vehicle.metaDescription.
-    const catalogDesc = String(vehicle.description || "").trim();
-    const description =
-      catalogDesc ||
-      (vehicle.metaDescription || "").trim() ||
-      `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`;
+    const catalogDesc =
+      String(vehicle.description || "").trim() ||
+      String(vehicle.metaDescription || "").trim();
+    const description = vehicleMetaDescription(vehicle, catalogDesc);
     const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
     const ogImage = mediaImageUrl(vehicle.image);
 
@@ -132,11 +133,10 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     { name: vehicle.displayName, url: `/cars/${vehicle.slug}` },
   ];
   const breadcrumbLd = breadcrumbJsonLd(crumbs);
-  const catalogDesc = String(vehicle.description || "").trim();
-  const pageDescription =
-    catalogDesc ||
-    (vehicle.metaDescription || "").trim() ||
-    `Shop ${vehicle.displayName} accessories in Pakistan — body kits, LED lights & more. Cash on Delivery.`;
+  const catalogDesc =
+    String(vehicle.description || "").trim() ||
+    String(vehicle.metaDescription || "").trim();
+  const pageDescription = vehicleMetaDescription(vehicle, catalogDesc);
 
   const collectionLd = collectionPageJsonLd({
     name: `${vehicle.displayName} Accessories`,
@@ -147,9 +147,17 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     breadcrumb: breadcrumbLd,
   });
 
+  const hasSplitterProducts = allProducts.some((p) =>
+    /splitter|side.?skirt|side skirt/i.test(
+      `${p?.name || ""} ${p?.slug || ""} ${Array.isArray(p?.tags) ? p.tags.join(" ") : ""}`
+    )
+  );
+  const faqItems = buildVehicleKeywordFaqs(vehicle, { hasSplitterProducts });
+  const faqLd = faqPageJsonLd(faqItems);
+  const akaLine = alsoKnownAsLine(vehicle, { max: 4 });
+
   const heroDesc =
     catalogDesc ||
-    (vehicle.metaDescription || "").trim() ||
     `Upgrade your ${vehicle.displayName} with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber. Cash on Delivery nationwide.`;
 
   const popularAccessories = Array.isArray(vehicle.popularAccessories)
@@ -168,6 +176,12 @@ export default async function VehicleSlugPage({ params, searchParams }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(collectionLd) }}
       />
+      {faqLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }}
+        />
+      ) : null}
 
       <section
         className="vehicle-page-hero"
@@ -234,6 +248,18 @@ export default async function VehicleSlugPage({ params, searchParams }) {
                   }}
                 >
                   {nickname}
+                </p>
+              ) : null}
+              {akaLine ? (
+                <p
+                  style={{
+                    margin: "6px 0 0",
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                    color: "#9CA3AF",
+                  }}
+                >
+                  {akaLine}
                 </p>
               ) : null}
               <p
@@ -347,6 +373,11 @@ export default async function VehicleSlugPage({ params, searchParams }) {
           {vehicle.make} · {yearLabel}
         </p>
         <h1 className="vehicle-mobile-heading__title">{vehicle.displayName}</h1>
+        {akaLine ? (
+          <p className="vehicle-mobile-heading__aka" style={{ margin: "6px 0 0", fontSize: 13, color: "#6B7280" }}>
+            {akaLine}
+          </p>
+        ) : null}
         <p className="vehicle-mobile-heading__sub">Accessories &amp; Body Kits</p>
       </div>
 

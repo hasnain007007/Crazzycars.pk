@@ -55,6 +55,7 @@ function codLandingFaqs() {
     byQ("how long does delivery"),
     byQ("return or exchange") || { question: "What is your return or exchange policy?", answer: returnsFaqAnswer() },
     byQ("fits my car"),
+    byQ("trusted store"),
     {
       question: "Can I use COD on a body kit?",
       answer:

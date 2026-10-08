@@ -14,6 +14,11 @@ import {
   returnsFaqAnswer,
   standardDeliveryFeeStatement,
 } from "../storePolicyCopy.js";
+import {
+  GENERATION_BY_SLUG,
+  aliasesForSlug,
+  aliasesForVehicle,
+} from "./generationAliases.js";
 
 function feeAmounts() {
   return {
@@ -46,19 +51,35 @@ function policyByQuestion(...needles) {
   return hit || null;
 }
 
-function sharedPolicyFaqs({ includeFitment = true, includeDeliveryTime = true } = {}) {
+function sharedPolicyFaqs({
+  includeFitment = true,
+  includeDeliveryTime = true,
+  includeTrusted = false,
+} = {}) {
   const cod = policyByQuestion("cash on delivery");
   const fees = policyByQuestion("delivery charges");
   const returns = policyByQuestion("return or exchange");
   const fitment = policyByQuestion("fits my car");
   const eta = policyByQuestion("how long does delivery");
+  const trusted = policyByQuestion("trusted store");
   const out = [];
   if (cod) out.push(cod);
   if (fees) out.push(fees);
   if (includeDeliveryTime && eta) out.push(eta);
   if (returns) out.push(returns);
   if (includeFitment && fitment) out.push(fitment);
+  if (includeTrusted && trusted) out.push(trusted);
   return out;
+}
+
+function trustedStoreFaq() {
+  return (
+    policyByQuestion("trusted store") || {
+      question: "Is CrazzyCars a trusted store for car accessories in Pakistan?",
+      answer:
+        "CrazzyCars.pk ships car accessories nationwide from Gujranwala. We list vehicle fitment on product pages, offer Cash on Delivery on eligible items (small booking advance, balance on delivery), and handle returns under our published returns policy. Message us on WhatsApp with your order number if you need help — we do not use fake star ratings or invented reviews.",
+    }
+  );
 }
 
 function fallbackShared() {
@@ -151,6 +172,16 @@ const CATEGORY_FAQ_EXTRAS = {
       {
         question: "Why is delivery sometimes higher for bulky items?",
         answer: standardDeliveryFeeStatement(),
+      },
+      {
+        question: "Which Civic or Corolla generation are these splitters for?",
+        answer:
+          "Fitment is product-specific. Honda Civic Reborn (2006–2012), Rebirth (2012–2016), Civic X (2016–2021), 11th Gen (2022–Present), and Toyota Corolla generations each need the matching SKU — open the product page vehicle table, or start from Shop by Car for your exact generation. We do not claim a part fits a nicknamed generation unless that row appears on the product.",
+      },
+      {
+        question: "How do I find a front splitter for Civic Reborn or Civic X?",
+        answer:
+          "Use Shop by Car for Honda Civic Reborn (2006–2012) or Civic X (2016–2021), or browse this category and confirm Reborn / Rebirth / Civic X / 11th Gen on each product’s fitment table before ordering. Search also understands nicknames like “reborn” and “civic x”.",
       },
     ],
   },
@@ -381,9 +412,14 @@ export function isKeywordStrategyCategory(slug) {
 const PRODUCT_FAQ_BY_SKU = {
   "CC-UNI-EXT-BCC-RD": (ctx) => [
     {
+      question: "Is this a real Brembo caliper?",
+      answer:
+        "No. These are decorative Brembo-style caliper covers — not OEM Brembo parts. They are meant for a sport look over exposed calipers; confirm wheel and caliper clearance on your car before ordering.",
+    },
+    {
       question: "Is this a universal fit?",
       answer:
-        "Yes. This product is listed as universal fit for cars with exposed brake calipers. Confirm wheel and caliper clearance on your car before installing.",
+        "Yes. This SKU is listed as universal for cars with exposed brake calipers. It is not tied to Civic Reborn, Corolla E140, or any single generation unless a vehicle row appears on this page — always check clearance on your wheels.",
     },
     {
       question: "What is the current price?",
@@ -1644,9 +1680,170 @@ export function defaultProductFaqs() {
     },
     {
       question: "How long does delivery take?",
-      answer: `Most orders ship within 1–2 business days after payment confirmation (or COD delivery-charge confirmation). ${deliveryEtaSummary()}`,
+      answer: `Most orders ship within 1–2 business days after payment confirmation (or COD booking confirmation). ${deliveryEtaSummary()}`,
     },
+    trustedStoreFaq(),
   ];
+}
+
+const FITMENT_Q_RE =
+  /which cars|does this fit|will it fit|fits my car|which .+ years does this fit/i;
+
+/**
+ * One capped fitment FAQ from real VC / compatibleVehicles rows only.
+ * Never invents generations — aliases only enrich labels already grounded in rows.
+ */
+export function buildGatedFitmentFaq(product) {
+  const labels = [];
+  const seen = new Set();
+  const push = (label) => {
+    const t = String(label || "").trim();
+    if (!t) return;
+    const k = t.toLowerCase();
+    if (seen.has(k)) return;
+    seen.add(k);
+    labels.push(t);
+  };
+
+  for (const v of Array.isArray(product?.compatibleVehicles) ? product.compatibleVehicles : []) {
+    if (!v || typeof v !== "object") continue;
+    if (v.slug) {
+      const entry = aliasesForSlug(v.slug);
+      if (entry) {
+        push(entry.displayName);
+        continue;
+      }
+    }
+    if (v.displayName) push(v.displayName);
+    else {
+      const entry = aliasesForVehicle(v);
+      if (entry) push(entry.displayName);
+      else {
+        const base = `${v.make || ""} ${v.model || ""}`.trim();
+        if (base) {
+          const yf = v.yearFrom;
+          const yt = v.yearTo;
+          push(
+            yf
+              ? yt && Number(yt) !== Number(yf)
+                ? `${base} (${yf}–${yt})`
+                : `${base} (${yf})`
+              : base
+          );
+        }
+      }
+    }
+  }
+
+  for (const row of Array.isArray(product?.vehicleCompatibility?.vehicles)
+    ? product.vehicleCompatibility.vehicles
+    : []) {
+    const entry = aliasesForVehicle({
+      make: row?.make,
+      model: row?.model,
+      yearFrom: row?.yearFrom,
+      yearTo: row?.yearTo,
+      nickname: row?.nickname,
+      generation: row?.generation,
+    });
+    if (entry) {
+      push(entry.displayName);
+      continue;
+    }
+    // Midpoint year → generation display name when nickname/slug missing.
+    const yf = Number(row?.yearFrom);
+    const yt = Number(row?.yearTo) || yf;
+    const mid = Number.isFinite(yf) ? (yf + (Number.isFinite(yt) ? yt : yf)) / 2 : null;
+    const make = String(row?.make || "").toLowerCase();
+    const model = String(row?.model || "").toLowerCase();
+    let midHit = null;
+    if (mid != null) {
+      for (const e of Object.values(GENERATION_BY_SLUG)) {
+        if (!make.includes(e.make)) continue;
+        if (!e.modelTokens.some((m) => model.includes(m))) continue;
+        const g2 = e.yearTo == null ? 2099 : e.yearTo;
+        if (mid >= e.yearFrom && mid <= g2) {
+          midHit = e;
+          break;
+        }
+      }
+    }
+    if (midHit) {
+      push(midHit.displayName);
+      continue;
+    }
+    const base = `${row?.make || ""} ${row?.model || ""}`.trim();
+    if (!base) continue;
+    push(
+      yf
+        ? yt && Number(yt) !== Number(yf)
+          ? `${base} (${yf}–${yt})`
+          : `${base} (${yf})`
+        : base
+    );
+  }
+
+  const capped = labels.slice(0, 6);
+  if (!capped.length) return null;
+
+  const akaBits = [];
+  for (const label of capped) {
+    const entry =
+      aliasesForVehicle({ displayName: label, nickname: label }) ||
+      Object.values(GENERATION_BY_SLUG).find((e) => e.displayName === label);
+    if (entry?.aliases?.length) {
+      akaBits.push(...entry.aliases.slice(0, 2));
+    }
+  }
+  const akaUnique = [...new Set(akaBits.map((a) => a.toLowerCase()))]
+    .slice(0, 4)
+    .map((a) => akaBits.find((x) => x.toLowerCase() === a) || a);
+  const akaClause = akaUnique.length
+    ? ` Nicknames such as ${akaUnique.join(", ")} may appear in search — they only apply when that generation is listed here.`
+    : "";
+
+  return {
+    question: "Which cars does this fit?",
+    answer: `Fitment on this page includes: ${capped.join("; ")}. Confirm your exact year against the vehicle compatibility table before ordering.${akaClause} We do not invent fitment beyond these rows.`,
+  };
+}
+
+/**
+ * FAQPage items for /cars/[slug] hubs (Civic / Corolla generations + COD/trust).
+ * @param {object} vehicle
+ * @param {{ hasSplitterProducts?: boolean }} [opts]
+ */
+export function buildVehicleKeywordFaqs(vehicle, { hasSplitterProducts = false } = {}) {
+  if (!vehicle) return [];
+  const shared = sharedPolicyFaqs({
+    includeFitment: false,
+    includeDeliveryTime: true,
+    includeTrusted: true,
+  });
+  const items = shared.length ? [...shared] : [...fallbackShared(), trustedStoreFaq()];
+  const name = String(vehicle.displayName || "this car").trim();
+  const entry = aliasesForVehicle(vehicle) || aliasesForSlug(vehicle.slug);
+  const aka = entry?.aliases?.slice(0, 4).join(", ") || "";
+
+  items.push({
+    question: `What is ${name} also called when shopping parts in Pakistan?`,
+    answer: aka
+      ? `${name} is commonly searched as ${aka}. Use those nicknames in site search or Shop by Car — each product still only fits when its vehicle compatibility table lists this generation.`
+      : `${name} accessories are listed on this car hub. Confirm make, model, and years on each product page before ordering.`,
+  });
+
+  if (hasSplitterProducts) {
+    items.push({
+      question: `Do you have front splitters or side skirts for ${name}?`,
+      answer: `Compatible splitters and side skirts for this car appear in the product list on this page when in stock. You can also browse the Splitters & Side Skirts category and confirm this generation on the product fitment table. Cash on Delivery is available on eligible items.`,
+    });
+  }
+
+  if (!items.some((f) => /trusted store/i.test(f.question))) {
+    items.push(trustedStoreFaq());
+  }
+
+  return items;
 }
 
 /**
@@ -1657,15 +1854,34 @@ export function buildProductKeywordFaqs(product) {
   const sku = String(product?.articleNo || "").trim();
   if (!sku || sku === "CC-0004") return [];
   const builder = PRODUCT_FAQ_BY_SKU[sku];
-  if (!builder) return defaultProductFaqs();
 
-  const shared = sharedPolicyFaqs({ includeFitment: false, includeDeliveryTime: false });
-  const base = shared.length
-    ? shared.filter((f) => /cash on delivery|return or exchange/i.test(f.question))
-    : fallbackShared().filter((f) => /cash on delivery|return or exchange/i.test(f.question));
+  let items;
+  if (!builder) {
+    items = defaultProductFaqs();
+  } else {
+    const shared = sharedPolicyFaqs({
+      includeFitment: false,
+      includeDeliveryTime: false,
+      includeTrusted: true,
+    });
+    const base = shared.length
+      ? shared.filter((f) => /cash on delivery|return or exchange|trusted store/i.test(f.question))
+      : [...fallbackShared().filter((f) => /cash on delivery|return or exchange/i.test(f.question)), trustedStoreFaq()];
 
-  const priceLabel = formatPkr(liveProductPrice(product));
-  return [...base, ...builder({ priceLabel, product })];
+    const priceLabel = formatPkr(liveProductPrice(product));
+    items = [...base, ...builder({ priceLabel, product })];
+  }
+
+  if (!items.some((f) => FITMENT_Q_RE.test(f.question))) {
+    const gated = buildGatedFitmentFaq(product);
+    if (gated) {
+      // Prefer after COD / near the top; keep list bounded.
+      const insertAt = Math.min(2, items.length);
+      items = [...items.slice(0, insertAt), gated, ...items.slice(insertAt)].slice(0, 8);
+    }
+  }
+
+  return items;
 }
 
 export function hasProductKeywordFaqs(articleNo) {

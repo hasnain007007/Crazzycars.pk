@@ -8,6 +8,13 @@
  *  - Progressive fallbacks: exact → text → typed AND → soft token match
  */
 
+import {
+  GENERATION_PHRASES,
+  aliasTextForProductDoc,
+  buildGenerationTokenSynonyms,
+  expandParsedQueryWithGenerationAliases,
+} from "./seo/generationAliases.js";
+
 function escapeRegex(s) {
   return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -77,6 +84,9 @@ const PHRASES = [
   "neon indicator",
   "mirror indicator",
   "mirror cover",
+  "caliper cover",
+  "front splitter",
+  ...GENERATION_PHRASES,
 ];
 
 /** Product-type tokens — missing these from the title is a hard demotion. */
@@ -191,6 +201,9 @@ const SYNONYMS = {
   neon: ["indicator", "indicators", "sequential", "led"],
   led: ["light", "lights", "neon"],
   rgb: ["led", "neon"],
+  splitter: ["splitters", "skirt", "skirts"],
+  splitters: ["splitter", "skirt", "skirts"],
+  ...buildGenerationTokenSynonyms(),
 };
 
 function isYearToken(t) {
@@ -263,7 +276,7 @@ export function parseSearchQuery(q) {
   // Years never belong in strict AND — they kill recall on near year ranges.
   const significantTokens = allTokens.filter((t) => !isYearToken(t));
 
-  return {
+  return expandParsedQueryWithGenerationAliases({
     raw,
     normalized,
     phrases,
@@ -273,7 +286,7 @@ export function parseSearchQuery(q) {
     makeTokens,
     modelTokens,
     yearTokens,
-  };
+  });
 }
 
 /** Build a $text search string with quoted phrases for higher weight. */
@@ -310,11 +323,12 @@ function haystackOf(doc) {
     : "";
   const vehicles = Array.isArray(doc.vehicleCompatibility?.vehicles)
     ? doc.vehicleCompatibility.vehicles
-        .map((c) => `${c?.make || ""} ${c?.model || ""}`)
+        .map((c) => `${c?.make || ""} ${c?.model || ""} ${c?.yearFrom || ""} ${c?.yearTo || ""}`)
         .join(" ")
     : "";
+  const aliasText = aliasTextForProductDoc(doc);
   return normalizeQuery(
-    `${doc.name || ""} ${doc.slug || ""} ${doc.articleNo || ""} ${doc.shortDescription || ""} ${tags} ${cars} ${vehicles}`
+    `${doc.name || ""} ${doc.slug || ""} ${doc.articleNo || ""} ${doc.shortDescription || ""} ${tags} ${cars} ${vehicles} ${aliasText}`
   );
 }
 

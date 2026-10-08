@@ -239,7 +239,12 @@ export function getFaqItems() {
     },
     {
       question: "How long does delivery take?",
-      answer: `Most orders ship within 1–2 business days after payment confirmation (or COD delivery-charge confirmation). ${deliveryEtaSummary()}`,
+      answer: `Most orders ship within 1–2 business days after payment confirmation (or COD booking confirmation). ${deliveryEtaSummary()}`,
+    },
+    {
+      question: "Is CrazzyCars a trusted store for car accessories in Pakistan?",
+      answer:
+        "CrazzyCars.pk ships car accessories nationwide from Gujranwala. We list vehicle fitment on product pages, offer Cash on Delivery on eligible items (small booking advance, balance on delivery), and handle returns under our published returns policy. Message us on WhatsApp with your order number if you need help — we do not use fake star ratings or invented reviews.",
     },
   ];
 }
