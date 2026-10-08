@@ -17,10 +17,13 @@ export const ROBOTS_PRIVATE_PATHS = [
  * Pagination (`page=`) is intentionally allowed: page-only listings are indexable.
  * Does not block CSS/JS (path-based, not extension-based).
  */
+/**
+ * Facet query params (Google wildcard Disallow).
+ * `q=` / `search=` are intentionally NOT blocked: WebSite SearchAction targets
+ * `/shop?q={search_term_string}`, and listingMetadata already noindexes those URLs.
+ */
 export const ROBOTS_FILTER_QUERY_DISALLOWS = [
   "/*?*sort=",
-  "/*?*q=",
-  "/*?*search=",
   "/*?*view=",
   "/*?*per_page=",
   "/*?*show=",

@@ -6,6 +6,8 @@ import { getSiteUrl } from "@/lib/siteUrl";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
 import { productAllowsCod } from "@/lib/codEligibility";
+import { loadShopByCarIndex } from "@/lib/vehiclePageData";
+import { GENERATION_BY_SLUG } from "@/lib/seo/generationAliases";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -24,9 +26,10 @@ export async function GET() {
 
   let categoryLinks = [];
   let productLinks = [];
+  let vehicleLinks = [];
   try {
     await dbConnect();
-    const [cats, products] = await Promise.all([
+    const [cats, products, vehicles] = await Promise.all([
       Category.find({ status: "active" })
         .select("name slug")
         .sort({ sortOrder: 1, name: 1 })
@@ -39,6 +42,7 @@ export async function GET() {
         .sort({ featured: -1, isDeal: -1, updatedAt: -1 })
         .limit(40)
         .lean(),
+      loadShopByCarIndex(),
     ]);
     categoryLinks = (cats || [])
       .filter((c) => c.slug)
@@ -58,9 +62,28 @@ export async function GET() {
         const cod = productAllowsCod(p) ? "COD eligible" : "prepaid";
         return `- [${p.name}](${site}/${p.slug})${priceBit} · ${cod}`;
       });
+
+    const prioritySlugs = Object.keys(GENERATION_BY_SLUG);
+    const bySlug = new Map((vehicles || []).filter((v) => v?.slug).map((v) => [v.slug, v]));
+    const ordered = [];
+    for (const slug of prioritySlugs) {
+      if (bySlug.has(slug)) ordered.push(bySlug.get(slug));
+    }
+    for (const v of vehicles || []) {
+      if (!v?.slug || prioritySlugs.includes(v.slug)) continue;
+      ordered.push(v);
+    }
+    vehicleLinks = ordered.slice(0, 36).map((v) => {
+      const entry = GENERATION_BY_SLUG[v.slug];
+      const aka = entry?.aliases?.slice(0, 3).join(", ");
+      const label = v.displayName || `${v.make || ""} ${v.model || ""}`.trim();
+      const akaBit = aka ? ` (also: ${aka})` : "";
+      return `- [${label}](${site}/cars/${v.slug})${akaBit}`;
+    });
   } catch {
     categoryLinks = [];
     productLinks = [];
+    vehicleLinks = [];
   }
 
   const body = `# CrazzyCars.pk
@@ -73,10 +96,11 @@ export async function GET() {
 - Payment: Cash on Delivery on eligible items (product amount paid on delivery); body kits are prepaid (JazzCash or bank transfer).
 - Returns: within ${STORE_POLICY.returns.windowDays} days only if the item is defective or the wrong item was shipped (full refund). No change-of-mind returns.
 - Contact: WhatsApp ${wa} (E.164 ${waE164}) · ${STORE_CONTACT.email} · ${STORE_CONTACT.address.city}, ${STORE_CONTACT.address.region}
+- Fitment: each product lists vehicle compatibility (make/model/years). Do not invent fitment beyond that table. Generation nicknames (Civic Reborn, Rebirth, Civic X, Corolla E140, etc.) are search aliases only.
 
 ## Key pages
 
-- [Shop all](${site}/shop) · [Shop by vehicle](${site}/cars) · [Cash on Delivery](${site}/cash-on-delivery) · [Shipping](${site}/shipping-policy) · [Returns](${site}/returns-policy) · [FAQ](${site}/faq) · [Contact](${site}/contact)
+- [Shop all](${site}/shop) · [Shop by vehicle](${site}/cars) · [Categories](${site}/categories) · [Cash on Delivery](${site}/cash-on-delivery) · [Shipping](${site}/shipping-policy) · [Returns](${site}/returns-policy) · [FAQ](${site}/faq) · [Contact](${site}/contact)
 
 ## Machine-readable data
 
@@ -85,6 +109,10 @@ export async function GET() {
 - AI discovery: ${site}/.well-known/ai.json
 - Sitemap: ${site}/sitemap.xml
 - This file: ${site}/llms.txt
+
+## Shop by vehicle (popular generations)
+
+${vehicleLinks.length ? vehicleLinks.join("\n") : `- [Shop by car](${site}/cars)`}
 
 ## Categories
 

@@ -10,6 +10,7 @@ import { resolveProductImageUrls } from "../productImages.js";
 import { productAllowsCod } from "../codEligibility.js";
 import {
   fitmentVehiclesForSchema,
+  resolveFitment,
   specAdditionalProperties,
   specsFromProduct,
 } from "../product-specs.mjs";
@@ -471,7 +472,8 @@ export function productJsonLd(p) {
   if (allProps.length) {
     ld.additionalProperty = allProps;
   }
-  const spareFor = fitmentVehiclesForSchema(p.fitment);
+  // Prefer stored fitment; otherwise resolve from VC / compatibleVehicles / compatibleCars.
+  const spareFor = fitmentVehiclesForSchema(resolveFitment(p));
   if (spareFor.length) {
     ld.isAccessoryOrSparePartFor = spareFor.slice(0, 12);
   }
@@ -642,6 +644,41 @@ export function websiteJsonLd(overrides = {}) {
       "@type": "SearchAction",
       target: `${SITE}/shop?q={search_term_string}`,
       "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+/**
+ * Homepage hub graph — categories + shop-by-car + trust pages already linked in UI.
+ * @param {{
+ *   name?: string,
+ *   description?: string,
+ *   items?: { name: string, url: string }[],
+ * }} opts
+ */
+export function homeHubCollectionJsonLd(opts = {}) {
+  const SITE = site();
+  const items = (Array.isArray(opts.items) ? opts.items : [])
+    .filter((it) => it?.name && it?.url)
+    .slice(0, 40);
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${SITE}/#homepage`,
+    name: opts.name || "CrazzyCars.pk — Car Accessories Pakistan",
+    url: `${SITE}/`,
+    description:
+      opts.description ||
+      "Buy car accessories online in Pakistan — shop by category or vehicle. Cash on Delivery on eligible items.",
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: items.length,
+      itemListElement: items.map((it, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: it.name,
+        url: it.url.startsWith("http") ? it.url : `${SITE}${it.url.startsWith("/") ? it.url : `/${it.url}`}`,
+      })),
     },
   };
 }

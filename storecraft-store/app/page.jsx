@@ -9,6 +9,9 @@ import { dbConnect } from "@/lib/db";
 import { fetchCategoryTreeServer } from "@/lib/serverCategoryTree";
 import { pickHomepageCategories, serializeHomepageCategory } from "@/lib/homepageCategories";
 import Product from "@/lib/models/Product.model";
+import { categoryHref } from "@/lib/categories";
+import { homeHubCollectionJsonLd } from "@/lib/seo/jsonld";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 
 export const revalidate = 300;
 
@@ -59,8 +62,37 @@ export default async function Page() {
   const desktopPreload = heroSlides[0]?.imageUrl || "";
   const mobilePreload = heroSlides[0]?.imageUrlMobile || desktopPreload;
 
+  const hubItems = [
+    { name: "Shop all car accessories", url: "/shop" },
+    { name: "Shop by car", url: "/cars" },
+    { name: "Browse categories", url: "/categories" },
+    { name: "Cash on Delivery", url: "/cash-on-delivery" },
+    { name: "Hot deals", url: "/sale" },
+    { name: "FAQ", url: "/faq" },
+    ...homepageCategories.slice(0, 10).map((c) => ({
+      name: c.name,
+      url: categoryHref(c.slug),
+    })),
+    ...(Array.isArray(carCatalog?.popular) ? carCatalog.popular : [])
+      .filter((v) => v?.slug)
+      .slice(0, 12)
+      .map((v) => ({
+        name: `${v.make || ""} ${v.model || ""}`.trim() || v.slug,
+        url: `/cars/${v.slug}`,
+      })),
+  ];
+  const homeLd = homeHubCollectionJsonLd({
+    description:
+      "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide.",
+    items: hubItems,
+  });
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(homeLd) }}
+      />
       {mobilePreload ? (
         // eslint-disable-next-line @next/next/no-head-element -- preload LCP hero (mobile)
         <link

@@ -25,7 +25,6 @@ const STATIC_PAGE_PATHS = [
   "/returns-policy",
   "/privacy-policy",
   "/terms-conditions",
-  "/track-order",
 ];
 
 const RESERVED_PAGE_SLUGS = new Set([
@@ -163,9 +162,6 @@ function staticPageLastmod(path, { products, categories, vehicles, blogPosts, cm
       break;
     case "/terms-conditions":
       lastmod = cmsBySlug.get("terms-conditions");
-      break;
-    case "/track-order":
-      lastmod = catalogFloor;
       break;
     default:
       lastmod = null;
