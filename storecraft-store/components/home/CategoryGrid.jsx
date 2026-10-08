@@ -90,24 +90,37 @@ export default function CategoryGrid({
     const el = scrollerRef.current;
     if (!el) return undefined;
 
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    if (reduce) return undefined;
+    // Same as ShopByVehicle: auto-scroll only on fine-pointer desktops —
+    // smooth scrollBy on phones cancels tap → link opens.
+    let canHover = false;
+    try {
+      canHover =
+        window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      canHover = false;
+    }
+    if (!canHover) return undefined;
 
+    let resumeTimer = 0;
     const pause = () => {
       pausedRef.current = true;
+      const x = el.scrollLeft;
+      el.scrollTo({ left: x, behavior: "auto" });
+      if (resumeTimer) window.clearTimeout(resumeTimer);
     };
-    const resume = () => {
-      pausedRef.current = false;
+    const scheduleResume = () => {
+      if (resumeTimer) window.clearTimeout(resumeTimer);
+      resumeTimer = window.setTimeout(() => {
+        pausedRef.current = false;
+      }, 4000);
     };
 
     el.addEventListener("mouseenter", pause);
-    el.addEventListener("mouseleave", resume);
+    el.addEventListener("mouseleave", scheduleResume);
     el.addEventListener("focusin", pause);
-    el.addEventListener("focusout", resume);
-    el.addEventListener("touchstart", pause, { passive: true });
-    el.addEventListener("touchend", resume, { passive: true });
+    el.addEventListener("focusout", scheduleResume);
+    el.addEventListener("pointerdown", pause, { passive: true });
 
     const tick = () => {
       if (pausedRef.current || !scrollerRef.current) return;
@@ -124,15 +137,15 @@ export default function CategoryGrid({
       }
     };
 
-    const id = window.setInterval(tick, 3000);
+    const id = window.setInterval(tick, 3200);
     return () => {
       window.clearInterval(id);
+      if (resumeTimer) window.clearTimeout(resumeTimer);
       el.removeEventListener("mouseenter", pause);
-      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("mouseleave", scheduleResume);
       el.removeEventListener("focusin", pause);
-      el.removeEventListener("focusout", resume);
-      el.removeEventListener("touchstart", pause);
-      el.removeEventListener("touchend", resume);
+      el.removeEventListener("focusout", scheduleResume);
+      el.removeEventListener("pointerdown", pause);
     };
   }, [categories.length]);
 

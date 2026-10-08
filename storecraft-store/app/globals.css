@@ -4966,8 +4966,10 @@ textarea::placeholder {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
   scrollbar-width: thin;
   padding: 2px 8px 6px;
 }
@@ -4982,6 +4984,9 @@ textarea::placeholder {
   text-decoration: none;
   color: inherit;
   scroll-snap-align: start;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .sbv-ring {

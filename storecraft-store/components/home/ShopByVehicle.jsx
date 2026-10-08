@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCarCatalogClient, seedCarCatalogClient } from "@/lib/fetchCarCatalogClient";
 import { stripBrandPrefix } from "@/lib/carCatalogDisplay";
@@ -12,6 +13,109 @@ function yearLabel(v) {
   if (!from) return "";
   if (to == null || to >= new Date().getFullYear()) return `${from}–Present`;
   return `${from}–${to}`;
+}
+
+/** True when the device can hover with a fine pointer (desktop/laptop). */
+function canAutoScrollRail() {
+  if (typeof window === "undefined") return false;
+  try {
+    return (
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Stop an in-flight smooth scroll so a tap is not cancelled mid-animation. */
+function freezeScroller(el) {
+  if (!el) return;
+  const x = el.scrollLeft;
+  el.scrollTo({ left: x, behavior: "auto" });
+}
+
+/**
+ * Vehicle card — on touch, open on a stationary finger-up so horizontal
+ * scroll / leftover smooth auto-scroll cannot swallow the navigation.
+ */
+function VehicleCard({ v }) {
+  const router = useRouter();
+  const tapRef = useRef(null);
+
+  function onPointerDown(e) {
+    if (e.pointerType === "mouse") return;
+    tapRef.current = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
+    freezeScroller(e.currentTarget.closest(".sbv-slider"));
+  }
+
+  function onPointerMove(e) {
+    const tap = tapRef.current;
+    if (!tap || tap.id !== e.pointerId) return;
+    if (Math.abs(e.clientX - tap.x) > 10 || Math.abs(e.clientY - tap.y) > 10) {
+      tap.moved = true;
+    }
+  }
+
+  function onPointerUp(e) {
+    const tap = tapRef.current;
+    tapRef.current = null;
+    if (!tap || tap.id !== e.pointerId || tap.moved) return;
+    // Touch taps often lose the synthetic click when a scroll container moved.
+    e.preventDefault();
+    router.push(v.href);
+  }
+
+  function onPointerCancel() {
+    tapRef.current = null;
+  }
+
+  const label = `${v.make} ${v.model}${yearLabel(v) ? ` ${yearLabel(v)}` : ""}`;
+
+  return (
+    <Link
+      href={v.href}
+      data-vehicle-card
+      aria-label={label}
+      className="sbv-card group flex w-[128px] shrink-0 flex-col items-center gap-1.5 text-inherit no-underline md:w-[156px]"
+      style={{ scrollSnapAlign: "start", WebkitTapHighlightColor: "rgba(196, 30, 30, 0.15)" }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      draggable={false}
+    >
+      <span className="sbv-ring relative flex h-[118px] w-[118px] items-center justify-center overflow-hidden rounded-full border-2 border-[#E8E8E8] bg-white transition group-hover:border-[#C41E1E] group-hover:shadow-[0_8px_18px_rgba(196,30,30,0.16)] md:h-[148px] md:w-[148px]">
+        {v.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={v.image}
+            alt=""
+            className="h-full w-full object-cover object-center transition group-hover:scale-[1.04] md:object-contain md:p-2.5"
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
+            draggable={false}
+          />
+        ) : (
+          <span className="sbv-fallback text-[26px] leading-none" aria-hidden>
+            🚗
+          </span>
+        )}
+      </span>
+      <span className="sbv-make max-w-full truncate text-center text-[8px] font-extrabold tracking-wider text-[#C41E1E] uppercase md:text-[10px]">
+        {v.make}
+      </span>
+      <span className="sbv-model font-heading max-w-full truncate text-center text-[11px] font-bold leading-tight text-[#111111] md:text-sm">
+        {v.model}
+      </span>
+      {yearLabel(v) ? (
+        <span className="sbv-years max-w-full truncate text-center text-[8px] text-[#6B7280] md:text-[10px]">
+          {yearLabel(v)}
+        </span>
+      ) : null}
+    </Link>
+  );
 }
 
 function mapCatalogToItems(data) {
@@ -130,24 +234,28 @@ export default function ShopByVehicle({ initialCatalog = null }) {
     const el = scrollerRef.current;
     if (!el) return undefined;
 
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    if (reduce) return undefined;
+    // Phones: never auto-scroll — smooth scrollBy cancels tap → link navigation.
+    if (!canAutoScrollRail()) return undefined;
 
+    let resumeTimer = 0;
     const pause = () => {
       pausedRef.current = true;
+      freezeScroller(el);
+      if (resumeTimer) window.clearTimeout(resumeTimer);
     };
-    const resume = () => {
-      pausedRef.current = false;
+    const scheduleResume = () => {
+      if (resumeTimer) window.clearTimeout(resumeTimer);
+      resumeTimer = window.setTimeout(() => {
+        pausedRef.current = false;
+      }, 4000);
     };
 
     el.addEventListener("mouseenter", pause);
-    el.addEventListener("mouseleave", resume);
+    el.addEventListener("mouseleave", scheduleResume);
     el.addEventListener("focusin", pause);
-    el.addEventListener("focusout", resume);
-    el.addEventListener("touchstart", pause, { passive: true });
-    el.addEventListener("touchend", resume, { passive: true });
+    el.addEventListener("focusout", scheduleResume);
+    el.addEventListener("wheel", pause, { passive: true });
+    el.addEventListener("pointerdown", pause, { passive: true });
 
     const tick = () => {
       if (pausedRef.current || !scrollerRef.current) return;
@@ -166,15 +274,16 @@ export default function ShopByVehicle({ initialCatalog = null }) {
       }
     };
 
-    const id = window.setInterval(tick, 2800);
+    const id = window.setInterval(tick, 3200);
     return () => {
       window.clearInterval(id);
+      if (resumeTimer) window.clearTimeout(resumeTimer);
       el.removeEventListener("mouseenter", pause);
-      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("mouseleave", scheduleResume);
       el.removeEventListener("focusin", pause);
-      el.removeEventListener("focusout", resume);
-      el.removeEventListener("touchstart", pause);
-      el.removeEventListener("touchend", resume);
+      el.removeEventListener("focusout", scheduleResume);
+      el.removeEventListener("wheel", pause);
+      el.removeEventListener("pointerdown", pause);
     };
   }, [loading, visible.length, activeMake]);
 
@@ -261,8 +370,9 @@ export default function ShopByVehicle({ initialCatalog = null }) {
             ref={scrollerRef}
             className="sbv-slider flex gap-2.5 overflow-x-auto px-1 pb-1.5 md:gap-3 md:px-9"
             style={{
-              scrollSnapType: "x mandatory",
+              scrollSnapType: "x proximity",
               WebkitOverflowScrolling: "touch",
+              touchAction: "pan-x",
               scrollbarWidth: "thin",
             }}
           >
@@ -278,45 +388,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                     <span className="h-2 w-[45%] rounded bg-[#E8E8E8]" />
                   </div>
                 ))
-              : visible.map((v) => (
-                  <Link
-                    key={`${v.make}-${v.slug}`}
-                    href={v.href}
-                    data-vehicle-card
-                    className="sbv-card group flex w-[128px] shrink-0 flex-col items-center gap-1.5 text-inherit no-underline md:w-[156px]"
-                    style={{ scrollSnapAlign: "start" }}
-                  >
-                    <span className="sbv-ring relative flex h-[118px] w-[118px] items-center justify-center overflow-hidden rounded-full border-2 border-[#E8E8E8] bg-white transition group-hover:border-[#C41E1E] group-hover:shadow-[0_8px_18px_rgba(196,30,30,0.16)] md:h-[148px] md:w-[148px]">
-                      {v.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={v.image}
-                          alt={`${v.make} ${v.model}`}
-                          className="h-full w-full object-cover object-center transition group-hover:scale-[1.04] md:object-contain md:p-2.5"
-                          loading="lazy"
-                          decoding="async"
-                          fetchPriority="low"
-                          draggable={false}
-                        />
-                      ) : (
-                        <span className="sbv-fallback text-[26px] leading-none" aria-hidden>
-                          🚗
-                        </span>
-                      )}
-                    </span>
-                    <span className="sbv-make max-w-full truncate text-center text-[8px] font-extrabold tracking-wider text-[#C41E1E] uppercase md:text-[10px]">
-                      {v.make}
-                    </span>
-                    <span className="sbv-model font-heading max-w-full truncate text-center text-[11px] font-bold leading-tight text-[#111111] md:text-sm">
-                      {v.model}
-                    </span>
-                    {yearLabel(v) ? (
-                      <span className="sbv-years max-w-full truncate text-center text-[8px] text-[#6B7280] md:text-[10px]">
-                        {yearLabel(v)}
-                      </span>
-                    ) : null}
-                  </Link>
-                ))}
+              : visible.map((v) => <VehicleCard key={`${v.make}-${v.slug}`} v={v} />)}
           </div>
         </div>
       </div>
