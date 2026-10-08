@@ -40,7 +40,7 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
       return undefined;
     }
     let cancelled = false;
-    fetch("/api/car-catalog")
+    fetch("/api/car-catalog?lean=1")
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -112,23 +112,25 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
       setLoading(true);
       try {
         const yearParam = year && year !== "range" ? year : "";
-        const modelName = selectedModel?.model || selectedModel?.name || "";
-        const findYear = yearParam || selectedModel?.yearFrom || YEAR_END;
-        const findUrl = selectedModel
-          ? `/api/vehicles/find?make=${encodeURIComponent(make)}&model=${encodeURIComponent(modelName)}&year=${encodeURIComponent(findYear)}&catalogSlug=${encodeURIComponent(modelSlug)}`
-          : null;
 
-        if (findUrl) {
+        // Fast path: catalog model slugs match Vehicle.slug — open immediately.
+        // Still confirm via find(catalogSlug) so missing vehicles are materialized.
+        const findUrl = `/api/vehicles/find?make=${encodeURIComponent(make)}&catalogSlug=${encodeURIComponent(modelSlug)}${
+          yearParam ? `&year=${encodeURIComponent(yearParam)}&model=${encodeURIComponent(selectedModel?.model || "")}` : ""
+        }`;
+
+        try {
           const res = await fetch(findUrl);
           const json = await res.json();
           const vehicle = json?.vehicle || json?.data;
           if (res.ok && vehicle?.slug) {
-            router.push(`/cars/${vehicle.slug}`);
+            router.push(`/cars/${vehicle.slug}${yearParam ? `?year=${yearParam}` : ""}`);
             return;
           }
+        } catch {
+          // fall through to direct slug navigation
         }
 
-        // Fallback: catalog model slug (store page resolves → Vehicle automatically)
         router.push(`/cars/${modelSlug}${yearParam ? `?year=${yearParam}` : ""}`);
       } catch {
         setError("Could not open that car. Try again.");
@@ -143,7 +145,9 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
     <section id="shop-by-car" className="filter-by-car-section">
       <div className="store-container">
         <form onSubmit={onSubmit} className="filter-by-car-card">
-          <h2 className="filter-by-car-title">{title === "Find Parts For Your Car" ? "Filter By Car" : title}</h2>
+          <h2 className="filter-by-car-title">
+            {title === "Find Parts For Your Car" ? "Filter By Car" : title}
+          </h2>
 
           <div className="filter-by-car-fields">
             <select
@@ -160,37 +164,39 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
               ))}
             </select>
 
-            <div className="filter-by-car-row">
-              <select
-                className="filter-by-car-select"
-                value={modelSlug}
-                onChange={(e) => setModelSlug(e.target.value)}
-                disabled={!make}
-                aria-label="Select model"
-              >
-                <option value="">SELECT MODEL</option>
-                {models.map((m) => (
-                  <option key={m.slug} value={m.slug}>
-                    {(m.nickname || m.generation || m.model || "").toUpperCase()}
-                  </option>
-                ))}
-              </select>
+            <select
+              className="filter-by-car-select"
+              value={modelSlug}
+              onChange={(e) => setModelSlug(e.target.value)}
+              disabled={!make}
+              aria-label="Select model"
+            >
+              <option value="">SELECT MODEL</option>
+              {models.map((m) => (
+                <option key={m.slug} value={m.slug}>
+                  {(m.nickname || m.generation || m.model || "").toUpperCase()}
+                </option>
+              ))}
+            </select>
 
-              <select
-                className="filter-by-car-select"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                disabled={!modelSlug}
-                aria-label="Select year"
-              >
-                <option value="">SELECT YEAR</option>
-                {yearOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              className="filter-by-car-select"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              disabled={!modelSlug}
+              aria-label="Select year"
+            >
+              <option value="">SELECT YEAR</option>
+              {yearOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+
+            <button type="submit" disabled={loading} className="filter-by-car-btn">
+              {loading ? "…" : "FILTER"}
+            </button>
           </div>
 
           {error ? (
@@ -198,10 +204,6 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
               {error}
             </p>
           ) : null}
-
-          <button type="submit" disabled={loading} className="filter-by-car-btn">
-            {loading ? "…" : "FILTER"}
-          </button>
         </form>
       </div>
     </section>

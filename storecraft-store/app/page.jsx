@@ -23,7 +23,8 @@ export default async function Page() {
       : fetchProductsServer({ limit: 4, sort: "popular" }).then((r) => r.products),
     shopify ? getHotDealProducts(12) : fetchHotDealsServer({ filter: "all", limit: 12 }),
     getHeroSlides(),
-    fetchCarCatalogServer(),
+    // lean=true strips long SEO descriptions from SSR HTML (~150KB → much smaller)
+    fetchCarCatalogServer({ lean: true }),
   ]);
 
   const preloadUrl = heroSlides[0]?.imageUrl || "";

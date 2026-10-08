@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { mediaImageUrl } from "@/lib/carCatalogCopy";
 
 function yearLabel(v) {
   const from = v.yearFrom;
@@ -24,7 +24,7 @@ function mapCatalogToItems(data) {
       slug: p.slug,
       yearFrom: p.yearFrom,
       yearTo: p.yearTo,
-      image: p.image || "",
+      image: mediaImageUrl(p.image),
       href: `/cars/${p.slug}`,
     }));
   }
@@ -38,7 +38,7 @@ function mapCatalogToItems(data) {
         slug: m.slug,
         yearFrom: m.yearFrom,
         yearTo: m.yearTo,
-        image: m.image || "",
+        image: mediaImageUrl(m.image),
         href: `/cars/${m.slug}`,
       });
     }
@@ -63,7 +63,7 @@ export default function ShopByVehicle({ initialCatalog = null }) {
       return undefined;
     }
     let cancelled = false;
-    fetch("/api/car-catalog")
+    fetch("/api/car-catalog?lean=1")
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -154,12 +154,13 @@ export default function ShopByVehicle({ initialCatalog = null }) {
                 >
                   <div className="relative h-[88px] w-full overflow-hidden bg-[#F3F4F6] sm:h-[100px]">
                     {v.image ? (
-                      <Image
+                      // eslint-disable-next-line @next/next/no-img-element -- catalog CDN URLs; avoid [object Object] via mediaImageUrl
+                      <img
                         src={v.image}
                         alt={`${v.make} ${v.model}`}
-                        fill
-                        className="object-cover object-center transition duration-300 group-hover:scale-105"
-                        sizes="(max-width: 768px) 50vw, 16vw"
+                        className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-2xl text-[#9CA3AF]">🚗</div>

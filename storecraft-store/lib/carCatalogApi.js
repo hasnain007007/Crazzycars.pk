@@ -1,3 +1,5 @@
+import { mediaImageUrl } from "@/lib/carCatalogCopy";
+
 /** Build storefront-friendly catalog shape from API / DB makes. */
 export function buildCatalogFromMakes(makes) {
   const carData = {};
@@ -20,7 +22,7 @@ export function buildCatalogFromMakes(makes) {
           yearFrom: m.yearFrom ?? yearFrom,
           yearTo: m.yearTo ?? yearTo,
           bodyStyle: m.bodyStyle || "Sedan",
-          image: String(m.image || "").trim(),
+          image: mediaImageUrl(m.image),
           description: m.description || "",
           popularAccessories: Array.isArray(m.popularAccessories) ? m.popularAccessories : [],
           generation: m.generation || "",

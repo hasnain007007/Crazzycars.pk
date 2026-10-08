@@ -19,6 +19,7 @@ const WISHLIST_KEY = "sialkot_wishlist";
 const DEFAULT_NAV = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/shop", mega: true },
+  { label: "Shop by Car", href: "/cars" },
   { label: "Categories", href: "/categories", mega: true },
   { label: "Deals", href: "/shop?deals=1", deals: true },
   { label: "📦 Track Order", href: "/track-order", track: true },
@@ -37,6 +38,8 @@ function normalizeNavHref(label, href) {
     blog: "/blogs",
     categories: "/categories",
     shop: "/shop",
+    "shop by car": "/cars",
+    cars: "/cars",
     home: "/",
   };
   if (byLabel[labelOnly]) return byLabel[labelOnly];
@@ -56,6 +59,7 @@ function humanizeNavLabel(label, href) {
     "/": "Home",
     "/shop": "Shop",
     "/products": "Products",
+    "/cars": "Shop by Car",
     "/categories": "Categories",
     "/wishlist": "Wishlist",
     "/account": "Account",
