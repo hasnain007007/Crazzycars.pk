@@ -14,7 +14,11 @@ async function findOrderByTrackingNumber(trackingNumber) {
   const tn = String(trackingNumber || "").trim();
   if (!tn) return null;
   return Order.findOne({
-    $or: [{ trackingNumber: tn }, { "tracking.number": tn }],
+    $or: [
+      { trackingNumber: tn },
+      { "tracking.number": tn },
+      { "previousTrackings.trackingNumber": tn },
+    ],
   })
     .select(
       "orderNumber courier trackingNumber tracking runCourierApi runCourierLabel shippingAddress.city shippingAddress.cityName"
