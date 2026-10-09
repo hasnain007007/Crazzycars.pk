@@ -70,20 +70,27 @@ export function advanceUnpaidErrorMessage(order, actionLabel = "continue") {
 }
 
 /**
- * @returns {{ ok: true } | { ok: false, error: string }}
+ * @param {object} order
+ * @param {{ allowWithoutAdvance?: boolean }} [opts]
+ *   When true (admin explicit override), unpaid COD advance does not block.
+ * @returns {{ ok: true, overridden?: boolean } | { ok: false, error: string }}
  */
-export function assertCodAdvanceAllowsDispatch(order) {
+export function assertCodAdvanceAllowsDispatch(order, opts = {}) {
   if (!isCodAdvanceUnpaid(order)) return { ok: true };
+  if (opts.allowWithoutAdvance) return { ok: true, overridden: true };
   return { ok: false, error: advanceUnpaidErrorMessage(order, "book a shipment") };
 }
 
 /**
+ * @param {object} order
  * @param {string} nextStatus
- * @returns {{ ok: true } | { ok: false, error: string }}
+ * @param {{ allowWithoutAdvance?: boolean }} [opts]
+ * @returns {{ ok: true, overridden?: boolean } | { ok: false, error: string }}
  */
-export function assertCodAdvanceAllowsStatus(order, nextStatus) {
+export function assertCodAdvanceAllowsStatus(order, nextStatus, opts = {}) {
   if (!isCodAdvanceUnpaid(order)) return { ok: true };
   const next = String(nextStatus || "").toLowerCase();
   if (!ADVANCE_BLOCKED_FULFILLMENT_STATUSES.has(next)) return { ok: true };
+  if (opts.allowWithoutAdvance) return { ok: true, overridden: true };
   return { ok: false, error: advanceUnpaidErrorMessage(order, `move to ${next}`) };
 }

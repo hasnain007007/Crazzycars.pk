@@ -295,9 +295,17 @@ export async function PUT(request, context) {
       if (!allowed.includes(body.orderStatus)) {
         return NextResponse.json({ success: false, error: "Invalid order status." }, { status: 400 });
       }
-      const statusGate = assertCodAdvanceAllowsStatus(order, body.orderStatus);
+      const allowWithoutAdvance = Boolean(
+        body.allowWithoutAdvance || body.skipCodAdvanceGate || body.bookWithoutAdvance
+      );
+      const statusGate = assertCodAdvanceAllowsStatus(order, body.orderStatus, {
+        allowWithoutAdvance,
+      });
       if (!statusGate.ok) {
-        return NextResponse.json({ success: false, error: statusGate.error }, { status: 409 });
+        return NextResponse.json(
+          { success: false, error: statusGate.error, code: "COD_ADVANCE_UNPAID" },
+          { status: 409 }
+        );
       }
       const note = typeof body.statusChangeNote === "string" ? body.statusChangeNote.trim().slice(0, 2000) : "";
       order.orderStatus = body.orderStatus;
@@ -305,8 +313,20 @@ export async function PUT(request, context) {
         status: body.orderStatus,
         changedBy: adminName,
         changedAt: new Date(),
-        note,
+        note: statusGate.overridden
+          ? [note, "Override: status changed while COD advance unpaid"].filter(Boolean).join(" — ")
+          : note,
       });
+      if (statusGate.overridden) {
+        if (!Array.isArray(order.timeline)) order.timeline = [];
+        order.timeline.push({
+          status: "cod_advance_override",
+          title: "Status changed without COD advance",
+          description: `${adminName} set status to ${body.orderStatus} while COD advance was unpaid (manual override).`,
+          timestamp: new Date(),
+          by: "admin",
+        });
+      }
       const statusInfo = ORDER_STATUS_TIMELINE_TITLES[body.orderStatus] || {
         title: body.orderStatus,
         description: "",
@@ -735,9 +755,15 @@ export async function PUT(request, context) {
       if (number) {
         const shipFrom = new Set(["pending", "confirmed", "processing", "packed"]);
         if (shipFrom.has(String(order.orderStatus || "")) && order.orderStatus !== "shipped") {
-          const shipGate = assertCodAdvanceAllowsDispatch(order);
+          const allowWithoutAdvance = Boolean(
+            body.allowWithoutAdvance || body.skipCodAdvanceGate || body.bookWithoutAdvance
+          );
+          const shipGate = assertCodAdvanceAllowsDispatch(order, { allowWithoutAdvance });
           if (!shipGate.ok) {
-            return NextResponse.json({ success: false, error: shipGate.error }, { status: 409 });
+            return NextResponse.json(
+              { success: false, error: shipGate.error, code: "COD_ADVANCE_UNPAID" },
+              { status: 409 }
+            );
           }
           order.orderStatus = "shipped";
           if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
@@ -745,7 +771,9 @@ export async function PUT(request, context) {
             status: "shipped",
             changedBy: adminName,
             changedAt: new Date(),
-            note: `Auto-shipped — tracking ${number}`,
+            note: shipGate.overridden
+              ? `Auto-shipped — tracking ${number} (without COD advance — manual override)`
+              : `Auto-shipped — tracking ${number}`,
           });
           const statusInfo = ORDER_STATUS_TIMELINE_TITLES.shipped || {
             title: "Shipped",
@@ -786,13 +814,23 @@ export async function PUT(request, context) {
         notifiedAt: order.tracking?.notifiedAt || null,
       };
       if (number && ["pending", "confirmed", "processing", "packed"].includes(String(order.orderStatus || ""))) {
-        const shipGate = assertCodAdvanceAllowsDispatch(order);
+        const allowWithoutAdvance = Boolean(
+          body.allowWithoutAdvance || body.skipCodAdvanceGate || body.bookWithoutAdvance
+        );
+        const shipGate = assertCodAdvanceAllowsDispatch(order, { allowWithoutAdvance });
         if (!shipGate.ok) {
-          return NextResponse.json({ success: false, error: shipGate.error }, { status: 409 });
+          return NextResponse.json(
+            { success: false, error: shipGate.error, code: "COD_ADVANCE_UNPAID" },
+            { status: 409 }
+          );
         }
         order.orderStatus = "shipped";
         order.shippedAt = order.shippedAt || new Date();
-        updates.push("orderStatus → shipped");
+        updates.push(
+          shipGate.overridden
+            ? "orderStatus → shipped (without COD advance — override)"
+            : "orderStatus → shipped"
+        );
       }
       updates.push(number ? `Tracking added: ${number}` : "Tracking updated");
     }

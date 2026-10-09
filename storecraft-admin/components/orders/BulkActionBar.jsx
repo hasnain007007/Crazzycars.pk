@@ -284,6 +284,9 @@ export function BulkActionBar({
       `Book ${ids.length} order(s) with Run Courier?\n\nUses the default Select API from Settings (e.g. Leopard2 / TCS). Orders that already have tracking will be skipped.`
     );
     if (!ok) return;
+    const allowWithoutAdvance = window.confirm(
+      "Also book orders where COD advance is still unpaid?\n\nOK = book without advance (manual override)\nCancel = skip unpaid-advance orders"
+    );
 
     setBusy(true);
     let okCount = 0;
@@ -301,7 +304,7 @@ export function BulkActionBar({
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: id }),
+          body: JSON.stringify({ orderId: id, allowWithoutAdvance }),
         });
         const json = await res.json();
         if (res.ok && json.success) {

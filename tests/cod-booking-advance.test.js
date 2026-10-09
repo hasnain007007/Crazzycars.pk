@@ -105,6 +105,19 @@ describe("codAdvanceGate", () => {
     assert.equal(assertCodAdvanceAllowsStatus(order, "confirmed").ok, true);
   });
 
+  it("allows dispatch/status when admin overrides unpaid advance", () => {
+    const order = {
+      paymentStatus: "unpaid",
+      payment: { advanceRequired: 250, paidAmount: 0, amount: 5000 },
+    };
+    const dispatch = assertCodAdvanceAllowsDispatch(order, { allowWithoutAdvance: true });
+    assert.equal(dispatch.ok, true);
+    assert.equal(dispatch.overridden, true);
+    const status = assertCodAdvanceAllowsStatus(order, "shipped", { allowWithoutAdvance: true });
+    assert.equal(status.ok, true);
+    assert.equal(status.overridden, true);
+  });
+
   it("allows when paidAmount covers advance (does not use payment.amount)", () => {
     const order = {
       paymentStatus: "partial",

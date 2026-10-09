@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { formatAdminPrice, roundRupees } from "@/lib/currency";
 import { orderStatusBadgeClass, paymentStatusBadgeClass } from "@/lib/orderUi";
 import { resolveAdvanceBadge } from "@/lib/advancePaymentBadge";
+import { isCodAdvanceUnpaid } from "@/lib/codAdvanceGate";
 
 const ORDER_STATUSES = [
   "pending",
@@ -27,6 +28,12 @@ export function OrderStatusCard({ order, onUpdated }) {
   const [next, setNext] = useState(order.orderStatus);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [allowWithoutAdvance, setAllowWithoutAdvance] = useState(false);
+
+  const advanceUnpaid = isCodAdvanceUnpaid(order);
+  const blockedNext =
+    advanceUnpaid &&
+    ["processing", "packed", "shipped", "delivered"].includes(String(next || "").toLowerCase());
 
   useEffect(() => {
     setNext(order.orderStatus);
@@ -38,13 +45,21 @@ export function OrderStatusCard({ order, onUpdated }) {
       toast.error("Select a different status.");
       return;
     }
+    if (blockedNext && !allowWithoutAdvance) {
+      toast.error('Tick "Allow without advance" to move past unpaid COD advance.');
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/orders/${order.id}`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderStatus: next, statusChangeNote: note }),
+        body: JSON.stringify({
+          orderStatus: next,
+          statusChangeNote: note,
+          allowWithoutAdvance: blockedNext && allowWithoutAdvance,
+        }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
@@ -53,6 +68,7 @@ export function OrderStatusCard({ order, onUpdated }) {
       }
       toast.success("Order status updated.");
       setNote("");
+      setAllowWithoutAdvance(false);
       onUpdated(json.order);
     } catch {
       toast.error("Network error.");
@@ -104,9 +120,22 @@ export function OrderStatusCard({ order, onUpdated }) {
             className="mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
           />
         </div>
+        {blockedNext ? (
+          <label className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={allowWithoutAdvance}
+              onChange={(e) => setAllowWithoutAdvance(e.target.checked)}
+            />
+            <span>
+              Allow without advance — COD booking advance is still unpaid; I will handle it manually
+            </span>
+          </label>
+        ) : null}
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || (blockedNext && !allowWithoutAdvance)}
           className="w-full rounded-lg bg-[#1d6fb8] py-2 text-sm font-semibold text-white hover:bg-[#185d9c] disabled:opacity-50"
         >
           {saving ? "Updating…" : "Update status"}

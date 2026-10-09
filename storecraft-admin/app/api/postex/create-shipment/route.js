@@ -88,6 +88,9 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const orderId = String(body.orderId || "").trim();
     const rebook = Boolean(body.rebook);
+    const allowWithoutAdvance = Boolean(
+      body.allowWithoutAdvance || body.skipCodAdvanceGate || body.bookWithoutAdvance
+    );
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return NextResponse.json({ success: false, error: "Invalid order id." }, { status: 400 });
@@ -99,9 +102,12 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
     }
 
-    const advanceGate = assertCodAdvanceAllowsDispatch(order);
+    const advanceGate = assertCodAdvanceAllowsDispatch(order, { allowWithoutAdvance });
     if (!advanceGate.ok) {
-      return NextResponse.json({ success: false, error: advanceGate.error }, { status: 409 });
+      return NextResponse.json(
+        { success: false, error: advanceGate.error, code: "COD_ADVANCE_UNPAID" },
+        { status: 409 }
+      );
     }
 
     const existingTracking = String(order.trackingNumber || order.tracking?.number || "").trim();
@@ -123,6 +129,17 @@ export async function POST(request) {
       {};
 
     const adminName = user.name || "Admin";
+    if (advanceGate.overridden) {
+      if (!Array.isArray(order.timeline)) order.timeline = [];
+      order.timeline.push({
+        status: "cod_advance_override",
+        title: "Shipped without COD advance",
+        description: `${adminName} booked PostEx while COD advance was still unpaid (manual override).`,
+        timestamp: new Date(),
+        by: "admin",
+      });
+      order.markModified("timeline");
+    }
     const bookingOptions = {
       handling: body.handling,
       type: body.type,

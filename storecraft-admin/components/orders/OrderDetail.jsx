@@ -1189,24 +1189,44 @@ export function OrderDetail({ orderId }) {
     try {
       const pickupCode = String(courierSettings.postexAddressCode || "").trim();
       const cod = Math.max(0, Math.round(Number(postexCodAmount) || 0));
-      const res = await fetch("/api/postex/create-shipment", {
+      const payload = {
+        orderId: order.id || order._id,
+        rebook: postexRebook,
+        handling: postexHandling,
+        type: postexShipType,
+        codAmount: cod,
+        weight: postexWeight,
+        pieces: postexPieces,
+        remarks: postexRemarks,
+        pickupAddressCode: pickupCode,
+        paymentMethod: cod > 0 ? "COD" : "Prepaid",
+      };
+      let res = await fetch("/api/postex/create-shipment", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: order.id || order._id,
-          rebook: postexRebook,
-          handling: postexHandling,
-          type: postexShipType,
-          codAmount: cod,
-          weight: postexWeight,
-          pieces: postexPieces,
-          remarks: postexRemarks,
-          pickupAddressCode: pickupCode,
-          paymentMethod: cod > 0 ? "COD" : "Prepaid",
-        }),
+        body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      let data = await res.json();
+      if (
+        !data.success &&
+        (data.code === "COD_ADVANCE_UNPAID" || /COD advance/i.test(String(data.error || "")))
+      ) {
+        const proceed = window.confirm(
+          `${data.error || "COD advance unpaid."}\n\nBook PostEx without advance anyway?`
+        );
+        if (!proceed) {
+          setPostexError(data.error || "Booking cancelled");
+          return;
+        }
+        res = await fetch("/api/postex/create-shipment", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, allowWithoutAdvance: true }),
+        });
+        data = await res.json();
+      }
       if (data.success) {
         setPostexSuccess(`✅ Booked! Tracking: ${data.trackingNumber}`);
         setShowPostexForm(false);

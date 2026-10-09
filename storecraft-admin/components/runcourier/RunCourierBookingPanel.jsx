@@ -13,6 +13,8 @@ import {
   RUN_COURIER_SERVICE_TYPES,
 } from "@/lib/runcourier";
 import RunCourierCitySelect from "@/components/runcourier/RunCourierCitySelect";
+import { isCodAdvanceUnpaid } from "@/lib/codAdvanceGate";
+import { formatAdminPrice, roundRupees } from "@/lib/currency";
 
 function defaultCod(order, orderTotal) {
   const status = String(order?.paymentStatus || "").toLowerCase();
@@ -57,6 +59,10 @@ export default function RunCourierBookingPanel({
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [allowWithoutAdvance, setAllowWithoutAdvance] = useState(false);
+
+  const advanceUnpaid = isCodAdvanceUnpaid(order);
+  const advanceRequired = Math.max(0, roundRupees(Number(order?.payment?.advanceRequired) || 0));
 
   const originCity = useMemo(
     () =>
@@ -160,6 +166,12 @@ export default function RunCourierBookingPanel({
       toast.error(msg);
       return;
     }
+    if (advanceUnpaid && !allowWithoutAdvance) {
+      const msg = `COD advance of ${formatAdminPrice(advanceRequired)} is unpaid. Tick "Book without advance" to ship anyway, or mark advance received first.`;
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
     setBooking(true);
     setError("");
     setSuccess("");
@@ -181,6 +193,7 @@ export default function RunCourierBookingPanel({
           remarks,
           cityName: dest,
           paymentMethod: cod > 0 ? "COD" : "Prepaid",
+          allowWithoutAdvance: advanceUnpaid && allowWithoutAdvance,
         }),
       });
       const data = await res.json();
@@ -493,20 +506,59 @@ export default function RunCourierBookingPanel({
           </div>
         </div>
 
+        {advanceUnpaid ? (
+          <div
+            style={{
+              marginTop: 10,
+              padding: "8px 10px",
+              background: "#FFF7ED",
+              border: "1px solid #FDBA74",
+              borderRadius: 6,
+              fontSize: 12,
+              color: "#9A3412",
+            }}
+          >
+            <div style={{ marginBottom: 6 }}>
+              COD advance unpaid: <strong>{formatAdminPrice(advanceRequired)}</strong>
+            </div>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={allowWithoutAdvance}
+                onChange={(e) => setAllowWithoutAdvance(e.target.checked)}
+                style={{ marginTop: 2 }}
+              />
+              <span>
+                Book without advance — I collected it manually / will handle it outside the system
+              </span>
+            </label>
+          </div>
+        ) : null}
+
         <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           <button
             type="button"
-            disabled={booking || !selectedApi || destOk === false}
+            disabled={
+              booking || !selectedApi || destOk === false || (advanceUnpaid && !allowWithoutAdvance)
+            }
             onClick={handleBook}
             style={{
-              background: booking || destOk === false ? "#9CA3AF" : "#059669",
+              background:
+                booking || destOk === false || (advanceUnpaid && !allowWithoutAdvance)
+                  ? "#9CA3AF"
+                  : "#059669",
               color: "#fff",
               border: "none",
               borderRadius: 6,
               padding: "8px 14px",
               fontWeight: 700,
               fontSize: 13,
-              cursor: booking ? "wait" : destOk === false ? "not-allowed" : "pointer",
+              cursor:
+                booking
+                  ? "wait"
+                  : destOk === false || (advanceUnpaid && !allowWithoutAdvance)
+                    ? "not-allowed"
+                    : "pointer",
             }}
           >
             {booking ? "Booking…" : rebook ? "Re-book with Run Courier" : "Book with Run Courier"}
