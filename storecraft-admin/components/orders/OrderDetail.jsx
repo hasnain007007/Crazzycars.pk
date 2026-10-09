@@ -2057,6 +2057,34 @@ export function OrderDetail({ orderId }) {
                       ✓ {order.courier || trackingCarrier || "Postex"} —{" "}
                       {order.trackingNumber || order.tracking?.number || trackingNumber}
                     </p>
+                    {Array.isArray(order.previousTrackings) && order.previousTrackings.length > 0 ? (
+                      <div className="mt-2 rounded-md border border-emerald-200/80 bg-white/60 px-2 py-1.5 text-xs text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100">
+                        <p className="font-semibold">Previous tracking ID(s)</p>
+                        <ul className="mt-1 space-y-0.5">
+                          {order.previousTrackings.map((row) => (
+                            <li key={`${row.trackingNumber}-${row.replacedAt || ""}`}>
+                              <button
+                                type="button"
+                                className="font-mono font-semibold text-[#1d6fb8] hover:underline"
+                                onClick={() => {
+                                  navigator.clipboard?.writeText(row.trackingNumber).then(
+                                    () => toast.success("Previous tracking copied."),
+                                    () => toast.error("Could not copy.")
+                                  );
+                                }}
+                                title="Copy previous tracking"
+                              >
+                                {row.trackingNumber}
+                              </button>
+                              {row.courier ? ` · ${row.courier}` : ""}
+                              {row.replacedAt
+                                ? ` · replaced ${new Date(row.replacedAt).toLocaleString("en-GB")}`
+                                : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
                     {liveTrackingLoading ? (
                       <p className="mt-1 text-xs">Loading live status…</p>
                     ) : liveTracking?.status ? (

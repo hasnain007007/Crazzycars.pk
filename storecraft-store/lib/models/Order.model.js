@@ -175,6 +175,22 @@ const orderSchema = new mongoose.Schema(
     trackingUrl: { type: String, default: "", trim: true },
     runCourierApi: { type: String, default: "", trim: true },
     runCourierLabel: { type: String, default: "" },
+    /** Prior AWBs when admin rebooks — mirrored with admin Order model. */
+    previousTrackings: {
+      type: [
+        {
+          trackingNumber: { type: String, default: "", trim: true },
+          courier: { type: String, default: "", trim: true },
+          trackingUrl: { type: String, default: "", trim: true },
+          runCourierApi: { type: String, default: "", trim: true },
+          bookedAt: { type: Date, default: null },
+          replacedAt: { type: Date, default: null },
+          replacedBy: { type: String, default: "", trim: true },
+          reason: { type: String, default: "rebook", trim: true },
+        },
+      ],
+      default: [],
+    },
     shippedAt: { type: Date, default: null },
     deliveredAt: { type: Date, default: null },
     courierSettlement: {

@@ -21,6 +21,7 @@ import {
 } from "@/lib/resolveLineItemImage";
 import { orderOriginLabel, serializeAttribution } from "@/lib/orderOrigin";
 import { assertCodAdvanceAllowsDispatch, assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
+import { archiveCurrentTracking, serializePreviousTrackings } from "@/lib/previousTrackings";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
@@ -144,6 +145,7 @@ function serializeOrder(doc, productImageById = null) {
     trackingNumber: o.trackingNumber || o.tracking?.number || "",
     courier: o.courier || o.tracking?.carrier || "Postex",
     trackingUrl: o.trackingUrl || o.tracking?.url || "",
+    previousTrackings: serializePreviousTrackings(o),
     aiAttributedSource: o.aiAttributedSource || "",
     aiAttributedAt: o.aiAttributedAt || null,
     attribution: serializeAttribution(o.attribution),
@@ -742,6 +744,15 @@ export async function PUT(request, context) {
           ? postexPublicTrackingUrl(number)
           : order.trackingUrl || order.tracking?.url || "");
 
+      const archived = archiveCurrentTracking(order, {
+        nextTrackingNumber: number,
+        reason: "manual_replace",
+        replacedBy: adminName,
+      });
+      if (archived?.trackingNumber) {
+        updates.push(`Previous tracking kept: ${archived.trackingNumber}`);
+      }
+
       order.trackingNumber = number;
       order.courier = carrier;
       order.trackingUrl = url;
@@ -804,6 +815,14 @@ export async function PUT(request, context) {
         String(body.tracking.url || "").trim().slice(0, 500) ||
         (number ? storefrontTrackingUrl(number) : "") ||
         (number && carrier.toLowerCase() === "postex" ? postexPublicTrackingUrl(number) : "");
+      const archived = archiveCurrentTracking(order, {
+        nextTrackingNumber: number,
+        reason: "manual_replace",
+        replacedBy: adminName,
+      });
+      if (archived?.trackingNumber) {
+        updates.push(`Previous tracking kept: ${archived.trackingNumber}`);
+      }
       order.trackingNumber = number;
       order.courier = carrier;
       order.trackingUrl = url;

@@ -18,15 +18,25 @@ import {
 } from "@/lib/runcourier";
 import { buildRunCourierAirbillPdf } from "@/lib/runcourierLabelPdf";
 import { assertCodAdvanceAllowsDispatch } from "@/lib/codAdvanceGate";
+import { archiveCurrentTracking } from "@/lib/previousTrackings";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
 }
 
-function applyRunCourierShipmentToOrder(order, { trackingNumber, label, invoiceLink, adminName, selectedApi }) {
+function applyRunCourierShipmentToOrder(
+  order,
+  { trackingNumber, label, invoiceLink, adminName, selectedApi, rebook = false }
+) {
   const tn = String(trackingNumber || "").trim();
   const carrierDisplay = displayCourierName(selectedApi);
   const url = storefrontTrackingUrl(tn);
+
+  const archived = archiveCurrentTracking(order, {
+    nextTrackingNumber: tn,
+    reason: rebook ? "rebook" : "book",
+    replacedBy: adminName,
+  });
 
   order.trackingNumber = tn;
   order.courier = carrierDisplay;
@@ -36,12 +46,12 @@ function applyRunCourierShipmentToOrder(order, { trackingNumber, label, invoiceL
     number: tn,
     carrier: carrierDisplay,
     url,
-    notifiedAt: order.tracking?.notifiedAt || null,
-    lastStatus: order.tracking?.lastStatus || "",
-    lastStatusAt: order.tracking?.lastStatusAt || null,
-    currentLocation: order.tracking?.currentLocation || "",
-    destinationCity: order.tracking?.destinationCity || "",
-    destinationReceived: Boolean(order.tracking?.destinationReceived),
+    notifiedAt: null,
+    lastStatus: "",
+    lastStatusAt: null,
+    currentLocation: "",
+    destinationCity: "",
+    destinationReceived: false,
   };
   if (label) {
     order.runCourierLabel = String(label);
@@ -75,10 +85,15 @@ function applyRunCourierShipmentToOrder(order, { trackingNumber, label, invoiceL
   }
 
   if (!Array.isArray(order.timeline)) order.timeline = [];
+  const prevBit = archived?.trackingNumber
+    ? ` Previous tracking kept: ${archived.trackingNumber}.`
+    : "";
   order.timeline.push({
-    status: "runcourier_booked",
-    title: `Shipment booked with Run Courier (${carrierDisplay})`,
-    description: `Tracking number assigned: ${tn}`,
+    status: rebook || archived ? "runcourier_rebooked" : "runcourier_booked",
+    title: rebook || archived
+      ? `Run Courier rebooked (${carrierDisplay})`
+      : `Shipment booked with Run Courier (${carrierDisplay})`,
+    description: `Tracking number assigned: ${tn}.${prevBit}`,
     timestamp: new Date(),
     by: "admin",
   });
@@ -252,6 +267,7 @@ export async function POST(request) {
       invoiceLink,
       adminName,
       selectedApi: result.selectedApi,
+      rebook: Boolean(rebook || existingTracking),
     });
 
     await order.save();

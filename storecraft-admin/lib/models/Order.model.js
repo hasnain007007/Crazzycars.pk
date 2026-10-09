@@ -226,6 +226,25 @@ const orderSchema = new mongoose.Schema(
     runCourierApi: { type: String, default: "", trim: true },
     /** When the Run Courier shipment was last booked (for Print Labels date filter). */
     runCourierBookedAt: { type: Date, default: null },
+    /**
+     * Prior AWBs kept when staff rebook or replace tracking (newest push last).
+     * Active tracking stays on trackingNumber / tracking.*.
+     */
+    previousTrackings: {
+      type: [
+        {
+          trackingNumber: { type: String, default: "", trim: true },
+          courier: { type: String, default: "", trim: true },
+          trackingUrl: { type: String, default: "", trim: true },
+          runCourierApi: { type: String, default: "", trim: true },
+          bookedAt: { type: Date, default: null },
+          replacedAt: { type: Date, default: null },
+          replacedBy: { type: String, default: "", trim: true },
+          reason: { type: String, default: "rebook", trim: true },
+        },
+      ],
+      default: [],
+    },
     shippedAt: { type: Date, default: null },
     deliveredAt: { type: Date, default: null },
     /**

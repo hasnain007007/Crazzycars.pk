@@ -17,14 +17,21 @@ import {
   storefrontTrackingUrl,
 } from "@/lib/postex";
 import { assertCodAdvanceAllowsDispatch } from "@/lib/codAdvanceGate";
+import { archiveCurrentTracking } from "@/lib/previousTrackings";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
 }
 
-function applyShipmentToOrder(order, { trackingNumber, label, adminName }) {
+function applyShipmentToOrder(order, { trackingNumber, label, adminName, rebook = false }) {
   const tn = String(trackingNumber || "").trim();
   const url = storefrontTrackingUrl(tn);
+
+  const archived = archiveCurrentTracking(order, {
+    nextTrackingNumber: tn,
+    reason: rebook ? "rebook" : "book",
+    replacedBy: adminName,
+  });
 
   order.trackingNumber = tn;
   order.courier = "Postex";
@@ -33,7 +40,7 @@ function applyShipmentToOrder(order, { trackingNumber, label, adminName }) {
     number: tn,
     carrier: "Postex",
     url,
-    notifiedAt: order.tracking?.notifiedAt || null,
+    notifiedAt: null,
   };
   if (label) {
     order.postexLabel = String(label);
@@ -63,10 +70,13 @@ function applyShipmentToOrder(order, { trackingNumber, label, adminName }) {
   }
 
   if (!Array.isArray(order.timeline)) order.timeline = [];
+  const prevBit = archived?.trackingNumber
+    ? ` Previous tracking kept: ${archived.trackingNumber}.`
+    : "";
   order.timeline.push({
-    status: "postex_booked",
-    title: "Shipment booked with Postex",
-    description: `Tracking number assigned: ${tn}`,
+    status: rebook || archived ? "postex_rebooked" : "postex_booked",
+    title: rebook || archived ? "Postex rebooked" : "Shipment booked with Postex",
+    description: `Tracking number assigned: ${tn}.${prevBit}`,
     timestamp: new Date(),
     by: "admin",
   });
@@ -237,6 +247,7 @@ export async function POST(request) {
       trackingNumber: result.trackingNumber,
       label,
       adminName,
+      rebook: Boolean(rebook || existingTracking),
     });
 
     await order.save();
