@@ -949,7 +949,7 @@ export function ProductDetailMedico({
       `}</style>
       <div className="bg-[#F8F8F8] py-3 border-b border-[#E5E5E5]">
         <div className="mx-auto max-w-7xl px-4 text-sm text-[#888888] leading-snug break-words">
-          <Link href="/">Home</Link> / <span>{product.name}</span>
+          <Link href="/">Home</Link> / <span>{displayName}</span>
         </div>
       </div>
 

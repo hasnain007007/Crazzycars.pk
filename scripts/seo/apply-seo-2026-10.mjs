@@ -11,7 +11,9 @@
  *   node --env-file=storecraft-store/.env.local scripts/seo/apply-seo-2026-10.mjs --apply --allow-write
  *
  * Backup (write mode only): seo-backup-2026-10.json in repo root.
+ * Dry-run also writes: seo-backup-dry-run-2026-10.json (current values only).
  */
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
@@ -30,6 +32,7 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
 const BACKUP_PATH = path.join(ROOT, "seo-backup-2026-10.json");
+const DRY_BACKUP_PATH = path.join(ROOT, "seo-backup-dry-run-2026-10.json");
 const require = createRequire(path.join(ROOT, "storecraft-store/package.json"));
 const mongoose = require("mongoose");
 
@@ -39,6 +42,12 @@ const ALLOW_WRITE = argv.has("--allow-write");
 const FORCE_STAGING_ACK = argv.has("--i-know-this-is-staging");
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || "";
+const PROD_FP = "84143ac0cb2c3085";
+const ATLAS_FP = "317ae4de8eb24f84";
+
+function uriFingerprint(uri) {
+  return crypto.createHash("sha256").update(String(uri || "")).digest("hex").slice(0, 16);
+}
 
 function looksLikeProductionUri(uri) {
   const u = String(uri || "").toLowerCase();
@@ -55,15 +64,35 @@ function diff(label, before, after) {
   return { field: label, before, after };
 }
 
+function redactUri(uri) {
+  return String(uri || "").replace(/:([^:@/]+)@/, ":***@");
+}
+
 async function main() {
   if (!MONGO_URI) {
     console.error("Set MONGO_URI or MONGODB_URI (e.g. --env-file=storecraft-store/.env.local).");
     process.exit(1);
   }
 
+  const fp = uriFingerprint(MONGO_URI);
+  console.log(`URI (redacted): ${redactUri(MONGO_URI)}`);
+  console.log(`DATABASE_FINGERPRINT: ${fp}`);
+  console.log(`Expected prod: ${PROD_FP} | Legacy Atlas (do not write): ${ATLAS_FP}`);
+  if (fp === ATLAS_FP) {
+    console.log("WARNING: This is legacy Atlas (317ae4de8eb24f84), NOT production sialkot-mongo.");
+  } else if (fp === PROD_FP) {
+    console.log("OK: Production sialkot-mongo fingerprint matched.");
+  } else {
+    console.log("WARNING: Fingerprint does not match known prod or Atlas values.");
+  }
+
   if (!DRY_RUN) {
     if (!ALLOW_WRITE) {
       console.error("Refusing write: pass --allow-write with --apply.");
+      process.exit(1);
+    }
+    if (fp === ATLAS_FP) {
+      console.error("Refusing write to legacy Atlas (317ae4de8eb24f84). Use production sialkot-mongo only.");
       process.exit(1);
     }
     if (looksLikeProductionUri(MONGO_URI) && !FORCE_STAGING_ACK) {
@@ -83,8 +112,17 @@ async function main() {
   const vehicles = db.collection("vehicles");
   const carCatalog = db.collection("carcatalogs");
 
-  const backup = { createdAt: new Date().toISOString(), products: [], categories: [], vehicles: [], carCatalog: [] };
+  const backup = {
+    createdAt: new Date().toISOString(),
+    fingerprint: fp,
+    uriHint: redactUri(MONGO_URI),
+    products: [],
+    categories: [],
+    vehicles: [],
+    carCatalog: [],
+  };
   const changes = [];
+  const missing = [];
 
   // --- Products: titles/metas/names/content ---
   const productSlugs = new Set([
@@ -109,6 +147,7 @@ async function main() {
     const doc = await products.findOne({ slug });
     if (!doc) {
       console.log(`[miss] product ${slug}`);
+      missing.push({ type: "product", slug });
       continue;
     }
     const nextTitle = seo.title || undefined;
@@ -123,6 +162,9 @@ async function main() {
       shortDescription: doc.shortDescription || "",
       longDescription: doc.longDescription || "",
       features: doc.features || [],
+      imageAlts: (Array.isArray(doc.media?.images) ? doc.media.images : [])
+        .map((im) => (typeof im === "string" ? "" : String(im?.altText || im?.alt || "")))
+        .filter(Boolean),
     };
 
     if (nextTitle) {
@@ -135,8 +177,16 @@ async function main() {
     }
     if (nameOverride) patch.name = nameOverride;
     if (content.shortDescription) patch.shortDescription = content.shortDescription;
+    // descriptionHtml stays code-only (ProductDetailMedico) — do not overwrite Mongo longDescription.
     if (content.appendDescription && !String(doc.longDescription || "").includes(content.appendDescription.slice(0, 40))) {
       patch.longDescription = `${doc.longDescription || ""}\n<p>${content.appendDescription}</p>`;
+    }
+    // AC panel: fix Butto typo inside existing longDescription without replacing the full body
+    if (slug === "toyota-corolla-2012-top-ac-panel") {
+      const ld = String(patch.longDescription || doc.longDescription || "");
+      if (/\bButto\b/.test(ld)) {
+        patch.longDescription = ld.replace(/\bButto\b/g, "Button");
+      }
     }
     if (content.careHtml && !String(doc.longDescription || "").includes("microfibre")) {
       patch.longDescription = `${patch.longDescription || doc.longDescription || ""}\n${content.careHtml}`;
@@ -144,9 +194,35 @@ async function main() {
     if (content.features) patch.features = content.features;
     if (PRODUCT_H1_OVERRIDES[slug]) patch.name = PRODUCT_H1_OVERRIDES[slug];
 
+    // Image alts (AC panel Butto→Button and any imageAlt override)
+    if (content.imageAlt && Array.isArray(doc.media?.images) && doc.media.images.length) {
+      const nextImages = doc.media.images.map((im) => {
+        if (typeof im === "string") return { url: im, altText: content.imageAlt };
+        return { ...im, altText: content.imageAlt, alt: content.imageAlt };
+      });
+      const beforeAlts = before.imageAlts.join(" | ");
+      const afterAlts = nextImages
+        .map((im) => String(im.altText || im.alt || ""))
+        .filter(Boolean)
+        .join(" | ");
+      if (beforeAlts !== afterAlts) {
+        patch["media.images"] = nextImages;
+      }
+    } else if (slug === "toyota-corolla-2012-top-ac-panel" && Array.isArray(doc.media?.images)) {
+      const nextImages = doc.media.images.map((im) => {
+        if (typeof im === "string") return im;
+        const alt = String(im?.altText || im?.alt || "");
+        if (!/\bButto\b/.test(alt)) return im;
+        const fixed = alt.replace(/\bButto\b/g, "Button");
+        return { ...im, altText: fixed, alt: fixed };
+      });
+      if (JSON.stringify(nextImages) !== JSON.stringify(doc.media.images)) {
+        patch["media.images"] = nextImages;
+      }
+    }
+
     // Aqua body kit year conflict → 2012–2015
     if (slug === "toyota-aqua-2012-2015-complete-body-kit") {
-      // Leave structured fitment to code/review; stamp FAQ-ish copy years in description if present
       const ld = String(patch.longDescription || doc.longDescription || "");
       if (/2012\s*[–-]\s*26|2012-2026/i.test(ld)) {
         patch.longDescription = ld.replace(/2012\s*[–-]\s*26/gi, "2012–2015").replace(/2012-2026/gi, "2012–2015");
@@ -163,7 +239,25 @@ async function main() {
       fieldDiffs.push(diff("shortDescription", before.shortDescription, patch.shortDescription));
     }
     if (patch.longDescription !== undefined) {
-      fieldDiffs.push(diff("longDescription", before.longDescription?.slice?.(0, 120), String(patch.longDescription).slice(0, 120)));
+      fieldDiffs.push(
+        diff(
+          "longDescription",
+          before.longDescription?.slice?.(0, 120),
+          String(patch.longDescription).slice(0, 120)
+        )
+      );
+    }
+    if (patch.features !== undefined) {
+      fieldDiffs.push(
+        diff("features", JSON.stringify(before.features), JSON.stringify(patch.features))
+      );
+    }
+    if (patch["media.images"] !== undefined) {
+      const afterAlts = patch["media.images"]
+        .map((im) => (typeof im === "string" ? "" : String(im.altText || im.alt || "")))
+        .filter(Boolean)
+        .join(" | ");
+      fieldDiffs.push(diff("imageAlts", before.imageAlts.join(" | "), afterAlts));
     }
     const real = fieldDiffs.filter(Boolean);
     if (!real.length) continue;
@@ -189,6 +283,7 @@ async function main() {
     const doc = await categories.findOne({ slug });
     if (!doc) {
       console.log(`[miss] category ${slug}`);
+      missing.push({ type: "category", slug });
       continue;
     }
     const h1 = CATEGORY_H1_OVERRIDES[slug];
@@ -220,14 +315,22 @@ async function main() {
     if (!DRY_RUN) await categories.updateOne({ _id: doc._id }, { $set: patch });
   }
 
-  // --- Vehicles + car catalog descriptions ---
-  for (const [pathKey, seo] of Object.entries(PAGE_SEO_OVERRIDES)) {
-    if (!pathKey.startsWith("/cars/")) continue;
-    const slug = pathKey.replace("/cars/", "");
+  // --- Vehicles + car catalog (PAGE_SEO + any VEHICLE_DESCRIPTION_HTML-only slugs) ---
+  const vehicleSlugs = new Set([
+    ...Object.keys(PAGE_SEO_OVERRIDES)
+      .filter((p) => p.startsWith("/cars/"))
+      .map((p) => p.replace("/cars/", "")),
+    ...Object.keys(VEHICLE_DESCRIPTION_HTML),
+  ]);
+
+  for (const slug of vehicleSlugs) {
+    const pathKey = `/cars/${slug}`;
+    const seo = PAGE_SEO_OVERRIDES[pathKey] || {};
     const doc = await vehicles.findOne({ slug });
     const catalog = await carCatalog.findOne({ slug }).catch(() => null);
     if (!doc && !catalog) {
       console.log(`[miss] vehicle ${slug}`);
+      missing.push({ type: "vehicle", slug });
       continue;
     }
     const html = VEHICLE_DESCRIPTION_HTML[slug];
@@ -266,13 +369,35 @@ async function main() {
       patchVehicle.description = plainIntro;
     }
 
+    const fieldDiffs = [
+      seo.title && !pathKey.includes("toyota-corolla-e140")
+        ? diff("metaTitle", before.metaTitle, seo.title)
+        : null,
+      seo.meta ? diff("metaDescription", before.metaDescription, seo.meta) : null,
+      html
+        ? diff(
+            "description",
+            String(before.description || "").slice(0, 100),
+            String(html).slice(0, 100)
+          )
+        : null,
+    ].filter(Boolean);
+
+    if (!fieldDiffs.length) continue;
+
     console.log(`\n[vehicle] /cars/${slug}`);
-    if (seo.title) console.log(`  metaTitle → ${seo.title}`);
-    if (seo.meta) console.log(`  metaDescription → ${seo.meta}`);
-    if (html) console.log(`  description → (html ${html.length} chars)`);
-    changes.push({ type: "vehicle", slug });
+    for (const d of fieldDiffs) {
+      console.log(`  ${d.field}: ${JSON.stringify(d.before)} → ${JSON.stringify(d.after)}`);
+    }
+    changes.push({ type: "vehicle", slug, diffs: fieldDiffs });
     if (doc) backup.vehicles.push({ _id: String(doc._id), slug, before });
-    if (catalog) backup.carCatalog.push({ _id: String(catalog._id), slug, before: { description: catalog.description } });
+    if (catalog) {
+      backup.carCatalog.push({
+        _id: String(catalog._id),
+        slug,
+        before: { description: catalog.description },
+      });
+    }
 
     if (!DRY_RUN) {
       if (doc && Object.keys(patchVehicle).length) {
@@ -284,15 +409,36 @@ async function main() {
     }
   }
 
-  if (!DRY_RUN) {
-    fs.writeFileSync(BACKUP_PATH, JSON.stringify(backup, null, 2));
-    console.log(`\nBackup written: ${BACKUP_PATH}`);
+  // Persist a snapshot of docs that would change (dry-run safety net)
+  const snapshotPath = DRY_RUN ? DRY_BACKUP_PATH : BACKUP_PATH;
+  try {
+    fs.writeFileSync(snapshotPath, JSON.stringify(backup, null, 2));
+    console.log(`\nSnapshot written: ${snapshotPath}`);
+  } catch (err) {
+    const fallback = path.join("/tmp", path.basename(snapshotPath));
+    fs.writeFileSync(fallback, JSON.stringify(backup, null, 2));
+    console.log(`\nSnapshot written (fallback): ${fallback} (${err.code || err.message})`);
+  }
+
+  // Summary
+  const byType = { product: 0, category: 0, vehicle: 0 };
+  for (const c of changes) byType[c.type] = (byType[c.type] || 0) + 1;
+  console.log("\n=== DIFF SUMMARY ===");
+  console.log(`Fingerprint: ${fp}${fp === PROD_FP ? " (production OK)" : fp === ATLAS_FP ? " (LEGACY ATLAS — do not apply)" : ""}`);
+  console.log(`Documents with changes: ${changes.length} (products=${byType.product}, categories=${byType.category}, vehicles=${byType.vehicle})`);
+  console.log(`Missing slugs: ${missing.length}`);
+  for (const m of missing) console.log(`  - ${m.type} ${m.slug}`);
+  if (!missing.length) console.log("  (none)");
+  console.log("Changed slugs:");
+  for (const c of changes) {
+    const fields = (c.diffs || []).map((d) => d.field).join(", ");
+    console.log(`  - ${c.type} ${c.slug}${fields ? ` [${fields}]` : ""}`);
   }
 
   console.log(`\nDone. ${changes.length} documents with changes. ${DRY_RUN ? "Dry run only." : "Writes applied."}`);
   if (DRY_RUN) {
     console.log(
-      "\nReal run command:\n  cd /Users/mac/Desktop/CCSMS && node --env-file=storecraft-store/.env.local scripts/seo/apply-seo-2026-10.mjs --apply --allow-write\n(Add --i-know-this-is-staging only after confirming the URI is staging/production intentionally.)"
+      "\nReal run command (VPS, production URI only):\n  MONGODB_URI='mongodb://sialkot-mongo:27017/sialkot_motorsports' node scripts/seo/apply-seo-2026-10.mjs --apply --allow-write --i-know-this-is-staging\n(Confirm fingerprint 84143ac0cb2c3085 first. Never use Atlas 317ae4de8eb24f84.)"
     );
   }
 

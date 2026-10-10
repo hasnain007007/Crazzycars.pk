@@ -439,13 +439,17 @@ function toProductLd(product, reviews = []) {
 
 function toBreadcrumbLd(product) {
   const cat = product.categories?.[0];
+  const slugKey = String(product?.slug || "").trim();
+  const crumbName =
+    PRODUCT_H1_OVERRIDES[slugKey] ||
+    String(product.name || "").replace(/\bButto\b/g, "Button");
   const items = [{ name: "Home", url: "/" }];
   if (cat?.slug) {
     items.push({ name: cat.name, url: `/categories/${cat.slug}` });
   } else {
     items.push({ name: "Products", url: "/shop" });
   }
-  items.push({ name: product.name, url: `/${product.slug}` });
+  items.push({ name: crumbName, url: `/${product.slug}` });
   return buildBreadcrumbJsonLd(items);
 }
 
