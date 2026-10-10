@@ -469,4 +469,10 @@ export const CATEGORY_KEYWORD_META = {
       "Steering wheel covers in Pakistan, including hand-stitched carbon fiber in universal fit. Price on every listing. COD on eligible items, nationwide delivery.",
     absoluteTitle: true,
   },
+  "stickers-monograms-emblems": {
+    metaTitle: "Car Stickers & Steering Monograms | CrazzyCars",
+    metaDescription:
+      "Car stickers, monograms and emblems in Pakistan, including Corolla carbon-style steering monograms. COD on eligible items. WhatsApp 03284010007.",
+    absoluteTitle: true,
+  },
 };

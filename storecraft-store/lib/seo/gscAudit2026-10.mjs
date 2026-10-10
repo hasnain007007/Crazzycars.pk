@@ -75,6 +75,14 @@ export const PAGE_SEO_OVERRIDES = {
     title: "Steering Wheel Covers Price in Pakistan | CrazzyCars",
     meta: "Steering wheel covers in Pakistan, including hand-stitched carbon fiber in universal fit. Price on every listing. COD on eligible items, nationwide delivery.",
   },
+  "/categories/stickers-monograms-emblems": {
+    title: "Car Stickers & Steering Monograms | CrazzyCars",
+    meta: "Car stickers, monograms and emblems in Pakistan, including Corolla carbon-style steering monograms. COD on eligible items. WhatsApp 03284010007.",
+  },
+  "/track-order": {
+    title: "Track Your Order | CrazzyCars",
+    meta: "Track your CrazzyCars order with your PostEx or Run Courier tracking number, or WhatsApp 03284010007 for help. Nationwide delivery from Gujranwala.",
+  },
   "/car-heads-up-display-hud": {
     title: "Car HUD Heads Up Display Price in Pakistan | CrazzyCars",
     meta: "Car HUD heads up display in Pakistan: speed, voltage and over-speed alarm, auto on/off, plug-and-play. Rs. 3,499. COD on eligible items, nationwide delivery.",
@@ -186,6 +194,14 @@ export function assertSeoLengths(pair, path) {
 
 /** Category description HTML (intro + H2 blocks + FAQ as h3/p for existing splitter). */
 export const CATEGORY_DESCRIPTION_HTML = {
+  "stickers-monograms-emblems": `
+<p>Car stickers, monograms and emblems at CrazzyCars.pk personalise the cabin and exterior. We currently list the Toyota Corolla Carbon Fiber Style Steering Monogram 2009–2026 (ABS). More stickers and emblems are added as stock arrives. Clean and dry the surface before applying. Cash on Delivery on eligible items; WhatsApp ${WA} to check availability.</p>
+<h2>Steering monograms</h2>
+<p>The Corolla carbon-style steering monogram fits Toyota Corolla E140 and E170–E210 generations (2009–2026). See the product page for price and fitment.</p>
+<h3>Do you sell other car stickers?</h3>
+<p>Ask on WhatsApp ${WA} with your make, model and year — we can confirm what is in stock before you order.</p>
+`.trim(),
+
   "interior-lights": `
 <p>Car interior lights at CrazzyCars.pk run from Rs. 499 to Rs. 14,999. The range covers ambient dashboard light strips, RGB footwell lights, door welcome logo projectors and USB roof star lights. Each product page lists fitment, what is in the box and the current price. We ship nationwide from Gujranwala and offer Cash on Delivery on eligible items.</p>
 <h2>Car ambient light for the dashboard and doors</h2>

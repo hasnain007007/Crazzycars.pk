@@ -93,6 +93,12 @@ export const PAGE_HANDLE_ALIASES = {
   "best-sellers": "/shop",
   "best-car-accessories-deals": "/sale",
   "features-products": "/shop",
+  // Shopify /pages/* that must not strip to a 404 root slug
+  home: "/",
+  "why-crazzycars-pk": "/about",
+  "about-us-crazzycars-pk": "/about",
+  about: "/about",
+  faq: "/faq",
 };
 
 export function normalizeCategoryHandle(raw) {

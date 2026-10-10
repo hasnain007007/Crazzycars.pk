@@ -21,6 +21,41 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/pages/home",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/home",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/pages/why-crazzycars-pk",
+        destination: "/about",
+        permanent: true,
+      },
+      {
+        source: "/why-crazzycars-pk",
+        destination: "/about",
+        permanent: true,
+      },
+      {
+        source: "/pages/about-us-crazzycars-pk",
+        destination: "/about",
+        permanent: true,
+      },
+      {
+        source: "/about-us-crazzycars-pk",
+        destination: "/about",
+        permanent: true,
+      },
+      {
+        source: "/collections",
+        destination: "/shop",
+        permanent: true,
+      },
+      {
         source: "/pages/contact-1",
         destination: "/contact",
         permanent: true,

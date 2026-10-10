@@ -218,6 +218,11 @@ export async function middleware(request) {
     }
   }
 
+  // Shopify /collections index → shop
+  if (lower === "/collections" || lower === "/collections/") {
+    return withPaidCookie(request, redirectPath(request, "/shop", 308));
+  }
+
   // Fast path for known /collections/ handles (next.config also has these; middleware
   // covers edge cases when config redirects are skipped).
   if (lower.startsWith("/collections/")) {
