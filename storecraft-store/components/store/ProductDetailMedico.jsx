@@ -15,7 +15,6 @@ import ProductReviews, { StarDisplay } from "./ProductReviews";
 import { formatPrice } from "@/lib/currency";
 import { altBelongsToProduct, imageBelongsToProduct } from "@/lib/productCardShape";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
-import { cardImageUrl } from "@/lib/cloudinaryImage";
 import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
@@ -1043,13 +1042,16 @@ export function ProductDetailMedico({
                   }}
                 >
                   {item.type === "image" ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={cardImageUrl(item.url, 112) || item.url}
+                    <WatermarkedImage
+                      src={item.url}
                       alt={item.altText || `${product.name} ${index + 1}`}
+                      watermark={null}
+                      optimize
+                      width={112}
+                      crop="fill"
+                      responsive={false}
                       loading="lazy"
-                      decoding="async"
-                      style={{
+                      imgStyle={{
                         width: "100%",
                         height: "100%",
                         objectFit: "cover",
@@ -1059,13 +1061,16 @@ export function ProductDetailMedico({
                   ) : (
                     <>
                       {item.thumbnail ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
+                        <WatermarkedImage
                           src={item.thumbnail}
                           alt=""
+                          watermark={null}
+                          optimize
+                          width={112}
+                          crop="fill"
+                          responsive={false}
                           loading="lazy"
-                          decoding="async"
-                          style={{
+                          imgStyle={{
                             width: "100%",
                             height: "100%",
                             objectFit: "cover",
