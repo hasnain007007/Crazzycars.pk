@@ -33,7 +33,12 @@ import {
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
 import { BRAND, PRODUCT_TITLE_BRAND } from "@/lib/brand";
 import { toPlainText } from "@/lib/sanitizeHtml";
-import { getPageSeoOverride, PRODUCT_FAQ_OVERRIDES } from "@/lib/seo/gscAudit2026-10.mjs";
+import {
+  getPageSeoOverride,
+  PRODUCT_CONTENT_OVERRIDES,
+  PRODUCT_FAQ_OVERRIDES,
+  PRODUCT_H1_OVERRIDES,
+} from "@/lib/seo/gscAudit2026-10.mjs";
 
 /**
  * ISR for product / CMS pages. Category slugs 308 to /categories/:slug.
@@ -301,13 +306,18 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
       metaTitle: p.metaTitle || p.seo?.metaTitle,
       slug: p.slug || slugStr,
     });
-    const seoOverride = getPageSeoOverride(`/${p.slug || slugStr}`);
+    const slugKey = p.slug || slugStr;
+    const seoOverride = getPageSeoOverride(`/${slugKey}`);
+    const contentOverride = PRODUCT_CONTENT_OVERRIDES[slugKey] || null;
+    const displayName =
+      PRODUCT_H1_OVERRIDES[slugKey] ||
+      String(p.name || "").replace(/\bButto\b/g, "Button");
     const description =
       (seoOverride?.meta || "").trim() ||
-      (p.metaDescription || p.seo?.metaDescription || "").trim() ||
-      stripHtml(p.shortDescription || "").slice(0, 160) ||
-      stripHtml(p.longDescription || "").slice(0, 160) ||
-      `Buy ${p.name} at ${BRAND}. Cash on Delivery nationwide.`;
+      (p.metaDescription || p.seo?.metaDescription || "").trim().replace(/\bButto\b/g, "Button") ||
+      stripHtml(contentOverride?.shortDescription || p.shortDescription || "").slice(0, 160) ||
+      stripHtml(contentOverride?.descriptionHtml || p.longDescription || "").slice(0, 160) ||
+      `Buy ${displayName} at ${BRAND}. Cash on Delivery nationwide.`;
     const keywords = Array.isArray(p.seo?.metaKeywords)
       ? p.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
       : [];
@@ -315,6 +325,7 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
       resolvePrimaryProductImageUrl(p) ||
       p.media?.images?.find((i) => i?.isMain)?.url ||
       p.media?.images?.[0]?.url;
+    const ogAlt = contentOverride?.imageAlt || displayName;
 
     return {
       title: { absolute: title },
@@ -323,15 +334,12 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
       alternates: { canonical },
       openGraph: {
         title: title,
-        description:
-          (p.metaDescription || p.seo?.metaDescription || "").trim() ||
-          stripHtml(p.shortDescription || "").slice(0, 200) ||
-          `Buy ${p.name} at ${BRAND}`,
+        description,
         // Next.js metadata only allows website|article|profile|… — not OG "product".
         // Product schema stays in JSON-LD (toProductLd).
         type: "website",
         url: canonical,
-        images: mainImg ? [{ url: mainImg, width: 800, height: 800, alt: p.name }] : [],
+        images: mainImg ? [{ url: mainImg, width: 800, height: 800, alt: ogAlt }] : [],
       },
       twitter: {
         card: "summary_large_image",
@@ -377,18 +385,36 @@ function toProductLd(product, reviews = []) {
   );
   const stock = Number(product.inventory?.quantity ?? product.stock ?? (product.inStock === false ? 0 : 1));
   const genuine = customerReviewsForSchema(reviews);
+  const slugKey = String(product?.slug || "").trim();
+  const contentOverride = PRODUCT_CONTENT_OVERRIDES[slugKey] || null;
+  const displayName =
+    PRODUCT_H1_OVERRIDES[slugKey] ||
+    String(product.name || "").replace(/\bButto\b/g, "Button");
+  const descHtml =
+    contentOverride?.descriptionHtml ||
+    product.descriptionHtml ||
+    product.longDescription ||
+    "";
+  const shortDesc =
+    contentOverride?.shortDescription || product.shortDescription || "";
+  const seoMeta = getPageSeoOverride(`/${slugKey}`)?.meta || "";
   return buildProductJsonLd({
-    name: product.name,
+    name: displayName,
     slug: product.slug,
     urlPath: `/${product.slug}`,
     images,
     media: { images: images.map((url) => ({ url, isMain: url === images[0] })) },
-    longDescription: product.longDescription || product.descriptionHtml || "",
-    descriptionHtml: product.descriptionHtml || product.longDescription || "",
-    shortDescription: toPlainText(product.shortDescription || ""),
-    metaDescription: product.metaDescription || product.seo?.metaDescription,
+    longDescription: descHtml,
+    descriptionHtml: descHtml,
+    shortDescription: toPlainText(shortDesc),
+    metaDescription:
+      seoMeta ||
+      String(product.metaDescription || product.seo?.metaDescription || "").replace(
+        /\bButto\b/g,
+        "Button"
+      ),
     specifications: product.specifications,
-    features: product.features,
+    features: contentOverride?.features || product.features,
     sku: product.articleNo || product.inventory?.sku,
     articleNo: product.articleNo,
     ean: product.ean,
