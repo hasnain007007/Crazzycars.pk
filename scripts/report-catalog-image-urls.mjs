@@ -82,7 +82,7 @@ async function main() {
     for (const img of imgs) collectUrl(report.products, img?.url);
   }
 
-  for await (const c of db.collection("categories").find({}, { projection: { "image.url": 1, image: 1 } })) {
+  for await (const c of db.collection("categories").find({}, { projection: { image: 1 } })) {
     const url = typeof c.image === "string" ? c.image : c.image?.url;
     collectUrl(report.categories, url);
   }
@@ -94,12 +94,12 @@ async function main() {
     collectUrl(report.banners, b.background?.mobileImage?.url || b.background?.image?.url || b.image?.url);
   }
 
-  for await (const p of db.collection("blogposts").find({}, { projection: { "featuredImage.url": 1, featuredImage: 1 } })) {
+  for await (const p of db.collection("blogposts").find({}, { projection: { featuredImage: 1 } })) {
     const url = typeof p.featuredImage === "string" ? p.featuredImage : p.featuredImage?.url;
     collectUrl(report.blogs, url);
   }
 
-  for await (const v of db.collection("vehicles").find({}, { projection: { "image.url": 1, image: 1 } })) {
+  for await (const v of db.collection("vehicles").find({}, { projection: { image: 1 } })) {
     const url = typeof v.image === "string" ? v.image : v.image?.url;
     collectUrl(report.vehicles, url);
   }
