@@ -1,0 +1,174 @@
+(node:585) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///tmp/seo-apply-go/storecraft-store/config/store-policy.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /tmp/seo-apply-go/storecraft-store/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+URI (redacted): mongodb://sialkot-mongo:27017/sialkot_motorsports
+DATABASE_FINGERPRINT: 84143ac0cb2c3085
+Expected prod: 84143ac0cb2c3085 | Legacy Atlas (do not write): 317ae4de8eb24f84
+OK: Production sialkot-mongo fingerprint matched.
+=== DRY RUN (no writes) ===
+Write style: field-level updateOne({ $set: patch }) only (no replaceOne / full-doc replace).
+products $set fields: name, metaTitle, metaDescription, seo.metaTitle, seo.metaDescription, shortDescription, longDescription, features
+categories $set fields: name, seo.metaTitle, seo.metaDescription, description
+vehicles $set fields: metaTitle, metaDescription, description
+carcatalogs $set fields: metaDescription, description
+Never touched: pricing.*, price, compareAt/comparePrice, inventory/stock, media/images, variants/variation*
+
+[product] /toyota-corolla-grande-steering-wheel-trim-in-carbon-fiber-multimedia
+  metaTitle: "Toyota Corolla Grande Steering Wheel Trim" → "Corolla Grande Steering Wheel Trim (Carbon Look)"
+  metaDescription: "Toyota Corolla carbon fiber trim price in Pakistan: Steering Wheel Trim in Carbon Multimedia for Toyota Corolla Grande. Cash on Delivery & nationwide delivery." → "Carbon-look steering wheel trim for Toyota Corolla Grande 2014–2026. Price in Pakistan, COD on eligible items, nationwide delivery."
+
+[product] /toyota-corolla-gli-xli-2009-2014-multimedia-steering-wheel-audio-control-buttons
+  metaTitle: "Toyota Corolla GLi XLi 2009-2014 Multimedia" → "Corolla GLi/XLi 2009–2014 Steering Audio Control Buttons"
+  metaDescription: "Corolla steering control buttons: GLi XLi Multimedia Steering Wheel Audio Control Buttons for Toyota Corolla 2009–2014. Cash on Delivery & nationwide delivery." → "Multimedia steering wheel audio control buttons for Toyota Corolla GLi/XLi 2009–2014. Price in Pakistan, plug-and-play wiring, COD on eligible items."
+
+[product] /funny-window-hand-gesture-led-light
+  metaTitle: "Funny Window Hand Gesture LED Light – Car Rear" → "Funny Hand Gesture LED Light for Car Rear Window"
+  metaDescription: "Car LED lights price in Pakistan: Funny Window Hand Gesture LED Light. Animated LED hand gesture display. Cash on Delivery available with nationwide delivery." → "Funny hand gesture LED light for the car rear window: USB powered, animated gestures, suction-cup mount, universal fit. Price in Pakistan, COD available."
+
+[product] /toyota-corolla-2009-2026-carbon-steering-monogram-abs
+  metaTitle: "Corolla Carbon Fiber Style Steering Monogram" → "Toyota Corolla Steering Monogram – Carbon Style 2009–2026"
+  metaDescription: "Corolla steering monogram price in Pakistan: Carbon Style Steering Monogram for Toyota Corolla 2009–2026. Cash on Delivery available with nationwide delivery." → "Carbon-style steering monogram for Toyota Corolla 2009–2026 (also Aqua, Vitz, Yaris). Peel-and-stick, Rs. 799. COD on eligible items, nationwide delivery."
+
+[product] /car-front-bumper-splitter-abs-plastic-3pcs
+  metaTitle: "Batman Style Front Bumper Splitter ABS 3PCS" → "Batman Style Front Bumper Splitter 3PCS – Universal Fit"
+  metaDescription: "Front splitter price in Pakistan: Batman Style Front Bumper Splitter ABS. Easy DIY installation with included hardware. Cash on Delivery & nationwide delivery." → "Batman style 3-piece front bumper splitter, ABS, gloss black, universal fit with hardware. Price in Pakistan, COD on eligible items, nationwide delivery."
+
+[product] /toyota-aqua-2012-2015-complete-body-kit
+  metaTitle: "Toyota Aqua 2012–2015 Complete Body Kit" → "Toyota Aqua 2012–2015 Body Kit Price in Pakistan"
+  metaDescription: "Aqua body kit 2012-2015 price in Pakistan: Complete Body Kit for Aqua 2012–2015. Nationwide delivery; this item is prepaid (no COD). Order from CrazzyCars.pk." → "Complete body kit for Toyota Aqua 2012–2015: front lip, side skirts, rear lip in unpainted ABS. Price in Pakistan, prepaid only, nationwide delivery."
+
+[product] /toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs
+  metaTitle: "Corolla 2015–2026 RS Style Trunk Spoiler" → "Toyota Corolla 2015–2026 RS Style Trunk Spoiler | CrazzyCars"
+  metaDescription: "Corolla trunk spoiler price in Pakistan: RS Style Trunk Spoiler for Corolla 2015–2026. Gloss black finish. Cash on Delivery available with nationwide delivery." → "Toyota Corolla 2015–2026 RS style trunk spoiler price in Pakistan: gloss black ABS, 3M tape install. COD on eligible items, nationwide delivery."
+
+[product] /honda-city-new-model-trunk-lip-spoiler-2021-2026
+  metaTitle: "City 2021–2026 RS Style Trunk Lip Spoiler" → "Honda City 2021–2026 RS Trunk Lip Spoiler | CrazzyCars"
+  metaDescription: "Honda City trunk spoiler price in Pakistan: RS Style Trunk Lip Spoiler for City 2021–2026. Cash on Delivery & nationwide delivery. WhatsApp support for fitment." → "Honda City trunk spoiler price in Pakistan: RS style trunk lip spoiler for City 2021–2026 (1.2L, 1.5L, Aspire). COD on eligible items, nationwide delivery."
+
+[product] /deepal-s05-batman-style-side-mirror-covers
+  metaTitle: "Deepal S05 Batman Style Side Mirror Covers" → "Deepal S05 Batman Side Mirror Covers Price in Pakistan"
+  metaDescription: "Side mirror cover price in Pakistan: Batman Style Side Mirror Covers for S05. Cash on Delivery available with nationwide delivery. WhatsApp support for fitment." → "Deepal S05 (SO5) Batman style side mirror covers in carbon fibre or gloss black ABS. Price in Pakistan, COD on eligible items, nationwide delivery."
+
+[product] /car-heads-up-display-hud
+  metaTitle: "Universal Heads Up Display HUD Car Speed" → "Car HUD Heads Up Display Price in Pakistan | CrazzyCars"
+  metaDescription: "Car heads up display projector price in Pakistan: Universal Heads Up Display HUD Car Speed Projector. Auto Power On/Off. Cash on Delivery & nationwide delivery." → "Car HUD heads up display in Pakistan: speed, voltage and over-speed alarm, auto on/off, plug-and-play. Rs. 3,499. COD on eligible items, nationwide delivery."
+
+[product] /toyota-corolla-2012-top-ac-panel
+  name: "Toyota Corolla 2012 Top AC Panel Center Dashboard AC Vent Butto 2008-2013" → "Toyota Corolla 2012 Top AC Panel Center Dashboard AC Vent Button 2008–2013"
+  metaDescription: "Corolla AC vent cover price in Pakistan: Top AC Panel Center Dashboard AC Vent Butto 2008-2013 for Toyota Corolla 2012. Cash on Delivery & nationwide delivery." → "Corolla AC vent cover price in Pakistan: Top AC Panel Center Dashboard AC Vent Button 2008-2013 for Toyota Corolla 2012. Cash on Delivery & nationwide delivery."
+  shortDescription: "Toyota Corolla 2012 Top AC Panel Center Dashboard AC Vent Butto 2008-2013. Carbon-fiber-look finish. Cash on Delivery available nationwide." → "Toyota Corolla 2012 Top AC Panel Center Dashboard AC Vent Button 2008-2013. Carbon-fiber-look finish. Cash on Delivery available nationwide."
+  longDescription: "<p>The Top AC Panel Center Dashboard AC Vent Butto 2008-2013 is listed for the Toyota Corolla 2012. Upgrade the center d" → "<p>The Top AC Panel Center Dashboard AC Vent Button 2008-2013 is listed for the Toyota Corolla 2012. Upgrade the center "
+  features: "[]" → "[\"carbon-fiber-look finish\",\"covers scratches and worn factory plastic on the centre AC panel\"]"
+
+[product] /honda-city-2021-2026-carbon-fiber-gear-knob
+  name: "Honda City Carbon Fiber Gear Knob 2021-2026" → "Honda City Carbon Fiber Gear Knob Cover 2021–2026"
+
+[product] /changan-oshan-x7-batman-style-side-mirror-covers
+  shortDescription: "Changan Oshan X7 Batman Style Side Mirror Covers. Finish options – Carbon Fiber or Gloss Black. Aggressive Batman styling – sporty exterior upgrade. Durable ABS construction – weather & UV resistant. Cash on Delivery available nationwide." → "These Batman style side mirror covers are made for the Changan Oshan X7 2022–2026. They come in a carbon fiber finish or gloss black, in durable, weather and UV resistant ABS, as a left and right pair. They clip on or fix with double-sided tape, so there is no drilling. Check your year and variant on WhatsApp 03284010007 before ordering."
+
+[category] /categories/led-indicator-lights
+  name: "LED Indicator Lights" → "LED Indicator Lights & Side Mirror Indicators in Pakistan"
+  metaTitle: "Side Mirror Indicator Price in Pakistan" → "LED Indicator Lights & Mirror Indicators | CrazzyCars.pk"
+  metaDescription: "Shop side mirror indicators online in Pakistan at CrazzyCars.pk. Parts for Toyota Corolla and Honda Civic & more. COD on eligible items, nationwide delivery." → "LED indicator lights, bulbs and side mirror indicators for Corolla, Civic and City. COD on eligible items, nationwide delivery from Gujranwala."
+  description: "<p>Shop side mirror indicators online in Pakistan at CrazzyCars.pk. LED indicato" → "<p>LED indicator lights on CrazzyCars.pk start at Rs. 1,199 for a pair of univer"
+
+[category] /categories/splitters-side-skirts
+  metaTitle: "Front Splitter Price in Pakistan" → "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars"
+  metaDescription: "Shop front splitters online in Pakistan at CrazzyCars.pk. Parts for Honda Civic and Toyota Corolla & more. COD on eligible items, nationwide delivery." → "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic, Corolla and City. COD on eligible items, nationwide delivery."
+
+[category] /categories/quarter-window-louvers
+  metaTitle: "Window Louvers Price in Pakistan" → "Quarter Window Louvers Price in Pakistan | Civic, Corolla"
+  metaDescription: "Shop window louvers online in Pakistan at CrazzyCars.pk. Parts for Honda Civic, Toyota Corolla and Honda City & more. Nationwide delivery from Gujranwala." → "Quarter window louvers for Civic, Corolla, City, Alto and Yaris in Pakistan. Carbon and gloss black options. COD on eligible items, nationwide delivery."
+
+[category] /categories/interior-lights
+  name: "Interior Lights" → "Car Interior Lights & Ambient Lights in Pakistan"
+  metaTitle: "Car Interior Lights Price in Pakistan" → "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars"
+  metaDescription: "Shop car interior lights online in Pakistan at CrazzyCars.pk. Universal & model-specific options. Cash on Delivery on eligible items & nationwide delivery." → "Buy car interior lights in Pakistan: ambient dashboard strips, footwell RGB lights, door welcome logo lights and roof star lights. COD on eligible items."
+  description: "<p>Shop car interior lights online in Pakistan at CrazzyCars.pk. Car interior li" → "<p>Car interior lights at CrazzyCars.pk run from Rs. 499 to Rs. 14,999. The rang"
+
+[category] /categories/led-lighting
+  metaTitle: "Car LED Lights in Pakistan" → "Car LED Lights in Pakistan – Headlights, Indicators, DRL"
+  metaDescription: "Shop car LED lights online in Pakistan at CrazzyCars.pk. Parts for Toyota Corolla, Honda Civic and Honda City & more. Nationwide delivery from Gujranwala." → "Shop car LED lights in Pakistan: headlights, fog lamps and DRL covers, indicators, tail lights, reflectors and SOS flashers. COD on eligible items."
+
+[category] /categories/steering-wheel-covers
+  metaTitle: "Steering Wheel Cover Price in Pakistan" → "Steering Wheel Covers Price in Pakistan | CrazzyCars"
+  metaDescription: "Shop steering wheel covers online in Pakistan at CrazzyCars.pk. Parts for Honda City, Honda Civic and Toyota Aqua & more. Nationwide delivery from Gujranwala." → "Steering wheel covers in Pakistan, including hand-stitched carbon fiber in universal fit. Price on every listing. COD on eligible items, nationwide delivery."
+  description: "<p>Shop steering wheel covers online in Pakistan at CrazzyCars.pk. A steering wh" → "<p>A steering wheel cover adds grip and a new look to the wheel. The Carbon Fibe"
+
+[vehicle] /cars/toyota-yaris-2020-present
+  metaTitle: "Toyota Yaris Accessories in Pakistan | Body Kits & LED | CrazzyCars.pk" → "Toyota Yaris 2020–2026 Accessories in Pakistan | CrazzyCars"
+  metaDescription: "Shop Toyota Yaris accessories in Pakistan — splitters, spoilers, chrome trims, LED lights & interior upgrades. Cash on Delivery all over Pakistan." → "Toyota Yaris 2020–2026 accessories in Pakistan: TPE floor mats, dashboard mat, key cover, spoilers, louvers, body kit. COD on eligible items, nationwide."
+  description: "" → "<p>Toyota Yaris 2020–2026 accessories at CrazzyCars.pk: TPE floor mats (Rs. 8,699), velvet dashboard"
+
+[vehicle] /cars/suzuki-alto-2020-present
+  metaTitle: "Suzuki Alto 2019+ Accessories in Pakistan | CrazzyCars.pk" → "Suzuki Alto 2019–2026 Accessories in Pakistan | CrazzyCars"
+  metaDescription: "Shop Suzuki Alto 2019–Present accessories in Pakistan — LED lighting, exterior & interior upgrades. Cash on Delivery nationwide." → "Suzuki Alto 2019–2026 accessories in Pakistan: lava tail lights, steering controls, roof spoiler, indicators, mats and key covers. COD on eligible items."
+  description: "" → "<p>Suzuki Alto 2019–2026 (660cc) accessories at CrazzyCars.pk: Lava style smoke tail lights (Rs. 11,"
+
+[vehicle] /cars/suzuki-swift-2025-present
+  metaTitle: "Suzuki Swift 2025+ Accessories in Pakistan | CrazzyCars.pk" → "Suzuki Swift 2025–Present Accessories in Pakistan | CrazzyCars"
+  metaDescription: "Premium Suzuki Swift 2025-Present (4th Gen) accessories in Pakistan — styling, LED & interior upgrades. COD all over Pakistan." → "Suzuki Swift 2025–present accessories in Pakistan: floor mats, dashboard mat, key cover, carbon side mirror and door handle covers. COD on eligible items."
+  description: "" → "<p>Suzuki Swift 2025–present (4th generation, Z Series) accessories at CrazzyCars.pk: carbon fiber s"
+
+[vehicle] /cars/toyota-aqua-2012-present
+  metaTitle: "Toyota Aqua Accessories in Pakistan | CrazzyCars.pk" → "Toyota Aqua Accessories & Body Kits in Pakistan | CrazzyCars"
+  metaDescription: "Upgrade your Toyota Aqua with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber trims. COD nationwide." → "Toyota Aqua accessories in Pakistan: body kits by year, Batman side mirror covers, front splitters, floor mats and dashboard mat. COD on eligible items."
+  description: "" → "<p>Toyota Aqua accessories at CrazzyCars.pk: body kits for each year, Batman style side mirror cover"
+
+[vehicle] /cars/honda-civic-x-2016-2021
+  metaTitle: "Honda Civic X 2016–2021 Accessories & Body Kits in Pakistan | CrazzyCars.pk" → "Honda Civic X 2016–2021 Accessories & Carbon Interior Trims"
+  metaDescription: "Shop Honda Civic X 2016-2021 accessories in Pakistan — body kits, splitters, spoilers, quarter window louvers & LED lights. Cash on Delivery." → "Honda Civic X 2016–2021 accessories in Pakistan: carbon interior trims, DRLs, fog lamps, spoilers, grille and more. COD on eligible items."
+  description: "" → "<h2>Honda Civic X interior accessories and carbon trims</h2>\n<p>The Civic X (10th generation) range "
+
+[vehicle] /cars/toyota-corolla-e140-2009-2014
+  metaDescription: "Shop Toyota Corolla E140 2009-2014 accessories in Pakistan — body kits, splitters, LED lights, carbon fiber trims & more. Cash on Delivery nationwide." → "Toyota Corolla E140 (2009–2014) accessories in Pakistan: body kits, grilles, projector headlights, spoilers and LEDs. COD on eligible items, nationwide."
+  description: "" → "<h2>Corolla E140 lights</h2>\n<p>RGB back bumper light, Nike Style 3 projector headlights, Lava style"
+
+[vehicle] /cars/honda-city-2021-present
+  description: "" → "<p>Honda City 2021–2026 accessories at CrazzyCars.pk: RS style trunk lip spoiler (Rs. 4,999), carbon"
+
+[vehicle] /cars/suzuki-liana-2006-2014
+  description: "" → "<p>CrazzyCars.pk sells the Velvet Dashboard Mat for the Suzuki Liana 2006–2014 (Rs. 1,799). It is a "
+
+Snapshot written: /tmp/seo-apply-go/seo-backup-dry-run-2026-10.json
+
+=== DIFF SUMMARY ===
+Fingerprint: 84143ac0cb2c3085 (production OK)
+Documents with changes: 27 (products=13, categories=6, vehicles=8)
+Missing slugs: 0
+  (none)
+Changed slugs:
+  - product toyota-corolla-grande-steering-wheel-trim-in-carbon-fiber-multimedia [metaTitle, metaDescription]
+  - product toyota-corolla-gli-xli-2009-2014-multimedia-steering-wheel-audio-control-buttons [metaTitle, metaDescription]
+  - product funny-window-hand-gesture-led-light [metaTitle, metaDescription]
+  - product toyota-corolla-2009-2026-carbon-steering-monogram-abs [metaTitle, metaDescription]
+  - product car-front-bumper-splitter-abs-plastic-3pcs [metaTitle, metaDescription]
+  - product toyota-aqua-2012-2015-complete-body-kit [metaTitle, metaDescription]
+  - product toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs [metaTitle, metaDescription]
+  - product honda-city-new-model-trunk-lip-spoiler-2021-2026 [metaTitle, metaDescription]
+  - product deepal-s05-batman-style-side-mirror-covers [metaTitle, metaDescription]
+  - product car-heads-up-display-hud [metaTitle, metaDescription]
+  - product toyota-corolla-2012-top-ac-panel [name, metaDescription, shortDescription, longDescription, features]
+  - product honda-city-2021-2026-carbon-fiber-gear-knob [name]
+  - product changan-oshan-x7-batman-style-side-mirror-covers [shortDescription]
+  - category led-indicator-lights [name, metaTitle, metaDescription, description]
+  - category splitters-side-skirts [metaTitle, metaDescription]
+  - category quarter-window-louvers [metaTitle, metaDescription]
+  - category interior-lights [name, metaTitle, metaDescription, description]
+  - category led-lighting [metaTitle, metaDescription]
+  - category steering-wheel-covers [metaTitle, metaDescription, description]
+  - vehicle toyota-yaris-2020-present [metaTitle, metaDescription, description]
+  - vehicle suzuki-alto-2020-present [metaTitle, metaDescription, description]
+  - vehicle suzuki-swift-2025-present [metaTitle, metaDescription, description]
+  - vehicle toyota-aqua-2012-present [metaTitle, metaDescription, description]
+  - vehicle honda-civic-x-2016-2021 [metaTitle, metaDescription, description]
+  - vehicle toyota-corolla-e140-2009-2014 [metaDescription, description]
+  - vehicle honda-city-2021-present [description]
+  - vehicle suzuki-liana-2006-2014 [description]
+
+Done. 27 documents with changes. Dry run only.
+
+Real run command (VPS, production URI only):
+  MONGODB_URI='mongodb://sialkot-mongo:27017/sialkot_motorsports' node scripts/seo/apply-seo-2026-10.mjs --apply --allow-write --i-know-this-is-staging
+(Confirm fingerprint 84143ac0cb2c3085 first. Never use Atlas 317ae4de8eb24f84.)

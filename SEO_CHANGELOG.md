@@ -1,5 +1,21 @@
 # SEO changelog — Search Console audit (10 Oct 2026)
 
+## Production Mongo apply (11 Oct 2026, ~01:09 PKT / 20:09 UTC)
+
+- **Fingerprint:** `84143ac0cb2c3085` (`mongodb://sialkot-mongo:27017/sialkot_motorsports`)
+- **Pre-apply mongodump:** `/data/crazzycars-mongo-backups/seo-apply-20261010T200917Z` (58M; taken immediately before apply)
+- **Dry-run snapshot:** `backups/seo-2026-10-apply/seo-backup-dry-run-2026-10.json` (also on VPS under the dump dir)
+- **Apply before-values backup:** `backups/seo-2026-10-apply/seo-backup-2026-10.json`
+- **Logs:** `backups/seo-2026-10-apply/seo-pre-apply-dry-run-20261010T200917Z.txt`, `seo-apply-20261010T200917Z.txt`
+- **Docs written:** 27 (13 products, 6 categories, 8 vehicles). `led-headlights-bulbs` excluded. Door-handle panels product not in scope.
+- **Write style:** field-level `updateOne({ $set })` only.
+  - products: `name`, `metaTitle`, `metaDescription`, `seo.metaTitle`, `seo.metaDescription`, `shortDescription`, `longDescription`, `features`
+  - categories: `name`, `seo.metaTitle`, `seo.metaDescription`, `description`
+  - vehicles: `metaTitle`, `metaDescription`, `description`
+  - carcatalogs: `metaDescription`, `description`
+  - Never touched: pricing/price/compare*, inventory/stock, media/images, variants*
+- **Follow-up code:** vehicle hero no longer concatenates Mongo+audit HTML; PDP serialize scrubs `\bButto\b` (AC panel image alts remain “Butto” in Mongo by design — images not written).
+
 ## Follow-up (11 Oct 2026)
 
 - Locked `/categories/led-headlights-bulbs` to pre-audit title/meta (`CATEGORY_SEO_OWNER_LOCKED`); skipped in apply script. Prod Mongo row was already divergent.
@@ -12,15 +28,9 @@
 - Request indexing for changed pages in batches of 10 per day.
 - Re-check CTR and position for the same pages after 4 weeks, with the same date range length.
 
-## Real Mongo write (owner / staging)
+## Real Mongo write
 
-Dry-run only was executed in this change set. To write:
-
-```bash
-cd /Users/mac/Desktop/CCSMS && node --env-file=storecraft-store/.env.local scripts/seo/apply-seo-2026-10.mjs --apply --allow-write
-```
-
-Add `--i-know-this-is-staging` only after confirming the URI fingerprint (see `docs/OPS-PRODUCTION-DATABASE.md`). Backup file: `seo-backup-2026-10.json`.
+Production apply completed 11 Oct 2026 (see section above). Re-runs are idempotent; still require `--apply --allow-write --i-know-this-is-staging` on fingerprint `84143ac0cb2c3085` only. Never Atlas `317ae4de8eb24f84`.
 
 ## Files changed
 
