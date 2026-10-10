@@ -19,7 +19,11 @@ import ShippingZone from "@/lib/models/Shipping.model";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { roundRupees } from "@/lib/currency";
 import { quoteShipping } from "@/lib/shippingZoneWeight";
-import { applyShippingRules, normalizeShippingRules } from "@/lib/freeDelivery";
+import {
+  applyShippingRules,
+  computeAdvancePaymentDiscount,
+  normalizeShippingRules,
+} from "@/lib/freeDelivery";
 import { computeCouponDiscount } from "@/lib/couponCompute";
 import { buildCodUnavailableMessage, productAllowsCod } from "@/lib/codEligibility";
 import { toKg } from "@/lib/shippingEstimate";
@@ -213,6 +217,21 @@ export async function POST(request) {
     });
   }
 
+  // Same rule as createStoreOrder / web CheckoutView — prepaid % off after coupon.
+  const adv = computeAdvancePaymentDiscount({
+    amountAfterCoupon: afterCoupon,
+    paymentMethod,
+    storePayment,
+  });
+  const advancePaymentDiscount = adv.discount;
+  const advancePaymentDiscountPercent = adv.percent;
+  const advancePaymentDiscountLabel =
+    advancePaymentDiscount > 0
+      ? `Advance payment (${advancePaymentDiscountPercent}% off)`
+      : "";
+  // Matches createStoreOrder: merchandise after coupon + advance, then shipping on that base.
+  const afterDiscounts = Math.max(0, roundRupees(afterCoupon - advancePaymentDiscount));
+
   // Min order (soft warning for quote; hard fail only on POST /orders)
   const minOrderAmount = Math.max(0, Number(settingsDoc?.storePayment?.minimumOrderAmount) || 0);
   const meetsMinOrder = minOrderAmount === 0 || afterCoupon >= minOrderAmount;
@@ -232,11 +251,18 @@ export async function POST(request) {
   let shippingEstimated = !city;
 
   if (city) {
-    const quote = quoteShipping(activeZones, country, city, totalWeightGrams, afterCoupon, province);
+    const quote = quoteShipping(
+      activeZones,
+      country,
+      city,
+      totalWeightGrams,
+      afterDiscounts,
+      province,
+    );
     const rulesResult = applyShippingRules({
       baseDeliveryCharge: roundRupees(quote.shippingCost),
       zoneShippingCost: roundRupees(quote.shippingCost),
-      cartTotal: afterCoupon,
+      cartTotal: afterDiscounts,
       paymentMethod,
       zoneIsFree: Boolean(quote.isFree),
       storePayment,
@@ -250,7 +276,8 @@ export async function POST(request) {
     shippingEstimated = true;
   }
 
-  const total = Math.max(0, roundRupees(afterCoupon + shippingCost));
+  // Identical to createStoreOrder: subtotal - (coupon + advance) + shipping
+  const total = Math.max(0, roundRupees(afterDiscounts + shippingCost));
 
   // Enabled payment methods
   const enabledPaymentMethods = Object.entries(pakMethods)
@@ -263,6 +290,10 @@ export async function POST(request) {
     discount,
     couponCode,
     afterCoupon,
+    advancePaymentDiscount,
+    advancePaymentDiscountPercent,
+    advancePaymentDiscountLabel,
+    afterDiscounts,
     shippingCost,
     shippingEstimated,
     total,
