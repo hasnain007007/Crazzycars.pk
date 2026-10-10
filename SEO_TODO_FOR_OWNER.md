@@ -17,8 +17,8 @@ Re-measure GSC: on or after **2026-11-08** (see `SEO_CHANGELOG.md` baseline).
 
 | # | Issue | Pages |
 |---|---|---|
-| A | Wrong-generation products on vehicle grids | E140 lists Corolla X door handle panels 2014–2026 and Corolla Dashboard Trim 2014–2026; Civic X lists Civic Rebirth 2012–2016 ducktail spoiler. Confirm untag / move. |
-| B | Category membership noise (metas already fixed) | `splitters-side-skirts` (ducktail, carbon steering trim, shark fin); `quarter-window-louvers` (steering trim, back mirror rack, front quarter pair); `led-indicator-lights` (OSRAM, angel wings, fog, reverse, tail — Civic mirror is Rs. 8,500); `steering-wheel-covers` (Corolla monogram is not a cover). |
+| A | Wrong-generation products on vehicle grids | **Done (2026-10-11 apply):** E140 door panels + dashboard trim untagged; rebirth ducktail off Civic X and Civic Reborn. Swift/Mark X left alone. |
+| B | Category membership noise (metas already fixed) | **Partial (2026-10-11 apply):** splitters/louvers/steering-cover/monogram/Aqua splitter fixed. Back Mirror Rack kept in louvers. Still open: `led-indicator-lights` non-indicators (OSRAM, angel wings, fog, reverse, Alto lava — list only). |
 | C | Swift 2025 page fitment years | Door handle covers 2022–2025 and floor/dash mats 2022–2026 on the 2025–Present page — confirm or move to 2018–2024. |
 | D | Yaris hatchback fitment | Do listings fit hatchback? |
 | E | Liana spare parts | Bumpers, windscreens, back light covers? |

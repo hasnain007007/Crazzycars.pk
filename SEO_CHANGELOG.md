@@ -10,6 +10,12 @@ Change date: **2026-10-11** (Asia/Karachi). Re-measure on or after **2026-11-08*
   - Mongodump: `/data/crazzycars-mongo-backups/seo-apply-20261010T200917Z` (58M, taken before apply)
   - Before-values: `backups/seo-2026-10-apply/seo-backup-2026-10.json`
 - Separate owner edit (not from the audit): Corolla X door handle panels now “(Set of 4)”, Rs. 5,999 (was Rs. 7,999).
+- **Fitment / category membership apply (2026-10-11):** 9 products — `$pull` / `$addToSet` on `compatibleVehicles` and `categories` only (no pricing/stock/images/variants/SEO).
+  - Mongodump: `/data/crazzycars-mongo-backups/fitment-membership-20261010T211824Z` (58M)
+  - Before-values: `backups/seo-2026-10-apply/fitment-membership-before-values-20261010T211824Z.json`
+  - Vehicle: door panels + dashboard trim off E140; rebirth ducktail off Civic X **and** Civic Reborn (confirmed Rebirth name years + separate `honda-civic-reborn-ducktail-spoiler` SKU).
+  - Category: splitters cleanup; louvers steering trim off; monogram → stickers-monograms-emblems; Aqua splitter added to splitters. Back Mirror Rack Louver kept. LED non-indicators list-only (unchanged).
+  - Active product counts before → after: E140 39→37; Civic X 48→47; splitters 26→24; louvers 14→13; steering-wheel-covers 2→1; stickers-monograms-emblems 0→1; spoilers-diffusers 29→31; led-indicator-lights 18 (unchanged). Titles/metas/H1 unchanged on verify.
 
 ### `$set` field list used in apply
 
@@ -39,8 +45,8 @@ Issues **1, 2 (Popular + Alto/Liana subtitle), 5, 6** were fixed in follow-up de
 |---|---|---|
 | 1 | City and Liana metas ~320 characters; City meta/Popular mentioned DRL covers with none listed | **Fixed** — metas ≤160; City DRL claim removed; Liana meta keeps velvet dashboard mat, no Rs. 1,799 |
 | 2 | Popular chips wrong on Civic X / E140 / Swift / Alto; Alto + Liana “Accessories & Body Kits” with no body kit | **Fixed** — Popular cleaned; subtitle is `Accessories` unless a body-kit product matches (`cars/[slug]/page.jsx:187–190`) |
-| 3 | Wrong-generation products on E140 / Civic X | **Open** — owner |
-| 4 | Category membership noise; metas named City / omitted Prius / “gloss black”; LED indicator Civic price wording | **Partial** — metas fixed (splitters no City; louvers +Prius + “carbon and black”; LED meta Corolla from Rs. 4,999). **Membership still open** — owner |
+| 3 | Wrong-generation products on E140 / Civic X | **Fixed** in fitment apply (E140 −2; Civic X −1 rebirth ducktail; also pulled Reborn from rebirth SKU) |
+| 4 | Category membership noise; metas named City / omitted Prius / “gloss black”; LED indicator Civic price wording | **Partial** — metas fixed; membership apply removed wrong splitters/louvers/steering-cover assignments; LED non-indicators still listed (owner) |
 | 5 | Aqua “body kits for each year” | **Fixed** — 2012–2022 wording |
 | 6 | Door handle title missing years; empty image alt; JSON-LD price unchecked | **Fixed** — title `Corolla X Door Handle Panels 2014–2026 Set of 4 \| CrazzyCars` (60); empty alt filled. JSON-LD price still not verified by fetch |
 | 7 | Swift 2025 page lists 2022–2025 / 2022–2026 fitment | **Open** — owner |

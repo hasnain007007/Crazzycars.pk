@@ -1,0 +1,119 @@
+{
+  "createdAt": "2026-10-10T21:18:26.549Z",
+  "products": [
+    {
+      "_id": "6aca8810b039d73bf1c379de",
+      "slug": "toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026",
+      "name": "Toyota Corolla X Carbon Fiber Interior Door Handle Panels 2014–2026 (Set of 4)",
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43ceb06d36eb2ac1cd7",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ],
+      "categories": [
+        "6a5ccf35eb06d36eb2ac1afc",
+        "6a5ccf34eb06d36eb2ac1aec",
+        "6a5ccf33eb06d36eb2ac1aea",
+        "6a5dd59389c0c8d16c693831"
+      ]
+    },
+    {
+      "_id": "6aca96af12ee11f6c00068d6",
+      "slug": "toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026",
+      "name": "Toyota Corolla Carbon Fiber Dashboard Trim 3PCS 2014–2026 (L/R + LCD)",
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43ceb06d36eb2ac1cd7",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ],
+      "categories": [
+        "6a5ccf35eb06d36eb2ac1afc",
+        "6a5ccf34eb06d36eb2ac1aec",
+        "6a5ccf33eb06d36eb2ac1aea"
+      ]
+    },
+    {
+      "_id": "6a5d227089c0c8d16c69203f",
+      "slug": "honda-civic-rebirth-ducktail-spoiler",
+      "name": "Honda Civic Rebirth 2012-2016 Ducktail Trunk Spoiler",
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdc",
+        "6a5cd43deb06d36eb2ac1cdd",
+        "6a5cd43deb06d36eb2ac1cde"
+      ],
+      "categories": [
+        "6a5ccf34eb06d36eb2ac1af1"
+      ]
+    },
+    {
+      "_id": "6a5d227089c0c8d16c69204a",
+      "slug": "toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler",
+      "name": "Toyota Corolla E140 2009–2013 Ducktail Trunk Spoiler",
+      "compatibleVehicles": [
+        "6a5cd43ceb06d36eb2ac1cd7"
+      ],
+      "categories": [
+        "6a5ccf34eb06d36eb2ac1af0"
+      ]
+    },
+    {
+      "_id": "6a5d227089c0c8d16c692045",
+      "slug": "toyota-corolla-2015-2026-carbon-steering-trim",
+      "name": "Toyota Corolla 2015–2026 Carbon Steering Trim",
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cd8"
+      ],
+      "categories": [
+        "6a5ccf35eb06d36eb2ac1afc",
+        "6a5ccf34eb06d36eb2ac1af0"
+      ]
+    },
+    {
+      "_id": "6a5d224889c0c8d16c691fb2",
+      "slug": "toyota-corolla-x-shark-fin-style-lower-panel-diffuser",
+      "name": "Toyota Corolla X Shark Fin Style Lower Panel Diffuser",
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cd8"
+      ],
+      "categories": [
+        "6a5ccf34eb06d36eb2ac1aef",
+        "6a5ccf34eb06d36eb2ac1af0"
+      ]
+    },
+    {
+      "_id": "6a5d227189c0c8d16c692055",
+      "slug": "honda-civic-x-2016-2021-carbon-steering-trim-cover",
+      "name": "Honda Civic X 2016-2021 Carbon Steering Trim Cover",
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ],
+      "categories": [
+        "6a5ccf35eb06d36eb2ac1afc",
+        "6a5ccf34eb06d36eb2ac1af3",
+        "6a5ccf34eb06d36eb2ac1af2"
+      ]
+    },
+    {
+      "_id": "6a5d227089c0c8d16c692044",
+      "slug": "toyota-corolla-2009-2026-carbon-steering-monogram-abs",
+      "name": "Toyota Corolla Carbon Fiber Style Steering Monogram 2009–2026",
+      "compatibleVehicles": [
+        "6a5cd43ceb06d36eb2ac1cd7",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ],
+      "categories": [
+        "6a5ccf35eb06d36eb2ac1afc",
+        "6a5ccf34eb06d36eb2ac1af5"
+      ]
+    },
+    {
+      "_id": "6a5d226789c0c8d16c691fdd",
+      "slug": "toyota-aqua-2022-2024-sportline-front-splitter-canards-red-black",
+      "name": "Toyota Aqua 2022-2024 Sportline Front Splitter Canards Red Black",
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cda"
+      ],
+      "categories": []
+    }
+  ]
+}
