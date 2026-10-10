@@ -21,6 +21,7 @@ import { fetchBestSellersServer } from "@/lib/serverBestSellers";
 import { fetchHotDealsServer } from "@/lib/serverHotDeals";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -85,11 +86,24 @@ export async function GET() {
     return NextResponse.json({
       banners: banners.map((b) => ({
         id: String(b._id),
-        title: b.title || "",
-        subtitle: b.subtitle || "",
-        image: b.image?.url || b.imageUrl || b.image || "",
-        link: b.link || b.href || b.url || "",
-        cta: b.cta || b.ctaText || "",
+        title: b.content?.heading?.text || b.name || b.title || "",
+        subtitle: b.content?.subheading?.text || b.subtitle || "",
+        image: absoluteMediaUrl(
+          b.background?.mobileImage?.url ||
+            b.background?.image?.url ||
+            b.image?.url ||
+            b.imageUrl ||
+            b.image ||
+            ""
+        ),
+        link:
+          b.targetUrl ||
+          b.content?.buttons?.[0]?.url ||
+          b.link ||
+          b.href ||
+          b.url ||
+          "",
+        cta: b.content?.buttons?.[0]?.text || b.cta || b.ctaText || "",
         isActive: b.status === "active",
       })),
       hotDeals: {
@@ -115,7 +129,7 @@ export async function GET() {
         id: String(c._id),
         name: c.name,
         slug: c.slug,
-        image: c.image?.url || c.image || "",
+        image: absoluteMediaUrl(c.image?.url || c.image || ""),
       })),
       recentBlogs: blogPosts.map((b) => ({
         id: String(b._id),
@@ -126,7 +140,7 @@ export async function GET() {
           .replace(/\s+/g, " ")
           .trim()
           .slice(0, 160),
-        image: b.featuredImage || "",
+        image: absoluteMediaUrl(b.featuredImage),
         publishedAt: b.publishedAt,
         readTime: b.readTime || null,
       })),

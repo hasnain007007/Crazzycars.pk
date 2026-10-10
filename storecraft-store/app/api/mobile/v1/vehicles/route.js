@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Vehicle from "@/lib/models/Vehicle.model";
+import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export async function GET() {
           model: v.model || "",
           generation: v.generation || "",
           slug: v.slug || "",
-          image: v.image || "",
+          image: absoluteMediaUrl(v.image),
           yearStart: v.yearStart || v.year || null,
           yearEnd: v.yearEnd || null,
         })) },

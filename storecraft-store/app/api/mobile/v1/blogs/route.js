@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
+import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export async function GET(request) {
       title: p.title,
       slug: p.slug,
       excerpt: String(p.excerpt || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200),
-      image: p.featuredImage || "",
+      image: absoluteMediaUrl(p.featuredImage),
       publishedAt: p.publishedAt || p.createdAt,
       readTime: p.readTime || null,
       categories: Array.isArray(p.categories) ? p.categories : [],

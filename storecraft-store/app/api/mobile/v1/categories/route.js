@@ -10,8 +10,18 @@ import {
   pruneCategoryTreeWithoutProducts,
   serializeCategoryTreeNode,
 } from "@/lib/storeCategoryData";
+import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 
 export const dynamic = "force-dynamic";
+
+function absolutizeCategoryTree(node) {
+  if (!node || typeof node !== "object") return node;
+  return {
+    ...node,
+    image: absoluteMediaUrl(node.image),
+    children: Array.isArray(node.children) ? node.children.map(absolutizeCategoryTree) : [],
+  };
+}
 
 export async function GET() {
   try {
@@ -21,7 +31,7 @@ export async function GET() {
       getCategoryIdsWithProducts(),
     ]);
     const categories = pruneCategoryTreeWithoutProducts(
-      (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode),
+      (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode).map(absolutizeCategoryTree),
       withProducts
     );
     return NextResponse.json(

@@ -15,6 +15,8 @@ If the container already exists: `docker start crazzycars-mongo-local-verify`.
 
 Database name: `crazzycars_local_verify` (must contain `local` or `verify`).
 
+For a **real production catalog** copy (read-only dump you create on the VPS), restore into `crazzycars_local_real` with `scripts/restore-catalog-local.sh` — see `docs/mobile-api/PREVIEW_DB.md` § Local Mac restore. Point `.env.local` at that DB and set `MEDIA_PUBLIC_BASE_URL=https://crazzycars.pk` so `/media` paths absolutize. Never use production Mongo from this laptop.
+
 ## 2. Storefront env
 
 In `storecraft-store/`:

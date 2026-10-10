@@ -226,3 +226,109 @@ npm install
 node run-ab.mjs
 # results → AB_RESULTS.json
 ```
+
+---
+
+## Local Mac restore → `crazzycars_local_real`
+
+Use this when validating the **real** production catalog on the Android emulator. Mongo stays on localhost Docker (`27028`). Never point the laptop at production Mongo. Never write to production.
+
+### Exact commands on the VPS (dump only — read-only)
+
+SSH to the VPS, then create a **read-only** dump user if you do not already have one (one-time):
+
+```bash
+docker exec -it sialkot-mongo mongosh admin --eval '
+db.getSiblingDB("sialkot_motorsports").createUser({
+  user: "catalog_dump_ro",
+  pwd: passwordPrompt(),
+  roles: [ { role: "read", db: "sialkot_motorsports" } ]
+})
+'
+```
+
+Dump **catalog collections only** (no customers / orders / carts / sessions / tokens / users):
+
+```bash
+docker exec sialkot-mongo mongodump \
+  --username=catalog_dump_ro \
+  --password \
+  --authenticationDatabase=sialkot_motorsports \
+  --db=sialkot_motorsports \
+  --collection=products \
+  --collection=categories \
+  --collection=vehicles \
+  --collection=carcatalogs \
+  --collection=banners \
+  --collection=blogposts \
+  --collection=pages \
+  --collection=settings \
+  --collection=shippingzones \
+  --collection=featuredmedias \
+  --collection=coupons \
+  --archive=/tmp/cc-catalog.archive
+
+docker cp sialkot-mongo:/tmp/cc-catalog.archive /tmp/cc-catalog.archive
+ls -lh /tmp/cc-catalog.archive
+```
+
+If `mongodump` rejects multiple `--collection` flags, dump into a directory instead:
+
+```bash
+mkdir -p /tmp/cc-catalog-dump
+for c in products categories vehicles carcatalogs banners blogposts pages settings shippingzones featuredmedias coupons; do
+  docker exec sialkot-mongo mongodump \
+    --username=catalog_dump_ro --password --authenticationDatabase=sialkot_motorsports \
+    --db=sialkot_motorsports --collection="$c" --out=/tmp/cc-catalog-dump
+done
+docker cp sialkot-mongo:/tmp/cc-catalog-dump /tmp/cc-catalog-dump
+# On the Mac, zip that folder and restore with mongorestore --dir=… (same ns remap)
+```
+
+### Copy archive to your Mac
+
+From your Mac (replace `VPS_HOST`):
+
+```bash
+scp "USER@VPS_HOST:/tmp/cc-catalog.archive" ~/Desktop/cc-catalog.archive
+```
+
+### Restore locally (safe script)
+
+Container `crazzycars-mongo-local-verify` must be running (`docs/LOCAL_VERIFY.md`). From the **server worktree** (`CCSMS-mobile-api`):
+
+```bash
+./scripts/restore-catalog-local.sh ~/Desktop/cc-catalog.archive
+```
+
+The script:
+
+- Refuses any target DB name that does **not** contain `local`
+- Refuses non-localhost hosts
+- Drops **only** `crazzycars_local_real` (never production / `sialkot_motorsports`)
+- Remaps `sialkot_motorsports.*` → `crazzycars_local_real.*`
+- Runs the Settings secret scrub (Meta pixel/CAPI, email, courier keys, payment keys, webhooks)
+
+Optional URL shape report (after restore):
+
+```bash
+MONGODB_URI='mongodb://127.0.0.1:27028/crazzycars_local_real' \
+  node scripts/report-catalog-image-urls.mjs
+```
+
+### Point local backend at the real catalog (local `.env.local` only)
+
+In `storecraft-store/.env.local` (never Coolify / production `.env`):
+
+```bash
+MONGODB_URI=mongodb://127.0.0.1:27028/crazzycars_local_real
+MEDIA_PUBLIC_BASE_URL=https://crazzycars.pk
+NEXT_PUBLIC_SITE_URL=https://crazzycars.pk
+SITE_URL=https://crazzycars.pk
+NEXT_PUBLIC_INDEXABLE=false
+# Keep Resend / Meta / courier keys empty
+```
+
+`MEDIA_PUBLIC_BASE_URL=https://crazzycars.pk` makes the mobile API absolutize `/media/...` paths to public HTTPS so the emulator can load images without a local media volume.
+
+See also `storecraft-store/.env.local.real.example`.

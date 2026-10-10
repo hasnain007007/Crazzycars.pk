@@ -7,6 +7,7 @@ import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
 import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
 import { mobileError } from "@/lib/mobile/response";
+import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,10 @@ export async function GET(_request, context) {
         slug: post.slug,
         excerpt: post.excerpt || "",
         content: sanitizeBlogHtml(post.content),
-        featuredImage: post.featuredImage || { url: "", altText: "" },
+        featuredImage: {
+          url: absoluteMediaUrl(post.featuredImage),
+          altText: post.featuredImage?.altText || "",
+        },
         publishedAt: post.publishedAt || post.createdAt,
         categories: post.categories || [],
         tags: post.tags || [],
