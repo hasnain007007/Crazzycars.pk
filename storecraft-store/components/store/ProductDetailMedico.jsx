@@ -1080,7 +1080,7 @@ export function ProductDetailMedico({
                       {item.thumbnail ? (
                         <WatermarkedImage
                           src={item.thumbnail}
-                          alt=""
+                          alt={item.title || displayName || product.name || "Product video"}
                           watermark={null}
                           optimize
                           width={112}
