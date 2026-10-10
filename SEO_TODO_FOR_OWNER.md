@@ -28,7 +28,12 @@ Re-measure GSC: on or after **2026-11-08** (see `SEO_CHANGELOG.md` baseline).
 | I | Redirect approvals | See `SEO_REDIRECT_REVIEW.md`. |
 | J | AC panel / Airflow fitment years | One owner truth for each ranking page. |
 | K | LED indicator bulb base type | Bright LED Indicator Bulbs 2PCS. |
-| L | Steering-wheel-covers assignment | Alcantara / universal trims missing; monogram vs cover. |
+| L | Steering-wheel-covers assignment | Now 1 cover left (thin). Add covers, merge category, or leave. Monogram moved to stickers-monograms-emblems. |
+| M | stickers-monograms-emblems placeholder | 1 product but still “products are being added” copy — rewrite, or noindex + omit from sitemap until ~3 products. |
+| N | Corolla deal packs (no category) | `deal-1` / `deal-2` / `deal-3` toyota-corolla-15-26 — pick a category. |
+| O | Mark X wrong years | Three 2004–2009 SKUs on Mark X 2009–2022 page — confirm untag/move. |
+| P | spoilers-diffusers meta (optional) | Generic “Car Spoiler Price in Pakistan” — improve when ready. |
+| Q | Shopify CDN images (~697) | Plan move to Cloudinary (ops, not SEO copy). |
 
 ### Fixed in follow-up (no owner wait)
 
