@@ -57,11 +57,11 @@ export const PAGE_SEO_OVERRIDES = {
   },
   "/categories/splitters-side-skirts": {
     title: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars",
-    meta: "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic, Corolla and City. COD on eligible items, nationwide delivery.",
+    meta: "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic and Corolla. COD on eligible items, nationwide delivery.",
   },
   "/categories/quarter-window-louvers": {
     title: "Quarter Window Louvers Price in Pakistan | Civic, Corolla",
-    meta: "Quarter window louvers for Civic, Corolla, City, Alto and Yaris in Pakistan. Carbon and gloss black options. COD on eligible items, nationwide delivery.",
+    meta: "Quarter window louvers for Civic, Corolla, City, Alto, Yaris and Prius in Pakistan. Carbon and black options. COD on eligible items, nationwide delivery.",
   },
   "/categories/interior-lights": {
     title: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars",
@@ -105,10 +105,10 @@ export const PAGE_SEO_OVERRIDES = {
   },
   "/cars/suzuki-liana-2006-2014": {
     title: "Suzuki Liana 2006–2014 Accessories | CrazzyCars.pk",
-    meta: "Suzuki Liana 2006–2014 accessories in Pakistan: velvet dashboard mat Rs. 1,799. COD on eligible items. WhatsApp for other parts.",
+    meta: "Suzuki Liana 2006–2014 accessories in Pakistan: velvet dashboard mat. COD on eligible items. WhatsApp for other parts.",
   },
   "/toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026": {
-    title: "Corolla X Door Handle Panels 2014–2026 Set of 4",
+    title: "Corolla X Door Handle Panels 2014–2026 Set of 4 | CrazzyCars",
     meta: "Buy Toyota Corolla X carbon-style interior door handle panels (set of 4) for 2014–2026 Grande/Altis. Sale Rs. 5,999. COD on eligible items at CrazzyCars.pk.",
   },
   "/contact": {
@@ -205,7 +205,7 @@ export const CATEGORY_DESCRIPTION_HTML = {
 `.trim(),
 
   "led-indicator-lights": `
-<p>LED indicator lights on CrazzyCars.pk start at Rs. 1,199 for a pair of universal Bright LED Indicator Bulbs. Side mirror indicators for the Toyota Corolla, Honda Civic and Honda City are priced from Rs. 4,999. Each product page lists fitment, what is in the box and the current price. Cash on Delivery is available on eligible items.</p>
+<p>LED indicator lights on CrazzyCars.pk start at Rs. 1,199 for a pair of universal Bright LED Indicator Bulbs. Side mirror indicators for the Toyota Corolla are priced from Rs. 4,999. Honda Civic Rebirth and Honda City Classic RGB side mirror indicators are Rs. 8,500 each. Each product page lists fitment, what is in the box and the current price. Cash on Delivery is available on eligible items.</p>
 <h2>LED indicator bulbs</h2>
 <p>Bright LED Indicator Bulbs 2PCS (universal) are Rs. 1,199.</p>
 <h2>Side mirror indicators by car</h2>
@@ -217,7 +217,7 @@ export const CATEGORY_DESCRIPTION_HTML = {
 <li>Universal LED reflector bumper side marker: Rs. 1,899</li>
 </ul>
 <h3>What is the price of LED indicator lights in Pakistan?</h3>
-<p>Indicator bulbs start at Rs. 1,199 for a pair. Side mirror indicators start at Rs. 4,999.</p>
+<p>Indicator bulbs start at Rs. 1,199 for a pair. Toyota Corolla side mirror indicators start at Rs. 4,999; Honda Civic and City RGB units are Rs. 8,500.</p>
 <h3>Will a side mirror indicator fit my car?</h3>
 <p>Each one lists its model and years. Send yours to WhatsApp ${WA} if unsure.</p>
 `.trim(),

@@ -183,12 +183,11 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const popularAccessories = Array.isArray(vehicle.popularAccessories)
     ? vehicle.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
     : [];
-  const noBodyKitSlugs = new Set(["suzuki-alto-2020-present", "suzuki-liana-2006-2014"]);
-  const hasBodyKitChip = popularAccessories.some((s) => /body\s*kit/i.test(s));
-  const heroOfferLine =
-    hasBodyKitChip && !noBodyKitSlugs.has(vehicle.slug)
-      ? "Accessories & Body Kits"
-      : "Accessories";
+  // Subtitle must reflect real catalogue — not Popular chips alone.
+  const hasBodyKitProduct = allProducts.some((p) =>
+    /body[\s-]?kit/i.test(`${p?.name || ""} ${p?.slug || ""}`)
+  );
+  const heroOfferLine = hasBodyKitProduct ? "Accessories & Body Kits" : "Accessories";
   const nickname = String(vehicle.nickname || "").trim();
   const heroImage = mediaImageUrl(vehicle.image);
 
@@ -421,7 +420,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
             {akaLine}
           </p>
         ) : null}
-        <p className="vehicle-mobile-heading__sub">Accessories &amp; Body Kits</p>
+        <p className="vehicle-mobile-heading__sub">{heroOfferLine}</p>
       </div>
 
       <section id="compatible-products" className="store-container py-8 md:py-10">
