@@ -99,6 +99,18 @@ export const PAGE_SEO_OVERRIDES = {
     title: "Honda Civic X 2016–2021 Accessories & Carbon Interior Trims",
     meta: "Honda Civic X 2016–2021 accessories in Pakistan: carbon interior trims, DRLs, fog lamps, spoilers, grille and more. COD on eligible items.",
   },
+  "/cars/honda-city-2021-present": {
+    title: "Honda City 2021–Present Accessories in Pakistan",
+    meta: "Honda City 2021–2026 accessories in Pakistan: trunk spoiler, gear knob, fog lights, body kits and mats. COD on eligible items.",
+  },
+  "/cars/suzuki-liana-2006-2014": {
+    title: "Suzuki Liana 2006–2014 Accessories | CrazzyCars.pk",
+    meta: "Suzuki Liana 2006–2014 accessories in Pakistan: velvet dashboard mat Rs. 1,799. COD on eligible items. WhatsApp for other parts.",
+  },
+  "/toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026": {
+    title: "Corolla X Door Handle Panels 2014–2026 (Set of 4)",
+    meta: "Buy Toyota Corolla X carbon-style interior door handle panels (set of 4) for 2014–2026 Grande/Altis. Sale Rs. 5,999. COD on eligible items at CrazzyCars.pk.",
+  },
   "/contact": {
     title: "Contact CrazzyCars.pk – WhatsApp, Phone & Gujranwala Store",
     meta: `Contact CrazzyCars.pk: WhatsApp ${WA}, email, store address in Gujranwala and opening hours. Ask about fitment, orders and delivery.`,
@@ -251,7 +263,7 @@ export const VEHICLE_DESCRIPTION_HTML = {
 `.trim(),
 
   "toyota-aqua-2012-present": `
-<p>Toyota Aqua accessories at CrazzyCars.pk: body kits for each year, Batman style side mirror covers (Rs. 3,199), a Sportline front splitter, TPE floor mats (Rs. 7,799) and a velvet dashboard mat (Rs. 1,799). Body kits are prepaid orders.</p>
+<p>Toyota Aqua accessories at CrazzyCars.pk: body kits for 2012–2022 model years, Batman style side mirror covers (Rs. 3,199), a Sportline front splitter, TPE floor mats (Rs. 7,799) and a velvet dashboard mat (Rs. 1,799). Body kits are prepaid orders.</p>
 <h2>Toyota Aqua body kit price in Pakistan, by year</h2>
 <table><thead><tr><th>Kit</th><th>Years</th><th>Price</th></tr></thead><tbody>
 <tr><td>Complete Body Kit</td><td>2012–2015</td><td>Rs. 12,999</td></tr>

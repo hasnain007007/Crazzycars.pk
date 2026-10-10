@@ -2,12 +2,41 @@
 
 Do not publish bracketed copy. Decide each item, then we can apply.
 
+Re-measure GSC: on or after **2026-11-08** (see `SEO_CHANGELOG.md` baseline).
+
 ## Category: LED Headlights & Bulbs
 
 **Page:** `/categories/led-headlights-bulbs`  
-**Status:** Restored on the wire to `LED Headlights & Bulbs | Crazzycars.pk` via `CATEGORY_SEO_OWNER_LOCKED` (excluded from GSC apply). Production Mongo still has a divergent row (`LED Headlights Price in Pakistan`) — that was **not** from `CATEGORY_KEYWORD_META` in the audit commit; code now ignores DB SEO for this slug until you decide.
+**Status:** Restored on the wire to `LED Headlights & Bulbs | Crazzycars.pk` via `CATEGORY_SEO_OWNER_LOCKED` (excluded from GSC apply). Production Mongo may still diverge; code ignores DB SEO for this slug until you decide.
 
 > The category is titled "LED Headlights & Bulbs" and the meta promises "plug-and-play LED headlight bulbs", but no LED headlight bulb is listed. Do you stock LED bulbs? If yes, add them to the category. If no, apply: title "Projector Headlights & LED Fog Lights Pakistan | CrazzyCars", meta "Corolla Nike style projector headlights, OSRAM 3-colour projector lights and H11 switchback LED fog lights. Fitment on every listing. COD on eligible items."
+
+## Open issues from live check (2026-10-11)
+
+### Needs owner decision
+
+| # | Issue | Pages |
+|---|---|---|
+| A | Wrong-generation products on vehicle grids | E140 lists Corolla X door handle panels 2014–2026 and Corolla Dashboard Trim 2014–2026; Civic X lists Civic Rebirth 2012–2016 ducktail spoiler. Confirm untag / move. |
+| B | Category membership noise | `splitters-side-skirts` (ducktail, carbon steering trim, shark fin); `quarter-window-louvers` (steering trim, back mirror rack, front quarter pair; Prius missing from meta; gloss black only Yaris); `led-indicator-lights` (OSRAM, angel wings, fog, reverse, tail; Civic mirror “from Rs. 4,999” vs only Rs. 8,500 listed); `steering-wheel-covers` (Corolla monogram is not a cover). |
+| C | Swift 2025 page fitment years | Door handle covers 2022–2025 and floor/dash mats 2022–2026 on the 2025–Present page — confirm or move to 2018–2024. |
+| D | Yaris hatchback fitment | Do listings fit hatchback? |
+| E | Liana spare parts | Bumpers, windscreens, back light covers? |
+| F | Alto multimedia steering years | Which years for each of the two Rs. 7,500 listings? |
+| G | Swift RS body kit location | Confirm 2022–2024 kit lives on `/cars/suzuki-swift-2018-2024`. |
+| H | Devil Eye / Angel Wings | Keep in interior-lights or move? |
+| I | Redirect approvals | See `SEO_REDIRECT_REVIEW.md`. |
+| J | AC panel / Airflow fitment years | One owner truth for each ranking page. |
+| K | LED indicator bulb base type | Bright LED Indicator Bulbs 2PCS. |
+| L | Steering-wheel-covers assignment | Alcantara / universal trims missing; monogram vs cover. |
+
+### Fixed in follow-up (no owner wait)
+
+- City / Liana meta ≤160 (code + Mongo).
+- Popular chips cleaned on Civic X, E140, Swift 2025, Alto, City (removed LED headlights / DRL / unlisted trims).
+- Hero subtitle drops “Body Kits” when no body-kit chip / known no-kit pages (Alto, Liana).
+- Aqua intro: “2012–2022” instead of “each year”.
+- Door handle panels: title includes 2014–2026; empty alt filled.
 
 ## Bracketed / omitted questions from the brief
 
@@ -37,4 +66,4 @@ See `SEO_REDIRECT_REVIEW.md` (5 product fallbacks + honda-city / car-emergency-s
 ## Honda City gear knob rename
 
 **Live slug:** `honda-city-2021-2026-carbon-fiber-gear-knob`  
-Code already shows H1/name as “Honda City Carbon Fiber Gear Knob Cover 2021–2026” via `PRODUCT_NAME_OVERRIDES`. The Mongo URI used for dry-run did not contain that product document — confirm the rename is written when you run apply against the live catalogue.
+Applied on production: name → “Honda City Carbon Fiber Gear Knob Cover 2021–2026”.

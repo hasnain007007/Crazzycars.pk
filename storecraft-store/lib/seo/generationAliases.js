@@ -251,18 +251,18 @@ export function alsoKnownAsLine(vehicle, { max = 4 } = {}) {
   return `Also searched as ${picks.join(", ")}.`;
 }
 
-/** Meta description fragment with aliases + COD. */
+/** Meta description fragment with aliases + COD. Never dump HTML body into meta. */
 export function vehicleMetaDescription(vehicle, catalogDesc) {
-  const base = String(catalogDesc || "").trim();
-  if (base) {
-    const aka = alsoKnownAsLine(vehicle, { max: 3 });
-    if (aka && !/also searched|also known/i.test(base)) {
-      return `${base.replace(/\s+$/, "")} ${aka} Cash on Delivery on eligible items.`.slice(0, 320);
+  const plain = String(catalogDesc || "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  // Long catalog HTML/intros are page body only — do not reuse as meta (GSC ~160).
+  if (plain && plain.length <= 160) {
+    if (!/cash on delivery|cod/i.test(plain)) {
+      return `${plain} Cash on Delivery on eligible items.`.slice(0, 160);
     }
-    if (!/cash on delivery|cod/i.test(base)) {
-      return `${base.replace(/\s+$/, "")} Cash on Delivery on eligible items.`.slice(0, 320);
-    }
-    return base.slice(0, 320);
+    return plain.slice(0, 160);
   }
   const entry = aliasesForVehicle(vehicle);
   const name = vehicle?.displayName || "this car";
@@ -271,7 +271,7 @@ export function vehicleMetaDescription(vehicle, catalogDesc) {
     : "";
   return `Shop ${name} accessories in Pakistan — splitters, body kits, LED lights & more.${aka} Cash on Delivery on eligible orders.`.slice(
     0,
-    320
+    160
   );
 }
 

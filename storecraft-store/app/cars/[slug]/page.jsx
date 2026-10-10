@@ -183,6 +183,12 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const popularAccessories = Array.isArray(vehicle.popularAccessories)
     ? vehicle.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
     : [];
+  const noBodyKitSlugs = new Set(["suzuki-alto-2020-present", "suzuki-liana-2006-2014"]);
+  const hasBodyKitChip = popularAccessories.some((s) => /body\s*kit/i.test(s));
+  const heroOfferLine =
+    hasBodyKitChip && !noBodyKitSlugs.has(vehicle.slug)
+      ? "Accessories & Body Kits"
+      : "Accessories";
   const nickname = String(vehicle.nickname || "").trim();
   const heroImage = mediaImageUrl(vehicle.image);
 
@@ -290,7 +296,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
                   color: "#E5E7EB",
                 }}
               >
-                Accessories &amp; Body Kits
+                {heroOfferLine}
               </p>
               {heroHtml ? (
                 <div
