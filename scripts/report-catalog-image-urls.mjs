@@ -13,11 +13,9 @@ import path from "path";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const storeRoot = path.resolve(__dirname, "../storecraft-store");
 const require = createRequire(path.join(storeRoot, "package.json"));
-const mongoose = require("mongoose");
 const { MongoClient } = require("mongodb");
 
 const URI = process.env.MONGODB_URI || process.env.MONGO_URI || "";
-void mongoose;
 
 function assertSafeUri(uri) {
   if (!uri?.trim()) throw new Error("MONGODB_URI is required.");
