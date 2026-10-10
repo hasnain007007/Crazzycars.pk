@@ -45,8 +45,38 @@ const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || "";
 const PROD_FP = "84143ac0cb2c3085";
 const ATLAS_FP = "317ae4de8eb24f84";
 
+/** Allowed $set paths only — never price/stock/images/variants. */
+const PRODUCT_ALLOWED_FIELDS = new Set([
+  "name",
+  "metaTitle",
+  "metaDescription",
+  "seo.metaTitle",
+  "seo.metaDescription",
+  "shortDescription",
+  "longDescription",
+  "features",
+]);
+const CATEGORY_ALLOWED_FIELDS = new Set([
+  "name",
+  "seo.metaTitle",
+  "seo.metaDescription",
+  "description",
+]);
+const VEHICLE_ALLOWED_FIELDS = new Set(["metaTitle", "metaDescription", "description"]);
+const CATALOG_ALLOWED_FIELDS = new Set(["metaDescription", "description"]);
+const FORBIDDEN_FIELD_RE =
+  /^(pricing|price|compareAt|compareAtPrice|comparePrice|salePrice|regularPrice|inventory|stock|media|images|variants|variationCombinations|simpleVariations|variationTypes|variationOptions)(\.|$)/i;
+
 function uriFingerprint(uri) {
   return crypto.createHash("sha256").update(String(uri || "")).digest("hex").slice(0, 16);
+}
+
+function assertSafePatch(patch, allowed, label) {
+  for (const key of Object.keys(patch || {})) {
+    if (FORBIDDEN_FIELD_RE.test(key) || !allowed.has(key)) {
+      throw new Error(`Refusing unsafe $set on ${label}: ${key}`);
+    }
+  }
 }
 
 function looksLikeProductionUri(uri) {
@@ -104,6 +134,14 @@ async function main() {
   }
 
   console.log(DRY_RUN ? "=== DRY RUN (no writes) ===" : "=== APPLY MODE ===");
+  console.log("Write style: field-level updateOne({ $set: patch }) only (no replaceOne / full-doc replace).");
+  console.log("products $set fields:", [...PRODUCT_ALLOWED_FIELDS].join(", "));
+  console.log("categories $set fields:", [...CATEGORY_ALLOWED_FIELDS].join(", "));
+  console.log("vehicles $set fields:", [...VEHICLE_ALLOWED_FIELDS].join(", "));
+  console.log("carcatalogs $set fields:", [...CATALOG_ALLOWED_FIELDS].join(", "));
+  console.log(
+    "Never touched: pricing.*, price, compareAt/comparePrice, inventory/stock, media/images, variants/variation*"
+  );
 
   await mongoose.connect(MONGO_URI);
   const db = mongoose.connection.db;
@@ -162,9 +200,6 @@ async function main() {
       shortDescription: doc.shortDescription || "",
       longDescription: doc.longDescription || "",
       features: doc.features || [],
-      imageAlts: (Array.isArray(doc.media?.images) ? doc.media.images : [])
-        .map((im) => (typeof im === "string" ? "" : String(im?.altText || im?.alt || "")))
-        .filter(Boolean),
     };
 
     if (nextTitle) {
@@ -177,7 +212,7 @@ async function main() {
     }
     if (nameOverride) patch.name = nameOverride;
     if (content.shortDescription) patch.shortDescription = content.shortDescription;
-    // descriptionHtml stays code-only (ProductDetailMedico) — do not overwrite Mongo longDescription.
+    // descriptionHtml / imageAlt stay code-only — never $set media/images.
     if (content.appendDescription && !String(doc.longDescription || "").includes(content.appendDescription.slice(0, 40))) {
       patch.longDescription = `${doc.longDescription || ""}\n<p>${content.appendDescription}</p>`;
     }
@@ -194,33 +229,6 @@ async function main() {
     if (content.features) patch.features = content.features;
     if (PRODUCT_H1_OVERRIDES[slug]) patch.name = PRODUCT_H1_OVERRIDES[slug];
 
-    // Image alts (AC panel Butto→Button and any imageAlt override)
-    if (content.imageAlt && Array.isArray(doc.media?.images) && doc.media.images.length) {
-      const nextImages = doc.media.images.map((im) => {
-        if (typeof im === "string") return { url: im, altText: content.imageAlt };
-        return { ...im, altText: content.imageAlt, alt: content.imageAlt };
-      });
-      const beforeAlts = before.imageAlts.join(" | ");
-      const afterAlts = nextImages
-        .map((im) => String(im.altText || im.alt || ""))
-        .filter(Boolean)
-        .join(" | ");
-      if (beforeAlts !== afterAlts) {
-        patch["media.images"] = nextImages;
-      }
-    } else if (slug === "toyota-corolla-2012-top-ac-panel" && Array.isArray(doc.media?.images)) {
-      const nextImages = doc.media.images.map((im) => {
-        if (typeof im === "string") return im;
-        const alt = String(im?.altText || im?.alt || "");
-        if (!/\bButto\b/.test(alt)) return im;
-        const fixed = alt.replace(/\bButto\b/g, "Button");
-        return { ...im, altText: fixed, alt: fixed };
-      });
-      if (JSON.stringify(nextImages) !== JSON.stringify(doc.media.images)) {
-        patch["media.images"] = nextImages;
-      }
-    }
-
     // Aqua body kit year conflict → 2012–2015
     if (slug === "toyota-aqua-2012-2015-complete-body-kit") {
       const ld = String(patch.longDescription || doc.longDescription || "");
@@ -228,6 +236,8 @@ async function main() {
         patch.longDescription = ld.replace(/2012\s*[–-]\s*26/gi, "2012–2015").replace(/2012-2026/gi, "2012–2015");
       }
     }
+
+    assertSafePatch(patch, PRODUCT_ALLOWED_FIELDS, `product ${slug}`);
 
     const fieldDiffs = [];
     if (patch.name !== undefined) fieldDiffs.push(diff("name", before.name, patch.name));
@@ -251,13 +261,6 @@ async function main() {
       fieldDiffs.push(
         diff("features", JSON.stringify(before.features), JSON.stringify(patch.features))
       );
-    }
-    if (patch["media.images"] !== undefined) {
-      const afterAlts = patch["media.images"]
-        .map((im) => (typeof im === "string" ? "" : String(im.altText || im.alt || "")))
-        .filter(Boolean)
-        .join(" | ");
-      fieldDiffs.push(diff("imageAlts", before.imageAlts.join(" | "), afterAlts));
     }
     const real = fieldDiffs.filter(Boolean);
     if (!real.length) continue;
@@ -308,6 +311,7 @@ async function main() {
     ].filter((d) => d && d.before !== d.after);
 
     if (!fieldDiffs.length) continue;
+    assertSafePatch(patch, CATEGORY_ALLOWED_FIELDS, `category ${slug}`);
     console.log(`\n[category] /categories/${slug}`);
     for (const d of fieldDiffs) console.log(`  ${d.field}: ${JSON.stringify(d.before)} → ${JSON.stringify(d.after)}`);
     changes.push({ type: "category", slug, diffs: fieldDiffs });
@@ -384,6 +388,13 @@ async function main() {
     ].filter(Boolean);
 
     if (!fieldDiffs.length) continue;
+
+    if (Object.keys(patchVehicle).length) {
+      assertSafePatch(patchVehicle, VEHICLE_ALLOWED_FIELDS, `vehicle ${slug}`);
+    }
+    if (Object.keys(patchCatalog).length) {
+      assertSafePatch(patchCatalog, CATALOG_ALLOWED_FIELDS, `carcatalog ${slug}`);
+    }
 
     console.log(`\n[vehicle] /cars/${slug}`);
     for (const d of fieldDiffs) {

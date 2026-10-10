@@ -38,6 +38,19 @@ function productDocId(p) {
   return "";
 }
 
+/** Truncated typo on Corolla AC panel ranking page — keep RSC/HTML free of "Butto". */
+function fixTruncatedButto(value) {
+  return String(value ?? "").replace(/\bButto\b/g, "Button");
+}
+
+function mapImagesWithSafeAlt(images) {
+  return (images || []).map((i) => ({
+    url: i?.url || "",
+    isMain: !!i?.isMain,
+    altText: fixTruncatedButto(i?.altText || ""),
+  }));
+}
+
 function getStock(product) {
   return (
     Number(product?.inventory?.quantity) ||
@@ -125,14 +138,14 @@ export function serializeStoreProductSummary(p, opts = {}) {
   const summaryImages = mediaImages.map((i) => i?.url).filter(Boolean);
   return {
     id: productDocId(p),
-    name: p.name,
+    name: fixTruncatedButto(p.name),
     slug: p.slug,
     articleNo: p.articleNo || p.inventory?.sku || "",
-    shortDescription: toPlainText(p.shortDescription || ""),
+    shortDescription: fixTruncatedButto(toPlainText(p.shortDescription || "")),
     image: summaryImage,
     images: summaryImages,
     media: {
-      images: mediaImages.map((i) => ({ url: i?.url || "", isMain: !!i?.isMain, altText: i?.altText || "" })),
+      images: mapImagesWithSafeAlt(mediaImages),
     },
     price,
     regularPrice,
@@ -238,25 +251,27 @@ export function serializeStoreProductDetail(p) {
 
   return {
     id: productDocId(p),
-    name: p.name,
+    name: fixTruncatedButto(p.name),
     slug: p.slug,
     articleNo: p.articleNo || "",
     ean: p.ean || "",
     partNumber: p.partNumber || "",
     condition: p.condition || "new",
     vendor: p.vendor || "",
-    shortDescription: toPlainText(p.shortDescription || ""),
-    longDescription: sanitizeProductHtml(p.longDescription || ""),
-    descriptionHtml: sanitizeProductHtml(p.longDescription || p.descriptionHtml || ""),
+    shortDescription: fixTruncatedButto(toPlainText(p.shortDescription || "")),
+    longDescription: sanitizeProductHtml(fixTruncatedButto(p.longDescription || "")),
+    descriptionHtml: sanitizeProductHtml(
+      fixTruncatedButto(p.longDescription || p.descriptionHtml || "")
+    ),
     price,
     regularPrice,
     salePrice,
     compareAt: regularPrice || price,
     saleSchedule: schedule,
     isOnSale,
-    images: (p.media?.images || []).map((i) => ({ url: i.url || "", isMain: !!i.isMain, altText: i.altText || "" })),
+    images: mapImagesWithSafeAlt(p.media?.images),
     media: {
-      images: (p.media?.images || []).map((i) => ({ url: i.url || "", isMain: !!i.isMain, altText: i.altText || "" })),
+      images: mapImagesWithSafeAlt(p.media?.images),
       videos: serializeMediaVideos(p.media?.videos),
     },
     videos: serializeMediaVideos(p.media?.videos),
@@ -313,7 +328,15 @@ export function serializeStoreProductDetail(p) {
     allowBackorder: p?.inventory?.allowBackorder === true,
     shippingBaseWeight: Number(p.inventory?.weight) || 0,
     shippingBaseWeightUnit: p.inventory?.weightUnit || "kg",
-    seo: p.seo || {},
+    seo: p.seo
+      ? {
+          ...p.seo,
+          metaTitle: fixTruncatedButto(p.seo.metaTitle || ""),
+          metaDescription: fixTruncatedButto(p.seo.metaDescription || ""),
+        }
+      : {},
+    metaTitle: fixTruncatedButto(p.metaTitle || p.seo?.metaTitle || ""),
+    metaDescription: fixTruncatedButto(p.metaDescription || p.seo?.metaDescription || ""),
     // PDP stars come from /api/reviews (genuine only); do not trust seed-polluted aggregates.
     averageRating: 0,
     reviewCount: 0,

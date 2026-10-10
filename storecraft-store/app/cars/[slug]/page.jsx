@@ -303,15 +303,8 @@ export default async function VehicleSlugPage({ params, searchParams }) {
                     color: "#D1D5DB",
                   }}
                   dangerouslySetInnerHTML={{
-                    __html:
-                      vehicle.slug === "toyota-corolla-e140-2009-2014" &&
-                      catalogDesc &&
-                      !/<h2[\s>]/i.test(catalogDesc)
-                        ? `<p>${String(catalogDesc)
-                            .replace(/&/g, "&amp;")
-                            .replace(/</g, "&lt;")
-                            .replace(/>/g, "&gt;")}</p>${heroHtml}`
-                        : heroHtml,
+                    // Audit HTML wins alone — never prepend Mongo description (avoids DB+code dupes).
+                    __html: heroHtml,
                   }}
                 />
               ) : (
