@@ -53,7 +53,7 @@ export const PAGE_SEO_OVERRIDES = {
   },
   "/categories/led-indicator-lights": {
     title: "LED Indicator Lights & Mirror Indicators | CrazzyCars.pk",
-    meta: "LED indicator lights, bulbs and side mirror indicators for Corolla, Civic and City. COD on eligible items, nationwide delivery from Gujranwala.",
+    meta: "LED indicator lights for Corolla, Civic and City. Side mirror indicators for the Toyota Corolla are priced from Rs. 4,999. COD on eligible items.",
   },
   "/categories/splitters-side-skirts": {
     title: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars",
