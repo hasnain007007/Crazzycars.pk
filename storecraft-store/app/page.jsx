@@ -12,14 +12,18 @@ import Product from "@/lib/models/Product.model";
 import { categoryHref } from "@/lib/categories";
 import { homeHubCollectionJsonLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
+import { getPageSeoOverride } from "@/lib/seo/gscAudit2026-10.mjs";
 
 export const revalidate = 300;
 
+const homeSeo = getPageSeoOverride("/") || {};
 export const metadata = buildPageMetadata({
-  title: "CrazzyCars.pk | Car Accessories Pakistan",
+  title: homeSeo.title || "CrazzyCars.pk | Car Accessories Pakistan",
   description:
+    homeSeo.meta ||
     "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide. CrazzyCars.pk",
   path: "/",
+  absoluteTitle: true,
 });
 
 export default async function Page() {

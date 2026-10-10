@@ -416,11 +416,42 @@ export function expandParsedQueryWithGenerationAliases(parsed) {
   return parsed;
 }
 
-/** Category meta overrides for keyword strategy leaves. */
+/** Category meta overrides for keyword strategy leaves + GSC audit (10 Oct 2026). */
 export const CATEGORY_KEYWORD_META = {
   "splitters-side-skirts": {
-    metaTitle: "Front Splitters & Side Skirts Price in Pakistan",
+    metaTitle: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars",
     metaDescription:
-      "Shop front splitters and side skirts for Honda Civic Reborn, Rebirth, Civic X, 11th Gen, and Toyota Corolla. Confirm fitment on each product. Cash on Delivery on eligible items.",
+      "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic, Corolla and City. COD on eligible items, nationwide delivery.",
+    absoluteTitle: true,
+  },
+  "led-indicator-lights": {
+    metaTitle: "LED Indicator Lights & Mirror Indicators | CrazzyCars.pk",
+    metaDescription:
+      "LED indicator lights, bulbs and side mirror indicators for Corolla, Civic and City. COD on eligible items, nationwide delivery from Gujranwala.",
+    absoluteTitle: true,
+  },
+  "quarter-window-louvers": {
+    metaTitle: "Quarter Window Louvers Price in Pakistan | Civic, Corolla",
+    metaDescription:
+      "Quarter window louvers for Civic, Corolla, City, Alto and Yaris in Pakistan. Carbon and gloss black options. COD on eligible items, nationwide delivery.",
+    absoluteTitle: true,
+  },
+  "interior-lights": {
+    metaTitle: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars",
+    metaDescription:
+      "Buy car interior lights in Pakistan: ambient dashboard strips, footwell RGB lights, door welcome logo lights and roof star lights. COD on eligible items.",
+    absoluteTitle: true,
+  },
+  "led-lighting": {
+    metaTitle: "Car LED Lights in Pakistan – Headlights, Indicators, DRL",
+    metaDescription:
+      "Shop car LED lights in Pakistan: headlights, fog lamps and DRL covers, indicators, tail lights, reflectors and SOS flashers. COD on eligible items.",
+    absoluteTitle: true,
+  },
+  "steering-wheel-covers": {
+    metaTitle: "Steering Wheel Covers Price in Pakistan | CrazzyCars",
+    metaDescription:
+      "Steering wheel covers in Pakistan, including hand-stitched carbon fiber in universal fit. Price on every listing. COD on eligible items, nationwide delivery.",
+    absoluteTitle: true,
   },
 };

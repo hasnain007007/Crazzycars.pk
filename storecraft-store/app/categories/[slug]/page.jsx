@@ -26,6 +26,10 @@ import {
   isKeywordStrategyCategory,
 } from "@/lib/seo/keywordStrategyFaqs";
 import { CATEGORY_KEYWORD_META } from "@/lib/seo/generationAliases";
+import {
+  CATEGORY_DESCRIPTION_HTML,
+  CATEGORY_FAQ_OVERRIDES,
+} from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { CATEGORY_TITLE_BRAND } from "@/lib/brand";
 
@@ -164,10 +168,11 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
 
     if (category) {
       const kwMeta = CATEGORY_KEYWORD_META[slugStr] || null;
-      const titleMeta = buildBrandedAbsoluteTitle(
-        (kwMeta?.metaTitle || category.seo?.metaTitle || "").trim() || category.name,
-        { brand: BRAND }
-      );
+      const titleSource =
+        (kwMeta?.metaTitle || category.seo?.metaTitle || "").trim() || category.name;
+      const titleMeta = kwMeta?.absoluteTitle
+        ? { absolute: String(kwMeta.metaTitle || titleSource).trim() }
+        : buildBrandedAbsoluteTitle(titleSource, { brand: BRAND, max: 62 });
       const title = titleMeta.absolute;
       const description =
         (kwMeta?.metaDescription || category.seo?.metaDescription || "").trim() ||
@@ -286,20 +291,29 @@ export default async function CategoryPage({ params, searchParams }) {
       isPartOfName: brand?.name || BRAND,
     });
 
+    const catSlug = data.category?.slug || slugStr;
+    const auditDesc = CATEGORY_DESCRIPTION_HTML[catSlug] || "";
+    const resolvedDescHtml = sanitizeCategoryHtml(
+      auditDesc ||
+        String(data.category?.description || "").trim() ||
+        String(data.category?.shortDescription || "").trim() ||
+        ""
+    );
+
     let faqLd = null;
-    if (isKeywordStrategyCategory(data.category?.slug || slugStr)) {
-      const extent = await getCategoryPriceExtent(data.category?.slug || slugStr);
-      faqLd = faqPageJsonLd(
-        buildCategoryKeywordFaqs(data.category?.slug || slugStr, extent)
-      );
+    if (isKeywordStrategyCategory(catSlug)) {
+      const extent = await getCategoryPriceExtent(catSlug);
+      const baseFaqs = buildCategoryKeywordFaqs(catSlug, extent);
+      const extraFaqs = CATEGORY_FAQ_OVERRIDES[catSlug] || [];
+      const seenQ = new Set(baseFaqs.map((f) => String(f.question || "").toLowerCase()));
+      const mergedFaqs = [
+        ...baseFaqs,
+        ...extraFaqs.filter((f) => !seenQ.has(String(f.question || "").toLowerCase())),
+      ];
+      faqLd = faqPageJsonLd(mergedFaqs);
     }
     if (!faqLd) {
-      const descHtml = sanitizeCategoryHtml(
-        String(data.category?.description || "").trim() ||
-          String(data.category?.shortDescription || "").trim() ||
-          ""
-      );
-      const { faqPairs } = splitCategoryDescriptionHtml(descHtml);
+      const { faqPairs } = splitCategoryDescriptionHtml(resolvedDescHtml);
       if (faqPairs.length) faqLd = faqPageJsonLd(faqPairs);
     }
 
@@ -320,7 +334,10 @@ export default async function CategoryPage({ params, searchParams }) {
           />
         ) : null}
         <CategoryPageChrome
-          category={data.category}
+          category={{
+            ...data.category,
+            description: resolvedDescHtml || data.category?.description,
+          }}
           subcategories={data.subcategories}
           products={data.products}
           brand={brand}
@@ -339,12 +356,7 @@ export default async function CategoryPage({ params, searchParams }) {
           emptyMessage="No products found in this category."
         />
         {(() => {
-          const descHtml = sanitizeCategoryHtml(
-            String(data.category?.description || "").trim() ||
-              String(data.category?.shortDescription || "").trim() ||
-              ""
-          );
-          const { remainderHtml } = splitCategoryDescriptionHtml(descHtml);
+          const { remainderHtml } = splitCategoryDescriptionHtml(resolvedDescHtml);
           if (!remainderHtml) return null;
           return (
             <div

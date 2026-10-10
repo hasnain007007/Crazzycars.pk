@@ -2,6 +2,7 @@ import { dbConnect } from "@/lib/db";
 import Vehicle from "@/lib/models/Vehicle.model";
 import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
 import { resolveLegacyDestination } from "@/lib/categoryHandleAliases";
+import { resolveCollectionRedirect } from "@/lib/collectionRedirectMap.mjs";
 
 function escapeRegex(value) {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -22,6 +23,10 @@ function normalizeHandle(raw) {
 export async function resolveCollectionHandleToPath(rawHandle) {
   const handle = normalizeHandle(rawHandle);
   if (!handle) return "/categories";
+
+  // Explicit Search Console /collections/ map (never fall through to /)
+  const mapped = resolveCollectionRedirect(handle);
+  if (mapped) return mapped;
 
   // Shopify system collections
   if (handle === "all" || handle === "frontpage") return "/shop";

@@ -18,6 +18,12 @@ import { sortProductsClient } from "@/lib/productListing";
 import { mediaImageUrl } from "@/lib/carCatalogCopy";
 import { alsoKnownAsLine, vehicleMetaDescription } from "@/lib/seo/generationAliases";
 import { buildVehicleKeywordFaqs, faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
+import {
+  getPageSeoOverride,
+  VEHICLE_DESCRIPTION_HTML,
+  VEHICLE_FAQ_OVERRIDES,
+} from "@/lib/seo/gscAudit2026-10.mjs";
+import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 
 export const revalidate = 60;
 
@@ -39,16 +45,20 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
     const totalPages = Math.max(1, Math.ceil(assigned / listing.pageSize) || 1);
     if (listing.page > totalPages) notFound();
 
-    const titleMeta = buildBrandedAbsoluteTitle(
-      (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
-      { brand: BRAND }
-    );
+    const seoOverride = getPageSeoOverride(`/cars/${vehicle.slug}`);
+    const titleMeta = seoOverride?.title
+      ? { absolute: seoOverride.title }
+      : buildBrandedAbsoluteTitle(
+          (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
+          { brand: BRAND, max: 62 }
+        );
     const title = titleMeta.absolute;
     // Prefer Car Catalog Description (merged in loadVehicleBySlug) over legacy Vehicle.metaDescription.
     const catalogDesc =
       String(vehicle.description || "").trim() ||
       String(vehicle.metaDescription || "").trim();
-    const description = vehicleMetaDescription(vehicle, catalogDesc);
+    const description =
+      (seoOverride?.meta || "").trim() || vehicleMetaDescription(vehicle, catalogDesc);
     const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
     const ogImage = mediaImageUrl(vehicle.image);
 
@@ -152,13 +162,23 @@ export default async function VehicleSlugPage({ params, searchParams }) {
       `${p?.name || ""} ${p?.slug || ""} ${Array.isArray(p?.tags) ? p.tags.join(" ") : ""}`
     )
   );
-  const faqItems = buildVehicleKeywordFaqs(vehicle, { hasSplitterProducts });
+  const faqExtras = VEHICLE_FAQ_OVERRIDES[vehicle.slug] || [];
+  const faqItems = [
+    ...buildVehicleKeywordFaqs(vehicle, { hasSplitterProducts }),
+    ...faqExtras,
+  ];
   const faqLd = faqPageJsonLd(faqItems);
   const akaLine = alsoKnownAsLine(vehicle, { max: 4 });
 
+  const auditHtml = VEHICLE_DESCRIPTION_HTML[vehicle.slug] || "";
   const heroDesc =
     catalogDesc ||
     `Upgrade your ${vehicle.displayName} with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber. Cash on Delivery nationwide.`;
+  const heroHtml = auditHtml
+    ? sanitizeCategoryHtml(auditHtml)
+    : /<[a-z][\s\S]*>/i.test(heroDesc)
+      ? sanitizeCategoryHtml(heroDesc)
+      : "";
 
   const popularAccessories = Array.isArray(vehicle.popularAccessories)
     ? vehicle.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
@@ -272,18 +292,42 @@ export default async function VehicleSlugPage({ params, searchParams }) {
               >
                 Accessories &amp; Body Kits
               </p>
-              <p
-                style={{
-                  margin: "12px 0 0",
-                  maxWidth: 480,
-                  fontSize: 14,
-                  lineHeight: 1.65,
-                  color: "#D1D5DB",
-                  whiteSpace: "pre-line",
-                }}
-              >
-                {heroDesc}
-              </p>
+              {heroHtml ? (
+                <div
+                  className="vehicle-hero-desc prose prose-invert max-w-none"
+                  style={{
+                    margin: "12px 0 0",
+                    maxWidth: 560,
+                    fontSize: 14,
+                    lineHeight: 1.65,
+                    color: "#D1D5DB",
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      vehicle.slug === "toyota-corolla-e140-2009-2014" &&
+                      catalogDesc &&
+                      !/<h2[\s>]/i.test(catalogDesc)
+                        ? `<p>${String(catalogDesc)
+                            .replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;")}</p>${heroHtml}`
+                        : heroHtml,
+                  }}
+                />
+              ) : (
+                <p
+                  style={{
+                    margin: "12px 0 0",
+                    maxWidth: 480,
+                    fontSize: 14,
+                    lineHeight: 1.65,
+                    color: "#D1D5DB",
+                    whiteSpace: "pre-line",
+                  }}
+                >
+                  {heroDesc}
+                </p>
+              )}
               {popularAccessories.length ? (
                 <p style={{ margin: "10px 0 0", fontSize: 13, color: "#9CA3AF" }}>
                   Popular: {popularAccessories.slice(0, 8).join(" · ")}

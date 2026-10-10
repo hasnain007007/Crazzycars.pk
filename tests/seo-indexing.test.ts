@@ -55,7 +55,8 @@ describe("robots.txt rules", () => {
       assert.ok(ROBOTS_PRIVATE_PATHS.includes(path), path);
     }
     assert.ok(disallow.includes("/*?*sort="));
-    assert.ok(ROBOTS_FILTER_QUERY_DISALLOWS.includes("/*?*q="));
+    // SearchAction uses /shop?q= — do not Disallow q=; listingMetadata noindexes facets.
+    assert.ok(!ROBOTS_FILTER_QUERY_DISALLOWS.includes("/*?*q="));
     assert.ok(!ROBOTS_FILTER_QUERY_DISALLOWS.includes("/*?*page="));
     assert.ok(!disallow.some((p) => p.includes(".css") || p.includes(".js") || p === "/_next/"));
   });

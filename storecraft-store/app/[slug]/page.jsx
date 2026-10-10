@@ -12,6 +12,7 @@ import { findExistingVehicleSlug } from "@/lib/vehiclePageData";
 import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { findActiveProductBySlugParam } from "@/lib/resolveProductSlug";
+import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { cloudinarySrcSet, pdpImageUrl } from "@/lib/cloudinaryImage";
 import { resolveProductImageUrls, resolvePrimaryProductImageUrl } from "@/lib/productImages";
 import {
@@ -32,6 +33,7 @@ import {
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
 import { BRAND, PRODUCT_TITLE_BRAND } from "@/lib/brand";
 import { toPlainText } from "@/lib/sanitizeHtml";
+import { getPageSeoOverride, PRODUCT_FAQ_OVERRIDES } from "@/lib/seo/gscAudit2026-10.mjs";
 
 /**
  * ISR for product / CMS pages. Category slugs 308 to /categories/:slug.
@@ -77,7 +79,10 @@ function truncateProductTitleAtWord(value, maxLength) {
   return truncated || withinLimit.trim();
 }
 
-function buildProductSeoTitle({ name, metaTitle }) {
+function buildProductSeoTitle({ name, metaTitle, slug }) {
+  const override = getPageSeoOverride(`/${String(slug || "").trim()}`);
+  if (override?.title) return override.title;
+
   const source = String(metaTitle || "").trim() || String(name || "").trim();
   const unbrandedTitle = stripTrailingProductTitleBrand(source);
   const titleBudget = PRODUCT_TITLE_MAX_LENGTH - PRODUCT_TITLE_SUFFIX.length;
@@ -258,6 +263,11 @@ const loadContent = cache(async (slug) => {
     return { type: "redirect", to: `/categories/${aliasedCategory}` };
   }
 
+  const productFallback = resolveFlatProductFallback(slugStr);
+  if (productFallback) {
+    return { type: "redirect", to: productFallback };
+  }
+
   const vehicleSlug = await findExistingVehicleSlug(slugStr);
   if (vehicleSlug) {
     return { type: "redirect", to: `/cars/${vehicleSlug}` };
@@ -289,8 +299,11 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     const title = buildProductSeoTitle({
       name: p.name,
       metaTitle: p.metaTitle || p.seo?.metaTitle,
+      slug: p.slug || slugStr,
     });
+    const seoOverride = getPageSeoOverride(`/${p.slug || slugStr}`);
     const description =
+      (seoOverride?.meta || "").trim() ||
       (p.metaDescription || p.seo?.metaDescription || "").trim() ||
       stripHtml(p.shortDescription || "").slice(0, 160) ||
       stripHtml(p.longDescription || "").slice(0, 160) ||
@@ -491,7 +504,12 @@ export default async function ProductPage({ params, searchParams }) {
         />
         {(() => {
           try {
-            const faqLd = faqPageJsonLd(buildProductKeywordFaqs(content.data));
+            const faqExtras =
+              PRODUCT_FAQ_OVERRIDES[String(content.data?.slug || "").trim()] || [];
+            const faqLd = faqPageJsonLd([
+              ...buildProductKeywordFaqs(content.data),
+              ...faqExtras,
+            ]);
             if (!faqLd) return null;
             return (
               <script

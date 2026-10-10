@@ -1,5 +1,6 @@
 import { categoryBannerUrl, logoImageUrl } from "@/lib/cloudinaryImage";
 import { trimmedLogoUrl } from "@/lib/storeLogo";
+import { CATEGORY_H1_OVERRIDES } from "@/lib/seo/gscAudit2026-10.mjs";
 
 function productImageUrls(products) {
   const urls = [];
@@ -20,7 +21,8 @@ function productImageUrls(products) {
  * Server-safe (no hooks) so the page H1 can SSR outside any useSearchParams island.
  */
 export function CategoryHeroBanner({ category, subcategories, products, brand }) {
-  const title = String(category?.name || "").toUpperCase();
+  const h1Override = CATEGORY_H1_OVERRIDES[String(category?.slug || "").trim()];
+  const title = String(h1Override || category?.name || "").toUpperCase();
   const imageAlt = category?.image?.altText || category?.name || "";
   const imageTitle = category?.image?.title || category?.name || "";
   const storeName = brand?.name || "CrazzyCars.pk";

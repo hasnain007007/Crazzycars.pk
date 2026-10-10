@@ -3,6 +3,8 @@
  * Keep this file free of `@/` imports so next.config.mjs can reuse it.
  */
 
+import { COLLECTIONS_REDIRECT_MAP } from "./collectionRedirectMap.mjs";
+
 export const CATEGORY_HANDLE_ALIASES = {
   "body-kit": "body-kits-extensions",
   "body-kits": "body-kits-extensions",
@@ -19,15 +21,25 @@ export const CATEGORY_HANDLE_ALIASES = {
   "fog-lights": "fog-lamps-drl-covers",
   "fog-lamps": "fog-lamps-drl-covers",
   "car-care": "car-care-safety",
+  "car-emergency-safety-products": "car-care-safety",
   "steering-covers": "steering-wheel-covers",
+  "car-steering-wheel-covers": "steering-wheel-covers",
   "phone-holders": "mobile-holders-chargers",
   louvers: "quarter-window-louvers",
   "window-louvers": "quarter-window-louvers",
+  "car-quarter-window-louvers": "quarter-window-louvers",
   "mirror-covers": "side-mirror-covers",
   "side-mirror": "side-mirror-covers",
+  "carbon-fiber-side-mirror-covers": "side-mirror-covers",
   "side-skirts": "splitters-side-skirts",
+  "car-splitters-side-skirts": "splitters-side-skirts",
+  "car-spoilers-diffusers": "spoilers-diffusers",
+  "interior-light": "interior-lights",
+  "interior-lights": "interior-lights",
   carbon: "carbon-fiber",
+  "carbon-fiber-car-accessories-shop-online-crazzycars-pk": "carbon-fiber",
   "exhaust-tips": "exhaust-systems-tips",
+  "car-exhaust-systems-tips": "exhaust-systems-tips",
   "door-handles": "door-handle-covers",
   grilles: "front-grilles",
   grille: "front-grilles",
@@ -39,6 +51,8 @@ export const CATEGORY_HANDLE_ALIASES = {
   organizers: "car-organizers",
   "air-freshener": "air-freshener-decoration",
   "air-freshner": "air-freshener-decoration",
+  "air-freshner-and-decoration": "air-freshener-decoration",
+  "universal-car-accessories": "universal-accessories",
 };
 
 /** Shopify collection handle → Vehicle.slug (covers Mongo docs missing shopifyHandle). */
@@ -101,6 +115,7 @@ export function aliasedCategorySlug(handle) {
 export function resolveLegacyDestination(rawHandle) {
   const handle = normalizeCategoryHandle(rawHandle);
   if (!handle) return null;
+  if (COLLECTIONS_REDIRECT_MAP[handle]) return COLLECTIONS_REDIRECT_MAP[handle];
   if (PAGE_HANDLE_ALIASES[handle]) return PAGE_HANDLE_ALIASES[handle];
   if (MAKE_HANDLE_ALIASES[handle]) return MAKE_HANDLE_ALIASES[handle];
   if (VEHICLE_HANDLE_ALIASES[handle]) return `/cars/${VEHICLE_HANDLE_ALIASES[handle]}`;
@@ -191,6 +206,11 @@ export function buildLegacyRedirects() {
     for (const source of [`/${handle}`, `/pages/${handle}`, `/collections/${handle}`]) {
       pushRedirect(redirects, seen, source, dest);
     }
+  }
+
+  // Search Console /collections/ map (idempotent with aliases above)
+  for (const [handle, dest] of Object.entries(COLLECTIONS_REDIRECT_MAP)) {
+    pushRedirect(redirects, seen, `/collections/${handle}`, dest);
   }
 
   return redirects;

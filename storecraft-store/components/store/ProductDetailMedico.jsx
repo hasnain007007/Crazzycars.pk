@@ -29,6 +29,11 @@ import {
   standardDeliveryFeeStatement,
 } from "@/lib/storePolicyCopy";
 import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
+import {
+  PRODUCT_CONTENT_OVERRIDES,
+  PRODUCT_H1_OVERRIDES,
+  PRODUCT_NAME_OVERRIDES,
+} from "@/lib/seo/gscAudit2026-10.mjs";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 const COMPARE_KEY = "sialkot_compare";
@@ -878,13 +883,32 @@ export function ProductDetailMedico({
     }
   }
 
-  const descriptionHtml = sanitizeClientHtml(
-    product.descriptionHtml || product.longDescription || product.description
+  const contentOverride =
+    PRODUCT_CONTENT_OVERRIDES[String(product?.slug || "").trim()] || null;
+  const displayName =
+    PRODUCT_H1_OVERRIDES[String(product?.slug || "").trim()] ||
+    PRODUCT_NAME_OVERRIDES[String(product?.slug || "").trim()] ||
+    product.name;
+  const rawDescription =
+    product.descriptionHtml || product.longDescription || product.description || "";
+  const appended = contentOverride?.appendDescription
+    ? `${rawDescription}<p>${contentOverride.appendDescription}</p>`
+    : rawDescription;
+  const withCare = contentOverride?.careHtml
+    ? `${appended}${contentOverride.careHtml}`
+    : appended;
+  const descriptionHtml = sanitizeClientHtml(withCare);
+  const descriptionPlain = toPlain(
+    contentOverride?.shortDescription || product.shortDescription
   );
-  const descriptionPlain = toPlain(product.shortDescription);
   const shortDesc =
-    truncatePlain(toPlain(product?.shortDescription), 180) ||
-    "Quality product with refined finish and modern design.";
+    truncatePlain(
+      toPlain(contentOverride?.shortDescription || product?.shortDescription),
+      400
+    ) || "Quality product with refined finish and modern design.";
+  const featureBullets = Array.isArray(contentOverride?.features)
+    ? contentOverride.features
+    : null;
 
   const deliveryFeeText =
     deliveryInfo?.deliveryFeeText ||
@@ -1103,7 +1127,7 @@ export function ProductDetailMedico({
                 margin: "0 0 8px",
               }}
             >
-              {product.name}
+              {displayName}
             </h1>
             <div className="flex flex-wrap items-center gap-3" style={{ margin: "8px 0" }}>
               {displayHasSale ? (
@@ -1164,6 +1188,22 @@ export function ProductDetailMedico({
             >
               {shortDesc}
             </p>
+            {contentOverride?.introHtml ? (
+              <div
+                className="product-seo-intro prose prose-neutral max-w-none"
+                style={{ fontSize: 14, color: "#555555", lineHeight: 1.7, margin: "0 0 16px" }}
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeClientHtml(contentOverride.introHtml),
+                }}
+              />
+            ) : null}
+            {featureBullets?.length ? (
+              <ul style={{ margin: "0 0 16px", paddingLeft: 18, fontSize: 14, color: "#555555", lineHeight: 1.7 }}>
+                {featureBullets.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : null}
 
             {scheduleEnabled && countdownEndDate ? (
               <div className="rounded border border-[#E5E5E5] p-3">

@@ -14,7 +14,9 @@ import {
   detectPaidSocialSource,
 } from "@/lib/paidTraffic";
 import { buildFbcFromFbclid } from "@/lib/metaClickIds";
-import { stripBrandSuffix } from "@/lib/productSlugParam";
+import { resolveProductRedirectPath, resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
+import { resolveCollectionRedirect } from "@/lib/collectionRedirectMap.mjs";
+import { STRIP_QUERY_KEYS } from "@/lib/stripQueryKeys.mjs";
 
 function redirectPath(request, pathname, status = 308) {
   // Prefer `new URL` over NextURL.clone() so Location never inherits stale search.
@@ -22,6 +24,7 @@ function redirectPath(request, pathname, status = 308) {
   const kept = new URLSearchParams();
   for (const [key, value] of request.nextUrl.searchParams.entries()) {
     const lower = String(key).toLowerCase();
+    // Keep ?page=N — pagination is self-canonical; only page=1 is cleaned in metadata.
     if (STRIP_QUERY_KEYS.has(lower) || lower.startsWith("utm_")) continue;
     kept.append(key, value);
   }
@@ -29,27 +32,6 @@ function redirectPath(request, pathname, status = 308) {
   if (qs) dest.search = qs;
   return NextResponse.redirect(dest, status);
 }
-
-/** Query keys Google still crawls from the old Shopify store. */
-const STRIP_QUERY_KEYS = new Set([
-  "variant",
-  "country",
-  "currency",
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_term",
-  "utm_content",
-  "gclid",
-  "fbclid",
-  "mc_cid",
-  "mc_eid",
-  "_pos",
-  "_fid",
-  "_ss",
-  "_v",
-  "pb",
-]);
 
 /**
  * - Fix Shopify-era / Google-indexed URLs (collections, case, cart, search).
@@ -210,17 +192,41 @@ export async function middleware(request) {
     return withPaidCookie(request, redirectPath(request, "/shop", 308));
   }
 
-  // Shopify-era product URLs (+ variant/country/currency) → clean /[slug] in one hop.
-  // Prefix strip and `-crazzycars-pk` suffix strip happen together so Meta
-  // `/products/{handle}-crazzycars-pk?utm_…` does not 308 twice.
+  // Shopify-era product URLs (+ variant/country/currency) → clean path in one hop.
+  // Explicit fallbacks cover handles with no flat twin; otherwise strip brand suffix.
   // Cookie captures fbclid/utm before redirectPath strips them.
   // Also accept mistaken `/product/{slug}` (singular) — same canonical target.
   if (lower.startsWith("/products/") || lower.startsWith("/product/")) {
     const prefix = lower.startsWith("/products/") ? "/products/" : "/product/";
     const rest = lower.slice(prefix.length).replace(/\/+$/, "");
     if (rest && !rest.includes("/")) {
-      const dest = stripBrandSuffix(rest) || rest;
-      return withPaidCookie(request, redirectPath(request, `/${dest}`, 308));
+      const dest = resolveProductRedirectPath(rest);
+      if (dest) {
+        return withPaidCookie(request, redirectPath(request, dest, 308));
+      }
+    }
+  }
+
+  // Dead flat slugs (no /products/ prefix) that still appear in GSC → closest live PDP.
+  {
+    const flat = lower.replace(/\/+$/, "") || "/";
+    if (flat.length > 1 && !flat.slice(1).includes("/")) {
+      const fallback = resolveFlatProductFallback(flat.slice(1));
+      if (fallback && fallback !== flat) {
+        return withPaidCookie(request, redirectPath(request, fallback, 308));
+      }
+    }
+  }
+
+  // Fast path for known /collections/ handles (next.config also has these; middleware
+  // covers edge cases when config redirects are skipped).
+  if (lower.startsWith("/collections/")) {
+    const handle = lower.slice("/collections/".length).replace(/\/+$/, "");
+    if (handle && !handle.includes("/")) {
+      const dest = resolveCollectionRedirect(handle);
+      if (dest) {
+        return withPaidCookie(request, redirectPath(request, dest, 308));
+      }
     }
   }
 
