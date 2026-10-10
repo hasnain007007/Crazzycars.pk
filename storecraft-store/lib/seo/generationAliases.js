@@ -436,7 +436,7 @@ export const CATEGORY_KEYWORD_META = {
   "splitters-side-skirts": {
     metaTitle: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars",
     metaDescription:
-      "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic, Corolla and City. COD on eligible items, nationwide delivery.",
+      "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic and Corolla. COD on eligible items, nationwide delivery.",
     absoluteTitle: true,
   },
   "led-indicator-lights": {
@@ -448,7 +448,7 @@ export const CATEGORY_KEYWORD_META = {
   "quarter-window-louvers": {
     metaTitle: "Quarter Window Louvers Price in Pakistan | Civic, Corolla",
     metaDescription:
-      "Quarter window louvers for Civic, Corolla, City, Alto and Yaris in Pakistan. Carbon and gloss black options. COD on eligible items, nationwide delivery.",
+      "Quarter window louvers for Civic, Corolla, City, Alto, Yaris and Prius in Pakistan. Carbon and black options. COD on eligible items, nationwide delivery.",
     absoluteTitle: true,
   },
   "interior-lights": {
