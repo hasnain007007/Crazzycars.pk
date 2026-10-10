@@ -5,7 +5,7 @@ Do not publish bracketed copy. Decide each item, then we can apply.
 ## Category: LED Headlights & Bulbs
 
 **Page:** `/categories/led-headlights-bulbs`  
-**File:** left unchanged in code (title/meta not updated).
+**Status:** Restored on the wire to `LED Headlights & Bulbs | Crazzycars.pk` via `CATEGORY_SEO_OWNER_LOCKED` (excluded from GSC apply). Production Mongo still has a divergent row (`LED Headlights Price in Pakistan`) — that was **not** from `CATEGORY_KEYWORD_META` in the audit commit; code now ignores DB SEO for this slug until you decide.
 
 > The category is titled "LED Headlights & Bulbs" and the meta promises "plug-and-play LED headlight bulbs", but no LED headlight bulb is listed. Do you stock LED bulbs? If yes, add them to the category. If no, apply: title "Projector Headlights & LED Fog Lights Pakistan | CrazzyCars", meta "Corolla Nike style projector headlights, OSRAM 3-colour projector lights and H11 switchback LED fog lights. Fitment on every listing. COD on eligible items."
 

@@ -1,5 +1,11 @@
 # SEO changelog — Search Console audit (10 Oct 2026)
 
+## Follow-up (11 Oct 2026)
+
+- Locked `/categories/led-headlights-bulbs` to pre-audit title/meta (`CATEGORY_SEO_OWNER_LOCKED`); skipped in apply script. Prod Mongo row was already divergent.
+- AC panel: “Butto”→“Button” in meta/alt/description; Key features = two bullets only (fitment years still in TODO).
+- Oshan X7: Description accordion uses exact Phase 4 paragraph.
+
 ## After deploy (owner)
 
 - Resubmit `https://crazzycars.pk/sitemap.xml` in Search Console.

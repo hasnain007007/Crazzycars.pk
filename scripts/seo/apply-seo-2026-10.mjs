@@ -20,6 +20,7 @@ import {
   PAGE_SEO_OVERRIDES,
   CATEGORY_H1_OVERRIDES,
   CATEGORY_DESCRIPTION_HTML,
+  CATEGORY_APPLY_SKIP,
   VEHICLE_DESCRIPTION_HTML,
   PRODUCT_CONTENT_OVERRIDES,
   PRODUCT_NAME_OVERRIDES,
@@ -181,6 +182,10 @@ async function main() {
   for (const [pathKey, seo] of Object.entries(PAGE_SEO_OVERRIDES)) {
     if (!pathKey.startsWith("/categories/")) continue;
     const slug = pathKey.replace("/categories/", "");
+    if (CATEGORY_APPLY_SKIP.has(slug)) {
+      console.log(`[skip] category ${slug} (owner-locked)`);
+      continue;
+    }
     const doc = await categories.findOne({ slug });
     if (!doc) {
       console.log(`[miss] category ${slug}`);

@@ -416,8 +416,23 @@ export function expandParsedQueryWithGenerationAliases(parsed) {
   return parsed;
 }
 
+/**
+ * Categories the GSC audit must not rewrite until the owner decides.
+ * Restores the pre-audit title/meta on the wire (production Mongo still has a
+ * divergent "LED Headlights Price in Pakistan" row — that was DB data, not this map).
+ */
+export const CATEGORY_SEO_OWNER_LOCKED = {
+  "led-headlights-bulbs": {
+    metaTitle: "LED Headlights & Bulbs | Crazzycars.pk",
+    metaDescription:
+      "Brighter night drives with plug-and-play LED headlight bulbs — cooler running and clearer beam patterns for popular Pakistani cars. COD available.",
+    absoluteTitle: true,
+  },
+};
+
 /** Category meta overrides for keyword strategy leaves + GSC audit (10 Oct 2026). */
 export const CATEGORY_KEYWORD_META = {
+  ...CATEGORY_SEO_OWNER_LOCKED,
   "splitters-side-skirts": {
     metaTitle: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars",
     metaDescription:

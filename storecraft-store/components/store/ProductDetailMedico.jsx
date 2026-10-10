@@ -412,6 +412,13 @@ export function ProductDetailMedico({
   const scheduleEnabled = Boolean(product?.saleSchedule?.enabled || product?.pricing?.saleSchedule?.enabled);
   const salePct = hasSale && regularPrice > 0 ? Math.max(1, Math.round(((regularPrice - basePrice) / regularPrice) * 100)) : 0;
   const images = useMemo(() => {
+    const slug = String(product?.slug || "").trim();
+    const altOverride = PRODUCT_CONTENT_OVERRIDES[slug]?.imageAlt || "";
+    const nameForAlt =
+      altOverride ||
+      PRODUCT_H1_OVERRIDES[slug] ||
+      PRODUCT_NAME_OVERRIDES[slug] ||
+      String(product?.name || "");
     const mapped = (
       Array.isArray(product?.images)
         ? product.images
@@ -424,7 +431,15 @@ export function ProductDetailMedico({
       .map((im) => {
         const url = typeof im === "string" ? im : im?.url || "";
         const rawAlt = typeof im === "string" ? "" : String(im?.altText || im?.alt || "").trim();
-        const altText = rawAlt && altBelongsToProduct(rawAlt, product) ? rawAlt : String(product?.name || "");
+        const fixedRaw = altOverride
+          ? altOverride
+          : rawAlt
+            ? rawAlt.replace(/\bButto\b/g, "Button")
+            : "";
+        const altText =
+          fixedRaw && altBelongsToProduct(fixedRaw, { ...product, name: nameForAlt })
+            ? fixedRaw
+            : nameForAlt;
         return { url, altText };
       })
       .filter((im) => Boolean(im.url));
@@ -888,11 +903,13 @@ export function ProductDetailMedico({
     PRODUCT_H1_OVERRIDES[String(product?.slug || "").trim()] ||
     PRODUCT_NAME_OVERRIDES[String(product?.slug || "").trim()] ||
     product.name;
-  const rawDescription =
-    product.descriptionHtml || product.longDescription || product.description || "";
+  const rawDescription = contentOverride?.descriptionHtml
+    ? contentOverride.descriptionHtml
+    : product.descriptionHtml || product.longDescription || product.description || "";
+  const fixedDescription = String(rawDescription || "").replace(/\bButto\b/g, "Button");
   const appended = contentOverride?.appendDescription
-    ? `${rawDescription}<p>${contentOverride.appendDescription}</p>`
-    : rawDescription;
+    ? `${fixedDescription}<p>${contentOverride.appendDescription}</p>`
+    : fixedDescription;
   const withCare = contentOverride?.careHtml
     ? `${appended}${contentOverride.careHtml}`
     : appended;

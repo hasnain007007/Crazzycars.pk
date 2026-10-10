@@ -111,7 +111,14 @@ export const PAGE_SEO_OVERRIDES = {
   "/cars/toyota-corolla-e140-2009-2014": {
     meta: "Toyota Corolla E140 (2009–2014) accessories in Pakistan: body kits, grilles, projector headlights, spoilers and LEDs. COD on eligible items, nationwide.",
   },
+  // Ranking page: title locked; fix truncated "Butto" in meta only
+  "/toyota-corolla-2012-top-ac-panel": {
+    meta: "Corolla AC vent cover price in Pakistan: Top AC Panel Center Dashboard AC Vent Button 2008-2013 for Toyota Corolla 2012. Cash on Delivery & nationwide delivery.",
+  },
 };
+
+/** Slugs the apply script and GSC audit must never rewrite (owner decision pending). */
+export const CATEGORY_APPLY_SKIP = new Set(["led-headlights-bulbs"]);
 
 /** Category H1 overrides (display name). */
 export const CATEGORY_H1_OVERRIDES = {
@@ -306,18 +313,22 @@ export const PRODUCT_CONTENT_OVERRIDES = {
 `.trim(),
   },
   "changan-oshan-x7-batman-style-side-mirror-covers": {
-    shortDescription:
-      `These Batman style side mirror covers are made for the Changan Oshan X7 2022–2026. They come in a carbon fiber finish or gloss black, in durable, weather and UV resistant ABS, as a left and right pair. They clip on or fix with double-sided tape, so there is no drilling. Check your year and variant on WhatsApp ${WA} before ordering.`,
+    shortDescription: `These Batman style side mirror covers are made for the Changan Oshan X7 2022–2026. They come in a carbon fiber finish or gloss black, in durable, weather and UV resistant ABS, as a left and right pair. They clip on or fix with double-sided tape, so there is no drilling. Check your year and variant on WhatsApp ${WA} before ordering.`,
+    descriptionHtml: `<p>These Batman style side mirror covers are made for the Changan Oshan X7 2022–2026. They come in a carbon fiber finish or gloss black, in durable, weather and UV resistant ABS, as a left and right pair. They clip on or fix with double-sided tape, so there is no drilling. Check your year and variant on WhatsApp ${WA} before ordering.</p>`,
   },
   "toyota-yaris-2020-2026-trunk-lip-spoiler-abs-plastic": {
     appendDescription:
       "This lightweight trunk lip spoiler is made for the Toyota Yaris 2020–2026, in gloss black ABS plastic. It is a single spoiler, not a full body kit, and fits with 3M adhesive tape. Spoiler paint (+Rs. 1,500), wrap (+Rs. 1,000) and double tape (+Rs. 150) can be added at checkout.",
   },
   "toyota-corolla-2012-top-ac-panel": {
+    shortDescription:
+      "Toyota Corolla 2012 Top AC Panel Center Dashboard AC Vent Button 2008-2013. Carbon-fiber-look finish. Cash on Delivery available nationwide.",
+    descriptionHtml: `<p>Toyota Corolla 2012 Top AC Panel Center Dashboard AC Vent Button 2008–2013. Carbon-fiber-look overlay for the centre dashboard AC vent and button control area.</p>`,
+    imageAlt:
+      "Toyota Corolla 2012 Top AC Panel Center Dashboard AC Vent Button 2008–2013",
     features: [
       "carbon-fiber-look finish",
       "covers scratches and worn factory plastic on the centre AC panel",
-      `fits the Toyota Corolla (years: confirm on WhatsApp ${WA})`,
     ],
   },
   "toyota-corolla-airflow-ambient-led-ac-vent-trims-plug-and-play": {

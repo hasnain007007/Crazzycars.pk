@@ -25,10 +25,11 @@ import {
   faqPageJsonLd,
   isKeywordStrategyCategory,
 } from "@/lib/seo/keywordStrategyFaqs";
-import { CATEGORY_KEYWORD_META } from "@/lib/seo/generationAliases";
+import { CATEGORY_KEYWORD_META, CATEGORY_SEO_OWNER_LOCKED } from "@/lib/seo/generationAliases";
 import {
   CATEGORY_DESCRIPTION_HTML,
   CATEGORY_FAQ_OVERRIDES,
+  CATEGORY_APPLY_SKIP,
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { CATEGORY_TITLE_BRAND } from "@/lib/brand";
@@ -167,15 +168,23 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
     if (detail && listing.page > (Number(detail.totalPages) || 1)) notFound();
 
     if (category) {
-      const kwMeta = CATEGORY_KEYWORD_META[slugStr] || null;
+      const locked = CATEGORY_SEO_OWNER_LOCKED[slugStr] || null;
+      const kwMeta = locked || CATEGORY_KEYWORD_META[slugStr] || null;
+      // Owner-locked categories (e.g. led-headlights-bulbs) ignore divergent DB SEO.
+      const dbTitle = CATEGORY_APPLY_SKIP.has(slugStr)
+        ? ""
+        : String(category.seo?.metaTitle || "").trim();
+      const dbMeta = CATEGORY_APPLY_SKIP.has(slugStr)
+        ? ""
+        : String(category.seo?.metaDescription || "").trim();
       const titleSource =
-        (kwMeta?.metaTitle || category.seo?.metaTitle || "").trim() || category.name;
+        String(kwMeta?.metaTitle || dbTitle || "").trim() || category.name;
       const titleMeta = kwMeta?.absoluteTitle
         ? { absolute: String(kwMeta.metaTitle || titleSource).trim() }
         : buildBrandedAbsoluteTitle(titleSource, { brand: BRAND, max: 62 });
       const title = titleMeta.absolute;
       const description =
-        (kwMeta?.metaDescription || category.seo?.metaDescription || "").trim() ||
+        String(kwMeta?.metaDescription || dbMeta || "").trim() ||
         `Shop ${category.name} at ${BRAND}. Premium car accessories with Cash on Delivery nationwide.`;
       const keywords = Array.isArray(category.seo?.metaKeywords)
         ? category.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
