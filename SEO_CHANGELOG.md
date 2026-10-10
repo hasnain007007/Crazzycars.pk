@@ -4,13 +4,12 @@ Change date: **2026-10-11** (Asia/Karachi). Re-measure on or after **2026-11-08*
 
 ## What shipped
 
-- Redirects (308), titles/metas, content blocks and FAQs live on `vps-test` → Coolify (commits `3100c26`, `0d72458`, `92f58e7`, `5bacfb7`, plus follow-ups `5ff6d1e`, `982aa42`).
+- Redirects (308), titles/metas, content blocks and FAQs live on `vps-test` → Coolify (commits `3100c26`, `0d72458`, `92f58e7`, `5bacfb7`).
 - Production Mongo apply (fingerprint `84143ac0cb2c3085`): **27 docs** (`$set` only; 13 products, 6 categories, 8 vehicles). LED headlights category excluded (owner-locked).
 - Backups:
   - Mongodump: `/data/crazzycars-mongo-backups/seo-apply-20261010T200917Z` (58M, taken before apply)
   - Before-values: `backups/seo-2026-10-apply/seo-backup-2026-10.json`
-  - Dry-run snapshot: `backups/seo-2026-10-apply/seo-backup-dry-run-2026-10.json`
-- Separate owner edit (not from the audit): Corolla X door handle panels now “(Set of 4)”, sale Rs. 5,999 / was Rs. 7,999.
+- Separate owner edit (not from the audit): Corolla X door handle panels now “(Set of 4)”, Rs. 5,999 (was Rs. 7,999).
 
 ### `$set` field list used in apply
 
@@ -30,24 +29,29 @@ Change date: **2026-10-11** (Asia/Karachi). Re-measure on or after **2026-11-08*
 
 ## Live check 2026-10-11 (cache-busted, after apply)
 
-OK: AC panel (no “Butto” in breadcrumb, H1, wire HTML; Mongo image alts still “Butto” by no-images rule), Oshan X7 description, LED headlights category title (owner-locked), door handle panels (set of 4 / price), Yaris, Aqua, Alto, Swift, Civic X, E140, steering-wheel-covers, interior-lights, led-indicator-lights titles/metas present.
+OK: AC panel (no “Butto” in breadcrumb, H1, alts), Oshan X7 description, LED headlights category title, door handle panels (title, meta, H1, price), Yaris, Aqua, Alto, Swift, Civic X, E140, steering-wheel-covers, interior-lights, led-indicator-lights titles/metas present.
 
 ## Open issues found in the live check
 
-See `SEO_TODO_FOR_OWNER.md` for owner decisions. Engineering follow-ups tracked there too.
+Issues **1, 2 (Popular + Alto/Liana subtitle), 5, 6** were fixed in follow-up deploys (`fc8a844` … `6d5a7c7`) and re-checked live. Owner/merchandising items remain in `SEO_TODO_FOR_OWNER.md`.
 
-1. City and Liana metas were ~320 characters (HTML description leaked into meta via `vehicleMetaDescription`). Trimmed overrides applied in follow-up.
-2. “Popular: … LED headlights” / wrong Popular chips on Civic X, E140, Swift, Alto; City Popular mentioned DRL covers with none listed. Catalog `popularAccessories` cleaned for those models in follow-up.
-3. Alto / Liana subtitle “Accessories & Body Kits” with no body kit — hero subtitle now omits “Body Kits” when none are indicated.
-4. Wrong-generation products on vehicle pages (E140 / Civic X) — **owner / fitment review** (not auto-removed).
-5. Category membership noise (splitters, louvers, indicators, steering-wheel-covers) — **owner / merchandising review**.
-6. Aqua text “body kits for each year” → corrected to 2012–2022 coverage in follow-up.
-7. Door handle panels: title tag years + empty alt — follow-up.
-8. Swift 2025 page listing 2022–2025 / 2022–2026 fitment — **owner confirmation**.
+| # | Issue (as found) | Status |
+|---|---|---|
+| 1 | City and Liana metas ~320 characters; City meta/Popular mentioned DRL covers with none listed | **Fixed** — metas ≤160; City DRL claim removed; Liana meta keeps velvet dashboard mat, no Rs. 1,799 |
+| 2 | Popular chips wrong on Civic X / E140 / Swift / Alto; Alto + Liana “Accessories & Body Kits” with no body kit | **Fixed** — Popular cleaned; subtitle is `Accessories` unless a body-kit product matches (`cars/[slug]/page.jsx:187–190`) |
+| 3 | Wrong-generation products on E140 / Civic X | **Open** — owner |
+| 4 | Category membership noise; metas named City / omitted Prius / “gloss black”; LED indicator Civic price wording | **Partial** — metas fixed (splitters no City; louvers +Prius + “carbon and black”; LED meta Corolla from Rs. 4,999). **Membership still open** — owner |
+| 5 | Aqua “body kits for each year” | **Fixed** — 2012–2022 wording |
+| 6 | Door handle title missing years; empty image alt; JSON-LD price unchecked | **Fixed** — title `Corolla X Door Handle Panels 2014–2026 Set of 4 \| CrazzyCars` (60); empty alt filled. JSON-LD price still not verified by fetch |
+| 7 | Swift 2025 page lists 2022–2025 / 2022–2026 fitment | **Open** — owner |
+
+## Owner decisions still open
+
+See `SEO_TODO_FOR_OWNER.md`: LED headlight bulbs stocked or not; bulb base type; steering-wheel-covers assignment; AC panel and Airflow fitment years; Yaris hatchback fitment; Liana spare parts; Alto steering years; Swift RS body kit location; Devil Eye / Angel Wings placement; redirect approvals in `SEO_REDIRECT_REVIEW.md`.
 
 ## Search Console steps
 
-- Resubmit `sitemap-products`, `sitemap-categories` and `sitemap-cars` (or full `sitemap.xml`).
+- Resubmit `sitemap-products`, `sitemap-categories` and `sitemap-cars`.
 - Request indexing **10 URLs a day**, lowest-CTR pages first.
 - Re-check CTR and position after 4 weeks with the same date-range length.
 
