@@ -22,6 +22,7 @@ import { OrderTagsEditor } from "./OrderTagsEditor";
 import { OrderStatusCard, PaymentStatusCard } from "./StatusUpdater";
 import { OrderItemsEditor } from "./OrderItemsEditor";
 import { SendInvoicePanel } from "./SendInvoicePanel";
+import { CustomerOrderHistory } from "./CustomerOrderHistory";
 import {
   buildWaLink,
   getCustomerOrderPhone,
@@ -1980,6 +1981,8 @@ export function OrderDetail({ orderId }) {
               onRefunded={load}
               orderTotal={effectiveTotal}
             />
+
+            <CustomerOrderHistory orderId={orderId} />
 
             <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
