@@ -8,6 +8,7 @@ import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { buildConfigPaymentMethods } from "@/lib/mobile/paymentInstructions";
+import { normalizeShippingRules } from "@/lib/freeDelivery";
 import { shippingFloorPKR } from "@/lib/shippingTier";
 import {
   deliveryEtaSummary,
@@ -43,6 +44,9 @@ export async function GET() {
       ? "cod"
       : enabledPaymentMethods[0]?.key || "cod";
 
+    const storePayment = normalizeShippingRules(settingsDoc?.storePayment);
+    const codBookingAmount = Math.max(0, Number(storePayment.advancePaymentAmount) || 0);
+
     return NextResponse.json({
       minVersionIos: mobileApp.minVersionIos || "1.0.0",
       minVersionAndroid: mobileApp.minVersionAndroid || "1.0.0",
@@ -56,6 +60,9 @@ export async function GET() {
       currency: "PKR",
       shippingFloorStandard: shippingFloorPKR(false),
       shippingFloorBulky: shippingFloorPKR(true),
+      /** Flat COD booking advance (settings / policy) — trust strip + PDP COD line. */
+      codBookingAmount,
+      returnsWindowDays: Number(STORE_POLICY.returns?.windowDays) || 7,
       enabledPaymentMethods,
       defaultPaymentMethod,
       contact: {

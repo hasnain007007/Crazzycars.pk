@@ -296,6 +296,8 @@ export async function POST(request) {
     afterDiscounts,
     shippingCost,
     shippingEstimated,
+    /** Flat COD booking advance from store settings (same source as GET /config). */
+    codBookingAmount: Math.max(0, Number(storePayment.advancePaymentAmount) || 0),
     total,
     totalWeightGrams,
     hasBulky: cartHasBulky,
