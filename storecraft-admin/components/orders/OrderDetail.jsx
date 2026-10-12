@@ -1875,6 +1875,13 @@ export function OrderDetail({ orderId }) {
             >
               Send Invoice
             </button>
+            <Link
+              href={`/invoices/new?fromOrder=${encodeURIComponent(orderId)}`}
+              className="rounded-md bg-[#1A7A4C] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#15663f]"
+              title="Create a new sale for this customer with name, phone, and address prefilled"
+            >
+              New Order
+            </Link>
             <div className="min-w-[140px] [&_button]:!py-1.5 [&_button]:!text-xs">
               <OrderWhatsAppButton order={order} settings={settings} />
             </div>

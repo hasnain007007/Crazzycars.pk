@@ -4,11 +4,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { formatAdminPrice, roundRupees } from "@/lib/currency";
 import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
+import { customerPrefillFromOrder } from "@/lib/invoicePrefillFromOrder";
 import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
 import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
 import { useInvoiceProductCatalog } from "@/components/invoices/useInvoiceProductCatalog";
@@ -50,6 +51,9 @@ const PAYMENT_METHOD_OPTIONS = [
 
 export function CreateInvoiceForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromOrderId = (searchParams.get("fromOrder") || "").trim();
+  const fromCustomerId = (searchParams.get("fromCustomer") || "").trim();
   const [customer, setCustomer] = useState({
     name: "",
     phone: "",
@@ -78,6 +82,8 @@ export function CreateInvoiceForm() {
   const [savedInvoice, setSavedInvoice] = useState(null);
   const [showPdfPrompt, setShowPdfPrompt] = useState(false);
   const [storeMeta, setStoreMeta] = useState(null);
+  const [prefillSource, setPrefillSource] = useState(null);
+  const [prefillLoading, setPrefillLoading] = useState(Boolean(fromOrderId || fromCustomerId));
 
   const {
     catalog,
@@ -92,6 +98,117 @@ export function CreateInvoiceForm() {
   useEffect(() => {
     getInvoiceStoreMeta().then(setStoreMeta).catch(() => {});
   }, []);
+
+  const loadArBalance = useCallback(async (customerId) => {
+    if (!customerId) {
+      setPreviousBalance(0);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/customers/${customerId}/ledger?mode=ar`, {
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (json.success) setPreviousBalance(Number(json.ar?.outstanding) || 0);
+      else setPreviousBalance(0);
+    } catch {
+      setPreviousBalance(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!fromOrderId && !fromCustomerId) {
+      setPrefillLoading(false);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      setPrefillLoading(true);
+      try {
+        if (fromOrderId) {
+          const res = await fetch(`/api/orders/${encodeURIComponent(fromOrderId)}`, {
+            credentials: "include",
+          });
+          const json = await res.json();
+          if (cancelled) return;
+          if (!res.ok || !json.success || !json.order) {
+            toast.error(json.error || "Could not load customer from that order.");
+            return;
+          }
+          const prefill = customerPrefillFromOrder(json.order);
+          setCustomer({
+            name: prefill.name,
+            phone: prefill.phone,
+            email: prefill.email,
+            city: prefill.city,
+            address: prefill.address,
+            customerId: prefill.customerId,
+          });
+          setPrefillSource({
+            type: "order",
+            orderId: fromOrderId,
+            orderNumber: prefill.orderNumber || json.order.orderNumber || "",
+          });
+          setDeliveryOn(true);
+          await loadArBalance(prefill.customerId);
+          toast.success(
+            prefill.orderNumber
+              ? `Customer loaded from ${prefill.orderNumber}`
+              : "Customer details prefilled"
+          );
+          return;
+        }
+
+        if (fromCustomerId) {
+          const res = await fetch(`/api/customers/${encodeURIComponent(fromCustomerId)}`, {
+            credentials: "include",
+          });
+          const json = await res.json();
+          if (cancelled) return;
+          const c = json.customer;
+          if (!res.ok || !json.success || !c) {
+            toast.error(json.error || "Could not load that customer.");
+            return;
+          }
+          const primary =
+            (Array.isArray(c.addresses) &&
+              (c.addresses.find((a) => a?.isDefault) || c.addresses[0])) ||
+            null;
+          const addr =
+            c.address && typeof c.address === "object" ? c.address : {};
+          setCustomer({
+            name: c.name || "",
+            phone: c.phone || "",
+            email: c.email && !String(c.email).includes("@guest.") ? c.email : "",
+            city: String(addr.city || primary?.city || "").trim(),
+            address: String(
+              addr.street ||
+                addr.address ||
+                primary?.street ||
+                primary?.address ||
+                ""
+            ).trim(),
+            customerId: c.id || fromCustomerId,
+          });
+          setPrefillSource({
+            type: "customer",
+            customerId: c.id || fromCustomerId,
+            name: c.name || "",
+          });
+          setDeliveryOn(true);
+          await loadArBalance(c.id || fromCustomerId);
+          toast.success(`Customer loaded: ${c.name || "profile"}`);
+        }
+      } catch {
+        if (!cancelled) toast.error("Could not prefill customer details.");
+      } finally {
+        if (!cancelled) setPrefillLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [fromOrderId, fromCustomerId, loadArBalance]);
 
   useEffect(() => {
     const q = customerQuery.trim();
@@ -129,17 +246,9 @@ export function CreateInvoiceForm() {
     });
     setCustomerQuery("");
     setCustomerHits([]);
+    setPrefillSource(null);
     toast.success(`Loaded ${c.name}`);
-    void (async () => {
-      try {
-        const res = await fetch(`/api/customers/${c.id}/ledger?mode=ar`, { credentials: "include" });
-        const json = await res.json();
-        if (json.success) setPreviousBalance(Number(json.ar?.outstanding) || 0);
-        else setPreviousBalance(0);
-      } catch {
-        setPreviousBalance(0);
-      }
-    })();
+    void loadArBalance(c.id);
   }
 
   function clearLinkedCustomer() {
@@ -404,9 +513,13 @@ export function CreateInvoiceForm() {
       <form noValidate onSubmit={submit} className="mx-auto max-w-7xl space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">New invoice</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              {prefillSource?.type === "order" ? "New order (repeat customer)" : "New invoice"}
+            </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Saves to Invoices only — does not create an order.
+              {prefillSource?.type === "order"
+                ? "Customer & address prefilled — add items, save invoice, then convert to order when ready to ship."
+                : "Saves to Invoices only — does not create an order."}
             </p>
           </div>
           <Link
@@ -416,6 +529,39 @@ export function CreateInvoiceForm() {
             All invoices
           </Link>
         </div>
+
+        {prefillLoading ? (
+          <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-100">
+            Loading customer details…
+          </div>
+        ) : null}
+
+        {prefillSource?.type === "order" ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100">
+            <p className="m-0">
+              Prefilled from{" "}
+              <Link
+                href={`/orders/${prefillSource.orderId}`}
+                className="font-bold underline underline-offset-2"
+              >
+                {prefillSource.orderNumber || "previous order"}
+              </Link>
+              . Name, phone, and shipping address are ready — add products below.
+            </p>
+          </div>
+        ) : null}
+
+        {prefillSource?.type === "customer" ? (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100">
+            Prefilled from customer profile
+            {prefillSource.name ? (
+              <>
+                : <span className="font-bold">{prefillSource.name}</span>
+              </>
+            ) : null}
+            .
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
           {/* Catalog first on mobile so products are easy to find; sticky on desktop */}

@@ -418,7 +418,10 @@ export function CustomerDetailPage({ customerId }) {
                 >
                   View all invoices
                 </Link>
-                <Link href="/invoices/new" className="text-[#1d6fb8] hover:underline">
+                <Link
+                  href={`/invoices/new?fromCustomer=${encodeURIComponent(c.id)}`}
+                  className="text-[#1d6fb8] hover:underline"
+                >
                   + New invoice
                 </Link>
               </div>
