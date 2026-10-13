@@ -189,6 +189,16 @@ export function stripFinancialDashboardData(data) {
   return data;
 }
 
+/**
+ * Order / invoice line items snapshot `unitCost` (merchant purchase cost).
+ * Remove it from API payloads for roles without canViewProductCosts.
+ */
+export function stripLineItemCosts(doc, user) {
+  if (!doc || typeof doc !== "object" || hasCapability(user, "canViewProductCosts")) return doc;
+  if (!Array.isArray(doc.items)) return doc;
+  return { ...doc, items: doc.items.map(({ unitCost: _unitCost, ...item }) => item) };
+}
+
 /** Strip merchant cost from a product lean/JSON object. */
 export function stripProductCostFields(product) {
   if (!product || typeof product !== "object") return product;

@@ -37,7 +37,8 @@ export async function GET(request, context) {
         paymentMethod: o.paymentMethod,
         total: orderGrandTotal(o),
         pricing: orderPricing(o),
-        items: o.items || [],
+        // unitCost is the store's purchase cost (admin margin data) — never send it to customers.
+        items: (o.items || []).map(({ unitCost: _unitCost, ...item }) => item),
         createdAt: o.createdAt,
         shippingAddress: o.shippingAddress || {},
         tracking: o.tracking || {},

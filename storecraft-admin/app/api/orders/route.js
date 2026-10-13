@@ -488,7 +488,11 @@ export async function POST(request) {
       }
       const unitCost = Math.max(
         0,
-        Number(raw?.unitCost ?? product?.pricing?.costPerItem ?? 0) || 0
+        Number(
+          (hasCapability(user, "canViewProductCosts") ? raw?.unitCost : undefined) ??
+            product?.pricing?.costPerItem ??
+            0
+        ) || 0
       );
       const lineTotal = roundRupees(quantity * unitPrice);
       normalizedItems.push({

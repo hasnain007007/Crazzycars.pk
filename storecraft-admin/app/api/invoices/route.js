@@ -8,6 +8,7 @@ import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
+import { hasCapability, stripLineItemCosts } from "@/lib/permissions";
 import { allocateInvoiceNumber } from "@/lib/invoiceNumber";
 import Invoice from "@/lib/models/Invoice.model";
 import Product from "@/lib/models/Product.model";
@@ -105,7 +106,8 @@ function serializeInvoice(doc) {
 
 export async function GET(request) {
   try {
-    if (!getRequestUser(request)) {
+    const viewer = getRequestUser(request);
+    if (!viewer) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     await dbConnect();
@@ -138,7 +140,7 @@ export async function GET(request) {
 
     return NextResponse.json({
       success: true,
-      invoices: rows.map(serializeInvoice),
+      invoices: rows.map((row) => stripLineItemCosts(serializeInvoice(row), viewer)),
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1,
@@ -206,7 +208,8 @@ export async function POST(request) {
           { status: 400 }
         );
       }
-      const unitCost = Math.max(0, Number(raw?.unitCost ?? product?.pricing?.costPerItem ?? 0) || 0);
+      const clientCost = hasCapability(user, "canViewProductCosts") ? raw?.unitCost : undefined;
+      const unitCost = Math.max(0, Number(clientCost ?? product?.pricing?.costPerItem ?? 0) || 0);
       unitPrice = roundRupees(unitPrice);
       const lineTotal = roundRupees(quantity * unitPrice);
       normalizedItems.push({
@@ -367,7 +370,7 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      invoice: serializeInvoice(invoice),
+      invoice: stripLineItemCosts(serializeInvoice(invoice), user),
     });
   } catch (error) {
     return NextResponse.json(

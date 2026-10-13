@@ -20,8 +20,22 @@ export function importsRoot() {
   return path.join(getMediaRoot(), "_imports");
 }
 
+const IMPORT_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const IMPORT_IMAGE_RE = /\.(jpe?g|png|webp|heic)$/i;
+const IMPORT_SHEET_RE = /\.(xlsx|xls|csv)$/i;
+
+/**
+ * Only images and the week sheet may land under _imports — it lives inside
+ * MEDIA_ROOT, which the storefront serves publicly by extension.
+ */
+export function isAllowedImportImage(name) {
+  return IMPORT_IMAGE_RE.test(String(name || ""));
+}
+
 export function importDir(importId) {
-  return path.join(importsRoot(), String(importId));
+  const id = String(importId || "");
+  if (!IMPORT_ID_RE.test(id)) throw new Error("Invalid import id");
+  return path.join(importsRoot(), id);
 }
 
 async function ensureImportDir(importId) {
@@ -31,7 +45,7 @@ async function ensureImportDir(importId) {
   return dir;
 }
 
-function safeRelPath(name) {
+export function safeRelPath(name) {
   const cleaned = String(name || "")
     .replace(/\\/g, "/")
     .split("/")
@@ -74,6 +88,7 @@ async function extractZip(buffer, destDir) {
     if (!entry || entry.dir) continue;
     const rel = safeRelPath(entryName);
     if (!rel) continue;
+    if (!IMPORT_IMAGE_RE.test(rel) && !IMPORT_SHEET_RE.test(rel)) continue;
     count += 1;
     if (count > MAX_FILES) throw new Error("Zip has more than 200 files");
     const out = path.join(destDir, "files", rel);
@@ -117,6 +132,7 @@ export async function previewImportFromParts(parts) {
       continue;
     }
     // image
+    if (!IMPORT_IMAGE_RE.test(lower)) continue;
     const rel = safeRelPath(filename);
     const abs = path.join(filesDir, rel);
     await mkdir(path.dirname(abs), { recursive: true });
@@ -133,11 +149,11 @@ export async function previewImportFromParts(parts) {
       if (ent.isDirectory()) await walk(abs, rel);
       else {
         const lower = ent.name.toLowerCase();
-        if (/\.(jpe?g|png|webp|heic)$/i.test(lower)) {
+        if (IMPORT_IMAGE_RE.test(lower)) {
           if (!imageFiles.some((f) => f.abs === abs)) {
             imageFiles.push({ name: rel, abs });
           }
-        } else if (!sheetBuffer && /\.(xlsx|xls|csv)$/i.test(lower)) {
+        } else if (!sheetBuffer && IMPORT_SHEET_RE.test(lower)) {
           sheetBuffer = await readFile(abs);
           sheetName = ent.name;
         }

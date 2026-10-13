@@ -8,6 +8,7 @@ import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
+import { hasCapability, stripLineItemCosts } from "@/lib/permissions";
 import Invoice from "@/lib/models/Invoice.model";
 import Product from "@/lib/models/Product.model";
 import Receipt from "@/lib/models/Receipt.model";
@@ -103,7 +104,11 @@ function serializeInvoice(doc) {
   };
 }
 
-async function normalizeItems(rawItems) {
+/**
+ * @param {unknown[]} rawItems
+ * @param {{ canSetCost?: boolean, previousItems?: Array<{ productId?: unknown, unitCost?: number }> }} [opts]
+ */
+async function normalizeItems(rawItems, { canSetCost = false, previousItems = [] } = {}) {
   if (!Array.isArray(rawItems) || rawItems.length < 1) {
     throw new Error("Add at least one product.");
   }
@@ -132,7 +137,15 @@ async function normalizeItems(rawItems) {
       unitPrice = product ? unitPriceFromProduct(product) : 0;
     }
     if (!nameItem) throw new Error("Each item needs a product name.");
-    const unitCost = Math.max(0, Number(raw?.unitCost ?? product?.pricing?.costPerItem ?? 0) || 0);
+    // Only cost-viewers may set cost; others keep the line's existing snapshot.
+    const prevCost = product
+      ? previousItems.find((p) => String(p?.productId || "") === String(product._id))?.unitCost
+      : undefined;
+    const clientCost = canSetCost ? raw?.unitCost : undefined;
+    const unitCost = Math.max(
+      0,
+      Number(clientCost ?? prevCost ?? product?.pricing?.costPerItem ?? 0) || 0
+    );
     unitPrice = roundRupees(unitPrice);
     const lineTotal = roundRupees(quantity * unitPrice);
     normalizedItems.push({
@@ -153,7 +166,8 @@ async function normalizeItems(rawItems) {
 
 export async function GET(request, context) {
   try {
-    if (!getRequestUser(request)) {
+    const viewer = getRequestUser(request);
+    if (!viewer) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     const { id } = await context.params;
@@ -165,7 +179,7 @@ export async function GET(request, context) {
     if (!doc) {
       return NextResponse.json({ success: false, error: "Invoice not found." }, { status: 404 });
     }
-    return NextResponse.json({ success: true, invoice: serializeInvoice(doc) });
+    return NextResponse.json({ success: true, invoice: stripLineItemCosts(serializeInvoice(doc), viewer) });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to load invoice." },
@@ -228,7 +242,10 @@ export async function PUT(request, context) {
 
     if (Array.isArray(body.items)) {
       try {
-        const normalizedItems = await normalizeItems(body.items);
+        const normalizedItems = await normalizeItems(body.items, {
+          canSetCost: hasCapability(user, "canViewProductCosts"),
+          previousItems: Array.isArray(invoice.items) ? invoice.items : [],
+        });
         const subtotal =
           roundRupees(normalizedItems.reduce((s, i) => s + Number(i.total || 0), 0));
         const discount =
@@ -300,7 +317,7 @@ export async function PUT(request, context) {
       ip: requestIp(request),
     });
 
-    return NextResponse.json({ success: true, invoice: serializeInvoice(invoice) });
+    return NextResponse.json({ success: true, invoice: stripLineItemCosts(serializeInvoice(invoice), user) });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Could not update invoice." },

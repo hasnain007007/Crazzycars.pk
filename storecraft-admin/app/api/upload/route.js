@@ -13,6 +13,17 @@ import {
   writeMediaFile,
 } from "@/lib/mediaStorage";
 
+/**
+ * Extensions the admin UI actually uploads (WebP from the image pipeline, raw
+ * blog images, product videos). Anything else — notably .svg / .html — is
+ * refused: /media is served from the storefront origin by extension, so a
+ * scriptable file there would be stored XSS on crazzycars.pk.
+ */
+const IMAGE_EXTS = new Set([".webp", ".jpg", ".jpeg", ".png", ".gif", ".avif", ".heic", ".heif"]);
+const VIDEO_EXTS = new Set([".mp4", ".webm", ".mov", ".m4v", ".ogv", ".avi", ".mkv"]);
+const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
+
 export async function POST(request) {
   try {
     const user = getRequestUser(request);
@@ -37,6 +48,23 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Missing file field." }, { status: 400 });
     }
 
+    const original = file.name || "upload.webp";
+    const ext = path.extname(original).slice(0, 8).toLowerCase() || ".webp";
+    const isImage = IMAGE_EXTS.has(ext);
+    if (!isImage && !VIDEO_EXTS.has(ext)) {
+      return NextResponse.json(
+        { success: false, error: `File type ${ext} is not allowed. Upload an image or video.` },
+        { status: 415 }
+      );
+    }
+    const maxBytes = isImage ? MAX_IMAGE_BYTES : MAX_VIDEO_BYTES;
+    if (Number(file.size) > maxBytes) {
+      return NextResponse.json(
+        { success: false, error: `File is too large (max ${maxBytes / (1024 * 1024)}MB).` },
+        { status: 413 }
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     if (!buffer.length) {
       return NextResponse.json({ success: false, error: "Empty file." }, { status: 400 });
@@ -51,11 +79,8 @@ export async function POST(request) {
     const rawItemName = String(formData.get("itemName") || "").trim();
     const rawImageName = String(formData.get("imageName") || "").trim();
     const imageIndex = String(formData.get("imageIndex") || "1").trim();
-    const original = file.name || "upload.webp";
-    const ext = path.extname(original).slice(0, 8) || ".webp";
-    const safeExt = /^\.[a-z0-9]+$/i.test(ext) ? ext.toLowerCase() : ".webp";
-    const baseName = rawItemName || rawImageName || path.basename(original, ext);
-    const filename = sanitizeMediaFilename(`${baseName}-${imageIndex}${safeExt}`, safeExt);
+    const baseName = rawItemName || rawImageName || path.basename(original, path.extname(original));
+    const filename = sanitizeMediaFilename(`${baseName}-${imageIndex}${ext}`, ext);
 
     const saved = await writeMediaFile({ folder, filename, buffer });
 

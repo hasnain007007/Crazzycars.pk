@@ -5,6 +5,7 @@ import Customer from "@/lib/models/Customer.model";
 import { requestIp } from "@/lib/requestIp";
 import jwt from "jsonwebtoken";
 import { sendPasswordResetEmail } from "@/lib/customerLifecycleEmail";
+import { passwordResetFingerprint } from "@/lib/passwordResetFingerprint";
 
 export async function POST(req) {
   try {
@@ -52,6 +53,7 @@ export async function POST(req) {
         customerId: String(customer._id),
         email: customer.email,
         type: "password_reset",
+        pwf: passwordResetFingerprint(customer.password || customer.passwordHash),
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }

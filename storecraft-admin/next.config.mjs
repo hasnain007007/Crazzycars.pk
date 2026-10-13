@@ -59,6 +59,16 @@ const nextConfig = {
     // Do not enable credentialed CORS from the storefront. Admin cookies are
     // host-only; allowing crazzycars.pk JS to call admin APIs with credentials
     // would create a CSRF surface. Storefront never needs cross-origin admin APIs.
+    // Must stay last: replaces the site CSP for uploaded media (passive content only).
+    security.push({
+      source: "/api/media/:path*",
+      headers: [
+        {
+          key: "Content-Security-Policy",
+          value: "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'; sandbox",
+        },
+      ],
+    });
     return security;
   },
   async rewrites() {
