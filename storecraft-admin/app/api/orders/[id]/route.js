@@ -7,6 +7,7 @@ import { logActivity } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
+import { hasCapability, stripLineItemCosts } from "@/lib/permissions";
 import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal, orderPricing } from "@/lib/orderFormat";
@@ -232,7 +233,8 @@ async function findOrderNeighbors(doc) {
 
 export async function GET(request, context) {
   try {
-    if (!getRequestUser(request)) {
+    const viewer = getRequestUser(request);
+    if (!viewer) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     const { id } = await context.params;
@@ -246,7 +248,11 @@ export async function GET(request, context) {
     }
     const neighbors = await findOrderNeighbors(doc);
     const imageMap = await productImageMapForOrder(doc);
-    return NextResponse.json({ success: true, order: serializeOrder(doc, imageMap), neighbors });
+    return NextResponse.json({
+      success: true,
+      order: stripLineItemCosts(serializeOrder(doc, imageMap), viewer),
+      neighbors,
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed to load order." },
@@ -449,6 +455,7 @@ export async function PUT(request, context) {
       }
       const normalizedItems = [];
       const previousItems = Array.isArray(order.items) ? order.items : [];
+      const canSetCost = hasCapability(user, "canViewProductCosts");
       for (let itemIdx = 0; itemIdx < body.items.length; itemIdx += 1) {
         const raw = body.items[itemIdx];
         const name = String(raw?.name || "").trim();
@@ -514,9 +521,10 @@ export async function PUT(request, context) {
           null;
         const articleNo =
           String(raw?.articleNo || prev?.articleNo || "").trim().slice(0, 120);
+        // Only cost-viewers may set cost; everyone else keeps the checkout snapshot.
         const unitCost = Math.max(
           0,
-          Number(raw?.unitCost ?? prev?.unitCost) || 0
+          Number(canSetCost ? raw?.unitCost ?? prev?.unitCost : prev?.unitCost) || 0
         );
         normalizedItems.push({
           productId,
@@ -857,7 +865,7 @@ export async function PUT(request, context) {
     if (!updates.length) {
       const lean = await Order.findById(id).populate("customer.customerId", "name email phone").lean();
       const imageMap = await productImageMapForOrder(lean);
-      return NextResponse.json({ success: true, order: serializeOrder(lean, imageMap), changed: false });
+      return NextResponse.json({ success: true, order: stripLineItemCosts(serializeOrder(lean, imageMap), user), changed: false });
     }
 
     await order.save();
@@ -901,7 +909,7 @@ export async function PUT(request, context) {
     const imageMap = await productImageMapForOrder(lean);
     return NextResponse.json({
       success: true,
-      order: serializeOrder(lean, imageMap),
+      order: stripLineItemCosts(serializeOrder(lean, imageMap), user),
       changed: true,
       ...emailSummary,
     });

@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import { customerForStorefront } from "@/lib/customerSerialize";
@@ -15,7 +16,7 @@ export async function PUT(req) {
     const body = await req.json().catch(() => ({}));
     await dbConnect();
 
-    const doc = await Customer.findById(session.customerId).select("+passwordHash");
+    const doc = await Customer.findById(session.customerId).select("+password +passwordHash");
     if (!doc || doc.isActive === false) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
@@ -32,7 +33,19 @@ export async function PUT(req) {
           { status: 400 }
         );
       }
-      doc.passwordHash = await hashPassword(pwd);
+      // Changing the password needs the current one (a stolen session alone must not lock the owner out).
+      const storedHash = doc.password || doc.passwordHash || "";
+      const currentPassword = String(body.currentPassword || "");
+      if (!storedHash || !currentPassword || !(await bcrypt.compare(currentPassword, storedHash))) {
+        return NextResponse.json(
+          { success: false, error: "Current password is incorrect." },
+          { status: 400 }
+        );
+      }
+      // Login reads `password` first — write both so the old password stops working.
+      const hashed = await hashPassword(pwd);
+      doc.password = hashed;
+      doc.passwordHash = hashed;
     }
 
     await doc.save();

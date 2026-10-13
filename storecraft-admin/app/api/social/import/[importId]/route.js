@@ -12,6 +12,8 @@ import {
   loadImportPreview,
   saveImportPreview,
   importDir,
+  isAllowedImportImage,
+  safeRelPath,
   readImportManifest,
 } from "@/lib/social/importService";
 import { parsePktDateTime } from "@/lib/social/pktTime";
@@ -51,10 +53,17 @@ export async function PATCH(request, context) {
       const files = form.getAll("files").filter((f) => f && typeof f !== "string");
       const manifest = await readImportManifest(importId);
       for (const file of files) {
-        const buf = Buffer.from(await file.arrayBuffer());
         const tmpId = randomUUID().slice(0, 8);
-        const name = file.name || `${tmpId}.jpg`;
-        const relPath = `extra/${tmpId}-${name}`.replace(/\\/g, "/");
+        // Client-controlled filename: strip path segments so it cannot escape the import dir.
+        const name = path.basename(safeRelPath(file.name || `${tmpId}.jpg`));
+        if (!isAllowedImportImage(name)) {
+          return NextResponse.json(
+            { success: false, error: `${name} is not a JPG, PNG, WebP or HEIC photo.` },
+            { status: 415 }
+          );
+        }
+        const buf = Buffer.from(await file.arrayBuffer());
+        const relPath = `extra/${tmpId}-${name}`;
         const abs = path.join(importDir(importId), "files", relPath);
         await mkdir(path.dirname(abs), { recursive: true });
         await writeFile(abs, buf);

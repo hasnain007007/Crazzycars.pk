@@ -45,6 +45,8 @@ http:
         customResponseHeaders:
           Cache-Control: "public, max-age=31536000, immutable"
           X-Content-Type-Options: "nosniff"
+          # Passive media only: blocks script in any SVG/HTML that lands under /media.
+          Content-Security-Policy: "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'; sandbox"
     media-no-h3:
       headers:
         customResponseHeaders:

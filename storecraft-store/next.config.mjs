@@ -347,6 +347,17 @@ const nextConfig = {
           },
         ],
       },
+      // Must stay last: replaces the site CSP for uploaded media so any
+      // scriptable file (e.g. legacy SVG) opened directly cannot run script.
+      ...["/media/:path*", "/api/media/:path*"].map((source) => ({
+        source,
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'; sandbox",
+          },
+        ],
+      })),
     ];
   },
   async rewrites() {
