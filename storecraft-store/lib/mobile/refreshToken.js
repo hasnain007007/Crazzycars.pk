@@ -65,7 +65,7 @@ export async function issueRefreshToken(customerId) {
 export async function rotateRefreshToken(opaqueToken) {
   await dbConnect();
   const tokenHash = hashRefreshToken(opaqueToken);
-  const doc = await CustomerRefreshToken.findOne({ tokenHash });
+  let doc = await CustomerRefreshToken.findOne({ tokenHash });
 
   if (!doc) {
     throw Object.assign(new Error("Refresh token not found."), {
@@ -89,13 +89,15 @@ export async function rotateRefreshToken(opaqueToken) {
     const expiresAt = new Date(Date.now() + REFRESH_TTL_MS);
     const graceExpiresAt = new Date(Date.now() + REFRESH_GRACE_MS);
 
-    await CustomerRefreshToken.create({
+    const child = await CustomerRefreshToken.create({
       customerId: doc.customerId,
       tokenHash: newHash,
       expiresAt,
     });
-    await CustomerRefreshToken.updateOne(
-      { _id: doc._id },
+    // Atomic claim: two concurrent refreshes of the same token must not both mint
+    // a live child. The child exists before the claim so a loser's grace lookup finds it.
+    const claimed = await CustomerRefreshToken.updateOne(
+      { _id: doc._id, isRevoked: { $ne: true } },
       {
         $set: {
           isRevoked: true,
@@ -107,7 +109,19 @@ export async function rotateRefreshToken(opaqueToken) {
       }
     );
 
-    return { opaqueToken: newOpaque, customerId: String(doc.customerId) };
+    if (claimed.modifiedCount === 1) {
+      return { opaqueToken: newOpaque, customerId: String(doc.customerId) };
+    }
+
+    // Lost the race: discard our child and treat this as a retry of a rotated parent.
+    await CustomerRefreshToken.deleteOne({ _id: child._id });
+    doc = await CustomerRefreshToken.findOne({ _id: doc._id });
+    if (!doc) {
+      throw Object.assign(new Error("Refresh token not found."), {
+        code: "TOKEN_INVALID",
+        statusCode: 401,
+      });
+    }
   }
 
   // Revoked token — grace path (rotated parent) or reject / family revoke

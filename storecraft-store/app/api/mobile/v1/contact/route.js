@@ -55,7 +55,8 @@ export async function POST(request) {
   }
 
   const ip = requestIp(request);
-  const rateLimitKey = actionRateLimitKey("mobile-contact", email, ip);
+  // Per IP only: keying on the submitted email let a sender rotate emails past the cap.
+  const rateLimitKey = actionRateLimitKey("mobile-contact", "any", ip);
 
   await dbConnect();
   const rateLimit = await checkActionRateLimit(rateLimitKey, CONTACT_RATE);

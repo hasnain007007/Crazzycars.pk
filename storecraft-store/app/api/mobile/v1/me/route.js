@@ -1,6 +1,8 @@
 /**
  * GET    /api/mobile/v1/me — Return current customer profile.
  * PATCH  /api/mobile/v1/me — Update profile (firstName, lastName, phone, password).
+ *   Changing password requires currentPassword, signs out every other session and
+ *   returns a fresh accessToken + refreshToken for this device.
  * DELETE /api/mobile/v1/me — Anonymize account (store-required deletion).
  *
  * Anonymize: blank name/phone/addresses/wishlist, replace email with deleted+id@deleted.local,
@@ -8,13 +10,13 @@
  * Orders are retained for fulfilment/accounting.
  */
 import { NextResponse } from "next/server";
-import { hashPassword } from "@/lib/auth";
+import { comparePassword, hashPassword } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import Customer from "@/lib/models/Customer.model";
 import MobileDevice from "@/lib/models/MobileDevice.model";
 import { normalizePkMobile, isValidPkMobile } from "@/lib/customerPhone";
-import { requireMobileAuth } from "@/lib/mobile/auth";
-import { revokeAllRefreshTokens } from "@/lib/mobile/refreshToken";
+import { requireMobileAuth, signMobileAccessToken } from "@/lib/mobile/auth";
+import { issueRefreshToken, revokeAllRefreshTokens } from "@/lib/mobile/refreshToken";
 import { mobileError } from "@/lib/mobile/response";
 
 export const dynamic = "force-dynamic";
@@ -103,11 +105,21 @@ export async function PATCH(request) {
   }
 
   const pwd = String(body.password || "").trim();
+  const passwordChanged = Boolean(pwd);
   if (pwd) {
     if (pwd.length < 8) {
       return mobileError("VALIDATION_ERROR", "Password must be at least 8 characters.", {
         status: 400,
         fields: { password: "Min 8 characters." },
+      });
+    }
+    // A stolen access token alone must not be able to take over the account.
+    const storedHash = doc.passwordHash || doc.password || "";
+    const currentPassword = String(body.currentPassword || "");
+    if (!storedHash || !currentPassword || !(await comparePassword(currentPassword, storedHash))) {
+      return mobileError("INVALID_CREDENTIALS", "Current password is incorrect.", {
+        status: 400,
+        fields: { currentPassword: "Current password is incorrect." },
       });
     }
     const hashed = await hashPassword(pwd);
@@ -126,7 +138,32 @@ export async function PATCH(request) {
   }
 
   const lean = await Customer.findById(doc._id).select("-password -passwordHash").lean();
-  return NextResponse.json({ customer: serializeCustomer(lean) });
+  if (!passwordChanged) {
+    return NextResponse.json({ customer: serializeCustomer(lean) });
+  }
+
+  // New password: end every other session, then hand this device a fresh pair.
+  try {
+    await revokeAllRefreshTokens(doc._id);
+    const accessToken = signMobileAccessToken({
+      sub: doc._id,
+      customerId: doc._id,
+      email: doc.email,
+    });
+    const { opaqueToken: refreshToken } = await issueRefreshToken(doc._id);
+    return NextResponse.json({
+      customer: serializeCustomer(lean),
+      accessToken,
+      refreshToken,
+      expiresIn: 900,
+      tokenType: "Bearer",
+    });
+  } catch (err) {
+    console.error("[mobile/me PATCH] session rotate:", err);
+    return mobileError(err.code || "CONFIG_ERROR", err.message || "Auth misconfigured.", {
+      status: err.statusCode || 500,
+    });
+  }
 }
 
 export async function DELETE(request) {
