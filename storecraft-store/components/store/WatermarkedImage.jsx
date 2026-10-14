@@ -87,6 +87,9 @@ export function WatermarkedImage({
     loading,
     decoding: "async",
     fetchPriority,
+    width,
+    height: width,
+    sizes,
     ...(itemProp ? { itemProp } : {}),
     onLoad: () => setLoaded(true),
     onError: () => {
@@ -105,7 +108,7 @@ export function WatermarkedImage({
       }
       setFailed(true);
     },
-    ...(srcSet ? { srcSet, sizes } : {}),
+    ...(srcSet ? { srcSet } : {}),
   };
 
   if (!watermark?.enabled || !watermark?.text) {

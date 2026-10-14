@@ -281,6 +281,9 @@ function HeroSlidePanel({
               String(slide.altText || slide.title || "").trim() ||
               `${BRAND} — Car Accessories Pakistan`
             }
+            width={bgImageMobile && bgImageMobile !== bgImage ? 828 : 1200}
+            height={bgImageMobile && bgImageMobile !== bgImage ? 248 : 360}
+            sizes="100vw"
             fetchPriority={isLcp ? "high" : "low"}
             loading={isLcp ? "eager" : "lazy"}
             decoding={isLcp ? "sync" : "async"}

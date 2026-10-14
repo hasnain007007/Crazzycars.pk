@@ -2,6 +2,7 @@
 
 /**
  * Local /media thumb with automatic fallback to the master file when *-400.webp is missing.
+ * Prefer explicit width/height + sizes for CLS; keep plain <img> for /media (avoids /_next/image 400s).
  */
 export default function LocalMediaImg({
   src,
@@ -12,7 +13,9 @@ export default function LocalMediaImg({
   loading = "lazy",
   decoding = "async",
   fetchPriority,
-  sizes,
+  sizes = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw",
+  width,
+  height,
   onLoad,
 }) {
   const masterUrl = String(master || src || "")
@@ -30,6 +33,8 @@ export default function LocalMediaImg({
       decoding={decoding}
       fetchPriority={fetchPriority}
       sizes={sizes}
+      width={width}
+      height={height}
       data-master={masterUrl}
       onLoad={onLoad}
       onError={(e) => {

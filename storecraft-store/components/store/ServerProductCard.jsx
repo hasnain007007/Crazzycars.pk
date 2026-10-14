@@ -44,6 +44,8 @@ function CardImage({ src, master, alt, priority, sizes, className }) {
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : undefined}
       sizes={sizes}
+      width={400}
+      height={400}
     />
   );
 }

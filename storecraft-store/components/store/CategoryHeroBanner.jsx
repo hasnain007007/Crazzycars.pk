@@ -97,7 +97,11 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
                 src={bannerSrc}
                 alt={imageAlt}
                 title={imageTitle}
+                width={800}
+                height={600}
+                sizes="(max-width: 768px) 100vw, 40vw"
                 fetchPriority="high"
+                loading="eager"
                 decoding="async"
               />
             </div>

@@ -91,6 +91,9 @@ function VehicleCard({ v }) {
           <img
             src={v.image}
             alt=""
+            width={148}
+            height={148}
+            sizes="(max-width: 768px) 118px, 148px"
             className="h-full w-full object-cover object-center transition group-hover:scale-[1.04] md:object-contain md:p-2.5"
             loading="lazy"
             decoding="async"

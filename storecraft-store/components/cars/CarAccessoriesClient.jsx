@@ -198,6 +198,12 @@ export function CarAccessoriesClient({ makeSlug, modelSlug, carContext, initialY
                 <img
                   src={entry.image}
                   alt={`${makeName} ${displayName}`.trim() || "Car accessories"}
+                  width={512}
+                  height={384}
+                  sizes="(max-width: 640px) 100vw, 256px"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                   className="h-full w-full object-cover"
                 />
               ) : (
