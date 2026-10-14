@@ -13,7 +13,7 @@ export const revalidate = 300;
 export const metadata = buildPageMetadata({
   title: "Shop Car Accessory Categories",
   description:
-    "Browse car accessory categories in Pakistan — splitters, body kits, LED lights, spoilers, interior trims and more. Confirm fitment on each product. Cash on Delivery on eligible items.",
+    "Browse car accessory categories in Pakistan: splitters, body kits, LEDs, spoilers and interior. Confirm fitment per product. COD on eligible items.",
   path: "/categories",
 });
 
