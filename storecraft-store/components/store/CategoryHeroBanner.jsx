@@ -70,7 +70,7 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
           <div className="cat-hero__brand">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="cat-hero__brand-logo" />
+              <img src={logoUrl} alt={storeName || "CrazzyCars.pk"} className="cat-hero__brand-logo" width={40} height={40} />
             ) : (
               <span className="cat-hero__brand-mark" aria-hidden>
                 CC

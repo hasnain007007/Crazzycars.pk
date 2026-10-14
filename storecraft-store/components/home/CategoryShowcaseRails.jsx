@@ -224,7 +224,15 @@ function CategoryRail({ config, root }) {
             </div>
             {image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={image} alt="" className="cat-showcase__promo-img" loading="lazy" />
+              <img
+                src={image}
+                alt={config.title || config.label || "Category"}
+                width={480}
+                height={640}
+                sizes="(max-width: 768px) 90vw, 280px"
+                className="cat-showcase__promo-img"
+                loading="lazy"
+              />
             ) : (
               <div className="cat-showcase__promo-fallback" aria-hidden>
                 🚗

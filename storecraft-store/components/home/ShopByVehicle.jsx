@@ -90,7 +90,7 @@ function VehicleCard({ v }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={v.image}
-            alt=""
+            alt={`${[v.make, v.model].filter(Boolean).join(" ").trim() || "Vehicle"} accessories`}
             width={148}
             height={148}
             sizes="(max-width: 768px) 118px, 148px"

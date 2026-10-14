@@ -178,7 +178,15 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
                         <span className="mega-menu__sub-thumb">
                           {img ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={img} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            <img
+                              src={img}
+                              alt={sub.name || "Category"}
+                              width={64}
+                              height={64}
+                              sizes="40px"
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
                           ) : (
                             <span className="mega-menu__sub-thumb-empty">·</span>
                           )}
