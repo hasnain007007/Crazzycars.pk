@@ -253,8 +253,8 @@ export function CartDrawer() {
 
         {/* Compact chrome ≤ ~35% viewport: COD + promo + summary + sticky CTAs */}
         {items.length > 0 ? (
-          <div className="cart-drawer__chrome shrink-0 border-t border-[var(--border)] bg-white">
-            <div className="max-h-[35dvh] space-y-2 overflow-y-auto overscroll-contain px-4 pt-3 sm:px-5">
+          <div className="cart-drawer__chrome flex max-h-[30dvh] shrink-0 flex-col border-t border-[var(--border)] bg-white">
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-4 pt-2 sm:px-5">
               {/* 3. Collapsed COD notice */}
               <div
                 className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left"
@@ -341,8 +341,8 @@ export function CartDrawer() {
               </div>
             </div>
 
-            {/* 6. Sticky bottom CTAs */}
-            <div className="shrink-0 border-t border-zinc-100 px-4 py-3 sm:px-5">
+            {/* 6. Sticky bottom CTAs (inside chrome max-height budget) */}
+            <div className="shrink-0 border-t border-zinc-100 px-4 py-2 sm:px-5">
               {checkoutUrl ? (
                 <a
                   href={checkoutHref}
@@ -365,7 +365,7 @@ export function CartDrawer() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="mt-1 flex min-h-11 w-full items-center justify-center text-center text-sm font-semibold text-[#111111] underline underline-offset-2"
+                className="mt-0.5 flex min-h-11 w-full items-center justify-center text-center text-sm font-semibold text-[#111111] underline underline-offset-2"
               >
                 Continue shopping
               </button>
