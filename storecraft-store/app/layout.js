@@ -5,6 +5,7 @@ import AnalyticsScripts from "@/components/store/AnalyticsScripts";
 import AnnouncementBar from "@/components/store/AnnouncementBar";
 import { ClientOnlyWidgets, LivePresenceClient } from "@/components/store/ClientOnlyWidgets";
 import LazyToaster from "@/components/store/LazyToaster";
+import MerchantWidgetScripts from "@/components/store/MerchantWidgetScripts";
 import ThemeInjector from "@/components/store/ThemeInjector";
 import { StoreFooter } from "@/components/store/StoreFooter";
 import { StoreHeader } from "@/components/store/StoreHeader";
@@ -19,7 +20,6 @@ import { buildFaviconMetadata } from "@/lib/faviconUrl";
 import { sanitizeMetadata, withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
-import { GOOGLE_MERCHANT_ID } from "@/lib/googleCustomerReviews";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { BRAND } from "@/lib/brand";
 import "./globals.css";
@@ -276,35 +276,7 @@ export default async function RootLayout({ children }) {
       >
         <ThemeInjector settings={settings} />
         <AnalyticsScripts settings={settings} />
-        {/* Google Customer Reviews badge — in initial HTML for Merchant verification crawlers */}
-        <script
-          id="merchantWidgetScript"
-          src="https://www.gstatic.com/shopping/merchant/merchantwidget.js"
-          defer
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-(function(){
-  function start(){
-    try{
-      if(typeof merchantwidget==='undefined'||!merchantwidget.start)return false;
-      merchantwidget.start({merchant_id:${GOOGLE_MERCHANT_ID},position:'BOTTOM_RIGHT'});
-      return true;
-    }catch(e){return false;}
-  }
-  function boot(){
-    var s=document.getElementById('merchantWidgetScript');
-    if(s){s.addEventListener('load',function(){setTimeout(start,700);});}
-    setTimeout(function(){
-      var n=0,t=setInterval(function(){n++;if(start()||n>50)clearInterval(t);},200);
-    },700);
-  }
-  if(document.readyState==='complete'){boot();}
-  else{window.addEventListener('load',boot);}
-})();`,
-          }}
-        />
+        <MerchantWidgetScripts />
         <LivePresenceClient />
         <script
           type="application/ld+json"
