@@ -125,22 +125,30 @@ function primaryButtonColors(button) {
   };
 }
 
-function CtaLink({ button, className }) {
+function CtaLink({ button, className, tabIndex }) {
   const text = String(button?.text || "Shop Now").trim();
   const href = normalizeButtonUrl(button?.url || button?.link);
   const style = className.includes("home-hero__btn--ghost")
     ? undefined
     : primaryButtonColors(button);
+  const focusProps = tabIndex === undefined ? {} : { tabIndex };
 
   if (href.startsWith("http://") || href.startsWith("https://")) {
     return (
-      <a href={href} className={className} style={style} target="_blank" rel="noopener noreferrer">
+      <a
+        href={href}
+        className={className}
+        style={style}
+        target="_blank"
+        rel="noopener noreferrer"
+        {...focusProps}
+      >
         {text}
       </a>
     );
   }
   return (
-    <Link href={href} className={className} style={style}>
+    <Link href={href} className={className} style={style} {...focusProps}>
       {text}
     </Link>
   );
@@ -174,7 +182,7 @@ function PageHeroH1({ slide, settings }) {
 }
 
 /** Slide overlay copy — never emits <h1>; page heading lives in PageHeroH1. */
-function HeroCopy({ slide, settings, animateKey }) {
+function HeroCopy({ slide, settings, animateKey, isActive = true }) {
   const { headline, sub, buttons, hasOverlay, hasText } = resolveCopy(slide, settings);
 
   if (!hasOverlay) return null;
@@ -186,7 +194,12 @@ function HeroCopy({ slide, settings, animateKey }) {
       {buttons.length ? (
         <div className="home-hero__ctas">
           {buttons.map((btn, i) => (
-            <CtaLink key={`${btn.text}-${i}`} button={btn} className={buttonClassName(btn)} />
+            <CtaLink
+              key={`${btn.text}-${i}`}
+              button={btn}
+              className={buttonClassName(btn)}
+              tabIndex={isActive ? undefined : -1}
+            />
           ))}
         </div>
       ) : null}
@@ -317,6 +330,7 @@ function HeroSlidePanel({
           <HeroCopy
             slide={slide}
             settings={settings}
+            isActive={isActive}
             animateKey={reduceMotion ? "static" : `${slide.id}-${isActive ? "on" : "off"}`}
           />
         </div>

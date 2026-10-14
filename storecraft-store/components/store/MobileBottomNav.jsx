@@ -16,8 +16,8 @@ const NAV = [
 ];
 
 function NavIcon({ name, active }) {
-  const color = active ? "#C41E1E" : "#9CA3AF";
-  const stroke = active ? "#C41E1E" : "#9CA3AF";
+  const color = active ? "#C41E1E" : "#4B5563";
+  const stroke = active ? "#C41E1E" : "#4B5563";
 
   if (name === "home") {
     return (

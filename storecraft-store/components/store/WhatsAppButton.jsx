@@ -46,7 +46,7 @@ export default function WhatsAppButton() {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`store-whatsapp-fab fixed z-[9000] flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md transition hover:scale-105 md:bottom-6 md:h-12 md:w-12 ${
+      className={`store-whatsapp-fab fixed z-[9000] flex h-11 w-11 items-center justify-center rounded-full text-white shadow-md transition hover:scale-105 md:bottom-6 md:h-12 md:w-12 ${
         isRight ? "store-whatsapp-fab--right md:right-6" : "store-whatsapp-fab--left md:left-6"
       }`}
       style={{

@@ -247,6 +247,7 @@ export function CategoryDetailPageClient({
                       className="subcat-circle-item"
                       tabIndex={copy === 0 ? undefined : -1}
                       aria-hidden={copy === 1 ? true : undefined}
+                      inert={copy === 1 ? true : undefined}
                       style={
                         copy === 0
                           ? { animationDelay: `${Math.min(idx, 12) * 45}ms` }
