@@ -1,11 +1,10 @@
 import { Inter, Rajdhani } from "next/font/google";
 import { cache, Suspense } from "react";
-import { Toaster } from "react-hot-toast";
+import dynamic from "next/dynamic";
 import AnalyticsScripts from "@/components/store/AnalyticsScripts";
 import AnnouncementBar from "@/components/store/AnnouncementBar";
 import { ClientOnlyWidgets, LivePresenceClient } from "@/components/store/ClientOnlyWidgets";
-import MobileBottomNav from "@/components/store/MobileBottomNav";
-import ScrollToTop from "@/components/store/ScrollToTop";
+import LazyToaster from "@/components/store/LazyToaster";
 import ThemeInjector from "@/components/store/ThemeInjector";
 import { StoreFooter } from "@/components/store/StoreFooter";
 import { StoreHeader } from "@/components/store/StoreHeader";
@@ -24,6 +23,9 @@ import { GOOGLE_MERCHANT_ID } from "@/lib/googleCustomerReviews";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { BRAND } from "@/lib/brand";
 import "./globals.css";
+
+const MobileBottomNav = dynamic(() => import("@/components/store/MobileBottomNav"));
+const ScrollToTop = dynamic(() => import("@/components/store/ScrollToTop"));
 
 /** Cache HTML for 5 min — major TTFB win vs force-dynamic. */
 export const revalidate = 300;
@@ -333,7 +335,7 @@ export default async function RootLayout({ children }) {
             <MobileBottomNav />
           </StoreProviders>
         </CustomerProvider>
-        <Toaster position="top-right" toastOptions={{ className: "text-sm" }} />
+        <LazyToaster />
       </body>
     </html>
   );

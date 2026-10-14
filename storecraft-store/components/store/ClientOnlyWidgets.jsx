@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CartDrawer } from "@/components/store/CartDrawer";
-import WhatsAppButton from "@/components/store/WhatsAppButton";
-import { LivePresenceBeacon } from "@/components/store/LivePresenceBeacon";
 
 /**
- * SSR null, then mount. Avoid next/dynamic `{ ssr: false }`, which emits
- * BAILOUT_TO_CLIENT_SIDE_RENDERING into the HTML document.
+ * SSR null, then mount interaction-only widgets.
+ * Dynamic-import after mount so CartDrawer / WhatsApp stay out of the first JS graph.
+ * Avoid next/dynamic `{ ssr: false }`, which emits BAILOUT_TO_CLIENT_SIDE_RENDERING.
  */
 function AfterMount({ children }) {
   const [mounted, setMounted] = useState(false);
@@ -18,10 +16,52 @@ function AfterMount({ children }) {
   return children;
 }
 
+function LazyCartAndWhatsApp() {
+  const [nodes, setNodes] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      import("@/components/store/CartDrawer"),
+      import("@/components/store/WhatsAppButton"),
+    ]).then(([cartMod, waMod]) => {
+      if (cancelled) return;
+      const CartDrawer = cartMod.CartDrawer;
+      const WhatsAppButton = waMod.default;
+      setNodes(
+        <>
+          <CartDrawer />
+          <WhatsAppButton />
+        </>
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return nodes;
+}
+
+function LazyLivePresence() {
+  const [Beacon, setBeacon] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    import("@/components/store/LivePresenceBeacon").then((mod) => {
+      if (!cancelled) setBeacon(() => mod.LivePresenceBeacon);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  if (!Beacon) return null;
+  return <Beacon />;
+}
+
 export function LivePresenceClient() {
   return (
     <AfterMount>
-      <LivePresenceBeacon />
+      <LazyLivePresence />
     </AfterMount>
   );
 }
@@ -29,8 +69,7 @@ export function LivePresenceClient() {
 export function ClientOnlyWidgets() {
   return (
     <AfterMount>
-      <CartDrawer />
-      <WhatsAppButton />
+      <LazyCartAndWhatsApp />
     </AfterMount>
   );
 }
