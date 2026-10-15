@@ -2,17 +2,21 @@
 
 import Script from "next/script";
 import { GOOGLE_MERCHANT_ID } from "@/lib/googleCustomerReviews";
+import { useDeferredThirdParty } from "@/lib/useDeferredThirdParty";
 
 /**
- * Google Merchant badge — load after page idle so it never contends with LCP.
+ * Google Merchant badge — load on first interaction or ~3s after window load.
  */
 export default function MerchantWidgetScripts() {
+  const ready = useDeferredThirdParty(3000);
+  if (!ready) return null;
+
   return (
     <>
       <Script
         id="merchantWidgetScript"
         src="https://www.gstatic.com/shopping/merchant/merchantwidget.js"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         onLoad={() => {
           window.setTimeout(() => {
             try {
@@ -28,7 +32,7 @@ export default function MerchantWidgetScripts() {
           }, 700);
         }}
       />
-      <Script id="merchant-widget-boot" strategy="lazyOnload">
+      <Script id="merchant-widget-boot" strategy="afterInteractive">
         {`
 (function(){
   function start(){
