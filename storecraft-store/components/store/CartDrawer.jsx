@@ -255,7 +255,11 @@ export function CartDrawer() {
         {items.length > 0 ? (
           <div className="cart-drawer__chrome flex shrink-0 flex-col border-t border-[var(--border)] bg-white">
             {/* COD + promo capped so items keep ≥60%; summary + CTAs stay pinned */}
-            <div className="max-h-[16dvh] space-y-1.5 overflow-y-auto overscroll-contain px-4 pt-2 sm:px-5">
+            <div
+              className={`space-y-1.5 overflow-y-auto overscroll-contain px-4 pt-2 sm:px-5 ${
+                codOpen ? "max-h-[32dvh]" : "max-h-[16dvh]"
+              }`}
+            >
               {/* 3. Collapsed COD notice */}
               <div
                 className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-left"
