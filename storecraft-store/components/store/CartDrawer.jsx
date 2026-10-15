@@ -90,7 +90,7 @@ export function CartDrawer() {
         aria-label="Shopping cart"
       >
         {/* 1. Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-4 py-3 sm:px-5">
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-4 py-2 sm:px-5">
           <h2 className="text-lg font-semibold text-[var(--text)]">
             Your Cart{" "}
             <span className="ml-1 rounded-full bg-black px-2 py-0.5 text-xs text-white">
@@ -255,10 +255,10 @@ export function CartDrawer() {
         {items.length > 0 ? (
           <div className="cart-drawer__chrome flex shrink-0 flex-col border-t border-[var(--border)] bg-white">
             {/* COD + promo capped so items keep ≥60%; summary + CTAs stay pinned */}
-            <div className="max-h-[18dvh] space-y-2 overflow-y-auto overscroll-contain px-4 pt-2 sm:px-5">
+            <div className="max-h-[16dvh] space-y-1.5 overflow-y-auto overscroll-contain px-4 pt-2 sm:px-5">
               {/* 3. Collapsed COD notice */}
               <div
-                className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left"
+                className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-left"
                 role="note"
               >
                 <div className="flex items-start gap-2">
@@ -295,7 +295,7 @@ export function CartDrawer() {
               {!promoOpen ? (
                 <button
                   type="button"
-                  className="flex min-h-11 w-full items-center text-left text-sm font-semibold text-[#111111] underline underline-offset-2"
+                  className="flex w-full items-center py-1 text-left text-sm font-semibold text-[#111111] underline underline-offset-2"
                   onClick={() => setPromoOpen(true)}
                 >
                   Have a promo code?
@@ -305,11 +305,11 @@ export function CartDrawer() {
                   <input
                     type="text"
                     placeholder="Enter promo code"
-                    className="h-11 min-h-11 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm"
+                    className="h-10 min-h-10 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm"
                   />
                   <button
                     type="button"
-                    className="h-11 min-h-11 rounded-lg border border-[var(--border)] px-3 text-sm font-medium"
+                    className="h-10 min-h-10 rounded-lg border border-[var(--border)] px-3 text-sm font-medium"
                   >
                     Apply
                   </button>
@@ -318,8 +318,8 @@ export function CartDrawer() {
             </div>
 
             {/* 5–6. Pinned summary + sticky CTAs */}
-            <div className="shrink-0 border-t border-zinc-100 px-4 pb-2 pt-2 sm:px-5">
-              <div className="space-y-1 pb-2 text-sm">
+            <div className="shrink-0 border-t border-zinc-100 px-4 pb-1.5 pt-1.5 sm:px-5">
+              <div className="space-y-0.5 pb-1.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-zinc-600">Subtotal ({items.length} items)</span>
                   <span className="price font-semibold text-zinc-900">{formatPrice(subtotal)}</span>
@@ -332,9 +332,9 @@ export function CartDrawer() {
                     </span>
                   </div>
                 ) : null}
-                <div className="flex items-center justify-between pt-0.5">
+                <div className="flex items-center justify-between">
                   <span className="text-base font-semibold">Total</span>
-                  <span className="price text-xl font-bold">{formatPrice(estimatedTotal)}</span>
+                  <span className="price text-lg font-bold">{formatPrice(estimatedTotal)}</span>
                 </div>
                 {estimatedShipping > 0 ? (
                   <p className="m-0 text-[11px] leading-snug text-zinc-500">
@@ -364,7 +364,7 @@ export function CartDrawer() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="mt-0.5 flex min-h-10 w-full items-center justify-center text-center text-sm font-semibold text-[#111111] underline underline-offset-2"
+                className="mt-0.5 flex w-full items-center justify-center py-1.5 text-center text-sm font-semibold text-[#111111] underline underline-offset-2"
               >
                 Continue shopping
               </button>
