@@ -17,6 +17,7 @@ export default function LocalMediaImg({
   sizes = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw",
   width,
   height,
+  draggable,
   onLoad,
 }) {
   const masterUrl = String(master || src || "")
@@ -37,6 +38,7 @@ export default function LocalMediaImg({
       sizes={sizes}
       width={width}
       height={height}
+      draggable={draggable}
       data-master={masterUrl}
       onLoad={onLoad}
       onError={(e) => {
