@@ -159,9 +159,20 @@ export function categoryImageUrl(src, width = 360) {
   return cloudinaryUrl(src, { width, height: width, crop: "fill" });
 }
 
-/** Category page single banner (wide landscape). */
+/**
+ * Category page hero banner — prefer prebuilt `-800.webp` (≈316 CSS px @ 2× DPR).
+ * Falls back to master via <img onError> when the derivative is missing.
+ */
 export function categoryBannerUrl(src) {
-  return cloudinaryUrl(src, { width: 1400, height: 480, crop: "fill" });
+  const path = localMediaPath(src) || "";
+  if (path && /\/media\/(categories|uploads|brand)\//i.test(path)) {
+    if (/-800\.webp$/i.test(path)) return path;
+    if (/-400\.(webp|jpe?g|png)$/i.test(path)) {
+      return path.replace(/-400\.(webp|jpe?g|png)$/i, "-800.webp");
+    }
+    return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-800.webp");
+  }
+  return cloudinaryUrl(src, { width: 800, height: 480, crop: "fill" });
 }
 
 /** Category page hero collage slots (legacy). */

@@ -1,6 +1,7 @@
-import { categoryBannerUrl, logoImageUrl } from "@/lib/cloudinaryImage";
+import { categoryBannerUrl, logoImageUrl, localMediaPath } from "@/lib/cloudinaryImage";
 import { trimmedLogoUrl } from "@/lib/storeLogo";
 import { CATEGORY_H1_OVERRIDES } from "@/lib/seo/gscAudit2026-10.mjs";
+import LocalMediaImg from "@/components/store/LocalMediaImg";
 
 function productImageUrls(products) {
   const urls = [];
@@ -70,7 +71,16 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
           <div className="cat-hero__brand">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={storeName || "CrazzyCars.pk"} className="cat-hero__brand-logo" width={40} height={40} />
+              <img
+                src={logoUrl}
+                alt={storeName || "CrazzyCars.pk"}
+                className="cat-hero__brand-logo"
+                width={40}
+                height={40}
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+              />
             ) : (
               <span className="cat-hero__brand-mark" aria-hidden>
                 CC
@@ -92,9 +102,9 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
         {bannerSrc ? (
           <div className="cat-hero__visual">
             <div className="cat-hero__visual-frame">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <LocalMediaImg
                 src={bannerSrc}
+                master={localMediaPath(rawBanner) || rawBanner}
                 alt={imageAlt}
                 title={imageTitle}
                 width={800}

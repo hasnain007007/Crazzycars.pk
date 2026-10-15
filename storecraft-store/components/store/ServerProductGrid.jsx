@@ -12,10 +12,13 @@ export function ServerProductGrid({
   view = "grid",
   id = "server-product-listing",
   emptyMessage = "No products found.",
+  /** How many leading cards get fetchPriority=high / eager. Category pages pass 0 (hero is sole LCP). */
+  priorityCount = 2,
 }) {
   const viewMeta = LISTING_VIEWS.find((v) => v.id === view) || LISTING_VIEWS[0];
   const rows = Array.isArray(products) ? products : [];
   const isRowView = view === "list" || view === "detail";
+  const n = Math.max(0, Number(priorityCount) || 0);
 
   if (!rows.length) {
     return (
@@ -35,7 +38,7 @@ export function ServerProductGrid({
               <ServerProductCard
                 product={product}
                 categoryName={categoryName}
-                priority={idx < 2}
+                priority={idx < n}
                 variant={view}
               />
             </Fragment>
@@ -49,7 +52,7 @@ export function ServerProductGrid({
               <ServerProductCard
                 product={product}
                 categoryName={categoryName}
-                priority={idx < 2}
+                priority={idx < n}
                 variant="grid"
               />
             </Fragment>
