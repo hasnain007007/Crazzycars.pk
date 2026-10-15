@@ -18,6 +18,7 @@ export function ProductListingSection({
   showTitle = true,
   emptyMessage,
   layout = "page",
+  priorityCount = 2,
   children,
 }) {
   const urlState = urlStateProp || listingToUrlState(listing);
@@ -47,6 +48,7 @@ export function ProductListingSection({
         categoryName={categoryName || title}
         view={listing.view}
         emptyMessage={emptyMessage}
+        priorityCount={priorityCount}
       />
       <ServerListingPagination
         pathname={pathname}

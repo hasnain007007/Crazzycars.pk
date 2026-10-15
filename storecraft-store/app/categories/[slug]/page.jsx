@@ -363,6 +363,7 @@ export default async function CategoryPage({ params, searchParams }) {
           categoryName={data.category?.name}
           showTitle={false}
           emptyMessage="No products found in this category."
+          priorityCount={0}
         />
         {(() => {
           const { remainderHtml } = splitCategoryDescriptionHtml(resolvedDescHtml);
@@ -411,6 +412,7 @@ export default async function CategoryPage({ params, searchParams }) {
           categoryName={collection.title}
           showTitle={false}
           emptyMessage="No products found in this category."
+          priorityCount={0}
         />
       </div>
     );
