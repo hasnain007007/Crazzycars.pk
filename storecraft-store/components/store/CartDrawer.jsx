@@ -9,6 +9,7 @@ import { productPath } from "@/lib/productPath";
 import {
   shippingAdvanceBannerEn,
   shippingAdvanceBannerUr,
+  shippingAdvanceCollapsedEn,
 } from "@/lib/storePolicyCopy";
 import { cartHasBulkyItem, shippingFloorPKR } from "@/lib/shippingTier";
 
@@ -267,7 +268,7 @@ export function CartDrawer() {
               >
                 <div className="flex items-start gap-2">
                   <p className="m-0 min-w-0 flex-1 text-[13px] font-medium leading-snug text-amber-950">
-                    COD needs a small booking advance (from Rs. 250).
+                    {shippingAdvanceCollapsedEn()}
                   </p>
                   <button
                     type="button"

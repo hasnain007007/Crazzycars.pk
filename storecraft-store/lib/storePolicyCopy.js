@@ -67,6 +67,11 @@ export function standardDeliveryFeeShort() {
   return `Delivery Rs. ${regular} regular · Rs. ${bulky} bulky`;
 }
 
+/** Cart drawer collapsed COD line — English. */
+export function shippingAdvanceCollapsedEn() {
+  return `COD needs a small booking advance (from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}).`;
+}
+
 /** Cart / checkout / PDP banner — English. Customer-facing: ask for advance only (no tier breakdown). */
 export function shippingAdvanceBannerEn() {
   return `COD orders need a small booking amount (from Rs. 250) before we process — deducted from your total, refunded if the item doesn't fit. Balance on delivery.`;
