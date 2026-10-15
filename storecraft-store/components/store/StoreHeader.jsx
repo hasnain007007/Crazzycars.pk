@@ -746,15 +746,16 @@ export function StoreHeader({ initialCategoryTree = null }) {
             onMouseEnter={() =>
               openMega({ label: "Categories", href: "/categories", mega: true })
             }
-            onFocus={() =>
-              openMega({ label: "Categories", href: "/categories", mega: true })
-            }
+            onFocus={() => {
+              // Preload only — opening on focus races with Enter (click toggles closed).
+              void loadMegaMenu();
+            }}
             onClick={() => {
-              if (megaOpen) {
-                setMegaOpen(false);
-                return;
-              }
-              openMega({ label: "Categories", href: "/categories", mega: true });
+              void loadMegaMenu().then((Comp) => {
+                if (!Comp) return;
+                setActiveMegaItem({ label: "Categories", href: "/categories", mega: true });
+                setMegaOpen((open) => !open);
+              });
             }}
             aria-expanded={megaOpen}
             aria-haspopup="true"
@@ -775,7 +776,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
                 className={navLinkClass(item)}
                 aria-current={isNavItemActive(item) ? "page" : undefined}
                 onFocus={() => {
-                  if (megaEnabled && item.mega) openMega(item);
+                  if (megaEnabled && item.mega) void loadMegaMenu();
                 }}
               >
                 {item.label}
