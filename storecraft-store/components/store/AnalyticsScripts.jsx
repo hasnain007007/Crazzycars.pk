@@ -1,30 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { trackPageView } from "@/lib/metaPixel";
 import { useDeferredThirdParty } from "@/lib/useDeferredThirdParty";
 
+/** One PageView per App Router location (survives Strict Mode remounts). */
+const pageViewFiredKeys = new Set();
+
 /**
- * Fire PageView on App Router navigations once the pixel is available.
- * Init script intentionally does NOT call PageView — avoids double-firing with this tracker.
+ * Fire PageView once the deferred pixel is available.
+ * Init script intentionally does NOT call PageView — this tracker owns it.
  */
 function MetaPixelPageViews() {
   const pathname = usePathname();
   const [search, setSearch] = useState("");
+  const firedRef = useRef(false);
 
   useEffect(() => {
     setSearch(String(window.location.search || "").replace(/^\?/, ""));
+    firedRef.current = false;
   }, [pathname]);
 
   useEffect(() => {
+    const key = `${pathname}?${search}`;
     let attempts = 0;
     let timer;
 
     const fire = () => {
+      if (firedRef.current || pageViewFiredKeys.has(key)) {
+        firedRef.current = true;
+        return true;
+      }
       if (typeof window !== "undefined" && typeof window.fbq === "function") {
         trackPageView();
+        firedRef.current = true;
+        pageViewFiredKeys.add(key);
         return true;
       }
       return false;
@@ -32,7 +44,6 @@ function MetaPixelPageViews() {
 
     if (fire()) return undefined;
 
-    // Pixel may still be downloading after the defer gate opens — retry briefly.
     timer = window.setInterval(() => {
       attempts += 1;
       if (fire() || attempts > 40) window.clearInterval(timer);
@@ -47,7 +58,7 @@ function MetaPixelPageViews() {
 export default function AnalyticsScripts({ settings }) {
   const gaId = String(settings?.seo?.googleAnalyticsId || "").trim();
   const fbPixelId = String(settings?.seo?.facebookPixelId || "").trim();
-  const deferMeta = useDeferredThirdParty(3000);
+  const deferMeta = useDeferredThirdParty(8000);
 
   if (!gaId && !fbPixelId) return null;
 
@@ -71,7 +82,7 @@ export default function AnalyticsScripts({ settings }) {
       ) : null}
       {fbPixelId && deferMeta ? (
         <>
-          <Script id="fb-pixel" strategy="afterInteractive">
+          <Script id="fb-pixel" strategy="lazyOnload">
             {`
               !function(f,b,e,v,n,t,s)
               {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

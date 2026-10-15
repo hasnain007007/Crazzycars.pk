@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 
 /**
- * Defer third-party boot until the first user interaction or `delayMs` after
- * the window `load` event — whichever comes first.
- * Ensures analytics still runs for non-interactive visitors via the timeout.
+ * Defer third-party boot until a real gesture (pointer/key/touch) or `delayMs`
+ * after the window `load` event — whichever comes first.
+ * Scroll is intentionally NOT a trigger (PSI/Lighthouse scroll during LCP).
  */
-export function useDeferredThirdParty(delayMs = 3000) {
+export function useDeferredThirdParty(delayMs = 8000) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function useDeferredThirdParty(delayMs = 3000) {
     };
 
     const onInteract = () => arm();
-    const events = ["pointerdown", "keydown", "touchstart", "scroll"];
+    const events = ["pointerdown", "keydown", "touchstart"];
 
     const startTimer = () => {
       timeoutId = window.setTimeout(arm, delayMs);
