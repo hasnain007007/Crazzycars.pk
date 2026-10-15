@@ -253,8 +253,9 @@ export function CartDrawer() {
 
         {/* Compact chrome ≤ ~35% viewport: COD + promo + summary + sticky CTAs */}
         {items.length > 0 ? (
-          <div className="cart-drawer__chrome flex max-h-[30dvh] shrink-0 flex-col border-t border-[var(--border)] bg-white">
-            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-4 pt-2 sm:px-5">
+          <div className="cart-drawer__chrome flex shrink-0 flex-col border-t border-[var(--border)] bg-white">
+            {/* COD + promo capped so items keep ≥60%; summary + CTAs stay pinned */}
+            <div className="max-h-[18dvh] space-y-2 overflow-y-auto overscroll-contain px-4 pt-2 sm:px-5">
               {/* 3. Collapsed COD notice */}
               <div
                 className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left"
@@ -314,9 +315,11 @@ export function CartDrawer() {
                   </button>
                 </div>
               )}
+            </div>
 
-              {/* 5. Summary */}
-              <div className="space-y-1 pb-1 text-sm">
+            {/* 5–6. Pinned summary + sticky CTAs */}
+            <div className="shrink-0 border-t border-zinc-100 px-4 pb-2 pt-2 sm:px-5">
+              <div className="space-y-1 pb-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-zinc-600">Subtotal ({items.length} items)</span>
                   <span className="price font-semibold text-zinc-900">{formatPrice(subtotal)}</span>
@@ -329,7 +332,7 @@ export function CartDrawer() {
                     </span>
                   </div>
                 ) : null}
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center justify-between pt-0.5">
                   <span className="text-base font-semibold">Total</span>
                   <span className="price text-xl font-bold">{formatPrice(estimatedTotal)}</span>
                 </div>
@@ -339,10 +342,6 @@ export function CartDrawer() {
                   </p>
                 ) : null}
               </div>
-            </div>
-
-            {/* 6. Sticky bottom CTAs (inside chrome max-height budget) */}
-            <div className="shrink-0 border-t border-zinc-100 px-4 py-2 sm:px-5">
               {checkoutUrl ? (
                 <a
                   href={checkoutHref}
@@ -365,7 +364,7 @@ export function CartDrawer() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="mt-0.5 flex min-h-11 w-full items-center justify-center text-center text-sm font-semibold text-[#111111] underline underline-offset-2"
+                className="mt-0.5 flex min-h-10 w-full items-center justify-center text-center text-sm font-semibold text-[#111111] underline underline-offset-2"
               >
                 Continue shopping
               </button>
