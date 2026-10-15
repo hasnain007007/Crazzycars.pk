@@ -470,6 +470,15 @@ export function StoreHeader({ initialCategoryTree = null }) {
   }, [mobileSearchOpen, isMdUp]);
 
   useEffect(() => {
+    if (!megaOpen) return undefined;
+    function onKey(e) {
+      if (e.key === "Escape") setMegaOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [megaOpen]);
+
+  useEffect(() => {
     const onAdded = (e) => {
       setCartToast({ message: "Added to cart", id: Date.now() });
     };
