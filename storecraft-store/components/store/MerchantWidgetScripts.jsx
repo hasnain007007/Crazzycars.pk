@@ -5,10 +5,10 @@ import { GOOGLE_MERCHANT_ID } from "@/lib/googleCustomerReviews";
 import { useDeferredThirdParty } from "@/lib/useDeferredThirdParty";
 
 /**
- * Google Merchant badge — load on first interaction or ~3s after window load.
+ * Google Merchant badge — load on first gesture or ~8s after window load.
  */
 export default function MerchantWidgetScripts() {
-  const ready = useDeferredThirdParty(3000);
+  const ready = useDeferredThirdParty(8000);
   if (!ready) return null;
 
   return (
@@ -16,7 +16,7 @@ export default function MerchantWidgetScripts() {
       <Script
         id="merchantWidgetScript"
         src="https://www.gstatic.com/shopping/merchant/merchantwidget.js"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         onLoad={() => {
           window.setTimeout(() => {
             try {
@@ -32,7 +32,7 @@ export default function MerchantWidgetScripts() {
           }, 700);
         }}
       />
-      <Script id="merchant-widget-boot" strategy="afterInteractive">
+      <Script id="merchant-widget-boot" strategy="lazyOnload">
         {`
 (function(){
   function start(){
