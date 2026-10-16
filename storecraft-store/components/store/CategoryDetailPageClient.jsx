@@ -259,7 +259,7 @@ export function CategoryDetailPageClient({
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={sub.image.url}
-                            alt={copy === 0 ? sub.image?.altText || sub.name || "Category" : ""}
+                            alt={sub.image?.altText || sub.name || "Category"}
                             title={sub.image?.title || sub.name}
                             width={120}
                             height={120}

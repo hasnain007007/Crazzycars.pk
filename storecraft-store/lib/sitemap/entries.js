@@ -183,7 +183,7 @@ export async function fetchSitemapContext(headers) {
 
   await dbConnect();
 
-  const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts, vehicleProductFreshness] =
+  const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts] =
     await Promise.all([
       Product.find(STOREFRONT_PRODUCT_FILTER).select("slug updatedAt").lean(),
       Category.find({ status: "active" }).select("slug updatedAt contentUpdatedAt _id").lean(),
@@ -192,26 +192,7 @@ export async function fetchSitemapContext(headers) {
       vehicleIdsWithProducts(),
       Page.find({ status: "published" }).select("slug updatedAt").lean(),
       BlogPost.find({ status: "published" }).select("slug updatedAt publishedAt contentUpdatedAt").lean(),
-      Product.aggregate([
-        {
-          $match: {
-            ...STOREFRONT_PRODUCT_FILTER,
-            compatibleVehicles: { $exists: true, $type: "array", $ne: [] },
-          },
-        },
-        { $unwind: "$compatibleVehicles" },
-        {
-          $group: {
-            _id: "$compatibleVehicles",
-            lastmod: { $max: "$updatedAt" },
-          },
-        },
-      ]),
     ]);
-
-  const vehicleProductLastmod = new Map(
-    (vehicleProductFreshness || []).map((row) => [String(row._id), asDate(row.lastmod)])
-  );
 
   const productSlugSet = new Set(
     products.map((p) => String(p.slug || "").toLowerCase()).filter(Boolean)
@@ -245,14 +226,10 @@ export async function fetchSitemapContext(headers) {
   const carEntries = vehicles
     .filter((v) => v.slug && vehiclesWithProducts.has(String(v._id)))
     .map((v) => {
-      const id = String(v._id);
-      // Prefer vehicle document timestamps; fall back to newest assigned product.
-      // Never use build time.
-      const lastmod = maxDate(
-        v.contentUpdatedAt,
-        v.updatedAt,
-        vehicleProductLastmod.get(id)
-      );
+      // Car hub lastmod = vehicle document only (contentUpdatedAt → updatedAt).
+      // Do not blend in product freshness — that made every lastmod look like
+      // "build/reindex time" after catalogue bulk updates.
+      const lastmod = maxDate(v.contentUpdatedAt, v.updatedAt);
       return toEntry(headers, `/cars/${v.slug}`, lastmod, "weekly", 0.8);
     });
 

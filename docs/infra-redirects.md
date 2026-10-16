@@ -24,18 +24,13 @@ ufw status
 
 Also confirm the cloud provider security group / firewall allows 80.
 
-## Current Coolify behaviour (observed 16 Oct 2026)
+## Current Coolify behaviour (verified 16 Oct 2026)
 
-Coolify already opens port 80 and attaches:
+- Traefik (`coolify-proxy`) listens on `0.0.0.0:80` and `:443`.
+- UFW allows `80/tcp` and `443/tcp`.
+- File provider `deploy/traefik/crazzycars-https-apex.yaml` → `/data/coolify/proxy/dynamic/` issues a **308 Permanent Redirect** (Traefik v3 “permanent”) in **one hop** to `https://crazzycars.pk$1` for both apex and www on HTTP, and for www on HTTPS.
 
-- `traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https` (HTTP → HTTPS, currently **307**)
-- Separate HTTP routers for `crazzycars.pk` and `www.crazzycars.pk`
-- HTTPS www is served by Traefik; Next middleware then **308**s www → apex
-
-Gaps vs the SEO target:
-
-1. Redirect should be **301 permanent**, not 307.
-2. `http://www…` should jump straight to `https://crazzycars.pk…` (one hop), not via `https://www…`.
+If `http://crazzycars.pk` times out from your network but works from the VPS (`curl -sI http://127.0.0.1/contact -H 'Host: crazzycars.pk'`), check the **cloud provider firewall / security group** (Hostinger hPanel → Firewall) — UFW alone is not enough when the provider drops :80 upstream.
 
 ## Applied file (preferred)
 

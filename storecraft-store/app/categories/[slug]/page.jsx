@@ -193,10 +193,19 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
         ? [
             {
               url: category.image.url,
+              width: 1200,
+              height: 630,
               alt: category.image?.altText || category.name,
             },
           ]
-        : [];
+        : [
+            {
+              url: "/og/default-1200x630.jpg",
+              width: 1200,
+              height: 630,
+              alt: category.name || BRAND,
+            },
+          ];
       const listingSeo = listingMetadata(listingPath, listing, {
         thin: Boolean(detail && Number(detail.productCount) === 0),
       });
@@ -216,7 +225,7 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
           card: "summary_large_image",
           title,
           description,
-          images: category.image?.url ? [category.image.url] : [],
+          images: [ogImage[0].url],
         },
         alternates: listingSeo.alternates,
       };

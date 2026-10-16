@@ -22,6 +22,7 @@ import { safeJsonLd } from "@/lib/safeJsonLd";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { BRAND_NAME, TITLE_SUFFIX, withBrandTitleSuffix } from "@/lib/brand";
+import { contactHoursToOpeningHoursSpec } from "@/lib/contactHours";
 import "./globals.css";
 
 const MobileBottomNav = dynamic(() => import("@/components/store/MobileBottomNav"));
@@ -258,7 +259,7 @@ export default async function RootLayout({ children }) {
     mapUrl: general.mapUrl || undefined,
     priceRange: general.priceRange || undefined,
     sameAs: Array.isArray(general.sameAs) ? general.sameAs : undefined,
-    openingHours: Array.isArray(general.openingHours) ? general.openingHours : undefined,
+    openingHours: contactHoursToOpeningHoursSpec(settings?.contactPage?.hours),
   });
 
   const websiteJsonLd = buildWebsiteLd({ name: BRAND_NAME });

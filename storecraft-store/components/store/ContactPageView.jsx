@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ContactForm from "@/components/store/ContactForm";
 import { BRAND_NAME } from "@/lib/brand";
+import { resolveContactHourLines } from "@/lib/contactHours";
 
 const DEFAULT_HERO = {
   badge: "Get In Touch",
@@ -64,23 +65,8 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
     .map((l) => String(l || "").trim())
     .filter(Boolean);
 
-  // One consistent Sunday line — prefer weekend, else closed, never both contradictory.
-  const hours = contact.hours && typeof contact.hours === "object" ? contact.hours : {};
-  const weekdays = String(hours.weekdays || "Monday - Saturday: 9am - 9pm PKT").trim();
-  const weekendRaw = String(hours.weekend || "").trim();
-  const closedRaw = String(hours.closed || "").trim();
-  let sundayLine = "";
-  if (/sunday/i.test(weekendRaw)) sundayLine = weekendRaw;
-  else if (/sunday/i.test(closedRaw)) sundayLine = closedRaw;
-  else if (weekendRaw) sundayLine = weekendRaw;
-  else if (closedRaw) sundayLine = closedRaw;
-  else sundayLine = "Sunday: Closed";
-
-  const hourLines = [weekdays, sundayLine].filter(Boolean);
-
-  const structuredHours = Array.isArray(localBusiness.openingHours)
-    ? localBusiness.openingHours.filter((h) => h?.opens && h?.closes && Array.isArray(h.dayOfWeek) && h.dayOfWeek.length)
-    : [];
+  // Admin Settings → contactPage.hours only (never invent Mon–Sat 10–18).
+  const hourLines = resolveContactHourLines(contact.hours);
 
   const social = contact.socialLinks && typeof contact.socialLinks === "object" ? contact.socialLinks : {};
   const socialEntries = [
@@ -209,27 +195,13 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
                 <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
                   Hours
                 </p>
-                {structuredHours.length ? (
-                  <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", color: "#374151", fontSize: 15 }}>
-                    {structuredHours.map((h) => (
-                      <li key={`${h.dayOfWeek?.join("-")}-${h.opens}`}>
-                        {Array.isArray(h.dayOfWeek) ? h.dayOfWeek.join(", ") : ""}: {h.opens} – {h.closes}
-                      </li>
-                    ))}
-                    {/* One consistent Sunday line — never contradict with open hours. */}
-                    {!structuredHours.some((h) =>
-                      (Array.isArray(h.dayOfWeek) ? h.dayOfWeek : []).some((d) => /sunday/i.test(String(d)))
-                    ) ? (
-                      <li>Sunday: Closed</li>
-                    ) : null}
-                  </ul>
-                ) : (
+                {hourLines.length ? (
                   <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", color: "#374151", fontSize: 15 }}>
                     {hourLines.map((line) => (
                       <li key={line}>{line}</li>
                     ))}
                   </ul>
-                )}
+                ) : null}
               </div>
 
               {responseTime ? (

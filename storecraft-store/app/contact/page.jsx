@@ -8,6 +8,7 @@ import { organizationJsonLd as buildOrgLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { getSiteUrl, absoluteUrl } from "@/lib/siteUrl";
+import { contactHoursToOpeningHoursSpec } from "@/lib/contactHours";
 
 export const generateMetadata = withSafeMetadata(async function contactMetadata() {
   const settings = await getServerStoreSettings();
@@ -50,7 +51,8 @@ export default async function ContactPage() {
     whatsapp: general.whatsapp || "",
     priceRange: general.priceRange || "",
     sameAs: Array.isArray(general.sameAs) ? general.sameAs : [],
-    openingHours: Array.isArray(general.openingHours) ? general.openingHours : [],
+    // Prefer admin contactPage.hours; do not use seeded general.openingHours.
+    openingHours: contactHoursToOpeningHoursSpec(settings?.contactPage?.hours),
   };
 
   const baseUrl = getSiteUrl();

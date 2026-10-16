@@ -650,9 +650,22 @@ export function organizationJsonLd(overrides = {}) {
     address,
   };
 
-  const lat = Number(overrides.latitude);
-  const lng = Number(overrides.longitude);
-  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+  // Number(null) === 0 — never treat missing coords as 0,0 (Gulf of Guinea).
+  const latRaw = overrides.latitude;
+  const lngRaw = overrides.longitude;
+  const lat =
+    latRaw === null || latRaw === undefined || latRaw === ""
+      ? NaN
+      : Number(latRaw);
+  const lng =
+    lngRaw === null || lngRaw === undefined || lngRaw === ""
+      ? NaN
+      : Number(lngRaw);
+  if (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    !(lat === 0 && lng === 0)
+  ) {
     ld.geo = {
       "@type": "GeoCoordinates",
       latitude: lat,
