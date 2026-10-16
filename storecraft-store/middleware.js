@@ -95,6 +95,9 @@ function wwwToApexRedirect(request) {
   return withPaidCookie(request, NextResponse.redirect(dest, 308));
 }
 
+const CITY_LANDING_RE =
+  /^\/car-accessories-(gujranwala|lahore|karachi|islamabad|rawalpindi|faisalabad)\/?$/i;
+
 export async function middleware(request) {
   const wwwRedirect = wwwToApexRedirect(request);
   if (wwwRedirect) return wwwRedirect;
@@ -105,6 +108,27 @@ export async function middleware(request) {
   // (Previously redirected to /logo.png when the cloud was billing-disabled.)
 
   const lower = pathname.toLowerCase();
+
+  // Public SEO URLs are /car-accessories-{city}; App Router needs /city/[city].
+  // Rewrite (not redirect) so the browser URL stays hyphenated.
+  {
+    const cityMatch = lower.match(CITY_LANDING_RE);
+    if (cityMatch) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = `/city/${cityMatch[1].toLowerCase()}`;
+      return withPaidCookie(request, NextResponse.rewrite(dest));
+    }
+    // Hide internal path — one hop to the public SEO URL.
+    const internalCity = lower.match(
+      /^\/city\/(gujranwala|lahore|karachi|islamabad|rawalpindi|faisalabad)\/?$/
+    );
+    if (internalCity) {
+      return withPaidCookie(
+        request,
+        redirectPath(request, `/car-accessories-${internalCity[1]}`, 308)
+      );
+    }
+  }
 
   // Explicit deleted catalogue / car URLs (also in next.config; middleware covers edge cases).
   {
