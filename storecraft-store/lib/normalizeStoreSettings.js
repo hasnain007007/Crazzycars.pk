@@ -587,6 +587,17 @@ export function toPublicClientSettings(full = {}, opts = {}) {
     },
     footer: full.footer,
     whatsapp: full.whatsapp,
+    // Public contact hours for LocalBusiness JSON-LD (no secrets).
+    contactPage: {
+      hours:
+        full.contactPage?.hours && typeof full.contactPage.hours === "object"
+          ? {
+              weekdays: String(full.contactPage.hours.weekdays || ""),
+              weekend: String(full.contactPage.hours.weekend || ""),
+              closed: String(full.contactPage.hours.closed || ""),
+            }
+          : {},
+    },
     checkoutSuccess: full.checkoutSuccess || {},
     checkout: full.checkout,
     storeName: full.storeName,
