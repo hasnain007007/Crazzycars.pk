@@ -6,6 +6,10 @@
 
 import { STORE_CONTACT, STORE_POLICY } from "../../config/store-policy.js";
 import { formatPkrAmount, standardFeePkr } from "../storePolicyCopy.js";
+import {
+  mergeKeywordProductFaqs,
+  mergeKeywordProductOverrides,
+} from "./keywordQuickWins2026-10.mjs";
 
 const WA = STORE_CONTACT.whatsapp;
 const FEE_REGULAR = formatPkrAmount(standardFeePkr());
@@ -14,7 +18,7 @@ const FEE_BULKY = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
 /** @typedef {{ title: string, meta: string }} SeoPair */
 
 /** Phase 2 table — path → absolute title + meta (≤62 / ≤160). */
-export const PAGE_SEO_OVERRIDES = {
+const PAGE_SEO_OVERRIDES_BASE = {
   "/toyota-corolla-grande-steering-wheel-trim-in-carbon-fiber-multimedia": {
     title: "Corolla Grande Steering Wheel Trim (Carbon Look)",
     meta: "Carbon-look steering wheel trim for Toyota Corolla Grande 2014–2026. Price in Pakistan, COD on eligible items, nationwide delivery.",
@@ -136,6 +140,9 @@ export const PAGE_SEO_OVERRIDES = {
     meta: "Corolla AC vent cover price in Pakistan: Top AC Panel Center Dashboard AC Vent Button 2008-2013 for Toyota Corolla 2012. Cash on Delivery & nationwide delivery.",
   },
 };
+
+/** Includes 16 Oct 2026 keyword quick-win product titles/metas. */
+export const PAGE_SEO_OVERRIDES = mergeKeywordProductOverrides(PAGE_SEO_OVERRIDES_BASE);
 
 /** Slugs the apply script and GSC audit must never rewrite (owner decision pending). */
 export const CATEGORY_APPLY_SKIP = new Set(["led-headlights-bulbs"]);
@@ -428,7 +435,7 @@ export const VEHICLE_FAQ_OVERRIDES = {
   ],
 };
 
-export const PRODUCT_FAQ_OVERRIDES = {
+const PRODUCT_FAQ_OVERRIDES_BASE = {
   "car-heads-up-display-hud": [
     {
       question: "What is the car HUD display price in Pakistan?",
@@ -442,3 +449,6 @@ export const PRODUCT_FAQ_OVERRIDES = {
     },
   ],
 };
+
+/** Includes 16 Oct 2026 “price in Pakistan” FAQs for money keywords. */
+export const PRODUCT_FAQ_OVERRIDES = mergeKeywordProductFaqs(PRODUCT_FAQ_OVERRIDES_BASE);

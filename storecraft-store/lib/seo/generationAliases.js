@@ -1,3 +1,5 @@
+import { KEYWORD_CATEGORY_SEO } from "./keywordQuickWins2026-10.mjs";
+
 /**
  * Generation search / SEO aliases for Pakistan fitment intent
  * (e.g. "splitter for civic reborn", "corolla 12 model").
@@ -441,6 +443,7 @@ export const CATEGORY_SEO_OWNER_LOCKED = {
   },
 };
 
+
 /** Category meta overrides for keyword strategy leaves + GSC audit (10 Oct 2026). */
 export const CATEGORY_KEYWORD_META = {
   ...CATEGORY_SEO_OWNER_LOCKED,
@@ -486,4 +489,6 @@ export const CATEGORY_KEYWORD_META = {
       "Car stickers, monograms and emblems in Pakistan, including Corolla carbon-style steering monograms. COD on eligible items. WhatsApp 03284010007.",
     absoluteTitle: true,
   },
+  // 16 Oct 2026 keyword quick wins (Price in Pakistan titles).
+  ...KEYWORD_CATEGORY_SEO,
 };
