@@ -1,9 +1,9 @@
 import { BRAND_NAME } from "../brand.js";
 import { STORE_POLICY } from "../../config/store-policy.js";
 
-const std = Number(STORE_POLICY.shipping.standardFeePKR) || 250;
-const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR) || 500;
-const days = Number(STORE_POLICY.returns.windowDays) || 7;
+const std = Number(STORE_POLICY.shipping.standardFeePKR);
+const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR);
+const days = Number(STORE_POLICY.returns.windowDays);
 
 /**
  * Server-rendered homepage intro (~300 words). Editable via settings.homepageIntroHtml
@@ -38,7 +38,7 @@ export function getHomepageFaqItems() {
     },
     {
       question: "Do you offer Cash on Delivery?",
-      answer: `Yes, on eligible items. Pay a small booking advance (from Rs. 250) to confirm the order, then pay the product balance when the courier delivers. Body kits and some large packages may require full advance — checkout shows what applies.`,
+      answer: `Yes, on eligible items. Pay a small booking advance (from Rs. ${std}) to confirm the order, then pay the product balance when the courier delivers. Body kits and some large packages may require full advance — checkout shows what applies.`,
     },
     {
       question: "How much is shipping?",
