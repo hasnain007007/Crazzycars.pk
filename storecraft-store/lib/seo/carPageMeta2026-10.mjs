@@ -118,7 +118,7 @@ export const CAR_PAGE_META = {
   "hyundai-elantra-hybrid-2025-present": {
     title: "Hyundai Elantra Hybrid Accessories Pakistan 2025-Present",
     description:
-      "Shop Hyundai Elantra Hybrid 2025-Present accessories in Pakistan: Spoilers, Carbon Trims. Prices from Rs 2,999. Cash on Delivery across Pakistan.",
+      "Shop Hyundai Elantra Hybrid 2025-Present accessories in Pakistan: Spoilers, Carbon Trims. Model prices from Rs 2,999. Cash on Delivery across Pakistan.",
   },
   "hyundai-sonata-2020-2024": {
     title: "Hyundai Sonata Accessories Price in Pakistan 2020-2024",

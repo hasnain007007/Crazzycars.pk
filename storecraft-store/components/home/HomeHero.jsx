@@ -167,7 +167,7 @@ function HeroRail({ items }) {
   );
 }
 
-const PAGE_H1_FALLBACK = `${BRAND} — Car Accessories in Pakistan`;
+const PAGE_H1_FALLBACK = "Car Accessories in Pakistan – Body Kits, LED Lights, Floor Mats";
 
 /**
  * Screen-reader brand line in the hero. The visible document H1 lives in
