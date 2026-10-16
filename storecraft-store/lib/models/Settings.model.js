@@ -43,6 +43,25 @@ const settingsSchema = new mongoose.Schema(
       defaultCurrency: { type: String, default: "PKR" },
       defaultPhonePrefix: { type: String, default: "+92" },
       address: { type: String, default: "" },
+      /** LocalBusiness / AutoPartsStore fields (optional — omit empties in JSON-LD). */
+      streetAddress: { type: String, default: "" },
+      addressLocality: { type: String, default: "Gujranwala" },
+      addressRegion: { type: String, default: "Punjab" },
+      postalCode: { type: String, default: "" },
+      addressCountry: { type: String, default: "PK" },
+      latitude: { type: Number, default: null },
+      longitude: { type: Number, default: null },
+      mapUrl: { type: String, default: "" },
+      whatsapp: { type: String, default: "" },
+      priceRange: { type: String, default: "" },
+      sameAs: [{ type: String }],
+      openingHours: [
+        {
+          dayOfWeek: [{ type: String }],
+          opens: { type: String, default: "" },
+          closes: { type: String, default: "" },
+        },
+      ],
     },
     appearance: {
       primaryColor: { type: String, default: "#C41E1E" },
@@ -176,6 +195,7 @@ const settingsSchema = new mongoose.Schema(
         icon: { type: String, default: "ubl" },
       },
     },
+    homepageIntroHtml: { type: String, default: "" },
     seo: {
       defaultMetaTitle: { type: String, default: "" },
       defaultMetaDescription: { type: String, default: "" },
@@ -272,7 +292,7 @@ const settingsSchema = new mongoose.Schema(
     contactPage: {
       hero: {
         badge: { type: String, default: "Get In Touch" },
-        title: { type: String, default: "We Would Love to Hear From You" },
+        title: { type: String, default: "Contact CrazzyCars.pk – Gujranwala" },
         subtitle: {
           type: String,
           default: "Questions about an order, product advice, or just want to say hello? We are always happy to help.",
@@ -289,8 +309,8 @@ const settingsSchema = new mongoose.Schema(
       },
       hours: {
         weekdays: { type: String, default: "Monday - Saturday: 9am - 9pm PKT" },
-        weekend: { type: String, default: "Sunday: 10am - 6pm PKT" },
-        closed: { type: String, default: "Sunday: Closed" },
+        weekend: { type: String, default: "Sunday: Closed" },
+        closed: { type: String, default: "" },
       },
       responseTime: { type: String, default: "We reply to all emails within 24 hours" },
       socialLinks: {

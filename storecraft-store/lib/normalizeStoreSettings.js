@@ -401,6 +401,7 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
   const data = {
     announcementBar,
     homepageSettings,
+    homepageIntroHtml: String(settings?.homepageIntroHtml || "").trim(),
     trustBadges,
     brandStory,
     appearance,
@@ -560,7 +561,20 @@ export function toPublicClientSettings(full = {}, opts = {}) {
       address: full.general?.address || "",
       currency: full.general?.currency || full.currency || "PKR",
       website: full.general?.website || full.website || "",
+      streetAddress: full.general?.streetAddress || "",
+      addressLocality: full.general?.addressLocality || "Gujranwala",
+      addressRegion: full.general?.addressRegion || "Punjab",
+      postalCode: full.general?.postalCode || "",
+      addressCountry: full.general?.addressCountry || "PK",
+      latitude: full.general?.latitude ?? null,
+      longitude: full.general?.longitude ?? null,
+      mapUrl: full.general?.mapUrl || "",
+      whatsapp: full.general?.whatsapp || "",
+      priceRange: full.general?.priceRange || "",
+      sameAs: Array.isArray(full.general?.sameAs) ? full.general.sameAs : [],
+      openingHours: Array.isArray(full.general?.openingHours) ? full.general.openingHours : [],
     },
+    homepageIntroHtml: full.homepageIntroHtml || "",
     payment: {},
     pakistaniPaymentMethods: includePaymentAccounts
       ? methods

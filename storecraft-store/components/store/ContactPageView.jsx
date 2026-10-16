@@ -1,12 +1,12 @@
 import Link from "next/link";
 import ContactForm from "@/components/store/ContactForm";
-
-const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
+import { BRAND_NAME } from "@/lib/brand";
 
 const DEFAULT_HERO = {
   badge: "Get In Touch",
-  title: "We Would Love to Hear From You",
-  subtitle: "Questions about an order, product advice, or just want to say hello? We are always happy to help.",
+  title: `Contact ${BRAND_NAME} – Gujranwala`,
+  subtitle:
+    "Questions about an order, product advice, or just want to say hello? We are always happy to help.",
 };
 
 function pick(obj, defaults) {
@@ -23,24 +23,64 @@ function digitsOnly(s) {
   return String(s || "").replace(/\D/g, "");
 }
 
-export default function ContactPageView({ contactPage, general = {} }) {
+/**
+ * Contact page — address / hours / map from the same settings used for AutoPartsStore JSON-LD.
+ */
+export default function ContactPageView({ contactPage, general = {}, localBusiness = {} }) {
   const contact = contactPage && typeof contactPage === "object" ? contactPage : {};
   const hero = pick(contact.hero, DEFAULT_HERO);
+  // Prefer explicit contact hero; fall back to LocalBusiness-aware default.
+  if (!String(contact?.hero?.title || "").trim()) {
+    hero.title = DEFAULT_HERO.title;
+  }
 
   const email = String(contact.email || general.email || "").trim();
   const phone = String(contact.phone || general.phone || "").trim();
-  const whatsapp = digitsOnly(contact.whatsapp || phone);
+  const whatsapp = digitsOnly(contact.whatsapp || localBusiness.whatsapp || phone);
   const responseTime = String(contact.responseTime || "We reply to all emails within 24 hours").trim();
 
-  const address = contact.address && typeof contact.address === "object" ? contact.address : {};
-  const addressLines = [address.line1, address.line2, [address.city, address.country].filter(Boolean).join(", ")]
+  const street =
+    String(localBusiness.streetAddress || "").trim() ||
+    String(contact.address?.line1 || "").trim();
+  const line2 = String(contact.address?.line2 || "").trim();
+  const city =
+    String(localBusiness.addressLocality || "").trim() ||
+    String(contact.address?.city || "Gujranwala").trim() ||
+    "Gujranwala";
+  const region = String(localBusiness.addressRegion || "Punjab").trim() || "Punjab";
+  const country =
+    String(localBusiness.addressCountry || "").trim() ||
+    String(contact.address?.country || "Pakistan").trim() ||
+    "Pakistan";
+  const postal = String(localBusiness.postalCode || "").trim();
+  const mapUrl = String(localBusiness.mapUrl || "").trim();
+
+  const addressLines = [
+    street,
+    line2,
+    [city, region, postal].filter(Boolean).join(", "),
+    country && country !== "PK" ? country : country === "PK" ? "Pakistan" : "",
+  ]
     .map((l) => String(l || "").trim())
     .filter(Boolean);
 
+  // One consistent Sunday line — prefer weekend, else closed, never both contradictory.
   const hours = contact.hours && typeof contact.hours === "object" ? contact.hours : {};
-  const hourLines = [hours.weekdays, hours.weekend, hours.closed]
-    .map((l) => String(l || "").trim())
-    .filter(Boolean);
+  const weekdays = String(hours.weekdays || "Monday - Saturday: 9am - 9pm PKT").trim();
+  const weekendRaw = String(hours.weekend || "").trim();
+  const closedRaw = String(hours.closed || "").trim();
+  let sundayLine = "";
+  if (/sunday/i.test(weekendRaw)) sundayLine = weekendRaw;
+  else if (/sunday/i.test(closedRaw)) sundayLine = closedRaw;
+  else if (weekendRaw) sundayLine = weekendRaw;
+  else if (closedRaw) sundayLine = closedRaw;
+  else sundayLine = "Sunday: Closed";
+
+  const hourLines = [weekdays, sundayLine].filter(Boolean);
+
+  const structuredHours = Array.isArray(localBusiness.openingHours)
+    ? localBusiness.openingHours.filter((h) => h?.opens && h?.closes && Array.isArray(h.dayOfWeek) && h.dayOfWeek.length)
+    : [];
 
   const social = contact.socialLinks && typeof contact.socialLinks === "object" ? contact.socialLinks : {};
   const socialEntries = [
@@ -119,18 +159,16 @@ export default function ContactPageView({ contactPage, general = {} }) {
                   </a>
                 </div>
               ) : null}
-
               {phone ? (
                 <div>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
                     Phone
                   </p>
-                  <a href={`tel:${digitsOnly(phone)}`} style={{ color: "#111111", fontSize: 15, textDecoration: "none" }}>
+                  <a href={`tel:${digitsOnly(phone)}`} style={{ color: "#111", fontSize: 15, textDecoration: "none" }}>
                     {phone}
                   </a>
                 </div>
               ) : null}
-
               {whatsapp ? (
                 <div>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
@@ -140,119 +178,105 @@ export default function ContactPageView({ contactPage, general = {} }) {
                     href={`https://wa.me/${whatsapp}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: "#25D366", fontSize: 15, fontWeight: 600, textDecoration: "none" }}
+                    style={{ color: "#16A34A", fontSize: 15, textDecoration: "none" }}
                   >
-                    Chat on WhatsApp
+                    {whatsapp}
                   </a>
                 </div>
               ) : null}
 
-              {addressLines.length > 0 ? (
+              {addressLines.length ? (
                 <div>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
                     Address
                   </p>
-                  {addressLines.map((line) => (
-                    <p key={line} style={{ margin: "4px 0 0", fontSize: 15, color: "#374151", lineHeight: 1.5 }}>
-                      {line}
+                  <address style={{ fontStyle: "normal", color: "#374151", fontSize: 15, lineHeight: 1.6 }}>
+                    {addressLines.map((line) => (
+                      <div key={line}>{line}</div>
+                    ))}
+                  </address>
+                  {mapUrl ? (
+                    <p style={{ margin: "8px 0 0" }}>
+                      <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#C41E1E" }}>
+                        Open in Google Maps
+                      </a>
                     </p>
-                  ))}
+                  ) : null}
                 </div>
               ) : null}
 
-              {hourLines.length > 0 ? (
-                <div>
-                  <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
-                    Hours
-                  </p>
-                  {hourLines.map((line) => (
-                    <p key={line} style={{ margin: "4px 0 0", fontSize: 14, color: "#374151" }}>
-                      {line}
-                    </p>
-                  ))}
-                </div>
-              ) : null}
+              <div>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
+                  Hours
+                </p>
+                {structuredHours.length ? (
+                  <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", color: "#374151", fontSize: 15 }}>
+                    {structuredHours.map((h) => (
+                      <li key={`${h.dayOfWeek?.join("-")}-${h.opens}`}>
+                        {Array.isArray(h.dayOfWeek) ? h.dayOfWeek.join(", ") : ""}: {h.opens} – {h.closes}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", color: "#374151", fontSize: 15 }}>
+                    {hourLines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
               {responseTime ? (
-                <p style={{ margin: 0, fontSize: 13, color: "#6B7280", lineHeight: 1.5 }}>{responseTime}</p>
+                <p style={{ margin: 0, fontSize: 14, color: "#6B7280" }}>{responseTime}</p>
               ) : null}
 
-              {socialEntries.length > 0 ? (
+              {socialEntries.length ? (
                 <div>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
-                    Follow {STORE}
+                    Social
                   </p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 8 }}>
+                  <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none" }}>
                     {socialEntries.map(([label, url]) => (
-                      <a
-                        key={label}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: 14, color: "#C41E1E", textDecoration: "none", fontWeight: 600 }}
-                      >
-                        {label}
-                      </a>
+                      <li key={label}>
+                        <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "#C41E1E" }}>
+                          {label}
+                        </a>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               ) : null}
             </div>
           </aside>
 
           <div>
-            <h2 className="font-heading text-[24px] font-bold" style={{ color: "#111111", margin: "0 0 8px" }}>
+            <h2 className="font-heading text-[24px] font-bold" style={{ color: "#111111", margin: 0 }}>
               Send a message
             </h2>
-            <p style={{ margin: "0 0 24px", fontSize: 14, color: "#6B7280" }}>
-              Prefer email? Use the form and we will reply to the address you provide.
-            </p>
+            <div style={{ width: 40, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 24 }} />
             <ContactForm />
           </div>
         </div>
       </section>
 
-      {faq.length > 0 ? (
-        <section style={{ background: "#FAFAFA", padding: "28px 0", borderTop: "1px solid #E5E5E5" }}>
-          <div className="store-container" style={{ maxWidth: 720 }}>
-            <h2 className="font-heading text-xl font-bold md:text-[28px]" style={{ color: "#111111", margin: 0 }}>
-              Common questions
-            </h2>
-            <div style={{ width: 48, height: 3, background: "#C41E1E", marginTop: 10, marginBottom: 28 }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {faq.map((item, i) => (
-                <details key={`${item.question}-${i}`} style={{ borderBottom: "1px solid #E5E5E5", paddingBottom: 12 }}>
-                  <summary
-                    className="font-heading cursor-pointer list-none text-base font-semibold"
-                    style={{ color: "#111111", padding: "8px 0" }}
-                  >
-                    {item.question}
-                  </summary>
-                  <p style={{ margin: "0 0 8px", fontSize: 14, lineHeight: 1.7, color: "#6B7280" }}>
-                    {item.answer}
-                  </p>
-                </details>
-              ))}
-            </div>
-            <p style={{ marginTop: 24, fontSize: 14, color: "#6B7280" }}>
-              Looking for shipping or returns info?{" "}
-              <Link href="/about" style={{ color: "#C41E1E", fontWeight: 600, textDecoration: "none" }}>
-                Visit our About page
-              </Link>
-              .
-            </p>
-          </div>
+      {faq.length ? (
+        <section className="store-container" style={{ paddingBottom: 56, maxWidth: 900 }}>
+          <h2 className="font-heading text-[22px] font-bold" style={{ color: "#111" }}>
+            Contact FAQ
+          </h2>
+          <dl>
+            {faq.map((item) => (
+              <div key={item.question} style={{ marginTop: 16 }}>
+                <dt style={{ fontWeight: 700 }}>{item.question}</dt>
+                <dd style={{ margin: "4px 0 0", color: "#4B5563" }}>{item.answer}</dd>
+              </div>
+            ))}
+          </dl>
+          <p style={{ marginTop: 16, fontSize: 14 }}>
+            See also our <Link href="/faq">store FAQ</Link>.
+          </p>
         </section>
       ) : null}
-
-      <style>{`
-        @media (max-width: 768px) {
-          .contact-layout {
-            grid-template-columns: 1fr !important;
-            gap: 20px !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

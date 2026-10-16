@@ -247,7 +247,18 @@ export default async function RootLayout({ children }) {
     ogImage: orgImage,
     email: general.email || undefined,
     telephone: general.phone || undefined,
-    streetAddress: general.address || undefined,
+    whatsapp: general.whatsapp || undefined,
+    streetAddress: general.streetAddress || undefined,
+    addressLocality: general.addressLocality || undefined,
+    addressRegion: general.addressRegion || undefined,
+    postalCode: general.postalCode || undefined,
+    addressCountry: general.addressCountry || undefined,
+    latitude: general.latitude,
+    longitude: general.longitude,
+    mapUrl: general.mapUrl || undefined,
+    priceRange: general.priceRange || undefined,
+    sameAs: Array.isArray(general.sameAs) ? general.sameAs : undefined,
+    openingHours: Array.isArray(general.openingHours) ? general.openingHours : undefined,
   });
 
   const websiteJsonLd = buildWebsiteLd({ name: BRAND_NAME });
@@ -266,9 +277,15 @@ export default async function RootLayout({ children }) {
         suppressHydrationWarning
       >
         <ThemeInjector settings={settings} />
-        <AnalyticsScripts settings={settings} />
-        <MerchantWidgetScripts />
-        <LivePresenceClient />
+        <Suspense fallback={null}>
+          <AnalyticsScripts settings={settings} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <MerchantWidgetScripts />
+        </Suspense>
+        <Suspense fallback={null}>
+          <LivePresenceClient />
+        </Suspense>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -294,8 +311,12 @@ export default async function RootLayout({ children }) {
             <Suspense fallback={null}>
               <StoreFooter settings={settings} initialCategoryTree={categoryTree} />
             </Suspense>
-            <ClientOnlyWidgets />
-            <MobileBottomNav />
+            <Suspense fallback={null}>
+              <ClientOnlyWidgets />
+            </Suspense>
+            <Suspense fallback={null}>
+              <MobileBottomNav />
+            </Suspense>
           </StoreProviders>
         </CustomerProvider>
         <LazyToaster />

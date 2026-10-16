@@ -68,7 +68,7 @@ const GENERAL_REGIONAL_DEFAULTS = {
 };
 
 const GENERAL_CONTENT_DEFAULTS = {
-  storeName: "Crazzycars.pk",
+  storeName: "CrazzyCars.pk",
   email: "info@crazzycars.pk",
   phone: "+92 324 422 0007",
 };
@@ -522,9 +522,93 @@ export function SettingsPage() {
             </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Field
-                label="Business address"
+                label="Business address (invoice / legacy)"
                 value={g.address || ""}
                 onChange={(v) => setS({ ...s, general: { ...g, address: v } })}
+                multiline
+              />
+              <Field
+                label="Street address (LocalBusiness JSON-LD)"
+                value={g.streetAddress || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, streetAddress: v } })}
+                multiline
+              />
+              <Field
+                label="City"
+                value={g.addressLocality || "Gujranwala"}
+                onChange={(v) => setS({ ...s, general: { ...g, addressLocality: v } })}
+              />
+              <Field
+                label="Region"
+                value={g.addressRegion || "Punjab"}
+                onChange={(v) => setS({ ...s, general: { ...g, addressRegion: v } })}
+              />
+              <Field
+                label="Postal code"
+                value={g.postalCode || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, postalCode: v } })}
+              />
+              <Field
+                label="Country code"
+                value={g.addressCountry || "PK"}
+                onChange={(v) => setS({ ...s, general: { ...g, addressCountry: v } })}
+              />
+              <Field
+                label="Latitude"
+                value={g.latitude ?? ""}
+                onChange={(v) =>
+                  setS({
+                    ...s,
+                    general: {
+                      ...g,
+                      latitude: v === "" ? null : Number(v),
+                    },
+                  })
+                }
+              />
+              <Field
+                label="Longitude"
+                value={g.longitude ?? ""}
+                onChange={(v) =>
+                  setS({
+                    ...s,
+                    general: {
+                      ...g,
+                      longitude: v === "" ? null : Number(v),
+                    },
+                  })
+                }
+              />
+              <Field
+                label="Google Maps / GBP URL"
+                value={g.mapUrl || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, mapUrl: v } })}
+              />
+              <Field
+                label="WhatsApp (digits)"
+                value={g.whatsapp || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, whatsapp: v } })}
+              />
+              <Field
+                label="Price range (e.g. PKR)"
+                value={g.priceRange || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, priceRange: v } })}
+              />
+              <Field
+                label="sameAs URLs (one per line)"
+                value={Array.isArray(g.sameAs) ? g.sameAs.join("\n") : ""}
+                onChange={(v) =>
+                  setS({
+                    ...s,
+                    general: {
+                      ...g,
+                      sameAs: String(v || "")
+                        .split("\n")
+                        .map((x) => x.trim())
+                        .filter(Boolean),
+                    },
+                  })
+                }
                 multiline
               />
               <Field

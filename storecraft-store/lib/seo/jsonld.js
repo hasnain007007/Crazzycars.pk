@@ -582,11 +582,41 @@ export function collectionPageJsonLd({
   return ld;
 }
 
-/** AutoPartsStore — root layout once */
+/**
+ * AutoPartsStore — root layout once.
+ * Optional LocalBusiness fields (streetAddress, geo, hours, map, priceRange, sameAs)
+ * are emitted only when filled — never placeholders.
+ */
 export function organizationJsonLd(overrides = {}) {
   const SITE = site();
   const orgId = `${SITE}/#org`;
-  return {
+  const telephone = String(overrides.telephone || "").trim() || "+92-328-4010007";
+  const email = String(overrides.email || "").trim() || "info@crazzycars.pk";
+  const whatsapp = String(overrides.whatsapp || "").replace(/\D/g, "");
+
+  const locality = String(overrides.addressLocality || "Gujranwala").trim() || "Gujranwala";
+  const region = String(overrides.addressRegion || "Punjab").trim() || "Punjab";
+  const country = String(overrides.addressCountry || "PK").trim() || "PK";
+  const street = String(overrides.streetAddress || "").trim();
+  const postal = String(overrides.postalCode || "").trim();
+
+  // Avoid stuffing the whole "Gujranwala, Punjab, Pakistan" blob into streetAddress.
+  const streetLooksLikeCityOnly =
+    street &&
+    !/\d/.test(street) &&
+    /gujranwala/i.test(street) &&
+    street.length < 48;
+
+  const address = {
+    "@type": "PostalAddress",
+    addressLocality: locality,
+    addressRegion: region,
+    addressCountry: country,
+  };
+  if (street && !streetLooksLikeCityOnly) address.streetAddress = street;
+  if (postal) address.postalCode = postal;
+
+  const ld = {
     "@context": "https://schema.org",
     "@type": "AutoPartsStore",
     "@id": orgId,
@@ -597,39 +627,77 @@ export function organizationJsonLd(overrides = {}) {
       url: overrides.logo || `${SITE}/logo.png`,
     },
     image: overrides.image || overrides.ogImage || `${SITE}/og/default-1200x630.jpg`,
-    email: overrides.email || "info@crazzycars.pk",
-    telephone: overrides.telephone || "+92-328-4010007",
+    email,
+    telephone,
     hasMerchantReturnPolicy: buildOrganizationReturnPolicy(SITE),
     contactPoint: [
       {
         "@type": "ContactPoint",
         contactType: "customer service",
-        telephone: "+92-328-4010007",
+        telephone,
         availableLanguage: ["en", "ur"],
         areaServed: "PK",
       },
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        telephone: "+92-328-4010007",
-        url: "https://wa.me/923284010007",
+        telephone: whatsapp ? `+${whatsapp.replace(/^\+/, "")}` : telephone,
+        url: whatsapp ? `https://wa.me/${whatsapp}` : "https://wa.me/923284010007",
         availableLanguage: ["en", "ur"],
         areaServed: "PK",
       },
     ],
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Gujranwala",
-      addressRegion: "Punjab",
-      addressCountry: "PK",
-      ...(overrides.streetAddress ? { streetAddress: overrides.streetAddress } : {}),
-    },
-    sameAs: overrides.sameAs || [
+    address,
+  };
+
+  const lat = Number(overrides.latitude);
+  const lng = Number(overrides.longitude);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    ld.geo = {
+      "@type": "GeoCoordinates",
+      latitude: lat,
+      longitude: lng,
+    };
+  }
+
+  const hours = Array.isArray(overrides.openingHours) ? overrides.openingHours : [];
+  const hourNodes = hours
+    .map((h) => {
+      const days = Array.isArray(h?.dayOfWeek)
+        ? h.dayOfWeek.map((d) => String(d || "").trim()).filter(Boolean)
+        : [];
+      const opens = String(h?.opens || "").trim();
+      const closes = String(h?.closes || "").trim();
+      if (!days.length || !opens || !closes) return null;
+      return {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: days,
+        opens,
+        closes,
+      };
+    })
+    .filter(Boolean);
+  if (hourNodes.length) ld.openingHoursSpecification = hourNodes;
+
+  const mapUrl = String(overrides.mapUrl || "").trim();
+  if (mapUrl) ld.hasMap = mapUrl;
+
+  const priceRange = String(overrides.priceRange || "").trim();
+  if (priceRange) ld.priceRange = priceRange;
+
+  const sameAs = Array.isArray(overrides.sameAs)
+    ? overrides.sameAs.map((u) => String(u || "").trim()).filter(Boolean)
+    : [];
+  if (sameAs.length) ld.sameAs = sameAs;
+  else {
+    ld.sameAs = [
       "https://www.facebook.com/crazzycars.pk",
       "https://www.instagram.com/crazzycars.pk",
       "https://www.tiktok.com/@crazzycars.pk",
-    ],
-  };
+    ];
+  }
+
+  return ld;
 }
 
 /** WebSite + SearchAction */

@@ -362,6 +362,45 @@ export async function middleware(request) {
   }
   applyOrderAttributionCookies(request, response);
 
+  // Catalogue HTML: when middleware did not Set-Cookie, advertise ISR-friendly
+  // shared caching for CDN / Traefik. Keep private for cart/checkout/account.
+  try {
+    const setCookie = response.headers.getSetCookie?.() || [];
+    const wroteCookie =
+      setCookie.length > 0 || Boolean(response.headers.get("set-cookie"));
+    const segments = lower.replace(/\/+$/, "").split("/").filter(Boolean);
+    const reserved = new Set([
+      "api",
+      "account",
+      "checkout",
+      "cart",
+      "wishlist",
+      "compare",
+      "track-order",
+    ]);
+    const isPrivate =
+      segments[0] && reserved.has(segments[0]);
+    const isCatalog =
+      segments.length === 0 ||
+      ["categories", "cars", "blogs", "shop", "sale", "faq", "about", "contact"].includes(
+        segments[0]
+      ) ||
+      String(segments[0] || "").endsWith("-policy") ||
+      segments[0] === "terms-conditions" ||
+      segments[0] === "cash-on-delivery" ||
+      (segments.length === 1 && !reserved.has(segments[0]));
+    if (isPrivate) {
+      response.headers.set("Cache-Control", "private, no-store");
+    } else if (!wroteCookie && isCatalog) {
+      response.headers.set(
+        "Cache-Control",
+        "public, s-maxage=300, stale-while-revalidate=86400"
+      );
+    }
+  } catch {
+    /* ignore */
+  }
+
   return response;
 }
 
