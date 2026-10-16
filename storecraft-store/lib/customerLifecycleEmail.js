@@ -17,7 +17,7 @@ function storeNameFrom(settings) {
     String(settings?.general?.storeName || "").trim() ||
     process.env.FROM_NAME ||
     process.env.NEXT_PUBLIC_STORE_NAME ||
-    "Crazzycars.pk"
+    "CrazzyCars.pk"
   );
 }
 

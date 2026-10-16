@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
 
 const DEFAULT_HERO = {
   badge: "Our Story",

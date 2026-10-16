@@ -10,7 +10,7 @@ import {
   normalizeImageDisplay,
 } from "@/lib/heroBannerDisplay";
 
-const BRAND = "Crazzycars.pk";
+const BRAND = "CrazzyCars.pk";
 const SWIPE_PX = 48;
 const SLIDE_MS = 560;
 

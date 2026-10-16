@@ -6,7 +6,7 @@ import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 
 /** Resend sandbox sender — works before a custom domain is verified. */
-export const RESEND_SANDBOX_FROM = "Crazzycars.pk <onboarding@resend.dev>";
+export const RESEND_SANDBOX_FROM = "CrazzyCars.pk <onboarding@resend.dev>";
 
 /** Default staff inbox when Settings / env are empty. */
 export const DEFAULT_ORDER_ADMIN_EMAIL = "ordersatall@gmail.com";
@@ -100,7 +100,7 @@ function isUnverifiedSenderError(error) {
 }
 
 function buildSender(fromOverride) {
-  const fromName = process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+  const fromName = process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
   const fromEmail = getFromEmail();
   if (fromOverride && String(fromOverride).trim()) return String(fromOverride).trim();
   if (!fromEmail) return null;
@@ -183,7 +183,7 @@ export async function sendTestEmail(toOverride) {
   const to = String(toOverride || "").trim() || getAdminEmail();
   const result = await sendEmail({
     to,
-    subject: `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} - Email Test`,
+    subject: `${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"} - Email Test`,
     html: `<h1>Email test working!</h1><p>Sent at ${new Date().toISOString()}</p>`,
   });
   return { ...result, to };
@@ -253,7 +253,7 @@ export async function sendAdminOrderNotification(order) {
     return { success: true, skipped: true, error: "Admin already notified for this order" };
   }
 
-  const storeName = process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`;
+  const storeName = process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"}`;
   const adminBase = String(process.env.NEXT_PUBLIC_ADMIN_URL || "https://admin.crazzycars.pk").replace(
     /\/$/,
     ""
@@ -395,7 +395,7 @@ export async function sendCustomerOrderConfirmation(order, { storeName, logoUrl 
     return sendTemplatedCustomerEmail(order, "orderConfirmation", await loadEmailRuntimeSettings());
   }
   const name =
-    storeName || process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+    storeName || process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
   const { subject, html } = await resolveOrderConfirmationEmail(order, name, logoUrl || "");
   const sent = await sendEmail({ to, subject, html });
   if (sent?.success && order?._id) {
@@ -484,7 +484,7 @@ export async function resolveOrderConfirmationEmail(order, storeName, logoUrl) {
     customer_name: order.customer?.name || "Customer",
     order_id: order.orderNumber || order._id,
     total: formatPrice(order.pricing?.total || order.total || 0),
-    store_name: storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
+    store_name: storeName || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk",
     tracking_link: order.tracking?.url || "",
   };
   const subject =
@@ -509,7 +509,7 @@ export async function resolvePasswordResetEmail(vars = {}) {
 }
 
 export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact = {}) {
-  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'}`;
   const codDeliverySection = buildCodDeliveryChargeEmailSection(order, contact);
 
   const items =
@@ -565,7 +565,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
           <p style="font-size:32px;margin:0 0 8px;">&#10003;</p>
           <h2 style="color:#166534;font-size:20px;margin:0 0 4px;">Order Confirmed!</h2>
           <p style="color:#16a34a;font-size:14px;margin:0;">
-            Thank you for shopping at Crazzycars.pk. We will deliver to your doorstep.
+            Thank you for shopping at CrazzyCars.pk. We will deliver to your doorstep.
           </p>
         </div>
 
@@ -678,7 +678,7 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
 }
 
 export function buildShippingEmail(order, storeName, logoUrl) {
-  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`;
+  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'}`;
 
   return `
     <!DOCTYPE html>

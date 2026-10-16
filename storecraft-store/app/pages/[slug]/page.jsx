@@ -6,7 +6,7 @@ import { getSiteUrl } from "@/lib/siteUrl";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
 
 async function loadPage(slug) {
   try {

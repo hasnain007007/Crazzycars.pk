@@ -1,41 +1,33 @@
-import { BRAND } from "../brand.js";
-
-const DEFAULT_BRAND =
-  process.env.NEXT_PUBLIC_STORE_NAME ||
-  process.env.NEXT_PUBLIC_APP_NAME ||
-  BRAND;
+import {
+  BRAND_NAME,
+  stripTrailingBrandSuffix,
+  withBrandTitleSuffix,
+} from "../brand.js";
 
 /** Strip a trailing `| CrazzyCars(.pk)` / dash-brand suffix (any casing). */
 export function stripTrailingBrand(raw) {
-  return String(raw || "")
-    .trim()
-    .replace(/\s*[|\u2013\u2014–—-]\s*Crazzy\s*Cars(?:\.pk)?\s*$/i, "")
-    .replace(/\s*[|\u2013\u2014–—-]\s*$/g, "")
-    .trim();
+  return stripTrailingBrandSuffix(raw);
 }
 
 /**
  * Build a Next.js metadata title that opts out of the root layout
  * `template: '%s | {storeName}'` so brand is never appended twice.
  *
- * Never mid-word truncates. If `base | brand` exceeds `max`, returns base only
- * (even if base alone is still over max — names are not shortened here).
+ * Admin titles with a trailing brand variant are normalised; suffix is dropped
+ * when `base | CrazzyCars.pk` would exceed `max`.
  */
 export function buildBrandedAbsoluteTitle(
   raw,
-  { max = 60, brand = DEFAULT_BRAND } = {}
+  { max = 60, brand = BRAND_NAME } = {}
 ) {
-  const brandStr = String(brand || DEFAULT_BRAND).trim() || DEFAULT_BRAND;
-  const base = stripTrailingBrand(raw);
-
-  if (!base) {
-    return { absolute: brandStr };
+  const brandStr = String(brand || BRAND_NAME).trim() || BRAND_NAME;
+  const absolute = withBrandTitleSuffix(raw, { maxLen: max });
+  // If caller passed a non-canonical brand, rebuild with that brand once.
+  if (brandStr !== BRAND_NAME) {
+    const base = stripTrailingBrandSuffix(raw);
+    if (!base) return { absolute: brandStr };
+    const withBrand = `${base} | ${brandStr}`;
+    return { absolute: withBrand.length <= max ? withBrand : base };
   }
-
-  const withBrand = `${base} | ${brandStr}`;
-  if (withBrand.length <= max) {
-    return { absolute: withBrand };
-  }
-
-  return { absolute: base };
+  return { absolute };
 }

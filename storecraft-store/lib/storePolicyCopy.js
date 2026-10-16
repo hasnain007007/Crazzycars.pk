@@ -160,7 +160,7 @@ export function homepageHeroTrustItems() {
 
 export function returnsPolicyMetaDescription() {
   const days = STORE_POLICY.returns.windowDays;
-  return `Within ${days} days: full refund for defective or wrong-item orders only. No returns for change of mind at Crazzycars.pk.`;
+  return `Within ${days} days: full refund for defective or wrong-item orders only. No returns for change of mind at CrazzyCars.pk.`;
 }
 
 export function returnsFaqAnswer() {
@@ -247,7 +247,7 @@ export function getFaqItems() {
       answer: `Most orders ship within 1–2 business days after payment confirmation (or COD booking confirmation). ${deliveryEtaSummary()}`,
     },
     {
-      question: "Is CrazzyCars a trusted store for car accessories in Pakistan?",
+      question: "Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
       answer:
         "CrazzyCars.pk ships car accessories nationwide from Gujranwala. We list vehicle fitment on product pages, offer Cash on Delivery on eligible items (small booking advance, balance on delivery), and handle returns under our published returns policy. Message us on WhatsApp with your order number if you need help — we do not use fake star ratings or invented reviews.",
     },
@@ -333,6 +333,6 @@ export function getShippingPolicySections() {
 }
 
 export const SHIPPING_POLICY_INTRO =
-  "We deliver car accessories nationwide from Gujranwala (Crazzycars.pk). Checkout shows the delivery option and fee before you place the order.";
+  "We deliver car accessories nationwide from Gujranwala (CrazzyCars.pk). Checkout shows the delivery option and fee before you place the order.";
 
 export const SHIPPING_POLICY_SECTIONS = getShippingPolicySections();

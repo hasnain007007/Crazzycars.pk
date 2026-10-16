@@ -1227,7 +1227,7 @@ export async function POST(request) {
 
     if (isValidCustomerEmail(order.customer?.email)) {
       try {
-        const storeName = settingsDoc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+        const storeName = settingsDoc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
         const logoUrl = settingsDoc?.general?.logo?.url || "";
         await sendCustomerOrderConfirmation(order, { storeName, logoUrl });
       } catch (emailError) {

@@ -37,7 +37,7 @@ export const DEFAULT_BRAND_STORY = {
   heading: "Exterior performance for street and show",
   subheading: "Splitters, kits, and carbon accents for Pakistani builds",
   description:
-    "Crazzycars.pk is our Gujranwala flagship for exterior performance styling — body kits, spoilers, carbon fiber, and aggressive lighting. Fitment is listed by generation, installs stay practical, and Cash on Delivery covers Pakistan.",
+    "CrazzyCars.pk is our Gujranwala flagship for exterior performance styling — body kits, spoilers, carbon fiber, and aggressive lighting. Fitment is listed by generation, installs stay practical, and Cash on Delivery covers Pakistan.",
   buttonText: "About Us",
   buttonLink: "/about",
   image1: "",
@@ -86,7 +86,7 @@ export function sanitizeCssFontFamily(value, fallback) {
 
 export const DEFAULT_CHECKOUT_MESSAGES = {
   orderSuccessMessage: "Order Placed! We will deliver to your doorstep.",
-  orderSuccessSubtext: "Thank you for shopping with Crazzycars.pk",
+  orderSuccessSubtext: "Thank you for shopping with CrazzyCars.pk",
   codInstructions: "Pay cash when your order arrives.",
   shippingNote: standardDeliveryFeeStatement(),
   cartEmptyMessage: "Your cart is empty",
@@ -453,7 +453,7 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
     contactPage: settings?.contactPage || {},
     storefront: settings?.storefront || {},
     checkout,
-    storeName: sanitizeStoreName(g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"),
+    storeName: sanitizeStoreName(g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"),
     logoUrl: logoString,
     phone: g.phone || "",
     email: g.email || "",

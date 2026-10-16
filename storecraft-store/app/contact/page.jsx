@@ -4,7 +4,7 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { getPageSeoOverride } from "@/lib/seo/gscAudit2026-10.mjs";
 
-const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
 
 export const generateMetadata = withSafeMetadata(async function contactMetadata() {
   const settings = await getServerStoreSettings();

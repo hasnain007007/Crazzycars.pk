@@ -25,10 +25,11 @@ import {
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
+import { BRAND_NAME } from "@/lib/brand";
 
 export const revalidate = 300;
 
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "CrazzyCars.pk";
+const BRAND = BRAND_NAME;
 
 export const generateMetadata = withSafeMetadata(async function vehicleMetadata({ params, searchParams }) {
   const { slug } = await params;

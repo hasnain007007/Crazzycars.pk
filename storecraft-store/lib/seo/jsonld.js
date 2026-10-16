@@ -213,7 +213,7 @@ function buildMerchantOffer({
     offer.seller = {
       "@type": "Organization",
       "@id": `${SITE}/#org`,
-      name: "CrazzyCars.pk",
+      name: "CrazzyCars.pk", // BRAND_NAME — keep literal to avoid circular import in mjs callers
       url: SITE,
       telephone: "+92-328-4010007",
     };

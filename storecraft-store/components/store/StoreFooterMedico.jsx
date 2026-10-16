@@ -263,7 +263,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   })
 
   const storeName = settings?.general?.storeName
-    || 'Crazzycars.pk'
+    || 'CrazzyCars.pk'
 
   const logoUrl = trimmedLogoUrl(resolveStoreLogoUrl(settings))
   const showLogoInFooter = footer.showLogoInFooter !== false

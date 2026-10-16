@@ -4,7 +4,9 @@
  */
 import { returnsTrustBadge, standardDeliveryFeeStatement } from "./storePolicyCopy.js";
 
-export const CANONICAL_STORE_NAME = "Crazzycars.pk";
+import { BRAND_NAME } from "./brand.js";
+
+export const CANONICAL_STORE_NAME = BRAND_NAME;
 export const CANONICAL_EMAIL = "info@crazzycars.pk";
 export const CANONICAL_WEBSITE = "https://crazzycars.pk";
 export const CANONICAL_PHONE = "03284010007";
@@ -49,8 +51,9 @@ export function replaceForeignBrandString(value) {
   s = s.replace(/homefy\.pk\.pk/gi, CANONICAL_STORE_NAME);
   s = s.replace(/Homefy\.pk/g, CANONICAL_STORE_NAME);
   s = s.replace(/homefy\.pk/gi, "crazzycars.pk");
-  s = s.replace(/\bHomefy\b/g, "Crazzycars");
-  s = s.replace(/\bhomefy\b/gi, "Crazzycars");
+  s = s.replace(/\bHomefy\b/g, "CrazzyCars");
+  s = s.replace(/\bhomefy\b/gi, "CrazzyCars");
+  s = s.replace(/Crazzycars\.pk/g, BRAND_NAME);
   return s;
 }
 
@@ -60,6 +63,8 @@ export function sanitizeStoreName(name) {
     return CANONICAL_STORE_NAME;
   }
   const next = replaceForeignBrandString(s).trim();
+  // Collapse casing variants to the canonical brand string.
+  if (/^crazzy\s*cars(?:\.pk)?$/i.test(next)) return CANONICAL_STORE_NAME;
   return next || CANONICAL_STORE_NAME;
 }
 

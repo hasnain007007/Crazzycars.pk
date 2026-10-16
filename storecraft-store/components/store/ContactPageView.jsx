@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ContactForm from "@/components/store/ContactForm";
 
-const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
 
 const DEFAULT_HERO = {
   badge: "Get In Touch",

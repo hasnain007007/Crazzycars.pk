@@ -36,7 +36,7 @@ import {
   faqPageJsonLd,
 } from "@/lib/seo/keywordStrategyFaqs";
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
-import { BRAND, PRODUCT_TITLE_BRAND } from "@/lib/brand";
+import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 import { toPlainText } from "@/lib/sanitizeHtml";
 import {
   getPageSeoOverride,
@@ -45,6 +45,8 @@ import {
   PRODUCT_H1_OVERRIDES,
 } from "@/lib/seo/gscAudit2026-10.mjs";
 
+const BRAND = BRAND_NAME;
+
 /**
  * ISR for product / CMS pages. Category slugs 308 to /categories/:slug.
  * 300s: catalog HTML can be edge-cached; admin revalidate webhook still purges.
@@ -52,53 +54,17 @@ import {
 export const revalidate = 300;
 
 const BASE_URL = getSiteUrl();
-const PRODUCT_TITLE_SUFFIX = ` | ${PRODUCT_TITLE_BRAND}`;
-const PRODUCT_TITLE_MAX_LENGTH = 60;
 
 function stripHtml(s) {
   return String(s || "").replace(/<[^>]*>/g, "");
 }
 
-function stripTrailingProductTitleBrand(value) {
-  let title = String(value || "").trim();
-  const trailingBrand =
-    /\s*[|\u2013\u2014-]\s*(?:CrazzyCars(?:\.pk)?|Crazzycars\.pk)\s*$/i;
-
-  for (let i = 0; i < 3; i += 1) {
-    const stripped = title
-      .replace(trailingBrand, "")
-      .replace(/[\s|\u2013\u2014-]+$/g, "")
-      .trim();
-    if (stripped === title) break;
-    title = stripped;
-  }
-
-  return title;
-}
-
-function truncateProductTitleAtWord(value, maxLength) {
-  const title = String(value || "").trim();
-  if (title.length <= maxLength) return title;
-
-  const withinLimit = title.slice(0, maxLength);
-  const lastSpace = withinLimit.lastIndexOf(" ");
-  const truncated = (lastSpace > 0 ? withinLimit.slice(0, lastSpace) : withinLimit)
-    .replace(/[\s|\u2013\u2014,;:-]+$/g, "")
-    .trim();
-
-  return truncated || withinLimit.trim();
-}
-
 function buildProductSeoTitle({ name, metaTitle, slug }) {
   const override = getPageSeoOverride(`/${String(slug || "").trim()}`);
-  if (override?.title) return override.title;
+  if (override?.title) return withBrandTitleSuffix(override.title);
 
   const source = String(metaTitle || "").trim() || String(name || "").trim();
-  const unbrandedTitle = stripTrailingProductTitleBrand(source);
-  const titleBudget = PRODUCT_TITLE_MAX_LENGTH - PRODUCT_TITLE_SUFFIX.length;
-  const truncatedTitle = truncateProductTitleAtWord(unbrandedTitle, titleBudget);
-
-  return `${truncatedTitle}${PRODUCT_TITLE_SUFFIX}`;
+  return withBrandTitleSuffix(source);
 }
 
 function querySuffix(searchParams) {

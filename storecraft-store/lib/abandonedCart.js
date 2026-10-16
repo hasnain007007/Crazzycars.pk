@@ -99,7 +99,7 @@ export function itemsListText(items) {
     .join("\n");
 }
 
-export function buildAbandonedCartEmail({ cart, storeName = "Crazzycars.pk", storePhone = "" }) {
+export function buildAbandonedCartEmail({ cart, storeName = "CrazzyCars.pk", storePhone = "" }) {
   const name = String(cart?.customer?.name || "").trim() || "there";
   const token = cart?.recoveryToken || "";
   const recoverUrl = recoveryCheckoutUrl(token);
@@ -168,14 +168,14 @@ export async function resolveAbandonedCartSettings(Settings, SETTINGS_SINGLETON_
     } else {
       cfg.emailEnabled = true;
     }
-    cfg.storeName = String(doc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk");
+    cfg.storeName = String(doc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk");
     cfg.storePhone = String(doc?.general?.phone || process.env.NEXT_PUBLIC_STORE_PHONE || "");
     return cfg;
   } catch {
     return {
       ...DEFAULT_ABANDONED_CART_SETTINGS,
       emailEnabled: true,
-      storeName: process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk",
+      storeName: process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk",
       storePhone: "",
     };
   }

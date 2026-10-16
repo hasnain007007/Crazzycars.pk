@@ -52,7 +52,7 @@ export function ShopifyProductView({ product }) {
           </div>
         </div>
         <div>
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.15em] text-[#C41E1E]">CrazzyCars</p>
+          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.15em] text-[#C41E1E]">CrazzyCars.pk</p>
           <h1 className="font-heading text-3xl font-bold text-zinc-950 md:text-4xl">{product.name}</h1>
           <div className="mt-5 flex items-center gap-3">
             <span className="text-3xl font-bold text-[#C41E1E]">{formatPrice(currentPrice)}</span>
