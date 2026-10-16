@@ -13,11 +13,12 @@ export const generateMetadata = withSafeMetadata(async function contactMetadata(
   const settings = await getServerStoreSettings();
   const hero = settings?.contactPage?.hero || {};
   const override = getPageSeoOverride("/contact");
-  const title = withBrandTitleSuffix(
-    override?.title ||
-      hero.title ||
-      `Contact ${BRAND_NAME} – Gujranwala`
-  );
+  // Absolute H1/title target — already includes BRAND_NAME (no TITLE_SUFFIX).
+  const rawTitle =
+    override?.title || hero.title || `Contact ${BRAND_NAME} – Gujranwala`;
+  const title = /crazzy\s*cars\.pk/i.test(rawTitle)
+    ? String(rawTitle).trim()
+    : withBrandTitleSuffix(rawTitle);
   const description =
     override?.meta ||
     hero.subtitle ||
