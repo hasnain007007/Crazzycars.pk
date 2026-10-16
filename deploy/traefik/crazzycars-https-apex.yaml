@@ -1,0 +1,26 @@
+# Coolify Traefik file provider — copy to /data/coolify/proxy/dynamic/
+# Single-hop permanent redirects:
+#   http://(www.)crazzycars.pk/*  → https://crazzycars.pk/*
+#   https://www.crazzycars.pk/*   → https://crazzycars.pk/*
+http:
+  middlewares:
+    crazzycars-https-apex:
+      redirectRegex:
+        regex: "^https?://(?:www\\.)?crazzycars\\.pk(.*)$"
+        replacement: "https://crazzycars.pk${1}"
+        permanent: true
+  routers:
+    crazzycars-http-apex:
+      rule: Host(`crazzycars.pk`) || Host(`www.crazzycars.pk`)
+      entryPoints: [http]
+      middlewares: [crazzycars-https-apex]
+      service: noop@internal
+      priority: 10000
+    crazzycars-https-www-apex:
+      rule: Host(`www.crazzycars.pk`)
+      entryPoints: [https]
+      middlewares: [crazzycars-https-apex]
+      service: noop@internal
+      priority: 10000
+      tls:
+        certResolver: letsencrypt

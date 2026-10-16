@@ -37,7 +37,18 @@ Gaps vs the SEO target:
 1. Redirect should be **301 permanent**, not 307.
 2. `http://www…` should jump straight to `https://crazzycars.pk…` (one hop), not via `https://www…`.
 
-## Coolify + Traefik labels (storefront app)
+## Applied file (preferred)
+
+Ship `deploy/traefik/crazzycars-https-apex.yaml` into Coolify’s Traefik file provider:
+
+```bash
+scp deploy/traefik/crazzycars-https-apex.yaml root@VPS:/data/coolify/proxy/dynamic/crazzycars-https-apex.yaml
+# Traefik reloads file provider automatically; verify with the curls below.
+```
+
+This beats Coolify’s default `redirectscheme` (307 to the same host) by issuing a **301** straight to `https://crazzycars.pk$1` for both apex and www on the `http` entrypoint, and for www on `https`.
+
+## Coolify + Traefik labels (storefront app, alternative)
 
 In Coolify → storecraft-store → **Advanced** / custom labels, replace the generic HTTPS redirect with an apex redirectregex (or add these alongside and point the HTTP www router at them). Adjust the router UUID prefix (`p3pc49…`) to match your app.
 
