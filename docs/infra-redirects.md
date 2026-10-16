@@ -24,9 +24,22 @@ ufw status
 
 Also confirm the cloud provider security group / firewall allows 80.
 
+## Current Coolify behaviour (observed 16 Oct 2026)
+
+Coolify already opens port 80 and attaches:
+
+- `traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https` (HTTP → HTTPS, currently **307**)
+- Separate HTTP routers for `crazzycars.pk` and `www.crazzycars.pk`
+- HTTPS www is served by Traefik; Next middleware then **308**s www → apex
+
+Gaps vs the SEO target:
+
+1. Redirect should be **301 permanent**, not 307.
+2. `http://www…` should jump straight to `https://crazzycars.pk…` (one hop), not via `https://www…`.
+
 ## Coolify + Traefik labels (storefront app)
 
-Attach these labels to the **store** service (or the Coolify “Custom Labels” field for the crazzycars.pk resource). Adjust the router/service names to match the Coolify-generated ones if they differ (`p3pc49…` style).
+In Coolify → storecraft-store → **Advanced** / custom labels, replace the generic HTTPS redirect with an apex redirectregex (or add these alongside and point the HTTP www router at them). Adjust the router UUID prefix (`p3pc49…`) to match your app.
 
 ```yaml
 # Listen on HTTP (entrypoint web) and redirect everything to HTTPS apex.
@@ -42,6 +55,10 @@ traefik.http.routers.crazzycars-http.service: noop@internal
 traefik.http.middlewares.crazzycars-https-apex.redirectregex.regex: ^https?://(?:www\.)?crazzycars\.pk(.*)$
 traefik.http.middlewares.crazzycars-https-apex.redirectregex.replacement: https://crazzycars.pk$${1}
 traefik.http.middlewares.crazzycars-https-apex.redirectregex.permanent: "true"
+
+# Also set on Coolify’s existing middleware if you keep redirectscheme:
+# traefik.http.middlewares.redirect-to-https.redirectscheme.permanent: "true"
+# Prefer redirectregex above for www→apex in one hop.
 
 # --- HTTPS router: apex only (TLS) ---
 traefik.http.routers.crazzycars-https.rule: Host(`crazzycars.pk`)

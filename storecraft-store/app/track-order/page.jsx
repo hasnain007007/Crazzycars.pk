@@ -4,7 +4,7 @@ import { OrderTrackingChrome } from "@/components/store/OrderTrackingChrome";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 
 export const metadata = buildPageMetadata({
-  title: "Track Your Order | CrazzyCars",
+  title: "Track Your Order | CrazzyCars.pk",
   description:
     "Track your CrazzyCars order with your PostEx or Run Courier tracking number, or WhatsApp 03284010007 for help. Nationwide delivery from Gujranwala.",
   path: "/track-order",
