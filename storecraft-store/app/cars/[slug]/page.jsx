@@ -25,11 +25,13 @@ import {
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
-import { BRAND_NAME } from "@/lib/brand";
+import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
+import { getCarPageMeta } from "@/lib/seo/carPageMeta2026-10.mjs";
 
 export const revalidate = 300;
 
 const BRAND = BRAND_NAME;
+const SITE = "https://crazzycars.pk";
 
 export const generateMetadata = withSafeMetadata(async function vehicleMetadata({ params, searchParams }) {
   const { slug } = await params;
@@ -49,32 +51,44 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
     const totalPages = Math.max(1, Math.ceil(assigned / listing.pageSize) || 1);
     if (listing.page > totalPages) notFound();
 
+    const carMeta = getCarPageMeta(vehicle.slug);
     const seoOverride = getPageSeoOverride(`/cars/${vehicle.slug}`);
-    const titleMeta = seoOverride?.title
-      ? { absolute: seoOverride.title }
-      : buildBrandedAbsoluteTitle(
-          (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
-          { brand: BRAND, max: 62 }
-        );
+    const titleMeta = carMeta?.title
+      ? { absolute: withBrandTitleSuffix(carMeta.title) }
+      : seoOverride?.title
+        ? { absolute: withBrandTitleSuffix(seoOverride.title) }
+        : buildBrandedAbsoluteTitle(
+            (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
+            { brand: BRAND, max: 60 }
+          );
     const title = titleMeta.absolute;
     // Prefer Car Catalog Description (merged in loadVehicleBySlug) over legacy Vehicle.metaDescription.
     const catalogDesc =
       String(vehicle.description || "").trim() ||
       String(vehicle.metaDescription || "").trim();
     const description =
-      (seoOverride?.meta || "").trim() || vehicleMetaDescription(vehicle, catalogDesc);
+      (carMeta?.description || "").trim() ||
+      (seoOverride?.meta || "").trim() ||
+      vehicleMetaDescription(vehicle, catalogDesc);
     const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
+    const canonical =
+      listing.page <= 1
+        ? `${SITE}/cars/${vehicle.slug}`
+        : listingSeo.alternates?.canonical || `${SITE}/cars/${vehicle.slug}`;
     const ogImage = mediaImageUrl(vehicle.image);
 
     return {
       title: titleMeta,
       description,
       robots: listingSeo.robots,
-      alternates: listingSeo.alternates,
+      alternates: {
+        ...listingSeo.alternates,
+        canonical,
+      },
       openGraph: {
         title,
         description,
-        url: listingSeo.alternates.canonical,
+        url: canonical,
         images: ogImage
           ? [{ url: ogImage, alt: vehicle.displayName }]
           : [{ url: "/og/default-1200x630.jpg", width: 1200, height: 630, alt: `${vehicle.displayName} accessories` }],
