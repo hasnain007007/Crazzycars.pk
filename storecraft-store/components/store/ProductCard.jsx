@@ -183,7 +183,12 @@ export function ProductCard({ product }) {
             >
               <WatermarkedImage
                 src={imageUrl}
-                alt={product.name || "Product"}
+                alt={
+                  product.image?.altText ||
+                  product.media?.images?.find((i) => i?.isMain)?.altText ||
+                  product.name ||
+                  "Product"
+                }
                 watermark={productImageWatermark}
                 className="h-full w-full"
                 imgClassName={`h-full w-full object-cover transition-transform duration-300 ${

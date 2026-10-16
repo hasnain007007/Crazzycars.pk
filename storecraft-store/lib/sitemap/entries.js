@@ -183,16 +183,35 @@ export async function fetchSitemapContext(headers) {
 
   await dbConnect();
 
-  const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts] =
+  const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts, vehicleProductFreshness] =
     await Promise.all([
       Product.find(STOREFRONT_PRODUCT_FILTER).select("slug updatedAt").lean(),
-      Category.find({ status: "active" }).select("slug updatedAt _id").lean(),
-      Vehicle.find({ isActive: true }).select("slug updatedAt _id").lean(),
+      Category.find({ status: "active" }).select("slug updatedAt contentUpdatedAt _id").lean(),
+      Vehicle.find({ isActive: true }).select("slug updatedAt contentUpdatedAt _id").lean(),
       categoryIdsWithProducts(),
       vehicleIdsWithProducts(),
       Page.find({ status: "published" }).select("slug updatedAt").lean(),
       BlogPost.find({ status: "published" }).select("slug updatedAt publishedAt contentUpdatedAt").lean(),
+      Product.aggregate([
+        {
+          $match: {
+            ...STOREFRONT_PRODUCT_FILTER,
+            compatibleVehicles: { $exists: true, $type: "array", $ne: [] },
+          },
+        },
+        { $unwind: "$compatibleVehicles" },
+        {
+          $group: {
+            _id: "$compatibleVehicles",
+            lastmod: { $max: "$updatedAt" },
+          },
+        },
+      ]),
     ]);
+
+  const vehicleProductLastmod = new Map(
+    (vehicleProductFreshness || []).map((row) => [String(row._id), asDate(row.lastmod)])
+  );
 
   const productSlugSet = new Set(
     products.map((p) => String(p.slug || "").toLowerCase()).filter(Boolean)
@@ -213,11 +232,29 @@ export async function fetchSitemapContext(headers) {
 
   const categoryEntries = categories
     .filter((c) => c.slug && withProducts.has(String(c._id)))
-    .map((c) => toEntry(headers, `/categories/${c.slug}`, c.updatedAt, "weekly", 0.8));
+    .map((c) =>
+      toEntry(
+        headers,
+        `/categories/${c.slug}`,
+        maxDate(c.contentUpdatedAt, c.updatedAt),
+        "weekly",
+        0.8
+      )
+    );
 
   const carEntries = vehicles
     .filter((v) => v.slug && vehiclesWithProducts.has(String(v._id)))
-    .map((v) => toEntry(headers, `/cars/${v.slug}`, v.updatedAt, "weekly", 0.8));
+    .map((v) => {
+      const id = String(v._id);
+      // Prefer vehicle document timestamps; fall back to newest assigned product.
+      // Never use build time.
+      const lastmod = maxDate(
+        v.contentUpdatedAt,
+        v.updatedAt,
+        vehicleProductLastmod.get(id)
+      );
+      return toEntry(headers, `/cars/${v.slug}`, lastmod, "weekly", 0.8);
+    });
 
   const staticPageEntries = STATIC_PAGE_PATHS.map((path) =>
     toEntry(

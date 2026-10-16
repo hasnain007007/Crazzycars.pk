@@ -3769,6 +3769,15 @@ textarea::placeholder {
   text-overflow: ellipsis;
 }
 
+
+.cat-hero__visual-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
 .cat-hero__eyebrow {
   margin: 0;
   font-size: 11px;

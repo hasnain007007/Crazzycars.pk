@@ -7,6 +7,7 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import CarCatalog from "@/lib/models/CarCatalog.model";
+import Vehicle from "@/lib/models/Vehicle.model";
 import { requestIp } from "@/lib/requestIp";
 
 export async function GET(request, context) {
@@ -83,6 +84,29 @@ export async function PUT(request, context) {
     }
 
     await doc.save();
+
+    // Bump matching Vehicle docs so /sitemap-cars.xml lastmod reflects admin edits.
+    try {
+      const now = new Date();
+      const modelSlugs = (doc.models || [])
+        .map((m) => String(m?.slug || "").trim().toLowerCase())
+        .filter(Boolean);
+      if (modelSlugs.length) {
+        await Vehicle.updateMany(
+          { catalogModelSlug: { $in: modelSlugs } },
+          { $set: { contentUpdatedAt: now, updatedAt: now } }
+        );
+      }
+      const makeName = String(doc.name || "").trim();
+      if (makeName) {
+        await Vehicle.updateMany(
+          { make: new RegExp(`^${makeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+          { $set: { contentUpdatedAt: now, updatedAt: now } }
+        );
+      }
+    } catch (syncErr) {
+      console.error("[car-catalog] vehicle lastmod sync:", syncErr?.message || syncErr);
+    }
 
     await logActivity({
       user: user.userId,
