@@ -22,7 +22,7 @@ export const revalidate = 300;
 const homeSeo = getPageSeoOverride("/") || {};
 export const metadata = buildPageMetadata({
   title: withBrandTitleSuffix(
-    homeSeo.title || `${BRAND_NAME} — Car Accessories in Pakistan`
+    homeSeo.title || "Car Accessories in Pakistan – Body Kits, LED Lights, Floor Mats"
   ),
   description:
     homeSeo.meta ||

@@ -128,7 +128,7 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: `Contact CrazzyCars.pk: WhatsApp ${WA}, email, store address in Gujranwala and opening hours. Ask about fitment, orders and delivery.`,
   },
   "/": {
-    title: "CrazzyCars.pk – Car Accessories in Pakistan | Body Kits & LED",
+    title: "Car Accessories in Pakistan – Body Kits, LED Lights, Floor Mats",
     meta: "Buy car accessories online in Pakistan: splitters, body kits, LED lights, carbon fiber and interior accessories. COD on eligible items, nationwide delivery.",
   },
   // Phase 4 ranking-page meta only (title/H1/URL unchanged except noted)

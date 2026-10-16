@@ -11,10 +11,10 @@ const days = Number(STORE_POLICY.returns.windowDays);
  */
 export function getHomepageIntroCopy() {
   return {
-    h1: `${BRAND_NAME} — Car Accessories in Pakistan`,
+    h1: "Car Accessories in Pakistan – Body Kits, LED Lights, Floor Mats",
     paragraphs: [
-      `${BRAND_NAME} is a car-accessories store based in Gujranwala, Punjab, shipping exterior, interior, LED, carbon-fiber and body-kit parts across Pakistan. We specialise in fitment-listed upgrades for popular Pakistani cars such as Toyota Corolla, Honda Civic, Honda City, Suzuki Alto and Toyota Yaris, plus universal gadgets that work in most cabins.`,
-      `Shop by category for spoilers and diffusers, splitters and side skirts, LED headlights and bulbs, interior lights, floor mats, door-handle covers and more — or open Shop by Car to browse generations with the correct year ranges. Every product page shows stock, price in PKR, and vehicle fitment so you can check before you order.`,
+      `Shop car accessories online in Pakistan at ${BRAND_NAME}: body kits, spoilers, LED headlights and indicators, TPE floor mats, carbon fiber interior trims and key covers for Honda Civic, Toyota Corolla, Honda City, Suzuki Alto, Yaris and more. Every product lists its model-year fitment. Nationwide delivery from Gujranwala with Cash on Delivery on eligible items.`,
+      `${BRAND_NAME} is based in Gujranwala, Punjab, and ships exterior, interior, LED, carbon-fiber and body-kit parts across Pakistan. Shop by category for spoilers and diffusers, splitters and side skirts, LED headlights and bulbs, interior lights, floor mats and door-handle covers — or open Shop by Car to browse generations with the correct year ranges. Every product page shows stock, price in PKR, and vehicle fitment so you can check before you order.`,
       `Nationwide courier delivery is available on every eligible order. Standard delivery is Rs. ${std}; bulky lines (spoilers, splitters, side skirts, floor mats and similar) are Rs. ${bulky}. Cash on Delivery is offered on eligible items: pay a small booking advance, then the balance when the parcel arrives. Prepaid JazzCash or bank transfer orders can qualify for the prepaid discount shown at checkout.`,
       `Need a fitment check or want to order on WhatsApp? Message 03284010007 with your car’s make, model, year and the product link. Defective or wrong-item claims are handled under our ${days}-day returns policy. Browse Exterior, Interior, LED Lighting, Spoilers & Diffusers, or jump to Corolla E170 and Civic X accessories to get started.`,
     ],
