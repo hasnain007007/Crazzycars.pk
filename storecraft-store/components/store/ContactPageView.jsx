@@ -216,6 +216,12 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
                         {Array.isArray(h.dayOfWeek) ? h.dayOfWeek.join(", ") : ""}: {h.opens} – {h.closes}
                       </li>
                     ))}
+                    {/* One consistent Sunday line — never contradict with open hours. */}
+                    {!structuredHours.some((h) =>
+                      (Array.isArray(h.dayOfWeek) ? h.dayOfWeek : []).some((d) => /sunday/i.test(String(d)))
+                    ) ? (
+                      <li>Sunday: Closed</li>
+                    ) : null}
                   </ul>
                 ) : (
                   <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", color: "#374151", fontSize: 15 }}>
