@@ -1,7 +1,11 @@
 /**
  * Pakistan city landing pages — unique default copy (admin can override via Settings.cityPages).
  * Routes: /car-accessories-{slug}
+ *
+ * Fee strings must come from STORE_POLICY (see scripts/check-policy-literals.mjs).
  */
+import { STORE_POLICY } from "@/config/store-policy";
+import { formatPkrAmount } from "@/lib/storePolicyCopy";
 
 export const CITY_LANDING_SLUGS = [
   "gujranwala",
@@ -11,6 +15,13 @@ export const CITY_LANDING_SLUGS = [
   "rawalpindi",
   "faisalabad",
 ];
+
+const FEE = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
+const BULKY = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
+
+function feeNote(cityLabel) {
+  return `${cityLabel} courier from ${FEE} (bulky kits may be ${BULKY}).`;
+}
 
 /** @typedef {{ slug: string, name: string, province: string, h1: string, introHtml: string, deliveryNote: string, deliveryDays: string, metaTitle: string, metaDescription: string, faq: {question:string,answer:string}[], topCategorySlugs: string[], emitLocalBusiness: boolean }} CityLandingDefault */
 
@@ -22,7 +33,7 @@ export const CITY_LANDING_DEFAULTS = {
     province: "Punjab",
     h1: "Car Accessories in Gujranwala — Same-City Dispatch from CrazzyCars.pk",
     introHtml: `<p>CrazzyCars.pk is based in <strong>Gujranwala</strong>, so local buyers get the fastest handoff for body kits, LED lighting, carbon fiber trim, floor mats and Civic/Corolla/City parts. Browse fitment by car, confirm on WhatsApp, and pay Cash on Delivery across Gujranwala city and nearby towns (Wazirabad, Kamoke, Gujrat corridor).</p><p>We stock generation-specific parts — not generic “fits most” guesses — so your Reborn, Civic X, Corolla or City order matches the years on the product page.</p>`,
-    deliveryNote: "Gujranwala city & suburbs from Rs. 250 (bulky kits may be Rs. 500).",
+    deliveryNote: feeNote("Gujranwala city & suburbs"),
     deliveryDays: "Same day–1 business day inside Gujranwala; 1–2 days nearby cities.",
     metaTitle: "Car Accessories Gujranwala | COD | CrazzyCars.pk",
     metaDescription:
@@ -42,8 +53,7 @@ export const CITY_LANDING_DEFAULTS = {
       },
       {
         question: "Is Cash on Delivery available in Gujranwala?",
-        answer:
-          "Yes. COD is available across Gujranwala with the standard delivery fee collected as per the checkout note (usually Rs. 250; bulky freight higher).",
+        answer: `Yes. COD is available across Gujranwala with the standard delivery fee collected as per the checkout note (usually ${FEE}; bulky freight higher).`,
       },
     ],
   },
@@ -53,7 +63,7 @@ export const CITY_LANDING_DEFAULTS = {
     province: "Punjab",
     h1: "Car Accessories in Lahore — COD Delivery from CrazzyCars.pk",
     introHtml: `<p>Lahore drivers shop CrazzyCars.pk for <strong>Civic, Corolla, City, Sportage and Yaris</strong> accessories with Cash on Delivery across DHA, Johar Town, Model Town, Cantt, Gulberg and surrounding areas. Every listing shows the exact generation years so you are not guessing fitment in traffic.</p><p>Popular Lahore orders include carbon interior trims, LED headlight upgrades, floor mats for monsoon season, and complete body kits — packed in Gujranwala and couriered to Lahore on the major-city lane.</p>`,
-    deliveryNote: "Lahore major-city courier from Rs. 250 (bulky Rs. 500).",
+    deliveryNote: feeNote("Lahore major-city"),
     deliveryDays: "Typically 2–3 business days to Lahore.",
     metaTitle: "Car Accessories Lahore | Cash on Delivery | CrazzyCars.pk",
     metaDescription:
@@ -84,7 +94,7 @@ export const CITY_LANDING_DEFAULTS = {
     province: "Sindh",
     h1: "Car Accessories in Karachi — Nationwide COD via CrazzyCars.pk",
     introHtml: `<p>Karachi buyers use CrazzyCars.pk for <strong>coastal-climate practical upgrades</strong>: TPE/9D mats that handle heat, LED lighting that cuts night glare on Shahrah-e-Faisal, and generation-correct Civic/Corolla exterior kits. Orders ship from Punjab with Cash on Delivery across Clifton, DHA, Gulshan, North Nazimabad and Malir.</p><p>Confirm your chassis years on WhatsApp before bulky kits leave the warehouse — Karachi return logistics are slower, so we double-check fitment first.</p>`,
-    deliveryNote: "Karachi courier from Rs. 250 (bulky kits Rs. 500).",
+    deliveryNote: feeNote("Karachi"),
     deliveryDays: "Typically 3–5 business days to Karachi.",
     metaTitle: "Car Accessories Karachi | COD Shipping | CrazzyCars.pk",
     metaDescription:
@@ -115,7 +125,7 @@ export const CITY_LANDING_DEFAULTS = {
     province: "Islamabad Capital Territory",
     h1: "Car Accessories in Islamabad — Fitment-Checked Parts, COD",
     introHtml: `<p>Islamabad and twin-city drivers order from CrazzyCars.pk for <strong>clean OEM-style upgrades</strong>: forged-look carbon trims, discreet LED lighting, and body kits that still look tidy on Margalla Road. We list exact years so F-series, G-series and Bahria fleets get the right Civic X, City Aspire or Corolla generation.</p><p>Checkout supports Cash on Delivery into Islamabad sectors; WhatsApp support helps confirm colour and fitment before dispatch from Gujranwala.</p>`,
-    deliveryNote: "Islamabad major-city rate from Rs. 250 (bulky Rs. 500).",
+    deliveryNote: feeNote("Islamabad major-city"),
     deliveryDays: "Typically 2–3 business days to Islamabad.",
     metaTitle: "Car Accessories Islamabad | COD | CrazzyCars.pk",
     metaDescription:
@@ -145,7 +155,7 @@ export const CITY_LANDING_DEFAULTS = {
     province: "Punjab",
     h1: "Car Accessories in Rawalpindi — Twin City COD Delivery",
     introHtml: `<p>Rawalpindi shoppers (Saddar, Westridge, Bahria, Askari, Satellite Town) get the same CrazzyCars.pk catalogue as Islamabad — <strong>with twin-city courier timing</strong>. Focus SKUs include Corolla gear trims, Civic Reborn exterior parts, City Aspire interior carbon, and monsoon-ready floor mats.</p><p>Order online, confirm on WhatsApp, and pay Cash on Delivery when the parcel arrives. Fitment tables on every product page list the years we support.</p>`,
-    deliveryNote: "Rawalpindi / twin-city courier from Rs. 250 (bulky Rs. 500).",
+    deliveryNote: feeNote("Rawalpindi / twin-city"),
     deliveryDays: "Typically 2–3 business days to Rawalpindi.",
     metaTitle: "Car Accessories Rawalpindi | Cash on Delivery | CrazzyCars.pk",
     metaDescription:
@@ -176,7 +186,7 @@ export const CITY_LANDING_DEFAULTS = {
     province: "Punjab",
     h1: "Car Accessories in Faisalabad — Punjab COD from CrazzyCars.pk",
     introHtml: `<p>Faisalabad is on our <strong>Punjab major-city</strong> route: Corolla and Civic owners in Madina Town, Peoples Colony, Susan Road and Jaranwala Road order body kits, LED bars, seat/floor protection and carbon interior upgrades with Cash on Delivery.</p><p>Because we dispatch from Gujranwala, Faisalabad parcels usually move faster than down-country routes. Still confirm generation years on the product page — especially for Reborn vs Rebirth vs Civic X kits.</p>`,
-    deliveryNote: "Faisalabad major-city courier from Rs. 250 (bulky Rs. 500).",
+    deliveryNote: feeNote("Faisalabad major-city"),
     deliveryDays: "Typically 2–3 business days to Faisalabad.",
     metaTitle: "Car Accessories Faisalabad | COD | CrazzyCars.pk",
     metaDescription:
@@ -191,8 +201,7 @@ export const CITY_LANDING_DEFAULTS = {
       },
       {
         question: "Do you charge extra for bulky body kits to Faisalabad?",
-        answer:
-          "Bulky freight (body kits, large spoilers, some mat sets) uses the bulky fee — usually Rs. 500 — shown at checkout.",
+        answer: `Bulky freight (body kits, large spoilers, some mat sets) uses the bulky fee — usually ${BULKY} — shown at checkout.`,
       },
       {
         question: "Can factories / fleets bulk-order?",
