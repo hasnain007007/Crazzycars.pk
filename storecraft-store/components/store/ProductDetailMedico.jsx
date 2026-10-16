@@ -19,6 +19,8 @@ import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { productAllowsCod } from "@/lib/codEligibility";
+import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
+import { getShippingRate } from "@/lib/shippingFee";
 import {
   lahoreEtaStatement,
   nonLahoreEtaStatement,
@@ -805,7 +807,7 @@ export function ProductDetailMedico({
       simpleVariations: product.simpleVariations || [],
       variationCombinations: product.variationCombinations || [],
       codEnabled: productAllowsCod(product),
-      isBulky: product.isBulky === true,
+      isBulky: productIsBulkyForShipping(product),
       advancePercentRequired: Math.min(
         100,
         Math.max(0, Number(product.advancePercentRequired) || 0)
@@ -926,10 +928,12 @@ export function ProductDetailMedico({
     ? contentOverride.features
     : null;
 
-  const deliveryFeeText =
-    deliveryInfo?.deliveryFeeText ||
-    deliveryInfo?.freeShippingText ||
-    standardDeliveryFeeStatement();
+  const shipRate = getShippingRate(product);
+  const deliveryFeeText = productIsBulkyForShipping(product)
+    ? `Delivery Rs. ${shipRate.toLocaleString("en-PK")} (bulky item)`
+    : deliveryInfo?.deliveryFeeText ||
+      deliveryInfo?.freeShippingText ||
+      `Delivery Rs. ${shipRate.toLocaleString("en-PK")}`;
   const lahoreEtaLine = lahoreEtaStatement();
   const otherCitiesEtaLine =
     deliveryInfo?.otherAreas?.copy || nonLahoreEtaStatement();
@@ -1534,7 +1538,7 @@ export function ProductDetailMedico({
                 </p>
               </div>
               <ShippingAdvanceBanner
-                hasBulky={product.isBulky === true ? true : null}
+                hasBulky={productIsBulkyForShipping(product) ? true : null}
                 className="mt-3"
               />
             </div>
