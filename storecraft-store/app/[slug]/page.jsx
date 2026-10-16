@@ -60,11 +60,15 @@ function stripHtml(s) {
 }
 
 function buildProductSeoTitle({ name, metaTitle, slug }) {
+  // Prefer admin/product SEO title when set — code PAGE_SEO_OVERRIDES must not
+  // hide a freshly saved seo.metaTitle from Google.
+  const fromProduct = String(metaTitle || "").trim();
+  if (fromProduct) return withBrandTitleSuffix(fromProduct);
+
   const override = getPageSeoOverride(`/${String(slug || "").trim()}`);
   if (override?.title) return withBrandTitleSuffix(override.title);
 
-  const source = String(metaTitle || "").trim() || String(name || "").trim();
-  return withBrandTitleSuffix(source);
+  return withBrandTitleSuffix(String(name || "").trim());
 }
 
 function querySuffix(searchParams) {
@@ -294,20 +298,21 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
 
   if (content.type === "product") {
     const p = content.data;
+    const slugKey = p.slug || slugStr;
     const title = buildProductSeoTitle({
       name: p.name,
-      metaTitle: p.metaTitle || p.seo?.metaTitle,
-      slug: p.slug || slugStr,
+      metaTitle: p.seo?.metaTitle || p.metaTitle,
+      slug: slugKey,
     });
-    const slugKey = p.slug || slugStr;
     const seoOverride = getPageSeoOverride(`/${slugKey}`);
     const contentOverride = PRODUCT_CONTENT_OVERRIDES[slugKey] || null;
     const displayName =
       PRODUCT_H1_OVERRIDES[slugKey] ||
       String(p.name || "").replace(/\bButto\b/g, "Button");
+    // Prefer product seo.metaDescription; override only fills gaps.
     const description =
+      (p.seo?.metaDescription || p.metaDescription || "").trim().replace(/\bButto\b/g, "Button") ||
       (seoOverride?.meta || "").trim() ||
-      (p.metaDescription || p.seo?.metaDescription || "").trim().replace(/\bButto\b/g, "Button") ||
       stripHtml(contentOverride?.shortDescription || p.shortDescription || "").slice(0, 160) ||
       stripHtml(contentOverride?.descriptionHtml || p.longDescription || "").slice(0, 160) ||
       `Buy ${displayName} at ${BRAND}. Cash on Delivery nationwide.`;

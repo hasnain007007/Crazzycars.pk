@@ -44,7 +44,7 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: "Complete body kit for Toyota Aqua 2012–2015: front lip, side skirts, rear lip in unpainted ABS. Price in Pakistan, prepaid only, nationwide delivery.",
   },
   "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs": {
-    title: "Toyota Corolla 2015–2026 RS Style Trunk Spoiler | CrazzyCars.pk",
+    // Title comes from product.seo.metaTitle on the PDP; keep meta only here.
     meta: "Toyota Corolla 2015–2026 RS style trunk spoiler price in Pakistan: gloss black ABS, 3M tape install. COD on eligible items, nationwide delivery.",
   },
   "/honda-city-new-model-trunk-lip-spoiler-2021-2026": {

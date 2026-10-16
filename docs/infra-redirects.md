@@ -30,7 +30,15 @@ Also confirm the cloud provider security group / firewall allows 80.
 - UFW allows `80/tcp` and `443/tcp`.
 - File provider `deploy/traefik/crazzycars-https-apex.yaml` → `/data/coolify/proxy/dynamic/` issues a **308 Permanent Redirect** (Traefik v3 “permanent”) in **one hop** to `https://crazzycars.pk$1` for both apex and www on HTTP, and for www on HTTPS.
 
-If `http://crazzycars.pk` times out from your network but works from the VPS (`curl -sI http://127.0.0.1/contact -H 'Host: crazzycars.pk'`), check the **cloud provider firewall / security group** (Hostinger hPanel → Firewall) — UFW alone is not enough when the provider drops :80 upstream.
+If `http://crazzycars.pk` times out from your network but works from the VPS (`curl -sI http://127.0.0.1/contact -H 'Host: crazzycars.pk'`), open **port 80** in **Hostinger hPanel** (VPS side already listens and redirects):
+
+1. Log in to [hPanel](https://hpanel.hostinger.com) → **VPS** → select this server  
+2. **Firewall** (or **Security → Firewall**)  
+3. Add rule: **TCP 80** (HTTP) — Allow — from Anywhere (and keep **TCP 443**)  
+4. Save / apply — wait ~1 minute  
+5. Verify from your laptop: `curl -sI http://crazzycars.pk/contact` → `308`/`301` to `https://crazzycars.pk/contact`
+
+UFW on the guest already allows 80/443; Hostinger’s edge firewall is a separate layer and is the usual cause when :80 times out externally while :443 works.
 
 ## Applied file (preferred)
 
