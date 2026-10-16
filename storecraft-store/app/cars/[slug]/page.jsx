@@ -146,14 +146,42 @@ export default async function VehicleSlugPage({ params, searchParams }) {
       }
     })
     .filter(Boolean);
-  const sorted = sortProductsClient(allProducts, listing.sort);
+
+  /** Min sale/regular price per category for this model. */
+  const categoryFloors = (() => {
+    const map = new Map();
+    for (const p of allProducts) {
+      const price = Number(p.price) || 0;
+      if (!(price > 0)) continue;
+      const cats = Array.isArray(p.categories) ? p.categories : [];
+      for (const c of cats) {
+        const slug = String(c?.slug || "").trim();
+        const name = String(c?.name || slug).trim();
+        if (!slug || !name) continue;
+        const prev = map.get(slug);
+        if (!prev || price < prev.priceFrom) {
+          map.set(slug, { slug, name, priceFrom: price });
+        }
+      }
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  })();
+
+  const categoryFilter = String(listing.category || "").trim().toLowerCase();
+  const filteredProducts = categoryFilter
+    ? allProducts.filter((p) =>
+        (p.categories || []).some((c) => String(c?.slug || "").toLowerCase() === categoryFilter)
+      )
+    : allProducts;
+
+  const sorted = sortProductsClient(filteredProducts, listing.sort);
   const total = sorted.length;
   const totalPages = Math.max(1, Math.ceil(total / listing.pageSize) || 1);
   if (listing.page > totalPages) notFound();
   const page = listing.page;
   const products = sorted.slice((page - 1) * listing.pageSize, page * listing.pageSize);
   const listingForUi = { ...listing, page };
-  if (total === 0) notFound();
+  if (total === 0 && !categoryFilter) notFound();
 
   const yearLabel =
     vehicle.yearTo == null || Number(vehicle.yearTo) >= new Date().getFullYear()
@@ -445,6 +473,74 @@ export default async function VehicleSlugPage({ params, searchParams }) {
         ) : null}
         <p className="vehicle-mobile-heading__sub">{heroOfferLine}</p>
       </div>
+
+      {categoryFloors.length ? (
+        <section className="store-container" style={{ padding: "24px 16px 0" }} aria-label="Prices by category">
+          <h2
+            style={{
+              margin: "0 0 12px",
+              fontSize: 18,
+              fontWeight: 700,
+              color: "#111",
+            }}
+          >
+            Shop {vehicle.displayName} by category
+          </h2>
+          <ul
+            style={{
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+              gap: 10,
+            }}
+          >
+            {categoryFloors.map((c) => {
+              const active = categoryFilter === c.slug;
+              const href = listingHref(`/cars/${vehicle.slug}`, {
+                ...listing,
+                page: 1,
+                category: active ? "" : c.slug,
+              });
+              return (
+                <li key={c.slug}>
+                  <Link
+                    href={href}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                      padding: "12px 14px",
+                      borderRadius: 10,
+                      border: active ? "2px solid #C41E1E" : "1px solid #E5E5E5",
+                      background: active ? "#FFF5F5" : "#fff",
+                      textDecoration: "none",
+                      color: "#111",
+                    }}
+                  >
+                    <span style={{ fontWeight: 650, fontSize: 14 }}>{c.name}</span>
+                    <span style={{ fontSize: 13, color: "#C41E1E", fontWeight: 700 }}>
+                      price from Rs{" "}
+                      {Math.round(c.priceFrom).toLocaleString("en-PK")}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          {categoryFilter ? (
+            <p style={{ margin: "12px 0 0", fontSize: 13 }}>
+              <Link
+                href={listingHref(`/cars/${vehicle.slug}`, { ...listing, page: 1, category: "" })}
+                style={{ color: "#C41E1E", fontWeight: 600 }}
+              >
+                Clear category filter
+              </Link>
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <section id="compatible-products" className="store-container py-8 md:py-10">
         <ProductListingSection

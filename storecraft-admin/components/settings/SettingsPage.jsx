@@ -9,6 +9,7 @@ import BrandStorySettings from "@/components/settings/BrandStorySettings";
 import AboutPageSettings from "@/components/settings/AboutPageSettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import ContactPageSettings from "@/components/settings/ContactPageSettings";
+import CityPagesSettings from "@/components/settings/CityPagesSettings";
 import { FooterSettings } from "@/components/settings/FooterSettings";
 import MegaMenuSettings from "@/components/settings/MegaMenuSettings";
 import ProductBadgeSettings from "@/components/settings/ProductBadgeSettings";
@@ -47,6 +48,7 @@ const TABS = [
   "Brand Story",
   "About Page",
   "Contact Page",
+  "City Pages",
   "Mega Menu",
   "Product Badges",
   "Checkout",
@@ -1274,29 +1276,35 @@ export function SettingsPage() {
 
       {tab === 13 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <MegaMenuSettings />
+          <CityPagesSettings />
         </div>
       ) : null}
 
       {tab === 14 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <ProductBadgeSettings />
+          <MegaMenuSettings />
         </div>
       ) : null}
 
       {tab === 15 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <CheckoutSettings />
+          <ProductBadgeSettings />
         </div>
       ) : null}
 
       {tab === 16 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <HomepageSettings />
+          <CheckoutSettings />
         </div>
       ) : null}
 
       {tab === 17 ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+          <HomepageSettings />
+        </div>
+      ) : null}
+
+      {tab === 18 ? (
         <CourierSettingsTab
           courier={courier}
           onPatch={(partial) => setS({ ...s, courier: { ...courier, ...partial } })}

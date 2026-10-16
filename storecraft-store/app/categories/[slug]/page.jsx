@@ -7,6 +7,7 @@ import { getCategoryIdsWithProducts, loadStoreCategoryDetail } from "@/lib/store
 import { isEmptyCategoryTree } from "@/lib/emptyLeafCategory";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 import { CategoryPageChrome, splitCategoryDescriptionHtml } from "@/components/store/CategoryPageChrome";
+import { FaqSection } from "@/components/store/FaqSection";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
@@ -318,22 +319,26 @@ export default async function CategoryPage({ params, searchParams }) {
         ""
     );
 
-    let faqLd = null;
+    let visibleFaqs = [];
     if (isKeywordStrategyCategory(catSlug)) {
       const extent = await getCategoryPriceExtent(catSlug);
       const baseFaqs = buildCategoryKeywordFaqs(catSlug, extent);
       const extraFaqs = CATEGORY_FAQ_OVERRIDES[catSlug] || [];
       const seenQ = new Set(baseFaqs.map((f) => String(f.question || "").toLowerCase()));
-      const mergedFaqs = [
+      visibleFaqs = [
         ...baseFaqs,
         ...extraFaqs.filter((f) => !seenQ.has(String(f.question || "").toLowerCase())),
       ];
-      faqLd = faqPageJsonLd(mergedFaqs);
     }
-    if (!faqLd) {
-      const { faqPairs } = splitCategoryDescriptionHtml(resolvedDescHtml);
-      if (faqPairs.length) faqLd = faqPageJsonLd(faqPairs);
+    const { faqPairs, remainderHtml } = splitCategoryDescriptionHtml(resolvedDescHtml);
+    if (!visibleFaqs.length && faqPairs.length) visibleFaqs = faqPairs;
+    else if (faqPairs.length) {
+      const seenQ = new Set(visibleFaqs.map((f) => String(f.question || "").toLowerCase()));
+      for (const f of faqPairs) {
+        if (!seenQ.has(String(f.question || "").toLowerCase())) visibleFaqs.push(f);
+      }
     }
+    const faqLd = faqPageJsonLd(visibleFaqs);
 
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
@@ -374,17 +379,14 @@ export default async function CategoryPage({ params, searchParams }) {
           emptyMessage="No products found in this category."
           priorityCount={0}
         />
-        {(() => {
-          const { remainderHtml } = splitCategoryDescriptionHtml(resolvedDescHtml);
-          if (!remainderHtml) return null;
-          return (
-            <div
-              className="store-container cat-desc cat-desc--html prose prose-neutral max-w-none"
-              style={{ padding: "24px 16px 40px" }}
-              dangerouslySetInnerHTML={{ __html: remainderHtml }}
-            />
-          );
-        })()}
+        {remainderHtml && !faqPairs.length ? (
+          <div
+            className="store-container cat-desc cat-desc--html prose prose-neutral max-w-none"
+            style={{ padding: "24px 16px 40px" }}
+            dangerouslySetInnerHTML={{ __html: remainderHtml }}
+          />
+        ) : null}
+        <FaqSection title={`${data.category?.name || "Category"} FAQs`} items={visibleFaqs} />
       </div>
     );
   }

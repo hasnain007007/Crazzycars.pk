@@ -326,6 +326,8 @@ const settingsSchema = new mongoose.Schema(
         },
       ],
     },
+    /** Per-city SEO landings (/car-accessories-{slug}) — unique copy editable in admin. */
+    cityPages: { type: mongoose.Schema.Types.Mixed, default: {} },
     storefront: {
       checkoutSuccess: {
         title: { type: String, default: "" },

@@ -143,7 +143,7 @@ export default async function BlogPostPage({ params }) {
     const modified = blogContentModifiedAt(post);
     const jsonLd = {
       "@context": "https://schema.org",
-      "@type": "BlogPosting",
+      "@type": ["Article", "BlogPosting"],
       headline: post.title,
       description: post.excerpt || post.title,
       image: post.featuredImage?.url || "",

@@ -7,6 +7,10 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import Order from "@/lib/models/Order.model";
 import { buildWaActionUrl } from "@/lib/waActionToken";
+import {
+  buildReviewRequestUrl,
+  buildReviewRequestWhatsAppMessage,
+} from "@/lib/reviewRequestToken";
 
 export async function GET(request, { params }) {
   try {
@@ -20,7 +24,9 @@ export async function GET(request, { params }) {
     }
 
     await dbConnect();
-    const order = await Order.findById(id).select("items orderNumber").lean();
+    const order = await Order.findById(id)
+      .select("items orderNumber customer shippingAddress orderStatus")
+      .lean();
     if (!order) {
       return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
     }
@@ -32,6 +38,8 @@ export async function GET(request, { params }) {
 
     const confirmUrl = buildWaActionUrl(base, id, "confirm");
     const cancelUrl = buildWaActionUrl(base, id, "cancel");
+    const reviewUrl = buildReviewRequestUrl(base, id);
+    const reviewMessage = reviewUrl ? buildReviewRequestWhatsAppMessage(order, reviewUrl) : "";
     const productImages = (order.items || [])
       .map((i) => String(i.image || "").trim())
       .filter(Boolean);
@@ -40,8 +48,11 @@ export async function GET(request, { params }) {
       success: true,
       confirmUrl,
       cancelUrl,
+      reviewUrl,
+      reviewMessage,
       productImages,
       orderNumber: order.orderNumber || "",
+      orderStatus: order.orderStatus || "",
     });
   } catch (error) {
     return NextResponse.json(

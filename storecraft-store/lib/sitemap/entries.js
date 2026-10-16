@@ -8,6 +8,7 @@ import { absoluteUrl } from "@/lib/siteUrl";
 import { MAX_SITEMAP_URLS } from "@/lib/sitemap/xml";
 import { getCategoryIdsWithProducts } from "@/lib/storeCategoryData";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { CITY_LANDING_SLUGS, cityPath } from "@/lib/cityLandingPages";
 
 /** Static storefront routes (no query strings, no redirect aliases). */
 const STATIC_PAGE_PATHS = [
@@ -25,6 +26,7 @@ const STATIC_PAGE_PATHS = [
   "/returns-policy",
   "/privacy-policy",
   "/terms-conditions",
+  ...CITY_LANDING_SLUGS.map((slug) => cityPath(slug)),
 ];
 
 const RESERVED_PAGE_SLUGS = new Set([

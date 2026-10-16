@@ -14,7 +14,14 @@ const REVIEW_REVALIDATE_PATHS = ["/", "/api/reviews", "/api/products"];
 async function updateProductRating(productId) {
   try {
     if (!productId || !mongoose.Types.ObjectId.isValid(String(productId))) return;
-    const reviews = await Review.find({ product: productId, status: "approved" }).select("rating").lean();
+    const reviews = await Review.find({
+      product: productId,
+      status: "approved",
+      isSeed: { $ne: true },
+      orderId: { $exists: true, $nin: [null, ""] },
+    })
+      .select("rating")
+      .lean();
     const reviewCount = reviews.length;
     const averageRating =
       reviewCount > 0
