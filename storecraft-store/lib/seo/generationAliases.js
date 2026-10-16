@@ -434,7 +434,7 @@ export function expandParsedQueryWithGenerationAliases(parsed) {
  */
 export const CATEGORY_SEO_OWNER_LOCKED = {
   "led-headlights-bulbs": {
-    metaTitle: "LED Headlights & Bulbs | Crazzycars.pk",
+    metaTitle: "LED Headlights & Bulbs | CrazzyCars.pk",
     metaDescription:
       "Brighter night drives with plug-and-play LED headlight bulbs — cooler running and clearer beam patterns for popular Pakistani cars. COD available.",
     absoluteTitle: true,
@@ -445,7 +445,7 @@ export const CATEGORY_SEO_OWNER_LOCKED = {
 export const CATEGORY_KEYWORD_META = {
   ...CATEGORY_SEO_OWNER_LOCKED,
   "splitters-side-skirts": {
-    metaTitle: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars",
+    metaTitle: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars.pk",
     metaDescription:
       "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic and Corolla. COD on eligible items, nationwide delivery.",
     absoluteTitle: true,
@@ -463,7 +463,7 @@ export const CATEGORY_KEYWORD_META = {
     absoluteTitle: true,
   },
   "interior-lights": {
-    metaTitle: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars",
+    metaTitle: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars.pk",
     metaDescription:
       "Buy car interior lights in Pakistan: ambient dashboard strips, footwell RGB lights, door welcome logo lights and roof star lights. COD on eligible items.",
     absoluteTitle: true,
@@ -475,13 +475,13 @@ export const CATEGORY_KEYWORD_META = {
     absoluteTitle: true,
   },
   "steering-wheel-covers": {
-    metaTitle: "Steering Wheel Covers Price in Pakistan | CrazzyCars",
+    metaTitle: "Steering Wheel Covers Price in Pakistan | CrazzyCars.pk",
     metaDescription:
       "Steering wheel covers in Pakistan, including hand-stitched carbon fiber in universal fit. Price on every listing. COD on eligible items, nationwide delivery.",
     absoluteTitle: true,
   },
   "stickers-monograms-emblems": {
-    metaTitle: "Car Stickers & Steering Monograms | CrazzyCars",
+    metaTitle: "Car Stickers & Steering Monograms | CrazzyCars.pk",
     metaDescription:
       "Car stickers, monograms and emblems in Pakistan, including Corolla carbon-style steering monograms. COD on eligible items. WhatsApp 03284010007.",
     absoluteTitle: true,

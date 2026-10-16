@@ -25,7 +25,7 @@ const settingsSchema = new mongoose.Schema(
       showLoginPrompt: { type: Boolean, default: true },
     },
     general: {
-      storeName: { type: String, default: 'Crazzycars.pk' },
+      storeName: { type: String, default: 'CrazzyCars.pk' },
       showStoreName: { type: Boolean, default: true },
       phone: { type: String, default: "+92 324 422 0007" },
       email: { type: String, default: "info@crazzycars.pk" },
@@ -42,6 +42,24 @@ const settingsSchema = new mongoose.Schema(
       defaultCurrency: { type: String, default: "PKR" },
       defaultPhonePrefix: { type: String, default: "+92" },
       address: { type: String, default: "" },
+      streetAddress: { type: String, default: "" },
+      addressLocality: { type: String, default: "Gujranwala" },
+      addressRegion: { type: String, default: "Punjab" },
+      postalCode: { type: String, default: "" },
+      addressCountry: { type: String, default: "PK" },
+      latitude: { type: Number, default: null },
+      longitude: { type: Number, default: null },
+      mapUrl: { type: String, default: "" },
+      whatsapp: { type: String, default: "" },
+      priceRange: { type: String, default: "" },
+      sameAs: [{ type: String }],
+      openingHours: [
+        {
+          dayOfWeek: [{ type: String }],
+          opens: { type: String, default: "" },
+          closes: { type: String, default: "" },
+        },
+      ],
     },
     appearance: {
       primaryColor: { type: String, default: "#C41E1E" },
@@ -53,7 +71,7 @@ const settingsSchema = new mongoose.Schema(
     },
     checkoutMessages: {
       orderSuccessMessage: { type: String, default: "Order Placed! We will deliver to your doorstep." },
-      orderSuccessSubtext: { type: String, default: "Thank you for shopping with Crazzycars.pk" },
+      orderSuccessSubtext: { type: String, default: "Thank you for shopping with CrazzyCars.pk" },
       codInstructions: { type: String, default: "Pay cash when your order arrives." },
       shippingNote: { type: String, default: "Free delivery on orders over Rs. 2,999" },
       cartEmptyMessage: { type: String, default: "Your cart is empty" },
@@ -255,6 +273,7 @@ const settingsSchema = new mongoose.Schema(
         icon: { type: String, default: "ubl" },
       },
     },
+    homepageIntroHtml: { type: String, default: "" },
     seo: {
       defaultMetaTitle: { type: String, default: "" },
       defaultMetaDescription: { type: String, default: "" },
@@ -291,7 +310,7 @@ const settingsSchema = new mongoose.Schema(
         subtitle: {
           type: String,
           default:
-            `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
+            `At ${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
         },
       },
       story: {
@@ -300,7 +319,7 @@ const settingsSchema = new mongoose.Schema(
         paragraph1: {
           type: String,
           default:
-            `${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
+            `${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
         },
         paragraph2: {
           type: String,
@@ -320,7 +339,7 @@ const settingsSchema = new mongoose.Schema(
         },
       ],
       promise: {
-        title: { type: String, default: `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} Promise` },
+        title: { type: String, default: `${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'} Promise` },
         paragraph1: {
           type: String,
           default:
@@ -329,7 +348,7 @@ const settingsSchema = new mongoose.Schema(
         paragraph2: {
           type: String,
           default:
-            `Your safety, satisfaction and style are at the heart of everything we do. That is not just a promise — that is the ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} way.`,
+            `Your safety, satisfaction and style are at the heart of everything we do. That is not just a promise — that is the ${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'} way.`,
         },
       },
       faq: [
@@ -349,7 +368,7 @@ const settingsSchema = new mongoose.Schema(
     contactPage: {
       hero: {
         badge: { type: String, default: "Get In Touch" },
-        title: { type: String, default: "We Would Love to Hear From You" },
+        title: { type: String, default: "Contact CrazzyCars.pk – Gujranwala" },
         subtitle: {
           type: String,
           default: "Questions about an order, product advice, or just want to say hello? We are always happy to help.",
@@ -366,8 +385,8 @@ const settingsSchema = new mongoose.Schema(
       },
       hours: {
         weekdays: { type: String, default: "Monday - Saturday: 9am - 9pm PKT" },
-        weekend: { type: String, default: "Sunday: 10am - 6pm PKT" },
-        closed: { type: String, default: "Sunday: Closed" },
+        weekend: { type: String, default: "Sunday: Closed" },
+        closed: { type: String, default: "" },
       },
       responseTime: { type: String, default: "We reply to all emails within 24 hours" },
       socialLinks: {
@@ -411,7 +430,7 @@ const settingsSchema = new mongoose.Schema(
       number: { type: String, default: "" },
       message: {
         type: String,
-        default: "Hi! I have a question about car accessories from Crazzycars.pk.",
+        default: "Hi! I have a question about car accessories from CrazzyCars.pk.",
       },
       showInNav: { type: Boolean, default: false },
       showInFooter: { type: Boolean, default: true },
@@ -430,7 +449,7 @@ const settingsSchema = new mongoose.Schema(
           type: String,
           default: `Assalam o Alaikum {customerName}! 🚗
 
-*Crazzycars.pk* — please confirm your order:
+*CrazzyCars.pk* — please confirm your order:
 
 ❓ *Is your order confirmed?*
 Tap one option below:
@@ -469,7 +488,7 @@ Or reply with:
 1️⃣ CONFIRM
 2️⃣ CANCEL
 
-Shukriya — Crazzycars.pk 🚗✨`,
+Shukriya — CrazzyCars.pk 🚗✨`,
         },
       },
       adminNewOrder: {
@@ -512,7 +531,7 @@ Or reply here:
 
 Assalam o Alaikum {customerName}!
 
-Your Crazzycars.pk order #{orderNumber} has been shipped via *{courier}*!
+Your CrazzyCars.pk order #{orderNumber} has been shipped via *{courier}*!
 
 🔍 *Tracking Number:* {trackingNumber}
 🔗 Track here: {trackingUrl}
@@ -531,7 +550,7 @@ Thank you! 🚗✨`,
           type: String,
           default: `Assalam o Alaikum {customerName}! 🚗
 
-You left items in your *Crazzycars.pk* cart:
+You left items in your *CrazzyCars.pk* cart:
 
 🛍️ *Items:*
 {itemsList}
@@ -543,7 +562,7 @@ Complete your order here:
 
 Need help? Call {storePhone}
 
-Shukriya — Crazzycars.pk ✨`,
+Shukriya — CrazzyCars.pk ✨`,
         },
       },
     },
@@ -572,7 +591,7 @@ Shukriya — Crazzycars.pk ✨`,
     },
     productImageWatermark: {
       enabled: { type: Boolean, default: true },
-      text: { type: String, default: "Crazzycars.pk" },
+      text: { type: String, default: "CrazzyCars.pk" },
       position: { type: String, default: "bottom-right" },
       opacity: { type: Number, default: 0.25 },
       fontSize: { type: Number, default: 13 },
@@ -629,7 +648,7 @@ Shukriya — Crazzycars.pk ✨`,
       description: {
         type: String,
         default:
-          "Crazzycars.pk was founded in Gujranwala to bring splitters, LED lighting, body kits, and carbon fiber accessories to drivers across Pakistan — with COD nationwide.",
+          "CrazzyCars.pk was founded in Gujranwala to bring splitters, LED lighting, body kits, and carbon fiber accessories to drivers across Pakistan — with COD nationwide.",
       },
       buttonText: { type: String, default: "Shop Car Accessories" },
       buttonLink: { type: String, default: "/about" },
@@ -790,9 +809,9 @@ Shukriya — Crazzycars.pk ✨`,
         email: { type: String, default: "" },
         phone: { type: String, default: "" },
       },
-      copyrightText: { type: String, default: "© 2025 Crazzycars.pk. All Rights Reserved." },
+      copyrightText: { type: String, default: "© 2025 CrazzyCars.pk. All Rights Reserved." },
       showLogoInFooter: { type: Boolean, default: true },
-      companyName: { type: String, default: "Crazzycars.pk" },
+      companyName: { type: String, default: "CrazzyCars.pk" },
       companyNumber: { type: String, default: "" },
       vatNumber: { type: String, default: "" },
       registeredAddress: { type: String, default: "Gujranwala, Punjab, Pakistan" },

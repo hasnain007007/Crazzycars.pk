@@ -4,9 +4,9 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildPageMetadata({
-  title: `Blog | ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} — car care tips & accessories Guides`,
+  title: `Blog | ${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'} — car care tips & accessories Guides`,
   description:
-    `Expert car accessories advice, aftercare guides, accessories care tips and style inspiration from ${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'} automotive specialists — read our blog.`,
+    `Expert car accessories advice, aftercare guides, accessories care tips and style inspiration from ${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'} automotive specialists — read our blog.`,
   path: "/posts",
   absoluteTitle: true,
 });

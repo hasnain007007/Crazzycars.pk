@@ -32,14 +32,14 @@ import {
   CATEGORY_APPLY_SKIP,
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
-import { CATEGORY_TITLE_BRAND } from "@/lib/brand";
+import { BRAND_NAME } from "@/lib/brand";
 
 /** ISR: catalog HTML edge-cache friendly; admin revalidate webhook still purges. */
 export const revalidate = 300;
 export const dynamicParams = true;
 
 const BASE_URL = getSiteUrl();
-const BRAND = CATEGORY_TITLE_BRAND;
+const BRAND = BRAND_NAME;
 
 export async function generateStaticParams() {
   try {

@@ -8,7 +8,7 @@ import {
 export const metadata = buildPageMetadata({
   title: "Shipping Policy",
   description:
-    "Delivery charges, timelines, and courier options for Crazzycars.pk orders across Pakistan.",
+    "Delivery charges, timelines, and courier options for CrazzyCars.pk orders across Pakistan.",
   path: "/shipping-policy",
 });
 

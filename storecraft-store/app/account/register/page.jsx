@@ -140,7 +140,7 @@ function RegisterPageContent() {
               margin: 0,
             }}
           >
-            Join {process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"} today
+            Join {process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"} today
           </p>
         </div>
 

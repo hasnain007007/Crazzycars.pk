@@ -35,13 +35,13 @@ export const metadata = sanitizeMetadata({
     description: META_DESCRIPTION,
     url: absoluteUrl("/cash-on-delivery"),
     type: "website",
-    images: [{ url: absoluteUrl("/og-image.jpg"), width: 1200, height: 630, alt: BRAND }],
+    images: [{ url: absoluteUrl("/og/default-1200x630.jpg"), width: 1200, height: 630, alt: BRAND }],
   },
   twitter: {
     card: "summary_large_image",
     title: titleMeta.absolute,
     description: META_DESCRIPTION,
-    images: [absoluteUrl("/og-image.jpg")],
+    images: [absoluteUrl("/og/default-1200x630.jpg")],
   },
 });
 
@@ -120,7 +120,7 @@ export default function CashOnDeliveryPage() {
         when your order arrives.
       </p>
 
-      <h2 className="mt-10 text-xl font-semibold text-zinc-900">How COD works on CrazzyCars</h2>
+      <h2 className="mt-10 text-xl font-semibold text-zinc-900">How COD works on CrazzyCars.pk</h2>
       <ol className="mt-3 list-decimal space-y-2 pl-5 text-gray-700 leading-relaxed">
         <li>
           <strong>Place your order</strong> on CrazzyCars.pk and choose Cash on Delivery at checkout

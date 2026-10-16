@@ -63,7 +63,7 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   const orderRef = String(order?.orderNumber || order?._id || "").trim();
   const waText = encodeURIComponent(
     [
-      `Hi CrazzyCars, I paid the COD booking / advance for order ${orderRef || "(new order)"}.`,
+      `Hi CrazzyCars.pk, I paid the COD booking / advance for order ${orderRef || "(new order)"}.`,
       `Amount: ${formatPrice(amount)}.`,
       "Sending payment screenshot now.",
     ].join("\n")
@@ -408,7 +408,7 @@ export default function CheckoutSuccessView() {
             letterSpacing: "0.04em",
           }}
         >
-          {messages.orderSuccessMessage || "Order Confirmed — Crazzycars.pk"}
+          {messages.orderSuccessMessage || "Order Confirmed — CrazzyCars.pk"}
         </h1>
 
         <p
@@ -420,7 +420,7 @@ export default function CheckoutSuccessView() {
           }}
         >
           {messages.orderSuccessSubtext ||
-            "Thank you for shopping with Crazzycars.pk. We will deliver to your doorstep."}
+            "Thank you for shopping with CrazzyCars.pk. We will deliver to your doorstep."}
         </p>
 
         <div

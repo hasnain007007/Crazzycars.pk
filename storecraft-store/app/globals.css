@@ -3769,6 +3769,69 @@ textarea::placeholder {
   text-overflow: ellipsis;
 }
 
+
+.cat-hero__visual-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.home-seo-intro {
+  padding: 2.5rem 1rem 3rem;
+  max-width: 720px;
+}
+.home-seo-intro__h1 {
+  margin: 0 0 1rem;
+  font-family: var(--font-heading), Rajdhani, sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #111;
+}
+.home-seo-intro__body p {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #374151;
+}
+.home-seo-intro__links a {
+  color: #c41e1e;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.home-seo-intro__faq {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+.home-seo-intro__faq-title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111;
+}
+.home-seo-intro__faq-item {
+  margin-bottom: 1rem;
+}
+.home-seo-intro__faq-item dt {
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 0.25rem;
+}
+.home-seo-intro__faq-item dd {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.65;
+}
+.home-seo-intro__faq-more {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
 .cat-hero__eyebrow {
   margin: 0;
   font-size: 11px;
@@ -3799,7 +3862,7 @@ textarea::placeholder {
   letter-spacing: 0.01em;
   line-height: 1.08 !important;
   text-align: left !important;
-  text-transform: uppercase;
+  text-transform: none;
   color: #ffd400 !important;
   text-shadow: 0 2px 0 rgba(100, 12, 14, 0.55), 0 8px 20px rgba(0, 0, 0, 0.35);
   -webkit-text-stroke: 0 !important;

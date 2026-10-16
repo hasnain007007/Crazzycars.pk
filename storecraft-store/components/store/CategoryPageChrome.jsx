@@ -40,7 +40,7 @@ function CategorySubcategoryMarquee({ subcategories = [] }) {
                       <LocalMediaImg
                         src={thumb}
                         master={localMediaPath(raw) || raw}
-                        alt={copy === 0 ? sub.image?.altText || sub.name : ""}
+                        alt={copy === 0 ? sub.image?.altText || sub.name || "Category" : ""}
                         title={sub.image?.title || sub.name}
                         width={120}
                         height={120}

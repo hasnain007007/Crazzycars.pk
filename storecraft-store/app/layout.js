@@ -21,7 +21,7 @@ import { sanitizeMetadata, withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
-import { BRAND } from "@/lib/brand";
+import { BRAND_NAME, TITLE_SUFFIX, withBrandTitleSuffix } from "@/lib/brand";
 import "./globals.css";
 
 const MobileBottomNav = dynamic(() => import("@/components/store/MobileBottomNav"));
@@ -80,17 +80,11 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
     const settings = await getLayoutSettings();
     const seo = settings?.seo || {};
     const general = settings?.general || {};
-    const storeName =
-      general.storeName ||
-      process.env.NEXT_PUBLIC_STORE_NAME ||
-      process.env.NEXT_PUBLIC_APP_NAME ||
-      "CrazzyCars.pk";
+    const storeName = BRAND_NAME;
 
-    const title =
-      seo.metaTitle?.trim() ||
-      seo.defaultMetaTitle?.trim() ||
-      storeName ||
-      "CrazzyCars.pk";
+    const title = withBrandTitleSuffix(
+      seo.metaTitle?.trim() || seo.defaultMetaTitle?.trim() || storeName
+    );
     const description =
       seo.metaDescription?.trim() ||
       seo.defaultMetaDescription?.trim() ||
@@ -98,7 +92,7 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
     const siteUrl = getSiteUrl();
     // Homepage canonical is set in app/page.jsx — keep root layout free of a sitewide canonical.
 
-    const ogTitle = seo.ogTitle?.trim() || title;
+    const ogTitle = withBrandTitleSuffix(seo.ogTitle?.trim() || title);
     const ogDescription = seo.ogDescription?.trim() || description;
     // Allow site-relative, same-host, and Cloudinary uploads from admin SEO settings.
     const configuredOg = seo.ogImage?.trim() || "";
@@ -124,7 +118,7 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
         ogSafe = "";
       }
     }
-    const ogImageUrl = ogSafe || absoluteUrl("/og-image.jpg");
+    const ogImageUrl = ogSafe || absoluteUrl("/og/default-1200x630.jpg");
 
     const gsc = seo.googleSearchConsoleId?.trim();
     const verification = gsc ? { google: gsc } : {};
@@ -142,20 +136,20 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
       metadataBase,
       title: {
         default: title,
-        template: `%s | ${storeName}`,
+        template: `%s${TITLE_SUFFIX}`,
       },
       description,
       icons,
-      authors: [{ name: storeName }],
-      creator: storeName,
-      publisher: storeName,
+      authors: [{ name: BRAND_NAME }],
+      creator: BRAND_NAME,
+      publisher: BRAND_NAME,
       robots: isIndexableEnvironment() ? robotsFromSeo(seo.robotsTxt) : { index: false, follow: false },
       openGraph: {
         title: ogTitle,
         description: ogDescription,
         locale: "en_US",
         type: "website",
-        siteName: storeName,
+        siteName: BRAND_NAME,
         url: siteUrl,
         images: [{ url: ogImageUrl, width: 1200, height: 630, alt: storeName }],
       },
@@ -179,16 +173,17 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
     }
     return sanitizeMetadata({
       metadataBase,
-      title: "CrazzyCars.pk | Car Accessories Pakistan",
+      title: `Car Accessories Pakistan${TITLE_SUFFIX}`,
       description: FALLBACK_DESCRIPTION,
       icons: buildFaviconMetadata(),
       robots: isIndexableEnvironment() ? undefined : { index: false, follow: false },
       openGraph: {
-        images: [{ url: absoluteUrl("/og-image.jpg"), width: 1200, height: 630, alt: "CrazzyCars.pk" }],
+        siteName: BRAND_NAME,
+        images: [{ url: absoluteUrl("/og/default-1200x630.jpg"), width: 1200, height: 630, alt: BRAND_NAME }],
       },
       twitter: {
         card: "summary_large_image",
-        images: [absoluteUrl("/og-image.jpg")],
+        images: [absoluteUrl("/og/default-1200x630.jpg")],
       },
     });
   }
@@ -232,11 +227,7 @@ export default async function RootLayout({ children }) {
   const appearance = settings?.appearance || {};
   const general = settings?.general || {};
   const seo = settings?.seo || {};
-  const storeName =
-    general.storeName ||
-    process.env.NEXT_PUBLIC_APP_NAME ||
-    process.env.NEXT_PUBLIC_STORE_NAME ||
-    BRAND;
+  const storeName = BRAND_NAME;
   const baseUrl = getSiteUrl();
   const description =
     seo.metaDescription?.trim() || seo.defaultMetaDescription?.trim() || FALLBACK_DESCRIPTION;
@@ -247,19 +238,30 @@ export default async function RootLayout({ children }) {
     `${baseUrl}/logo.png`;
   const orgImage =
     seo.ogImage?.trim() ||
-    `${baseUrl}/og-image.jpg`;
+    `${baseUrl}/og/default-1200x630.jpg`;
 
   const organizationJsonLd = buildOrgLd({
-    name: storeName,
+    name: BRAND_NAME,
     logo: logoUrl,
     image: orgImage,
     ogImage: orgImage,
     email: general.email || undefined,
     telephone: general.phone || undefined,
-    streetAddress: general.address || undefined,
+    whatsapp: general.whatsapp || undefined,
+    streetAddress: general.streetAddress || undefined,
+    addressLocality: general.addressLocality || undefined,
+    addressRegion: general.addressRegion || undefined,
+    postalCode: general.postalCode || undefined,
+    addressCountry: general.addressCountry || undefined,
+    latitude: general.latitude,
+    longitude: general.longitude,
+    mapUrl: general.mapUrl || undefined,
+    priceRange: general.priceRange || undefined,
+    sameAs: Array.isArray(general.sameAs) ? general.sameAs : undefined,
+    openingHours: Array.isArray(general.openingHours) ? general.openingHours : undefined,
   });
 
-  const websiteJsonLd = buildWebsiteLd({ name: storeName });
+  const websiteJsonLd = buildWebsiteLd({ name: BRAND_NAME });
 
   const bodyFont = appearance.fontFamily || undefined;
 
@@ -275,9 +277,15 @@ export default async function RootLayout({ children }) {
         suppressHydrationWarning
       >
         <ThemeInjector settings={settings} />
-        <AnalyticsScripts settings={settings} />
-        <MerchantWidgetScripts />
-        <LivePresenceClient />
+        <Suspense fallback={null}>
+          <AnalyticsScripts settings={settings} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <MerchantWidgetScripts />
+        </Suspense>
+        <Suspense fallback={null}>
+          <LivePresenceClient />
+        </Suspense>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -303,8 +311,12 @@ export default async function RootLayout({ children }) {
             <Suspense fallback={null}>
               <StoreFooter settings={settings} initialCategoryTree={categoryTree} />
             </Suspense>
-            <ClientOnlyWidgets />
-            <MobileBottomNav />
+            <Suspense fallback={null}>
+              <ClientOnlyWidgets />
+            </Suspense>
+            <Suspense fallback={null}>
+              <MobileBottomNav />
+            </Suspense>
           </StoreProviders>
         </CustomerProvider>
         <LazyToaster />

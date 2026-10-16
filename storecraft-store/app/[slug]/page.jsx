@@ -11,8 +11,13 @@ import { resolveLegacyDestination } from "@/lib/categoryHandleAliases";
 import { findExistingVehicleSlug } from "@/lib/vehiclePageData";
 import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { findActiveProductBySlugParam } from "@/lib/resolveProductSlug";
+import {
+  findActiveProductBySlugParam,
+  findUnavailableProductBySlugParam,
+} from "@/lib/resolveProductSlug";
 import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
+import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
+import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
 import { cloudinarySrcSet, pdpImageUrl } from "@/lib/cloudinaryImage";
 import { resolveProductImageUrls, resolvePrimaryProductImageUrl } from "@/lib/productImages";
 import {
@@ -31,7 +36,7 @@ import {
   faqPageJsonLd,
 } from "@/lib/seo/keywordStrategyFaqs";
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
-import { BRAND, PRODUCT_TITLE_BRAND } from "@/lib/brand";
+import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 import { toPlainText } from "@/lib/sanitizeHtml";
 import {
   getPageSeoOverride,
@@ -40,6 +45,8 @@ import {
   PRODUCT_H1_OVERRIDES,
 } from "@/lib/seo/gscAudit2026-10.mjs";
 
+const BRAND = BRAND_NAME;
+
 /**
  * ISR for product / CMS pages. Category slugs 308 to /categories/:slug.
  * 300s: catalog HTML can be edge-cached; admin revalidate webhook still purges.
@@ -47,53 +54,17 @@ import {
 export const revalidate = 300;
 
 const BASE_URL = getSiteUrl();
-const PRODUCT_TITLE_SUFFIX = ` | ${PRODUCT_TITLE_BRAND}`;
-const PRODUCT_TITLE_MAX_LENGTH = 60;
 
 function stripHtml(s) {
   return String(s || "").replace(/<[^>]*>/g, "");
 }
 
-function stripTrailingProductTitleBrand(value) {
-  let title = String(value || "").trim();
-  const trailingBrand =
-    /\s*[|\u2013\u2014-]\s*(?:CrazzyCars(?:\.pk)?|Crazzycars\.pk)\s*$/i;
-
-  for (let i = 0; i < 3; i += 1) {
-    const stripped = title
-      .replace(trailingBrand, "")
-      .replace(/[\s|\u2013\u2014-]+$/g, "")
-      .trim();
-    if (stripped === title) break;
-    title = stripped;
-  }
-
-  return title;
-}
-
-function truncateProductTitleAtWord(value, maxLength) {
-  const title = String(value || "").trim();
-  if (title.length <= maxLength) return title;
-
-  const withinLimit = title.slice(0, maxLength);
-  const lastSpace = withinLimit.lastIndexOf(" ");
-  const truncated = (lastSpace > 0 ? withinLimit.slice(0, lastSpace) : withinLimit)
-    .replace(/[\s|\u2013\u2014,;:-]+$/g, "")
-    .trim();
-
-  return truncated || withinLimit.trim();
-}
-
 function buildProductSeoTitle({ name, metaTitle, slug }) {
   const override = getPageSeoOverride(`/${String(slug || "").trim()}`);
-  if (override?.title) return override.title;
+  if (override?.title) return withBrandTitleSuffix(override.title);
 
   const source = String(metaTitle || "").trim() || String(name || "").trim();
-  const unbrandedTitle = stripTrailingProductTitleBrand(source);
-  const titleBudget = PRODUCT_TITLE_MAX_LENGTH - PRODUCT_TITLE_SUFFIX.length;
-  const truncatedTitle = truncateProductTitleAtWord(unbrandedTitle, titleBudget);
-
-  return `${truncatedTitle}${PRODUCT_TITLE_SUFFIX}`;
+  return withBrandTitleSuffix(source);
 }
 
 function querySuffix(searchParams) {
@@ -179,6 +150,11 @@ async function loadRelatedProducts(product) {
 const loadContent = cache(async (slug) => {
   await dbConnect();
   const slugStr = String(slug || "").trim();
+
+  const deletedDest = resolveDeletedFlatSlug(slugStr);
+  if (deletedDest) {
+    return { type: "redirect", to: deletedDest };
+  }
 
   // Exact slug first (fast path).
   let product = await Product.findOne({
@@ -271,6 +247,23 @@ const loadContent = cache(async (slug) => {
   const productFallback = resolveFlatProductFallback(slugStr);
   if (productFallback) {
     return { type: "redirect", to: productFallback };
+  }
+
+  // Soft-deleted / inactive catalogue row → category (or car / home), never soft-404.
+  try {
+    const gone = await findUnavailableProductBySlugParam(slugStr);
+    if (gone?._id) {
+      const full = await Product.findOne({ _id: gone._id, status: "inactive" })
+        .select("name slug categories compatibleVehicles redirectTo primaryCategorySlug primaryCarSlug carSlug seo")
+        .populate("categories", "name slug")
+        .populate("compatibleVehicles", "slug")
+        .lean();
+      if (full) {
+        return { type: "redirect", to: resolveInactiveProductRedirect(full) };
+      }
+    }
+  } catch (err) {
+    console.error("[loadContent] inactive redirect:", err?.message || err);
   }
 
   const vehicleSlug = await findExistingVehicleSlug(slugStr);

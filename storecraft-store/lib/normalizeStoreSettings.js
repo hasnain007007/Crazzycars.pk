@@ -37,7 +37,7 @@ export const DEFAULT_BRAND_STORY = {
   heading: "Exterior performance for street and show",
   subheading: "Splitters, kits, and carbon accents for Pakistani builds",
   description:
-    "Crazzycars.pk is our Gujranwala flagship for exterior performance styling — body kits, spoilers, carbon fiber, and aggressive lighting. Fitment is listed by generation, installs stay practical, and Cash on Delivery covers Pakistan.",
+    "CrazzyCars.pk is our Gujranwala flagship for exterior performance styling — body kits, spoilers, carbon fiber, and aggressive lighting. Fitment is listed by generation, installs stay practical, and Cash on Delivery covers Pakistan.",
   buttonText: "About Us",
   buttonLink: "/about",
   image1: "",
@@ -86,7 +86,7 @@ export function sanitizeCssFontFamily(value, fallback) {
 
 export const DEFAULT_CHECKOUT_MESSAGES = {
   orderSuccessMessage: "Order Placed! We will deliver to your doorstep.",
-  orderSuccessSubtext: "Thank you for shopping with Crazzycars.pk",
+  orderSuccessSubtext: "Thank you for shopping with CrazzyCars.pk",
   codInstructions: "Pay cash when your order arrives.",
   shippingNote: standardDeliveryFeeStatement(),
   cartEmptyMessage: "Your cart is empty",
@@ -401,6 +401,7 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
   const data = {
     announcementBar,
     homepageSettings,
+    homepageIntroHtml: String(settings?.homepageIntroHtml || "").trim(),
     trustBadges,
     brandStory,
     appearance,
@@ -453,7 +454,7 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
     contactPage: settings?.contactPage || {},
     storefront: settings?.storefront || {},
     checkout,
-    storeName: sanitizeStoreName(g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"),
+    storeName: sanitizeStoreName(g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"),
     logoUrl: logoString,
     phone: g.phone || "",
     email: g.email || "",
@@ -560,7 +561,20 @@ export function toPublicClientSettings(full = {}, opts = {}) {
       address: full.general?.address || "",
       currency: full.general?.currency || full.currency || "PKR",
       website: full.general?.website || full.website || "",
+      streetAddress: full.general?.streetAddress || "",
+      addressLocality: full.general?.addressLocality || "Gujranwala",
+      addressRegion: full.general?.addressRegion || "Punjab",
+      postalCode: full.general?.postalCode || "",
+      addressCountry: full.general?.addressCountry || "PK",
+      latitude: full.general?.latitude ?? null,
+      longitude: full.general?.longitude ?? null,
+      mapUrl: full.general?.mapUrl || "",
+      whatsapp: full.general?.whatsapp || "",
+      priceRange: full.general?.priceRange || "",
+      sameAs: Array.isArray(full.general?.sameAs) ? full.general.sameAs : [],
+      openingHours: Array.isArray(full.general?.openingHours) ? full.general.openingHours : [],
     },
+    homepageIntroHtml: full.homepageIntroHtml || "",
     payment: {},
     pakistaniPaymentMethods: includePaymentAccounts
       ? methods

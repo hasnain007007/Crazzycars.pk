@@ -22,13 +22,13 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
   const inset = insetRaw && insetRaw !== coverRaw ? editorialInsetUrl(insetRaw) || insetRaw : "";
 
   return (
-    <section className="shop-band" aria-label="About Crazzycars.pk">
+    <section className="shop-band" aria-label="About CrazzyCars.pk">
       <div className="shop-band__visual">
         {visual ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={visual}
-            alt="Crazzycars.pk — car accessories from Gujranwala"
+            alt="CrazzyCars.pk — car accessories from Gujranwala"
             loading="lazy"
             decoding="async"
           />
@@ -46,7 +46,7 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
       <div className="shop-band__copy">
         <p className="shop-band__kicker">{city} · Pakistan</p>
         <h2 className="shop-band__title">
-          <span className="shop-band__brand">Crazzycars.pk</span>
+          <span className="shop-band__brand">CrazzyCars.pk</span>
           <span className="shop-band__rule" aria-hidden />
           <span className="shop-band__headline">
             Exterior performance styling

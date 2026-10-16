@@ -7,7 +7,7 @@ function whatsappUrl() {
       "923284010007"
   ).replace(/\D/g, "");
   const text = encodeURIComponent(
-    "Hi Crazzycars.pk — a page failed to load and I still want to place an order."
+    "Hi CrazzyCars.pk — a page failed to load and I still want to place an order."
   );
   return `https://wa.me/${digits}?text=${text}`;
 }

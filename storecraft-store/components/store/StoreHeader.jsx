@@ -142,7 +142,7 @@ function deriveHeaderConfig(data) {
       : String(logoRaw?.url || "").trim();
 
   const brand = {
-    storeName: general.storeName || data?.storeName || "Crazzycars.pk",
+    storeName: general.storeName || data?.storeName || "CrazzyCars.pk",
     logo,
     phone: general.phone || data?.phone || "",
     email: normalizeStoreEmail(general.email || data?.email || ""),
@@ -195,7 +195,7 @@ function deriveHeaderConfig(data) {
 }
 
 function splitStoreName(name) {
-  const n = String(name || "Crazzycars.pk").trim();
+  const n = String(name || "CrazzyCars.pk").trim();
   const parts = n.split(/\s+/);
   if (parts.length <= 1) return { line1: n.toUpperCase(), line2: "" };
   return {
