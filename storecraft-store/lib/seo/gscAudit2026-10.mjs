@@ -124,7 +124,7 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: "Buy Toyota Corolla X carbon-style interior door handle panels (set of 4) for 2014–2026 Grande/Altis. Sale Rs. 5,999. COD on eligible items at CrazzyCars.pk.",
   },
   "/contact": {
-    title: "Contact CrazzyCars.pk – WhatsApp, Phone & Gujranwala Store",
+    title: "Contact CrazzyCars.pk – Gujranwala",
     meta: `Contact CrazzyCars.pk: WhatsApp ${WA}, email, store address in Gujranwala and opening hours. Ask about fitment, orders and delivery.`,
   },
   "/": {

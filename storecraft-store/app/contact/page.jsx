@@ -59,7 +59,7 @@ export default async function ContactPage() {
     logo: logoUrl,
     image: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
     email: general.email || settings?.email,
-    telephone: general.phone || settings?.phone,
+    telephone: general.telephone || general.phone || settings?.phone,
     ...localBusiness,
   });
 

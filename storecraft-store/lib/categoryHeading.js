@@ -30,10 +30,11 @@ export function resolveCategoryH1(category, h1Override = "") {
     return /[a-z]/.test(override) ? override : titleCaseCategoryName(override);
   }
 
+  // Prefer a descriptive H1; skip meta titles that are SERP-oriented ("Price in…").
   const seoTitle = stripTrailingBrandSuffix(
     category?.seo?.metaTitle || category?.metaTitle || ""
   );
-  if (seoTitle) return seoTitle;
+  if (seoTitle && !/\bprice\s+in\b/i.test(seoTitle)) return seoTitle;
 
   const name = titleCaseCategoryName(category?.name || "Car");
   // Avoid "Accessories Accessories"

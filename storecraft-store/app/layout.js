@@ -246,7 +246,7 @@ export default async function RootLayout({ children }) {
     image: orgImage,
     ogImage: orgImage,
     email: general.email || undefined,
-    telephone: general.phone || undefined,
+    telephone: general.telephone || general.phone || undefined,
     whatsapp: general.whatsapp || undefined,
     streetAddress: general.streetAddress || undefined,
     addressLocality: general.addressLocality || undefined,
