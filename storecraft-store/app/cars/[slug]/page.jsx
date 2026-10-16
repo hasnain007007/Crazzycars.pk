@@ -77,13 +77,13 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
         url: listingSeo.alternates.canonical,
         images: ogImage
           ? [{ url: ogImage, alt: vehicle.displayName }]
-          : [{ url: "/og-image.jpg", width: 1200, height: 630, alt: `${vehicle.displayName} accessories` }],
+          : [{ url: "/og/default-1200x630.jpg", width: 1200, height: 630, alt: `${vehicle.displayName} accessories` }],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: ogImage ? [ogImage] : ["/og-image.jpg"],
+        images: ogImage ? [ogImage] : ["/og/default-1200x630.jpg"],
       },
     };
   } catch (err) {

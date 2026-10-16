@@ -167,18 +167,16 @@ function HeroRail({ items }) {
   );
 }
 
-const PAGE_H1_FALLBACK = `${BRAND} — Car Accessories Pakistan`;
+const PAGE_H1_FALLBACK = `${BRAND} — Car Accessories in Pakistan`;
 
 /**
- * Single page H1 for the homepage hero — rendered once outside the slide track
- * so carousel SSR can never emit two <h1> tags.
+ * Screen-reader brand line in the hero. The visible document H1 lives in
+ * HomeSeoIntro (server-rendered) so crawlers get one descriptive heading.
  */
 function PageHeroH1({ slide, settings }) {
   const { headline, hasText } = resolveCopy(slide, settings);
   const text = hasText && headline ? headline : PAGE_H1_FALLBACK;
-  // Designed / image-only banners: keep H1 for crawlers without overlaying art.
-  // Text overlays: visual title stays a <p> in HeroCopy; this H1 mirrors it for a11y/SEO.
-  return <h1 className="sr-only">{text}</h1>;
+  return <p className="sr-only">{text}</p>;
 }
 
 /** Slide overlay copy — never emits <h1>; page heading lives in PageHeroH1. */

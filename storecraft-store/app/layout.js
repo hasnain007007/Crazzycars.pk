@@ -118,7 +118,7 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
         ogSafe = "";
       }
     }
-    const ogImageUrl = ogSafe || absoluteUrl("/og-image.jpg");
+    const ogImageUrl = ogSafe || absoluteUrl("/og/default-1200x630.jpg");
 
     const gsc = seo.googleSearchConsoleId?.trim();
     const verification = gsc ? { google: gsc } : {};
@@ -179,11 +179,11 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
       robots: isIndexableEnvironment() ? undefined : { index: false, follow: false },
       openGraph: {
         siteName: BRAND_NAME,
-        images: [{ url: absoluteUrl("/og-image.jpg"), width: 1200, height: 630, alt: BRAND_NAME }],
+        images: [{ url: absoluteUrl("/og/default-1200x630.jpg"), width: 1200, height: 630, alt: BRAND_NAME }],
       },
       twitter: {
         card: "summary_large_image",
-        images: [absoluteUrl("/og-image.jpg")],
+        images: [absoluteUrl("/og/default-1200x630.jpg")],
       },
     });
   }
@@ -238,7 +238,7 @@ export default async function RootLayout({ children }) {
     `${baseUrl}/logo.png`;
   const orgImage =
     seo.ogImage?.trim() ||
-    `${baseUrl}/og-image.jpg`;
+    `${baseUrl}/og/default-1200x630.jpg`;
 
   const organizationJsonLd = buildOrgLd({
     name: BRAND_NAME,

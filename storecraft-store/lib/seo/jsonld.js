@@ -596,7 +596,7 @@ export function organizationJsonLd(overrides = {}) {
       "@type": "ImageObject",
       url: overrides.logo || `${SITE}/logo.png`,
     },
-    image: overrides.image || overrides.ogImage || `${SITE}/og-image.jpg`,
+    image: overrides.image || overrides.ogImage || `${SITE}/og/default-1200x630.jpg`,
     email: overrides.email || "info@crazzycars.pk",
     telephone: overrides.telephone || "+92-328-4010007",
     hasMerchantReturnPolicy: buildOrganizationReturnPolicy(SITE),
