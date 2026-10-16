@@ -11,8 +11,13 @@ import { resolveLegacyDestination } from "@/lib/categoryHandleAliases";
 import { findExistingVehicleSlug } from "@/lib/vehiclePageData";
 import { serializeStoreProductDetail, serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { findActiveProductBySlugParam } from "@/lib/resolveProductSlug";
+import {
+  findActiveProductBySlugParam,
+  findUnavailableProductBySlugParam,
+} from "@/lib/resolveProductSlug";
 import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
+import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
+import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
 import { cloudinarySrcSet, pdpImageUrl } from "@/lib/cloudinaryImage";
 import { resolveProductImageUrls, resolvePrimaryProductImageUrl } from "@/lib/productImages";
 import {
@@ -180,6 +185,11 @@ const loadContent = cache(async (slug) => {
   await dbConnect();
   const slugStr = String(slug || "").trim();
 
+  const deletedDest = resolveDeletedFlatSlug(slugStr);
+  if (deletedDest) {
+    return { type: "redirect", to: deletedDest };
+  }
+
   // Exact slug first (fast path).
   let product = await Product.findOne({
     slug: slugStr,
@@ -271,6 +281,23 @@ const loadContent = cache(async (slug) => {
   const productFallback = resolveFlatProductFallback(slugStr);
   if (productFallback) {
     return { type: "redirect", to: productFallback };
+  }
+
+  // Soft-deleted / inactive catalogue row → category (or car / home), never soft-404.
+  try {
+    const gone = await findUnavailableProductBySlugParam(slugStr);
+    if (gone?._id) {
+      const full = await Product.findOne({ _id: gone._id, status: "inactive" })
+        .select("name slug categories compatibleVehicles redirectTo primaryCategorySlug primaryCarSlug carSlug seo")
+        .populate("categories", "name slug")
+        .populate("compatibleVehicles", "slug")
+        .lean();
+      if (full) {
+        return { type: "redirect", to: resolveInactiveProductRedirect(full) };
+      }
+    }
+  } catch (err) {
+    console.error("[loadContent] inactive redirect:", err?.message || err);
   }
 
   const vehicleSlug = await findExistingVehicleSlug(slugStr);

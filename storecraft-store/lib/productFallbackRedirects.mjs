@@ -8,6 +8,7 @@
  */
 
 import { stripBrandSuffix } from "./productSlugParam.js";
+import { resolveDeletedFlatSlug, resolveDeletedPath } from "./deletedUrlRedirects.mjs";
 
 /** @type {Record<string, string>} handle (with or without -crazzycars-pk) → path */
 export const PRODUCT_FALLBACK_REDIRECTS = {
@@ -41,11 +42,17 @@ export function resolveProductRedirectPath(rawHandle) {
     .toLowerCase();
   if (!handle || handle.includes("/")) return null;
 
+  const deleted = resolveDeletedFlatSlug(handle) || resolveDeletedPath(`/${handle}`);
+  if (deleted) return deleted;
+
   if (PRODUCT_FALLBACK_REDIRECTS[handle]) {
     return PRODUCT_FALLBACK_REDIRECTS[handle];
   }
 
   const stripped = stripBrandSuffix(handle) || handle;
+  const deletedStripped = resolveDeletedFlatSlug(stripped);
+  if (deletedStripped) return deletedStripped;
+
   if (PRODUCT_FALLBACK_REDIRECTS[stripped]) {
     return PRODUCT_FALLBACK_REDIRECTS[stripped];
   }
@@ -61,6 +68,8 @@ export function resolveFlatProductFallback(rawSlug) {
     .toLowerCase();
   if (!slug || slug.includes("/")) return null;
   return (
+    resolveDeletedFlatSlug(slug) ||
+    resolveDeletedPath(`/${slug}`) ||
     PRODUCT_FALLBACK_REDIRECTS[slug] ||
     PRODUCT_FALLBACK_REDIRECTS[`${slug}-crazzycars-pk`] ||
     null

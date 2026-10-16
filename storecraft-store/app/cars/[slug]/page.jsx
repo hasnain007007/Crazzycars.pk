@@ -24,8 +24,9 @@ import {
   VEHICLE_FAQ_OVERRIDES,
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
+import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "CrazzyCars.pk";
 
@@ -33,6 +34,8 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const listing = parseListingSearchParams(await searchParams);
+  const deletedCar = resolveDeletedPath(`/cars/${slugStr}`);
+  if (deletedCar) permanentRedirect(listingHref(deletedCar, listing));
   try {
     await dbConnect();
     const vehicle = await loadVehicleBySlug(slugStr);
@@ -93,6 +96,8 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const slugStr = String(slug || "").trim();
   if (!slugStr) notFound();
   const listing = parseListingSearchParams(await searchParams);
+  const deletedCar = resolveDeletedPath(`/cars/${slugStr}`);
+  if (deletedCar) permanentRedirect(listingHref(deletedCar, listing));
 
   let vehicle = null;
   try {
@@ -102,7 +107,10 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     console.error("[vehicle page] load failed:", err?.message || err);
     throw err;
   }
-  if (!vehicle) notFound();
+  if (!vehicle) {
+    // Inactive / removed generation — closest brand page or exterior hub.
+    permanentRedirect("/categories/exterior");
+  }
   if (vehicle.slug && String(vehicle.slug) !== slugStr) {
     permanentRedirect(listingHref(`/cars/${vehicle.slug}`, listing));
   }

@@ -15,6 +15,7 @@ import {
 } from "@/lib/paidTraffic";
 import { buildFbcFromFbclid } from "@/lib/metaClickIds";
 import { resolveProductRedirectPath, resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
+import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveCollectionRedirect } from "@/lib/collectionRedirectMap.mjs";
 import { STRIP_QUERY_KEYS } from "@/lib/stripQueryKeys.mjs";
 
@@ -104,6 +105,14 @@ export async function middleware(request) {
   // (Previously redirected to /logo.png when the cloud was billing-disabled.)
 
   const lower = pathname.toLowerCase();
+
+  // Explicit deleted catalogue / car URLs (also in next.config; middleware covers edge cases).
+  {
+    const deletedDest = resolveDeletedPath(lower.replace(/\/+$/, "") || "/");
+    if (deletedDest && deletedDest !== (lower.replace(/\/+$/, "") || "/")) {
+      return withPaidCookie(request, redirectPath(request, deletedDest, 301));
+    }
+  }
 
   // Homepage ignores ?q= — SearchSuggest / JSON-LD SearchAction use /shop?q=
   if (lower === "/") {

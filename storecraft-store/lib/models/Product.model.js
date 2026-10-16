@@ -252,6 +252,13 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
     /**
+     * Soft-delete SEO target when status becomes inactive (path starting with /).
+     * Storefront permanentRedirects here instead of 404.
+     */
+    redirectTo: { type: String, default: "", trim: true },
+    primaryCategorySlug: { type: String, default: "", trim: true, lowercase: true },
+    primaryCarSlug: { type: String, default: "", trim: true, lowercase: true },
+    /**
      * Security / data-quality hold. When true, storefront treats the SKU as
      * unpublished even if status slips to active.
      */
