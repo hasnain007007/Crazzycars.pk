@@ -34,8 +34,11 @@ export function WatermarkedImage({
   }, [src]);
 
   const rawSrc = retrySrc || src;
+  // After a -400 thumb 404, retrySrc is the master URL — serve it as-is (do not
+  // rewrite back to the missing -400.webp).
+  const skipThumbRewrite = Boolean(retrySrc);
   const optimized =
-    optimize
+    optimize && !skipThumbRewrite
       ? crop === "fill"
         ? cardImageUrl(rawSrc, width)
         : cloudinaryUrl(rawSrc, { width, crop })
