@@ -1738,33 +1738,20 @@ export function OrderDetail({ orderId }) {
                 </h1>
                 <OrderStatusBadges order={order} />
                 <CustomerConfirmBadge order={order} />
-                {order.origin && order.origin !== "—" ? (
-                  <span
-                    className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800 dark:bg-violet-900/40 dark:text-violet-200"
-                    title={
-                      order.attribution?.firstTouch?.label
-                        ? `First touch: ${order.attribution.firstTouch.label}${
-                            order.attribution?.lastTouch?.label
-                              ? ` · Last: ${order.attribution.lastTouch.label}`
-                              : ""
-                          }`
-                        : "Traffic origin"
-                    }
-                  >
-                    {order.origin}
-                  </span>
-                ) : order.aiAttributedSource ? (
-                  <span
-                    className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800 dark:bg-violet-900/40 dark:text-violet-200"
-                    title={
-                      order.aiAttributedAt
-                        ? `AI first-touch ${new Date(order.aiAttributedAt).toLocaleString()}`
-                        : "Attributed to AI agent traffic"
-                    }
-                  >
-                    AI · {order.aiAttributedSource}
-                  </span>
-                ) : null}
+                <span
+                  className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800 dark:bg-violet-900/40 dark:text-violet-200"
+                  title={
+                    order.attribution?.firstTouch?.label
+                      ? `First touch: ${order.attribution.firstTouch.label}${
+                          order.attribution?.lastTouch?.label
+                            ? ` · Last: ${order.attribution.lastTouch.label}`
+                            : ""
+                        }`
+                      : "Traffic origin (where the customer came from)"
+                  }
+                >
+                  Origin: {order.origin && order.origin !== "—" ? order.origin : "Direct"}
+                </span>
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
                   {formatCurrencyAmount(order, effectiveTotal)}
                 </span>
@@ -1923,10 +1910,11 @@ export function OrderDetail({ orderId }) {
           </div>
 
           <div className="min-w-0 space-y-3">
-            {order.origin && order.origin !== "—" ? (
-              <div className="rounded-xl border border-violet-200 bg-violet-50/60 p-3 shadow-sm dark:border-violet-900/50 dark:bg-violet-950/30">
+            <div className="rounded-xl border border-violet-200 bg-violet-50/60 p-3 shadow-sm dark:border-violet-900/50 dark:bg-violet-950/30">
                 <h2 className="text-sm font-semibold text-violet-950 dark:text-violet-100">Origin</h2>
-                <p className="mt-1 text-base font-bold text-violet-900 dark:text-violet-50">{order.origin}</p>
+                <p className="mt-1 text-base font-bold text-violet-900 dark:text-violet-50">
+                  {order.origin && order.origin !== "—" ? order.origin : "Direct"}
+                </p>
                 {order.attribution ? (
                   <dl className="mt-2 space-y-1 text-xs text-violet-900/80 dark:text-violet-200/80">
                     {order.attribution.source ? (
@@ -1978,7 +1966,6 @@ export function OrderDetail({ orderId }) {
                   </dl>
                 ) : null}
               </div>
-            ) : null}
             <OrderStatusCard order={order} onUpdated={setOrder} />
             <PaymentStatusCard order={order} onUpdated={setOrder} orderTotalOverride={effectiveTotal} />
 

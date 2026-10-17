@@ -582,6 +582,7 @@ export function toPublicClientSettings(full = {}, opts = {}) {
     seo: {
       googleAnalyticsId: full.seo?.googleAnalyticsId || "",
       facebookPixelId: full.seo?.facebookPixelId || "",
+      snapchatPixelId: full.seo?.snapchatPixelId || "",
       metaTitle: full.seo?.metaTitle || "",
       metaDescription: full.seo?.metaDescription || "",
     },

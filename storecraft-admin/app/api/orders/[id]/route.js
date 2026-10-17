@@ -150,7 +150,7 @@ function serializeOrder(doc, productImageById = null) {
     aiAttributedSource: o.aiAttributedSource || "",
     aiAttributedAt: o.aiAttributedAt || null,
     attribution: serializeAttribution(o.attribution),
-    origin: orderOriginLabel(o) || "—",
+    origin: orderOriginLabel(o) || "Direct",
     hasPostexLabel: Boolean(o.postexLabel),
     hasRunCourierLabel: Boolean(o.runCourierLabel),
     runCourierApi: o.runCourierApi || "",

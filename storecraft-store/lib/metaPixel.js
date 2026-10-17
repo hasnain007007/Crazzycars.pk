@@ -2,7 +2,14 @@
  * Meta Pixel (fbq) helpers — client-only.
  * Pixel ID comes from settings via AnalyticsScripts init; never hardcode IDs here.
  * Browser events also mirror to Conversions API via /api/meta/capi with the same event_id.
+ * Snapchat Pixel events are mirrored when snaptr is loaded.
  */
+import {
+  trackSnapAddToCart,
+  trackSnapInitiateCheckout,
+  trackSnapPurchase,
+  trackSnapViewContent,
+} from "@/lib/snapPixel";
 
 export const META_PIXEL_CURRENCY = "PKR";
 
@@ -163,6 +170,7 @@ export function resolveProductContentId(productOrRow) {
 export function trackViewContent({ contentIds, value, currency = META_PIXEL_CURRENCY, eventId, skipCapi } = {}) {
   const ids = normalizeIds(contentIds);
   if (!ids.length) return false;
+  trackSnapViewContent({ contentIds: ids, value, currency });
   return trackMetaPixel(
     "ViewContent",
     {
@@ -186,6 +194,7 @@ export function trackAddToCart({
   const ids = normalizeIds(contentIds);
   if (!ids.length) return false;
   const qty = Math.max(1, Math.min(99, Number(quantity) || 1));
+  trackSnapAddToCart({ contentIds: ids, value, quantity: qty, currency });
   return trackMetaPixel(
     "AddToCart",
     {
@@ -217,6 +226,7 @@ export function trackInitiateCheckout({
     num_items: Math.max(0, Number(numItems) || 0),
   };
   if (ids.length) params.content_ids = ids;
+  trackSnapInitiateCheckout({ contentIds: ids, value, numItems, currency });
   return trackMetaPixel("InitiateCheckout", params, { eventId, skipCapi, user });
 }
 
@@ -243,6 +253,7 @@ export function trackPurchase({
   if (ids.length) params.content_ids = ids;
   if (orderId) params.order_id = String(orderId);
   if (numItems != null) params.num_items = Math.max(0, Number(numItems) || 0);
+  trackSnapPurchase({ contentIds: ids, value, orderId, numItems, currency });
   return trackMetaPixel("Purchase", params, { eventId, skipCapi, user });
 }
 

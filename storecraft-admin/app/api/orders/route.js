@@ -352,7 +352,7 @@ export async function GET(request) {
         tags: Array.isArray(o.tags) ? o.tags : [],
         ordersLast24h,
         isRepeatToday: ordersLast24h > 1,
-        origin: orderOriginLabel(o) || "—",
+        origin: orderOriginLabel(o) || "Direct",
         attributionChannel: o.attribution?.channel || "",
         aiAttributedSource: o.aiAttributedSource || "",
         // Computed at query time (OR8) — never stored on the order document

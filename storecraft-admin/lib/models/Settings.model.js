@@ -286,6 +286,8 @@ const settingsSchema = new mongoose.Schema(
       googleAnalyticsId: { type: String, default: "" },
       googleSearchConsoleId: { type: String, default: "" },
       facebookPixelId: { type: String, default: "" },
+      /** Snapchat Ads Pixel ID (UUID). */
+      snapchatPixelId: { type: String, default: "" },
       metaCapiAccessToken: { type: String, default: "" },
       metaCapiTestEventCode: { type: String, default: "" },
       canonicalUrl: { type: String, default: "" },

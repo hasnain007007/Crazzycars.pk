@@ -208,6 +208,8 @@ const settingsSchema = new mongoose.Schema(
       googleAnalyticsId: { type: String, default: "" },
       googleSearchConsoleId: { type: String, default: "" },
       facebookPixelId: { type: String, default: "" },
+      /** Snapchat Ads Pixel ID (UUID). */
+      snapchatPixelId: { type: String, default: "" },
       /** Meta Conversions API access token — never expose to public storefront settings. */
       metaCapiAccessToken: { type: String, default: "" },
       /** Optional Events Manager test code (TEST12345). */

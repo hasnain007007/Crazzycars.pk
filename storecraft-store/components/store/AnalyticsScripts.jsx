@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { trackPageView } from "@/lib/metaPixel";
+import { trackSnapPageView } from "@/lib/snapPixel";
 import { useDeferredThirdParty } from "@/lib/useDeferredThirdParty";
 
 /** One PageView per App Router location (survives Strict Mode remounts). */
 const pageViewFiredKeys = new Set();
+const snapPageViewFiredKeys = new Set();
 
 /**
  * Fire PageView once the deferred pixel is available.
@@ -55,12 +57,56 @@ function MetaPixelPageViews() {
   return null;
 }
 
+function SnapPixelPageViews() {
+  const pathname = usePathname();
+  const [search, setSearch] = useState("");
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    setSearch(String(window.location.search || "").replace(/^\?/, ""));
+    firedRef.current = false;
+  }, [pathname]);
+
+  useEffect(() => {
+    const key = `snap:${pathname}?${search}`;
+    let attempts = 0;
+    let timer;
+
+    const fire = () => {
+      if (firedRef.current || snapPageViewFiredKeys.has(key)) {
+        firedRef.current = true;
+        return true;
+      }
+      if (typeof window !== "undefined" && typeof window.snaptr === "function") {
+        trackSnapPageView();
+        firedRef.current = true;
+        snapPageViewFiredKeys.add(key);
+        return true;
+      }
+      return false;
+    };
+
+    if (fire()) return undefined;
+
+    timer = window.setInterval(() => {
+      attempts += 1;
+      if (fire() || attempts > 40) window.clearInterval(timer);
+    }, 100);
+
+    return () => window.clearInterval(timer);
+  }, [pathname, search]);
+
+  return null;
+}
+
 export default function AnalyticsScripts({ settings }) {
   const gaId = String(settings?.seo?.googleAnalyticsId || "").trim();
   const fbPixelId = String(settings?.seo?.facebookPixelId || "").trim();
+  const snapPixelId = String(settings?.seo?.snapchatPixelId || "").trim();
   const deferMeta = useDeferredThirdParty(8000);
+  const deferSnap = useDeferredThirdParty(8000);
 
-  if (!gaId && !fbPixelId) return null;
+  if (!gaId && !fbPixelId && !snapPixelId) return null;
 
   return (
     <>
@@ -96,6 +142,22 @@ export default function AnalyticsScripts({ settings }) {
             `}
           </Script>
           <MetaPixelPageViews />
+        </>
+      ) : null}
+      {snapPixelId && deferSnap ? (
+        <>
+          <Script id="snap-pixel" strategy="lazyOnload">
+            {`
+              (function(e,t,n){if(e.snaptr)return;var a=e.snaptr=function()
+              {a.handleRequest?a.handleRequest.apply(a,arguments):a.queue.push(arguments)};
+              a.queue=[];var s='script';r=t.createElement(s);r.async=!0;
+              r.src=n;var u=t.getElementsByTagName(s)[0];
+              u.parentNode.insertBefore(r,u);})(window,document,
+              'https://sc-static.net/scevent.min.js');
+              snaptr('init', '${snapPixelId.replace(/'/g, "\\'")}', {});
+            `}
+          </Script>
+          <SnapPixelPageViews />
         </>
       ) : null}
     </>

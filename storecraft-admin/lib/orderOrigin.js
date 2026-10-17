@@ -32,8 +32,9 @@ export function orderOriginLabel(order) {
   const label = String(order?.attribution?.label || "").trim();
   if (label) return label;
   const ai = String(order?.aiAttributedSource || "").trim();
-  if (!ai) return "";
-  return AI_LABELS[ai] || `AI: ${ai}`;
+  if (ai) return AI_LABELS[ai] || `AI: ${ai}`;
+  // Always surface Origin in admin (blank attribution = Direct).
+  return "Direct";
 }
 
 export function serializeAttribution(attr) {
