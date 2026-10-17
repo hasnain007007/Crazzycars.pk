@@ -246,6 +246,7 @@ export function OrdersTable({
               <th>Payment status</th>
               <th>Fulfillment status</th>
               <th>Origin</th>
+              <th>IP / Device</th>
               <th>Customer confirm</th>
               <th>Delivery status</th>
               <th style={{ textAlign: "right" }}>Actions</th>
@@ -255,7 +256,7 @@ export function OrdersTable({
             {loading
               ? Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={14}>
+                    <td colSpan={15}>
                       <div
                         style={{
                           height: 12,
@@ -426,6 +427,21 @@ export function OrdersTable({
                           title={o.origin || "No attribution captured"}
                         >
                           {o.origin || "—"}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className="truncate"
+                          style={{
+                            display: "inline-block",
+                            maxWidth: "12rem",
+                            fontSize: 12,
+                            fontVariantNumeric: "tabular-nums",
+                            color: o.customerIp ? "#202223" : "#8C9196",
+                          }}
+                          title={o.customerIpSummary || o.customerIp || "IP captured on new storefront orders"}
+                        >
+                          {o.customerIpSummary || o.customerIp || "—"}
                         </span>
                       </td>
                       <td>

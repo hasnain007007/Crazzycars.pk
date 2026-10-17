@@ -1752,6 +1752,15 @@ export function OrderDetail({ orderId }) {
                 >
                   Origin: {order.origin && order.origin !== "—" ? order.origin : "Direct"}
                 </span>
+                {order.customerIp ? (
+                  <span
+                    className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    title={order.customerIpSummary || order.customerIp}
+                  >
+                    {order.customerDevice ? `${order.customerDevice} · ` : ""}
+                    {order.customerIp}
+                  </span>
+                ) : null}
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
                   {formatCurrencyAmount(order, effectiveTotal)}
                 </span>
@@ -1915,56 +1924,98 @@ export function OrderDetail({ orderId }) {
                 <p className="mt-1 text-base font-bold text-violet-900 dark:text-violet-50">
                   {order.origin && order.origin !== "—" ? order.origin : "Direct"}
                 </p>
-                {order.attribution ? (
-                  <dl className="mt-2 space-y-1 text-xs text-violet-900/80 dark:text-violet-200/80">
-                    {order.attribution.source ? (
-                      <div className="flex justify-between gap-2">
-                        <dt>Source</dt>
-                        <dd className="font-medium">{order.attribution.source}</dd>
-                      </div>
-                    ) : null}
-                    {order.attribution.medium ? (
-                      <div className="flex justify-between gap-2">
-                        <dt>Medium</dt>
-                        <dd className="font-medium">{order.attribution.medium}</dd>
-                      </div>
-                    ) : null}
-                    {order.attribution.campaign ? (
-                      <div className="flex justify-between gap-2">
-                        <dt>Campaign</dt>
-                        <dd className="font-medium truncate" title={order.attribution.campaign}>
-                          {order.attribution.campaign}
-                        </dd>
-                      </div>
-                    ) : null}
-                    {order.attribution.referrerHost ? (
-                      <div className="flex justify-between gap-2">
-                        <dt>Referrer</dt>
-                        <dd className="font-medium">{order.attribution.referrerHost}</dd>
-                      </div>
-                    ) : null}
-                    {order.attribution.landingPath ? (
-                      <div className="flex justify-between gap-2">
-                        <dt>Landing</dt>
-                        <dd className="font-medium truncate" title={order.attribution.landingPath}>
-                          {order.attribution.landingPath}
-                        </dd>
-                      </div>
-                    ) : null}
-                    {order.attribution.firstTouch?.label ? (
-                      <div className="flex justify-between gap-2 border-t border-violet-200/60 pt-1 dark:border-violet-800/60">
-                        <dt>First touch</dt>
-                        <dd className="font-medium text-right">{order.attribution.firstTouch.label}</dd>
-                      </div>
-                    ) : null}
-                    {order.attribution.lastTouch?.label ? (
-                      <div className="flex justify-between gap-2">
-                        <dt>Last touch</dt>
-                        <dd className="font-medium text-right">{order.attribution.lastTouch.label}</dd>
-                      </div>
-                    ) : null}
-                  </dl>
-                ) : null}
+                <dl className="mt-2 space-y-1 text-xs text-violet-900/80 dark:text-violet-200/80">
+                  {order.customerIp ? (
+                    <div className="flex justify-between gap-2">
+                      <dt>IP address</dt>
+                      <dd className="font-medium font-mono tabular-nums">{order.customerIp}</dd>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between gap-2">
+                      <dt>IP address</dt>
+                      <dd className="font-medium text-violet-900/50 dark:text-violet-200/50">
+                        Not captured (older order)
+                      </dd>
+                    </div>
+                  )}
+                  {order.customerDevice ? (
+                    <div className="flex justify-between gap-2">
+                      <dt>Device</dt>
+                      <dd className="font-medium">{order.customerDevice}</dd>
+                    </div>
+                  ) : null}
+                  {order.customerIpGeo?.city ||
+                  order.customerIpGeo?.region ||
+                  order.customerIpGeo?.country ||
+                  order.customerIpGeo?.countryCode ? (
+                    <div className="flex justify-between gap-2">
+                      <dt>IP location</dt>
+                      <dd className="font-medium text-right">
+                        {[
+                          order.customerIpGeo?.city,
+                          order.customerIpGeo?.region,
+                          order.customerIpGeo?.countryCode || order.customerIpGeo?.country,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {order.customerIpGeo?.isp ? (
+                    <div className="flex justify-between gap-2">
+                      <dt>ISP</dt>
+                      <dd className="font-medium truncate text-right" title={order.customerIpGeo.isp}>
+                        {order.customerIpGeo.isp}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {order.attribution?.source ? (
+                    <div className="flex justify-between gap-2 border-t border-violet-200/60 pt-1 dark:border-violet-800/60">
+                      <dt>Source</dt>
+                      <dd className="font-medium">{order.attribution.source}</dd>
+                    </div>
+                  ) : null}
+                  {order.attribution?.medium ? (
+                    <div className="flex justify-between gap-2">
+                      <dt>Medium</dt>
+                      <dd className="font-medium">{order.attribution.medium}</dd>
+                    </div>
+                  ) : null}
+                  {order.attribution?.campaign ? (
+                    <div className="flex justify-between gap-2">
+                      <dt>Campaign</dt>
+                      <dd className="font-medium truncate" title={order.attribution.campaign}>
+                        {order.attribution.campaign}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {order.attribution?.referrerHost ? (
+                    <div className="flex justify-between gap-2">
+                      <dt>Referrer</dt>
+                      <dd className="font-medium">{order.attribution.referrerHost}</dd>
+                    </div>
+                  ) : null}
+                  {order.attribution?.landingPath ? (
+                    <div className="flex justify-between gap-2">
+                      <dt>Landing</dt>
+                      <dd className="font-medium truncate" title={order.attribution.landingPath}>
+                        {order.attribution.landingPath}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {order.attribution?.firstTouch?.label ? (
+                    <div className="flex justify-between gap-2 border-t border-violet-200/60 pt-1 dark:border-violet-800/60">
+                      <dt>First touch</dt>
+                      <dd className="font-medium text-right">{order.attribution.firstTouch.label}</dd>
+                    </div>
+                  ) : null}
+                  {order.attribution?.lastTouch?.label ? (
+                    <div className="flex justify-between gap-2">
+                      <dt>Last touch</dt>
+                      <dd className="font-medium text-right">{order.attribution.lastTouch.label}</dd>
+                    </div>
+                  ) : null}
+                </dl>
               </div>
             <OrderStatusCard order={order} onUpdated={setOrder} />
             <PaymentStatusCard order={order} onUpdated={setOrder} orderTotalOverride={effectiveTotal} />

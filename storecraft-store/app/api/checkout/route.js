@@ -43,6 +43,7 @@ import {
   recordActionAttempt,
 } from "@/lib/actionRateLimit";
 import { requestIp } from "@/lib/requestIp";
+import { customerNetworkFromRequest } from "@/lib/customerIp";
 import { shippingFloorPKR } from "@/lib/shippingTier";
 import {
   buildPurchaseCustomData,
@@ -998,6 +999,7 @@ export async function POST(request) {
 
     const orderNumber = await allocateOrderNumber();
     const publicAccessToken = randomBytes(24).toString("base64url");
+    const customerNetwork = await customerNetworkFromRequest(request);
 
     let order;
     try {
@@ -1034,6 +1036,12 @@ export async function POST(request) {
         },
         shippingAddress,
         couponCode,
+        customerIp: customerNetwork.customerIp || "",
+        customerUserAgent: customerNetwork.customerUserAgent || "",
+        customerDevice: customerNetwork.customerDevice || "",
+        ...(customerNetwork.customerIpGeo
+          ? { customerIpGeo: customerNetwork.customerIpGeo }
+          : {}),
         statusHistory: [
           {
             status: initialStatus,

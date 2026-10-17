@@ -21,6 +21,7 @@ import {
   productMainImageUrl,
 } from "@/lib/resolveLineItemImage";
 import { orderOriginLabel, serializeAttribution } from "@/lib/orderOrigin";
+import { serializeCustomerNetwork } from "@/lib/customerIpDisplay";
 import { assertCodAdvanceAllowsDispatch, assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
 import { archiveCurrentTracking, serializePreviousTrackings } from "@/lib/previousTrackings";
 
@@ -151,6 +152,7 @@ function serializeOrder(doc, productImageById = null) {
     aiAttributedAt: o.aiAttributedAt || null,
     attribution: serializeAttribution(o.attribution),
     origin: orderOriginLabel(o) || "Direct",
+    ...serializeCustomerNetwork(o),
     hasPostexLabel: Boolean(o.postexLabel),
     hasRunCourierLabel: Boolean(o.runCourierLabel),
     runCourierApi: o.runCourierApi || "",

@@ -19,6 +19,7 @@ import { isCustomerWaCancelled } from "@/lib/orderUi";
 import { dispatchOrderLifecycleEmails, sendTemplatedCustomerEmail } from "@/lib/customerLifecycleEmail";
 import { buildOrderSearchOr, looksLikeTrackingId } from "@/lib/orderSearch";
 import { orderOriginLabel, originFilterToMongo, serializeAttribution } from "@/lib/orderOrigin";
+import { serializeCustomerNetwork } from "@/lib/customerIpDisplay";
 import { withoutDemo } from "@/lib/orderDemoFilter";
 import { awaitingBookingAdvanceMongoFilter } from "@/lib/codAdvanceGate";
 
@@ -355,6 +356,14 @@ export async function GET(request) {
         origin: orderOriginLabel(o) || "Direct",
         attributionChannel: o.attribution?.channel || "",
         aiAttributedSource: o.aiAttributedSource || "",
+        ...(() => {
+          const net = serializeCustomerNetwork(o);
+          return {
+            customerIp: net.customerIp,
+            customerDevice: net.customerDevice,
+            customerIpSummary: net.customerIpSummary,
+          };
+        })(),
         // Computed at query time (OR8) — never stored on the order document
         isStale:
           String(o.orderStatus || "").toLowerCase() === "pending" &&
