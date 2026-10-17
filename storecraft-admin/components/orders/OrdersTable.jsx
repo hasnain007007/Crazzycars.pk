@@ -208,7 +208,7 @@ export function OrdersTable({
         getStoreSettings={getStoreSettings}
       />
 
-      <div className="op-table-wrap">
+      <div className="op-table-wrap" role="region" aria-label="Orders table" tabIndex={0}>
         <table className="op-table">
           <thead>
             <tr>
