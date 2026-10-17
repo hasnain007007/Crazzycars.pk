@@ -30,6 +30,9 @@
   color: var(--p-text);
   background: var(--p-bg);
   -webkit-font-smoothing: antialiased;
+  /* Stay inside admin main; table scrolls inside .op-table-wrap */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .orders-polaris * {
@@ -159,6 +162,8 @@
   border: 1px solid var(--p-border);
   border-radius: 12px;
   overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .orders-polaris .op-card-pad {
@@ -247,20 +252,39 @@
 }
 
 .orders-polaris .op-table-wrap {
-  /* Card clips corners; scroll must live here or Actions/Delivery get cut off. */
-  overflow-x: auto;
-  overflow-y: visible;
+  /* Force a real horizontal scroller (auto+visible is ignored by some browsers). */
+  display: block;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+  overflow-x: scroll;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #eef0f2;
+  padding-bottom: 2px;
+}
+
+.orders-polaris .op-table-wrap::-webkit-scrollbar {
+  height: 12px;
+}
+.orders-polaris .op-table-wrap::-webkit-scrollbar-track {
+  background: #eef0f2;
+}
+.orders-polaris .op-table-wrap::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 6px;
+  border: 2px solid #eef0f2;
 }
 
 .orders-polaris .op-table {
   width: max-content;
-  min-width: 100%;
+  min-width: 1100px;
   table-layout: auto;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 13px;
   line-height: 20px;
 }
@@ -353,6 +377,22 @@
   min-width: 5.5rem;
   text-align: right;
   padding-right: 12px;
+  /* Keep View always on-screen while the rest of the row scrolls */
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  background: var(--p-surface);
+  box-shadow: -6px 0 8px -6px rgba(0, 0, 0, 0.18);
+}
+.orders-polaris .op-table thead th:nth-child(14) {
+  z-index: 4;
+  background: #f7f7f7;
+}
+.orders-polaris .op-table tbody tr:hover td:nth-child(14) {
+  background: var(--p-hover);
+}
+.orders-polaris .op-table tbody tr.is-selected td:nth-child(14) {
+  background: var(--p-selected);
 }
 
 .orders-polaris .op-table tbody tr {

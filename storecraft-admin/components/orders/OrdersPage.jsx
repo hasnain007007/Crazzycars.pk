@@ -308,7 +308,7 @@ export function OrdersPage() {
   }
 
   return (
-    <div className="orders-polaris -mx-4 -my-5 min-h-[calc(100vh-3.5rem)] space-y-4 px-4 py-5 md:-mx-6 md:-my-6 md:px-6 md:py-6">
+    <div className="orders-polaris -mx-4 -my-5 min-h-[calc(100vh-3.5rem)] min-w-0 max-w-full space-y-4 overflow-x-hidden px-4 py-5 md:-mx-6 md:-my-6 md:px-6 md:py-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="op-title">Orders</h1>
