@@ -246,7 +246,6 @@ export function OrdersTable({
               <th>Payment status</th>
               <th>Fulfillment status</th>
               <th>Origin</th>
-              <th>IP / Device</th>
               <th>Customer confirm</th>
               <th>Delivery status</th>
               <th style={{ textAlign: "right" }}>Actions</th>
@@ -256,7 +255,7 @@ export function OrdersTable({
             {loading
               ? Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={15}>
+                    <td colSpan={14}>
                       <div
                         style={{
                           height: 12,
@@ -417,32 +416,38 @@ export function OrdersTable({
                         <OrderStatusBadges order={o} mode="fulfillment" />
                       </td>
                       <td>
-                        <span
-                          className="op-pill"
-                          style={{
-                            background: o.origin && o.origin !== "—" ? "#EDE9FE" : "transparent",
-                            color: o.origin && o.origin !== "—" ? "#5B21B6" : "#616161",
-                            maxWidth: "11rem",
-                          }}
-                          title={o.origin || "No attribution captured"}
-                        >
-                          {o.origin || "—"}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className="truncate"
-                          style={{
-                            display: "inline-block",
-                            maxWidth: "12rem",
-                            fontSize: 12,
-                            fontVariantNumeric: "tabular-nums",
-                            color: o.customerIp ? "#202223" : "#8C9196",
-                          }}
-                          title={o.customerIpSummary || o.customerIp || "IP captured on new storefront orders"}
-                        >
-                          {o.customerIpSummary || o.customerIp || "—"}
-                        </span>
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span
+                            className="op-pill"
+                            style={{
+                              background: o.origin && o.origin !== "—" ? "#EDE9FE" : "transparent",
+                              color: o.origin && o.origin !== "—" ? "#5B21B6" : "#616161",
+                              maxWidth: "11rem",
+                            }}
+                            title={
+                              [o.origin, o.customerIpSummary || o.customerIp]
+                                .filter(Boolean)
+                                .join(" · ") || "No attribution captured"
+                            }
+                          >
+                            {o.origin || "—"}
+                          </span>
+                          {o.customerIp ? (
+                            <span
+                              className="truncate"
+                              style={{
+                                maxWidth: "11rem",
+                                fontSize: 10,
+                                fontVariantNumeric: "tabular-nums",
+                                color: "#8C9196",
+                              }}
+                              title={o.customerIpSummary || o.customerIp}
+                            >
+                              {o.customerDevice ? `${o.customerDevice} · ` : ""}
+                              {o.customerIp}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td>
                         <CustomerConfirmBadge order={o} compact />
