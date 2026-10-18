@@ -347,6 +347,8 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
     invoiceNumber: { type: String, default: "", trim: true, index: true },
+    /** Storefront channel stamped at checkout ("site" | "mobile"). No enum: admin never writes it. */
+    orderSource: { type: String, default: "", trim: true },
   },
   { timestamps: true }
 );
