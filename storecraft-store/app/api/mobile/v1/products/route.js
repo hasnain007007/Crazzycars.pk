@@ -18,7 +18,7 @@ import Vehicle from "@/lib/models/Vehicle.model";
 import { FIT_SCOPES, fitScopeFilter, fitmentLabels } from "@/lib/mobile/fitsVehicle";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
-import { parseSegment, segmentFilter, segmentOf } from "@/lib/segment";
+import { ANY_SEGMENT, parseSegment, segmentFilter, segmentOf } from "@/lib/segment";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +60,7 @@ export async function GET(request) {
     }
 
     if (vehicleSlug) {
-      vehicleDoc = await Vehicle.findOne({ slug: vehicleSlug }).lean();
+      vehicleDoc = await Vehicle.findOne({ slug: vehicleSlug, ...ANY_SEGMENT }).lean();
       if (vehicleDoc) segment = segmentOf(vehicleDoc);
       if (vehicleDoc && fitsOnly) {
         Object.assign(filter, fitScopeFilter(vehicleDoc, fitScope));

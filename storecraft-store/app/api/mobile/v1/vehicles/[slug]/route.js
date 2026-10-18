@@ -10,7 +10,7 @@ import Vehicle from "@/lib/models/Vehicle.model";
 import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 import { fitScopeFilter } from "@/lib/mobile/fitsVehicle";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
-import { segmentFilter, segmentOf } from "@/lib/segment";
+import { ANY_SEGMENT, segmentFilter, segmentOf } from "@/lib/segment";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,7 @@ export async function GET(_request, context) {
   }
   try {
     await dbConnect();
-    const v = await Vehicle.findOne({ slug, isActive: true }).lean();
+    const v = await Vehicle.findOne({ slug, isActive: true, ...ANY_SEGMENT }).lean();
     if (!v) {
       return NextResponse.json({ error: { code: "NOT_FOUND", message: "Vehicle not found." } }, { status: 404 });
     }

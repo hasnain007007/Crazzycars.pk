@@ -86,7 +86,7 @@ async function main() {
   let vNew = 0;
   for (const [i, b] of BIKES.entries()) {
     const doc = bikeVehicleDoc(b, i);
-    const exists = await Vehicle.exists({ slug: doc.slug });
+    const exists = await Vehicle.exists({ slug: doc.slug, segment: "bike" });
     if (!exists) vNew += 1;
     console.log(`${exists ? "update" : "create"} vehicle ${doc.slug}`);
     if (APPLY) await Vehicle.updateOne({ slug: doc.slug }, { $set: doc }, { upsert: true });

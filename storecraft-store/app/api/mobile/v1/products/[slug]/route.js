@@ -8,6 +8,7 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Vehicle from "@/lib/models/Vehicle.model";
 import { fitmentLabels } from "@/lib/mobile/fitsVehicle";
+import { ANY_SEGMENT } from "@/lib/segment";
 import { serializeStoreProductDetail } from "@/lib/storeSerialize";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
@@ -48,6 +49,7 @@ export async function GET(request, context) {
     if (vehicleSlug && String(vehicleSlug).trim()) {
       const vehicle = await Vehicle.findOne({
         slug: String(vehicleSlug).trim().toLowerCase(),
+        ...ANY_SEGMENT,
       }).lean();
       const fitment = vehicle ? (await fitmentLabels([p], vehicle)).get(String(p._id)) : "none";
       detail.fitment = fitment || "none";

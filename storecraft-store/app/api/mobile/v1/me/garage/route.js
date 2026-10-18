@@ -12,7 +12,7 @@ import Vehicle from "@/lib/models/Vehicle.model";
 import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 import { requireMobileAuth } from "@/lib/mobile/auth";
 import { mobileError } from "@/lib/mobile/response";
-import { segmentOf } from "@/lib/segment";
+import { ANY_SEGMENT, segmentOf } from "@/lib/segment";
 import { sanitizeGarageInput } from "@/lib/mobile/garage";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 async function serializeGarage(entries) {
   const slugs = [...new Set(entries.map((e) => e.slug))];
   const vehicles = slugs.length
-    ? await Vehicle.find({ slug: { $in: slugs }, isActive: { $ne: false } })
+    ? await Vehicle.find({ slug: { $in: slugs }, isActive: { $ne: false }, ...ANY_SEGMENT })
         .select("_id slug make model generation displayName image yearFrom yearTo segment")
         .lean()
     : [];
@@ -74,7 +74,7 @@ export async function PUT(request) {
   const cleaned = sanitizeGarageInput(body?.vehicles);
   // Keep only vehicles that exist, so the stored list matches what GET returns.
   const known = new Set(
-    (await Vehicle.find({ slug: { $in: cleaned.map((c) => c.slug) }, isActive: { $ne: false } })
+    (await Vehicle.find({ slug: { $in: cleaned.map((c) => c.slug) }, isActive: { $ne: false }, ...ANY_SEGMENT })
       .select("slug")
       .lean()).map((v) => v.slug)
   );

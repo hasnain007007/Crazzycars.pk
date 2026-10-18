@@ -4,6 +4,9 @@
  */
 export const SEGMENTS = ["car", "bike"];
 
+/** Vehicle filter that sees both stores (Vehicle reads default to cars — see Vehicle.model.js). */
+export const ANY_SEGMENT = { segment: { $in: ["car", "bike", null] } };
+
 /** Normalise a query value; unknown → null (no segment filter). */
 export function parseSegment(value) {
   const v = String(value || "").trim().toLowerCase();

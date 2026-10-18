@@ -34,6 +34,20 @@ const vehicleSchema = new mongoose.Schema(
 vehicleSchema.index({ make: 1, model: 1, yearFrom: 1 });
 vehicleSchema.index({ make: 1, isActive: 1, sortOrder: 1 });
 
+/**
+ * Website = car store: reads that do not name a segment only see cars (and legacy docs without
+ * the field), so /cars pages, Shop by Car, sitemaps and fitment never pick up bikes by accident.
+ * Code that serves bikes (the app's Bikes store) must pass a `segment` condition explicitly,
+ * e.g. ANY_SEGMENT from lib/segment.js.
+ */
+function defaultToCars() {
+  const filter = this.getFilter();
+  if (!Object.prototype.hasOwnProperty.call(filter, "segment")) {
+    this.where({ segment: { $in: ["car", null] } });
+  }
+}
+vehicleSchema.pre(["find", "findOne", "countDocuments", "distinct", "findOneAndUpdate"], defaultToCars);
+
 vehicleSchema.methods.matchesYear = function matchesYear(year) {
   const to = this.yearTo || new Date().getFullYear() + 1;
   return year >= this.yearFrom && year <= to;
