@@ -167,7 +167,7 @@ cd storecraft-store && npm run build
 Prerequisites: preview HTTPS URL, catalog restored + secrets scrubbed, `NEXT_PUBLIC_INDEXABLE=false`.
 
 ```bash
-export PREVIEW=https://mobile-preview.crazzycars.pk
+export PREVIEW=https://store-preview.crazzycars.pk
 export BASE=$PREVIEW/api/mobile/v1
 export EMAIL="preview.tester+$(date +%s)@example.com"
 export PHONE="03001234567"
