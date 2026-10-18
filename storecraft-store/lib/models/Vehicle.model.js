@@ -8,6 +8,8 @@ import mongoose from "mongoose";
 const vehicleSchema = new mongoose.Schema(
   {
     make: { type: String, required: true, trim: true },
+    /** Store segment: "car" (default, includes legacy docs without the field) or "bike". */
+    segment: { type: String, enum: ["car", "bike"], default: "car", index: true },
     model: { type: String, required: true, trim: true },
     generation: { type: String, default: "" },
     displayName: { type: String, required: true },

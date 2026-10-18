@@ -795,6 +795,8 @@ Shukriya — CrazzyCars.pk ✨`,
       },
       iosStoreUrl: { type: String, default: "" },
       androidStoreUrl: { type: String, default: "" },
+      /** Show the Bikes store in the app (Cars | Bikes switch). Off until bike products are loaded. */
+      bikesLive: { type: Boolean, default: false },
     },
   },
   { timestamps: true }

@@ -1,6 +1,6 @@
 /**
  * GET /api/mobile/v1/products
- * Query: q, category, sort, page, limit, vehicle, brand, inStock, maxPrice, minPrice, fitsOnly, fit
+ * Query: q, category, sort, page, limit, vehicle, brand, inStock, maxPrice, minPrice, fitsOnly, fit, segment
  *
  * Fitment design:
  * - `vehicle=<slug>` resolves a Vehicle, applies `buildVehiclePageProductFilter` (same as
@@ -18,6 +18,7 @@ import Vehicle from "@/lib/models/Vehicle.model";
 import { FIT_SCOPES, fitScopeFilter, fitmentLabels } from "@/lib/mobile/fitsVehicle";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { parseSegment, segmentFilter, segmentOf } from "@/lib/segment";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,8 @@ export async function GET(request) {
 
     const filter = { ...STOREFRONT_PRODUCT_FILTER };
     let vehicleDoc = null;
+    // A vehicle pins the store to its own segment; otherwise honour ?segment= (no param = all, as before).
+    let segment = parseSegment(searchParams.get("segment"));
 
     if (categorySlug) {
       const cat = await Category.findOne({ slug: categorySlug }).select("_id").lean();
@@ -58,12 +61,15 @@ export async function GET(request) {
 
     if (vehicleSlug) {
       vehicleDoc = await Vehicle.findOne({ slug: vehicleSlug }).lean();
+      if (vehicleDoc) segment = segmentOf(vehicleDoc);
       if (vehicleDoc && fitsOnly) {
         Object.assign(filter, fitScopeFilter(vehicleDoc, fitScope));
       } else if (!vehicleDoc && fitsOnly) {
         filter._id = null;
       }
     }
+
+    Object.assign(filter, segmentFilter(segment));
 
     if (q) {
       const re = new RegExp(escapeRegex(q), "i");

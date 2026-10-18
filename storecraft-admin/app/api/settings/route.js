@@ -78,6 +78,24 @@ export async function PUT(request) {
       mergeNested(doc.general, body.general);
     }
     if (body.notifications) mergeNested(doc.notifications, body.notifications);
+    if (body.mobileApp != null && typeof body.mobileApp === "object") {
+      const m = body.mobileApp;
+      const str = (v, max = 200) => String(v ?? "").trim().slice(0, max);
+      if (!doc.mobileApp) doc.mobileApp = {};
+      const next = {
+        bikesLive: Boolean(m.bikesLive),
+        maintenanceMode: Boolean(m.maintenanceMode),
+        maintenanceMessage: str(m.maintenanceMessage, 300),
+        minVersionAndroid: str(m.minVersionAndroid, 20) || "1.0.0",
+        minVersionIos: str(m.minVersionIos, 20) || "1.0.0",
+        recommendedVersionAndroid: str(m.recommendedVersionAndroid, 20),
+        recommendedVersionIos: str(m.recommendedVersionIos, 20),
+        androidStoreUrl: str(m.androidStoreUrl, 500),
+        iosStoreUrl: str(m.iosStoreUrl, 500),
+      };
+      mergeNested(doc.mobileApp, next);
+      doc.markModified("mobileApp");
+    }
     if (body.invoice !== undefined && body.invoice !== null && typeof body.invoice === "object") {
       if (!doc.invoice) doc.set("invoice", {});
       mergeNested(doc.invoice, body.invoice);

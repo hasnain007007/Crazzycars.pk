@@ -10,6 +10,7 @@ import Vehicle from "@/lib/models/Vehicle.model";
 import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 import { fitScopeFilter } from "@/lib/mobile/fitsVehicle";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { segmentFilter, segmentOf } from "@/lib/segment";
 
 export const dynamic = "force-dynamic";
 
@@ -24,9 +25,11 @@ export async function GET(_request, context) {
     if (!v) {
       return NextResponse.json({ error: { code: "NOT_FOUND", message: "Vehicle not found." } }, { status: 404 });
     }
+    // Universal parts are counted within the vehicle's own store (car parts never count for a bike).
+    const seg = segmentFilter(segmentOf(v));
     const [exact, universal] = await Promise.all([
-      Product.countDocuments({ ...STOREFRONT_PRODUCT_FILTER, ...fitScopeFilter(v, "specific") }),
-      Product.countDocuments({ ...STOREFRONT_PRODUCT_FILTER, ...fitScopeFilter(v, "universal") }),
+      Product.countDocuments({ ...STOREFRONT_PRODUCT_FILTER, ...seg, ...fitScopeFilter(v, "specific") }),
+      Product.countDocuments({ ...STOREFRONT_PRODUCT_FILTER, ...seg, ...fitScopeFilter(v, "universal") }),
     ]);
     return NextResponse.json({
       vehicle: {
@@ -36,6 +39,7 @@ export async function GET(_request, context) {
         model: v.model || "",
         generation: v.generation || "",
         displayName: v.displayName || `${v.make} ${v.model}`.trim(),
+        segment: segmentOf(v),
         yearFrom: v.yearFrom ?? null,
         yearTo: v.yearTo ?? null,
         image: absoluteMediaUrl(v.image),

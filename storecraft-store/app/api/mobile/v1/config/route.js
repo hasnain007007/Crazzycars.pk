@@ -57,6 +57,11 @@ export async function GET() {
         mobileApp.maintenanceMessage || "App is under maintenance. Please try again later.",
       iosStoreUrl: mobileApp.iosStoreUrl || "",
       androidStoreUrl: mobileApp.androidStoreUrl || "",
+      /** Stores in the app. Bikes shows only when switched on in settings (mobileApp.bikesLive). */
+      segments: [
+        { key: "car", label: "Cars", live: true },
+        { key: "bike", label: "Bikes", live: Boolean(mobileApp.bikesLive) },
+      ],
       currency: "PKR",
       shippingFloorStandard: shippingFloorPKR(false),
       shippingFloorBulky: shippingFloorPKR(true),

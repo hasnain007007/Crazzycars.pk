@@ -3,6 +3,7 @@
  * Slim payload (no product counts) + short CDN/SWR cache + warm-instance memory cache.
  */
 import { NextResponse } from "next/server";
+import { filterCategoryTreeBySegment } from "@/lib/segment";
 import { dbConnect } from "@/lib/db";
 import {
   getCategoryIdsWithProducts,
@@ -35,9 +36,13 @@ export async function GET() {
       loadStoreCategoriesTreeSlim(),
       getCategoryIdsWithProducts(),
     ]);
-    const payload = pruneCategoryTreeWithoutProducts(
-      (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode),
-      withProducts
+    // Website menus are the car store; bike categories appear only in the app until /bikes ships.
+    const payload = filterCategoryTreeBySegment(
+      pruneCategoryTreeWithoutProducts(
+        (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode),
+        withProducts
+      ),
+      "car"
     );
     setCachedCategoryTreePayload(payload);
 

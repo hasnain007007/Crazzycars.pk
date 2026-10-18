@@ -863,6 +863,21 @@ Shukriya — CrazzyCars.pk ✨`,
         playStore: { type: String, default: "" },
       },
     },
+    /** Mirrors storecraft-store Settings.mobileApp (read by /api/mobile/v1/config). */
+    mobileApp: {
+      minVersionIos: { type: String, default: "1.0.0" },
+      minVersionAndroid: { type: String, default: "1.0.0" },
+      recommendedVersionIos: { type: String, default: "" },
+      recommendedVersionAndroid: { type: String, default: "" },
+      maintenanceMode: { type: Boolean, default: false },
+      maintenanceMessage: {
+        type: String,
+        default: "App is under maintenance. Please try again later.",
+      },
+      iosStoreUrl: { type: String, default: "" },
+      androidStoreUrl: { type: String, default: "" },
+      bikesLive: { type: Boolean, default: false },
+    },
   },
   { timestamps: true }
 );

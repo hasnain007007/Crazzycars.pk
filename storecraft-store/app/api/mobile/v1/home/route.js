@@ -8,6 +8,9 @@
  *
  * Also returns banners, categories, newArrivals, recentBlogs for the app shell.
  * `featured` is kept as an alias of bestSellers for older clients.
+ *
+ * Query: segment=car|bike (default car). The car home is unchanged apart from limiting new
+ * arrivals and categories to cars; the bike home builds every section from bike products.
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -22,19 +25,41 @@ import { fetchHotDealsServer } from "@/lib/serverHotDeals";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
+import { parseSegment, segmentFilter } from "@/lib/segment";
+import { getCategoryIdsWithProducts } from "@/lib/storeCategoryData";
+
+const SUMMARY_FIELDS =
+  "name slug media pricing inventory featured newArrival categories simpleVariations variationCombinations codEnabled isBulky";
+
+/** Bike store sections straight from bike products (the car helpers rank the car catalog). */
+async function bikeSections() {
+  const base = { ...STOREFRONT_PRODUCT_FILTER, segment: "bike" };
+  const find = (extra, sort) =>
+    Product.find({ ...base, ...extra }).select(SUMMARY_FIELDS).sort(sort).limit(24).lean();
+  const [featured, deals] = await Promise.all([
+    find({ $or: [{ featured: true }, { isFeatured: true }] }, { updatedAt: -1 }),
+    find({ "pricing.salePrice": { $gt: 0 } }, { updatedAt: -1 }),
+  ]);
+  return {
+    bestSellers: featured.map((p) => serializeStoreProductSummary(p)),
+    hotDeals: deals.map((p) => serializeStoreProductSummary(p)),
+  };
+}
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request) {
   try {
     await dbConnect();
+    const segment = parseSegment(new URL(request.url).searchParams.get("segment")) || "car";
+    const isBike = segment === "bike";
 
     const settingsDoc =
       (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
       (await Settings.findOne({}).lean());
     const homepage = normalizeHomepageSettings(settingsDoc?.homepageSettings);
 
-    const [
+    let [
       banners,
       bestSellers,
       hotDeals,
@@ -43,17 +68,16 @@ export async function GET() {
       blogPosts,
     ] = await Promise.all([
       Banner.find({ status: "active" }).sort({ sortOrder: 1, createdAt: -1 }).lean(),
-      fetchBestSellersServer({ limit: 24 }),
-      fetchHotDealsServer({ filter: "all", limit: 24 }),
-      Product.find({ ...STOREFRONT_PRODUCT_FILTER, newArrival: true })
-        .select(
-          "name slug media pricing inventory featured newArrival categories simpleVariations variationCombinations codEnabled isBulky"
-        )
+      isBike ? null : fetchBestSellersServer({ limit: 24 }),
+      isBike ? null : fetchHotDealsServer({ filter: "all", limit: 24 }),
+      Product.find({ ...STOREFRONT_PRODUCT_FILTER, ...segmentFilter(segment), newArrival: true })
+        .select(SUMMARY_FIELDS)
         .populate("categories", "name slug")
         .limit(12)
         .lean(),
       Category.find({
         status: "active",
+        ...segmentFilter(segment),
         $or: [{ parentCategory: null }, { parentCategory: { $exists: false } }],
       })
         .select("name slug image")
@@ -66,7 +90,14 @@ export async function GET() {
         .lean(),
     ]);
 
-    const brands = (homepage.brands || [])
+    if (isBike) {
+      ({ bestSellers, hotDeals } = await bikeSections());
+      // New store: hide categories that have no products yet (no empty pages from the home grid).
+      const withProducts = await getCategoryIdsWithProducts();
+      categoriesRaw = categoriesRaw.filter((c) => withProducts.has(String(c._id)));
+    }
+
+    const brands = (isBike ? [] : homepage.brands || [])
       .filter((b) => b && b.isActive !== false && String(b.name || "").trim())
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       .map((b, i) => ({
