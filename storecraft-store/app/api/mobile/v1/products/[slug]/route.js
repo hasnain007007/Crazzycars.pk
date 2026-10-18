@@ -1,12 +1,13 @@
 /**
  * GET /api/mobile/v1/products/[slug]
- * Optional query: vehicle=<slug> → adds fitsVehicle (web /cars filter parity).
+ * Optional query: vehicle=<slug> → adds fitsVehicle (web /cars filter parity) and
+ * fitment: "exact" | "universal" | "none" for the garage fit badge.
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Vehicle from "@/lib/models/Vehicle.model";
-import { productFitsVehicleExists } from "@/lib/mobile/fitsVehicle";
+import { fitmentLabels } from "@/lib/mobile/fitsVehicle";
 import { serializeStoreProductDetail } from "@/lib/storeSerialize";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
@@ -48,9 +49,9 @@ export async function GET(request, context) {
       const vehicle = await Vehicle.findOne({
         slug: String(vehicleSlug).trim().toLowerCase(),
       }).lean();
-      detail.fitsVehicle = vehicle
-        ? await productFitsVehicleExists(p._id, vehicle)
-        : false;
+      const fitment = vehicle ? (await fitmentLabels([p], vehicle)).get(String(p._id)) : "none";
+      detail.fitment = fitment || "none";
+      detail.fitsVehicle = detail.fitment === "exact";
     }
 
     return NextResponse.json({ product: detail });

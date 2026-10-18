@@ -13,7 +13,7 @@ export async function GET() {
   try {
     await dbConnect();
     const vehicles = await Vehicle.find({ isActive: true })
-      .select("make model generation slug image year yearStart yearEnd sortOrder")
+      .select("make model generation displayName slug image yearFrom yearTo sortOrder")
       .sort({ make: 1, sortOrder: 1 })
       .lean();
 
@@ -25,8 +25,10 @@ export async function GET() {
           generation: v.generation || "",
           slug: v.slug || "",
           image: absoluteMediaUrl(v.image),
-          yearStart: v.yearStart || v.year || null,
-          yearEnd: v.yearEnd || null,
+          displayName: v.displayName || "",
+          // Schema stores yearFrom/yearTo; keep the yearStart/yearEnd names the app already reads.
+          yearStart: v.yearFrom ?? null,
+          yearEnd: v.yearTo ?? null,
         })) },
       { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } }
     );

@@ -1,19 +1,21 @@
 /**
  * GET /api/mobile/v1/products
- * Query: q, category, sort, page, limit, vehicle, brand, inStock, maxPrice, minPrice, fitsOnly
+ * Query: q, category, sort, page, limit, vehicle, brand, inStock, maxPrice, minPrice, fitsOnly, fit
  *
  * Fitment design:
  * - `vehicle=<slug>` resolves a Vehicle, applies `buildVehiclePageProductFilter` (same as
  *   website `/cars/[slug]`), and sets `fitsVehicle: true` on every card.
  * - `fitsOnly=true` is the default when `vehicle` is set; pass `fitsOnly=false` only if
  *   you want unfiltered results (no fitsVehicle annotation in that mode for v1).
+ * - `fit=specific|universal|all` (garage tabs): exact-fit only (default), universal parts only,
+ *   or both. Every card then carries `fitment: "exact" | "universal" | "none"`.
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
 import Vehicle from "@/lib/models/Vehicle.model";
-import { fittingProductsFilter, markFitsVehicleTrue } from "@/lib/mobile/fitsVehicle";
+import { FIT_SCOPES, fitScopeFilter, fitmentLabels } from "@/lib/mobile/fitsVehicle";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
@@ -43,6 +45,8 @@ export async function GET(request) {
       fitsOnlyParam == null || fitsOnlyParam === ""
         ? Boolean(vehicleSlug)
         : fitsOnlyParam === "true" || fitsOnlyParam === "1";
+    const fitParam = (searchParams.get("fit") || "").trim().toLowerCase();
+    const fitScope = FIT_SCOPES.includes(fitParam) ? fitParam : "specific";
 
     const filter = { ...STOREFRONT_PRODUCT_FILTER };
     let vehicleDoc = null;
@@ -55,7 +59,7 @@ export async function GET(request) {
     if (vehicleSlug) {
       vehicleDoc = await Vehicle.findOne({ slug: vehicleSlug }).lean();
       if (vehicleDoc && fitsOnly) {
-        Object.assign(filter, fittingProductsFilter(vehicleDoc));
+        Object.assign(filter, fitScopeFilter(vehicleDoc, fitScope));
       } else if (!vehicleDoc && fitsOnly) {
         filter._id = null;
       }
@@ -97,7 +101,7 @@ export async function GET(request) {
     const [products, total] = await Promise.all([
       Product.find(filter)
         .select(
-          "name slug articleNo media pricing inventory status categories featured newArrival simpleVariations variationCombinations codEnabled isBulky shortDescription"
+          "name slug articleNo media pricing inventory status categories featured newArrival simpleVariations variationCombinations codEnabled isBulky shortDescription isUniversal vehicleCompatibility.fitmentType"
         )
         .sort(sortSpec)
         .skip(skip)
@@ -106,10 +110,12 @@ export async function GET(request) {
       Product.countDocuments(filter),
     ]);
 
-    const annotate = Boolean(vehicleDoc && fitsOnly);
+    const labels = vehicleDoc ? await fitmentLabels(products, vehicleDoc) : null;
     const data = products.map((p) => {
       const summary = serializeStoreProductSummary(p);
-      return annotate ? markFitsVehicleTrue(summary) : summary;
+      if (!labels) return summary;
+      const fitment = labels.get(String(p._id)) || "none";
+      return { ...summary, fitment, fitsVehicle: fitment === "exact" };
     });
 
     return NextResponse.json({

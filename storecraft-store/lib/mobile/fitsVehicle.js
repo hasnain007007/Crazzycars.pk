@@ -34,3 +34,54 @@ export async function productFitsVehicleExists(productId, vehicle) {
   const hit = await Product.exists(filter);
   return Boolean(hit);
 }
+
+/**
+ * Universal products — fit any car (garage "Universal" tab). Not vehicle-specific, so they are
+ * kept apart from the exact-fit list rather than mixed into it (web /cars parity stays intact).
+ */
+export function universalProductsFilter() {
+  return {
+    $or: [{ isUniversal: true }, { "vehicleCompatibility.fitmentType": "universal" }],
+  };
+}
+
+/** Fit scopes for list queries: exact-fit only, universal only, or both. */
+export const FIT_SCOPES = ["specific", "universal", "all"];
+
+/**
+ * Build the Mongo filter for a fit scope. Each branch is wrapped in $and so callers can still add
+ * their own $or (text search) without clobbering it.
+ */
+export function fitScopeFilter(vehicle, scope) {
+  const exact = fittingProductsFilter(vehicle);
+  const { $or: exactOr, ...exactRest } = exact;
+  if (scope === "universal") return universalProductsFilter();
+  if (scope === "all") {
+    return { ...exactRest, $and: [{ $or: [...exactOr, ...universalProductsFilter().$or] }] };
+  }
+  return { ...exactRest, $and: [{ $or: exactOr }] };
+}
+
+/**
+ * Label each product for a vehicle: "exact" (listed for this car), "universal", or "none".
+ * One query for the whole page so list cards and detail share the same rule.
+ * @returns {Promise<Map<string, "exact"|"universal"|"none">>}
+ */
+export async function fitmentLabels(products, vehicle) {
+  const out = new Map();
+  if (!products.length) return out;
+  const ids = products.map((p) => p._id);
+  const exactIds = vehicle?._id
+    ? new Set(
+        (await Product.find({ ...fittingProductsFilter(vehicle), _id: { $in: ids } }).select("_id").lean()).map(
+          (d) => String(d._id)
+        )
+      )
+    : new Set();
+  for (const p of products) {
+    const id = String(p._id);
+    const universal = p.isUniversal === true || p.vehicleCompatibility?.fitmentType === "universal";
+    out.set(id, exactIds.has(id) ? "exact" : universal ? "universal" : "none");
+  }
+  return out;
+}
