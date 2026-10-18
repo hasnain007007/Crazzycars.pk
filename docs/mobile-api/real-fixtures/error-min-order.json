@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "MIN_ORDER_NOT_MET",
+    "message": "Minimum order amount is Rs.999999. Your cart subtotal after discounts is Rs.2499."
+  }
+}

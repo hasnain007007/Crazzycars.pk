@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const bannerSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
+    /** Store segment for the app home: "car" (default) or "bike". */
+    segment: { type: String, enum: ["car", "bike"], default: "car", index: true },
     placement: {
       type: String,
       enum: ["hero_slider", "promo_strip", "promo_card", "category_banner", "product_banner", "sidebar_banner", "popup_banner"],

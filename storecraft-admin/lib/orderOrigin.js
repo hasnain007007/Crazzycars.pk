@@ -28,6 +28,7 @@ export function orderOriginLabel(order) {
   if (src === "invoice") return "Admin: Invoice";
   if (src === "manual") return "Admin: Manual";
   if (src === "resend") return "Admin: Resend";
+  if (src === "mobile") return "Mobile App";
 
   const label = String(order?.attribution?.label || "").trim();
   if (label) return label;
@@ -76,6 +77,7 @@ export function serializeAttribution(attr) {
 export const ORIGIN_FILTER_OPTIONS = [
   { value: "all", label: "All sources" },
   { value: "direct", label: "Direct" },
+  { value: "mobile", label: "Mobile App" },
   { value: "organic", label: "Organic search" },
   { value: "paid", label: "Paid ads" },
   { value: "social", label: "Social" },
@@ -88,8 +90,10 @@ export const ORIGIN_FILTER_OPTIONS = [
 export function originFilterToMongo(origin) {
   const v = String(origin || "").trim().toLowerCase();
   if (!v || v === "all") return null;
+  if (v === "mobile") return { orderSource: "mobile" };
   if (v === "direct") {
     return {
+      orderSource: { $ne: "mobile" },
       $or: [
         { "attribution.channel": "direct" },
         {

@@ -179,7 +179,8 @@ function SearchableSelect({ value, onChange, options, placeholder, disabled }) {
   );
 }
 
-export default function TabVehicleFitment({ value, onChange }) {
+/** segment: "car" (car catalog) or "bike" (bike models from /api/bike-catalog). */
+export default function TabVehicleFitment({ value, onChange, segment = "car" }) {
   const vc = normalizeVehicleCompatibility(value || emptyVehicleCompatibility());
   const [catalog, setCatalog] = useState({ makes: [], carData: {} });
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -192,7 +193,8 @@ export default function TabVehicleFitment({ value, onChange }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/car-catalog", { credentials: "include" })
+    setCatalogLoading(true);
+    fetch(segment === "bike" ? "/api/bike-catalog" : "/api/car-catalog", { credentials: "include" })
       .then((r) => r.json())
       .then((json) => {
         if (cancelled) return;
@@ -208,7 +210,7 @@ export default function TabVehicleFitment({ value, onChange }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [segment]);
 
   const patch = useCallback(
     (partial) => {

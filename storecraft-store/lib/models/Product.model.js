@@ -156,6 +156,8 @@ const vehicleFitmentRowSchema = new mongoose.Schema(
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
+    /** Store segment: "car" (default, includes legacy docs without the field) or "bike". */
+    segment: { type: String, enum: ["car", "bike"], default: "car", index: true },
     slug: { type: String, required: true, unique: true, trim: true },
     /** Former URL handles after a rename (e.g. 8pcs → 4pcs). */
     previousSlugs: { type: [String], default: [] },

@@ -5,6 +5,7 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { PRODUCT_CARD_SELECT } from "@/lib/serverProductFetch";
+import { WEBSITE_SEGMENT_FILTER } from "@/lib/productVisibility";
 
 /**
  * @param {{ limit?: number }} opts
@@ -15,6 +16,7 @@ export async function fetchBestSellersServer({ limit = 500 } = {}) {
     await dbConnect();
     const rows = await Product.find({
       status: { $regex: /^active$/i },
+      ...WEBSITE_SEGMENT_FILTER,
       $or: [{ featured: true }, { isFeatured: true }],
     })
       .select(PRODUCT_CARD_SELECT)

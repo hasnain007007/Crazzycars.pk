@@ -1,0 +1,137 @@
+{
+  "product": {
+    "id": "6ac2c71efdf15f953bf2aa73",
+    "name": "Side Mirror LED Cover",
+    "slug": "side-mirror-led-cover",
+    "articleNo": "LV-MIR-1",
+    "ean": "",
+    "partNumber": "",
+    "condition": "new",
+    "vendor": "",
+    "shortDescription": "Side Mirror LED Cover — local verify SKU",
+    "longDescription": "<p>Side Mirror LED Cover seeded for local mobile API verification. Fake data only.</p>",
+    "descriptionHtml": "<p>Side Mirror LED Cover seeded for local mobile API verification. Fake data only.</p>",
+    "price": 2999,
+    "regularPrice": 3499,
+    "salePrice": 2999,
+    "compareAt": 3499,
+    "saleSchedule": null,
+    "isOnSale": true,
+    "images": [
+      {
+        "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "isMain": true,
+        "altText": "Side Mirror LED Cover"
+      }
+    ],
+    "media": {
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+          "isMain": true,
+          "altText": "Side Mirror LED Cover"
+        }
+      ],
+      "videos": []
+    },
+    "videos": [],
+    "videoUrl": "",
+    "videoType": "",
+    "usesVariantMatrix": false,
+    "variationTypes": [],
+    "variationOptions": [],
+    "variants": [],
+    "simpleVariations": [
+      {
+        "name": "Side",
+        "enabled": true,
+        "tags": [
+          "Left",
+          "Right"
+        ]
+      }
+    ],
+    "variationCombinations": [
+      {
+        "_id": "6ac2c71efdf15f953bf2aa6e",
+        "options": [
+          {
+            "name": "Side",
+            "value": "Left"
+          }
+        ],
+        "price": 2999,
+        "compareAtPrice": 3499,
+        "priceDelta": 0,
+        "weight": 0,
+        "weightDelta": 0,
+        "stock": 20,
+        "sku": "MIR-L",
+        "image": ""
+      },
+      {
+        "_id": "6ac2c71efdf15f953bf2aa6f",
+        "options": [
+          {
+            "name": "Side",
+            "value": "Right"
+          }
+        ],
+        "price": 2999,
+        "compareAtPrice": 3499,
+        "priceDelta": 0,
+        "weight": 0,
+        "weightDelta": 0,
+        "stock": 20,
+        "sku": "MIR-R",
+        "image": ""
+      }
+    ],
+    "variations": [],
+    "categories": [
+      {
+        "id": "6ac2c71efdf15f953bf2aa6a",
+        "name": "Mirrors",
+        "slug": "mirrors"
+      },
+      {
+        "id": "6ac2c71efdf15f953bf2aa66",
+        "name": "Exterior",
+        "slug": "exterior"
+      }
+    ],
+    "inStock": true,
+    "quantityAvailable": 40,
+    "stock": 40,
+    "trackInventory": true,
+    "allowBackorder": false,
+    "shippingBaseWeight": 0,
+    "shippingBaseWeightUnit": "kg",
+    "seo": {},
+    "averageRating": 0,
+    "reviewCount": 0,
+    "features": [],
+    "specifications": [],
+    "codEnabled": true,
+    "isBulky": false,
+    "advancePercentRequired": 0,
+    "addOns": [],
+    "recommendedProducts": [],
+    "customSizing": {
+      "enabled": false,
+      "title": "Enter Your Measurements",
+      "description": "Enter your measurements for a perfect fit",
+      "unit": "cm",
+      "fields": []
+    },
+    "isUniversal": false,
+    "compatibleCars": [],
+    "vehicleCompatibility": {
+      "fitmentType": "specific",
+      "universalNote": "",
+      "categories": [],
+      "vehicles": []
+    },
+    "fitsVehicle": true
+  }
+}

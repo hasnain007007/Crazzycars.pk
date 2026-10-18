@@ -1,0 +1,47 @@
+{
+  "orders": [
+    {
+      "id": "6ac2c723e8107da9613b561e",
+      "orderNumber": "ORD-2026-00003",
+      "status": "pending",
+      "paymentStatus": "unpaid",
+      "paymentMethod": "cod",
+      "total": 2749,
+      "itemCount": 1,
+      "createdAt": "2026-10-04T21:37:39.859Z",
+      "shippingCity": "Lahore",
+      "trackingNumber": ""
+    },
+    {
+      "id": "6ac2c723e8107da9613b5616",
+      "orderNumber": "ORD-2026-00002",
+      "status": "pending",
+      "paymentStatus": "unpaid",
+      "paymentMethod": "cod",
+      "total": 2749,
+      "itemCount": 1,
+      "createdAt": "2026-10-04T21:37:39.799Z",
+      "shippingCity": "Lahore",
+      "trackingNumber": ""
+    },
+    {
+      "id": "6ac2c723e8107da9613b560f",
+      "orderNumber": "ORD-2026-00001",
+      "status": "pending",
+      "paymentStatus": "unpaid",
+      "paymentMethod": "cod",
+      "total": 2749,
+      "itemCount": 1,
+      "createdAt": "2026-10-04T21:37:39.737Z",
+      "shippingCity": "Lahore",
+      "trackingNumber": ""
+    }
+  ],
+  "pagination": {
+    "total": 3,
+    "page": 1,
+    "limit": 50,
+    "pages": 1,
+    "hasNext": false
+  }
+}

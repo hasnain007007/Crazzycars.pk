@@ -1,0 +1,34 @@
+{
+  "vehicles": [
+    {
+      "id": "6ac2c71efdf15f953bf2aa6b",
+      "make": "Honda",
+      "model": "Civic",
+      "generation": "11th Gen",
+      "slug": "honda-civic-11th-2022-2026",
+      "image": "",
+      "yearStart": null,
+      "yearEnd": null
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa6d",
+      "make": "Suzuki",
+      "model": "Swift",
+      "generation": "4th Gen",
+      "slug": "suzuki-swift-2022-2025",
+      "image": "",
+      "yearStart": null,
+      "yearEnd": null
+    },
+    {
+      "id": "6ac2c71efdf15f953bf2aa6c",
+      "make": "Toyota",
+      "model": "Corolla",
+      "generation": "E170",
+      "slug": "toyota-corolla-2014-2019",
+      "image": "",
+      "yearStart": null,
+      "yearEnd": null
+    }
+  ]
+}

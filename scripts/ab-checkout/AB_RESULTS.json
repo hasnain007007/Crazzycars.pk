@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-10-04T20:55:09.416Z",
+  "note": "Resend + Meta CAPI env vars cleared for both sides; Settings.seo CAPI tokens empty in fixture. Confirms order creation succeeds when unconfigured.",
+  "results": [
+    {
+      "name": "simple_cod",
+      "status": "PASS",
+      "reason": "order docs match (ids/timestamps/orderNumber/tokens ignored)",
+      "diffs": []
+    },
+    {
+      "name": "with_coupon",
+      "status": "PASS",
+      "reason": "order docs match (ids/timestamps/orderNumber/tokens ignored)",
+      "diffs": []
+    },
+    {
+      "name": "bulky_item",
+      "status": "PASS",
+      "reason": "order docs match (ids/timestamps/orderNumber/tokens ignored)",
+      "diffs": []
+    },
+    {
+      "name": "body_kit_cod_block",
+      "status": "PASS",
+      "reason": "error payloads match",
+      "diffs": [],
+      "a": "Cash on Delivery is not available for: Honda Civic Body Kit D1. Choose advance payment instead.",
+      "b": "Cash on Delivery is not available for: Honda Civic Body Kit D1. Choose advance payment instead."
+    },
+    {
+      "name": "body_kit_bank_transfer",
+      "status": "PASS",
+      "reason": "order docs match (ids/timestamps/orderNumber/tokens ignored)",
+      "diffs": []
+    },
+    {
+      "name": "cod_with_advance_charge",
+      "status": "PASS",
+      "reason": "order docs match (ids/timestamps/orderNumber/tokens ignored)",
+      "diffs": []
+    },
+    {
+      "name": "variant_low_stock",
+      "status": "PASS",
+      "reason": "error payloads match",
+      "diffs": [],
+      "a": "Insufficient stock for AB Variant Mirror (Black / Left).",
+      "b": "Insufficient stock for AB Variant Mirror (Black / Left)."
+    },
+    {
+      "name": "guest_checkout",
+      "status": "PASS",
+      "reason": "order docs match (ids/timestamps/orderNumber/tokens ignored)",
+      "diffs": []
+    },
+    {
+      "name": "existing_customer",
+      "status": "PASS",
+      "reason": "order docs match (ids/timestamps/orderNumber/tokens ignored)",
+      "diffs": []
+    }
+  ]
+}

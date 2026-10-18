@@ -15,7 +15,7 @@ import { FaqSection } from "@/components/store/FaqSection";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { withSafeMetadata } from "@/lib/safeMetadata";
-import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { BRAND_NAME } from "@/lib/brand";
 
@@ -52,7 +52,7 @@ async function loadCityPage(citySlug) {
   let products = [];
   if (catIds.length) {
     const rows = await Product.find({
-      ...STOREFRONT_PRODUCT_FILTER,
+      ...WEBSITE_PRODUCT_FILTER,
       categories: { $in: catIds },
     })
       .select("name slug media pricing categories")

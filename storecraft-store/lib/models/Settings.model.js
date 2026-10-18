@@ -782,6 +782,22 @@ Shukriya — CrazzyCars.pk ✨`,
         playStore: { type: String, default: "" },
       },
     },
+    mobileApp: {
+      minVersionIos: { type: String, default: "1.0.0" },
+      minVersionAndroid: { type: String, default: "1.0.0" },
+      /** Soft-update targets (optional). Empty = no soft prompt. */
+      recommendedVersionIos: { type: String, default: "" },
+      recommendedVersionAndroid: { type: String, default: "" },
+      maintenanceMode: { type: Boolean, default: false },
+      maintenanceMessage: {
+        type: String,
+        default: "App is under maintenance. Please try again later.",
+      },
+      iosStoreUrl: { type: String, default: "" },
+      androidStoreUrl: { type: String, default: "" },
+      /** Show the Bikes store in the app (Cars | Bikes switch). Off until bike products are loaded. */
+      bikesLive: { type: Boolean, default: false },
+    },
   },
   { timestamps: true }
 );

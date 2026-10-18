@@ -1,0 +1,5 @@
+node_modules/
+.tmp-*
+.payload-*
+.payload-debug.json
+*.tmp.mjs

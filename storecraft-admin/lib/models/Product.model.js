@@ -164,6 +164,8 @@ const vehicleFitmentRowSchema = new mongoose.Schema(
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
+    /** Store segment: "car" (default, includes legacy docs without the field) or "bike". */
+    segment: { type: String, enum: ["car", "bike"], default: "car", index: true },
     slug: { type: String, required: true, unique: true, trim: true },
     articleNo: { type: String, default: "" },
     /** European Article Number (barcode). */

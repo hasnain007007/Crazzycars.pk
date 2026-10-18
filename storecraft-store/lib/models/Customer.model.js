@@ -53,6 +53,20 @@ const CustomerSchema = new mongoose.Schema(
       zip: { type: String, default: "" },
     },
     addresses: { type: [addressSubSchema], default: [] },
+    /** App "My Garage": saved cars/bikes (Vehicle slugs) so the garage follows the account. */
+    garage: {
+      type: [
+        {
+          slug: { type: String, required: true, trim: true, lowercase: true },
+          yearStart: { type: Number, default: null },
+          yearEnd: { type: Number, default: null },
+          active: { type: Boolean, default: false },
+          addedAt: { type: Date, default: Date.now },
+          _id: false,
+        },
+      ],
+      default: [],
+    },
     wishlist: [
       {
         productId: { type: String },

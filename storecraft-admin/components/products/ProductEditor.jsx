@@ -178,6 +178,7 @@ function emptyForm() {
     codEnabled: true,
     isBulky: false,
     advancePercentRequired: 0,
+    segment: "car",
     isUniversal: false,
     compatibleCars: [],
     vehicleCompatibility: emptyVehicleCompatibility(),
@@ -325,6 +326,7 @@ function productToForm(p) {
     codEnabled: p.codEnabled !== false,
     isBulky: p.isBulky === true,
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
+    segment: p.segment === "bike" ? "bike" : "car",
     ...(() => {
       const fit = vehicleCompatibilityFromProduct(p);
       const synced = buildVehicleCompatibilityPayload(fit);
@@ -350,6 +352,7 @@ function buildApiPayload(form) {
   return {
     name: form.name.trim(),
     slug: slugFinal,
+    segment: form.segment === "bike" ? "bike" : "car",
     articleNo: form.articleNo.trim(),
     ean: form.ean || "",
     categories: form.categories,
@@ -824,7 +827,33 @@ export function ProductEditor({ mode, productId }) {
 
           <section id="product-section-fitment" className={cardClass}>
             <h2 className="mb-4 text-base font-semibold text-gray-900">Vehicle Fitment 🚗</h2>
+            <div className="mb-5">
+              <p className="text-sm font-medium text-[#374151]">Store</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Bikes products show only in the app&apos;s Bikes store and only fit bikes.
+              </p>
+              <div className="mt-2 flex gap-2">
+                {[
+                  ["car", "Cars"],
+                  ["bike", "Bikes"],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, segment: key }))}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${
+                      form.segment === key
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-200 bg-white text-gray-700"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <TabVehicleFitment
+              segment={form.segment}
               value={form.vehicleCompatibility}
               onChange={(vehicleCompatibility) => {
                 const payload = buildVehicleCompatibilityPayload(vehicleCompatibility);

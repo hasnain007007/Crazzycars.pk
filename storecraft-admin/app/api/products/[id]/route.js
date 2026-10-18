@@ -388,6 +388,9 @@ export async function PUT(request, context) {
       existing.collections = normalizeProductOrganisation({ collections: body.collections }).collections;
       existing.markModified("collections");
     }
+    if (body.segment !== undefined) {
+      existing.segment = body.segment === "bike" ? "bike" : "car";
+    }
     if (body.tags !== undefined) {
       existing.tags = normalizeProductOrganisation({ tags: body.tags }).tags;
       existing.markModified("tags");

@@ -148,6 +148,9 @@ export async function PUT(request, context) {
         title: body.image?.title || "",
       };
     }
+    if (body.segment !== undefined) {
+      existing.segment = body.segment === "bike" ? "bike" : "car";
+    }
     if (body.status !== undefined) {
       existing.status = ["active", "draft"].includes(body.status) ? body.status : existing.status;
     }

@@ -199,6 +199,7 @@ export async function POST(request) {
         title: body.image?.title || "",
       },
       status: ["active", "draft"].includes(body.status) ? body.status : "active",
+      segment: body.segment === "bike" ? "bike" : "car",
       isFeatured: Boolean(body.featured ?? body.isFeatured),
       featured: Boolean(body.featured ?? body.isFeatured),
       showInNav: Boolean(body.showInNav),

@@ -5,7 +5,7 @@ import Product from "@/lib/models/Product.model";
 import Category from "@/lib/models/Category.model";
 import BlogPost from "@/lib/models/BlogPost.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
-import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 export async function GET() {
   try {
@@ -15,11 +15,13 @@ export async function GET() {
     const [banners, featuredRaw, newArrivalsRaw, categoriesRaw, blogPosts] = await Promise.all([
       Banner.find({
         status: "active",
+        // Website is the car store; bike banners are for the app's Bikes home only.
+        segment: { $in: ["car", null] },
       })
         .sort({ sortOrder: 1, createdAt: -1 })
         .lean(),
       Product.find({
-        ...STOREFRONT_PRODUCT_FILTER,
+        ...WEBSITE_PRODUCT_FILTER,
         featured: true,
       })
         .select("name slug media pricing inventory featured newArrival categories simpleVariations variationCombinations variationTypes variationOptions variants")
@@ -27,7 +29,7 @@ export async function GET() {
         .limit(8)
         .lean(),
       Product.find({
-        ...STOREFRONT_PRODUCT_FILTER,
+        ...WEBSITE_PRODUCT_FILTER,
         newArrival: true,
       })
         .select("name slug media pricing inventory featured newArrival categories simpleVariations variationCombinations variationTypes variationOptions variants")

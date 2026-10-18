@@ -55,6 +55,7 @@ export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
     image: { url: "", publicId: "", altText: "", title: "" },
     parentCategory: "",
     status: "active",
+    segment: "car",
     featured: false,
     showInNav: false,
     showInFooter: false,
@@ -136,6 +137,7 @@ export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
             },
             parentCategory: cat.parentCategory?._id ? String(cat.parentCategory._id) : "",
             status: cat.status || "active",
+            segment: cat.segment === "bike" ? "bike" : "car",
             featured: Boolean(cat.featured ?? cat.isFeatured),
             showInNav: cat?.showInNav === true,
             showInFooter: cat?.showInFooter === true,
@@ -227,6 +229,34 @@ export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
       setDeleting(false);
     }
   };
+
+  /** Store this category belongs to (Cars or Bikes). Children follow their top-level parent. */
+  const segmentPicker = (
+    <div style={{ marginTop: 12 }}>
+      <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b7280" }}>Store</p>
+      <div style={{ display: "flex", gap: 8 }}>
+        {[
+          ["car", "Cars"],
+          ["bike", "Bikes"],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setForm((f) => ({ ...f, segment: key }))}
+            style={{
+              flex: 1,
+              border: "1px solid #e5e7eb",
+              borderRadius: 8,
+              padding: "8px 10px",
+              background: form.segment === key ? "#dbeafe" : "#fff",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   const selectedParent = form.parentCategory ? categoryMap.get(String(form.parentCategory)) : null;
   const parentPathNames = useMemo(() => {
@@ -396,6 +426,7 @@ export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
                     Draft
                   </button>
                 </div>
+                {segmentPicker}
                 <div
                   style={{
                     display: "flex",
@@ -597,6 +628,7 @@ export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
               Draft
             </button>
           </div>
+          {segmentPicker}
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
             <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm((f) => ({ ...f, isFeatured: e.target.checked }))} />
             Featured

@@ -94,6 +94,8 @@ export async function GET() {
 
     const rows = await Banner.find({
       status: { $in: ["active", "published"] },
+      // Website is the car store; bike banners are for the app's Bikes home only.
+      segment: { $in: ["car", null] },
     })
       .sort({ sortOrder: 1 })
       .lean();

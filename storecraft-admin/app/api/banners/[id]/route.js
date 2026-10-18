@@ -43,6 +43,7 @@ export async function PUT(request, context) {
     const body = await request.json();
     if (body.name !== undefined) doc.name = String(body.name || "").trim();
     if (body.placement !== undefined) doc.placement = body.placement || "hero_slider";
+    if (body.segment !== undefined) doc.segment = body.segment === "bike" ? "bike" : "car";
     if (body.size !== undefined) doc.size = body.size || "full_width";
     if (body.background !== undefined || body.image !== undefined) {
       doc.background = {

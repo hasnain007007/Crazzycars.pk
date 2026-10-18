@@ -1,0 +1,48 @@
+{
+  "orderId": "6ac2c723e8107da9613b5623",
+  "orderNumber": "ORD-2026-00004",
+  "accessToken": "[REDACTED]",
+  "total": 2749,
+  "paymentStatus": "unpaid",
+  "paymentMethod": "cod",
+  "pricing": {
+    "subtotal": 2499,
+    "discount": 0,
+    "shippingCost": 250,
+    "shippingMethod": "Standard",
+    "shippingZone": "Pakistan Default",
+    "total": 2749
+  },
+  "paymentInstructions": {
+    "paymentMethod": "cod",
+    "amountDue": 250,
+    "remainingOnDelivery": 2499,
+    "currency": "PKR",
+    "title": "Confirm Your Order",
+    "message": "Pay delivery charges of Rs.250 and send screenshot on WhatsApp: 03000000000",
+    "accountLines": [
+      {
+        "label": "Bank",
+        "value": "Fake Meezan Local"
+      },
+      {
+        "label": "Account",
+        "value": "00000000000000"
+      },
+      {
+        "label": "Title",
+        "value": "LOCAL VERIFY FAKE"
+      },
+      {
+        "label": "IBAN",
+        "value": "PK00FAKE0000000000000000"
+      }
+    ],
+    "whatsapp": {
+      "number": "03000000000",
+      "display": "03000000000",
+      "waMeUrl": "https://wa.me/923000000000?text=Hi%20CrazzyCars%2C%20I%20paid%20for%20order%20ORD-2026-00004.%0AAmount%3A%20Rs.250.%0ASending%20payment%20screenshot%20now.",
+      "prefilledMessage": "Hi CrazzyCars, I paid for order ORD-2026-00004.\nAmount: Rs.250.\nSending payment screenshot now."
+    }
+  }
+}

@@ -37,6 +37,9 @@ const attributionSchema = new mongoose.Schema(
 const orderItemSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", default: null },
+    /** Optional snapshots from storefront checkout (mobile reorder). Harmless if absent. */
+    slug: { type: String, default: "", trim: true },
+    variantId: { type: mongoose.Schema.Types.ObjectId, default: null },
     /** Immutable catalogue/pixel ID snapshot captured when the order is placed. */
     articleNo: { type: String, default: "", trim: true },
     name: { type: String, required: true, trim: true },
@@ -344,6 +347,8 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
     invoiceNumber: { type: String, default: "", trim: true, index: true },
+    /** Storefront channel stamped at checkout ("site" | "mobile"). No enum: admin never writes it. */
+    orderSource: { type: String, default: "", trim: true },
   },
   { timestamps: true }
 );

@@ -8,6 +8,7 @@ import { parseListingSearchParams } from "@/lib/listingQuery";
 import { getActiveDescendantCategoryIds } from "@/lib/storeCategoryData";
 import { buildMakeModelProductOr } from "@/lib/productVehicleQuery";
 import { excludeSecurityHeld } from "@/lib/productVisibility";
+import { WEBSITE_SEGMENT_FILTER } from "@/lib/productVisibility";
 
 /** Fields needed for product cards / homepage grids. */
 export const PRODUCT_CARD_SELECT =
@@ -132,7 +133,7 @@ export async function fetchProductsServer(params = {}) {
     const skip = (page - 1) * limit;
     const q = listing ? listing.q : String(params.q || "").trim();
 
-    const filter = excludeSecurityHeld({ status: { $regex: /^active$/i } });
+    const filter = excludeSecurityHeld({ status: { $regex: /^active$/i }, ...WEBSITE_SEGMENT_FILTER });
     if (listing) {
       await applyShopListingFilters(filter, listing);
     }
