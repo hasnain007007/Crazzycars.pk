@@ -1315,8 +1315,6 @@ export function ProductDetailMedico({
               </div>
             ) : null}
 
-            <RecommendedProductsQuickAdd products={product?.recommendedProducts || []} />
-
             {!productAllowsCod(product) ? (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                 Cash on Delivery is not available for body kits. Pay with JazzCash, Meezan, or bank transfer
@@ -1492,7 +1490,7 @@ export function ProductDetailMedico({
                 width: "100%",
                 height: 52,
                 marginTop: 10,
-                background: canAddToCart ? "#111111" : "#D1D5DB",
+                background: canAddToCart ? "#C41E1E" : "#D1D5DB",
                 color: "#FFFFFF",
                 border: "none",
                 borderRadius: 8,
@@ -1504,15 +1502,18 @@ export function ProductDetailMedico({
                 boxShadow: canAddToCart ? "0 4px 15px rgba(0,0,0,0.15)" : "none",
               }}
               onMouseEnter={(e) => {
-                if (canAddToCart) e.currentTarget.style.background = "#000000";
+                if (canAddToCart) e.currentTarget.style.background = "#A01818";
               }}
               onMouseLeave={(e) => {
-                if (canAddToCart) e.currentTarget.style.background = "#111111";
+                if (canAddToCart) e.currentTarget.style.background = "#C41E1E";
               }}
             >
               Buy Now
             </button>
             </div>
+
+            {/* Upsells after the buy buttons so buyers reach Add to cart without scrolling past them. */}
+            <RecommendedProductsQuickAdd products={product?.recommendedProducts || []} />
 
             <div
               style={{

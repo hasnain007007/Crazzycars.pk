@@ -78,6 +78,18 @@ function resolveCategoryDescriptionHtml(category) {
   return sanitizeCategoryHtml(raw);
 }
 
+/**
+ * First paragraph of the intro, and everything after it. Category pages show only the lead above
+ * the product grid; the rest renders below the grid so shoppers reach products first (same HTML
+ * on the page, so search engines still read all of it).
+ */
+export function splitLeadParagraph(html) {
+  const safe = String(html || "").trim();
+  const m = safe.match(/^\s*<p\b[^>]*>[\s\S]*?<\/p>/i);
+  if (!m) return { leadHtml: safe, restHtml: "" };
+  return { leadHtml: m[0].trim(), restHtml: safe.slice(m[0].length).trim() };
+}
+
 /** Split intro paragraphs from H3/P FAQ-style pairs for layout. */
 export function splitCategoryDescriptionHtml(html) {
   const safe = String(html || "").trim();
@@ -114,11 +126,15 @@ export function CategoryPageChrome({
   brand = null,
   crumbs = [],
   showFullDescription = true,
+  /** Show only the first intro paragraph here; the caller renders the rest below the products. */
+  leadOnly = false,
 }) {
   if (!category) return null;
 
   const descriptionHtml = resolveCategoryDescriptionHtml(category);
-  const { summaryHtml, remainderHtml } = splitCategoryDescriptionHtml(descriptionHtml);
+  const split = splitCategoryDescriptionHtml(descriptionHtml);
+  const { remainderHtml } = split;
+  const summaryHtml = leadOnly ? splitLeadParagraph(split.summaryHtml).leadHtml : split.summaryHtml;
 
   const relatedGuides = (Array.isArray(category?.relatedGuides) ? category.relatedGuides : [])
     .map((g) => ({
@@ -162,7 +178,7 @@ export function CategoryPageChrome({
         <>
           <hr className="cat-hero-divider" />
           <div
-            className="cat-desc cat-desc--html prose prose-neutral max-w-none"
+            className={`cat-desc cat-desc--html prose prose-neutral max-w-none${leadOnly ? " cat-desc--lead" : ""}`}
             dangerouslySetInnerHTML={{ __html: summaryHtml }}
           />
         </>

@@ -413,9 +413,14 @@ export async function middleware(request) {
       segments[0] === "terms-conditions" ||
       segments[0] === "cash-on-delivery" ||
       (segments.length === 1 && !reserved.has(segments[0]));
+    // RSC payloads and redirects vary by router headers (the _rsc hash check answers 307 with a
+    // header-specific target). Publicly caching them can replay a stale target and loop prefetches.
+    const isRsc =
+      request.headers.get("rsc") === "1" || request.nextUrl.searchParams.has("_rsc");
+    const isRedirect = response.status >= 300 && response.status < 400;
     if (isPrivate) {
       response.headers.set("Cache-Control", "private, no-store");
-    } else if (!wroteCookie && isCatalog) {
+    } else if (!wroteCookie && isCatalog && !isRsc && !isRedirect) {
       response.headers.set(
         "Cache-Control",
         "public, s-maxage=300, stale-while-revalidate=86400"

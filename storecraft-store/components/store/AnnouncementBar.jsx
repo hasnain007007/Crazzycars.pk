@@ -106,6 +106,12 @@ export default function AnnouncementBar() {
           text-decoration: none;
           margin: 0;
           max-width: 100%;
+          /* The site-wide 44px tap-target rule made this link taller than the 36px bar on
+             phones, pushing the text up and out of view. The whole bar stays tappable. */
+          min-height: 0 !important;
+        }
+        @media (max-width: 767px) {
+          .store-announcement-bar .ann-msg-wrap { padding: 4px 8px; }
         }
         @media (min-width: 768px) {
           .store-announcement-bar .ann-msg { font-size: 13px; letter-spacing: 0.3px; }

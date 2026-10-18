@@ -6,7 +6,11 @@ import Category from "@/lib/models/Category.model";
 import { getCategoryIdsWithProducts, loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { isEmptyCategoryTree } from "@/lib/emptyLeafCategory";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
-import { CategoryPageChrome, splitCategoryDescriptionHtml } from "@/components/store/CategoryPageChrome";
+import {
+  CategoryPageChrome,
+  splitCategoryDescriptionHtml,
+  splitLeadParagraph,
+} from "@/components/store/CategoryPageChrome";
 import { FaqSection } from "@/components/store/FaqSection";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
 import { getSiteUrl } from "@/lib/siteUrl";
@@ -330,7 +334,8 @@ export default async function CategoryPage({ params, searchParams }) {
         ...extraFaqs.filter((f) => !seenQ.has(String(f.question || "").toLowerCase())),
       ];
     }
-    const { faqPairs, remainderHtml } = splitCategoryDescriptionHtml(resolvedDescHtml);
+    const { faqPairs, remainderHtml, summaryHtml } = splitCategoryDescriptionHtml(resolvedDescHtml);
+    const introRestHtml = splitLeadParagraph(summaryHtml).restHtml;
     if (!visibleFaqs.length && faqPairs.length) visibleFaqs = faqPairs;
     else if (faqPairs.length) {
       const seenQ = new Set(visibleFaqs.map((f) => String(f.question || "").toLowerCase()));
@@ -366,6 +371,7 @@ export default async function CategoryPage({ params, searchParams }) {
           brand={brand}
           crumbs={uniqueCrumbs}
           showFullDescription={false}
+          leadOnly
         />
         <ProductListingSection
           pathname={listingPath}
@@ -379,6 +385,13 @@ export default async function CategoryPage({ params, searchParams }) {
           emptyMessage="No products found in this category."
           priorityCount={0}
         />
+        {introRestHtml ? (
+          <div
+            className="store-container cat-desc cat-desc--html prose prose-neutral max-w-none"
+            style={{ padding: "24px 16px 8px" }}
+            dangerouslySetInnerHTML={{ __html: introRestHtml }}
+          />
+        ) : null}
         {remainderHtml && !faqPairs.length ? (
           <div
             className="store-container cat-desc cat-desc--html prose prose-neutral max-w-none"

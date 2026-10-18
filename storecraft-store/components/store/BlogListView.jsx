@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+// Dates print in Pakistan time on server and browser alike, so hydration text matches.
+const TZ = "Asia/Karachi";
+
 function getDayMonth(value) {
   const d = new Date(value || Date.now());
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = d.toLocaleDateString("en-GB", { month: "short" });
+  const day = d.toLocaleDateString("en-GB", { day: "2-digit", timeZone: TZ });
+  const month = d.toLocaleDateString("en-GB", { month: "short", timeZone: TZ });
   return { day, month };
 }
 
@@ -15,6 +18,7 @@ function formatLongDate(value) {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: TZ,
   });
 }
 
