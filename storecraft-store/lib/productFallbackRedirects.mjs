@@ -8,6 +8,7 @@
  */
 
 import { stripBrandSuffix } from "./productSlugParam.js";
+import { resolveDeletedFlatSlug, resolveDeletedPath } from "./deletedUrlRedirects.mjs";
 
 /** @type {Record<string, string>} handle (with or without -crazzycars-pk) → path */
 export const PRODUCT_FALLBACK_REDIRECTS = {
@@ -27,6 +28,20 @@ export const PRODUCT_FALLBACK_REDIRECTS = {
     "/suzuki-swift-2022-2024-rs-style-body-kit-fibreglass",
   "canbus-bright-led-indicator-bulbs-2-pcs": "/bright-led-indicator-bulbs-2-pcs",
   "canbus-bright-led-indicator-bulbs-2-pcs-crazzycars-pk": "/bright-led-indicator-bulbs-2-pcs",
+  // Corolla RS trunk spoiler — short / Shopify-era handles → live PDP
+  "toyota-corolla-rs-trunk-spoiler":
+    "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+  "toyota-corolla-rs-trunk-spoiler-crazzycars-pk":
+    "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+  "corolla-rs-trunk-spoiler": "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+  "corolla-rs-trunk-spoiler-crazzycars-pk":
+    "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+  "toyota-corolla-rs-style-trunk-spoiler-abs":
+    "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+  "toyota-corolla-2015-2026-rs-trunk-spoiler":
+    "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+  "toyota-corolla-2015-2026-rs-style-trunk-spoiler":
+    "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
 };
 
 /**
@@ -41,16 +56,25 @@ export function resolveProductRedirectPath(rawHandle) {
     .toLowerCase();
   if (!handle || handle.includes("/")) return null;
 
+  const deleted = resolveDeletedFlatSlug(handle) || resolveDeletedPath(`/${handle}`);
+  if (deleted) return deleted;
+
   if (PRODUCT_FALLBACK_REDIRECTS[handle]) {
     return PRODUCT_FALLBACK_REDIRECTS[handle];
   }
 
   const stripped = stripBrandSuffix(handle) || handle;
+  const deletedStripped = resolveDeletedFlatSlug(stripped);
+  if (deletedStripped) return deletedStripped;
+
   if (PRODUCT_FALLBACK_REDIRECTS[stripped]) {
     return PRODUCT_FALLBACK_REDIRECTS[stripped];
   }
 
-  return `/${stripped}`;
+  // Brand-suffix-only cleanup can hop to the flat slug; otherwise return null so
+  // /products/[handle] can DB-resolve (prefix / previousSlugs) instead of 308→404.
+  if (stripped !== handle) return `/${stripped}`;
+  return null;
 }
 
 /** Flat slug paths that should 308 even when requested without /products/. */
@@ -61,6 +85,8 @@ export function resolveFlatProductFallback(rawSlug) {
     .toLowerCase();
   if (!slug || slug.includes("/")) return null;
   return (
+    resolveDeletedFlatSlug(slug) ||
+    resolveDeletedPath(`/${slug}`) ||
     PRODUCT_FALLBACK_REDIRECTS[slug] ||
     PRODUCT_FALLBACK_REDIRECTS[`${slug}-crazzycars-pk`] ||
     null

@@ -215,6 +215,9 @@ export default function CategoryGrid({
                         src={imageUrl}
                         alt={c.imageAlt || c.name}
                         title={c.imageTitle || c.name}
+                        width={360}
+                        height={360}
+                        sizes="(max-width: 768px) 28vw, 120px"
                         loading="lazy"
                         decoding="async"
                         draggable={false}

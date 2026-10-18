@@ -23,7 +23,9 @@ export function AdminShell({ children }) {
       ) : null}
       <div className="min-h-screen min-w-0 md:pl-[220px] print:pl-0">
         <Topbar onMenuClick={() => setMobileOpen(true)} />
-        <main className="min-w-0 px-4 py-5 md:px-6 md:py-6 print:px-4 print:py-4">{children}</main>
+        <main className="min-w-0 max-w-full overflow-x-hidden px-4 py-5 md:px-6 md:py-6 print:px-4 print:py-4">
+          {children}
+        </main>
       </div>
     </div>
   );

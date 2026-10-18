@@ -16,13 +16,23 @@ const META_UTM = new Set([
 const META_REFERER_RE =
   /(?:^|[/.])(?:facebook|instagram|fb\.com|l\.facebook|lm\.facebook|m\.facebook|l\.instagram)\./i;
 
+const SNAP_UTM = new Set(["snapchat", "snap", "snapads", "sc", "snapchat_ads"]);
+const SNAP_REFERER_RE = /(?:^|[/.])(?:snapchat|snap)\./i;
+
 /**
  * Detect paid / social landing from the inbound request (query + Referer).
  * Returns a short source tag or "".
  */
 export function detectPaidSocialSource({ searchParams, referer, cookieValue } = {}) {
   const existing = String(cookieValue || "").trim().toLowerCase();
-  if (existing === "meta" || existing === "google" || existing === "paid") return existing;
+  if (
+    existing === "meta" ||
+    existing === "google" ||
+    existing === "snapchat" ||
+    existing === "paid"
+  ) {
+    return existing;
+  }
 
   const params =
     searchParams && typeof searchParams.get === "function"
@@ -35,6 +45,15 @@ export function detectPaidSocialSource({ searchParams, referer, cookieValue } = 
 
   if (params.has("fbclid") || META_UTM.has(utm) || META_REFERER_RE.test(ref)) {
     return "meta";
+  }
+  if (
+    params.has("ScCid") ||
+    params.has("sccid") ||
+    params.has("scclid") ||
+    SNAP_UTM.has(utm) ||
+    SNAP_REFERER_RE.test(ref)
+  ) {
+    return "snapchat";
   }
   if (params.has("gclid") || utm === "google" || utm === "googleads") {
     return "google";

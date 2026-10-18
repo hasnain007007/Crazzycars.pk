@@ -212,6 +212,22 @@ export function OrderWhatsAppButton({ order, onNotified, settings: settingsProp 
     );
   }
 
+  const status = String(order?.orderStatus || "").toLowerCase();
+  const canAskReview = status === "delivered" || status === "completed";
+
+  async function openReviewRequestWhatsApp() {
+    if (!rawPhone || !orderApiId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/orders/${orderApiId}/wa-links`, { credentials: "include" });
+      const json = await res.json();
+      if (!json.success || !json.reviewMessage) return;
+      await openWhatsAppWithOptionalImage(rawPhone, json.reviewMessage, []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="flex w-full flex-col gap-1.5">
       <button
@@ -231,6 +247,22 @@ export function OrderWhatsAppButton({ order, onNotified, settings: settingsProp 
         </svg>
         {loading ? "Opening…" : done ? "✓ WhatsApp opened" : "WhatsApp Customer"}
       </button>
+      {canAskReview ? (
+        <button
+          type="button"
+          onClick={openReviewRequestWhatsApp}
+          disabled={loading}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-70"
+          style={{
+            background: "#111827",
+            color: "#fff",
+            border: "none",
+            cursor: loading ? "wait" : "pointer",
+          }}
+        >
+          Ask for review (post-delivery)
+        </button>
+      ) : null}
       {done ? (
         <p className="m-0 text-[11px] leading-snug text-slate-500">
           Asks customer: confirm order? Yes / No links included.

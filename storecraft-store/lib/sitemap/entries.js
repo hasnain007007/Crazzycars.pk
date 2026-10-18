@@ -8,6 +8,7 @@ import { absoluteUrl } from "@/lib/siteUrl";
 import { MAX_SITEMAP_URLS } from "@/lib/sitemap/xml";
 import { getCategoryIdsWithProducts } from "@/lib/storeCategoryData";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { CITY_LANDING_SLUGS, cityPath } from "@/lib/cityLandingPages";
 
 /** Static storefront routes (no query strings, no redirect aliases). */
 const STATIC_PAGE_PATHS = [
@@ -25,6 +26,7 @@ const STATIC_PAGE_PATHS = [
   "/returns-policy",
   "/privacy-policy",
   "/terms-conditions",
+  ...CITY_LANDING_SLUGS.map((slug) => cityPath(slug)),
 ];
 
 const RESERVED_PAGE_SLUGS = new Set([
@@ -186,8 +188,8 @@ export async function fetchSitemapContext(headers) {
   const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts] =
     await Promise.all([
       Product.find(STOREFRONT_PRODUCT_FILTER).select("slug updatedAt").lean(),
-      Category.find({ status: "active" }).select("slug updatedAt _id").lean(),
-      Vehicle.find({ isActive: true }).select("slug updatedAt _id").lean(),
+      Category.find({ status: "active" }).select("slug updatedAt contentUpdatedAt _id").lean(),
+      Vehicle.find({ isActive: true }).select("slug updatedAt contentUpdatedAt _id").lean(),
       categoryIdsWithProducts(),
       vehicleIdsWithProducts(),
       Page.find({ status: "published" }).select("slug updatedAt").lean(),
@@ -213,11 +215,25 @@ export async function fetchSitemapContext(headers) {
 
   const categoryEntries = categories
     .filter((c) => c.slug && withProducts.has(String(c._id)))
-    .map((c) => toEntry(headers, `/categories/${c.slug}`, c.updatedAt, "weekly", 0.8));
+    .map((c) =>
+      toEntry(
+        headers,
+        `/categories/${c.slug}`,
+        maxDate(c.contentUpdatedAt, c.updatedAt),
+        "weekly",
+        0.8
+      )
+    );
 
   const carEntries = vehicles
     .filter((v) => v.slug && vehiclesWithProducts.has(String(v._id)))
-    .map((v) => toEntry(headers, `/cars/${v.slug}`, v.updatedAt, "weekly", 0.8));
+    .map((v) => {
+      // Car hub lastmod = vehicle document only (contentUpdatedAt → updatedAt).
+      // Do not blend in product freshness — that made every lastmod look like
+      // "build/reindex time" after catalogue bulk updates.
+      const lastmod = maxDate(v.contentUpdatedAt, v.updatedAt);
+      return toEntry(headers, `/cars/${v.slug}`, lastmod, "weekly", 0.8);
+    });
 
   const staticPageEntries = STATIC_PAGE_PATHS.map((path) =>
     toEntry(

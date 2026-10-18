@@ -7,7 +7,7 @@
 const STORE_NAME =
   process.env.NEXT_PUBLIC_STORE_NAME ||
   process.env.NEXT_PUBLIC_APP_NAME ||
-  "Crazzycars.pk";
+  "CrazzyCars.pk";
 
 /** Next.js Metadata.openGraph.type allowlist (not Facebook's og:product). */
 const OG_TYPES = new Set([
@@ -30,7 +30,7 @@ const TWITTER_CARDS = new Set(["summary", "summary_large_image", "app", "player"
 export const FALLBACK_METADATA = {
   title: STORE_NAME,
   description:
-    "Car accessories in Pakistan — Cash on Delivery nationwide. Crazzycars.pk",
+    "Car accessories in Pakistan — Cash on Delivery nationwide. CrazzyCars.pk",
   icons: {
     icon: [
       { url: "/favicon.ico?v=3", sizes: "any" },

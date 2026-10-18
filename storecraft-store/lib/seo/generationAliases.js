@@ -1,3 +1,5 @@
+import { KEYWORD_CATEGORY_SEO } from "./keywordQuickWins2026-10.mjs";
+
 /**
  * Generation search / SEO aliases for Pakistan fitment intent
  * (e.g. "splitter for civic reborn", "corolla 12 model").
@@ -251,27 +253,38 @@ export function alsoKnownAsLine(vehicle, { max = 4 } = {}) {
   return `Also searched as ${picks.join(", ")}.`;
 }
 
+const META_DESC_MAX = 155;
+
+function clipMeta(text, max = META_DESC_MAX) {
+  const s = String(text || "").replace(/\s+/g, " ").trim();
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max - 1);
+  const at = cut.lastIndexOf(" ");
+  return `${(at > 80 ? cut.slice(0, at) : cut).trimEnd()}…`;
+}
+
 /** Meta description fragment with aliases + COD. Never dump HTML body into meta. */
 export function vehicleMetaDescription(vehicle, catalogDesc) {
   const plain = String(catalogDesc || "")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  // Long catalog HTML/intros are page body only — do not reuse as meta (GSC ~160).
-  if (plain && plain.length <= 160) {
+  // Long catalog HTML/intros are page body only — do not reuse as meta (keep ≤155 for SERP).
+  if (plain && plain.length <= META_DESC_MAX) {
     if (!/cash on delivery|cod/i.test(plain)) {
-      return `${plain} Cash on Delivery on eligible items.`.slice(0, 160);
+      return clipMeta(`${plain} COD on eligible items.`);
     }
-    return plain.slice(0, 160);
+    return plain;
   }
   const entry = aliasesForVehicle(vehicle);
   const name = vehicle?.displayName || "this car";
-  const aka = entry
-    ? ` Also searched as ${entry.aliases.slice(0, 3).join(", ")}.`
-    : "";
-  return `Shop ${name} accessories in Pakistan — splitters, body kits, LED lights & more.${aka} Cash on Delivery on eligible orders.`.slice(
-    0,
-    160
+  // One short alias only — the old 3-alias "Also searched as…" line blew past 155.
+  const aka =
+    entry?.aliases?.[0] && String(entry.aliases[0]).length <= 24
+      ? ` (${entry.aliases[0]})`
+      : "";
+  return clipMeta(
+    `Shop ${name}${aka} accessories in Pakistan: body kits, LEDs & more. COD on eligible items.`
   );
 }
 
@@ -423,18 +436,19 @@ export function expandParsedQueryWithGenerationAliases(parsed) {
  */
 export const CATEGORY_SEO_OWNER_LOCKED = {
   "led-headlights-bulbs": {
-    metaTitle: "LED Headlights & Bulbs | Crazzycars.pk",
+    metaTitle: "LED Headlights & Bulbs | CrazzyCars.pk",
     metaDescription:
       "Brighter night drives with plug-and-play LED headlight bulbs — cooler running and clearer beam patterns for popular Pakistani cars. COD available.",
     absoluteTitle: true,
   },
 };
 
+
 /** Category meta overrides for keyword strategy leaves + GSC audit (10 Oct 2026). */
 export const CATEGORY_KEYWORD_META = {
   ...CATEGORY_SEO_OWNER_LOCKED,
   "splitters-side-skirts": {
-    metaTitle: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars",
+    metaTitle: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars.pk",
     metaDescription:
       "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic and Corolla. COD on eligible items, nationwide delivery.",
     absoluteTitle: true,
@@ -452,7 +466,7 @@ export const CATEGORY_KEYWORD_META = {
     absoluteTitle: true,
   },
   "interior-lights": {
-    metaTitle: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars",
+    metaTitle: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars.pk",
     metaDescription:
       "Buy car interior lights in Pakistan: ambient dashboard strips, footwell RGB lights, door welcome logo lights and roof star lights. COD on eligible items.",
     absoluteTitle: true,
@@ -464,15 +478,17 @@ export const CATEGORY_KEYWORD_META = {
     absoluteTitle: true,
   },
   "steering-wheel-covers": {
-    metaTitle: "Steering Wheel Covers Price in Pakistan | CrazzyCars",
+    metaTitle: "Steering Wheel Covers Price in Pakistan | CrazzyCars.pk",
     metaDescription:
       "Steering wheel covers in Pakistan, including hand-stitched carbon fiber in universal fit. Price on every listing. COD on eligible items, nationwide delivery.",
     absoluteTitle: true,
   },
   "stickers-monograms-emblems": {
-    metaTitle: "Car Stickers & Steering Monograms | CrazzyCars",
+    metaTitle: "Car Stickers & Steering Monograms | CrazzyCars.pk",
     metaDescription:
       "Car stickers, monograms and emblems in Pakistan, including Corolla carbon-style steering monograms. COD on eligible items. WhatsApp 03284010007.",
     absoluteTitle: true,
   },
+  // 16 Oct 2026 keyword quick wins (Price in Pakistan titles).
+  ...KEYWORD_CATEGORY_SEO,
 };

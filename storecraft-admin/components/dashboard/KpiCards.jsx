@@ -156,14 +156,12 @@ export function KpiCards({ data }) {
         }${unpaidToday > 0 ? ` · ${formatCount(unpaidToday)} unpaid COD` : ""}`}
       />
 
-      {/* Money first — order count is secondary */}
       <HeroCard
         label="Today's Orders"
-        value={formatAdminPrice(d.todayOrderValue)}
+        value={formatCount(todayOrders)}
         trend={d.todayOrdersGrowth}
-        tone="money"
-        money
-        hint={`${formatCount(todayOrders)} orders today · ${formatCount(pendingToday)} pending · ${formatCount(unpaidToday)} unpaid`}
+        tone="line"
+        hint={`${formatCount(pendingToday)} pending · ${formatCount(unpaidToday)} unpaid COD`}
       />
 
       <HeroCard

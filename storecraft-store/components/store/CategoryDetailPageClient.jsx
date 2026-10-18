@@ -247,6 +247,7 @@ export function CategoryDetailPageClient({
                       className="subcat-circle-item"
                       tabIndex={copy === 0 ? undefined : -1}
                       aria-hidden={copy === 1 ? true : undefined}
+                      inert={copy === 1 ? true : undefined}
                       style={
                         copy === 0
                           ? { animationDelay: `${Math.min(idx, 12) * 45}ms` }
@@ -258,8 +259,11 @@ export function CategoryDetailPageClient({
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={sub.image.url}
-                            alt={copy === 0 ? sub.image?.altText || sub.name : ""}
+                            alt={sub.image?.altText || sub.name || "Category"}
                             title={sub.image?.title || sub.name}
+                            width={120}
+                            height={120}
+                            sizes="96px"
                             loading="lazy"
                             draggable={false}
                           />

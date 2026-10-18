@@ -15,6 +15,7 @@ import {
 } from "@/lib/paidTraffic";
 import { buildFbcFromFbclid } from "@/lib/metaClickIds";
 import { resolveProductRedirectPath, resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
+import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveCollectionRedirect } from "@/lib/collectionRedirectMap.mjs";
 import { STRIP_QUERY_KEYS } from "@/lib/stripQueryKeys.mjs";
 
@@ -94,6 +95,9 @@ function wwwToApexRedirect(request) {
   return withPaidCookie(request, NextResponse.redirect(dest, 308));
 }
 
+const CITY_LANDING_RE =
+  /^\/car-accessories-(gujranwala|lahore|karachi|islamabad|rawalpindi|faisalabad)\/?$/i;
+
 export async function middleware(request) {
   const wwwRedirect = wwwToApexRedirect(request);
   if (wwwRedirect) return wwwRedirect;
@@ -104,6 +108,35 @@ export async function middleware(request) {
   // (Previously redirected to /logo.png when the cloud was billing-disabled.)
 
   const lower = pathname.toLowerCase();
+
+  // Public SEO URLs are /car-accessories-{city}; App Router needs /city/[city].
+  // Rewrite (not redirect) so the browser URL stays hyphenated.
+  {
+    const cityMatch = lower.match(CITY_LANDING_RE);
+    if (cityMatch) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = `/city/${cityMatch[1].toLowerCase()}`;
+      return withPaidCookie(request, NextResponse.rewrite(dest));
+    }
+    // Hide internal path — one hop to the public SEO URL.
+    const internalCity = lower.match(
+      /^\/city\/(gujranwala|lahore|karachi|islamabad|rawalpindi|faisalabad)\/?$/
+    );
+    if (internalCity) {
+      return withPaidCookie(
+        request,
+        redirectPath(request, `/car-accessories-${internalCity[1]}`, 308)
+      );
+    }
+  }
+
+  // Explicit deleted catalogue / car URLs (also in next.config; middleware covers edge cases).
+  {
+    const deletedDest = resolveDeletedPath(lower.replace(/\/+$/, "") || "/");
+    if (deletedDest && deletedDest !== (lower.replace(/\/+$/, "") || "/")) {
+      return withPaidCookie(request, redirectPath(request, deletedDest, 301));
+    }
+  }
 
   // Homepage ignores ?q= — SearchSuggest / JSON-LD SearchAction use /shop?q=
   if (lower === "/") {
@@ -352,6 +385,45 @@ export async function middleware(request) {
     applyAiAttributionCookies(request, response, aiHit);
   }
   applyOrderAttributionCookies(request, response);
+
+  // Catalogue HTML: when middleware did not Set-Cookie, advertise ISR-friendly
+  // shared caching for CDN / Traefik. Keep private for cart/checkout/account.
+  try {
+    const setCookie = response.headers.getSetCookie?.() || [];
+    const wroteCookie =
+      setCookie.length > 0 || Boolean(response.headers.get("set-cookie"));
+    const segments = lower.replace(/\/+$/, "").split("/").filter(Boolean);
+    const reserved = new Set([
+      "api",
+      "account",
+      "checkout",
+      "cart",
+      "wishlist",
+      "compare",
+      "track-order",
+    ]);
+    const isPrivate =
+      segments[0] && reserved.has(segments[0]);
+    const isCatalog =
+      segments.length === 0 ||
+      ["categories", "cars", "blogs", "shop", "sale", "faq", "about", "contact"].includes(
+        segments[0]
+      ) ||
+      String(segments[0] || "").endsWith("-policy") ||
+      segments[0] === "terms-conditions" ||
+      segments[0] === "cash-on-delivery" ||
+      (segments.length === 1 && !reserved.has(segments[0]));
+    if (isPrivate) {
+      response.headers.set("Cache-Control", "private, no-store");
+    } else if (!wroteCookie && isCatalog) {
+      response.headers.set(
+        "Cache-Control",
+        "public, s-maxage=300, stale-while-revalidate=86400"
+      );
+    }
+  } catch {
+    /* ignore */
+  }
 
   return response;
 }

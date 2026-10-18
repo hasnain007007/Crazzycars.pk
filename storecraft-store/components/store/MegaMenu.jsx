@@ -104,11 +104,18 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
   const focusHref = focusCat?.slug ? categoryHref(focusCat.slug) : "/categories";
   const focusLabel = focusCat?.name || "Shop";
 
-  if (!isOpen) return null;
   if (!loading && menuCategories.length === 0) return null;
 
+  // Keep link markup in the DOM when closed (hidden/inert) so open/close is
+  // presentational — crawlers and return visits still see the category tree.
   return (
-    <div ref={menuRef} className="mega-menu">
+    <div
+      ref={menuRef}
+      className="mega-menu"
+      hidden={!isOpen}
+      inert={!isOpen ? true : undefined}
+      aria-hidden={!isOpen ? true : undefined}
+    >
       <div className="store-container mega-menu__grid">
         <aside className="mega-menu__parents">
           {loading && !menuCategories.length ? (
@@ -121,6 +128,7 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
                 key={String(cat._id)}
                 type="button"
                 className={`mega-menu__parent${active ? " is-active" : ""}`}
+                tabIndex={isOpen ? undefined : -1}
                 onMouseEnter={() => {
                   setActiveCategory(cat._id);
                   setHoveredSubId(null);
@@ -178,7 +186,15 @@ export default function MegaMenu({ isOpen, onClose, initialCategories = null }) 
                         <span className="mega-menu__sub-thumb">
                           {img ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={img} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            <img
+                              src={img}
+                              alt={sub.name || "Category"}
+                              width={64}
+                              height={64}
+                              sizes="40px"
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
                           ) : (
                             <span className="mega-menu__sub-thumb-empty">·</span>
                           )}

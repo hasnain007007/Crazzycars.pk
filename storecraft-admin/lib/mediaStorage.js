@@ -92,6 +92,30 @@ export async function ensureMediaRoot() {
   return root;
 }
 
+/** Prebuild card thumbs so PDP/grid do not 404 on *-400.webp after upload. */
+async function writeCardThumbBeside(absMasterPath, folder) {
+  const folderKey = String(folder || "").toLowerCase();
+  if (!/^(products|categories|uploads|blogs|vehicles|cars|brand)(\/|$)/.test(folderKey)) {
+    return null;
+  }
+  const ext = path.extname(absMasterPath);
+  if (!/\.(webp|jpe?g|png|gif|avif)$/i.test(ext)) return null;
+  if (/-400\./i.test(absMasterPath) || /-800\./i.test(absMasterPath)) return null;
+  const outAbs = absMasterPath.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
+  try {
+    const sharp = (await import("sharp")).default;
+    await sharp(absMasterPath)
+      .rotate()
+      .resize(400, 400, { fit: "cover", position: "centre", withoutEnlargement: false })
+      .webp({ quality: 72, effort: 4 })
+      .toFile(outAbs);
+    return outAbs;
+  } catch (err) {
+    console.warn("[mediaStorage] -400 thumb failed:", err?.message || err);
+    return null;
+  }
+}
+
 export async function writeMediaFile({ folder, filename, buffer }) {
   const root = await ensureMediaRoot();
   const safeFolder = sanitizeMediaFolder(folder);
@@ -102,6 +126,7 @@ export async function writeMediaFile({ folder, filename, buffer }) {
   await mkdir(dir, { recursive: true });
   const abs = path.join(dir, safeName);
   await writeFile(abs, buffer);
+  await writeCardThumbBeside(abs, safeFolder);
   const relative = path.join(safeFolder, safeName).replace(/\\/g, "/");
   return {
     absolutePath: abs,

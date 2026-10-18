@@ -75,7 +75,7 @@ function sharedPolicyFaqs({
 function trustedStoreFaq() {
   return (
     policyByQuestion("trusted store") || {
-      question: "Is CrazzyCars a trusted store for car accessories in Pakistan?",
+      question: "Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
       answer:
         "CrazzyCars.pk ships car accessories nationwide from Gujranwala. We list vehicle fitment on product pages, offer Cash on Delivery on eligible items (small booking advance, balance on delivery), and handle returns under our published returns policy. Message us on WhatsApp with your order number if you need help — we do not use fake star ratings or invented reviews.",
     }
@@ -164,7 +164,7 @@ const CATEGORY_FAQ_EXTRAS = {
   "led-headlights-bulbs": {
     name: "LED Headlights & Bulbs",
     priceMode: "fromMin",
-    priceQuestion: "What do LED headlights and bulbs cost on CrazzyCars?",
+    priceQuestion: "What do LED headlights and bulbs cost on CrazzyCars.pk?",
   },
   "splitters-side-skirts": {
     name: "Splitters & Side Skirts",
@@ -242,7 +242,7 @@ const CATEGORY_FAQ_EXTRAS = {
   "dashboard-mats": {
     name: "Dashboard Mats",
     priceMode: "flat",
-    priceQuestion: "What do dashboard mats cost on CrazzyCars?",
+    priceQuestion: "What do dashboard mats cost on CrazzyCars.pk?",
     extras: [
       {
         question: "Are these universal?",
@@ -264,11 +264,11 @@ const CATEGORY_FAQ_EXTRAS = {
   },
   "air-freshener-decoration": {
     name: "Air Fresheners & Decor",
-    priceQuestion: "What price range do air fresheners and décor sell for on CrazzyCars?",
+    priceQuestion: "What price range do air fresheners and décor sell for on CrazzyCars.pk?",
   },
   "fender-light": {
     name: "Fender Light",
-    priceQuestion: "What do fender lights cost on CrazzyCars?",
+    priceQuestion: "What do fender lights cost on CrazzyCars.pk?",
   },
   // Batch 4 — last leaf-category expansion round (parents still excluded)
   "emergency-safety": {
@@ -288,7 +288,7 @@ const CATEGORY_FAQ_EXTRAS = {
   },
   "hanging-perfumes": {
     name: "Hanging Perfumes",
-    priceQuestion: "What price range do hanging car perfumes sell for on CrazzyCars?",
+    priceQuestion: "What price range do hanging car perfumes sell for on CrazzyCars.pk?",
     extras: [
       {
         question: "Are these vehicle-specific?",
@@ -304,7 +304,7 @@ const CATEGORY_FAQ_EXTRAS = {
   },
   utility: {
     name: "Utility",
-    priceQuestion: "What price range do Utility tools sell for on CrazzyCars?",
+    priceQuestion: "What price range do Utility tools sell for on CrazzyCars.pk?",
     extras: [
       {
         question: "What is listed in Utility right now?",
@@ -315,7 +315,7 @@ const CATEGORY_FAQ_EXTRAS = {
   },
   "air-press": {
     name: "Air Press / Window Visors",
-    priceQuestion: "What price range do air press / window visors sell for on CrazzyCars?",
+    priceQuestion: "What price range do air press / window visors sell for on CrazzyCars.pk?",
     extras: [
       {
         question: "Will this fit my car?",
@@ -332,7 +332,7 @@ const CATEGORY_FAQ_EXTRAS = {
   "exhaust-systems-tips": {
     name: "Exhaust Tips & Systems",
     priceMode: "fromMin",
-    priceQuestion: "What do exhaust tips and systems cost on CrazzyCars?",
+    priceQuestion: "What do exhaust tips and systems cost on CrazzyCars.pk?",
     priceFromMinClause: "Full cut-off kits are higher",
     extras: [
       {
@@ -344,7 +344,7 @@ const CATEGORY_FAQ_EXTRAS = {
   },
   "car-care-cleaning": {
     name: "Car Care & Cleaning",
-    priceQuestion: "What price range do Car Care & Cleaning products sell for on CrazzyCars?",
+    priceQuestion: "What price range do Car Care & Cleaning products sell for on CrazzyCars.pk?",
     extras: [
       {
         question: "What is listed here right now?",
@@ -380,22 +380,22 @@ export function buildCategoryKeywordFaqs(slug, range = {}) {
     const fromMinClause =
       cfg.priceFromMinClause || "Full projector headlight assemblies are higher";
     items.push({
-      question: cfg.priceQuestion || `What do ${cfg.name} cost on CrazzyCars?`,
+      question: cfg.priceQuestion || `What do ${cfg.name} cost on CrazzyCars.pk?`,
       answer: `Prices on this category currently start from ${minLabel}. ${fromMinClause} — always check the product card for the live price. Prices change with stock and deals.`,
     });
   } else if (mode === "flat" && minLabel) {
     items.push({
-      question: cfg.priceQuestion || `What do ${cfg.name} cost on CrazzyCars?`,
+      question: cfg.priceQuestion || `What do ${cfg.name} cost on CrazzyCars.pk?`,
       answer: `On this category, live prices are currently ${minLabel} per mat. Prices change with stock and deals — check the product card for the current price.`,
     });
   } else if (mode === "rangeHighEnd" && minLabel && maxLabel) {
     items.push({
-      question: cfg.priceQuestion || `What price range do ${cfg.name} sell for on CrazzyCars?`,
+      question: cfg.priceQuestion || `What price range do ${cfg.name} sell for on CrazzyCars.pk?`,
       answer: `On this category, live prices currently range from ${minLabel} to ${maxLabel}. Full assemblies sit at the high end — always check the product card for the live price.`,
     });
   } else if (minLabel && maxLabel) {
     items.push({
-      question: cfg.priceQuestion || `What price range do ${cfg.name} sell for on CrazzyCars?`,
+      question: cfg.priceQuestion || `What price range do ${cfg.name} sell for on CrazzyCars.pk?`,
       answer: `On this category, live prices currently range from ${minLabel} to ${maxLabel}. Prices change with stock and deals — check the product card for the current price.`,
     });
   }

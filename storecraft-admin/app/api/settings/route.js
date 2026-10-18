@@ -144,6 +144,10 @@ export async function PUT(request) {
       doc.contactPage = body.contactPage;
       doc.markModified("contactPage");
     }
+    if (body.cityPages !== undefined && body.cityPages !== null && typeof body.cityPages === "object") {
+      doc.cityPages = body.cityPages;
+      doc.markModified("cityPages");
+    }
     if (body.whatsapp !== undefined) {
       doc.whatsapp = body.whatsapp;
       doc.markModified("whatsapp");

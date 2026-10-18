@@ -326,6 +326,32 @@ export async function PUT(request, context) {
 
     if (nextStatus !== undefined) {
       existing.status = nextStatus;
+      // Soft-delete: keep a permanent redirect target so the old slug never 404s.
+      if (nextStatus === "inactive") {
+        if (body.redirectTo !== undefined) {
+          existing.redirectTo = String(body.redirectTo || "").trim();
+        }
+        let catSlug = String(existing.primaryCategorySlug || "").trim();
+        if (!catSlug && Array.isArray(existing.categories) && existing.categories.length) {
+          try {
+            const Category = (await import("@/lib/models/Category.model")).default;
+            const cat = await Category.findById(existing.categories[0]).select("slug").lean();
+            catSlug = String(cat?.slug || "").trim();
+            if (catSlug) existing.primaryCategorySlug = catSlug;
+          } catch {
+            /* ignore */
+          }
+        }
+        if (!String(existing.redirectTo || "").trim() && catSlug) {
+          existing.redirectTo = `/categories/${catSlug}`;
+        }
+      }
+      if (nextStatus === "active") {
+        existing.redirectTo = "";
+      }
+    }
+    if (body.redirectTo !== undefined && nextStatus !== "inactive") {
+      existing.redirectTo = String(body.redirectTo || "").trim();
     }
     if (nextHold !== undefined) {
       existing.securityHold = nextHold;

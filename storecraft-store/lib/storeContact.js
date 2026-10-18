@@ -1,5 +1,7 @@
-/** Canonical storefront contact email and default brand name (Crazzycars.pk). */
-export const STORE_DEFAULT_NAME = "Crazzycars.pk";
+/** Canonical storefront contact email and default brand name. */
+import { BRAND_NAME } from "./brand.js";
+
+export const STORE_DEFAULT_NAME = BRAND_NAME;
 export const STORE_CONTACT_EMAIL = "info@crazzycars.pk";
 
 const LEGACY_EMAILS = new Set([

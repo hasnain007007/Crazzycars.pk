@@ -2,9 +2,13 @@ import Link from "next/link";
 import { CategoryHeroBanner } from "@/components/store/CategoryHeroBanner";
 import { categoryHref } from "@/lib/categories";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
+import { categoryImageUrl, localMediaPath } from "@/lib/cloudinaryImage";
+import LocalMediaImg from "@/components/store/LocalMediaImg";
 
 function CategorySubcategoryMarquee({ subcategories = [] }) {
   if (!subcategories.length) return null;
+  // Seamless CSS marquee uses translateX(-50%), so the track must contain two
+  // identical sequences — rendering once would break the loop.
   return (
     <section className="subcat-circle-section" style={{ marginBottom: 20 }}>
       <h2 className="cat-section-title">Shop By Categories</h2>
@@ -16,36 +20,45 @@ function CategorySubcategoryMarquee({ subcategories = [] }) {
           }}
         >
           {[0, 1].map((copy) =>
-            subcategories.map((sub, idx) => (
-              <Link
-                key={`${copy}-${sub._id || sub.slug}`}
-                href={categoryHref(sub.slug)}
-                className="subcat-circle-item"
-                tabIndex={copy === 0 ? undefined : -1}
-                aria-hidden={copy === 1 ? true : undefined}
-                style={
-                  copy === 0 ? { animationDelay: `${Math.min(idx, 12) * 45}ms` } : undefined
-                }
-              >
-                <span className="subcat-circle-ring">
-                  {sub.image?.url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={sub.image.url}
-                      alt={copy === 0 ? sub.image?.altText || sub.name : ""}
-                      title={sub.image?.title || sub.name}
-                      loading="lazy"
-                      draggable={false}
-                    />
-                  ) : (
-                    <span className="subcat-circle-fallback" aria-hidden>
-                      {(sub.name || "?").charAt(0)}
-                    </span>
-                  )}
-                </span>
-                <span className="subcat-circle-label">{sub.name}</span>
-              </Link>
-            ))
+            subcategories.map((sub, idx) => {
+              const raw = sub.image?.url || "";
+              const thumb = raw ? categoryImageUrl(raw, 400) : "";
+              return (
+                <Link
+                  key={`${copy}-${sub._id || sub.slug}`}
+                  href={categoryHref(sub.slug)}
+                  className="subcat-circle-item"
+                  tabIndex={copy === 0 ? undefined : -1}
+                  aria-hidden={copy === 1 ? true : undefined}
+                  inert={copy === 1 ? true : undefined}
+                  style={
+                    copy === 0 ? { animationDelay: `${Math.min(idx, 12) * 45}ms` } : undefined
+                  }
+                >
+                  <span className="subcat-circle-ring">
+                    {thumb ? (
+                      <LocalMediaImg
+                        src={thumb}
+                        master={localMediaPath(raw) || raw}
+                        alt={sub.image?.altText || sub.name || "Category"}
+                        title={sub.image?.title || sub.name}
+                        width={120}
+                        height={120}
+                        sizes="120px"
+                        loading="lazy"
+                        decoding="async"
+                        draggable={false}
+                      />
+                    ) : (
+                      <span className="subcat-circle-fallback" aria-hidden>
+                        {(sub.name || "?").charAt(0)}
+                      </span>
+                    )}
+                  </span>
+                  <span className="subcat-circle-label">{sub.name}</span>
+                </Link>
+              );
+            })
           )}
         </div>
       </div>

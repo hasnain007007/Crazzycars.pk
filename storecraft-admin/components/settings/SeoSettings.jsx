@@ -15,6 +15,7 @@ const DEFAULT_FORM = {
   googleAnalyticsId: "",
   googleSearchConsoleId: "",
   facebookPixelId: "",
+  snapchatPixelId: "",
   metaCapiAccessToken: "",
   metaCapiTestEventCode: "",
   metaCapiConfigured: false,
@@ -66,6 +67,7 @@ export default function SeoSettings() {
       googleAnalyticsId: String(form.googleAnalyticsId || "").trim(),
       googleSearchConsoleId: String(form.googleSearchConsoleId || "").trim(),
       facebookPixelId: String(form.facebookPixelId || "").trim(),
+      snapchatPixelId: String(form.snapchatPixelId || "").trim(),
       metaCapiAccessToken: String(form.metaCapiAccessToken || "").trim(),
       metaCapiTestEventCode: String(form.metaCapiTestEventCode || "").trim(),
       canonicalUrl: String(form.canonicalUrl || "").trim(),
@@ -452,6 +454,20 @@ export default function SeoSettings() {
           />
           <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>
             Events Manager → Data sources → Pixel (browser Pixel + CAPI share this ID)
+          </p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>Snapchat Pixel ID</label>
+          <input
+            style={inputStyle}
+            placeholder="7c5ac44e-f373-4923-8d07-dad602da1776"
+            value={form.snapchatPixelId}
+            onChange={(e) => setForm((f) => ({ ...f, snapchatPixelId: e.target.value }))}
+          />
+          <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>
+            Snapchat Ads Manager → Events Manager → Pixel (fires PAGE_VIEW, VIEW_CONTENT, ADD_CART,
+            START_CHECKOUT, PURCHASE)
           </p>
         </div>
 

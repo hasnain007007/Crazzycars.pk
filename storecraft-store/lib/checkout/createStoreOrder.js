@@ -43,6 +43,7 @@ import {
   recordActionAttempt,
 } from "@/lib/actionRateLimit";
 import { requestIp } from "@/lib/requestIp";
+import { customerNetworkFromRequest } from "@/lib/customerIp";
 import { shippingFloorPKR } from "@/lib/shippingTier";
 import {
   buildPurchaseCustomData,
@@ -1023,6 +1024,7 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
 
     const orderNumber = await allocateOrderNumber();
     const publicAccessToken = randomBytes(24).toString("base64url");
+    const customerNetwork = await customerNetworkFromRequest(request);
 
     let order;
     try {
@@ -1060,6 +1062,12 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
         },
         shippingAddress,
         couponCode,
+        customerIp: customerNetwork.customerIp || "",
+        customerUserAgent: customerNetwork.customerUserAgent || "",
+        customerDevice: customerNetwork.customerDevice || "",
+        ...(customerNetwork.customerIpGeo
+          ? { customerIpGeo: customerNetwork.customerIpGeo }
+          : {}),
         statusHistory: [
           {
             status: initialStatus,
@@ -1253,7 +1261,7 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
 
     if (isValidCustomerEmail(order.customer?.email)) {
       try {
-        const storeName = settingsDoc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
+        const storeName = settingsDoc?.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
         const logoUrl = settingsDoc?.general?.logo?.url || "";
         await sendCustomerOrderConfirmation(order, { storeName, logoUrl });
       } catch (emailError) {

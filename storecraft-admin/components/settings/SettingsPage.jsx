@@ -9,6 +9,7 @@ import BrandStorySettings from "@/components/settings/BrandStorySettings";
 import AboutPageSettings from "@/components/settings/AboutPageSettings";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import ContactPageSettings from "@/components/settings/ContactPageSettings";
+import CityPagesSettings from "@/components/settings/CityPagesSettings";
 import { FooterSettings } from "@/components/settings/FooterSettings";
 import MegaMenuSettings from "@/components/settings/MegaMenuSettings";
 import ProductBadgeSettings from "@/components/settings/ProductBadgeSettings";
@@ -47,6 +48,7 @@ const TABS = [
   "Brand Story",
   "About Page",
   "Contact Page",
+  "City Pages",
   "Mega Menu",
   "Product Badges",
   "Checkout",
@@ -68,7 +70,7 @@ const GENERAL_REGIONAL_DEFAULTS = {
 };
 
 const GENERAL_CONTENT_DEFAULTS = {
-  storeName: "Crazzycars.pk",
+  storeName: "CrazzyCars.pk",
   email: "info@crazzycars.pk",
   phone: "+92 324 422 0007",
 };
@@ -522,9 +524,93 @@ export function SettingsPage() {
             </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Field
-                label="Business address"
+                label="Business address (invoice / legacy)"
                 value={g.address || ""}
                 onChange={(v) => setS({ ...s, general: { ...g, address: v } })}
+                multiline
+              />
+              <Field
+                label="Street address (LocalBusiness JSON-LD)"
+                value={g.streetAddress || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, streetAddress: v } })}
+                multiline
+              />
+              <Field
+                label="City"
+                value={g.addressLocality || "Gujranwala"}
+                onChange={(v) => setS({ ...s, general: { ...g, addressLocality: v } })}
+              />
+              <Field
+                label="Region"
+                value={g.addressRegion || "Punjab"}
+                onChange={(v) => setS({ ...s, general: { ...g, addressRegion: v } })}
+              />
+              <Field
+                label="Postal code"
+                value={g.postalCode || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, postalCode: v } })}
+              />
+              <Field
+                label="Country code"
+                value={g.addressCountry || "PK"}
+                onChange={(v) => setS({ ...s, general: { ...g, addressCountry: v } })}
+              />
+              <Field
+                label="Latitude"
+                value={g.latitude ?? ""}
+                onChange={(v) =>
+                  setS({
+                    ...s,
+                    general: {
+                      ...g,
+                      latitude: v === "" ? null : Number(v),
+                    },
+                  })
+                }
+              />
+              <Field
+                label="Longitude"
+                value={g.longitude ?? ""}
+                onChange={(v) =>
+                  setS({
+                    ...s,
+                    general: {
+                      ...g,
+                      longitude: v === "" ? null : Number(v),
+                    },
+                  })
+                }
+              />
+              <Field
+                label="Google Maps / GBP URL"
+                value={g.mapUrl || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, mapUrl: v } })}
+              />
+              <Field
+                label="WhatsApp (digits)"
+                value={g.whatsapp || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, whatsapp: v } })}
+              />
+              <Field
+                label="Price range (e.g. PKR)"
+                value={g.priceRange || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, priceRange: v } })}
+              />
+              <Field
+                label="sameAs URLs (one per line)"
+                value={Array.isArray(g.sameAs) ? g.sameAs.join("\n") : ""}
+                onChange={(v) =>
+                  setS({
+                    ...s,
+                    general: {
+                      ...g,
+                      sameAs: String(v || "")
+                        .split("\n")
+                        .map((x) => x.trim())
+                        .filter(Boolean),
+                    },
+                  })
+                }
                 multiline
               />
               <Field
@@ -1190,29 +1276,35 @@ export function SettingsPage() {
 
       {tab === 13 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <MegaMenuSettings />
+          <CityPagesSettings />
         </div>
       ) : null}
 
       {tab === 14 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <ProductBadgeSettings />
+          <MegaMenuSettings />
         </div>
       ) : null}
 
       {tab === 15 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <CheckoutSettings />
+          <ProductBadgeSettings />
         </div>
       ) : null}
 
       {tab === 16 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-          <HomepageSettings />
+          <CheckoutSettings />
         </div>
       ) : null}
 
       {tab === 17 ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+          <HomepageSettings />
+        </div>
+      ) : null}
+
+      {tab === 18 ? (
         <CourierSettingsTab
           courier={courier}
           onPatch={(partial) => setS({ ...s, courier: { ...courier, ...partial } })}

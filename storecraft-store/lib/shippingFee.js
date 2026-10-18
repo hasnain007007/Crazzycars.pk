@@ -3,19 +3,29 @@
  */
 import { STORE_POLICY } from "../config/store-policy.js";
 import { isBodyKitProduct } from "./codEligibility.js";
+import { productIsBulkyForShipping } from "./bulkyShipping.js";
+
+/**
+ * Shipping rate in PKR for a single product (Offer.shippingDetails.shippingRate).
+ * 500 for bulky (flag, category, or name match); otherwise 250.
+ * @param {object} [product]
+ * @returns {number}
+ */
+export function getShippingRate(product) {
+  const std = Number(STORE_POLICY.shipping.standardFeePKR) || 250;
+  const bulkyFee = Number(STORE_POLICY.shipping.bulkyFeePKR) || 500;
+  const bulky =
+    productIsBulkyForShipping(product) ||
+    (product ? isBodyKitProduct(product) : false);
+  return bulky ? bulkyFee : std;
+}
 
 /**
  * @param {object} [product]
  * @returns {number} PKR fee for this product alone (cart may still take max of lines).
  */
 export function shippingFeePkr(product) {
-  const bulky =
-    Boolean(product?.isBulky) ||
-    Boolean(product?.is_bulky) ||
-    (product ? isBodyKitProduct(product) : false);
-  const std = Number(STORE_POLICY.shipping.standardFeePKR) || 250;
-  const bulkyFee = Number(STORE_POLICY.shipping.bulkyFeePKR) || 500;
-  return bulky ? bulkyFee : std;
+  return getShippingRate(product);
 }
 
 /**
@@ -24,10 +34,11 @@ export function shippingFeePkr(product) {
  */
 export function cartShippingFeePkr(lines = []) {
   const list = Array.isArray(lines) ? lines : [];
+  const bulkyFee = Number(STORE_POLICY.shipping.bulkyFeePKR) || 500;
   for (const line of list) {
     const p = line?.product || line;
-    if (shippingFeePkr(p) >= (Number(STORE_POLICY.shipping.bulkyFeePKR) || 500)) {
-      return Number(STORE_POLICY.shipping.bulkyFeePKR) || 500;
+    if (getShippingRate(p) >= bulkyFee) {
+      return bulkyFee;
     }
   }
   return Number(STORE_POLICY.shipping.standardFeePKR) || 250;

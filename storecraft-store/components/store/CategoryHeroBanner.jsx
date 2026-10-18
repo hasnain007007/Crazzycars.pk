@@ -1,6 +1,9 @@
-import { categoryBannerUrl, logoImageUrl } from "@/lib/cloudinaryImage";
+import { categoryBannerUrl, logoImageUrl, localMediaPath } from "@/lib/cloudinaryImage";
 import { trimmedLogoUrl } from "@/lib/storeLogo";
 import { CATEGORY_H1_OVERRIDES } from "@/lib/seo/gscAudit2026-10.mjs";
+import { resolveCategoryH1 } from "@/lib/categoryHeading";
+import { BRAND_NAME } from "@/lib/brand";
+import LocalMediaImg from "@/components/store/LocalMediaImg";
 
 function productImageUrls(products) {
   const urls = [];
@@ -22,10 +25,10 @@ function productImageUrls(products) {
  */
 export function CategoryHeroBanner({ category, subcategories, products, brand }) {
   const h1Override = CATEGORY_H1_OVERRIDES[String(category?.slug || "").trim()];
-  const title = String(h1Override || category?.name || "").toUpperCase();
-  const imageAlt = category?.image?.altText || category?.name || "";
+  const title = resolveCategoryH1(category, h1Override);
+  const imageAlt = category?.image?.altText || category?.name || title || "";
   const imageTitle = category?.image?.title || category?.name || "";
-  const storeName = brand?.name || "CrazzyCars.pk";
+  const storeName = brand?.name || BRAND_NAME;
   const logoUrl = logoImageUrl(trimmedLogoUrl(brand?.logo || "")) || trimmedLogoUrl(brand?.logo || "");
 
   const bannerSlots = (Array.isArray(category?.bannerImages) ? category.bannerImages : [])
@@ -70,7 +73,16 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
           <div className="cat-hero__brand">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="cat-hero__brand-logo" />
+              <img
+                src={logoUrl}
+                alt={storeName || "CrazzyCars.pk"}
+                className="cat-hero__brand-logo"
+                width={40}
+                height={40}
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+              />
             ) : (
               <span className="cat-hero__brand-mark" aria-hidden>
                 CC
@@ -83,6 +95,11 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
           </div>
 
           <p className="cat-hero__eyebrow">Shop Collection</p>
+          {category?.name ? (
+            <p className="cat-hero__visual-label" aria-hidden="true">
+              {String(category.name)}
+            </p>
+          ) : null}
           <h1 className="cat-hero__title">{title}</h1>
           <p className="cat-hero__sub">
             Built for real roads — fitment-ready parts from {storeName}
@@ -92,12 +109,16 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
         {bannerSrc ? (
           <div className="cat-hero__visual">
             <div className="cat-hero__visual-frame">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <LocalMediaImg
                 src={bannerSrc}
+                master={localMediaPath(rawBanner) || rawBanner}
                 alt={imageAlt}
                 title={imageTitle}
+                width={800}
+                height={600}
+                sizes="(max-width: 768px) 100vw, 40vw"
                 fetchPriority="high"
+                loading="eager"
                 decoding="async"
               />
             </div>

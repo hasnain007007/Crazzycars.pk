@@ -90,17 +90,18 @@ export function VehicleCompatibilitySection({ product, carLinks = [] }) {
 function ShopByCarLinks({ links }) {
   if (!links?.length) return null;
   return (
-    <p className="mt-3 text-sm text-[#555555]">
-      Shop by car:{" "}
-      {links.map((link, i) => (
-        <span key={link.slug}>
-          {i > 0 ? <span aria-hidden>, </span> : null}
-          <Link href={link.href || `/cars/${link.slug}`} className="font-medium text-[#C41E1E] underline-offset-2 hover:underline">
-            {link.label}
+    <div className="mt-3 space-y-1.5 text-sm text-[#555555]">
+      {links.map((link) => (
+        <p key={link.slug} className="m-0">
+          <Link
+            href={link.href || `/cars/${link.slug}`}
+            className="font-semibold text-[#C41E1E] underline-offset-2 hover:underline"
+          >
+            More for {link.label}
           </Link>
-        </span>
+        </p>
       ))}
-    </p>
+    </div>
   );
 }
 

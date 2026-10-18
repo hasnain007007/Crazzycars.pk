@@ -257,6 +257,10 @@ const productSchema = new mongoose.Schema(
       default: "draft",
       index: true,
     },
+    /** Soft-delete SEO target (path starting with /) when status becomes inactive. */
+    redirectTo: { type: String, default: "", trim: true },
+    primaryCategorySlug: { type: String, default: "", trim: true, lowercase: true },
+    primaryCarSlug: { type: String, default: "", trim: true, lowercase: true },
     /**
      * Security / data-quality hold. When true, storefront treats the SKU as
      * unpublished and only an owner may clear the hold or set status=active.

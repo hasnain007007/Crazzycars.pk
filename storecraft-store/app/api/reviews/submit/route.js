@@ -9,7 +9,9 @@ import {
 import { dbConnect } from "@/lib/db";
 import Review from "@/lib/models/Review.model";
 import Product from "@/lib/models/Product.model";
+import Order from "@/lib/models/Order.model";
 import { requestIp } from "@/lib/requestIp";
+import { verifyReviewRequestToken } from "@/lib/reviewRequestToken";
 
 const REVIEW_RATE = { maxAttempts: 3, windowMs: 60 * 60 * 1000 };
 
@@ -56,6 +58,8 @@ export async function POST(req) {
       rating,
       title,
       body: reviewBody,
+      orderId,
+      token,
     } = body;
 
     if (!name?.trim()) {
@@ -105,9 +109,65 @@ export async function POST(req) {
       });
     }
 
+    // Optional signed post-delivery link → schema-eligible once approved.
+    let verifiedOrderId = "";
+    const orderIdStr = String(orderId || "").trim();
+    const tokenStr = String(token || "").trim();
+    if (orderIdStr || tokenStr) {
+      if (!orderIdStr || !tokenStr || !mongoose.Types.ObjectId.isValid(orderIdStr)) {
+        return NextResponse.json(
+          { success: false, error: "Invalid review link. Please use the WhatsApp link we sent." },
+          { status: 400 }
+        );
+      }
+      const tokenCheck = verifyReviewRequestToken(tokenStr, orderIdStr);
+      if (!tokenCheck.ok) {
+        return NextResponse.json({ success: false, error: tokenCheck.error }, { status: 400 });
+      }
+      const order = await Order.findById(orderIdStr).select("orderStatus items").lean();
+      if (!order) {
+        return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
+      }
+      const orderStatus = String(order.orderStatus || "").toLowerCase();
+      if (orderStatus && orderStatus !== "delivered" && orderStatus !== "completed") {
+        return NextResponse.json(
+          { success: false, error: "Reviews are only accepted after delivery." },
+          { status: 400 }
+        );
+      }
+      const lineHit = (order.items || []).some((it) => {
+        const pid = it.product ? String(it.product) : "";
+        const slug = String(it.slug || it.productSlug || "").trim();
+        return (
+          (pid && pid === String(product._id)) ||
+          (slug && slug === String(product.slug || ""))
+        );
+      });
+      if (!lineHit) {
+        return NextResponse.json(
+          { success: false, error: "That product is not on this order." },
+          { status: 400 }
+        );
+      }
+      const existing = await Review.findOne({
+        product: product._id,
+        orderId: orderIdStr,
+        status: { $in: ["pending", "approved"] },
+      })
+        .select("_id")
+        .lean();
+      if (existing) {
+        return NextResponse.json(
+          { success: false, error: "You already reviewed this product for this order." },
+          { status: 400 }
+        );
+      }
+      verifiedOrderId = orderIdStr;
+    }
+
     const reviewLimitKey = actionRateLimitKey(
       `review-submit:${String(product._id)}`,
-      String(email || "anon").trim().toLowerCase() || "anon",
+      verifiedOrderId || String(email || "anon").trim().toLowerCase() || "anon",
       requestIp(req)
     );
     const reviewLimit = await checkActionRateLimit(reviewLimitKey, REVIEW_RATE);
@@ -127,13 +187,15 @@ export async function POST(req) {
         name: name.trim(),
         email: email?.trim() || "",
         location: location?.trim() || "",
-        verified: false,
+        verified: Boolean(verifiedOrderId),
       },
       rating: ratingNum,
       title: title?.trim() || "",
       body: reviewBody.trim(),
       status: "pending",
       source: "customer",
+      ...(verifiedOrderId ? { orderId: verifiedOrderId } : {}),
+      isSeed: false,
     });
     recalcProductRating(created.product).catch(() => {});
 

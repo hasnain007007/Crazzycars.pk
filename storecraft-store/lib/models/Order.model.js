@@ -267,6 +267,20 @@ const orderSchema = new mongoose.Schema(
      * Primary display label is attribution.label ("Organic: Google", "Direct", …).
      */
     attribution: { type: attributionSchema, default: null },
+    /** Customer public IP at checkout (from reverse-proxy headers). */
+    customerIp: { type: String, default: "", trim: true, index: true },
+    /** Raw User-Agent at checkout (truncated). */
+    customerUserAgent: { type: String, default: "", trim: true },
+    /** Short device label derived from User-Agent (iPhone, Android, …). */
+    customerDevice: { type: String, default: "", trim: true },
+    /** Best-effort geo snapshot for the customer IP (city / country / ISP). */
+    customerIpGeo: {
+      city: { type: String, default: "", trim: true },
+      region: { type: String, default: "", trim: true },
+      country: { type: String, default: "", trim: true },
+      countryCode: { type: String, default: "", trim: true },
+      isp: { type: String, default: "", trim: true },
+    },
     /** Source walk-in Invoice when created via admin “Add to orders”. */
     invoiceId: {
       type: mongoose.Schema.Types.ObjectId,

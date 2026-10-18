@@ -203,7 +203,7 @@ export default function BlogListView({
                           {String(post.excerpt || "").length > 190 ? "..." : ""}
                         </p>
                         <p className="blog-list-meta">
-                          {post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'Crazzycars.pk'}`} · {formatLongDate(post.publishedAt || post.createdAt)} · {post.readTime || 3}{" "}
+                          {post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'}`} · {formatLongDate(post.publishedAt || post.createdAt)} · {post.readTime || 3}{" "}
                           min read
                         </p>
                         <Link href={`/blogs/${post.slug}`} className="blog-read-more">

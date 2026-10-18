@@ -16,7 +16,7 @@ import { getSiteUrl } from "@/lib/siteUrl";
 export const revalidate = 120;
 
 export const metadata = buildPageMetadata({
-  title: `Hot Deals & Sale — ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}`,
+  title: `Hot Deals & Sale — ${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"}`,
   description:
     "Shop live sale deals on car accessories in Pakistan — LED lights, spoilers, carbon fiber trims, body kits and more. Cash on Delivery nationwide from CrazzyCars.pk.",
   path: "/sale",

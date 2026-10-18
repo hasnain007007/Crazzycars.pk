@@ -3,13 +3,22 @@
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import HomeHero from "@/components/home/HomeHero";
-import StatsBar from "@/components/home/StatsBar";
-import ShopByCar from "@/components/home/ShopByCar";
-import CategoryGrid from "@/components/home/CategoryGrid";
-import ShopByVehicle from "@/components/home/ShopByVehicle";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
+/** Above-the-fold LCP stays eager (HomeHero). Everything else is code-split. */
+const StatsBar = dynamic(() => import("@/components/home/StatsBar"), {
+  loading: () => <SectionSkeleton height={72} />,
+});
+const ShopByCar = dynamic(() => import("@/components/home/ShopByCar"), {
+  loading: () => <SectionSkeleton height={220} />,
+});
+const ShopByVehicle = dynamic(() => import("@/components/home/ShopByVehicle"), {
+  loading: () => <SectionSkeleton height={280} />,
+});
+const CategoryGrid = dynamic(() => import("@/components/home/CategoryGrid"), {
+  loading: () => <SectionSkeleton height={200} />,
+});
 const HotDeals = dynamic(() => import("@/components/home/HotDeals"), {
   loading: () => <SectionSkeleton height={360} />,
 });

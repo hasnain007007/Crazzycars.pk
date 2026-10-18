@@ -90,7 +90,10 @@ function VehicleCard({ v }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={v.image}
-            alt=""
+            alt={`${[v.make, v.model].filter(Boolean).join(" ").trim() || "Vehicle"} accessories`}
+            width={148}
+            height={148}
+            sizes="(max-width: 768px) 118px, 148px"
             className="h-full w-full object-cover object-center transition group-hover:scale-[1.04] md:object-contain md:p-2.5"
             loading="lazy"
             decoding="async"
@@ -103,14 +106,14 @@ function VehicleCard({ v }) {
           </span>
         )}
       </span>
-      <span className="sbv-make max-w-full truncate text-center text-[8px] font-extrabold tracking-wider text-[#C41E1E] uppercase md:text-[10px]">
+      <span className="sbv-make max-w-full truncate text-center text-[10px] font-extrabold tracking-wider text-[#C41E1E] uppercase md:text-[11px]">
         {v.make}
       </span>
-      <span className="sbv-model font-heading max-w-full truncate text-center text-[11px] font-bold leading-tight text-[#111111] md:text-sm">
+      <span className="sbv-model font-heading max-w-full truncate text-center text-[12px] font-bold leading-tight text-[#111111] md:text-sm">
         {v.model}
       </span>
       {yearLabel(v) ? (
-        <span className="sbv-years max-w-full truncate text-center text-[8px] text-[#6B7280] md:text-[10px]">
+        <span className="sbv-years max-w-full truncate text-center text-[10px] text-[#4B5563] md:text-[11px]">
           {yearLabel(v)}
         </span>
       ) : null}

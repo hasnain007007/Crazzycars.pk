@@ -354,7 +354,7 @@ export async function fetchPostexTracking(trackingNumber, options = {}) {
 }
 
 export function buildTrackingWhatsAppMessage({
-  storeName = "Crazzycars.pk",
+  storeName = "CrazzyCars.pk",
   orderNumber,
   trackingNumber,
   storeUrl = "",

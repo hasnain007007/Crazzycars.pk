@@ -22,6 +22,8 @@ const vehicleSchema = new mongoose.Schema(
     shopifyId: { type: String, default: "" },
     sortOrder: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true, index: true },
+    /** Bumped when admin edits car SEO/copy — sitemap lastmod. */
+    contentUpdatedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

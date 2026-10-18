@@ -36,10 +36,13 @@ const SOCIAL_HOSTS = [
   { key: "facebook", hosts: ["facebook.com", "fb.com", "m.facebook.com", "l.facebook.com", "lm.facebook.com"], label: "Social: Facebook" },
   { key: "instagram", hosts: ["instagram.com", "l.instagram.com"], label: "Social: Instagram" },
   { key: "tiktok", hosts: ["tiktok.com"], label: "Social: TikTok" },
+  { key: "snapchat", hosts: ["snapchat.com", "snap.com", "link.snapchat.com"], label: "Social: Snapchat" },
   { key: "youtube", hosts: ["youtube.com", "youtu.be", "m.youtube.com"], label: "Social: YouTube" },
   { key: "twitter", hosts: ["twitter.com", "x.com", "t.co"], label: "Social: X" },
   { key: "whatsapp", hosts: ["whatsapp.com", "wa.me", "api.whatsapp.com"], label: "WhatsApp" },
 ];
+
+const SNAP_UTM = new Set(["snapchat", "snap", "snapads", "sc", "snapchat_ads"]);
 
 /**
  * Staff / ads-tool hosts that must NOT count as customer acquisition.
@@ -245,6 +248,8 @@ export function classifyLandingHit({
   const utmTerm = truncate(params.get("utm_term"), 80);
   const hasGclid = params.has("gclid") || Boolean(String(params.get("gclid") || "").trim());
   const hasFbclid = params.has("fbclid") || Boolean(String(params.get("fbclid") || "").trim());
+  const hasScclid = params.has("ScCid") || params.has("sccid") || params.has("scclid")
+    || Boolean(String(params.get("ScCid") || params.get("sccid") || params.get("scclid") || "").trim());
   const refHost = hostFromUrl(referer);
   const landingPath = truncate(pathname || "/", 200);
 
@@ -267,6 +272,25 @@ export function classifyLandingHit({
       source: utmSource || "meta",
       medium: utmMedium || "paid_social",
       detection: hasFbclid ? "fbclid" : "utm",
+    });
+  }
+  if (hasScclid || SNAP_UTM.has(utmSource)) {
+    const paidSnap =
+      hasScclid ||
+      utmMedium === "cpc" ||
+      utmMedium === "ppc" ||
+      utmMedium === "paid" ||
+      utmMedium === "paid_social" ||
+      utmMedium === "paidsocial" ||
+      utmSource === "snapads" ||
+      utmSource === "snapchat_ads";
+    return touchFromParts({
+      ...base,
+      channel: paidSnap ? "paid_snapchat" : "social_snapchat",
+      label: paidSnap ? "Paid: Snapchat" : "Social: Snapchat",
+      source: utmSource || "snapchat",
+      medium: utmMedium || (paidSnap ? "paid_social" : "social"),
+      detection: hasScclid ? "sccid" : "utm",
     });
   }
   if (hasGclid || utmSource === "google" || utmSource === "googleads" || utmSource === "adwords") {
@@ -349,18 +373,21 @@ export function classifyLandingHit({
     if (
       utmMedium === "social" ||
       META_UTM.has(utmSource) ||
-      ["tiktok", "youtube", "twitter", "x"].includes(utmSource)
+      SNAP_UTM.has(utmSource) ||
+      ["tiktok", "youtube", "twitter", "x", "snapchat", "snap"].includes(utmSource)
     ) {
       const socialLabel =
         utmSource === "instagram" || utmSource === "ig"
           ? "Social: Instagram"
           : utmSource === "tiktok"
             ? "Social: TikTok"
-            : utmSource === "youtube"
-              ? "Social: YouTube"
-              : utmSource === "twitter" || utmSource === "x"
-                ? "Social: X"
-                : "Social: Facebook";
+            : SNAP_UTM.has(utmSource)
+              ? "Social: Snapchat"
+              : utmSource === "youtube"
+                ? "Social: YouTube"
+                : utmSource === "twitter" || utmSource === "x"
+                  ? "Social: X"
+                  : "Social: Facebook";
       return touchFromParts({
         ...base,
         channel: "social_utm",

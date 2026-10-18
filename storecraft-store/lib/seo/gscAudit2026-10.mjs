@@ -6,6 +6,10 @@
 
 import { STORE_CONTACT, STORE_POLICY } from "../../config/store-policy.js";
 import { formatPkrAmount, standardFeePkr } from "../storePolicyCopy.js";
+import {
+  mergeKeywordProductFaqs,
+  mergeKeywordProductOverrides,
+} from "./keywordQuickWins2026-10.mjs";
 
 const WA = STORE_CONTACT.whatsapp;
 const FEE_REGULAR = formatPkrAmount(standardFeePkr());
@@ -14,7 +18,7 @@ const FEE_BULKY = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
 /** @typedef {{ title: string, meta: string }} SeoPair */
 
 /** Phase 2 table — path → absolute title + meta (≤62 / ≤160). */
-export const PAGE_SEO_OVERRIDES = {
+const PAGE_SEO_OVERRIDES_BASE = {
   "/toyota-corolla-grande-steering-wheel-trim-in-carbon-fiber-multimedia": {
     title: "Corolla Grande Steering Wheel Trim (Carbon Look)",
     meta: "Carbon-look steering wheel trim for Toyota Corolla Grande 2014–2026. Price in Pakistan, COD on eligible items, nationwide delivery.",
@@ -40,11 +44,11 @@ export const PAGE_SEO_OVERRIDES = {
     meta: "Complete body kit for Toyota Aqua 2012–2015: front lip, side skirts, rear lip in unpainted ABS. Price in Pakistan, prepaid only, nationwide delivery.",
   },
   "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs": {
-    title: "Toyota Corolla 2015–2026 RS Style Trunk Spoiler | CrazzyCars",
+    // Title comes from product.seo.metaTitle on the PDP; keep meta only here.
     meta: "Toyota Corolla 2015–2026 RS style trunk spoiler price in Pakistan: gloss black ABS, 3M tape install. COD on eligible items, nationwide delivery.",
   },
   "/honda-city-new-model-trunk-lip-spoiler-2021-2026": {
-    title: "Honda City 2021–2026 RS Trunk Lip Spoiler | CrazzyCars",
+    title: "Honda City 2021–2026 RS Trunk Lip Spoiler | CrazzyCars.pk",
     meta: "Honda City trunk spoiler price in Pakistan: RS style trunk lip spoiler for City 2021–2026 (1.2L, 1.5L, Aspire). COD on eligible items, nationwide delivery.",
   },
   "/deepal-s05-batman-style-side-mirror-covers": {
@@ -56,7 +60,7 @@ export const PAGE_SEO_OVERRIDES = {
     meta: "LED indicator lights for Corolla, Civic and City. Side mirror indicators for the Toyota Corolla are priced from Rs. 4,999. COD on eligible items.",
   },
   "/categories/splitters-side-skirts": {
-    title: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars",
+    title: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars.pk",
     meta: "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic and Corolla. COD on eligible items, nationwide delivery.",
   },
   "/categories/quarter-window-louvers": {
@@ -64,7 +68,7 @@ export const PAGE_SEO_OVERRIDES = {
     meta: "Quarter window louvers for Civic, Corolla, City, Alto, Yaris and Prius in Pakistan. Carbon and black options. COD on eligible items, nationwide delivery.",
   },
   "/categories/interior-lights": {
-    title: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars",
+    title: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars.pk",
     meta: "Buy car interior lights in Pakistan: ambient dashboard strips, footwell RGB lights, door welcome logo lights and roof star lights. COD on eligible items.",
   },
   "/categories/led-lighting": {
@@ -72,35 +76,35 @@ export const PAGE_SEO_OVERRIDES = {
     meta: "Shop car LED lights in Pakistan: headlights, fog lamps and DRL covers, indicators, tail lights, reflectors and SOS flashers. COD on eligible items.",
   },
   "/categories/steering-wheel-covers": {
-    title: "Steering Wheel Covers Price in Pakistan | CrazzyCars",
+    title: "Steering Wheel Covers Price in Pakistan | CrazzyCars.pk",
     meta: "Steering wheel covers in Pakistan, including hand-stitched carbon fiber in universal fit. Price on every listing. COD on eligible items, nationwide delivery.",
   },
   "/categories/stickers-monograms-emblems": {
-    title: "Car Stickers & Steering Monograms | CrazzyCars",
+    title: "Car Stickers & Steering Monograms | CrazzyCars.pk",
     meta: "Car stickers, monograms and emblems in Pakistan, including Corolla carbon-style steering monograms. COD on eligible items. WhatsApp 03284010007.",
   },
   "/track-order": {
-    title: "Track Your Order | CrazzyCars",
-    meta: "Track your CrazzyCars order with your PostEx or Run Courier tracking number, or WhatsApp 03284010007 for help. Nationwide delivery from Gujranwala.",
+    title: "Track Your Order | CrazzyCars.pk",
+    meta: "Track your CrazzyCars.pk order with your PostEx or Run Courier tracking number, or WhatsApp 03284010007 for help. Nationwide delivery from Gujranwala.",
   },
   "/car-heads-up-display-hud": {
-    title: "Car HUD Heads Up Display Price in Pakistan | CrazzyCars",
+    title: "Car HUD Heads Up Display Price in Pakistan | CrazzyCars.pk",
     meta: "Car HUD heads up display in Pakistan: speed, voltage and over-speed alarm, auto on/off, plug-and-play. Rs. 3,499. COD on eligible items, nationwide delivery.",
   },
   "/cars/toyota-yaris-2020-present": {
-    title: "Toyota Yaris 2020–2026 Accessories in Pakistan | CrazzyCars",
+    title: "Toyota Yaris 2020–2026 Accessories in Pakistan | CrazzyCars.pk",
     meta: "Toyota Yaris 2020–2026 accessories in Pakistan: TPE floor mats, dashboard mat, key cover, spoilers, louvers, body kit. COD on eligible items, nationwide.",
   },
   "/cars/suzuki-alto-2020-present": {
-    title: "Suzuki Alto 2019–2026 Accessories in Pakistan | CrazzyCars",
+    title: "Suzuki Alto 2019–2026 Accessories in Pakistan | CrazzyCars.pk",
     meta: "Suzuki Alto 2019–2026 accessories in Pakistan: lava tail lights, steering controls, roof spoiler, indicators, mats and key covers. COD on eligible items.",
   },
   "/cars/suzuki-swift-2025-present": {
-    title: "Suzuki Swift 2025–Present Accessories in Pakistan | CrazzyCars",
+    title: "Suzuki Swift 2025–Present Accessories in Pakistan | CrazzyCars.pk",
     meta: "Suzuki Swift 2025–present accessories in Pakistan: floor mats, dashboard mat, key cover, carbon side mirror and door handle covers. COD on eligible items.",
   },
   "/cars/toyota-aqua-2012-present": {
-    title: "Toyota Aqua Accessories & Body Kits in Pakistan | CrazzyCars",
+    title: "Toyota Aqua Accessories & Body Kits in Pakistan | CrazzyCars.pk",
     meta: "Toyota Aqua accessories in Pakistan: body kits by year, Batman side mirror covers, front splitters, floor mats and dashboard mat. COD on eligible items.",
   },
   "/cars/honda-civic-x-2016-2021": {
@@ -116,15 +120,15 @@ export const PAGE_SEO_OVERRIDES = {
     meta: "Suzuki Liana 2006–2014 accessories in Pakistan: velvet dashboard mat. COD on eligible items. WhatsApp for other parts.",
   },
   "/toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026": {
-    title: "Corolla X Door Handle Panels 2014–2026 Set of 4 | CrazzyCars",
+    title: "Corolla X Door Handle Panels 2014–2026 Set of 4 | CrazzyCars.pk",
     meta: "Buy Toyota Corolla X carbon-style interior door handle panels (set of 4) for 2014–2026 Grande/Altis. Sale Rs. 5,999. COD on eligible items at CrazzyCars.pk.",
   },
   "/contact": {
-    title: "Contact CrazzyCars.pk – WhatsApp, Phone & Gujranwala Store",
+    title: "Contact CrazzyCars.pk – Gujranwala",
     meta: `Contact CrazzyCars.pk: WhatsApp ${WA}, email, store address in Gujranwala and opening hours. Ask about fitment, orders and delivery.`,
   },
   "/": {
-    title: "CrazzyCars.pk – Car Accessories in Pakistan | Body Kits & LED",
+    title: "Car Accessories in Pakistan – Body Kits, LED Lights, Floor Mats",
     meta: "Buy car accessories online in Pakistan: splitters, body kits, LED lights, carbon fiber and interior accessories. COD on eligible items, nationwide delivery.",
   },
   // Phase 4 ranking-page meta only (title/H1/URL unchanged except noted)
@@ -136,6 +140,9 @@ export const PAGE_SEO_OVERRIDES = {
     meta: "Corolla AC vent cover price in Pakistan: Top AC Panel Center Dashboard AC Vent Button 2008-2013 for Toyota Corolla 2012. Cash on Delivery & nationwide delivery.",
   },
 };
+
+/** Includes 16 Oct 2026 keyword quick-win product titles/metas. */
+export const PAGE_SEO_OVERRIDES = mergeKeywordProductOverrides(PAGE_SEO_OVERRIDES_BASE);
 
 /** Slugs the apply script and GSC audit must never rewrite (owner decision pending). */
 export const CATEGORY_APPLY_SKIP = new Set(["led-headlights-bulbs"]);
@@ -428,7 +435,7 @@ export const VEHICLE_FAQ_OVERRIDES = {
   ],
 };
 
-export const PRODUCT_FAQ_OVERRIDES = {
+const PRODUCT_FAQ_OVERRIDES_BASE = {
   "car-heads-up-display-hud": [
     {
       question: "What is the car HUD display price in Pakistan?",
@@ -442,3 +449,6 @@ export const PRODUCT_FAQ_OVERRIDES = {
     },
   ],
 };
+
+/** Includes 16 Oct 2026 “price in Pakistan” FAQs for money keywords. */
+export const PRODUCT_FAQ_OVERRIDES = mergeKeywordProductFaqs(PRODUCT_FAQ_OVERRIDES_BASE);

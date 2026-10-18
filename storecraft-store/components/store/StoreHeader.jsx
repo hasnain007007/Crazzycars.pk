@@ -11,8 +11,8 @@ import { trimmedLogoUrl } from "@/lib/storeLogo";
 import { getCategoryMegaColumns } from "@/lib/categories";
 import { rewriteStorePath } from "@/lib/categoryHandleAliases";
 import { useCustomer } from "@/lib/customerAuth";
-import MegaMenu from "@/components/store/MegaMenu";
-import { SearchSuggest } from "@/components/store/SearchSuggest";
+import { CategoryMegaSsrLinks } from "@/components/store/CategoryMegaSsrLinks";
+import { LazySearchSuggest } from "@/components/store/LazySearchSuggest";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -142,7 +142,7 @@ function deriveHeaderConfig(data) {
       : String(logoRaw?.url || "").trim();
 
   const brand = {
-    storeName: general.storeName || data?.storeName || "Crazzycars.pk",
+    storeName: general.storeName || data?.storeName || "CrazzyCars.pk",
     logo,
     phone: general.phone || data?.phone || "",
     email: normalizeStoreEmail(general.email || data?.email || ""),
@@ -195,7 +195,7 @@ function deriveHeaderConfig(data) {
 }
 
 function splitStoreName(name) {
-  const n = String(name || "Crazzycars.pk").trim();
+  const n = String(name || "CrazzyCars.pk").trim();
   const parts = n.split(/\s+/);
   if (parts.length <= 1) return { line1: n.toUpperCase(), line2: "" };
   return {
@@ -315,6 +315,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
   const [isMdUp, setIsMdUp] = useState(null);
   const [mobileSearchTop, setMobileSearchTop] = useState(0);
   const [megaOpen, setMegaOpen] = useState(false);
+  const [MegaMenuComp, setMegaMenuComp] = useState(null);
   const [drawerExpanded, setDrawerExpanded] = useState({});
   // Badges read cart/wishlist from localStorage after mount — keep them at 0
   // until then so SSR HTML matches the first client render.
@@ -389,6 +390,26 @@ export function StoreHeader({ initialCategoryTree = null }) {
   const accountHref = customer ? "/account" : "/account/login";
   const { line1, line2 } = splitStoreName(brand.storeName);
 
+  const loadMegaMenu = useCallback(() => {
+    if (MegaMenuComp) return Promise.resolve(MegaMenuComp);
+    return import("@/components/store/MegaMenu")
+      .then((m) => {
+        setMegaMenuComp(() => m.default);
+        return m.default;
+      })
+      .catch(() => null);
+  }, [MegaMenuComp]);
+
+  const openMega = useCallback(
+    (item = null) => {
+      if (item) setActiveMegaItem(item);
+      void loadMegaMenu().then((Comp) => {
+        if (Comp) setMegaOpen(true);
+      });
+    },
+    [loadMegaMenu]
+  );
+
   useEffect(() => {
     setMenuOpen(false);
     setMegaOpen(false);
@@ -447,6 +468,15 @@ export function StoreHeader({ initialCategoryTree = null }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [mobileSearchOpen, isMdUp]);
+
+  useEffect(() => {
+    if (!megaOpen) return undefined;
+    function onKey(e) {
+      if (e.key === "Escape") setMegaOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [megaOpen]);
 
   useEffect(() => {
     const onAdded = (e) => {
@@ -598,7 +628,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
           <form onSubmit={search} className="mx-auto hidden max-w-[480px] flex-1 md:block">
             <div className="relative">
               {isMdUp === true ? (
-                <SearchSuggest
+                <LazySearchSuggest
                   value={q}
                   onChange={setQ}
                   onSubmit={submitSearchTerm}
@@ -669,7 +699,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
               <div className="store-mobile-search-sheet__panel" style={{ top: mobileSearchTop }}>
                 <form onSubmit={search} className="flex items-center gap-2">
                   <div className="relative min-w-0 flex-1">
-                    <SearchSuggest
+                    <LazySearchSuggest
                       value={q}
                       onChange={setQ}
                       onSubmit={submitSearchTerm}
@@ -713,11 +743,20 @@ export function StoreHeader({ initialCategoryTree = null }) {
             type="button"
             className="mr-2 flex items-center gap-2 rounded px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-white"
             style={{ background: "#C41E1E" }}
-            onMouseEnter={() => {
-              setMegaOpen(true);
-              setActiveMegaItem({ label: "Categories", href: "/categories", mega: true });
+            onMouseEnter={() =>
+              openMega({ label: "Categories", href: "/categories", mega: true })
+            }
+            onFocus={() => {
+              // Preload only — opening on focus races with Enter (click toggles closed).
+              void loadMegaMenu();
             }}
-            onClick={() => setMegaOpen((o) => !o)}
+            onClick={() => {
+              void loadMegaMenu().then((Comp) => {
+                if (!Comp) return;
+                setActiveMegaItem({ label: "Categories", href: "/categories", mega: true });
+                setMegaOpen((open) => !open);
+              });
+            }}
             aria-expanded={megaOpen}
             aria-haspopup="true"
           >
@@ -729,24 +768,25 @@ export function StoreHeader({ initialCategoryTree = null }) {
               key={item.label}
               className="relative"
               onMouseEnter={() => {
-                if (megaEnabled && item.mega) {
-                  setMegaOpen(true);
-                  setActiveMegaItem(item);
-                }
+                if (megaEnabled && item.mega) openMega(item);
               }}
             >
               <Link
                 href={item.href}
                 className={navLinkClass(item)}
                 aria-current={isNavItemActive(item) ? "page" : undefined}
+                onFocus={() => {
+                  if (megaEnabled && item.mega) void loadMegaMenu();
+                }}
               >
                 {item.label}
               </Link>
             </div>
           ))}
         </div>
-        {megaEnabled && megaOpen ? (
-          <MegaMenu
+        <CategoryMegaSsrLinks categories={treeCategories} />
+        {megaEnabled && MegaMenuComp ? (
+          <MegaMenuComp
             isOpen={megaOpen}
             onClose={() => setMegaOpen(false)}
             initialCategories={treeCategories}

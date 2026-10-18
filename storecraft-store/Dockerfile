@@ -14,8 +14,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # Public env baked at build time when provided by Coolify/build args
-ARG NEXT_PUBLIC_STORE_NAME=Crazzycars.pk
-ARG NEXT_PUBLIC_APP_NAME=Crazzycars.pk
+ARG NEXT_PUBLIC_STORE_NAME=CrazzyCars.pk
+ARG NEXT_PUBLIC_APP_NAME=CrazzyCars.pk
 ARG NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_STORE_URL
@@ -33,7 +33,23 @@ ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
 RUN --mount=type=cache,target=/app/.next/cache \
     --mount=type=cache,target=/root/.npm \
-    npm run build
+    npm run build \
+ && node -e "\
+const fs=require('fs');const path=require('path');\
+const dir='.next/static/chunks';\
+const files=fs.readdirSync(dir).filter(f=>f.endsWith('.css'));\
+if(!files.length){console.error('BUILD GUARD: no CSS chunks');process.exit(1)}\
+let found=false,total=0;\
+for(const f of files){\
+  const t=fs.readFileSync(path.join(dir,f),'utf8');\
+  total+=t.length;\
+  if(t.includes('.home-hero')) found=true;\
+}\
+console.log('BUILD GUARD: cssBytes='+total+' files='+files.length+' home-hero='+found);\
+if(!found || total < 120000){\
+  console.error('BUILD GUARD: globals/home-hero CSS missing or truncated — refusing image');\
+  process.exit(1);\
+}"
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app

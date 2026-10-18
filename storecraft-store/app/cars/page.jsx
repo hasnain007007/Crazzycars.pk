@@ -9,7 +9,7 @@ import { safeJsonLd } from "@/lib/safeJsonLd";
 export const revalidate = 300;
 
 export const metadata = buildPageMetadata({
-  title: "Shop by Car | Crazzycars.pk",
+  title: "Shop by Car | CrazzyCars.pk",
   description:
     "Browse car accessories by make and model — Honda Civic, Toyota Corolla, Suzuki Alto, and more. Generation-matched parts with Cash on Delivery across Pakistan.",
   path: "/cars",

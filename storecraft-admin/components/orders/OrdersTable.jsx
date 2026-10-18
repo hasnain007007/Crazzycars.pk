@@ -208,7 +208,7 @@ export function OrdersTable({
         getStoreSettings={getStoreSettings}
       />
 
-      <div className="op-table-wrap">
+      <div className="op-table-wrap" role="region" aria-label="Orders table" tabIndex={0}>
         <table className="op-table">
           <thead>
             <tr>
@@ -416,17 +416,38 @@ export function OrdersTable({
                         <OrderStatusBadges order={o} mode="fulfillment" />
                       </td>
                       <td>
-                        <span
-                          className="op-pill"
-                          style={{
-                            background: o.origin && o.origin !== "—" ? "#EDE9FE" : "transparent",
-                            color: o.origin && o.origin !== "—" ? "#5B21B6" : "#616161",
-                            maxWidth: "11rem",
-                          }}
-                          title={o.origin || "No attribution captured"}
-                        >
-                          {o.origin || "—"}
-                        </span>
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span
+                            className="op-pill"
+                            style={{
+                              background: o.origin && o.origin !== "—" ? "#EDE9FE" : "transparent",
+                              color: o.origin && o.origin !== "—" ? "#5B21B6" : "#616161",
+                              maxWidth: "11rem",
+                            }}
+                            title={
+                              [o.origin, o.customerIpSummary || o.customerIp]
+                                .filter(Boolean)
+                                .join(" · ") || "No attribution captured"
+                            }
+                          >
+                            {o.origin || "—"}
+                          </span>
+                          {o.customerIp ? (
+                            <span
+                              className="truncate"
+                              style={{
+                                maxWidth: "11rem",
+                                fontSize: 10,
+                                fontVariantNumeric: "tabular-nums",
+                                color: "#8C9196",
+                              }}
+                              title={o.customerIpSummary || o.customerIp}
+                            >
+                              {o.customerDevice ? `${o.customerDevice} · ` : ""}
+                              {o.customerIp}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td>
                         <CustomerConfirmBadge order={o} compact />

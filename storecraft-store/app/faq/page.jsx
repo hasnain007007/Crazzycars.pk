@@ -4,7 +4,7 @@ import { getFaqItems } from "@/lib/storePolicyCopy";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 
 export const metadata = buildPageMetadata({
-  title: "FAQ — Shipping, COD & Fitment | Crazzycars.pk",
+  title: "FAQ — Shipping, COD & Fitment | CrazzyCars.pk",
   description:
     "Answers about Cash on Delivery, delivery charges, order tracking, product fitment, returns, and payments for car accessories in Pakistan.",
   path: "/faq",
@@ -27,7 +27,7 @@ export default function FaqPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(ld) }} />
       <h1 className="text-2xl font-bold md:text-3xl">Frequently Asked Questions</h1>
       <p className="mt-3 text-gray-600">
-        Quick answers about shopping car accessories on Crazzycars.pk — COD, payments, fitment, and
+        Quick answers about shopping car accessories on CrazzyCars.pk — COD, payments, fitment, and
         delivery across Pakistan.
       </p>
       <div className="mt-8 space-y-6">

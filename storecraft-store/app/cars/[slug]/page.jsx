@@ -24,15 +24,49 @@ import {
   VEHICLE_FAQ_OVERRIDES,
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
+import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
+import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
+import { getCarPageMeta } from "@/lib/seo/carPageMeta2026-10.mjs";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
-const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_APP_NAME || "CrazzyCars.pk";
+const BRAND = BRAND_NAME;
+const SITE = "https://crazzycars.pk";
+const HERO_DESC_MAX = 320;
+
+/** First paragraph only, capped — drops price lists / FAQ blocks from the hero. */
+function shortenVehicleHeroHtml(html) {
+  const safe = String(html || "").trim();
+  if (!safe) return "";
+  const pMatch = safe.match(/<p\b[^>]*>[\s\S]*?<\/p>/i);
+  let chunk = pMatch ? pMatch[0] : safe;
+  // Drop nested lists / headings if somehow inside the first block.
+  chunk = chunk.replace(/<(ul|ol|h[1-6]|table)\b[\s\S]*$/i, "").trim();
+  if (!chunk) return "";
+  const text = chunk
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= HERO_DESC_MAX) return chunk.startsWith("<") ? chunk : `<p>${chunk}</p>`;
+  const cut = text.slice(0, HERO_DESC_MAX).replace(/\s+\S*$/, "").trim();
+  return `<p>${cut}…</p>`;
+}
+
+function shortenVehicleHeroPlain(text) {
+  const t = String(text || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!t) return "";
+  if (t.length <= HERO_DESC_MAX) return t;
+  return `${t.slice(0, HERO_DESC_MAX).replace(/\s+\S*$/, "").trim()}…`;
+}
 
 export const generateMetadata = withSafeMetadata(async function vehicleMetadata({ params, searchParams }) {
   const { slug } = await params;
   const slugStr = String(slug || "").trim();
   const listing = parseListingSearchParams(await searchParams);
+  const deletedCar = resolveDeletedPath(`/cars/${slugStr}`);
+  if (deletedCar) permanentRedirect(listingHref(deletedCar, listing));
   try {
     await dbConnect();
     const vehicle = await loadVehicleBySlug(slugStr);
@@ -45,41 +79,53 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
     const totalPages = Math.max(1, Math.ceil(assigned / listing.pageSize) || 1);
     if (listing.page > totalPages) notFound();
 
+    const carMeta = getCarPageMeta(vehicle.slug);
     const seoOverride = getPageSeoOverride(`/cars/${vehicle.slug}`);
-    const titleMeta = seoOverride?.title
-      ? { absolute: seoOverride.title }
-      : buildBrandedAbsoluteTitle(
-          (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
-          { brand: BRAND, max: 62 }
-        );
+    const titleMeta = carMeta?.title
+      ? { absolute: withBrandTitleSuffix(carMeta.title) }
+      : seoOverride?.title
+        ? { absolute: withBrandTitleSuffix(seoOverride.title) }
+        : buildBrandedAbsoluteTitle(
+            (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
+            { brand: BRAND, max: 60 }
+          );
     const title = titleMeta.absolute;
     // Prefer Car Catalog Description (merged in loadVehicleBySlug) over legacy Vehicle.metaDescription.
     const catalogDesc =
       String(vehicle.description || "").trim() ||
       String(vehicle.metaDescription || "").trim();
     const description =
-      (seoOverride?.meta || "").trim() || vehicleMetaDescription(vehicle, catalogDesc);
+      (carMeta?.description || "").trim() ||
+      (seoOverride?.meta || "").trim() ||
+      vehicleMetaDescription(vehicle, catalogDesc);
     const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
+    const canonical =
+      listing.page <= 1
+        ? `${SITE}/cars/${vehicle.slug}`
+        : listingSeo.alternates?.canonical || `${SITE}/cars/${vehicle.slug}`;
     const ogImage = mediaImageUrl(vehicle.image);
 
     return {
       title: titleMeta,
       description,
       robots: listingSeo.robots,
-      alternates: listingSeo.alternates,
+      alternates: {
+        ...listingSeo.alternates,
+        canonical,
+      },
       openGraph: {
         title,
         description,
-        url: listingSeo.alternates.canonical,
+        url: canonical,
         images: ogImage
           ? [{ url: ogImage, alt: vehicle.displayName }]
-          : [{ url: "/og-image.jpg", width: 1200, height: 630, alt: `${vehicle.displayName} accessories` }],
+          : [{ url: "/og/default-1200x630.jpg", width: 1200, height: 630, alt: `${vehicle.displayName} accessories` }],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: ogImage ? [ogImage] : ["/og-image.jpg"],
+        images: ogImage ? [ogImage] : ["/og/default-1200x630.jpg"],
       },
     };
   } catch (err) {
@@ -93,6 +139,8 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const slugStr = String(slug || "").trim();
   if (!slugStr) notFound();
   const listing = parseListingSearchParams(await searchParams);
+  const deletedCar = resolveDeletedPath(`/cars/${slugStr}`);
+  if (deletedCar) permanentRedirect(listingHref(deletedCar, listing));
 
   let vehicle = null;
   try {
@@ -102,7 +150,10 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     console.error("[vehicle page] load failed:", err?.message || err);
     throw err;
   }
-  if (!vehicle) notFound();
+  if (!vehicle) {
+    // Inactive / removed generation — closest brand page or exterior hub.
+    permanentRedirect("/categories/exterior");
+  }
   if (vehicle.slug && String(vehicle.slug) !== slugStr) {
     permanentRedirect(listingHref(`/cars/${vehicle.slug}`, listing));
   }
@@ -123,6 +174,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
       }
     })
     .filter(Boolean);
+
   const sorted = sortProductsClient(allProducts, listing.sort);
   const total = sorted.length;
   const totalPages = Math.max(1, Math.ceil(total / listing.pageSize) || 1);
@@ -174,11 +226,16 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const heroDesc =
     catalogDesc ||
     `Upgrade your ${vehicle.displayName} with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber. Cash on Delivery nationwide.`;
-  const heroHtml = auditHtml
+  const rawHeroHtml = auditHtml
     ? sanitizeCategoryHtml(auditHtml)
     : /<[a-z][\s\S]*>/i.test(heroDesc)
       ? sanitizeCategoryHtml(heroDesc)
       : "";
+  // Hero: keep a short blurb only (first paragraph / ~320 chars) — price lists stay in the grid below.
+  const heroHtml = shortenVehicleHeroHtml(rawHeroHtml);
+  const heroPlainShort = !heroHtml
+    ? shortenVehicleHeroPlain(heroDesc)
+    : "";
 
   const popularAccessories = Array.isArray(vehicle.popularAccessories)
     ? vehicle.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
@@ -323,7 +380,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
                     whiteSpace: "pre-line",
                   }}
                 >
-                  {heroDesc}
+                  {heroPlainShort || heroDesc}
                 </p>
               )}
               {popularAccessories.length ? (

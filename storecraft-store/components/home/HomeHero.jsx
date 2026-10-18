@@ -10,7 +10,7 @@ import {
   normalizeImageDisplay,
 } from "@/lib/heroBannerDisplay";
 
-const BRAND = "Crazzycars.pk";
+const BRAND = "CrazzyCars.pk";
 const SWIPE_PX = 48;
 const SLIDE_MS = 560;
 
@@ -125,22 +125,30 @@ function primaryButtonColors(button) {
   };
 }
 
-function CtaLink({ button, className }) {
+function CtaLink({ button, className, tabIndex }) {
   const text = String(button?.text || "Shop Now").trim();
   const href = normalizeButtonUrl(button?.url || button?.link);
   const style = className.includes("home-hero__btn--ghost")
     ? undefined
     : primaryButtonColors(button);
+  const focusProps = tabIndex === undefined ? {} : { tabIndex };
 
   if (href.startsWith("http://") || href.startsWith("https://")) {
     return (
-      <a href={href} className={className} style={style} target="_blank" rel="noopener noreferrer">
+      <a
+        href={href}
+        className={className}
+        style={style}
+        target="_blank"
+        rel="noopener noreferrer"
+        {...focusProps}
+      >
         {text}
       </a>
     );
   }
   return (
-    <Link href={href} className={className} style={style}>
+    <Link href={href} className={className} style={style} {...focusProps}>
       {text}
     </Link>
   );
@@ -159,22 +167,20 @@ function HeroRail({ items }) {
   );
 }
 
-const PAGE_H1_FALLBACK = `${BRAND} — Car Accessories Pakistan`;
+const PAGE_H1_FALLBACK = "Car Accessories in Pakistan – Body Kits, LED Lights, Floor Mats";
 
 /**
- * Single page H1 for the homepage hero — rendered once outside the slide track
- * so carousel SSR can never emit two <h1> tags.
+ * Screen-reader brand line in the hero. The visible document H1 lives in
+ * HomeSeoIntro (server-rendered) so crawlers get one descriptive heading.
  */
 function PageHeroH1({ slide, settings }) {
   const { headline, hasText } = resolveCopy(slide, settings);
   const text = hasText && headline ? headline : PAGE_H1_FALLBACK;
-  // Designed / image-only banners: keep H1 for crawlers without overlaying art.
-  // Text overlays: visual title stays a <p> in HeroCopy; this H1 mirrors it for a11y/SEO.
-  return <h1 className="sr-only">{text}</h1>;
+  return <p className="sr-only">{text}</p>;
 }
 
 /** Slide overlay copy — never emits <h1>; page heading lives in PageHeroH1. */
-function HeroCopy({ slide, settings, animateKey }) {
+function HeroCopy({ slide, settings, animateKey, isActive = true }) {
   const { headline, sub, buttons, hasOverlay, hasText } = resolveCopy(slide, settings);
 
   if (!hasOverlay) return null;
@@ -186,7 +192,12 @@ function HeroCopy({ slide, settings, animateKey }) {
       {buttons.length ? (
         <div className="home-hero__ctas">
           {buttons.map((btn, i) => (
-            <CtaLink key={`${btn.text}-${i}`} button={btn} className={buttonClassName(btn)} />
+            <CtaLink
+              key={`${btn.text}-${i}`}
+              button={btn}
+              className={buttonClassName(btn)}
+              tabIndex={isActive ? undefined : -1}
+            />
           ))}
         </div>
       ) : null}
@@ -281,6 +292,9 @@ function HeroSlidePanel({
               String(slide.altText || slide.title || "").trim() ||
               `${BRAND} — Car Accessories Pakistan`
             }
+            width={bgImageMobile && bgImageMobile !== bgImage ? 828 : 1200}
+            height={bgImageMobile && bgImageMobile !== bgImage ? 248 : 360}
+            sizes="100vw"
             fetchPriority={isLcp ? "high" : "low"}
             loading={isLcp ? "eager" : "lazy"}
             decoding={isLcp ? "sync" : "async"}
@@ -314,6 +328,7 @@ function HeroSlidePanel({
           <HeroCopy
             slide={slide}
             settings={settings}
+            isActive={isActive}
             animateKey={reduceMotion ? "static" : `${slide.id}-${isActive ? "on" : "off"}`}
           />
         </div>
