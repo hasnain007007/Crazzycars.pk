@@ -193,6 +193,7 @@ export async function DELETE(request) {
           isActive: false,
           addresses: [],
           wishlist: [],
+          garage: [],
           address: { street: "", street2: "", area: "", city: "", state: "", country: "", zip: "" },
         },
       }

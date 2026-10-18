@@ -3,7 +3,7 @@ import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
 import { productAllowsCod } from "@/lib/codEligibility";
 import { loadShopByCarIndex } from "@/lib/vehiclePageData";
@@ -35,7 +35,7 @@ export async function GET() {
         .sort({ sortOrder: 1, name: 1 })
         .limit(40)
         .lean(),
-      Product.find(STOREFRONT_PRODUCT_FILTER)
+      Product.find(WEBSITE_PRODUCT_FILTER)
         .select(
           "name slug pricing.regularPrice pricing.salePrice shortDescription featured isDeal inventory variationCombinations codEnabled"
         )

@@ -853,6 +853,7 @@ export function ProductEditor({ mode, productId }) {
               </div>
             </div>
             <TabVehicleFitment
+              segment={form.segment}
               value={form.vehicleCompatibility}
               onChange={(vehicleCompatibility) => {
                 const payload = buildVehicleCompatibilityPayload(vehicleCompatibility);

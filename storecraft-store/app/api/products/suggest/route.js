@@ -3,6 +3,7 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 import { queryProductsSmart } from "@/lib/smartProductSearch";
+import { WEBSITE_SEGMENT_FILTER } from "@/lib/productVisibility";
 
 function lightSerialize(p) {
   const regularPrice = Number(p.pricing?.regularPrice) || 0;
@@ -51,7 +52,7 @@ export async function GET(request) {
 
     const { rows, total, mode } = await queryProductsSmart(
       Product,
-      { status: "active" },
+      { status: "active", ...WEBSITE_SEGMENT_FILTER },
       q,
       {
         limit,

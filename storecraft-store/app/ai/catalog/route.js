@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import {
   aiStoreManifest,
   filterAiCatalogItems,
@@ -32,7 +32,7 @@ export async function GET(request) {
 
     await dbConnect();
     // Broader fetch then filter in memory — fitment is nested and hard to query cleanly.
-    const products = await Product.find(STOREFRONT_PRODUCT_FILTER)
+    const products = await Product.find(WEBSITE_PRODUCT_FILTER)
       .select(
         "name slug articleNo vendor shortDescription pricing inventory variationCombinations categories codEnabled isBulky isUniversal fitment compatibleCars vehicleCompatibility featured isDeal updatedAt"
       )

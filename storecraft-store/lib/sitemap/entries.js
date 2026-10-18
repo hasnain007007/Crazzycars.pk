@@ -7,7 +7,7 @@ import BlogPost from "@/lib/models/BlogPost.model";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { MAX_SITEMAP_URLS } from "@/lib/sitemap/xml";
 import { getCategoryIdsWithProducts } from "@/lib/storeCategoryData";
-import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { STOREFRONT_PRODUCT_FILTER, WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { CITY_LANDING_SLUGS, cityPath } from "@/lib/cityLandingPages";
 
 /** Static storefront routes (no query strings, no redirect aliases). */
@@ -187,7 +187,7 @@ export async function fetchSitemapContext(headers) {
 
   const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts] =
     await Promise.all([
-      Product.find(STOREFRONT_PRODUCT_FILTER).select("slug updatedAt").lean(),
+      Product.find(WEBSITE_PRODUCT_FILTER).select("slug updatedAt").lean(),
       Category.find({ status: "active" }).select("slug updatedAt contentUpdatedAt _id").lean(),
       Vehicle.find({ isActive: true }).select("slug updatedAt contentUpdatedAt _id").lean(),
       categoryIdsWithProducts(),

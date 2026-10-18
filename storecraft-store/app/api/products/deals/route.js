@@ -3,6 +3,7 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { buildDealsMongoFilter } from "@/lib/dealsFilter";
+import { WEBSITE_SEGMENT_FILTER } from "@/lib/productVisibility";
 
 export async function GET(request) {
   try {
@@ -12,6 +13,7 @@ export async function GET(request) {
     const limit = Math.min(500, Math.max(1, Number(searchParams.get("limit") || 500)));
     const query = {
       status: { $regex: /^active$/i },
+      ...WEBSITE_SEGMENT_FILTER,
       pricing: { $exists: true },
       ...buildDealsMongoFilter(filter),
     };
