@@ -5,7 +5,7 @@
 import { formatPrice, roundRupees } from "./currency.js";
 
 /**
- * Collapse doubled currency tokens ("Rs. Rs.250", "PKR PKR 250").
+ * Collapse doubled currency tokens ("Rs. Rs.300", "PKR PKR 300").
  * Safe on already-correct strings.
  */
 export function collapseRepeatedCurrencyPrefix(text) {

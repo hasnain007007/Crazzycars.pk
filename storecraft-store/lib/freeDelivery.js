@@ -191,7 +191,7 @@ export function applyWhatsAppPlaceholder(text, whatsapp) {
 
 /**
  * Fill {amount} / {whatsapp} in CMS advance templates.
- * Normalises Rs./PKR so CMS "Rs. {amount}" never becomes "Rs. Rs.250".
+ * Normalises Rs./PKR so CMS "Rs. {amount}" never becomes "Rs. Rs.300".
  */
 export function formatAdvancePaymentMessage(message, amount, whatsapp) {
   const body = fillAmountPlaceholder(message || DEFAULT_ADVANCE_MESSAGE, amount);
