@@ -83,6 +83,7 @@ const DEFAULT_IMAGE_DISPLAY = {
 const initForm = (data = {}) => ({
   name: data.name || "",
   placement: data.placement || "hero_slider",
+  segment: data.segment === "bike" ? "bike" : "car",
   size: data.size || "full_width",
   // New banners must be active to appear in the storefront hero slider.
   status: data.status || "active",
@@ -147,6 +148,7 @@ export function BannerForm({ bannerId }) {
   const isEdit = Boolean(bannerId);
   const [name, setName] = useState("");
   const [placement, setPlacement] = useState("hero_slider");
+  const [segment, setSegment] = useState("car");
   const [size, setSize] = useState("full_width");
   const [background, setBackground] = useState(DEFAULT_BACKGROUND);
   const [content, setContent] = useState(DEFAULT_CONTENT);
@@ -168,6 +170,7 @@ export function BannerForm({ bannerId }) {
     const b = initForm(json.banner || {});
     setName(b.name);
     setPlacement(b.placement);
+    setSegment(b.segment);
     setSize(b.size);
     setBackground(b.background || DEFAULT_BACKGROUND);
     setContent(b.content || DEFAULT_CONTENT);
@@ -193,6 +196,7 @@ export function BannerForm({ bannerId }) {
       const body = {
         name,
         placement,
+        segment,
         size,
         background,
         imageDisplay,
@@ -234,6 +238,7 @@ export function BannerForm({ bannerId }) {
   const form = {
     name,
     placement,
+    segment,
     size,
     background,
     content,
@@ -251,6 +256,7 @@ export function BannerForm({ bannerId }) {
     if (!next) return;
     if (Object.prototype.hasOwnProperty.call(next, "name")) setName(next.name || "");
     if (Object.prototype.hasOwnProperty.call(next, "placement")) setPlacement(next.placement || "hero_slider");
+    if (Object.prototype.hasOwnProperty.call(next, "segment")) setSegment(next.segment === "bike" ? "bike" : "car");
     if (Object.prototype.hasOwnProperty.call(next, "size")) setSize(next.size || "full_width");
     if (Object.prototype.hasOwnProperty.call(next, "background")) setBackground(next.background || DEFAULT_BACKGROUND);
     if (Object.prototype.hasOwnProperty.call(next, "content")) setContent(next.content || DEFAULT_CONTENT);
@@ -538,6 +544,17 @@ export function BannerForm({ bannerId }) {
                 <option value="promo_card">Promo Card</option>
                 <option value="category_banner">Category Banner</option>
                 <option value="popup_banner">Popup Banner</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Store (app home)</label>
+              <select
+                style={inputStyle}
+                value={form.segment || "car"}
+                onChange={(e) => setForm((f) => ({ ...f, segment: e.target.value }))}
+              >
+                <option value="car">Cars</option>
+                <option value="bike">Bikes</option>
               </select>
             </div>
             <div>

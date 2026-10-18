@@ -15,6 +15,8 @@ export async function GET() {
     const [banners, featuredRaw, newArrivalsRaw, categoriesRaw, blogPosts] = await Promise.all([
       Banner.find({
         status: "active",
+        // Website is the car store; bike banners are for the app's Bikes home only.
+        segment: { $in: ["car", null] },
       })
         .sort({ sortOrder: 1, createdAt: -1 })
         .lean(),

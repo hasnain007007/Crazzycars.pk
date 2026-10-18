@@ -35,6 +35,7 @@ export async function POST(request) {
     const doc = await Banner.create({
       name: String(body.name || "Banner").trim(),
       placement: body.placement || "hero_slider",
+      segment: body.segment === "bike" ? "bike" : "car",
       size: body.size || "full_width",
       background: {
         type: body.background?.type || "image",

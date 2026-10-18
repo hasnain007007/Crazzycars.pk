@@ -67,7 +67,7 @@ export async function GET(request) {
       categoriesRaw,
       blogPosts,
     ] = await Promise.all([
-      Banner.find({ status: "active" }).sort({ sortOrder: 1, createdAt: -1 }).lean(),
+      Banner.find({ status: "active", ...segmentFilter(segment) }).sort({ sortOrder: 1, createdAt: -1 }).lean(),
       isBike ? null : fetchBestSellersServer({ limit: 24 }),
       isBike ? null : fetchHotDealsServer({ filter: "all", limit: 24 }),
       Product.find({ ...STOREFRONT_PRODUCT_FILTER, ...segmentFilter(segment), newArrival: true })
