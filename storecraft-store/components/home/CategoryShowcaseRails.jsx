@@ -181,11 +181,17 @@ function CategoryRail({ config, root }) {
     <section className="cat-showcase" aria-labelledby={`cat-rail-${config.slug}`}>
       <div className="store-container">
         <div className="cat-showcase__head">
-          <h2 id={`cat-rail-${config.slug}`} className="cat-showcase__title">
-            {config.title}
-          </h2>
+          <div className="cat-showcase__titlerow">
+            <h2 id={`cat-rail-${config.slug}`} className="cat-showcase__title">
+              {config.title}
+            </h2>
+            {/* Phones: replaces the promo card (hidden there) as the way into the category. */}
+            <Link href={href} className="cat-showcase__viewall">
+              View all <span aria-hidden>→</span>
+            </Link>
+          </div>
           <div
-            className="cat-showcase__tabs"
+            className={`cat-showcase__tabs${tabs.length <= 2 ? " cat-showcase__tabs--few" : ""}`}
             role="tablist"
             aria-label={`${config.title} filters`}
             style={{ ["--rail-accent"]: config.accent || "#C41E1E" }}

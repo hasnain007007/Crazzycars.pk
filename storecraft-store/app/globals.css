@@ -4793,6 +4793,108 @@ textarea::placeholder {
   }
 }
 
+.cat-showcase__titlerow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cat-showcase__viewall {
+  display: none;
+}
+
+/* Phones: compact rails. Each section was ~705px for two products (title + boxed tabs 103px,
+   promo card 184px, 44px dot row). Now: title row with View all, slim chips, 2.4 cards peeking
+   so the row reads as swipeable, no promo card, no dots. */
+@media (max-width: 767px) {
+  .cat-showcase-stack {
+    gap: 0;
+  }
+
+  .cat-showcase {
+    padding: 16px 0 8px;
+  }
+
+  .cat-showcase__head {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .cat-showcase__title {
+    font-size: 20px;
+  }
+
+  .cat-showcase__title::after {
+    width: 28px;
+    margin-top: 4px;
+  }
+
+  .cat-showcase__viewall {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 6px 0 8px 8px;
+    min-height: 0 !important;
+    font-size: 13px;
+    font-weight: 700;
+    color: #c41e1e !important;
+    text-decoration: none;
+  }
+
+  .cat-showcase__tabs {
+    padding: 0;
+    gap: 8px;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* "All" + one subcategory adds nothing — hide the row. */
+  .cat-showcase__tabs--few {
+    display: none;
+  }
+
+  .cat-showcase__tab {
+    height: 32px;
+    min-height: 0 !important;
+    padding: 0 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #ffffff;
+    font-size: 12px;
+  }
+
+  .cat-showcase__tab.is-on {
+    box-shadow: 0 2px 8px rgba(196, 30, 30, 0.25);
+  }
+
+  .cat-showcase__promo {
+    display: none;
+  }
+
+  .cat-showcase__body {
+    gap: 0;
+  }
+
+  .cat-showcase__scroller {
+    gap: 10px;
+    padding: 2px 0 8px;
+    scroll-padding-left: 0;
+  }
+
+  .cat-showcase__card-wrap {
+    width: 40vw;
+    max-width: 170px;
+  }
+
+  .cat-showcase__dots {
+    display: none;
+  }
+}
+
 /* ===== Filter By Car — single-line bar ===== */
 .filter-by-car-section {
   background: #f5f5f5;
@@ -6845,5 +6947,34 @@ textarea::placeholder {
   .contact-layout {
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 32px !important;
+  }
+}
+
+/* Phones: Hot Deals / Best Sellers showed all 24 products (12 rows, ~3,800px each).
+   Show 3 rows and a full-width link to the rest; desktop keeps the full grid. */
+.home-grid-more {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .home-grid--capped > :nth-child(n + 7) {
+    display: none;
+  }
+
+  .home-grid-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 12px;
+    min-height: 46px;
+    border: 1.5px solid #111111;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #111111 !important;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
   }
 }

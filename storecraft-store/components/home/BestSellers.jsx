@@ -103,11 +103,18 @@ export default function BestSellers({ initialProducts = [], settings }) {
         ) : filtered.length === 0 ? (
           <p className="mt-8 text-sm text-[#6B7280]">No products in this tab yet.</p>
         ) : (
-          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
-            {filtered.map((p) => (
-              <ProductCard key={p.id || p.slug} product={p} />
-            ))}
-          </div>
+          <>
+            <div className="product-grid home-grid--capped mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
+              {filtered.map((p) => (
+                <ProductCard key={p.id || p.slug} product={p} />
+              ))}
+            </div>
+            {filtered.length > 6 ? (
+              <Link href="/shop?sort=featured" className="home-grid-more">
+                View all best sellers <span aria-hidden>→</span>
+              </Link>
+            ) : null}
+          </>
         )}
       </div>
     </section>
