@@ -11,13 +11,15 @@ import Product from "@/lib/models/Product.model";
 import { orderGrandTotal } from "@/lib/orderFormat";
 import { customerConfirmKind, customerConfirmLabel } from "@/lib/orderUi";
 import { withoutDemo } from "@/lib/orderDemoFilter";
+import { karachiDayBounds, karachiDayKey } from "@/lib/karachiDay";
 
-function utcStartOfDay(d) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+/** Asia/Karachi calendar day bounds (orders are placed and reported in PKT). */
+function karachiStartOfDay(d) {
+  return karachiDayBounds(karachiDayKey(d)).start;
 }
 
-function utcEndOfDay(d) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
+function karachiEndOfDay(d) {
+  return karachiDayBounds(karachiDayKey(d)).end;
 }
 
 function escapeRegex(s) {
@@ -58,11 +60,11 @@ export async function GET(request) {
       filter.createdAt = {};
       if (from) {
         const d = new Date(from);
-        if (!Number.isNaN(d.getTime())) filter.createdAt.$gte = utcStartOfDay(d);
+        if (!Number.isNaN(d.getTime())) filter.createdAt.$gte = karachiStartOfDay(d);
       }
       if (to) {
         const d = new Date(to);
-        if (!Number.isNaN(d.getTime())) filter.createdAt.$lte = utcEndOfDay(d);
+        if (!Number.isNaN(d.getTime())) filter.createdAt.$lte = karachiEndOfDay(d);
       }
     }
     if (search) {

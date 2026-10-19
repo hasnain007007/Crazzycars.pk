@@ -22,6 +22,7 @@ import {
 } from "@/lib/runcourierWebhook";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
+import { isCodPaymentMethod } from "@/lib/pakistaniPaymentMethods";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -44,10 +45,6 @@ function mapPostexToOrderStatus(postexStatus) {
   return null;
 }
 
-function isCodPaymentMethod(method) {
-  const m = String(method || "").toLowerCase();
-  return m === "cod" || m.includes("cash");
-}
 
 function isPostexish(order) {
   const c = String(order.courier || order.tracking?.carrier || "").toLowerCase();

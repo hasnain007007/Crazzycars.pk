@@ -6,6 +6,7 @@ import crypto from "node:crypto";
 import { storefrontTrackingUrl, runCourierPublicTrackingUrl } from "@/lib/runcourier";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
+import { isCodPaymentMethod } from "@/lib/pakistaniPaymentMethods";
 
 export const RUN_COURIER_WEBHOOK_HEADER = "x-webhook-secret";
 export const RAW_PAYLOAD_LOG_LIMIT = 20;
@@ -155,10 +156,6 @@ export function parseRunCourierWebhookPayload(body) {
   };
 }
 
-function isCodPaymentMethod(method) {
-  const m = String(method || "").toLowerCase();
-  return m === "cod" || m.includes("cash");
-}
 
 /**
  * Apply mapped fulfillment (+ COD paid on Delivered). Mutates order doc.

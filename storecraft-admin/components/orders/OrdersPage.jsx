@@ -431,7 +431,7 @@ export function OrdersPage() {
           tone="attention"
           hint="Pending + unpaid order totals"
         />
-        <StatCard label="Today's revenue" value={formatMoney(stats.todayRevenue)} tone="money" />
+        <StatCard label="Today's sales" value={formatMoney(stats.todayRevenue)} tone="money" />
       </div>
 
       {(stats.courierSettled || 0) > 0 ? (

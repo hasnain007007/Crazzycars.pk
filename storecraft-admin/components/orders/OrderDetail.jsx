@@ -47,6 +47,7 @@ import {
   getLegacyTrackingWhatsAppMessage,
   getOrderShippedWhatsAppMessage,
 } from "@/lib/whatsappTemplates";
+import { isCodPaymentMethod } from "@/lib/pakistaniPaymentMethods";
 
 function orderItemCount(order) {
   const items = Array.isArray(order?.items) ? order.items : [];
@@ -1453,7 +1454,7 @@ export function OrderDetail({ orderId }) {
               <strong>Payment:</strong>{" "}
               {Number(postexCodAmount) > 0
                 ? `COD (Rs. ${Math.round(Number(postexCodAmount) || 0).toLocaleString()})`
-                : pmLower.includes("cod") || pmLower.includes("cash")
+                : isCodPaymentMethod(pmLower)
                   ? "Cash on Delivery"
                   : "Prepaid"}
             </div>

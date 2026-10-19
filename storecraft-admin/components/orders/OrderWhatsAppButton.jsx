@@ -6,6 +6,7 @@ import {
   getAdminNewOrderWhatsAppMessage,
   getCustomerOrderWhatsAppMessage,
 } from "@/lib/whatsappTemplates";
+import { isCodPaymentMethod } from "@/lib/pakistaniPaymentMethods";
 
 /** Pakistan WhatsApp deep link: https://wa.me/923XXXXXXXXX?text=... */
 export function buildWaLink(phone, message) {
@@ -68,7 +69,7 @@ function getLegacyWhatsAppMessage(order) {
   const pm = paymentMethod.toLowerCase();
   const isPayPal = pm.includes("paypal");
   const isCard = pm.includes("stripe") || pm.includes("card");
-  const isCOD = pm.includes("cod") || pm.includes("cash");
+  const isCOD = isCodPaymentMethod(pm);
   let paymentLine = "";
   if (isPayPal) {
     const paypalId = order.payment?.paypalOrderId || order.payment?.paypalCaptureId || "";

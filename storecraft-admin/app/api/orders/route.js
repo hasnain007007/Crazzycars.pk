@@ -22,6 +22,7 @@ import { orderOriginLabel, originFilterToMongo, serializeAttribution } from "@/l
 import { serializeCustomerNetwork } from "@/lib/customerIpDisplay";
 import { withoutDemo } from "@/lib/orderDemoFilter";
 import { awaitingBookingAdvanceMongoFilter } from "@/lib/codAdvanceGate";
+import { karachiDayBounds, karachiDayKey } from "@/lib/karachiDay";
 
 const PAYMENT_METHODS = new Set([
   "cod",
@@ -56,12 +57,13 @@ function unitPriceFromProduct(p) {
   return 0;
 }
 
-function utcStartOfDay(d) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+/** Asia/Karachi calendar day bounds (orders are placed and reported in PKT). */
+function karachiStartOfDay(d) {
+  return karachiDayBounds(karachiDayKey(d)).start;
 }
 
-function utcEndOfDay(d) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
+function karachiEndOfDay(d) {
+  return karachiDayBounds(karachiDayKey(d)).end;
 }
 
 export async function GET(request) {
@@ -93,11 +95,11 @@ export async function GET(request) {
       filter.createdAt = {};
       if (from) {
         const d = new Date(from);
-        if (!Number.isNaN(d.getTime())) filter.createdAt.$gte = utcStartOfDay(d);
+        if (!Number.isNaN(d.getTime())) filter.createdAt.$gte = karachiStartOfDay(d);
       }
       if (to) {
         const d = new Date(to);
-        if (!Number.isNaN(d.getTime())) filter.createdAt.$lte = utcEndOfDay(d);
+        if (!Number.isNaN(d.getTime())) filter.createdAt.$lte = karachiEndOfDay(d);
       }
     }
 
@@ -113,8 +115,8 @@ export async function GET(request) {
 
     const view = (searchParams.get("view") || "").trim();
     const nowForView = new Date();
-    const dayStartView = utcStartOfDay(nowForView);
-    const dayEndView = utcEndOfDay(nowForView);
+    const dayStartView = karachiStartOfDay(nowForView);
+    const dayEndView = karachiEndOfDay(nowForView);
     // Ask for reviews: delivered in the last 45 days and not asked yet.
     const reviewDueFilter = {
       orderStatus: "delivered",
@@ -193,8 +195,8 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
     const now = new Date();
-    const dayStart = utcStartOfDay(now);
-    const dayEnd = utcEndOfDay(now);
+    const dayStart = karachiStartOfDay(now);
+    const dayEnd = karachiEndOfDay(now);
 
     // Server-side sort so Date/Total sort applies across all pages, not just the loaded page
     const sortKey = (searchParams.get("sort") || "date").trim();
@@ -212,7 +214,7 @@ export async function GET(request) {
       totalOrders,
       pendingCount,
       processingCount,
-      todayPaidOrders,
+      todayBookedOrders,
       pendingUnpaidOrders,
       viewUnfulfilled,
       viewUnpaid,
@@ -234,9 +236,10 @@ export async function GET(request) {
       Order.countDocuments(live({})),
       Order.countDocuments(live({ orderStatus: "pending" })),
       Order.countDocuments(live({ orderStatus: "processing" })),
+      // Booked value today (PKT), excluding void orders — same rule as the dashboard's Today's Sales.
       Order.find(
         live({
-          paymentStatus: "paid",
+          orderStatus: { $nin: ["cancelled", "returned", "refunded"] },
           createdAt: { $gte: dayStart, $lte: dayEnd },
         })
       )
@@ -282,7 +285,7 @@ export async function GET(request) {
     const returnRatio =
       courierSettled > 0 ? Math.round((returnedCount / courierSettled) * 1000) / 10 : null;
     let todayRevenue = 0;
-    for (const o of todayPaidOrders) {
+    for (const o of todayBookedOrders) {
       todayRevenue += orderGrandTotal(o);
     }
 

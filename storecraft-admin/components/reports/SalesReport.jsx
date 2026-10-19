@@ -16,9 +16,10 @@ import {
   YAxis,
 } from "recharts";
 import { formatAdminPrice } from "@/lib/currency";
+import { karachiDayKey, shiftDayKey } from "@/lib/karachiDay";
 
 const ORDER_STATUSES = [
-  { value: "all", label: "All statuses" },
+  { value: "all", label: "All (excl. cancelled / returned)" },
   { value: "pending", label: "Pending" },
   { value: "confirmed", label: "Confirmed" },
   { value: "processing", label: "Processing" },
@@ -48,11 +49,8 @@ function StatCard({ title, value, subtitle }) {
 }
 
 function defaultDateRange() {
-  const to = new Date();
-  const from = new Date();
-  from.setDate(from.getDate() - 30);
-  const toStr = to.toISOString().slice(0, 10);
-  const fromStr = from.toISOString().slice(0, 10);
+  const toStr = karachiDayKey(new Date());
+  const fromStr = shiftDayKey(toStr, -30);
   return { fromStr, toStr };
 }
 
