@@ -27,6 +27,30 @@ const DEFAULT_FORM = {
 export default function SeoSettings() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(DEFAULT_FORM);
+  const [metaTest, setMetaTest] = useState({ running: false, result: null });
+
+  const testMetaConnection = async () => {
+    setMetaTest({ running: true, result: null });
+    try {
+      const res = await fetch("/api/settings/meta-test", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pixelId: String(form.facebookPixelId || "").trim(),
+          accessToken: String(form.metaCapiAccessToken || "").trim(),
+          testEventCode: String(form.metaCapiTestEventCode || "").trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      setMetaTest({
+        running: false,
+        result: res.ok ? data : { ok: false, error: data.error || `HTTP ${res.status}` },
+      });
+    } catch (e) {
+      setMetaTest({ running: false, result: { ok: false, error: e?.message || "Request failed" } });
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -491,9 +515,62 @@ export default function SeoSettings() {
             onChange={(e) => setForm((f) => ({ ...f, metaCapiAccessToken: e.target.value }))}
           />
           <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>
-            Replaces Shopify&apos;s server events. Leave blank to keep the existing token. Or set env
-            META_CAPI_ACCESS_TOKEN on the store app.
+            Sends events from the server too, so Meta still counts visitors with ad blockers or
+            iPhone tracking limits. Leave blank to keep the saved token.
           </p>
+          <p
+            style={{
+              fontSize: 12,
+              margin: "8px 0 0",
+              fontWeight: 600,
+              color: form.metaCapiConfigured ? "#047857" : "#b45309",
+            }}
+          >
+            {form.metaCapiConfigured
+              ? `Conversions API: token saved (${form.metaCapiAccessTokenMasked || "••••"})`
+              : "Conversions API: not connected. Only the browser Pixel is sending events."}
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={testMetaConnection}
+              disabled={metaTest.running}
+              style={{
+                padding: "6px 12px",
+                fontSize: 12,
+                fontWeight: 600,
+                borderRadius: 6,
+                border: "1px solid #d1d5db",
+                background: "#fff",
+                color: "#111827",
+                cursor: metaTest.running ? "wait" : "pointer",
+              }}
+            >
+              {metaTest.running ? "Testing…" : "Test connection"}
+            </button>
+            {metaTest.result ? (
+              <span
+                style={{
+                  fontSize: 12,
+                  color: metaTest.result.ok ? "#047857" : "#b91c1c",
+                }}
+              >
+                {metaTest.result.ok
+                  ? `Connected to ${metaTest.result.pixelName || "your Pixel"}${
+                      metaTest.result.lastFiredTime
+                        ? ` · last event ${new Date(metaTest.result.lastFiredTime).toLocaleString("en-PK", { timeZone: "Asia/Karachi" })}`
+                        : ""
+                    }${
+                      metaTest.result.testEvent
+                        ? metaTest.result.testEvent.ok
+                          ? " · test event sent, check Events Manager → Test Events"
+                          : ` · test event failed: ${metaTest.result.testEvent.error}`
+                        : ""
+                    }`
+                  : metaTest.result.error}
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <div style={{ marginBottom: 0 }}>
@@ -509,6 +586,16 @@ export default function SeoSettings() {
             value={form.metaCapiTestEventCode}
             onChange={(e) => setForm((f) => ({ ...f, metaCapiTestEventCode: e.target.value }))}
           />
+          {String(form.metaCapiTestEventCode || "").trim() ? (
+            <p style={{ fontSize: 12, color: "#b91c1c", fontWeight: 600, margin: "6px 0 0" }}>
+              While this code is set, Meta treats every server event as a test and does not count
+              it for your ads. Clear it and save once testing is done.
+            </p>
+          ) : (
+            <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>
+              Only for checking setup. Leave empty for normal running.
+            </p>
+          )}
         </div>
       </div>
 

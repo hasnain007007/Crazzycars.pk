@@ -3,13 +3,44 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
-import { flushMetaPixelQueue, trackPageView } from "@/lib/metaPixel";
+import { flushMetaPixelQueue, mirrorMetaCapi, newMetaEventId, trackPageView } from "@/lib/metaPixel";
 import { trackSnapPageView } from "@/lib/snapPixel";
 import { useDeferredThirdParty } from "@/lib/useDeferredThirdParty";
 
 /** One PageView per App Router location (survives Strict Mode remounts). */
 const pageViewFiredKeys = new Set();
+/** One PageView event_id per page key, shared by the server copy and the browser Pixel. */
+const pageViewEventIds = new Map();
+const pageViewServerSent = new Set();
 const snapPageViewFiredKeys = new Set();
+
+function pageViewEventId(key) {
+  let id = pageViewEventIds.get(key);
+  if (!id) {
+    id = newMetaEventId();
+    pageViewEventIds.set(key, id);
+  }
+  return id;
+}
+
+/**
+ * Server (Conversions API) PageView as soon as the page opens, before the deferred Pixel
+ * loads, so visitors who leave quickly are still counted. The browser PageView later
+ * reuses the same event_id and Meta keeps one.
+ */
+function MetaServerPageViews() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const search = String(window.location.search || "").replace(/^\?/, "");
+    const key = `${pathname}?${search}`;
+    if (pageViewServerSent.has(key) || pageViewFiredKeys.has(key)) return;
+    pageViewServerSent.add(key);
+    mirrorMetaCapi({ eventName: "PageView", eventId: pageViewEventId(key) });
+  }, [pathname]);
+
+  return null;
+}
 
 /**
  * Fire PageView once the deferred pixel is available.
@@ -29,6 +60,7 @@ function MetaPixelPageViews() {
     const key = `${pathname}?${search}`;
     let attempts = 0;
     let timer;
+    const eventId = pageViewEventId(key);
 
     const fire = () => {
       if (firedRef.current || pageViewFiredKeys.has(key)) {
@@ -36,7 +68,7 @@ function MetaPixelPageViews() {
         return true;
       }
       if (typeof window !== "undefined" && typeof window.fbq === "function") {
-        trackPageView();
+        trackPageView({ eventId, skipCapi: true });
         flushMetaPixelQueue();
         firedRef.current = true;
         pageViewFiredKeys.add(key);
@@ -127,6 +159,7 @@ export default function AnalyticsScripts({ settings }) {
           </Script>
         </>
       ) : null}
+      {fbPixelId ? <MetaServerPageViews /> : null}
       {fbPixelId && deferMeta ? (
         <>
           <Script id="fb-pixel" strategy="lazyOnload">
