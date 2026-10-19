@@ -556,7 +556,7 @@ export default function SeoSettings() {
                 }}
               >
                 {metaTest.result.ok
-                  ? `Connected to ${metaTest.result.pixelName || "your Pixel"}${
+                  ? `${metaTest.result.pixelName ? `Connected to ${metaTest.result.pixelName}` : "Token accepted by Meta"}${
                       metaTest.result.lastFiredTime
                         ? ` · last event ${new Date(metaTest.result.lastFiredTime).toLocaleString("en-PK", { timeZone: "Asia/Karachi" })}`
                         : ""

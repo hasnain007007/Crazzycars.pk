@@ -2,7 +2,8 @@
  * Check the Meta Pixel + Conversions API settings against Meta.
  * Uses the values typed in the form when given, else the saved ones.
  * Validates the token by reading the pixel (no event sent); when a test event code
- * is set, also sends one PageView that only appears under Events Manager → Test Events.
+ * is set, also sends one PageView for Events Manager → Test Events. A code that does not
+ * match an open Test Events session makes Meta process that event normally.
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -59,7 +60,11 @@ export async function POST(request) {
       { cache: "no-store", signal: AbortSignal.timeout(10000) }
     );
     const data = await metaJson(res);
-    if (!res.ok || data.error) {
+    // Conversions API tokens from Events Manager may only send events, so reading the
+    // pixel answers "(#100) Missing Permission". That still proves Meta accepted the
+    // token; a bad or expired token fails with code 190 instead.
+    const readOnlyDenied = data.error && Number(data.error.code) === 100;
+    if ((!res.ok || data.error) && !readOnlyDenied) {
       return NextResponse.json({
         ok: false,
         error: `Meta rejected the token: ${data.error?.message || `HTTP ${res.status}`}`,
@@ -95,8 +100,9 @@ export async function POST(request) {
 
     return NextResponse.json({
       ok: true,
-      pixelName: data.name || "",
-      lastFiredTime: data.last_fired_time || null,
+      pixelName: readOnlyDenied ? "" : data.name || "",
+      lastFiredTime: readOnlyDenied ? null : data.last_fired_time || null,
+      sendOnlyToken: Boolean(readOnlyDenied),
       testEvent,
     });
   } catch (e) {
