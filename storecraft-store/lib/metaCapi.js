@@ -140,8 +140,10 @@ export async function resolveMetaCapiConfig(settingsDoc) {
       seo = {};
     }
   }
+  // Admin setting first: it is the same ID the browser Pixel uses, so server and browser
+  // events always land in one dataset (and dedupe). Env is only a fallback.
   const pixelId = String(
-    process.env.META_PIXEL_ID || seo?.facebookPixelId || ""
+    seo?.facebookPixelId || process.env.META_PIXEL_ID || ""
   ).trim();
   const accessToken = String(
     process.env.META_CAPI_ACCESS_TOKEN || seo?.metaCapiAccessToken || ""
