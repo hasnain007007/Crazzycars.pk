@@ -249,6 +249,8 @@ export function ProductDetailMedico({
   product: initialProduct = null,
   relatedProducts = null,
   carLinks = null,
+  /** Units sold in the last 30 days (real orders); shown from 3 up. */
+  soldRecently = 0,
 }) {
   const { addItem } = useCart();
   const router = useRouter();
@@ -649,6 +651,16 @@ export function ProductDetailMedico({
     } else if (!hasVariations) {
       if (product?.inStock === false || (tracksStock && productStock <= 0)) {
         markOutOfStock();
+      }
+    }
+
+    // Honest scarcity: real tracked stock at or under the admin low-stock threshold (default 5).
+    if (stockStatus === "in_stock") {
+      const left = matched ? Number(matched.stock) : tracksStock ? productStock : NaN;
+      const threshold = Number(product?.inventory?.lowStockThreshold) || 5;
+      if (Number.isFinite(left) && left > 0 && left <= threshold) {
+        stockText = `Only ${left} left in stock`;
+        stockColor = "#c2410c";
       }
     }
 
@@ -1272,6 +1284,11 @@ export function ProductDetailMedico({
                 {stockText}
               </span>
             </p>
+            {Number(soldRecently) >= 3 ? (
+              <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600, color: "#9a3412" }}>
+                🔥 {Number(soldRecently)} sold in the last 30 days
+              </p>
+            ) : null}
 
 
             <ProductVariations

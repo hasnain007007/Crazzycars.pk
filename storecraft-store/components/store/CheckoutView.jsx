@@ -37,7 +37,6 @@ import { useCustomer } from "@/lib/customerAuth";
 import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
 import { resolveProductContentId, trackInitiateCheckout, getMetaClickIds, newMetaEventId } from "@/lib/metaPixel";
 import { ga4BeginCheckout } from "@/lib/ga4";
-import { standardDeliveryFeeStatement } from "@/lib/storePolicyCopy";
 import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
 import { cartHasBulkyItem } from "@/lib/shippingTier";
 import {
@@ -401,7 +400,6 @@ export function CheckoutView() {
     [settings?.storePayment, storePayment]
   );
 
-  const freeDeliveryNote = useMemo(() => standardDeliveryFeeStatement(), []);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -1021,8 +1019,8 @@ export function CheckoutView() {
       {showOptionalLoginPrompt ? (
         <div
           style={{
-            background: "#F8F7FF",
-            border: "1px solid #E0DEFF",
+            background: "#F9FAFB",
+            border: "1px solid #E5E7EB",
             borderRadius: 8,
             padding: "14px 16px",
             marginTop: 20,
@@ -1039,7 +1037,7 @@ export function CheckoutView() {
               style={{
                 fontSize: 13,
                 fontWeight: 600,
-                color: "#5b21b6",
+                color: "#111111",
                 margin: "0 0 2px",
               }}
             >
@@ -1048,7 +1046,7 @@ export function CheckoutView() {
             <p
               style={{
                 fontSize: 11,
-                color: "#7c3aed",
+                color: "#6B7280",
                 margin: 0,
               }}
             >
@@ -1059,7 +1057,7 @@ export function CheckoutView() {
             href="/account/login?redirect=/checkout"
             style={{
               padding: "8px 16px",
-              background: "#5b21b6",
+              background: "#111111",
               color: "#FFFFFF",
               textDecoration: "none",
               fontSize: 12,
@@ -1331,7 +1329,8 @@ export function CheckoutView() {
           )}
 
           <h2 className="mb-2 text-base font-semibold text-zinc-900">Payment</h2>
-          <p className="mb-2 text-xs text-zinc-600">{freeDeliveryNote}</p>
+          {/* One explanation only: the banner states this cart's delivery fee and the COD booking
+              amount (English + Urdu); the long policy paragraph above it repeated the same thing. */}
           <ShippingAdvanceBanner hasBulky={cartHasBulky} className="mb-3" />
           {!cartAllowsCod ? (
             <p className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
@@ -1432,7 +1431,11 @@ export function CheckoutView() {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {shippingRules.advancePaymentDiscountPercent || 5}% OFF
+                          {(() => {
+                            const pct = Number(shippingRules.advancePaymentDiscountPercent) || 5;
+                            const save = Math.round((Number(subtotal) || 0) * pct / 100);
+                            return save > 0 ? `${pct}% OFF · Save Rs.${save.toLocaleString("en-PK")}` : `${pct}% OFF`;
+                          })()}
                         </span>
                       ) : null}
                       {m.key === "cod" ? (
@@ -1566,6 +1569,21 @@ export function CheckoutView() {
             ) : null}
           </div>
 
+          {/* Phones: the order summary sits below this button — show what they pay before tapping. */}
+          <div className="mb-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm lg:hidden">
+            <div className="flex justify-between font-bold text-zinc-900">
+              <span>Total</span>
+              <span className="price tabular-nums">{formatPrice(total, addr.country)}</span>
+            </div>
+            {showProductAdvanceBox || showBookingAdvanceBox ? (
+              <div className="mt-1 flex justify-between text-xs text-zinc-600">
+                <span>
+                  Pay now {formatPrice(effectiveAdvanceAmount, addr.country)} · on delivery{" "}
+                  {formatPrice(Math.max(0, total - effectiveAdvanceAmount), addr.country)}
+                </span>
+              </div>
+            ) : null}
+          </div>
           <button
             type="button"
             onClick={handleProceedToPayment}

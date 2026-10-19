@@ -186,10 +186,13 @@ export function applyWhatsAppPlaceholder(text, whatsapp) {
 export function formatAdvancePaymentMessage(message, amount, whatsapp) {
   const amt = Math.max(0, Number(amount) || 0);
   const amountStr = formatPrice(amt);
-  return applyWhatsAppPlaceholder(
-    String(message || DEFAULT_ADVANCE_MESSAGE).replace(/\{amount\}/gi, amountStr),
-    whatsapp
-  );
+  // Templates say "Rs. {amount}" and formatPrice already adds "Rs." — swallow the template's
+  // own prefix and collapse any doubled currency prefix.
+  const body = String(message || DEFAULT_ADVANCE_MESSAGE)
+    .replace(/(Rs\.?\s*|PKR\s*)\{amount\}/gi, amountStr)
+    .replace(/\{amount\}/gi, amountStr)
+    .replace(/(Rs\.?\s*){2,}/gi, "Rs.");
+  return applyWhatsAppPlaceholder(body, whatsapp);
 }
 
 /** Account lines for COD delivery-charge advance payment box. */
