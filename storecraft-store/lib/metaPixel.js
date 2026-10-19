@@ -108,11 +108,46 @@ export function mirrorMetaCapi({
  * @param {{ eventId?: string, skipCapi?: boolean, user?: object }} [options]
  * @returns {string|false} eventId when fired
  */
+/**
+ * Events fired before the deferred Pixel loads (ViewContent on product open,
+ * InitiateCheckout, Purchase on the success page). They used to be dropped; now they
+ * wait here and AnalyticsScripts sends them right after PageView.
+ */
+const PENDING_KEY = "__ccMetaPending";
+const PENDING_MAX = 20;
+
+function queueMetaPixel(event, params, eventOptions) {
+  if (typeof window === "undefined") return false;
+  const q = (window[PENDING_KEY] = window[PENDING_KEY] || []);
+  if (q.length >= PENDING_MAX) q.shift();
+  q.push({ event, params: params && Object.keys(params).length ? params : {}, eventOptions });
+  return true;
+}
+
+/** Send queued events once window.fbq exists. Returns how many were sent. */
+export function flushMetaPixelQueue() {
+  if (!isMetaPixelReady()) return 0;
+  const q = window[PENDING_KEY] || [];
+  window[PENDING_KEY] = [];
+  let sent = 0;
+  for (const { event, params, eventOptions } of q) {
+    try {
+      window.fbq("track", event, params, eventOptions);
+      sent += 1;
+    } catch {
+      /* ignore */
+    }
+  }
+  return sent;
+}
+
 export function trackMetaPixel(event, params, options = {}) {
   const eventId = String(options.eventId || newMetaEventId());
   const eventOptions = { eventID: eventId };
   let pixelOk = false;
-  if (isMetaPixelReady()) {
+  if (!isMetaPixelReady() && event !== "PageView") {
+    pixelOk = queueMetaPixel(event, params, eventOptions);
+  } else if (isMetaPixelReady()) {
     try {
       if (params && Object.keys(params).length) {
         window.fbq("track", event, params, eventOptions);

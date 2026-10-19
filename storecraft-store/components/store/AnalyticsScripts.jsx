@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
-import { trackPageView } from "@/lib/metaPixel";
+import { flushMetaPixelQueue, trackPageView } from "@/lib/metaPixel";
 import { trackSnapPageView } from "@/lib/snapPixel";
 import { useDeferredThirdParty } from "@/lib/useDeferredThirdParty";
 
@@ -37,6 +37,7 @@ function MetaPixelPageViews() {
       }
       if (typeof window !== "undefined" && typeof window.fbq === "function") {
         trackPageView();
+        flushMetaPixelQueue();
         firedRef.current = true;
         pageViewFiredKeys.add(key);
         return true;
