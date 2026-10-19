@@ -4,7 +4,7 @@
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
-import { buildDealsMongoFilter } from "@/lib/dealsFilter";
+import { buildDealsMongoFilter, discountFraction } from "@/lib/dealsFilter";
 
 /**
  * @param {{ filter?: string, limit?: number }} opts
@@ -20,14 +20,20 @@ export async function fetchHotDealsServer({ filter = "all", limit = 500 } = {}) 
       pricing: { $exists: true },
       ...buildDealsMongoFilter(f),
     };
-    const rows = await Product.find(query)
+    const found = await Product.find(query)
       .select(
         "name slug media.images pricing inventory featured isDeal newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
       .sort({ updatedAt: -1, createdAt: -1 })
-      .limit(lim)
+      .limit(500)
       .populate("categories", "name slug")
       .lean();
+    // Biggest discount first — the point of Hot Deals (ties keep most-recently-updated order).
+    const rows = found
+      .map((row, i) => ({ row, i, d: discountFraction(row) }))
+      .sort((a, b) => b.d - a.d || a.i - b.i)
+      .slice(0, lim)
+      .map((x) => x.row);
 
     return JSON.parse(
       JSON.stringify(rows.map((row) => serializeStoreProductSummary(row, { maxImages: 1 })))

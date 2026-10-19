@@ -45,9 +45,19 @@ export default async function Page() {
   // (client components can still fall back to their own fetches if needed).
   try {
     let tree = [];
-    [bestSellers, hotDeals, heroSlides, carCatalog, activeProductCount, tree] = await Promise.all([
-      shopify ? getBestSellingProducts(24) : fetchBestSellersServer({ limit: 24 }),
-      shopify ? getHotDealProducts(24) : fetchHotDealsServer({ filter: "all", limit: 24 }),
+    // Best sellers skip anything already in Hot Deals, so the two rows show different products.
+    const dealsThenBest = shopify
+      ? Promise.all([getHotDealProducts(24), getBestSellingProducts(24)])
+      : fetchHotDealsServer({ filter: "all", limit: 24 }).then(async (deals) => [
+          deals,
+          await fetchBestSellersServer({
+            limit: 24,
+            excludeIds: (deals || []).map((d) => d.id || d._id).filter(Boolean),
+          }),
+        ]);
+    let pair;
+    [pair, heroSlides, carCatalog, activeProductCount, tree] = await Promise.all([
+      dealsThenBest,
       getHeroSlides(),
       fetchCarCatalogServer({ lean: true }),
       (async () => {
@@ -60,6 +70,7 @@ export default async function Page() {
       })(),
       fetchCategoryTreeServer(),
     ]);
+    [hotDeals, bestSellers] = pair;
     categoryTree = Array.isArray(tree) ? tree : [];
     homepageCategories = pickHomepageCategories(categoryTree)
       .map(serializeHomepageCategory)
