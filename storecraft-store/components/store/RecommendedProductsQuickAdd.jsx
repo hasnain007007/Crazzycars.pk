@@ -110,6 +110,10 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
                     alt={rec.name}
                     width={48}
                     height={48}
+                    // Below the buy buttons: lazy, so React does not preload these 48px thumbs
+                    // ahead of the main product photo (~230KB that competed with the LCP image).
+                    loading="lazy"
+                    decoding="async"
                     style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 6, display: "block" }}
                   />
                 ) : (
