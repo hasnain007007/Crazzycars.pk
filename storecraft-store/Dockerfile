@@ -31,7 +31,8 @@ ENV NEXT_PUBLIC_STORE_NAME=$NEXT_PUBLIC_STORE_NAME \
 # Some routes touch DB during `next build` page collection
 ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
-RUN --mount=type=cache,target=/app/.next/cache \
+# Own cache id so the admin build never shares this Next cache (see storecraft-admin/Dockerfile).
+RUN --mount=type=cache,id=crazzycars-store-next-cache,target=/app/.next/cache \
     --mount=type=cache,target=/root/.npm \
     npm run build \
  && node -e "\

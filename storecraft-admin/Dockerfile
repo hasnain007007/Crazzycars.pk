@@ -29,9 +29,12 @@ ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME \
 # Some routes may touch DB during `next build` page collection
 ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
-RUN --mount=type=cache,target=/app/.next/cache \
+# Own cache id: without it BuildKit keys the cache by path, so admin and store shared one
+# Next cache and the admin shipped the storefront's CSS.
+RUN --mount=type=cache,id=crazzycars-admin-next-cache,target=/app/.next/cache \
     --mount=type=cache,target=/root/.npm \
-    npm run build
+    npm run build \
+ && node scripts/check-admin-css.mjs
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
