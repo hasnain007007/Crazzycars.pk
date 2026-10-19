@@ -115,6 +115,12 @@ export async function GET(request) {
     const nowForView = new Date();
     const dayStartView = utcStartOfDay(nowForView);
     const dayEndView = utcEndOfDay(nowForView);
+    // Ask for reviews: delivered in the last 45 days and not asked yet.
+    const reviewDueFilter = {
+      orderStatus: "delivered",
+      updatedAt: { $gte: new Date(nowForView.getTime() - 45 * 86_400_000) },
+      reviewRequestedAt: null, // also matches orders without the field
+    };
     // Needs Attention === stale rule (OR8): pending + unpaid + age >= 10 days
     const attentionCutoff = new Date(nowForView.getTime() - 10 * 86_400_000);
 
@@ -135,6 +141,8 @@ export async function GET(request) {
         filter.orderStatus = "pending";
       } else if (view === "advanceUnpaid") {
         Object.assign(filter, awaitingBookingAdvanceMongoFilter());
+      } else if (view === "reviewDue") {
+        Object.assign(filter, reviewDueFilter);
       }
     }
 
@@ -212,6 +220,7 @@ export async function GET(request) {
       viewToday,
       viewAwaitingCustomer,
       viewAdvanceUnpaid,
+      viewReviewDue,
       deliveredCount,
       returnedCount,
     ] = await Promise.all([
@@ -262,6 +271,7 @@ export async function GET(request) {
         })
       ),
       Order.countDocuments(live(awaitingBookingAdvanceMongoFilter())),
+      Order.countDocuments(live(reviewDueFilter)),
       Order.countDocuments(live({ orderStatus: "delivered" })),
       Order.countDocuments(live({ orderStatus: "returned" })),
     ]);
@@ -336,6 +346,7 @@ export async function GET(request) {
         total: orderGrandTotal(o),
         orderStatus: o.orderStatus,
         paymentStatus: o.paymentStatus,
+        reviewRequestedAt: o.reviewRequestedAt || null,
         payment: {
           paidAmount: Number(o.payment?.paidAmount ?? o.payment?.amount) || 0,
           remainingCod: Number(o.payment?.remainingCod) || 0,
@@ -406,6 +417,7 @@ export async function GET(request) {
         today: viewToday,
         awaitingCustomer: viewAwaitingCustomer,
         advanceUnpaid: viewAdvanceUnpaid,
+        reviewDue: viewReviewDue,
       },
     });
   } catch (error) {

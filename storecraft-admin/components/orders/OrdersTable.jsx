@@ -12,6 +12,7 @@ import { formatCustomerListMeta, formatPhoneDisplay } from "@/lib/guestCustomerD
 import { CustomerConfirmBadge } from "./CustomerConfirmBadge";
 import { OrderStatusBadges } from "./OrderStatusBadges";
 import { BulkActionBar } from "./BulkActionBar";
+import { ReviewRequestRowButton } from "./OrderWhatsAppButton";
 import { formatAdminPrice } from "@/lib/currency";
 import { resolveInvoiceLogoUrl } from "@/lib/invoiceStoreMeta";
 
@@ -471,7 +472,10 @@ export function OrdersTable({
                           {courierLabel}
                         </span>
                       </td>
-                      <td style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }} onClick={(e) => e.stopPropagation()}>
+                        {o.orderStatus === "delivered" && !o.reviewRequestedAt ? (
+                          <ReviewRequestRowButton order={o} />
+                        ) : null}
                         <Link href={`/orders/${o.id}`} className="op-btn op-btn-secondary" style={{ minHeight: 28, padding: "4px 10px" }}>
                           View
                         </Link>

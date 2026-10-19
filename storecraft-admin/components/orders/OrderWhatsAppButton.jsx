@@ -223,6 +223,10 @@ export function OrderWhatsAppButton({ order, onNotified, settings: settingsProp 
       const json = await res.json();
       if (!json.success || !json.reviewMessage) return;
       await openWhatsAppWithOptionalImage(rawPhone, json.reviewMessage, []);
+      // Leaves the "Ask for reviews" queue on the Orders page.
+      fetch(`/api/orders/${orderApiId}/review-requested`, { method: "POST", credentials: "include" }).catch(
+        () => {}
+      );
     } finally {
       setLoading(false);
     }
@@ -370,6 +374,54 @@ export function OrderAdminWhatsAppButton({ order, settings: settingsProp }) {
       }}
     >
       WhatsApp Admin Alert
+    </button>
+  );
+}
+
+/**
+ * Compact row button for the Orders list: sends the signed post-delivery review link on WhatsApp
+ * and records it, so the order leaves the "Ask for reviews" queue.
+ */
+export function ReviewRequestRowButton({ order, onDone }) {
+  const [state, setState] = useState("idle");
+  const phone = order?.customerPhone || "";
+  if (!phone || String(order?.orderStatus || "").toLowerCase() !== "delivered") return null;
+  async function send() {
+    setState("busy");
+    try {
+      const res = await fetch(`/api/orders/${order.id}/wa-links`, { credentials: "include" });
+      const json = await res.json();
+      if (!json.success || !json.reviewMessage) {
+        setState("idle");
+        return;
+      }
+      await openWhatsAppWithOptionalImage(phone, json.reviewMessage, []);
+      await fetch(`/api/orders/${order.id}/review-requested`, { method: "POST", credentials: "include" }).catch(
+        () => {}
+      );
+      setState("done");
+      onDone?.(order.id);
+    } catch {
+      setState("idle");
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={send}
+      disabled={state !== "idle"}
+      className="op-btn"
+      style={{
+        minHeight: 28,
+        padding: "4px 10px",
+        marginRight: 6,
+        background: state === "done" ? "#dcfce7" : "#25D366",
+        color: state === "done" ? "#166534" : "#fff",
+        border: "none",
+      }}
+      title="Send the review link on WhatsApp"
+    >
+      {state === "busy" ? "Opening…" : state === "done" ? "✓ Asked" : "Ask review"}
     </button>
   );
 }
