@@ -50,7 +50,6 @@ export const DELETED_URL_REDIRECTS = [
   { source: "/universal-carbon-fiber-style-door-handle-covers", destination: "/categories/door-handle-covers", permanent: true },
   { source: "/universal-galaxy-starry-sky-sunroof-headliner-film", destination: "/categories/interior-lights", permanent: true },
   { source: "/universal-led-rear-lip-spoiler-kit", destination: "/categories/spoilers-diffusers", permanent: true },
-  { source: "/universal-lime-green-fog-light-led-h11-pair", destination: "/categories/led-headlights-bulbs", permanent: true },
   { source: "/universal-rgb-headlight-drl-strip-kit", destination: "/categories/led-headlights-bulbs", permanent: true },
   {
     source: "/universal-suzuki-automatic-gear-shift-knob-7-colour-rgb-crystal",
