@@ -16,6 +16,7 @@ export function normalizeOnCarPreviews(rows) {
         .replace(/[^a-z0-9-]/g, "")
         .slice(0, 120),
       image,
+      aiGenerated: r?.aiGenerated === true,
     });
     if (out.length >= 20) break;
   }

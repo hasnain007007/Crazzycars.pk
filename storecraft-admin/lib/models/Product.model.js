@@ -229,6 +229,8 @@ const productSchema = new mongoose.Schema(
             car: { type: String, trim: true, default: "" },
             vehicleSlug: { type: String, trim: true, default: "" },
             image: { type: String, trim: true, default: "" },
+            /** AI-made picture: storefront labels it "AI preview", not a real fitment photo. */
+            aiGenerated: { type: Boolean, default: false },
           },
           { _id: false }
         ),

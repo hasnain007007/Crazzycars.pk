@@ -93,12 +93,18 @@ export default function OnCarPreviewDialog({ previews, productName, onClose }) {
                 }`}
               >
                 {p.car}
+                {p.aiGenerated ? <span className="ml-1 opacity-70">· AI</span> : null}
               </button>
             ))}
           </div>
         ) : null}
 
-        <div className="overflow-hidden rounded-xl bg-[#f3f4f6]">
+        <div className="relative overflow-hidden rounded-xl bg-[#f3f4f6]">
+          {current.aiGenerated ? (
+            <span className="absolute left-2 top-2 z-10 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-semibold text-white">
+              AI preview
+            </span>
+          ) : null}
           {/* eslint-disable-next-line @next/next/no-img-element -- on-demand viewer, plain img keeps it light */}
           <img
             key={current.image}
@@ -109,7 +115,9 @@ export default function OnCarPreviewDialog({ previews, productName, onClose }) {
           />
         </div>
         <p className="mt-2 text-xs text-[#6b7280]">
-          Preview on {current.car}. Final look can vary slightly with bumper shape and colour.
+          {current.aiGenerated
+            ? `AI-made preview of how it could look on a ${current.car}, not a photo of a fitted car. Final look depends on your bumper shape and colour.`
+            : `Real photo on ${current.car}. Final look can vary slightly with bumper shape and colour.`}
         </p>
 
         <a

@@ -300,6 +300,7 @@ function productToForm(p) {
       car: r?.car || "",
       vehicleSlug: r?.vehicleSlug || "",
       image: r?.image || "",
+      aiGenerated: r?.aiGenerated === true,
     })),
     recommendedProducts: (p.recommendedProducts || [])
       .map((rp) => {

@@ -22,7 +22,7 @@ export default function OnCarPreviewsEditor({ value, onChange, fieldClass }) {
   const rows = Array.isArray(value) ? value : [];
   const update = (i, patch) => onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const remove = (i) => onChange(rows.filter((_, idx) => idx !== i));
-  const add = () => onChange([...rows, { car: "", vehicleSlug: "", image: "" }]);
+  const add = () => onChange([...rows, { car: "", vehicleSlug: "", image: "", aiGenerated: false }]);
 
   return (
     <div className="space-y-4">
@@ -53,6 +53,14 @@ export default function OnCarPreviewsEditor({ value, onChange, fieldClass }) {
             value={row.vehicleSlug || ""}
             onChange={(e) => update(i, { vehicleSlug: e.target.value })}
           />
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={row.aiGenerated === true}
+              onChange={(e) => update(i, { aiGenerated: e.target.checked })}
+            />
+            AI-made picture (customers see an &quot;AI preview&quot; label)
+          </label>
           <ImageUploader
             value={{ url: row.image || "", publicId: "" }}
             onChange={(img) => update(i, { image: urlFrom(img) })}
