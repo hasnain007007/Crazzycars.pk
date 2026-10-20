@@ -28,6 +28,7 @@ import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 import { revalidateStorefront, productRevalidatePaths } from "@/lib/revalidateStorefront";
 import { validateProductActivePublishGate } from "@/lib/productPublishGate";
+import { normalizeOnCarPreviews } from "@/lib/onCarPreviews";
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;
@@ -300,6 +301,7 @@ export async function POST(request) {
       customSizing: normalizeCustomSizing(body.customSizing),
       addOns: normalizeAddOns(body.addOns),
       recommendedProducts: normalizeRecommendedProductIds(body.recommendedProducts),
+      onCarPreviews: normalizeOnCarPreviews(body.onCarPreviews),
       features: Array.isArray(body.features) ? body.features.map((s) => String(s || "").trim()).filter(Boolean) : [],
       specifications: Array.isArray(body.specifications)
         ? body.specifications.filter((s) => s && (s.label || s.value)).map((s) => ({ label: String(s.label || "").trim(), value: String(s.value || "").trim() }))

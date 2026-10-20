@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 const KEY = "cc-my-car";
 
-function readCar() {
+export function readCar() {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) || "null");
     return v && typeof v.slug === "string" && v.slug ? v : null;

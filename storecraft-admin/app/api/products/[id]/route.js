@@ -31,6 +31,7 @@ import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
 import { revalidateStorefront, productRevalidatePaths } from "@/lib/revalidateStorefront";
 import { denySecurityHoldMutation } from "@/lib/securityHold";
 import { validateProductActivePublishGate } from "@/lib/productPublishGate";
+import { normalizeOnCarPreviews } from "@/lib/onCarPreviews";
 
 function maybeStripProductCosts(user, product) {
   if (hasCapability(user, "canViewProductCosts")) return product;
@@ -290,6 +291,10 @@ export async function PUT(request, context) {
       existing.recommendedProducts = normalizeRecommendedProductIds(body.recommendedProducts, {
         excludeId: id,
       });
+    }
+    if (body.onCarPreviews !== undefined) {
+      existing.onCarPreviews = normalizeOnCarPreviews(body.onCarPreviews);
+      existing.markModified("onCarPreviews");
     }
     if (body.features !== undefined) {
       existing.features = Array.isArray(body.features)

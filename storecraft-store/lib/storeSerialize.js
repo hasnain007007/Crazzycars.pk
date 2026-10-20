@@ -270,6 +270,9 @@ export function serializeStoreProductDetail(p) {
     saleSchedule: schedule,
     isOnSale,
     images: mapImagesWithSafeAlt(p.media?.images),
+    onCarPreviews: (Array.isArray(p.onCarPreviews) ? p.onCarPreviews : [])
+      .filter((r) => r?.car && r?.image)
+      .map((r) => ({ car: String(r.car), vehicleSlug: String(r.vehicleSlug || ""), image: String(r.image) })),
     media: {
       images: mapImagesWithSafeAlt(p.media?.images),
       videos: serializeMediaVideos(p.media?.videos),

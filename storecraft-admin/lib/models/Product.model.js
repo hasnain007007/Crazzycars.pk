@@ -218,6 +218,23 @@ const productSchema = new mongoose.Schema(
      * (named extra fees on this line item).
      */
     recommendedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+    /**
+     * "See it on your car" pictures: this product shown fitted to specific cars.
+     * vehicleSlug (optional) lets the storefront pre-select the shopper's saved car.
+     */
+    onCarPreviews: {
+      type: [
+        new mongoose.Schema(
+          {
+            car: { type: String, trim: true, default: "" },
+            vehicleSlug: { type: String, trim: true, default: "" },
+            image: { type: String, trim: true, default: "" },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
     customSizing: { type: customSizingSchema, default: () => ({}) },
     features: [{ type: String, trim: true }],
     specifications: [

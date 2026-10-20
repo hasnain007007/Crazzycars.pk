@@ -34,6 +34,7 @@ import {
   emptyVehicleCompatibility,
   vehicleCompatibilityFromProduct,
 } from "@/lib/vehicleCompatibility";
+import OnCarPreviewsEditor from "@/components/products/OnCarPreviewsEditor";
 
 const TabSEO = dynamic(() => import("./TabSEO").then((m) => ({ default: m.TabSEO })), {
   loading: () => <div className="py-6 text-center text-sm text-slate-500">Loading SEO…</div>,
@@ -168,6 +169,7 @@ function emptyForm() {
     },
     addOns: [],
     recommendedProducts: [],
+    onCarPreviews: [],
     features: [],
     specifications: [],
     seo: { metaTitle: "", metaDescription: "", metaKeywords: [] },
@@ -293,6 +295,11 @@ function productToForm(p) {
       name: a.name || "",
       price: a.price ?? 0,
       required: Boolean(a.required),
+    })),
+    onCarPreviews: (p.onCarPreviews || []).map((r) => ({
+      car: r?.car || "",
+      vehicleSlug: r?.vehicleSlug || "",
+      image: r?.image || "",
     })),
     recommendedProducts: (p.recommendedProducts || [])
       .map((rp) => {
@@ -423,6 +430,7 @@ function buildApiPayload(form) {
     recommendedProducts: (form.recommendedProducts || [])
       .map((p) => String(p?._id || p?.id || p || "").trim())
       .filter(Boolean),
+    onCarPreviews: (form.onCarPreviews || []).filter((r) => r.car?.trim() && r.image?.trim()),
     features: form.features.map((f) => f.trim()).filter(Boolean),
     specifications: (form.specifications || []).filter((s) => s.label?.trim() && s.value?.trim()),
     seo: form.seo,
@@ -1011,6 +1019,15 @@ export function ProductEditor({ mode, productId }) {
                 }
               />
             </div>
+          </section>
+
+          <section className={asideCardClass}>
+            <h2 className="mb-4 text-base font-semibold text-gray-900">See it on your car</h2>
+            <OnCarPreviewsEditor
+              value={form.onCarPreviews}
+              onChange={(rows) => setForm((f) => ({ ...f, onCarPreviews: rows }))}
+              fieldClass={fieldClass}
+            />
           </section>
 
           <section id="product-section-options" className={asideCardClass}>

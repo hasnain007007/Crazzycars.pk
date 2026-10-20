@@ -168,7 +168,7 @@ const loadContent = cache(async (slug) => {
     securityHold: { $ne: true },
   })
     .select(
-      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky compatibleVehicles compatibleCars vehicleCompatibility"
+      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts onCarPreviews customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky compatibleVehicles compatibleCars vehicleCompatibility"
     )
     .populate("categories", "name slug")
     .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")
@@ -193,7 +193,7 @@ const loadContent = cache(async (slug) => {
         securityHold: { $ne: true },
       })
         .select(
-          "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky compatibleVehicles compatibleCars vehicleCompatibility"
+          "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts onCarPreviews customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky compatibleVehicles compatibleCars vehicleCompatibility"
         )
         .populate("categories", "name slug")
         .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")
