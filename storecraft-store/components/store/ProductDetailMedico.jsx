@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { MyCarFitTag } from "@/components/store/MyCar";
-import { OnCarPreviewButton } from "@/components/store/OnCarPreview";
+import { OnCarPreviewButton, TryOnButton } from "@/components/store/OnCarPreview";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { resolveProductContentId, trackViewContent } from "@/lib/metaPixel";
@@ -1288,6 +1288,7 @@ export function ProductDetailMedico({
             </p>
             <MyCarFitTag productSlug={product?.slug} />
             <OnCarPreviewButton previews={product?.onCarPreviews} productName={product?.name || ""} />
+            <TryOnButton product={product} />
             {Number(soldRecently) >= 3 ? (
               <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600, color: "#9a3412" }}>
                 🔥 {Number(soldRecently)} sold in the last 30 days

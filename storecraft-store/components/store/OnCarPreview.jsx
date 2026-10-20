@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { tryOnStyleFor } from "@/lib/tryOnStyle";
 
 // The viewer (and its pictures) loads only after the shopper taps the button,
 // so product pages pay nothing for it on first load.
@@ -28,6 +29,31 @@ export function OnCarPreviewButton({ previews, productName }) {
       </button>
       {open ? (
         <OnCarPreviewDialog previews={list} productName={productName} onClose={() => setOpen(false)} />
+      ) : null}
+    </>
+  );
+}
+
+const TryOnDialog = dynamic(() => import("./TryOnDialog"), { ssr: false });
+
+/** "Try it on your car photo" for front splitters: drag-and-fit on the shopper's own photo. */
+export function TryOnButton({ product }) {
+  const [open, setOpen] = useState(false);
+  const style = tryOnStyleFor(product);
+  if (!style) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#111827] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] transition hover:bg-[#f9fafb]"
+      >
+        <span aria-hidden>📷</span>
+        Try it on your car photo
+      </button>
+      {open ? (
+        <TryOnDialog productName={product?.name || ""} style={style} onClose={() => setOpen(false)} />
       ) : null}
     </>
   );
