@@ -4,6 +4,17 @@
  * Local /media thumb with automatic fallback to the master when *-400.webp / *-800.webp is missing.
  * Prefer explicit width/height + sizes for CLS; keep plain <img> for /media (avoids /_next/image 400s).
  */
+/** Swap a failed thumb to its full-size master (data-master); hide it if that fails too. */
+export function applyMasterFallback(img) {
+  const fallback = img.getAttribute("data-master") || "";
+  if (fallback && img.getAttribute("src") !== fallback) {
+    img.src = fallback;
+    return;
+  }
+  img.removeAttribute("alt");
+  img.style.visibility = "hidden";
+}
+
 export default function LocalMediaImg({
   src,
   master,
@@ -41,16 +52,14 @@ export default function LocalMediaImg({
       draggable={draggable}
       data-master={masterUrl}
       onLoad={onLoad}
-      onError={(e) => {
-        const img = e.currentTarget;
-        const fallback = img.getAttribute("data-master") || "";
-        if (fallback && img.getAttribute("src") !== fallback) {
-          img.src = fallback;
-          return;
+      // A thumb that failed before hydration (e.g. a 404 the browser cached) fires its
+      // error event before React listens, so check once the element is attached too.
+      ref={(img) => {
+        if (img && img.complete && img.naturalWidth === 0 && img.getAttribute("src")) {
+          applyMasterFallback(img);
         }
-        img.removeAttribute("alt");
-        img.style.visibility = "hidden";
       }}
+      onError={(e) => applyMasterFallback(e.currentTarget)}
     />
   );
 }
