@@ -7227,3 +7227,75 @@ textarea::placeholder {
   .adv-tiers { grid-template-columns: 1fr; }
   .adv-wa { width: 100%; }
 }
+
+/* ── Hero depth effect (3D tilt, glare, scroll parallax) ─────────────────── */
+.home-hero--depth .home-hero__viewport {
+  perspective: 1400px;
+}
+.home-hero--depth .home-hero__media {
+  transform-origin: 50% 50%;
+  transform:
+    translate3d(
+      calc(var(--hx, 0) * -7px),
+      calc(var(--hy, 0) * -5px + var(--hs, 0) * 50px),
+      0
+    )
+    rotateY(calc(var(--hx, 0) * 2.2deg))
+    rotateX(calc(var(--hy, 0) * -1.6deg))
+    scale(calc(1.025 + var(--hs, 0) * 0.05));
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform;
+}
+.home-hero--depth.is-tilting .home-hero__media {
+  transition-duration: 0.12s;
+}
+.home-hero--depth .home-hero__inner {
+  transform: translate3d(calc(var(--hx, 0) * 12px), calc(var(--hy, 0) * 8px - var(--hs, 0) * 30px), 0);
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+/* Soft light that follows the mouse, like a reflection on paint. */
+.home-hero__glare {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    38% 55% at calc(50% + var(--hx, 0) * 42%) calc(45% + var(--hy, 0) * 40%),
+    rgba(255, 255, 255, 0.16),
+    rgba(255, 255, 255, 0) 70%
+  );
+  mix-blend-mode: screen;
+  transition: opacity 0.4s ease;
+}
+.home-hero--depth.is-tilting .home-hero__glare {
+  opacity: 1;
+}
+/* Slow shine across the banner every few seconds. */
+.home-hero--depth .home-hero__viewport::after {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% -40%;
+  width: 28%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-18deg);
+  animation: hero-shine 7s ease-in-out 2.5s infinite;
+}
+@keyframes hero-shine {
+  0% { left: -40%; }
+  28% { left: 130%; }
+  100% { left: 130%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero--depth .home-hero__media,
+  .home-hero--depth .home-hero__inner {
+    transform: none;
+    transition: none;
+  }
+  .home-hero--depth .home-hero__viewport::after,
+  .home-hero__glare {
+    display: none;
+  }
+}
