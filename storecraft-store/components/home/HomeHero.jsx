@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
-import { homepageHeroTrustItems } from "@/lib/storePolicyCopy";
 import {
   heroHeightStyle,
   mapBannerToSlide,
@@ -14,8 +13,9 @@ const BRAND = "CrazzyCars.pk";
 const SWIPE_PX = 48;
 const SLIDE_MS = 560;
 
+/** COD / prepaid already in the announcement bar; StatsBar owns trust chips. */
 function useTrustItems() {
-  return useMemo(() => homepageHeroTrustItems(), []);
+  return useMemo(() => [], []);
 }
 
 function normalizeButtonUrl(url) {
@@ -125,8 +125,16 @@ function primaryButtonColors(button) {
   };
 }
 
+/** Soften ALL-CAPS CMS labels to sentence case without inventing new wording. */
+function softenCtaLabel(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return "Shop now";
+  if (text !== text.toUpperCase() || !/[A-Z]/.test(text)) return text;
+  return text.charAt(0) + text.slice(1).toLowerCase();
+}
+
 function CtaLink({ button, className, tabIndex }) {
-  const text = String(button?.text || "Shop Now").trim();
+  const text = softenCtaLabel(button?.text || "Shop now");
   const href = normalizeButtonUrl(button?.url || button?.link);
   const style = className.includes("home-hero__btn--ghost")
     ? undefined

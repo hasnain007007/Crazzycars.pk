@@ -554,7 +554,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
 
   const navLinkClass = (item) => {
     const active = isNavItemActive(item);
-    return `store-header-nav-link px-3 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+    return `store-header-nav-link px-3 py-3 text-sm font-semibold tracking-normal transition-colors ${
       active ? "is-active" : ""
     }`;
   };
@@ -741,7 +741,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
         <div className="store-container flex items-center gap-1">
           <button
             type="button"
-            className="mr-2 flex items-center gap-2 rounded px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-white"
+            className="mr-2 flex min-h-11 items-center gap-2 rounded-[var(--radius-btn)] px-3 py-2.5 text-sm font-bold tracking-normal text-white"
             style={{ background: "#C41E1E" }}
             onMouseEnter={() =>
               openMega({ label: "Categories", href: "/categories", mega: true })
@@ -761,7 +761,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
             aria-haspopup="true"
           >
             <span aria-hidden>☰</span>
-            Shop by Category
+            Shop by category
           </button>
           {nav.map((item) => (
             <div
