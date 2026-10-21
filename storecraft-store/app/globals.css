@@ -35,8 +35,36 @@ body {
   --color-success: #059669;
   --color-error: #DC2626;
 
-  --section-gap: 80px;
-  --section-gap-sm: 28px;
+  /* Spacing — 4/8 scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
+  --section-gap: 64px;
+  --section-gap-sm: 32px;
+
+  /* Surfaces */
+  --radius-card: 10px;
+  --radius-btn: 8px;
+  --shadow-card: 0 1px 2px rgba(17, 17, 17, 0.04), 0 4px 12px rgba(17, 17, 17, 0.06);
+  --shadow-card-hover: 0 2px 4px rgba(17, 17, 17, 0.05), 0 8px 20px rgba(17, 17, 17, 0.08);
+
+  /* Type scale: 12 / 14 / 16 / 20 / 24 / 32 / 40 */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 40px;
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
 
   /* Legacy aliases */
   --red: var(--color-primary);
@@ -66,8 +94,9 @@ body {
   --foreground: var(--color-text-primary);
   --background: var(--color-surface);
 
+  /* Two families only: Rajdhani headings, Inter body/price */
   --font-body: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading: var(--font-rajdhani), "Rajdhani", "Bebas Neue", sans-serif;
+  --font-heading: var(--font-rajdhani), "Rajdhani", sans-serif;
   --font-price: var(--font-inter), "Inter", Arial, Helvetica, sans-serif;
 }
 
@@ -152,14 +181,15 @@ body {
 .font-heading,
 .cinzel {
   font-family: var(--font-heading), "Rajdhani", sans-serif !important;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: #0a0a0a;
 }
 
 .font-display {
   font-family: var(--font-heading), "Rajdhani", sans-serif !important;
-  letter-spacing: 0.03em;
+  letter-spacing: -0.02em;
   color: #0a0a0a;
+  text-transform: none;
 }
 
 h1.text-white,
@@ -202,27 +232,31 @@ h6 .price {
 
 h1 {
   font-family: var(--font-heading), "Rajdhani", sans-serif;
-  font-size: clamp(28px, 4vw, 48px);
+  font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl));
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+  text-transform: none;
   color: #111111;
 }
 
 h2 {
   font-family: var(--font-heading), "Rajdhani", sans-serif;
-  font-size: clamp(22px, 3vw, 36px);
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: 0.02em;
+  font-size: clamp(var(--text-xl), 3vw, var(--text-2xl));
+  font-weight: 700;
+  line-height: var(--leading-snug);
+  letter-spacing: -0.02em;
+  text-transform: none;
   color: #111111;
 }
 
 h3 {
   font-family: var(--font-heading), "Rajdhani", sans-serif;
-  font-size: clamp(18px, 2.5vw, 26px);
+  font-size: clamp(var(--text-lg), 2.5vw, var(--text-xl));
   font-weight: 600;
-  line-height: 1.4;
+  line-height: var(--leading-snug);
+  letter-spacing: -0.01em;
+  text-transform: none;
   color: #111111;
 }
 
@@ -230,17 +264,18 @@ h4,
 h5,
 h6 {
   font-family: var(--font-heading), "Rajdhani", sans-serif;
-  font-size: clamp(16px, 2vw, 20px);
+  font-size: var(--text-base);
   font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: 0.02em;
+  line-height: var(--leading-snug);
+  letter-spacing: -0.01em;
+  text-transform: none;
   color: #111111;
 }
 
 p {
   font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
   color: #444444;
   font-weight: 400;
 }
@@ -248,25 +283,26 @@ p {
 nav a,
 .nav-link {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .product-title {
   font-family: var(--font-heading), "Rajdhani", sans-serif;
-  font-size: clamp(16px, 2vw, 22px);
+  font-size: clamp(var(--text-base), 2vw, var(--text-lg));
   font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: 0.01em;
+  line-height: var(--leading-snug);
+  letter-spacing: -0.01em;
+  text-transform: none;
   color: #111111;
 }
 
 .product-price {
   font-family: var(--font-price);
-  font-size: clamp(20px, 2.5vw, 28px);
-  letter-spacing: 0.04em;
+  font-size: clamp(var(--text-lg), 2.5vw, var(--text-xl));
+  letter-spacing: 0;
   color: #111111;
 }
 
@@ -274,7 +310,8 @@ button,
 .btn {
   font-family: var(--font-body);
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
+  border-radius: var(--radius-btn);
 }
 
 .product-description {
@@ -780,21 +817,53 @@ a {
   Listing cards: unlayered global h3/p (Rajdhani 18–26px / body 15px) beat
   Tailwind utilities. Pin card type so titles stay readable in a 4-col grid.
 */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .product-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+}
+
+.product-card .cc-card-media {
+  aspect-ratio: 1 / 1;
+  background: #f3f4f6;
+}
+
+.product-card .cc-card-media img {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+
 .product-card h3,
 .product-card .cc-card-title {
   font-family: var(--font-body), Inter, Arial, Helvetica, sans-serif !important;
-  font-size: 13px !important;
+  font-size: var(--text-sm) !important;
   font-weight: 500 !important;
   line-height: 1.35 !important;
   letter-spacing: 0 !important;
   color: #111111;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
+  min-height: calc(1.35em * 2);
 }
 
 .product-card .cc-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   padding: 10px 10px 12px;
 }
 
@@ -2596,12 +2665,12 @@ textarea::placeholder {
   justify-content: center;
   min-height: 48px;
   padding: 0 26px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: var(--radius-btn);
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
 }
 
@@ -3009,9 +3078,10 @@ textarea::placeholder {
 
 .home-stats__label {
   text-align: left;
-  font-size: 10px;
-  line-height: 1.25;
-  color: #9ca3af;
+  font-size: var(--text-xs);
+  line-height: 1.3;
+  font-weight: 500;
+  color: #d1d5db; /* ≥4.5:1 on #111 */
 }
 
 @media (min-width: 640px) {
@@ -4906,20 +4976,21 @@ textarea::placeholder {
   max-width: 980px;
   margin: 0 auto;
   background: #ffffff;
-  border-radius: 16px;
-  padding: 16px 18px 18px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
-  border: 1px solid #eeeeee;
+  border-radius: var(--radius-card);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-card);
+  border: none;
 }
 
 .filter-by-car-title {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
   text-align: center;
   font-family: var(--font-heading), Rajdhani, sans-serif;
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: #111111 !important;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  text-transform: none;
 }
 
 .filter-by-car-fields {
@@ -4942,9 +5013,10 @@ textarea::placeholder {
     no-repeat right 14px center;
   appearance: none;
   -webkit-appearance: none;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   color: #111111;
   outline: none;
   cursor: pointer;
@@ -4975,18 +5047,20 @@ textarea::placeholder {
   flex: 0 0 auto;
   transform: none;
   min-width: 120px;
+  min-height: 48px;
   height: 48px;
-  padding: 0 28px;
+  padding: 0 24px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-btn);
   background: #c41e1e;
   color: #ffffff;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(196, 30, 30, 0.35);
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
+  transition: background 0.2s ease, transform 0.2s ease;
   white-space: nowrap;
 }
 

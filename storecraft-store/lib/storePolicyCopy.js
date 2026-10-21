@@ -148,13 +148,31 @@ export function returnsHeroTrustChip() {
   return "Refund for a defective or wrong part · no change-of-mind returns";
 }
 
-/** Homepage hero rail under CTAs — COD booking vs prepaid discount. */
+/**
+ * Homepage hero rail under CTAs.
+ * COD booking / prepaid % already appear in the top announcement bar — do not repeat them here.
+ */
 export function homepageHeroTrustItems() {
+  const days = returnsWindowDays();
   return [
-    `COD booking from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}`,
-    `${PREPAID_DISCOUNT_PERCENT}% off full payment (JazzCash / bank)`,
-    "Nationwide delivery",
+    lahoreEtaStatement(),
+    "Cash on Delivery nationwide",
     "WhatsApp support",
+    `${days}-day return on defective or wrong item`,
+  ];
+}
+
+/**
+ * Homepage trust strip (StatsBar) — true policy signals only, no invented counts.
+ * @returns {{ value: string, label: string }[]}
+ */
+export function homepageTrustStripItems() {
+  const days = returnsWindowDays();
+  return [
+    { value: "COD", label: "Nationwide" },
+    { value: lahoreEtaRange(), label: "Days to Lahore" },
+    { value: "WhatsApp", label: "Support" },
+    { value: `${days}-day`, label: "Return if defective/wrong" },
   ];
 }
 
