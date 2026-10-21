@@ -31,9 +31,12 @@ ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
 # Own cache id: without it BuildKit keys the cache by path, so admin and store shared one
 # Next cache and the admin shipped the storefront's CSS.
+# Turbopack's persistent cache can hand back a stale CSS chunk (new globals.css rules
+# missing on the live site), so drop it every build; the rest of .next/cache stays.
 RUN --mount=type=cache,id=crazzycars-admin-next-cache,target=/app/.next/cache \
     --mount=type=cache,target=/root/.npm \
-    npm run build \
+    rm -rf /app/.next/cache/turbopack \
+ && npm run build \
  && node scripts/check-admin-css.mjs
 
 FROM node:20-bookworm-slim AS runner

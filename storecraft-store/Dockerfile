@@ -32,9 +32,12 @@ ENV NEXT_PUBLIC_STORE_NAME=$NEXT_PUBLIC_STORE_NAME \
 ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
 # Own cache id so the admin build never shares this Next cache (see storecraft-admin/Dockerfile).
+# Turbopack's persistent cache can hand back a stale CSS chunk (new globals.css rules
+# missing on the live site), so drop it every build; the rest of .next/cache stays.
 RUN --mount=type=cache,id=crazzycars-store-next-cache,target=/app/.next/cache \
     --mount=type=cache,target=/root/.npm \
-    npm run build \
+    rm -rf /app/.next/cache/turbopack \
+ && npm run build \
  && node -e "\
 const fs=require('fs');const path=require('path');\
 const dir='.next/static/chunks';\
