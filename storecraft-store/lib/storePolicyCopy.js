@@ -1,6 +1,7 @@
 import { STORE_POLICY } from "../config/store-policy.js";
 import {
   COD_ADVANCE_AMOUNT,
+  COD_ADVANCE_TIERS,
   PREPAID_DISCOUNT_PERCENT,
 } from "../config/checkout-money.js";
 
@@ -72,14 +73,46 @@ export function shippingAdvanceCollapsedEn() {
   return `COD needs a small booking advance (from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}).`;
 }
 
-/** Cart / checkout / PDP banner — English. Customer-facing: ask for advance only (no tier breakdown). */
-export function shippingAdvanceBannerEn() {
-  return `COD orders need a small booking amount (from Rs. 250) before we process — deducted from your total, refunded if the item doesn't fit. Balance on delivery.`;
+/**
+ * COD booking tiers for display: [{ amount: "Rs. 300", range: "Under Rs. 5,000" }, …].
+ */
+export function codAdvanceTierList() {
+  let from = 0;
+  return COD_ADVANCE_TIERS.map((t) => {
+    const range =
+      t.below == null
+        ? `${formatPkrAmount(from)} and above`
+        : from === 0
+          ? `Under ${formatPkrAmount(t.below)}`
+          : `${formatPkrAmount(from)} – ${formatPkrAmount(t.below - 1)}`;
+    const shortRange =
+      t.below == null ? `${formatPkrAmount(from)}+` : from === 0 ? `Under ${formatPkrAmount(t.below)}` : `${formatPkrAmount(from)}+`;
+    from = t.below ?? from;
+    return { amount: formatPkrAmount(t.amount), range, shortRange };
+  });
 }
 
-/** Cart / checkout / PDP banner — Urdu. Customer-facing: ask for advance only. */
+/** "Under Rs. 5,000" → "under Rs. 5,000" mid-sentence; amounts stay "Rs.". */
+function midSentence(range) {
+  return range.startsWith("Under ") ? `under ${range.slice(6)}` : range;
+}
+
+/** One-line tier summary, e.g. "Rs. 300 under Rs. 5,000 · Rs. 600 for Rs. 5,000 – Rs. 9,999 · …". */
+export function codAdvanceTierSummary() {
+  return codAdvanceTierList()
+    .map((t) => `${t.amount} (${midSentence(t.range)})`)
+    .join(" · ");
+}
+
+/** Cart / checkout / PDP banner — English. */
+export function shippingAdvanceBannerEn() {
+  return `COD orders need a small booking amount before we process: ${codAdvanceTierSummary()}. It is deducted from your total and refunded if the item doesn't fit. Balance on delivery.`;
+}
+
+/** Cart / checkout / PDP banner — Urdu. */
 export function shippingAdvanceBannerUr() {
-  return `COD آرڈر پر کم از کم Rs. 250 بکنگ ایڈوانس درکار ہے — کل سے کٹے گی، فٹ نہ ہونے پر واپس۔ باقی ڈیلیوری پر۔`;
+  const [a, b, c] = codAdvanceTierList();
+  return `COD آرڈر پر بکنگ ایڈوانس: ${a.range.replace("Under ", "")} سے کم پر ${a.amount}، ${b.range} پر ${b.amount}، ${c.range.replace(" and above", "")} یا زیادہ پر ${c.amount} — کل سے کٹے گی، فٹ نہ ہونے پر واپس۔ باقی ڈیلیوری پر۔`;
 }
 
 /** Site-wide top announcement bar — COD booking vs prepaid discount. */
@@ -362,24 +395,20 @@ export function advancePaymentCopy() {
   return {
     stripTitle: "Your order is confirmed after a small booking advance",
     stripSub: `Pay the rest in cash on delivery, or pay in full and save ${pct}%.`,
-    chips: [
-      { value: booking, label: "COD booking" },
-      { value: `${pct}% OFF`, label: "Pay in full" },
-    ],
+    chips: codAdvanceTierList().map((t) => ({ value: t.amount, label: t.shortRange })),
     pageTitle: "Advance payment",
-    pageIntro: `Cash on Delivery orders are confirmed after a small booking advance, from ${booking}. It is deducted from your total, so you pay only the balance when the parcel arrives.`,
-    tiers: [
-      {
-        title: "Cash on Delivery",
-        value: `from ${booking}`,
-        note: "Booking advance before dispatch. Some items need a higher advance; the exact amount is shown at checkout.",
-      },
-      {
-        title: "Pay in full",
-        value: `${pct}% OFF`,
-        note: "Pay the whole order by JazzCash or bank transfer and get the prepaid discount at checkout.",
-      },
-    ],
+    pageIntro: `Cash on Delivery orders are confirmed after a small booking advance, from ${booking} depending on your order total. It is deducted from your total, so you pay only the balance when the parcel arrives.`,
+    tiers: codAdvanceTierList().map((t) => ({
+      title: `Order ${midSentence(t.range)}`,
+      value: t.amount,
+      note: "",
+    })),
+    prepaid: {
+      title: "Pay in full",
+      value: `${pct}% OFF`,
+      note: "Pay the whole order by JazzCash or bank transfer and get the prepaid discount at checkout.",
+    },
+    higherAdvanceNote: "Some items (like body kits) need a higher advance; the exact amount is always shown at checkout.",
     deductedNote:
       "Your advance is deducted from your total bill and refunded if the item doesn't fit. You pay only the balance on delivery.",
     steps: [

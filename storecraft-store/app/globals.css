@@ -7191,7 +7191,9 @@ textarea::placeholder {
 .adv-hero__badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); font-size: 12px; font-weight: 600; }
 .adv-hero h1 { margin: 12px 0 8px; font-size: clamp(28px, 5vw, 40px); font-weight: 800; line-height: 1.1; color: #fff; }
 .adv-hero p { margin: 0; font-size: 16px; line-height: 1.55; color: rgba(255, 255, 255, 0.85); max-width: 62ch; }
-.adv-tiers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.adv-tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.adv-tier.adv-tier--prepaid { margin-top: 12px; display: flex; align-items: center; gap: 18px; border: 1.5px solid #16a34a; background: #f0fdf4; }
+.adv-tier.adv-tier--prepaid .adv-tier__value { color: #15803d; margin-bottom: 0; }
 .adv-tier { padding: 18px; border-radius: 14px; background: #fff; border: 1.5px dashed rgba(196, 30, 30, 0.4); }
 .adv-tier__title { margin: 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; }
 .adv-tier__value { margin: 6px 0; font-size: 28px; font-weight: 800; color: #c41e1e; }
@@ -7224,7 +7226,11 @@ textarea::placeholder {
 .adv-faq p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: #374151; }
 @media (max-width: 640px) {
   .adv-hero { padding: 22px 18px; }
-  .adv-tiers { grid-template-columns: 1fr; }
+  .adv-tiers { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .adv-tiers .adv-tier { padding: 12px 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+  .adv-tiers .adv-tier__title { font-size: 10.5px; letter-spacing: 0.02em; line-height: 1.3; }
+  .adv-tiers .adv-tier__value { font-size: 20px; margin: 4px 0 0; }
+  .adv-tier--prepaid { flex-direction: column; align-items: flex-start; gap: 6px; }
   .adv-wa { width: 100%; }
 }
 

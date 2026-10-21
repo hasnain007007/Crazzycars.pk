@@ -79,15 +79,26 @@ export default async function AdvancePaymentPage() {
         <p>{c.pageIntro}</p>
       </header>
 
-      <section className="adv-tiers" aria-label="Payment options">
-        {c.tiers.map((t) => (
-          <div key={t.title} className="adv-tier">
-            <p className="adv-tier__title">{t.title}</p>
-            <p className="adv-tier__value">{t.value}</p>
-            <p className="adv-tier__note">{t.note}</p>
-          </div>
-        ))}
+      <section className="adv-section" aria-labelledby="adv-tiers-h">
+        <h2 id="adv-tiers-h">Booking advance for Cash on Delivery</h2>
+        <div className="adv-tiers">
+          {c.tiers.map((t) => (
+            <div key={t.title} className="adv-tier">
+              <p className="adv-tier__title">{t.title}</p>
+              <p className="adv-tier__value">{t.value}</p>
+              {t.note ? <p className="adv-tier__note">{t.note}</p> : null}
+            </div>
+          ))}
+        </div>
+        <p className="adv-muted">{c.higherAdvanceNote}</p>
       </section>
+      <div className="adv-tier adv-tier--prepaid">
+        <div>
+          <p className="adv-tier__title">{c.prepaid.title}</p>
+          <p className="adv-tier__value">{c.prepaid.value}</p>
+        </div>
+        <p className="adv-tier__note">{c.prepaid.note}</p>
+      </div>
       <p className="adv-deducted">✓ {c.deductedNote}</p>
 
       <section className="adv-section" aria-labelledby="adv-accounts">

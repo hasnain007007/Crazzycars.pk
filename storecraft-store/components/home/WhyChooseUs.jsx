@@ -59,8 +59,8 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
           395+ accessories with year fitment on every listing. Cash on Delivery nationwide.
         </p>
         <p className="shop-band__lead shop-band__lead--offer">
-          After you order on COD, send the {formatPkrAmount(COD_ADVANCE_AMOUNT)} booking /
-          confirmation amount on WhatsApp. That small payment confirms your order is real so we
+          After you order on COD, send the booking amount (from {formatPkrAmount(COD_ADVANCE_AMOUNT)},
+          by order total) on WhatsApp. That small payment confirms your order is real so we
           can pack and dispatch quickly — it is deducted from your total and refunded if the item
           doesn&apos;t fit. Prefer full payment? Get {PREPAID_DISCOUNT_PERCENT}% off with JazzCash
           or bank transfer.
@@ -76,7 +76,7 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
         </div>
         <p className="shop-band__chips">
           <span>Year-fit catalog</span>
-          <span>COD booking {formatPkrAmount(COD_ADVANCE_AMOUNT)}</span>
+          <span>COD booking from {formatPkrAmount(COD_ADVANCE_AMOUNT)}</span>
           <span>{PREPAID_DISCOUNT_PERCENT}% off full pay</span>
           <span>From {city}</span>
         </p>
