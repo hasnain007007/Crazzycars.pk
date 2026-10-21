@@ -88,95 +88,72 @@ export default async function AdvancePaymentPage() {
     <div className="adv-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <nav className="adv-crumbs" aria-label="Breadcrumb">
-        <Link href="/">Home</Link> <span aria-hidden>/</span> <span>{c.pageTitle}</span>
+        <Link href="/">Home</Link> / <span>{c.pageTitle}</span>
       </nav>
 
-      <header className="adv-hero">
-        <span className="adv-hero__badge">🔒 Official CrazzyCars.pk payment page</span>
+      <header className="adv-head">
         <h1>{c.pageTitle}</h1>
         <p>{c.pageIntro}</p>
-        <div className="adv-hero__chips">
-          {c.tiers.map((t) => (
-            <span key={t.title} className="adv-hero__chip">
-              <strong>{t.value}</strong>
-              <small>{t.title.replace(/^Order /, "")}</small>
-            </span>
-          ))}
-          <span className="adv-hero__chip adv-hero__chip--green">
-            <strong>{c.prepaid.value}</strong>
-            <small>{c.prepaid.title}</small>
-          </span>
-        </div>
-        <div className="adv-hero__actions">
-          <a href="#adv-accounts" className="adv-btn adv-btn--light">
-            {hasQr ? "Pay by QR or account" : "See payment accounts"} ↓
-          </a>
-          <a href={waLink} target="_blank" rel="noopener noreferrer" className="adv-btn adv-btn--ghost">
-            📲 Send screenshot
-          </a>
-        </div>
+        <p className="adv-official">This is the official CrazzyCars.pk payment page.</p>
       </header>
 
-      <section className="adv-section" aria-labelledby="adv-tiers-h">
-        <p className="adv-eyebrow">Step 1</p>
-        <h2 id="adv-tiers-h">How much to send</h2>
-        <div className="adv-tiers">
-          {c.tiers.map((t) => (
-            <div key={t.title} className="adv-tier">
-              <p className="adv-tier__title">{t.title}</p>
-              <p className="adv-tier__value">{t.value}</p>
-              {t.note ? <p className="adv-tier__note">{t.note}</p> : null}
-            </div>
-          ))}
-        </div>
-        <p className="adv-muted">{c.higherAdvanceNote}</p>
-        <div className="adv-tier adv-tier--prepaid">
-          <div>
-            <p className="adv-tier__title">{c.prepaid.title}</p>
-            <p className="adv-tier__value">{c.prepaid.value}</p>
-          </div>
-          <p className="adv-tier__note">{c.prepaid.note}</p>
-        </div>
-        <p className="adv-deducted">✓ {c.deductedNote}</p>
+      <section className="adv-section" aria-labelledby="adv-amounts">
+        <h2 id="adv-amounts">
+          <span>1.</span>How much to send
+        </h2>
+        <table className="adv-table">
+          <thead>
+            <tr>
+              <th scope="col">Order total</th>
+              <th scope="col">Booking advance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {c.tiers.map((t) => (
+              <tr key={t.title}>
+                <td>{t.title.replace(/^Order /, "").replace(/^under/, "Under")}</td>
+                <td>
+                  <strong>{t.value}</strong>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="adv-note">{c.higherAdvanceNote}</p>
+        <p className="adv-note">
+          <strong>Paying in full?</strong> {c.prepaid.note} You save {c.prepaid.value.replace(" OFF", "")}.
+        </p>
+        <p className="adv-note">{c.deductedNote}</p>
       </section>
 
       <section className="adv-section" id="adv-accounts" aria-labelledby="adv-accounts-h">
-        <p className="adv-eyebrow">Step 2</p>
-        <h2 id="adv-accounts-h">Pay by QR or to our official account</h2>
+        <h2 id="adv-accounts-h">
+          <span>2.</span>Where to send it
+        </h2>
         {hasQr ? (
-          <p className="adv-lead">
-            Scan a QR with any banking app, JazzCash or Easypaisa (Raast). Paying from this same phone? Tap{" "}
-            <strong>Save QR</strong>, then in your app choose <em>Scan QR → upload from gallery</em>.
+          <p className="adv-note" style={{ marginTop: 0, marginBottom: 14 }}>
+            Scan a QR code with your banking app, JazzCash or Easypaisa, or send to the account details. On the same
+            phone, save the QR and upload it in your app&apos;s Scan QR screen.
           </p>
         ) : null}
         {accounts.length ? (
           <div className="adv-accounts">
             {accounts.map((a) => (
-              <article key={a.key} className="adv-account" style={{ "--acc": a.accent }}>
-                <div className="adv-account__head">
-                  <h3 className="adv-account__name">{a.name}</h3>
-                  <span className="adv-account__type">{a.type}</span>
-                </div>
+              <div key={a.key} className="adv-account">
+                <h3>{a.name}</h3>
                 {a.qr ? (
                   <div className="adv-qr">
                     {/* eslint-disable-next-line @next/next/no-img-element -- static QR; must stay pixel-sharp */}
-                    <img
-                      src={a.qr.src}
-                      alt={a.qr.alt}
-                      width={a.qr.width}
-                      height={a.qr.height}
-                      loading="lazy"
-                      decoding="async"
-                      className="adv-qr__img"
-                    />
-                    <div className="adv-qr__actions">
-                      <a href={a.qr.src} download className="adv-copy">
+                    <img src={a.qr.src} alt={a.qr.alt} width={a.qr.width} height={a.qr.height} loading="lazy" decoding="async" />
+                    <p className="adv-qr__links">
+                      <a href={a.qr.src} download>
                         Save QR
+                      </a>{" "}
+                      ·{" "}
+                      <a href={a.qr.src} target="_blank" rel="noopener noreferrer">
+                        Open full size
                       </a>
-                      <a href={a.qr.src} target="_blank" rel="noopener noreferrer" className="adv-copy">
-                        Enlarge
-                      </a>
-                    </div>
+                    </p>
                   </div>
                 ) : null}
                 <dl>
@@ -191,35 +168,30 @@ export default async function AdvancePaymentPage() {
                   ))}
                 </dl>
                 {a.qr?.tillHint ? <p className="adv-account__hint">{a.qr.tillHint}</p> : null}
-              </article>
+              </div>
             ))}
           </div>
         ) : (
           <p className="adv-muted">Account details are shown at checkout after you choose a payment method.</p>
         )}
-        <p className="adv-safety">⚠️ {c.safety}</p>
+        <p className="adv-important">
+          <strong>Important:</strong> {c.safety}
+        </p>
       </section>
 
       <section className="adv-section" aria-labelledby="adv-steps">
-        <p className="adv-eyebrow">Step 3</p>
-        <h2 id="adv-steps">Send the screenshot and you&apos;re done</h2>
+        <h2 id="adv-steps">
+          <span>3.</span>Send us the screenshot
+        </h2>
         <ol className="adv-steps">
           {c.steps.map((s, i) => (
-            <li key={i}>
-              <span className="adv-steps__n">{i + 1}</span>
-              <span>{s}</span>
-            </li>
+            <li key={i}>{s}</li>
           ))}
         </ol>
-        <div className="adv-wa-box">
-          <div>
-            <p className="adv-wa-box__title">Paid? Send us the screenshot</p>
-            <p className="adv-muted">Include your order number. We confirm on WhatsApp and dispatch your order.</p>
-          </div>
-          <a className="adv-wa" href={waLink} target="_blank" rel="noopener noreferrer">
-            📲 Send on WhatsApp
-          </a>
-        </div>
+        <a className="adv-wa" href={waLink} target="_blank" rel="noopener noreferrer">
+          Send screenshot on WhatsApp
+        </a>
+        <p className="adv-muted">WhatsApp: {STORE_CONTACT.whatsapp}</p>
       </section>
 
       <section className="adv-section" aria-labelledby="adv-faq">
@@ -233,8 +205,8 @@ export default async function AdvancePaymentPage() {
           ))}
         </div>
         <p className="adv-muted">
-          Need help? WhatsApp {STORE_CONTACT.whatsapp}. See also our <Link href="/shipping-policy">shipping policy</Link>{" "}
-          and <Link href="/returns-policy">returns policy</Link>.
+          See also our <Link href="/shipping-policy">shipping policy</Link> and{" "}
+          <Link href="/returns-policy">returns policy</Link>.
         </p>
       </section>
     </div>

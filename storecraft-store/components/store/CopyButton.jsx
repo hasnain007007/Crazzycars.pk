@@ -20,7 +20,7 @@ export default function CopyButton({ value, label = "Copy" }) {
       }}
       aria-label={`${label} ${value}`}
     >
-      {done ? "Copied ✓" : label}
+      {done ? "Copied" : label}
     </button>
   );
 }
