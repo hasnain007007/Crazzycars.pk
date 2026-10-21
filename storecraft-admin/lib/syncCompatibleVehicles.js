@@ -3,7 +3,7 @@
  */
 import Vehicle from "@/lib/models/Vehicle.model";
 
-function overlapsYear(vehicle, yearFrom, yearTo) {
+export function overlapsYear(vehicle, yearFrom, yearTo) {
   const vFrom = Number(vehicle.yearFrom) || 0;
   const vTo = vehicle.yearTo == null ? 9999 : Number(vehicle.yearTo);
   const from = yearFrom == null || yearFrom === "" ? null : Number(yearFrom);
@@ -11,7 +11,11 @@ function overlapsYear(vehicle, yearFrom, yearTo) {
   if (!Number.isFinite(from) && !Number.isFinite(to)) return true;
   const a0 = Number.isFinite(from) ? from : 0;
   const a1 = Number.isFinite(to) ? to : 9999;
-  return a0 <= vTo && a1 >= vFrom;
+  if (a0 > vTo || a1 < vFrom) return false;
+  // Sharing only the changeover year (Civic 2012-2015 vs Reborn 2006-2012) is the next
+  // generation, not a fit. A single-year row or generation still matches on that year.
+  const shared = Math.min(a1, vTo) - Math.max(a0, vFrom);
+  return shared >= 1 || a0 === a1 || vFrom === vTo;
 }
 
 /**
