@@ -354,3 +354,58 @@ export const SHIPPING_POLICY_INTRO =
   "We deliver car accessories nationwide from Gujranwala (CrazzyCars.pk). Checkout shows the delivery option and fee before you place the order.";
 
 export const SHIPPING_POLICY_SECTIONS = getShippingPolicySections();
+
+/** Advance strip under the header + /advance-payment page (single source for the copy). */
+export function advancePaymentCopy() {
+  const booking = formatPkrAmount(COD_ADVANCE_AMOUNT);
+  const pct = PREPAID_DISCOUNT_PERCENT;
+  return {
+    stripTitle: "Your order is confirmed after a small booking advance",
+    stripSub: `Pay the rest in cash on delivery, or pay in full and save ${pct}%.`,
+    chips: [
+      { value: booking, label: "COD booking" },
+      { value: `${pct}% OFF`, label: "Pay in full" },
+    ],
+    pageTitle: "Advance payment",
+    pageIntro: `Cash on Delivery orders are confirmed after a small booking advance, from ${booking}. It is deducted from your total, so you pay only the balance when the parcel arrives.`,
+    tiers: [
+      {
+        title: "Cash on Delivery",
+        value: `from ${booking}`,
+        note: "Booking advance before dispatch. Some items need a higher advance; the exact amount is shown at checkout.",
+      },
+      {
+        title: "Pay in full",
+        value: `${pct}% OFF`,
+        note: "Pay the whole order by JazzCash or bank transfer and get the prepaid discount at checkout.",
+      },
+    ],
+    deductedNote:
+      "Your advance is deducted from your total bill and refunded if the item doesn't fit. You pay only the balance on delivery.",
+    steps: [
+      "Place your order on CrazzyCars.pk and note your order number.",
+      "Send the advance shown at checkout to one of our official accounts on this page.",
+      "Send the payment screenshot with your order number on WhatsApp. We confirm and dispatch your order.",
+    ],
+    safety:
+      "Send payments only to the accounts on this page. We never ask you to pay to any other number or account.",
+    faq: [
+      {
+        q: "Why do you take a booking advance on Cash on Delivery?",
+        a: "It confirms the order is genuine before we pack and send it, which keeps courier costs and prices low for everyone.",
+      },
+      {
+        q: "Is the advance extra?",
+        a: "No. It is deducted from your total. You pay only the remaining balance in cash when the parcel arrives.",
+      },
+      {
+        q: "What if the item doesn't fit my car?",
+        a: "Your advance is refunded if the item doesn't fit. Check fitment with us on WhatsApp before ordering if you are unsure.",
+      },
+      {
+        q: "How do I get the prepaid discount?",
+        a: `Choose JazzCash or bank transfer at checkout and pay the full amount. The ${pct}% discount is applied automatically.`,
+      },
+    ],
+  };
+}

@@ -9,6 +9,7 @@ import MerchantWidgetScripts from "@/components/store/MerchantWidgetScripts";
 import ThemeInjector from "@/components/store/ThemeInjector";
 import { StoreFooter } from "@/components/store/StoreFooter";
 import { StoreHeader } from "@/components/store/StoreHeader";
+import AdvancePayStrip from "@/components/store/AdvancePayStrip";
 import { StoreProviders } from "@/components/store/StoreProviders";
 import { CustomerProvider } from "@/lib/customerAuth";
 import { getPublicStoreSettings } from "@/lib/serverSettings";
@@ -307,6 +308,9 @@ export default async function RootLayout({ children }) {
             </Suspense>
             <Suspense fallback={null}>
               <StoreHeader initialCategoryTree={categoryTree} />
+            </Suspense>
+            <Suspense fallback={null}>
+              <AdvancePayStrip />
             </Suspense>
             <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">{children}</main>
             <Suspense fallback={null}>
