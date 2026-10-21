@@ -6832,10 +6832,10 @@ textarea::placeholder {
     padding: 24px 0 28px !important;
   }
 
-  /* Product pages: the sticky Add to cart + Buy now block is ~140px tall above the tab bar.
-     Lift the WhatsApp bubble over it so it never covers Buy now. */
+  /* Product pages: sticky ATC + Buy now + Buy on WhatsApp (~200px) above the tab bar.
+     Lift the WhatsApp bubble over it so it never covers the CTAs. */
   body:has(.pdp-purchase-actions) .store-whatsapp-fab {
-    bottom: calc(3.5rem + 150px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(3.5rem + 210px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   /* Stick ATC/Buy Now above MobileBottomNav (h-14 + safe-area) so taps hit CTAs, not nav. */
@@ -6850,7 +6850,8 @@ textarea::placeholder {
   }
 
   .pdp-add-btn,
-  .pdp-buy-btn {
+  .pdp-buy-btn,
+  .pdp-wa-buy-btn {
     height: 48px !important;
     font-size: 14px !important;
     min-height: 48px !important;
