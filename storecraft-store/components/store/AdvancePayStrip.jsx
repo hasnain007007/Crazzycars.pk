@@ -19,14 +19,20 @@ export default function AdvancePayStrip() {
           🚗
         </span>
         <div className="advance-strip__text">
-          <p className="advance-strip__title">{c.stripTitle}</p>
+          <p className="advance-strip__title">
+            <span className="advance-strip__title-full">{c.stripTitle}</span>
+            <span className="advance-strip__title-short">{c.stripTitleShort}</span>
+          </p>
           <p className="advance-strip__sub">{c.stripSub}</p>
         </div>
         <div className="advance-strip__chips">
           {c.chips.map((chip) => (
             <span key={chip.label} className="advance-strip__chip">
               <strong>{chip.value}</strong>
-              <small>{chip.label}</small>
+              <small>
+                <span className="advance-strip__chip-label">{chip.label}</span>
+                <span className="advance-strip__chip-compact">{chip.compactLabel}</span>
+              </small>
             </span>
           ))}
         </div>

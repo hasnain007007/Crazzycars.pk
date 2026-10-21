@@ -87,8 +87,15 @@ export function codAdvanceTierList() {
           : `${formatPkrAmount(from)} – ${formatPkrAmount(t.below - 1)}`;
     const shortRange =
       t.below == null ? `${formatPkrAmount(from)}+` : from === 0 ? `Under ${formatPkrAmount(t.below)}` : `${formatPkrAmount(from)}+`;
+    // Mobile strip chips — keep labels short so three tiers fit one row
+    const compactRange =
+      t.below == null
+        ? `${Math.round(from / 1000)}k+`
+        : from === 0
+          ? `<${Math.round(t.below / 1000)}k`
+          : `${Math.round(from / 1000)}k+`;
     from = t.below ?? from;
-    return { amount: formatPkrAmount(t.amount), range, shortRange };
+    return { amount: formatPkrAmount(t.amount), range, shortRange, compactRange };
   });
 }
 
@@ -394,8 +401,13 @@ export function advancePaymentCopy() {
   const pct = PREPAID_DISCOUNT_PERCENT;
   return {
     stripTitle: "Your order is confirmed after a small booking advance",
+    stripTitleShort: "Booking advance confirms your order",
     stripSub: `Pay the rest in cash on delivery, or pay in full and save ${pct}%.`,
-    chips: codAdvanceTierList().map((t) => ({ value: t.amount, label: t.shortRange })),
+    chips: codAdvanceTierList().map((t) => ({
+      value: t.amount,
+      label: t.shortRange,
+      compactLabel: t.compactRange,
+    })),
     pageTitle: "Advance payment",
     pageIntro: `Cash on Delivery orders are confirmed after a small booking advance, from ${booking} depending on your order total. It is deducted from your total, so you pay only the balance when the parcel arrives.`,
     tiers: codAdvanceTierList().map((t) => ({

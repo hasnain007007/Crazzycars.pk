@@ -7091,6 +7091,9 @@ textarea::placeholder {
   color: #b0151a;
   line-height: 1.3;
 }
+.advance-strip__title-short {
+  display: none;
+}
 .advance-strip__sub {
   margin: 2px 0 0;
   font-size: 13px;
@@ -7123,6 +7126,9 @@ textarea::placeholder {
   font-weight: 600;
   color: #4b5563;
 }
+.advance-strip__chip-compact {
+  display: none;
+}
 .advance-strip__cta {
   flex: 0 0 auto;
   display: inline-flex;
@@ -7143,44 +7149,79 @@ textarea::placeholder {
 }
 @media (max-width: 767px) {
   .advance-strip-wrap {
-    padding: 8px 12px 0;
+    padding: 6px 10px 0;
   }
   .advance-strip {
-    flex-wrap: wrap;
-    gap: 8px 10px;
-    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "icon text cta"
+      "chips chips chips";
+    align-items: center;
+    gap: 4px 8px;
+    padding: 7px 9px;
+    border-radius: 10px;
+    border-width: 1px;
   }
   .advance-strip__icon {
-    width: 30px;
-    height: 30px;
-    font-size: 15px;
+    grid-area: icon;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
     box-shadow: none;
   }
   .advance-strip__text {
-    flex: 1 1 calc(100% - 40px);
+    grid-area: text;
+    min-width: 0;
   }
   .advance-strip__title {
-    font-size: 13px;
-    line-height: 1.25;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  .advance-strip__title-full {
+    display: none;
+  }
+  .advance-strip__title-short {
+    display: inline;
   }
   .advance-strip__sub {
     display: none;
   }
   .advance-strip__chips {
-    flex: 1 1 auto;
+    grid-area: chips;
+    gap: 4px;
+    min-width: 0;
   }
   .advance-strip__chip {
     min-width: 0;
     flex: 1 1 0;
-    padding: 4px 8px;
+    padding: 3px 4px;
+    border-radius: 6px;
+    box-shadow: none;
+    border: 1px solid rgba(196, 30, 30, 0.12);
   }
   .advance-strip__chip strong {
-    font-size: 14px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .advance-strip__chip small {
+    font-size: 9px;
+    font-weight: 600;
+  }
+  .advance-strip__chip-label {
+    display: none;
+  }
+  .advance-strip__chip-compact {
+    display: inline;
   }
   .advance-strip__cta {
-    min-height: 40px;
-    padding: 0 14px;
-    font-size: 13px;
+    grid-area: cta;
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 11px;
+    gap: 3px;
+    white-space: nowrap;
+    align-self: center;
   }
 }
 
