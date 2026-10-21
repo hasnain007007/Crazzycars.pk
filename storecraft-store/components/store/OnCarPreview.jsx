@@ -19,7 +19,7 @@ export function OnCarPreviewButton({ previews, productName }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#C41E1E] bg-white px-4 py-2.5 text-sm font-semibold text-[#C41E1E] transition hover:bg-[#fff5f5]"
+        className="inline-flex min-h-11 w-full flex-1 items-center justify-center gap-2 rounded-[var(--radius-btn)] border border-[#C41E1E] bg-white px-4 py-2.5 text-sm font-semibold text-[#C41E1E] transition hover:bg-[#fff5f5]"
       >
         <span aria-hidden>🚗</span>
         See it on your car
@@ -47,7 +47,7 @@ export function TryOnButton({ product }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#111827] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] transition hover:bg-[#f9fafb]"
+        className="inline-flex min-h-11 w-full flex-1 items-center justify-center gap-2 rounded-[var(--radius-btn)] border border-[#111827] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] transition hover:bg-[#f9fafb]"
       >
         <span aria-hidden>📷</span>
         Try it on your car photo
