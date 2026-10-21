@@ -7183,75 +7183,26 @@ textarea::placeholder {
   }
 }
 
-/* ── Hero depth effect (3D tilt, glare, scroll parallax) ─────────────────── */
-.home-hero--depth .home-hero__viewport {
-  perspective: 1400px;
-}
+/* ── Hero depth: subtle scroll parallax only (no 3D tilt / glare / shine) ──
+   Designed banners already have type + art baked in — rotate/scale/glare
+   warps edges and washes out the design. Keep motion almost invisible. */
 .home-hero--depth .home-hero__media {
-  transform-origin: 50% 50%;
-  transform:
-    translate3d(
-      calc(var(--hx, 0) * -7px),
-      calc(var(--hy, 0) * -5px + var(--hs, 0) * 50px),
-      0
-    )
-    rotateY(calc(var(--hx, 0) * 2.2deg))
-    rotateX(calc(var(--hy, 0) * -1.6deg))
-    scale(calc(1.025 + var(--hs, 0) * 0.05));
-  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform: translate3d(0, calc(var(--hs, 0) * 12px), 0);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
-.home-hero--depth.is-tilting .home-hero__media {
-  transition-duration: 0.12s;
-}
 .home-hero--depth .home-hero__inner {
-  transform: translate3d(calc(var(--hx, 0) * 12px), calc(var(--hy, 0) * 8px - var(--hs, 0) * 30px), 0);
-  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform: translate3d(0, calc(var(--hs, 0) * -6px), 0);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* Soft light that follows the mouse, like a reflection on paint. */
 .home-hero__glare {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(
-    38% 55% at calc(50% + var(--hx, 0) * 42%) calc(45% + var(--hy, 0) * 40%),
-    rgba(255, 255, 255, 0.16),
-    rgba(255, 255, 255, 0) 70%
-  );
-  mix-blend-mode: screen;
-  transition: opacity 0.4s ease;
-}
-.home-hero--depth.is-tilting .home-hero__glare {
-  opacity: 1;
-}
-/* Slow shine across the banner every few seconds. */
-.home-hero--depth .home-hero__viewport::after {
-  content: "";
-  position: absolute;
-  inset: -20% auto -20% -40%;
-  width: 28%;
-  z-index: 2;
-  pointer-events: none;
-  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0) 100%);
-  transform: skewX(-18deg);
-  animation: hero-shine 7s ease-in-out 2.5s infinite;
-}
-@keyframes hero-shine {
-  0% { left: -40%; }
-  28% { left: 130%; }
-  100% { left: 130%; }
+  display: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .home-hero--depth .home-hero__media,
   .home-hero--depth .home-hero__inner {
     transform: none;
     transition: none;
-  }
-  .home-hero--depth .home-hero__viewport::after,
-  .home-hero__glare {
-    display: none;
   }
 }
 
@@ -7302,4 +7253,47 @@ textarea::placeholder {
 @media (max-width: 640px) {
   .adv-wa { width: 100%; }
   .adv-table th, .adv-table td { padding: 10px 8px; }
+}
+
+/* ── Brand hero (homepage) ─────────────────────────────────────────────── */
+.brand-hero { position: relative; overflow: hidden; color: #fff; background: #050505; }
+.brand-hero__inner { position: relative; max-width: 1280px; margin: 0 auto; min-height: 480px; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); align-items: center; padding: 36px 24px 0; }
+.brand-hero__copy { position: relative; z-index: 2; padding-bottom: 64px; }
+.brand-hero__kicker { margin: 0 0 14px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #ef4444; }
+.brand-hero__title { margin: 0; font-family: var(--font-heading), Rajdhani, sans-serif; font-weight: 700; font-size: clamp(44px, 6vw, 82px); line-height: 0.98; letter-spacing: -0.01em; color: #fff; }
+.brand-hero__title span { color: #e11d2a; }
+.brand-hero__sub { margin: 18px 0 0; max-width: 34ch; font-size: 17px; line-height: 1.5; color: rgba(255, 255, 255, 0.78); }
+.brand-hero__offers { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 22px; }
+.brand-hero__coupon { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1.5px dashed rgba(255, 255, 255, 0.55); border-radius: 8px; font-size: 14px; color: rgba(255, 255, 255, 0.9); }
+.brand-hero__coupon strong { color: #fff; font-size: 16px; }
+.brand-hero__offer-link { font-size: 14px; color: rgba(255, 255, 255, 0.8); text-decoration: underline; text-underline-offset: 3px; }
+.brand-hero__offer-link:hover { color: #fff; }
+.brand-hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.brand-hero__btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 26px; border-radius: 8px; font-size: 15px; font-weight: 700; text-decoration: none; transition: background 0.15s ease, border-color 0.15s ease; }
+.brand-hero__btn--primary { background: #c41e1e; color: #fff; }
+.brand-hero__btn--primary:hover { background: #a01818; }
+.brand-hero__btn--ghost { border: 1.5px solid rgba(255, 255, 255, 0.5); color: #fff; }
+.brand-hero__btn--ghost:hover { border-color: #fff; background: rgba(255, 255, 255, 0.06); }
+/* Photo sits flush right and fades out on every side into the black background. */
+.brand-hero__visual { position: absolute; z-index: 1; right: 0; bottom: 46px; width: min(62%, 860px); }
+.brand-hero__car { display: block; width: 100%; height: auto; -webkit-mask-image: radial-gradient(75% 85% at 62% 58%, #000 55%, transparent 100%); mask-image: radial-gradient(75% 85% at 62% 58%, #000 55%, transparent 100%); }
+.brand-hero__road { position: relative; z-index: 2; height: 46px; background: linear-gradient(#1b1b1b, #111); border-top: 2px solid #2a2a2a; overflow: hidden; }
+.brand-hero__lane { position: absolute; left: -80px; right: -80px; top: 50%; height: 4px; margin-top: -2px; background: repeating-linear-gradient(90deg, #e5b100 0 44px, transparent 44px 80px); animation: brand-hero-lane 1.6s linear infinite; }
+@keyframes brand-hero-lane { from { transform: translateX(0); } to { transform: translateX(-80px); } }
+@media (prefers-reduced-motion: reduce) { .brand-hero__lane { animation: none; } }
+@media (max-width: 767px) {
+  .brand-hero__inner { display: flex; flex-direction: column; min-height: 0; padding: 20px 16px 0; }
+  .brand-hero__copy { display: contents; }
+  .brand-hero__kicker { order: 1; font-size: 11px; margin-bottom: 8px; }
+  .brand-hero__title { order: 2; font-size: clamp(38px, 11vw, 48px); }
+  .brand-hero__visual { order: 3; position: relative; right: auto; bottom: auto; width: auto; margin: -6px -16px -10px; }
+  .brand-hero__car { -webkit-mask-image: radial-gradient(80% 90% at 55% 55%, #000 55%, transparent 100%); mask-image: radial-gradient(80% 90% at 55% 55%, #000 55%, transparent 100%); }
+  .brand-hero__offers { order: 4; margin-top: 0; gap: 8px 12px; }
+  .brand-hero__coupon { font-size: 12.5px; padding: 6px 10px; }
+  .brand-hero__coupon strong { font-size: 14px; }
+  .brand-hero__offer-link { font-size: 12.5px; }
+  .brand-hero__actions { order: 5; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 18px; }
+  .brand-hero__btn { min-height: 46px; padding: 0 10px; font-size: 14px; }
+  .brand-hero__sub { display: none; }
+  .brand-hero__road { height: 30px; }
 }

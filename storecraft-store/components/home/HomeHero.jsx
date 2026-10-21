@@ -346,52 +346,27 @@ function HeroSlidePanel({
 }
 
 /**
- * Depth effect: writes --hx / --hy (pointer, -1..1, desktop mouse only) and --hs (scroll
- * progress through the hero, 0..1) on the section. CSS turns them into a 3D tilt, glare and
- * scroll parallax. One rAF per frame, no React re-renders, off for reduced motion.
+ * Subtle depth: writes --hs (scroll progress through the hero, 0..1) for a light
+ * parallax. No pointer tilt / glare — designed banner art stays sharp and flat.
  */
 function useHeroDepth(ref, enabled) {
   useEffect(() => {
     const el = ref.current;
     if (!el || !enabled) return undefined;
-    const fineHover = window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
     let raf = 0;
-    let px = 0;
-    let py = 0;
     const write = () => {
       raf = 0;
       const r = el.getBoundingClientRect();
       const hs = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height)));
-      el.style.setProperty("--hx", px.toFixed(3));
-      el.style.setProperty("--hy", py.toFixed(3));
       el.style.setProperty("--hs", hs.toFixed(3));
     };
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(write);
     };
-    const onMove = (e) => {
-      const r = el.getBoundingClientRect();
-      px = ((e.clientX - r.left) / r.width) * 2 - 1;
-      py = ((e.clientY - r.top) / r.height) * 2 - 1;
-      el.classList.add("is-tilting");
-      schedule();
-    };
-    const onLeave = () => {
-      px = 0;
-      py = 0;
-      el.classList.remove("is-tilting");
-      schedule();
-    };
-    if (fineHover) {
-      el.addEventListener("pointermove", onMove, { passive: true });
-      el.addEventListener("pointerleave", onLeave, { passive: true });
-    }
     window.addEventListener("scroll", schedule, { passive: true });
     schedule();
     return () => {
       if (raf) cancelAnimationFrame(raf);
-      el.removeEventListener("pointermove", onMove);
-      el.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("scroll", schedule);
     };
   }, [ref, enabled]);
