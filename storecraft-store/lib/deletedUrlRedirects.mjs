@@ -19,7 +19,6 @@ export const DELETED_URL_REDIRECTS = [
   { source: "/honda-city-2021-present-rear-bumper-led-lights", destination: "/cars/honda-city-2021-present", permanent: true },
   { source: "/honda-city-classic-2009-2020-rear-bumper-led-lights", destination: "/cars/honda-city-classic-2009-2020", permanent: true },
   { source: "/honda-civic-2022-ac-vent-carbon-fiber-trim-2pcs", destination: "/cars/honda-civic-11th-gen-2022-present", permanent: true },
-  { source: "/honda-civic-rebirth-2012-2015-carbon-fiber-steering-trim", destination: "/cars/honda-civic-rebirth-2012-2016", permanent: true },
   { source: "/honda-civic-rebirth-2012-2016-side-mirror-led-indicators", destination: "/cars/honda-civic-rebirth-2012-2016", permanent: true },
   { source: "/honda-civic-reborn-2006-2012-gear-box-carbon-fiber-trim", destination: "/cars/honda-civic-reborn-2006-2012", permanent: true },
   { source: "/honda-civic-x-2016-2021-ac-vent-frame-carbon-fiber-trims", destination: "/cars/honda-civic-x-2016-2021", permanent: true },
