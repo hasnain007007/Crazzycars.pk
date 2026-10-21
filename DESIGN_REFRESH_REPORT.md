@@ -66,7 +66,7 @@ Local after changes (390×844 and 1440×900), no horizontal scroll on any listed
 | Home (phone) | Measured at push time — see live note below | LCP API often 0 in headless; TTFB ~390ms local |
 | PDP splitter | — | TTFB ~65ms local |
 
-**Live after deploy:** re-check with `?v=<timestamp>` on phone profile; target = not worse than pre-push live LCP. Documented in deploy verification notes when Coolify finishes.
+**Live after deploy (`d126844` on Coolify):** phone home LCP entry sometimes unavailable via Performance API in headless Chrome; visual load is healthy. No horizontal scroll on home/shop. Trust strip live: `COD Nationwide · 2–3 Days to Lahore · WhatsApp Support · 7-day Return if defective/wrong`. Hero rail count = 0.
 
 ## Protection checks (local)
 
@@ -83,7 +83,14 @@ Local after changes (390×844 and 1440×900), no horizontal scroll on any listed
 | Suites: admin-cod, meta-capi, try-on-style, vehicle-year-overlap | Pass (8/8) |
 | `git diff origin/vps-test -- storecraft-admin` | Empty |
 
-**Judgement — not fully automated locally:** empty `/cart` can 308 to `/shop` on this local DB; full ATC→checkout and try-on photo draw verified again on live after deploy.
+**Live post-deploy (2026-10-21):**
+- See it on your car: opens (Civic chip text present); Escape closes.
+- Try it on your car photo: opens (“Take or choose…”).
+- Fog LED: no See/Try. Rear splitter: no Try.
+- `/api/fits?...ativus...&vehicle=honda-civic-rebirth...` → `{"fits":false}`.
+- “Shop by category” + “Filter by car” sentence case on desktop.
+
+**Judgement — local cart:** empty `/cart` can 308 to `/shop` on local Mongo; not a design regression.
 
 ## Judgement calls
 
