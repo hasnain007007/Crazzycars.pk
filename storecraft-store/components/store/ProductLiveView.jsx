@@ -1,17 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-const CITIES = [
-  "Lahore",
-  "Karachi",
-  "Islamabad",
-  "Gujranwala",
-  "Faisalabad",
-  "Rawalpindi",
-  "Multan",
-  "Peshawar",
-];
+import { pickStableCity } from "@/lib/fakeSocialProof";
 
 function hashSeed(str) {
   let h = 0;
@@ -34,7 +24,7 @@ function baseViewers(productKey) {
  */
 export function ProductLiveView({ productKey = "" }) {
   const base = useMemo(() => baseViewers(productKey), [productKey]);
-  const city = useMemo(() => CITIES[hashSeed(`${productKey}:city`) % CITIES.length], [productKey]);
+  const city = useMemo(() => pickStableCity(productKey), [productKey]);
   const [count, setCount] = useState(base);
   const [ready, setReady] = useState(false);
 
