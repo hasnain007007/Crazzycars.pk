@@ -46,7 +46,7 @@ export function ProductLiveView({ productKey = "" }) {
       <span className="pdp-live-view__dot" aria-hidden />
       <div className="pdp-live-view__text">
         <p className="pdp-live-view__line">
-          <strong>{count}</strong> {count === 1 ? "customer is" : "customers are"} viewing this right now
+          <strong>{count}</strong> viewing now
         </p>
       </div>
     </div>

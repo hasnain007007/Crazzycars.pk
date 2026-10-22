@@ -6935,20 +6935,20 @@ textarea::placeholder {
 
 /* PDP fake live viewers — social proof under availability */
 .pdp-live-view {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 0 0 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(5, 150, 105, 0.22);
-  background: linear-gradient(90deg, #ecfdf5 0%, #ffffff 70%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  background: #ecfdf5;
 }
 .pdp-live-view__dot {
   flex: 0 0 auto;
-  width: 8px;
-  height: 8px;
-  margin-top: 5px;
+  width: 6px;
+  height: 6px;
+  margin-top: 0;
   border-radius: 999px;
   background: #059669;
   box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.45);
@@ -6959,28 +6959,24 @@ textarea::placeholder {
 }
 .pdp-live-view__line {
   margin: 0;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   color: #065f46;
-  line-height: 1.35;
+  line-height: 1.2;
 }
 .pdp-live-view__line strong {
   font-weight: 800;
   color: #047857;
 }
 .pdp-live-view__sub {
-  margin: 2px 0 0;
-  font-size: 11px;
-  font-weight: 500;
-  color: #6b7280;
-  line-height: 1.3;
+  display: none;
 }
 @keyframes pdp-live-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.45);
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(5, 150, 105, 0);
+    box-shadow: 0 0 0 5px rgba(5, 150, 105, 0);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
