@@ -33,7 +33,6 @@ import {
 } from "@/lib/storePolicyCopy";
 import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
 import { ProductLiveView } from "@/components/store/ProductLiveView";
-import { ProductRecentBuyers } from "@/components/store/ProductRecentBuyers";
 import { FakePurchaseToast } from "@/components/store/FakePurchaseToast";
 import {
   PRODUCT_CONTENT_OVERRIDES,
@@ -1332,7 +1331,6 @@ export function ProductDetailMedico({
             </p>
             <MyCarFitTag productSlug={product?.slug} />
             <ProductLiveView productKey={String(product?.slug || product?.id || product?._id || displayName)} />
-            <ProductRecentBuyers productKey={String(product?.slug || product?.id || product?._id || displayName)} />
             {Number(soldRecently) >= 3 ? (
               <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600, color: "#9a3412" }}>
                 🔥 {Number(soldRecently)} sold in the last 30 days

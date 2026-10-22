@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { pickStableCity } from "@/lib/fakeSocialProof";
-
 function hashSeed(str) {
   let h = 0;
   const s = String(str || "product");
@@ -24,7 +22,6 @@ function baseViewers(productKey) {
  */
 export function ProductLiveView({ productKey = "" }) {
   const base = useMemo(() => baseViewers(productKey), [productKey]);
-  const city = useMemo(() => pickStableCity(productKey), [productKey]);
   const [count, setCount] = useState(base);
   const [ready, setReady] = useState(false);
 
@@ -51,7 +48,6 @@ export function ProductLiveView({ productKey = "" }) {
         <p className="pdp-live-view__line">
           <strong>{count}</strong> {count === 1 ? "customer is" : "customers are"} viewing this right now
         </p>
-        <p className="pdp-live-view__sub">Also browsing from {city}</p>
       </div>
     </div>
   );
