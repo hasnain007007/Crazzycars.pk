@@ -12,6 +12,35 @@ body {
   overflow-x: clip;
 }
 
+/*
+ * Critical layout before Tailwind utilities — avoids FOUC when CSS chunks
+ * are mid-swap on deploy (desktop nav + SEO tree flashing as raw links).
+ */
+.cc-seo-nav {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border-width: 0 !important;
+}
+.store-header-desktop-nav,
+.store-header-desktop-actions {
+  display: none !important;
+}
+@media (min-width: 768px) {
+  .store-header-desktop-nav {
+    display: block !important;
+  }
+  .store-header-desktop-actions {
+    display: flex !important;
+  }
+}
+
 /* ============================================
    CRAZZYCARS.PK — AUTOMOTIVE THEME
    ============================================ */
@@ -7149,7 +7178,7 @@ textarea::placeholder {
 }
 @media (max-width: 767px) {
   .advance-strip-wrap {
-    padding: 6px 10px 0;
+    padding: 4px 10px 0;
   }
   .advance-strip {
     display: grid;
@@ -7158,16 +7187,16 @@ textarea::placeholder {
       "icon text cta"
       "chips chips chips";
     align-items: center;
-    gap: 4px 8px;
-    padding: 7px 9px;
-    border-radius: 10px;
+    gap: 3px 6px;
+    padding: 5px 8px;
+    border-radius: 8px;
     border-width: 1px;
   }
   .advance-strip__icon {
     grid-area: icon;
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
     box-shadow: none;
   }
   .advance-strip__text {
@@ -7175,7 +7204,7 @@ textarea::placeholder {
     min-width: 0;
   }
   .advance-strip__title {
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.2;
   }
   .advance-strip__title-full {
@@ -7189,19 +7218,22 @@ textarea::placeholder {
   }
   .advance-strip__chips {
     grid-area: chips;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
   }
   .advance-strip__chip {
     min-width: 0;
     flex: 1 1 0;
-    padding: 3px 4px;
-    border-radius: 6px;
+    flex-direction: row;
+    justify-content: center;
+    gap: 3px;
+    padding: 2px 4px;
+    border-radius: 5px;
     box-shadow: none;
     border: 1px solid rgba(196, 30, 30, 0.12);
   }
   .advance-strip__chip strong {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
   }
   .advance-strip__chip small {
@@ -7216,12 +7248,21 @@ textarea::placeholder {
   }
   .advance-strip__cta {
     grid-area: cta;
-    min-height: 28px;
-    padding: 0 10px;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    color: #c41e1e;
     font-size: 11px;
-    gap: 3px;
+    font-weight: 700;
+    gap: 2px;
     white-space: nowrap;
     align-self: center;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .advance-strip__cta:hover {
+    background: transparent;
+    color: #a01818;
   }
 }
 

@@ -649,7 +649,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
             </div>
           </form>
 
-          <div className="ml-auto hidden items-center gap-6 md:flex">
+          <div className="store-header-desktop-actions ml-auto items-center gap-6">
             <HeaderAction href={accountHref} label="Account" icon={<IconAccount />} badge={0} />
             <HeaderAction href="/wishlist" label="Saved" icon={<IconHeart />} badge={badgeWish} />
             <HeaderAction label="Cart" icon={<IconBag />} badge={badgeCart} onClick={() => setOpen(true)} />
@@ -732,9 +732,9 @@ export function StoreHeader({ initialCategoryTree = null }) {
           )
         : null}
 
-      {/* Row 3 — nav */}
+      {/* Row 3 — nav (desktop only; class hides before Tailwind loads) */}
       <nav
-        className="relative z-10 hidden border-b-2 bg-white md:block"
+        className="store-header-desktop-nav relative z-10 border-b-2 bg-white"
         style={{ borderBottomColor: "#C41E1E" }}
         onMouseLeave={() => setMegaOpen(false)}
       >
