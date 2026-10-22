@@ -87,13 +87,10 @@ export function codAdvanceTierList() {
           : `${formatPkrAmount(from)} – ${formatPkrAmount(t.below - 1)}`;
     const shortRange =
       t.below == null ? `${formatPkrAmount(from)}+` : from === 0 ? `Under ${formatPkrAmount(t.below)}` : `${formatPkrAmount(from)}+`;
-    // Mobile strip chips — keep labels short so three tiers fit one row
+    // Mobile strip chips — plain words (no < / k+); Pakistani shoppers read these easily
+    const num = (n) => Number(n).toLocaleString("en-PK");
     const compactRange =
-      t.below == null
-        ? `${Math.round(from / 1000)}k+`
-        : from === 0
-          ? `<${Math.round(t.below / 1000)}k`
-          : `${Math.round(from / 1000)}k+`;
+      t.below == null ? `From ${num(from)}` : from === 0 ? `Under ${num(t.below)}` : `From ${num(from)}`;
     from = t.below ?? from;
     return { amount: formatPkrAmount(t.amount), range, shortRange, compactRange };
   });
