@@ -79,8 +79,6 @@ export default async function Page() {
     console.error("[homepage] SSR data load failed:", err?.message || err);
   }
 
-  const desktopPreload = heroSlides[0]?.imageUrl || "";
-  const mobilePreload = heroSlides[0]?.imageUrlMobile || desktopPreload;
 
   const hubItems = [
     { name: "Shop all car accessories", url: "/shop" },
@@ -121,26 +119,9 @@ export default async function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(homeLd) }}
       />
-      {mobilePreload ? (
-        // eslint-disable-next-line @next/next/no-head-element -- preload LCP hero (mobile)
-        <link
-          rel="preload"
-          as="image"
-          href={mobilePreload}
-          media="(max-width: 767px)"
-          fetchPriority="high"
-        />
-      ) : null}
-      {desktopPreload ? (
-        // eslint-disable-next-line @next/next/no-head-element -- preload LCP hero (desktop)
-        <link
-          rel="preload"
-          as="image"
-          href={desktopPreload}
-          media="(min-width: 768px)"
-          fetchPriority="high"
-        />
-      ) : null}
+      {/* Preload the BrandHero car (LCP) — same files as components/home/BrandHero.jsx. */}
+      <link rel="preload" as="image" href="/hero/civic-night-760.webp" media="(max-width: 767px)" fetchPriority="high" />
+      <link rel="preload" as="image" href="/hero/civic-night-1205.webp" media="(min-width: 768px)" fetchPriority="high" />
       <HomePage
         initialBestSellers={bestSellers}
         initialHotDeals={hotDeals}
