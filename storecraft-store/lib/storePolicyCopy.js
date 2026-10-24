@@ -253,18 +253,10 @@ export function sanitizeAnnouncementItems(items) {
     }
     return item;
   });
-  const hasOffer = mapped.some((item) =>
-    /booking|prepaid|% off|advance/i.test(String(item?.text || item?.message || ""))
-  );
-  if (hasOffer) return mapped;
-  return [
-    {
-      text: announcementAdvanceDeliveryText(),
-      link: "/checkout",
-      enabled: true,
-    },
-    ...mapped,
-  ];
+  // The COD booking offer has its own band under the header (AdvancePayStrip), so the top
+  // bar is free for other messages; only fall back to the offer when it would be empty.
+  if (mapped.some((item) => String(item?.text || item?.message || "").trim())) return mapped;
+  return [{ text: announcementAdvanceDeliveryText(), link: "/checkout", enabled: true }];
 }
 
 export function getFaqItems() {
