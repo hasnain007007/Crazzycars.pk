@@ -397,9 +397,9 @@ export function advancePaymentCopy() {
   const booking = formatPkrAmount(COD_ADVANCE_AMOUNT);
   const pct = PREPAID_DISCOUNT_PERCENT;
   return {
-    stripTitle: "Your order is confirmed after a small booking advance",
-    stripTitleShort: "Booking advance confirms your order",
-    stripSub: `Pay the rest in cash on delivery, or pay in full and save ${pct}%.`,
+    stripTitle: "COD booking advance",
+    stripTitleShort: "COD booking advance",
+    stripSub: `Deducted from your total. Pay the rest on delivery, or pay in full and save ${pct}%.`,
     chips: codAdvanceTierList().map((t) => ({
       value: t.amount,
       label: t.shortRange,
