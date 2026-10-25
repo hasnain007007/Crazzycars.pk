@@ -4,6 +4,8 @@ import {
   COD_ADVANCE_TIERS,
   PREPAID_DISCOUNT_PERCENT,
 } from "../config/checkout-money.js";
+import { COD_LONG, DELIVERY_SHORT, RETURNS_SHORT } from "./policy";
+import { PHONE_DISPLAY } from "./contact";
 
 export function formatPkrAmount(n) {
   return `Rs. ${Number(n).toLocaleString("en-PK")}`;
@@ -57,9 +59,11 @@ export function deliveryEtaSummary() {
 }
 
 export function standardDeliveryFeeStatement() {
+  // Official booking advance = COD_ADVANCE_AMOUNT (Rs 300 tier floor), not legacy Rs 250.
   const regular = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
   const bulky = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
-  return `Delivery is ${regular} for regular items, or ${bulky} when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). COD orders require a booking advance (from Rs. 250) before processing; the balance is Cash on Delivery. There is no order-value waiver for delivery.`;
+  const booking = formatPkrAmount(COD_ADVANCE_AMOUNT);
+  return `Delivery is ${regular} for regular items, or ${bulky} when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). COD orders require a booking advance (from ${booking}) before processing; the balance is Cash on Delivery. There is no order-value waiver for delivery.`;
 }
 
 export function standardDeliveryFeeShort() {
@@ -263,12 +267,11 @@ export function getFaqItems() {
   return [
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
-      answer:
-        "Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from Rs. 250, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.",
+      answer: COD_LONG(),
     },
     {
       question: "How much are delivery charges?",
-      answer: `${standardDeliveryFeeStatement()} Roof or trunk spoilers and Express (Daewoo) use a different courier rate shown at checkout.`,
+      answer: `${DELIVERY_SHORT()} Roof or trunk spoilers and Express (Daewoo) use a different courier rate shown at checkout.`,
     },
     {
       question: "How do I pay with JazzCash or bank transfer?",
@@ -287,7 +290,7 @@ export function getFaqItems() {
     },
     {
       question: "What is your return or exchange policy?",
-      answer: returnsFaqAnswer(),
+      answer: RETURNS_SHORT(),
     },
     {
       question: "How long does delivery take?",
@@ -295,8 +298,7 @@ export function getFaqItems() {
     },
     {
       question: "Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
-      answer:
-        "CrazzyCars.pk ships car accessories nationwide from Gujranwala. We list vehicle fitment on product pages, offer Cash on Delivery on eligible items (small booking advance, balance on delivery), and handle returns under our published returns policy. Message us on WhatsApp with your order number if you need help — we do not use fake star ratings or invented reviews.",
+      answer: `CrazzyCars.pk ships car accessories nationwide from Gujranwala. We list vehicle fitment on product pages, offer Cash on Delivery on eligible items (booking advance from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}, balance on delivery), and handle returns under our published returns policy. Message us on WhatsApp ${PHONE_DISPLAY} with your order number if you need help — we do not use fake star ratings or invented reviews.`,
     },
   ];
 }
@@ -373,7 +375,7 @@ export function getShippingPolicySections() {
     {
       heading: "Cash on Delivery",
       paragraphs: [
-        "COD is available on eligible products. Body kits cannot be ordered on Cash on Delivery — use JazzCash, Meezan, or bank transfer. COD orders need a booking advance (from Rs. 250) before we process; checkout shows the exact amount. Send your payment screenshot on WhatsApp; the balance is collected on delivery.",
+        `COD is available on eligible products. Body kits cannot be ordered on Cash on Delivery — use JazzCash, Meezan, or bank transfer. ${COD_LONG()}`,
       ],
     },
   ];

@@ -27,6 +27,8 @@ const ALLOWLIST = new Set(
     path.join(ROOT, "config/store-policy.ts"),
     path.join(ROOT, "storecraft-admin/lib/storePolicyDefaults.js"),
     path.join(STORE_ROOT, "lib/storePolicyCopy.js"),
+    path.join(STORE_ROOT, "lib/policy.ts"),
+    path.join(STORE_ROOT, "lib/contact.ts"),
     path.join(ROOT, "scripts/check-policy-literals.mjs"),
     path.join(STORE_ROOT, "scripts/check-policy-literals.mjs"),
     path.join(ROOT, "tests/store-policy.test.ts"),

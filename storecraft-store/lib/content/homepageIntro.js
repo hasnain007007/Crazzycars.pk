@@ -1,9 +1,13 @@
 import { BRAND_NAME } from "../brand.js";
 import { STORE_POLICY } from "../../config/store-policy.js";
+import { COD_ADVANCE_AMOUNT } from "../../config/checkout-money.js";
+import { COD_LONG, DELIVERY_SHORT, RETURNS_SHORT } from "../policy";
+import { PHONE_DISPLAY } from "../contact";
 
 const std = Number(STORE_POLICY.shipping.standardFeePKR);
 const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR);
 const days = Number(STORE_POLICY.returns.windowDays);
+const booking = Number(COD_ADVANCE_AMOUNT);
 
 /**
  * Server-rendered homepage intro (~300 words). Editable via settings.homepageIntroHtml
@@ -16,7 +20,7 @@ export function getHomepageIntroCopy() {
       `Shop car accessories online in Pakistan at ${BRAND_NAME}: body kits, spoilers, LED headlights and indicators, TPE floor mats, carbon fiber interior trims and key covers for Honda Civic, Toyota Corolla, Honda City, Suzuki Alto, Yaris and more. Every product lists its model-year fitment. Nationwide delivery from Gujranwala with Cash on Delivery on eligible items.`,
       `${BRAND_NAME} is based in Gujranwala, Punjab, and ships exterior, interior, LED, carbon-fiber and body-kit parts across Pakistan. Shop by category for spoilers and diffusers, splitters and side skirts, LED headlights and bulbs, interior lights, floor mats and door-handle covers — or open Shop by Car to browse generations with the correct year ranges. Every product page shows stock, price in PKR, and vehicle fitment so you can check before you order.`,
       `Nationwide courier delivery is available on every eligible order. Standard delivery is Rs. ${std}; bulky lines (spoilers, splitters, side skirts, floor mats and similar) are Rs. ${bulky}. Cash on Delivery is offered on eligible items: pay a small booking advance, then the balance when the parcel arrives. Prepaid JazzCash or bank transfer orders can qualify for the prepaid discount shown at checkout.`,
-      `Need a fitment check or want to order on WhatsApp? Message 03284010007 with your car’s make, model, year and the product link. Defective or wrong-item claims are handled under our ${days}-day returns policy. Browse Exterior, Interior, LED Lighting, Spoilers & Diffusers, or jump to Corolla E170 and Civic X accessories to get started.`,
+      `Need a fitment check or want to order on WhatsApp? Message ${PHONE_DISPLAY} with your car’s make, model, year and the product link. Defective or wrong-item claims are handled under our ${days}-day returns policy. Browse Exterior, Interior, LED Lighting, Spoilers & Diffusers, or jump to Corolla E170 and Civic X accessories to get started.`,
     ],
     links: [
       { href: "/categories/exterior", label: "Exterior" },
@@ -38,23 +42,23 @@ export function getHomepageFaqItems() {
     },
     {
       question: "Do you offer Cash on Delivery?",
-      answer: `Yes, on eligible items. Pay a small booking advance (from Rs. ${std}) to confirm the order, then pay the product balance when the courier delivers. Body kits and some large packages may require full advance — checkout shows what applies.`,
+      answer: COD_LONG(),
     },
     {
       question: "How much is shipping?",
-      answer: `Delivery is Rs. ${std} for regular items. When the cart includes bulky items (spoilers, splitters, side skirts, floor mats, body kits, etc.) the fee is Rs. ${bulky}. The exact fee is shown at checkout before you place the order.`,
+      answer: DELIVERY_SHORT(),
     },
     {
       question: "What is your return policy?",
-      answer: `Within ${days} days of delivery we refund defective or wrong-item orders after inspection. Change of mind is not eligible. Contact WhatsApp 03284010007 with your order number and photos to start a claim.`,
+      answer: RETURNS_SHORT(),
     },
     {
       question: "How do I check if a part fits my car?",
-      answer: `Open the product page and read the vehicle fitment (make, model and years). You can also shop by car under /cars. If you are unsure, WhatsApp 03284010007 with your car year and a photo before ordering.`,
+      answer: `Open the product page and read the vehicle fitment (make, model and years). You can also shop by car under /cars. If you are unsure, WhatsApp ${PHONE_DISPLAY} with your car year and a photo before ordering.`,
     },
     {
       question: "How do I order on WhatsApp?",
-      answer: `Message 03284010007 with the product link (or name), quantity, your city, and your car’s make/model/year. We confirm price, delivery fee and COD booking steps, then place the order for you.`,
+      answer: `Message ${PHONE_DISPLAY} with the product link (or name), quantity, your city, and your car’s make/model/year. We confirm price, delivery fee and COD booking steps, then place the order for you.`,
     },
   ];
 }
