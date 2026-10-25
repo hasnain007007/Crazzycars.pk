@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ProductDetailMedico } from "@/components/store/ProductDetailMedico";
+import { FaqSection } from "@/components/store/FaqSection";
 import PageView from "@/components/store/PageView";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
@@ -512,6 +513,17 @@ export default async function ProductPage({ params, searchParams }) {
     const lcpUrl = lcpSrc ? pdpImageUrl(lcpSrc, 720) : "";
     const lcpSrcSet = lcpSrc ? cloudinarySrcSet(lcpSrc, [480, 720, 900], { crop: "limit" }) : "";
     const ssrReviews = approvedReviews.slice(0, 5);
+    const faqExtras =
+      PRODUCT_FAQ_OVERRIDES[String(content.data?.slug || "").trim()] || [];
+    const faqItems = [...buildProductKeywordFaqs(content.data), ...faqExtras];
+    const faqLd = (() => {
+      try {
+        return faqPageJsonLd(faqItems);
+      } catch (e) {
+        console.error("product faq json-ld:", e);
+        return null;
+      }
+    })();
 
     return (
       <>
@@ -547,26 +559,12 @@ export default async function ProductPage({ params, searchParams }) {
             })(),
           }}
         />
-        {(() => {
-          try {
-            const faqExtras =
-              PRODUCT_FAQ_OVERRIDES[String(content.data?.slug || "").trim()] || [];
-            const faqLd = faqPageJsonLd([
-              ...buildProductKeywordFaqs(content.data),
-              ...faqExtras,
-            ]);
-            if (!faqLd) return null;
-            return (
-              <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }}
-              />
-            );
-          } catch (e) {
-            console.error("product faq json-ld:", e);
-            return null;
-          }
-        })()}
+        {faqLd ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }}
+          />
+        ) : null}
         {ssrReviews.length ? (
           <section id="customer-reviews-ssr" className="sr-only" aria-label="Customer reviews">
             {ssrReviews.map((r, i) => (
@@ -587,6 +585,9 @@ export default async function ProductPage({ params, searchParams }) {
           soldRecently={soldRecently}
           initialReviews={approvedReviews.slice(0, 10)}
         />
+        {faqItems.length ? (
+          <FaqSection title="Frequently asked questions" items={faqItems} />
+        ) : null}
       </>
     );
   }

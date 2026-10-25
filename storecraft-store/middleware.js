@@ -116,15 +116,27 @@ export async function middleware(request) {
     if (cityMatch) {
       const dest = request.nextUrl.clone();
       dest.pathname = `/city/${cityMatch[1].toLowerCase()}`;
-      const rewritten = withPaidCookie(request, NextResponse.rewrite(dest));
-      // Early return used to skip the catalog Cache-Control block below → private/no-store.
-      // Match category ISR: public shared cache, 5 min + SWR day.
+      // Skip withPaidCookie on the SEO rewrite so Googlebot/CDN never see Set-Cookie
+      // (which forces private, no-store). Paid/fbclid attribution still applies on
+      // subsequent navigations through the normal middleware path.
+      const needsAttr =
+        Boolean(paidSourceFromRequest(request)) ||
+        Boolean(String(request.nextUrl.searchParams.get("fbclid") || "").trim()) ||
+        Boolean(String(request.nextUrl.searchParams.get("gclid") || "").trim()) ||
+        Boolean(String(request.nextUrl.searchParams.get("utm_source") || "").trim());
+      const rewritten = needsAttr
+        ? withPaidCookie(request, NextResponse.rewrite(dest))
+        : NextResponse.rewrite(dest);
       const isRsc =
         request.headers.get("rsc") === "1" ||
         request.headers.has("next-router-prefetch") ||
         request.headers.has("next-router-state-tree") ||
         /[?&]_rsc=/.test(request.url);
-      if (!isRsc) {
+      const wroteCookie =
+        Boolean(rewritten.headers.get("set-cookie")) ||
+        (typeof rewritten.cookies?.getAll === "function" &&
+          rewritten.cookies.getAll().length > 0);
+      if (!isRsc && !wroteCookie) {
         rewritten.headers.set(
           "Cache-Control",
           "public, max-age=0, s-maxage=300, stale-while-revalidate=86400"

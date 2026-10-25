@@ -3,6 +3,11 @@
  * All fields are optional — never invent values from titles or descriptions.
  */
 
+import {
+  fitmentCarDisplayName,
+  resolveVehicleFitmentRow,
+} from "./resolveVehicleFitment.js";
+
 export const PAINT_STATUS = ["painted", "unpainted", "primed", "not-applicable"];
 export const INSTALLATION_DIFFICULTY = [
   "plug-and-play",
@@ -380,53 +385,19 @@ export function specAdditionalProperties(specs) {
 
 /**
  * schema.org isAccessoryOrSparePartFor — only for model-specific fitment.
+ * Uses shared resolveVehicleFitment (Classic→City, Reborn→Civic, etc.).
  */
-/** Nickname → parent model (keep in sync with lib/resolveVehicleFitment.js). */
-const SCHEMA_GEN_TO_MODEL = {
-  honda: {
-    reborn: "Civic",
-    rebirth: "Civic",
-    "civic x": "Civic",
-    classic: "City",
-    "7th gen": "City",
-  },
-  toyota: {
-    e120: "Corolla",
-    e140: "Corolla",
-    e170: "Corolla",
-    "e170-e210": "Corolla",
-    "e170–e210": "Corolla",
-  },
-};
-
-function resolveRowForSchema(row) {
-  const make = String(row?.make || "").trim();
-  let model = String(row?.model || "").trim();
-  let generation = String(row?.trim || row?.generation || row?.generationLabel || "").trim();
-  const key = model.toLowerCase().replace(/[—–]/g, "-").replace(/\s+/g, " ");
-  const mapped = SCHEMA_GEN_TO_MODEL[make.toLowerCase()]?.[key];
-  if (mapped) {
-    if (!generation) generation = model;
-    model = mapped;
-  }
-  const years =
-    row?.yearFrom != null && row?.yearTo != null
-      ? Number(row.yearFrom) === Number(row.yearTo)
-        ? String(row.yearFrom)
-        : `${row.yearFrom}–${row.yearTo}`
-      : formatYearRange(row?.yearFrom, row?.yearTo);
-  const name = [make, model, generation, years].filter(Boolean).join(" ");
-  return { make, model, generation, yearFrom: row?.yearFrom, name };
-}
-
 export function fitmentVehiclesForSchema(fitment) {
   const f = fitment && typeof fitment === "object" ? fitment : null;
   if (!f || f.universal || !Array.isArray(f.fits) || !f.fits.length) return [];
   return f.fits.map((row) => {
-    const resolved = resolveRowForSchema(row);
+    const resolved = resolveVehicleFitmentRow({
+      ...row,
+      generation: row?.generation || row?.generationLabel || row?.trim || "",
+    });
     const node = {
       "@type": "Car",
-      name: resolved.name,
+      name: fitmentCarDisplayName(resolved),
       brand: { "@type": "Brand", name: resolved.make },
       model: resolved.model,
     };
