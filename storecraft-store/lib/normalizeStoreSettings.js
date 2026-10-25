@@ -43,7 +43,7 @@ export const DEFAULT_BRAND_STORY = {
   image1: "",
   image2: "",
   stats: [
-    { value: "393+", label: "Active products" },
+    { value: "{productCount}", label: "Active products" },
     { value: "COD", label: "Nationwide" },
   ],
 };

@@ -9,7 +9,7 @@ import {
   cityPath,
   mergeCityLanding,
 } from "@/lib/cityLandingPages";
-import { breadcrumbJsonLd, organizationJsonLd } from "@/lib/seo/jsonld";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
 import { FaqSection } from "@/components/store/FaqSection";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
@@ -33,11 +33,30 @@ async function loadCityPage(citySlug) {
   if (!CITY_LANDING_SLUGS.includes(key)) return null;
   await dbConnect();
   const settings = await Settings.findOne({ singletonKey: "default" })
-    .select("cityPages general contactPage")
+    .select("cityPages general contactPage localBusiness")
     .lean();
   const override = settings?.cityPages?.[key] || {};
   const city = mergeCityLanding(key, override);
   if (!city) return null;
+
+  // Enrich Gujranwala FAQ with street/directions when admin filled address settings.
+  const g = settings?.general || settings?.localBusiness || {};
+  const street = String(g.streetAddress || "").trim();
+  const mapUrl = String(g.mapUrl || "").trim();
+  if (key === "gujranwala" && Array.isArray(city.faq)) {
+    city.faq = city.faq.map((item) => {
+      if (!/physical store/i.test(item.question || "")) return item;
+      if (!street && !mapUrl) return item;
+      const locality = String(g.addressLocality || "Gujranwala").trim();
+      const region = String(g.addressRegion || "Punjab").trim();
+      const line = [street, locality, region].filter(Boolean).join(", ");
+      const dir = mapUrl ? ` Directions: ${mapUrl}` : "";
+      return {
+        ...item,
+        answer: `Yes — CrazzyCars.pk operates from ${line}.${dir} Message WhatsApp 0328 4010007 for the current pickup/visit window before you come.`,
+      };
+    });
+  }
 
   const catSlugs = city.topCategorySlugs || [];
   const categories = catSlugs.length
@@ -111,32 +130,19 @@ export default async function CityAccessoriesPage({ params }) {
   const faqLd = faqPageJsonLd(city.faq);
   const introHtml = sanitizeCategoryHtml(city.introHtml);
 
-  let localBusinessLd = null;
-  if (city.emitLocalBusiness) {
-    const g = settings?.general || {};
-    localBusinessLd = organizationJsonLd({
-      name: BRAND_NAME,
-      telephone: g.phone || g.whatsapp,
-      email: g.email,
-      whatsapp: g.whatsapp || g.phone,
-      streetAddress: g.streetAddress || g.address,
-      addressLocality: g.addressLocality || "Gujranwala",
-      addressRegion: g.addressRegion || "Punjab",
-      postalCode: g.postalCode,
-      addressCountry: g.addressCountry || "PK",
-      latitude: g.latitude,
-      longitude: g.longitude,
-      mapUrl: g.mapUrl,
-      priceRange: g.priceRange,
-      sameAs: g.sameAs,
-      openingHours: g.openingHours,
-    });
-    // Gujranwala landing only — sitewide AutoPartsStore stays in root layout.
-    if (localBusinessLd) {
-      localBusinessLd["@type"] = ["LocalBusiness", "AutoPartsStore"];
-      localBusinessLd["@id"] = `${SITE}${cityPath(city.slug)}#localbusiness`;
-    }
-  }
+  // Do not duplicate AutoPartsStore / LocalBusiness here — root layout emits #org.
+  // WebPage about points at the single store entity.
+  const webPageLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${SITE}${cityPath(city.slug)}#webpage`,
+    url: `${SITE}${cityPath(city.slug)}`,
+    name: city.h1 || city.metaTitle,
+    description: city.metaDescription,
+    isPartOf: { "@type": "WebSite", name: BRAND_NAME, url: SITE },
+    about: { "@id": `${SITE}/#org` },
+    provider: { "@id": `${SITE}/#org` },
+  };
 
   return (
     <div style={{ background: "#fff", minHeight: "100vh" }}>
@@ -150,12 +156,10 @@ export default async function CityAccessoriesPage({ params }) {
           dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }}
         />
       ) : null}
-      {localBusinessLd ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLd(localBusinessLd) }}
-        />
-      ) : null}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(webPageLd) }}
+      />
 
       <section
         style={{
@@ -200,6 +204,56 @@ export default async function CityAccessoriesPage({ params }) {
         style={{ padding: "28px 16px 8px", maxWidth: 920 }}
         dangerouslySetInnerHTML={{ __html: introHtml }}
       />
+
+      {city.slug === "gujranwala" &&
+      (() => {
+        const g = settings?.general || settings?.localBusiness || {};
+        const street = String(g.streetAddress || "").trim();
+        const mapUrl = String(g.mapUrl || "").trim();
+        const mapEmbedUrl = String(g.mapEmbedUrl || "").trim();
+        const lat = Number(g.latitude);
+        const lng = Number(g.longitude);
+        const hasGeo =
+          Number.isFinite(lat) &&
+          Number.isFinite(lng) &&
+          lat >= 23 &&
+          lat <= 37 &&
+          lng >= 60 &&
+          lng <= 78;
+        if (!street && !mapUrl && !mapEmbedUrl) return null;
+        const locality = String(g.addressLocality || "Gujranwala").trim();
+        const region = String(g.addressRegion || "Punjab").trim();
+        const oneLine = [street, locality, region].filter(Boolean).join(", ");
+        const directions = hasGeo
+          ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+          : mapUrl;
+        return (
+          <section className="store-container" style={{ padding: "8px 16px 24px", maxWidth: 920 }}>
+            <h2 style={{ margin: "0 0 10px", fontSize: 20, fontWeight: 700 }}>Visit / Directions</h2>
+            <p style={{ margin: 0, fontSize: 15, color: "#374151" }}>{oneLine}</p>
+            <p style={{ margin: "8px 0 0", fontSize: 14, color: "#6B7280" }}>
+              Hours: Mon–Sat 09:00–21:00 · Sunday closed
+            </p>
+            {directions ? (
+              <p style={{ margin: "10px 0 0" }}>
+                <a href={directions} target="_blank" rel="noopener noreferrer" style={{ color: "#C41E1E", fontWeight: 600 }}>
+                  Get directions
+                </a>
+              </p>
+            ) : null}
+            {mapEmbedUrl ? (
+              <iframe
+                title={`${BRAND_NAME} location map`}
+                src={mapEmbedUrl}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                style={{ marginTop: 12, width: "100%", height: 240, border: 0, borderRadius: 8 }}
+                allowFullScreen
+              />
+            ) : null}
+          </section>
+        );
+      })()}
 
       {categories.length ? (
         <section className="store-container" style={{ padding: "20px 16px" }}>
