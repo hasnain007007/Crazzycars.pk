@@ -325,6 +325,14 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
       p.media?.images?.find((i) => i?.isMain)?.url ||
       p.media?.images?.[0]?.url;
     const ogAlt = contentOverride?.imageAlt || displayName;
+    const sale = Number(p.pricing?.salePrice);
+    const regular = Number(p.pricing?.regularPrice);
+    const priceAmount =
+      Number.isFinite(sale) && sale > 0 && (!Number.isFinite(regular) || sale < regular)
+        ? sale
+        : Number.isFinite(regular)
+          ? regular
+          : null;
 
     return {
       title: { absolute: title },
@@ -334,9 +342,7 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
       openGraph: {
         title: title,
         description,
-        // Next.js metadata only allows website|article|profile|… — not OG "product".
-        // Product schema stays in JSON-LD (toProductLd).
-        type: "website",
+        // Omit openGraph.type so Next does not also emit website; use other for OG product.
         url: canonical,
         images: mainImg ? [{ url: mainImg, width: 800, height: 800, alt: ogAlt }] : [],
       },
@@ -345,6 +351,15 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
         title,
         description,
         images: mainImg ? [mainImg] : [],
+      },
+      other: {
+        "og:type": "product",
+        ...(priceAmount != null
+          ? {
+              "product:price:amount": String(Math.round(priceAmount)),
+              "product:price:currency": "PKR",
+            }
+          : {}),
       },
     };
   }
@@ -570,6 +585,7 @@ export default async function ProductPage({ params, searchParams }) {
           relatedProducts={content.relatedProducts || []}
           carLinks={content.carLinks || []}
           soldRecently={soldRecently}
+          initialReviews={approvedReviews.slice(0, 10)}
         />
       </>
     );

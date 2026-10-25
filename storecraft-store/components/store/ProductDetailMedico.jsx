@@ -258,6 +258,8 @@ export function ProductDetailMedico({
   carLinks = null,
   /** Units sold in the last 30 days (real orders); shown from 3 up. */
   soldRecently = 0,
+  /** Server-fetched eligible reviews (SSR first paint; no "Loading reviews…"). */
+  initialReviews = null,
 }) {
   const { addItem } = useCart();
   const router = useRouter();
@@ -1956,6 +1958,7 @@ export function ProductDetailMedico({
                   embedded
                   productId={product._id || product.id}
                   productSlug={product.slug}
+                  initialReviews={initialReviews}
                   onReviewCountChange={(total, avg) => {
                     setReviewCount(total);
                     if (avg != null && Number.isFinite(Number(avg))) setReviewAverage(Number(avg));
