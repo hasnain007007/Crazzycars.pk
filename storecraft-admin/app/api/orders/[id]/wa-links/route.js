@@ -6,8 +6,10 @@ import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import Order from "@/lib/models/Order.model";
+import Settings from "@/lib/models/Settings.model";
 import { buildWaActionUrl } from "@/lib/waActionToken";
 import {
+  DEFAULT_REVIEW_REQUEST_WHATSAPP_TEMPLATE,
   buildReviewRequestUrl,
   buildReviewRequestWhatsAppMessage,
 } from "@/lib/reviewRequestToken";
@@ -24,9 +26,10 @@ export async function GET(request, { params }) {
     }
 
     await dbConnect();
-    const order = await Order.findById(id)
-      .select("items orderNumber customer shippingAddress orderStatus")
-      .lean();
+    const [order, settings] = await Promise.all([
+      Order.findById(id).select("items orderNumber customer shippingAddress orderStatus").lean(),
+      Settings.findOne({ singletonKey: "default" }).select("whatsappTemplates.reviewRequest").lean(),
+    ]);
     if (!order) {
       return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
     }
@@ -39,7 +42,12 @@ export async function GET(request, { params }) {
     const confirmUrl = buildWaActionUrl(base, id, "confirm");
     const cancelUrl = buildWaActionUrl(base, id, "cancel");
     const reviewUrl = buildReviewRequestUrl(base, id);
-    const reviewMessage = reviewUrl ? buildReviewRequestWhatsAppMessage(order, reviewUrl) : "";
+    const reviewTemplate =
+      String(settings?.whatsappTemplates?.reviewRequest?.template || "").trim() ||
+      DEFAULT_REVIEW_REQUEST_WHATSAPP_TEMPLATE;
+    const reviewMessage = reviewUrl
+      ? buildReviewRequestWhatsAppMessage(order, reviewUrl, reviewTemplate)
+      : "";
     const productImages = (order.items || [])
       .map((i) => String(i.image || "").trim())
       .filter(Boolean);

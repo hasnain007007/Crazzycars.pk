@@ -8,6 +8,7 @@ export function OrderReviewForm({
   products = [],
   defaultName = "",
   defaultLocation = "",
+  googleReviewUrl = "",
 }) {
   const [productKey, setProductKey] = useState(() => {
     const first = products[0];
@@ -61,6 +62,7 @@ export function OrderReviewForm({
   }
 
   if (done) {
+    const gbp = String(googleReviewUrl || "").trim();
     return (
       <div
         style={{
@@ -74,6 +76,26 @@ export function OrderReviewForm({
       >
         <strong>Thank you!</strong> Your review is pending approval and will appear on the product
         page once moderated.
+        {gbp ? (
+          <p style={{ margin: "16px 0 0" }}>
+            <a
+              href={gbp}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-block",
+                padding: "10px 16px",
+                borderRadius: 8,
+                background: "#111",
+                color: "#fff",
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              Also review us on Google
+            </a>
+          </p>
+        ) : null}
       </div>
     );
   }

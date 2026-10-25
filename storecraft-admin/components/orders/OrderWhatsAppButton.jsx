@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { STORE_NAME } from "@/lib/constants";
+import { toE164PK, waLink } from "@/lib/contact";
 import {
   getAdminNewOrderWhatsAppMessage,
   getCustomerOrderWhatsAppMessage,
@@ -11,16 +12,9 @@ import { isCodPaymentMethod } from "@/lib/pakistaniPaymentMethods";
 /** Pakistan WhatsApp deep link: https://wa.me/923XXXXXXXXX?text=... */
 export function buildWaLink(phone, message) {
   if (!phone) return null;
-  let cleaned = String(phone).replace(/\D/g, "");
-  if (!cleaned) return null;
-  if (cleaned.startsWith("0") && cleaned.length === 11) {
-    cleaned = `92${cleaned.slice(1)}`;
-  }
-  if (cleaned.startsWith("3") && cleaned.length === 10) {
-    cleaned = `92${cleaned}`;
-  }
-  const encoded = encodeURIComponent(message || "");
-  return `https://wa.me/${cleaned}?text=${encoded}`;
+  const digits = String(phone).replace(/\D/g, "");
+  if (!digits) return null;
+  return waLink(toE164PK(phone), message);
 }
 
 export function openWhatsApp(phone, message) {
@@ -265,7 +259,7 @@ export function OrderWhatsAppButton({ order, onNotified, settings: settingsProp 
             cursor: loading ? "wait" : "pointer",
           }}
         >
-          Ask for review (post-delivery)
+          Request review on WhatsApp
         </button>
       ) : null}
       {done ? (
@@ -380,8 +374,8 @@ export function OrderAdminWhatsAppButton({ order, settings: settingsProp }) {
 }
 
 /**
- * Compact row button for the Orders list: sends the signed post-delivery review link on WhatsApp
- * and records it, so the order leaves the "Ask for reviews" queue.
+ * Compact row button for the Orders list: opens wa.me with the signed post-delivery review link
+ * and stamps reviewRequestedAt so the order leaves the review-due queue.
  */
 export function ReviewRequestRowButton({ order, onDone }) {
   const [state, setState] = useState("idle");
@@ -396,7 +390,12 @@ export function ReviewRequestRowButton({ order, onDone }) {
         setState("idle");
         return;
       }
-      await openWhatsAppWithOptionalImage(phone, json.reviewMessage, []);
+      const url = waLink(toE164PK(phone), json.reviewMessage);
+      if (!url) {
+        setState("idle");
+        return;
+      }
+      window.open(url, "_blank", "noopener,noreferrer");
       await fetch(`/api/orders/${order.id}/review-requested`, { method: "POST", credentials: "include" }).catch(
         () => {}
       );
@@ -420,9 +419,9 @@ export function ReviewRequestRowButton({ order, onDone }) {
         color: state === "done" ? "#166534" : "#fff",
         border: "none",
       }}
-      title="Send the review link on WhatsApp"
+      title="Request review on WhatsApp"
     >
-      {state === "busy" ? "Opening…" : state === "done" ? "✓ Asked" : "Ask review"}
+      {state === "busy" ? "Opening…" : state === "done" ? "✓ Requested" : "Request review on WhatsApp"}
     </button>
   );
 }

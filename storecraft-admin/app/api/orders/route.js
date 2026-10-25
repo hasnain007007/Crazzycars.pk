@@ -117,11 +117,19 @@ export async function GET(request) {
     const nowForView = new Date();
     const dayStartView = karachiStartOfDay(nowForView);
     const dayEndView = karachiEndOfDay(nowForView);
-    // Ask for reviews: delivered in the last 45 days and not asked yet.
+    // Delivered 3–10 days ago, review not requested yet (prefer deliveredAt; fall back to updatedAt).
+    // $expr avoids clobbering search $or when both are applied.
+    const reviewDueNewest = new Date(nowForView.getTime() - 3 * 86_400_000);
+    const reviewDueOldest = new Date(nowForView.getTime() - 10 * 86_400_000);
     const reviewDueFilter = {
       orderStatus: "delivered",
-      updatedAt: { $gte: new Date(nowForView.getTime() - 45 * 86_400_000) },
       reviewRequestedAt: null, // also matches orders without the field
+      $expr: {
+        $and: [
+          { $gte: [{ $ifNull: ["$deliveredAt", "$updatedAt"] }, reviewDueOldest] },
+          { $lte: [{ $ifNull: ["$deliveredAt", "$updatedAt"] }, reviewDueNewest] },
+        ],
+      },
     };
     // Needs Attention === stale rule (OR8): pending + unpaid + age >= 10 days
     const attentionCutoff = new Date(nowForView.getTime() - 10 * 86_400_000);

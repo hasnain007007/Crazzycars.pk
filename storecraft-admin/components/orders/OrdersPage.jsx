@@ -27,7 +27,7 @@ const SAVED_VIEWS = [
   { key: "unpaid", label: "Unpaid" },
   { key: "needsAttention", label: "Needs Attention" },
   { key: "today", label: "Today" },
-  { key: "reviewDue", label: "Ask for reviews" },
+  { key: "reviewDue", label: "Delivered 3–10 days ago, review not requested yet" },
 ];
 
 function StatCard({ label, value, hint, tone }) {
