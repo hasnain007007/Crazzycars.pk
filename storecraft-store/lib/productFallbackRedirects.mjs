@@ -42,6 +42,11 @@ export const PRODUCT_FALLBACK_REDIRECTS = {
     "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
   "toyota-corolla-2015-2026-rs-style-trunk-spoiler":
     "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+  // Short GSC/Shopify handle without toyota- prefix
+  "corolla-2015-2026-rs-style-trunk-spoiler-abs":
+    "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+  "corolla-2015-2026-rs-style-trunk-spoiler-abs-crazzycars-pk":
+    "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
 };
 
 /**
