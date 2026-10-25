@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import Order from "@/lib/models/Order.model";
-import Settings from "@/lib/models/Settings.model";
+import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { buildWaActionUrl } from "@/lib/waActionToken";
 import {
   DEFAULT_REVIEW_REQUEST_WHATSAPP_TEMPLATE,
@@ -28,7 +28,10 @@ export async function GET(request, { params }) {
     await dbConnect();
     const [order, settings] = await Promise.all([
       Order.findById(id).select("items orderNumber customer shippingAddress orderStatus").lean(),
-      Settings.findOne({ singletonKey: "default" }).select("whatsappTemplates.reviewRequest").lean(),
+      Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY })
+        .select("whatsappTemplates.reviewRequest")
+        .lean()
+        .then((doc) => doc || Settings.findOne({}).select("whatsappTemplates.reviewRequest").lean()),
     ]);
     if (!order) {
       return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });

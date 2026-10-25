@@ -127,6 +127,9 @@ export function ReviewsPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [seedFilter, setSeedFilter] = useState("all");
+  const [verifiedFilter, setVerifiedFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
@@ -151,6 +154,9 @@ export function ReviewsPage() {
         status: statusFilter,
         limit: "50",
       });
+      if (seedFilter !== "all") params.set("isSeed", seedFilter);
+      if (verifiedFilter !== "all") params.set("verified", verifiedFilter);
+      if (sourceFilter !== "all") params.set("source", sourceFilter);
       const res = await fetch(`/api/reviews?${params}`, fetchOpts);
       const data = await res.json();
       if (data.success) {
@@ -173,7 +179,7 @@ export function ReviewsPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, seedFilter, verifiedFilter, sourceFilter]);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -833,33 +839,98 @@ export function ReviewsPage() {
       ) : null}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 4, background: "#f3f4f6", borderRadius: 8, padding: 4 }}>
-          {[
-            { key: "all", label: "All" },
-            { key: "pending", label: "Pending" },
-            { key: "approved", label: "Approved" },
-            { key: "rejected", label: "Rejected" },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setStatusFilter(tab.key)}
-              style={{
-                padding: "7px 16px",
-                border: "none",
-                borderRadius: 6,
-                cursor: "pointer",
-                fontSize: 13,
-                fontWeight: 600,
-                background: statusFilter === tab.key ? "#fff" : "transparent",
-                color: statusFilter === tab.key ? "#111827" : "#6b7280",
-                boxShadow: statusFilter === tab.key ? "0 1px 4px rgba(0,0,0,0.1)" : "none",
-                transition: "all 0.15s",
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
+          <div style={{ display: "flex", gap: 4, background: "#f3f4f6", borderRadius: 8, padding: 4, flexWrap: "wrap" }}>
+            {[
+              { key: "all", label: "All" },
+              { key: "pending", label: "Pending" },
+              { key: "approved", label: "Approved" },
+              { key: "rejected", label: "Rejected" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setStatusFilter(tab.key)}
+                style={{
+                  padding: "7px 16px",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: statusFilter === tab.key ? "#fff" : "transparent",
+                  color: statusFilter === tab.key ? "#111827" : "#6b7280",
+                  boxShadow: statusFilter === tab.key ? "0 1px 4px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.15s",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#374151" }}>
+              Seed
+              <select
+                value={seedFilter}
+                onChange={(e) => setSeedFilter(e.target.value)}
+                style={{
+                  minHeight: 28,
+                  borderRadius: 6,
+                  border: "1px solid #e5e7eb",
+                  padding: "2px 8px",
+                  fontSize: 12,
+                  background: "#fff",
+                }}
+                aria-label="Filter by seed"
+              >
+                <option value="all">All</option>
+                <option value="true">Seed only</option>
+                <option value="false">Non-seed</option>
+              </select>
+            </label>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#374151" }}>
+              Verified
+              <select
+                value={verifiedFilter}
+                onChange={(e) => setVerifiedFilter(e.target.value)}
+                style={{
+                  minHeight: 28,
+                  borderRadius: 6,
+                  border: "1px solid #e5e7eb",
+                  padding: "2px 8px",
+                  fontSize: 12,
+                  background: "#fff",
+                }}
+                aria-label="Filter by verified"
+              >
+                <option value="all">All</option>
+                <option value="true">Verified</option>
+                <option value="false">Unverified</option>
+              </select>
+            </label>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#374151" }}>
+              Source
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value)}
+                style={{
+                  minHeight: 28,
+                  borderRadius: 6,
+                  border: "1px solid #e5e7eb",
+                  padding: "2px 8px",
+                  fontSize: 12,
+                  background: "#fff",
+                }}
+                aria-label="Filter by source"
+              >
+                <option value="all">All</option>
+                <option value="customer">Customer</option>
+                <option value="manual">Manual</option>
+                <option value="import">Import</option>
+              </select>
+            </label>
+          </div>
         </div>
 
         {selectedIds.length > 0 ? (
@@ -1029,6 +1100,36 @@ export function ReviewsPage() {
                               }}
                             >
                               ✓ Verified
+                            </span>
+                          ) : null}
+                          {review.isSeed ? (
+                            <span
+                              style={{
+                                background: "#f3f4f6",
+                                color: "#4b5563",
+                                fontSize: 10,
+                                fontWeight: 700,
+                                padding: "2px 8px",
+                                borderRadius: 99,
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              Seed
+                            </span>
+                          ) : null}
+                          {review.source ? (
+                            <span
+                              style={{
+                                background: "#eff6ff",
+                                color: "#1d4ed8",
+                                fontSize: 10,
+                                fontWeight: 700,
+                                padding: "2px 8px",
+                                borderRadius: 99,
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              {review.source}
                             </span>
                           ) : null}
                           {review.featured ? (

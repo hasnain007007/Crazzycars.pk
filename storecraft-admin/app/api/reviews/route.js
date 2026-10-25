@@ -22,6 +22,9 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "all";
     const productParam = searchParams.get("product");
+    const isSeedParam = (searchParams.get("isSeed") || "").trim().toLowerCase();
+    const verifiedParam = (searchParams.get("verified") || "").trim().toLowerCase();
+    const sourceParam = (searchParams.get("source") || "").trim().toLowerCase();
     const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit"), 10) || 20));
     const skip = (page - 1) * limit;
@@ -30,6 +33,15 @@ export async function GET(request) {
     if (status !== "all") query.status = status;
     if (productParam && mongoose.Types.ObjectId.isValid(productParam)) {
       query.product = productParam;
+    }
+    if (isSeedParam === "true" || isSeedParam === "1") query.isSeed = true;
+    else if (isSeedParam === "false" || isSeedParam === "0") query.isSeed = { $ne: true };
+    if (verifiedParam === "true" || verifiedParam === "1") query["reviewer.verified"] = true;
+    else if (verifiedParam === "false" || verifiedParam === "0") {
+      query["reviewer.verified"] = { $ne: true };
+    }
+    if (sourceParam === "manual" || sourceParam === "import" || sourceParam === "customer") {
+      query.source = sourceParam;
     }
 
     const [reviews, total, totalAll, pendingC, approvedC, rejectedC] = await Promise.all([

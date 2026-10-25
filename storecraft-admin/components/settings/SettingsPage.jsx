@@ -582,9 +582,24 @@ export function SettingsPage() {
                 }
               />
               <Field
-                label="Google Maps / GBP URL"
+                label="Google Maps URL"
                 value={g.mapUrl || ""}
                 onChange={(v) => setS({ ...s, general: { ...g, mapUrl: v } })}
+              />
+              <Field
+                label="Google Maps embed URL"
+                value={g.mapEmbedUrl || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, mapEmbedUrl: v } })}
+              />
+              <Field
+                label="Google Business Profile URL"
+                value={g.gbpUrl || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, gbpUrl: v } })}
+              />
+              <Field
+                label="Google review URL"
+                value={g.googleReviewUrl || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, googleReviewUrl: v } })}
               />
               <Field
                 label="WhatsApp (digits)"

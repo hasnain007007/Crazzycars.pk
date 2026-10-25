@@ -48,6 +48,7 @@ export default async function ContactPage() {
     latitude: general.latitude,
     longitude: general.longitude,
     mapUrl: general.mapUrl || "",
+    mapEmbedUrl: general.mapEmbedUrl || "",
     whatsapp: general.whatsapp || "",
     priceRange: general.priceRange || "",
     sameAs: Array.isArray(general.sameAs) ? general.sameAs : [],

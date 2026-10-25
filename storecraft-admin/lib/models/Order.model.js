@@ -344,7 +344,7 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
     invoiceNumber: { type: String, default: "", trim: true, index: true },
-    /** When admin sent the post-delivery review request on WhatsApp ("Ask for reviews" queue). */
+    /** When admin sent the post-delivery review request on WhatsApp (review-due queue). */
     reviewRequestedAt: { type: Date, default: null },
   },
   { timestamps: true }

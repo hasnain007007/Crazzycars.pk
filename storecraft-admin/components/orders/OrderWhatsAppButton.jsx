@@ -217,8 +217,10 @@ export function OrderWhatsAppButton({ order, onNotified, settings: settingsProp 
       const res = await fetch(`/api/orders/${orderApiId}/wa-links`, { credentials: "include" });
       const json = await res.json();
       if (!json.success || !json.reviewMessage) return;
-      await openWhatsAppWithOptionalImage(rawPhone, json.reviewMessage, []);
-      // Leaves the "Ask for reviews" queue on the Orders page.
+      const url = waLink(toE164PK(rawPhone), json.reviewMessage);
+      if (!url) return;
+      window.open(url, "_blank", "noopener,noreferrer");
+      // Leaves the review-due queue on the Orders page.
       fetch(`/api/orders/${orderApiId}/review-requested`, { method: "POST", credentials: "include" }).catch(
         () => {}
       );
