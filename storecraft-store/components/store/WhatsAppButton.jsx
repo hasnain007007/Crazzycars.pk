@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
+import { waLink, waMeDigits } from "@/lib/contact";
 
-const ENV_WA = process.env.NEXT_PUBLIC_WHATSAPP?.replace(/[^0-9]/g, "") || "";
+const ENV_WA = process.env.NEXT_PUBLIC_WHATSAPP || "";
 
 export default function WhatsAppButton() {
   const ctx = useStoreSettings();
@@ -11,7 +12,7 @@ export default function WhatsAppButton() {
 
   useEffect(() => {
     const apply = (wa) => {
-      const num = String(wa?.number || ENV_WA).replace(/[^0-9]/g, "");
+      const num = waMeDigits(wa?.number || ENV_WA);
       setConfig({
         enabled: wa?.enabled === true && !!num && wa?.showFloating !== false,
         number: num,
@@ -38,7 +39,7 @@ export default function WhatsAppButton() {
 
   if (!config?.enabled || !config.number) return null;
 
-  const href = `https://wa.me/${config.number}?text=${encodeURIComponent(config.message)}`;
+  const href = waLink(config.number, config.message);
   const isRight = config.position === "bottom-right";
 
   return (

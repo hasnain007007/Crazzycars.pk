@@ -2,6 +2,7 @@ import Link from "next/link";
 import ContactForm from "@/components/store/ContactForm";
 import { BRAND_NAME } from "@/lib/brand";
 import { resolveContactHourLines } from "@/lib/contactHours";
+import { telHref, waLink, phoneDisplay, PHONE_DISPLAY } from "@/lib/contact";
 
 const DEFAULT_HERO = {
   badge: "Get In Touch",
@@ -40,7 +41,7 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
   const whatsapp = digitsOnly(contact.whatsapp || localBusiness.whatsapp || phone);
   const responseTime = String(contact.responseTime || "We reply to all emails within 24 hours").trim();
 
-  const street =
+  let street =
     String(localBusiness.streetAddress || "").trim() ||
     String(contact.address?.line1 || "").trim();
   const line2 = String(contact.address?.line2 || "").trim();
@@ -55,15 +56,38 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
     "Pakistan";
   const postal = String(localBusiness.postalCode || "").trim();
   const mapUrl = String(localBusiness.mapUrl || "").trim();
+  const mapEmbedUrl = String(localBusiness.mapEmbedUrl || "").trim();
+  const lat = Number(localBusiness.latitude);
+  const lng = Number(localBusiness.longitude);
+  const hasValidGeo =
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= 23 &&
+    lat <= 37 &&
+    lng >= 60 &&
+    lng <= 78 &&
+    !(lat === 0 && lng === 0);
 
-  const addressLines = [
-    street,
-    line2,
-    [city, region, postal].filter(Boolean).join(", "),
-    country && country !== "PK" ? country : country === "PK" ? "Pakistan" : "",
-  ]
-    .map((l) => String(l || "").trim())
-    .filter(Boolean);
+  // Never fall back street → city (avoids "Gujranwala Gujranwala").
+  if (street && !/\d/.test(street) && street.toLowerCase() === city.toLowerCase()) {
+    street = "";
+  }
+
+  const showVisitBlock = Boolean(street || mapUrl || mapEmbedUrl);
+  const directionsUrl = hasValidGeo
+    ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+    : mapUrl || "";
+
+  const addressLines = showVisitBlock
+    ? [
+        street,
+        line2,
+        [city, region, postal].filter(Boolean).join(", "),
+        country && country !== "PK" ? country : country === "PK" ? "Pakistan" : "",
+      ]
+        .map((l) => String(l || "").trim())
+        .filter(Boolean)
+    : [[city, region].filter(Boolean).join(", ")].filter(Boolean);
 
   // Admin Settings → contactPage.hours only (never invent Mon–Sat 10–18).
   const hourLines = resolveContactHourLines(contact.hours);
@@ -150,23 +174,23 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
                     Phone
                   </p>
-                  <a href={`tel:${digitsOnly(phone)}`} style={{ color: "#111", fontSize: 15, textDecoration: "none" }}>
-                    {phone}
+                  <a href={telHref(phone)} style={{ color: "#111", fontSize: 15, textDecoration: "none" }}>
+                    {phoneDisplay(phone) || PHONE_DISPLAY}
                   </a>
                 </div>
               ) : null}
-              {whatsapp ? (
+              {whatsapp || phone ? (
                 <div>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
                     WhatsApp
                   </p>
                   <a
-                    href={`https://wa.me/${whatsapp}`}
+                    href={waLink(whatsapp || phone)}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: "#16A34A", fontSize: 15, textDecoration: "none" }}
                   >
-                    {whatsapp}
+                    {phoneDisplay(whatsapp || phone) || PHONE_DISPLAY}
                   </a>
                 </div>
               ) : null}
@@ -174,19 +198,35 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
               {addressLines.length ? (
                 <div>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
-                    Address
+                    {showVisitBlock ? "Visit / Directions" : "Address"}
                   </p>
                   <address style={{ fontStyle: "normal", color: "#374151", fontSize: 15, lineHeight: 1.6 }}>
                     {addressLines.map((line) => (
                       <div key={line}>{line}</div>
                     ))}
                   </address>
-                  {mapUrl ? (
+                  {directionsUrl ? (
                     <p style={{ margin: "8px 0 0" }}>
-                      <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#C41E1E" }}>
-                        Open in Google Maps
+                      <a href={directionsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#C41E1E" }}>
+                        Get directions
                       </a>
                     </p>
+                  ) : null}
+                  {showVisitBlock && mapEmbedUrl ? (
+                    <iframe
+                      title={`${BRAND_NAME} location map`}
+                      src={mapEmbedUrl}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      style={{
+                        marginTop: 12,
+                        width: "100%",
+                        height: 220,
+                        border: 0,
+                        borderRadius: 8,
+                      }}
+                      allowFullScreen
+                    />
                   ) : null}
                 </div>
               ) : null}

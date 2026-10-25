@@ -14,6 +14,8 @@ import { ROBOTS_INDEX_FOLLOW } from "@/lib/seo/robotsMeta";
 import { sanitizeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
+import { PHONE_DISPLAY, waLink, waMeDigits } from "@/lib/contact";
+import { COD_LONG } from "@/lib/policy";
 
 const BRAND =
   process.env.NEXT_PUBLIC_STORE_NAME ||
@@ -68,7 +70,7 @@ function codLandingFaqs() {
     return [
       {
         question: "Do you offer Cash on Delivery (COD) in Pakistan?",
-        answer: `Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
+        answer: COD_LONG(),
       },
       {
         question: "How much are delivery charges?",
@@ -97,9 +99,9 @@ function codLandingFaqs() {
   return items;
 }
 
-const WA = String(STORE_CONTACT.whatsapp || "03284010007").replace(/\D/g, "");
-const WA_DISPLAY = STORE_CONTACT.whatsapp || "03284010007";
-const WA_HREF = `https://wa.me/${STORE_CONTACT.phoneE164?.replace(/\D/g, "") || `92${WA.replace(/^0/, "")}`}`;
+const WA = waMeDigits(STORE_CONTACT.whatsapp || STORE_CONTACT.phoneE164);
+const WA_DISPLAY = PHONE_DISPLAY;
+const WA_HREF = waLink(STORE_CONTACT.whatsapp || STORE_CONTACT.phoneE164);
 
 export default function CashOnDeliveryPage() {
   const faqs = codLandingFaqs();

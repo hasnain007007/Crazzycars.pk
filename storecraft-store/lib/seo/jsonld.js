@@ -14,6 +14,7 @@ import {
   specAdditionalProperties,
   specsFromProduct,
 } from "../product-specs.mjs";
+import { schemaTelephone, waLink, waMeDigits } from "../contact";
 
 function site() {
   return getSiteUrl();
@@ -215,7 +216,7 @@ function buildMerchantOffer({
       "@id": `${SITE}/#org`,
       name: "CrazzyCars.pk", // BRAND_NAME — keep literal to avoid circular import in mjs callers
       url: SITE,
-      telephone: "+92-328-4010007",
+      telephone: schemaTelephone(),
     };
   }
   return offer;
@@ -252,14 +253,17 @@ export function isGenuineReview(r) {
   const orderId = String(r.orderId || "").trim();
   if (!orderId) return false;
   const source = String(r.source || "").trim().toLowerCase();
-  // Legacy rows may lack source; require customer when source is present.
-  if (source && source !== "customer") return false;
-  const email = String(r?.reviewer?.email || r?.email || "").toLowerCase();
-  if (email.endsWith("@seed-top100-bestsellers-v1.local") || email.endsWith("@crazzycars.local")) {
-    return false;
+  // Allow customer + whatsapp-request; reject seed/import/manual when labelled.
+  if (source && !["customer", "whatsapp-request", "order"].includes(source)) {
+    if (source.includes("seed") || source === "import" || source === "manual") return false;
   }
+  const email = String(r?.reviewer?.email || r?.email || "").toLowerCase();
+  if (email.endsWith(".local") || email.includes("seed")) return false;
   return true;
 }
+
+/** Alias used by the Oct 2026 SEO audit acceptance checks. */
+export const isEligibleReview = isGenuineReview;
 
 /** @deprecated use isGenuineReview */
 function isCustomerSourcedReview(r) {
@@ -590,9 +594,9 @@ export function collectionPageJsonLd({
 export function organizationJsonLd(overrides = {}) {
   const SITE = site();
   const orgId = `${SITE}/#org`;
-  const telephone = String(overrides.telephone || "").trim() || "+92-328-4010007";
+  const telephone = schemaTelephone(overrides.telephone || overrides.phone);
   const email = String(overrides.email || "").trim() || "info@crazzycars.pk";
-  const whatsapp = String(overrides.whatsapp || "").replace(/\D/g, "");
+  const waDigits = waMeDigits(overrides.whatsapp || overrides.telephone || overrides.phone);
 
   const locality = String(overrides.addressLocality || "Gujranwala").trim() || "Gujranwala";
   const region = String(overrides.addressRegion || "Punjab").trim() || "Punjab";
@@ -641,8 +645,8 @@ export function organizationJsonLd(overrides = {}) {
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        telephone: whatsapp ? `+${whatsapp.replace(/^\+/, "")}` : telephone,
-        url: whatsapp ? `https://wa.me/${whatsapp}` : "https://wa.me/923284010007",
+        telephone: schemaTelephone(waDigits),
+        url: waLink(waDigits),
         availableLanguage: ["en", "ur"],
         areaServed: "PK",
       },
@@ -661,10 +665,15 @@ export function organizationJsonLd(overrides = {}) {
     lngRaw === null || lngRaw === undefined || lngRaw === ""
       ? NaN
       : Number(lngRaw);
+  // Pakistan bounding box — never emit 0,0 or out-of-country coords.
   if (
     Number.isFinite(lat) &&
     Number.isFinite(lng) &&
-    !(lat === 0 && lng === 0)
+    !(lat === 0 && lng === 0) &&
+    lat >= 23 &&
+    lat <= 37 &&
+    lng >= 60 &&
+    lng <= 78
   ) {
     ld.geo = {
       "@type": "GeoCoordinates",
@@ -701,6 +710,8 @@ export function organizationJsonLd(overrides = {}) {
   const sameAs = Array.isArray(overrides.sameAs)
     ? overrides.sameAs.map((u) => String(u || "").trim()).filter(Boolean)
     : [];
+  const gbpUrl = String(overrides.gbpUrl || "").trim();
+  if (gbpUrl && !sameAs.includes(gbpUrl)) sameAs.push(gbpUrl);
   if (sameAs.length) ld.sameAs = sameAs;
   else {
     ld.sameAs = [
