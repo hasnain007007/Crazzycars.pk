@@ -50,6 +50,9 @@ const settingsSchema = new mongoose.Schema(
       latitude: { type: Number, default: null },
       longitude: { type: Number, default: null },
       mapUrl: { type: String, default: "" },
+      mapEmbedUrl: { type: String, default: "" },
+      googleReviewUrl: { type: String, default: "" },
+      gbpUrl: { type: String, default: "" },
       whatsapp: { type: String, default: "" },
       priceRange: { type: String, default: "" },
       sameAs: [{ type: String }],
@@ -567,6 +570,14 @@ Complete your order here:
 Need help? Call {storePhone}
 
 Shukriya — CrazzyCars.pk ✨`,
+        },
+      },
+      reviewRequest: {
+        enabled: { type: Boolean, default: true },
+        template: {
+          type: String,
+          default:
+            "Assalam o Alaikum {firstName}! Your CrazzyCars.pk order #{orderNo} was delivered. How do you like it? Please rate it here (1 minute): {reviewUrl} — your honest feedback, good or bad, helps other buyers in Pakistan. Shukriya! WhatsApp: 0328 4010007",
         },
       },
     },

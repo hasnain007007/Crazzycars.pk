@@ -103,6 +103,11 @@ Need help? Call {storePhone}
 
 Shukriya — Crazzycars.pk ✨`,
   },
+  reviewRequest: {
+    enabled: true,
+    template:
+      "Assalam o Alaikum {firstName}! Your CrazzyCars.pk order #{orderNo} was delivered. How do you like it? Please rate it here (1 minute): {reviewUrl} — your honest feedback, good or bad, helps other buyers in Pakistan. Shukriya! WhatsApp: 0328 4010007",
+  },
 };
 
 export function buildWhatsAppMessage(template, variables) {

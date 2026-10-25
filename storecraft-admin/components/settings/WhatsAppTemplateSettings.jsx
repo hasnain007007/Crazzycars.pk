@@ -88,6 +88,13 @@ const TEMPLATE_CONFIG = [
       "storeName",
     ],
   },
+  {
+    key: "reviewRequest",
+    label: "Request review on WhatsApp",
+    description:
+      "Opened from delivered orders → Request review on WhatsApp. Uses a signed opaque /review/<token> link.",
+    variables: ["firstName", "orderNo", "reviewUrl"],
+  },
 ];
 
 function emptyTemplates() {
@@ -96,6 +103,7 @@ function emptyTemplates() {
     adminNewOrder: { enabled: true, template: "" },
     orderShipped: { enabled: true, template: "" },
     abandonedCart: { enabled: true, template: "" },
+    reviewRequest: { enabled: true, template: "" },
   };
 }
 
