@@ -80,16 +80,27 @@ function pick(obj, defaults) {
   return out;
 }
 
-export default function AboutPageView({ aboutPage }) {
+export default function AboutPageView({ aboutPage, productCountLabel = null }) {
   const about = aboutPage && typeof aboutPage === "object" ? aboutPage : {};
   const hero = pick(about.hero, DEFAULT_HERO);
   const story = pick(about.story, DEFAULT_STORY);
   const promise = pick(about.promise, DEFAULT_PROMISE);
 
-  const stats =
-    Array.isArray(about.stats) && about.stats.some((s) => s?.number || s?.label)
-      ? about.stats.filter((s) => s?.number || s?.label)
-      : [];
+  const stats = (
+    Array.isArray(about.stats) && about.stats.some((s) => s?.number || s?.label || s?.value)
+      ? about.stats.filter((s) => s?.number || s?.label || s?.value)
+      : []
+  ).map((stat) => {
+    const label = String(stat.label || "").trim();
+    const raw = String(stat.number || stat.value || "").trim();
+    if (
+      productCountLabel &&
+      (/product/i.test(label) || raw === "{productCount}" || /\d{2,}\+/.test(raw))
+    ) {
+      return { ...stat, number: productCountLabel, value: productCountLabel };
+    }
+    return { ...stat, number: raw || stat.number };
+  });
 
   const values =
     Array.isArray(about.values) && about.values.some((v) => v?.title || v?.description)

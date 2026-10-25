@@ -6,24 +6,30 @@ import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { listingCanonicalPath, listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
+import { withBrandTitleSuffix } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
 export const generateMetadata = withSafeMetadata(async function shopMetadata({ searchParams }) {
   const listing = parseListingSearchParams(await searchParams);
-  const title = listing.q
+  const bare = listing.q
     ? `Results for “${listing.q}”`
     : listing.sale || listing.deals
       ? "Hot Deals"
-      : "Shop All Car Accessories";
+      : "Shop All Car Accessories in Pakistan";
+  const title = withBrandTitleSuffix(bare, { maxLen: 60 });
   const description =
-    "Browse premium car accessories in Pakistan. Filter by category, brand, and car make. Cash on delivery available nationwide from CrazzyCars.pk.";
+    "Browse premium car accessories in Pakistan. Filter by category, brand, and car make. Cash on delivery available nationwide from CrazzyCars.pk.".slice(
+      0,
+      160
+    );
   const listingSeo = listingMetadata("/shop", listing);
   const base = buildPageMetadata({
     title,
     description,
     path: listingCanonicalPath("/shop", listing),
     noIndex: listingSeo.robots.index === false,
+    absoluteTitle: true,
   });
   return {
     ...base,
@@ -31,6 +37,7 @@ export const generateMetadata = withSafeMetadata(async function shopMetadata({ s
     alternates: listingSeo.alternates,
     openGraph: {
       ...base.openGraph,
+      title,
       url: listingSeo.alternates.canonical,
     },
   };

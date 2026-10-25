@@ -9,7 +9,8 @@ export function formatActiveProductStat(count) {
   if (count == null || count === "") return null;
   const n = Number(count);
   if (!Number.isFinite(n) || n < 0) return null;
-  const rounded = Math.floor(n);
+  // Round down to nearest 10 with "+" (SEO audit §16).
+  const rounded = Math.floor(n / 10) * 10;
   return `${rounded.toLocaleString("en-US")}+`;
 }
 
@@ -36,8 +37,8 @@ export function resolveHomepageStats(stats, opts = {}) {
       const label = String(s?.label || "").trim();
       if (!value && !label) return null;
       if (isUnverifiableStat(value, label)) return null;
-      if (liveProducts && /product/i.test(label)) {
-        return { value: liveProducts, label };
+      if (liveProducts && (/product/i.test(label) || value === "{productCount}")) {
+        return { value: liveProducts, label: label || "Active products" };
       }
       return { value, label };
     })

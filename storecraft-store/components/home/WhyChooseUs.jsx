@@ -56,7 +56,7 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
         </h2>
         <p className="shop-band__lead">
           Splitters, LED lighting, body kits, and carbon from our Gujranwala flagship —
-          395+ accessories with year fitment on every listing. Cash on Delivery nationwide.
+          Year-fit accessories with fitment on every listing. Cash on Delivery nationwide.
         </p>
         <p className="shop-band__lead shop-band__lead--offer">
           After you order on COD, send the booking amount (from {formatPkrAmount(COD_ADVANCE_AMOUNT)},
