@@ -116,7 +116,21 @@ export async function middleware(request) {
     if (cityMatch) {
       const dest = request.nextUrl.clone();
       dest.pathname = `/city/${cityMatch[1].toLowerCase()}`;
-      return withPaidCookie(request, NextResponse.rewrite(dest));
+      const rewritten = withPaidCookie(request, NextResponse.rewrite(dest));
+      // Early return used to skip the catalog Cache-Control block below → private/no-store.
+      // Match category ISR: public shared cache, 5 min + SWR day.
+      const isRsc =
+        request.headers.get("rsc") === "1" ||
+        request.headers.has("next-router-prefetch") ||
+        request.headers.has("next-router-state-tree") ||
+        /[?&]_rsc=/.test(request.url);
+      if (!isRsc) {
+        rewritten.headers.set(
+          "Cache-Control",
+          "public, max-age=0, s-maxage=300, stale-while-revalidate=86400"
+        );
+      }
+      return rewritten;
     }
     // Hide internal path — one hop to the public SEO URL.
     const internalCity = lower.match(
@@ -401,17 +415,26 @@ export async function middleware(request) {
       "wishlist",
       "compare",
       "track-order",
+      "review",
     ]);
     const isPrivate =
       segments[0] && reserved.has(segments[0]);
+    if (segments[0] === "review") {
+      response.headers.set("X-Robots-Tag", "noindex, nofollow");
+      response.headers.set("Cache-Control", "private, no-store");
+    }
+    const isCityLanding = CITY_LANDING_RE.test(`/${segments.join("/")}`);
     const isCatalog =
       segments.length === 0 ||
+      isCityLanding ||
+      segments[0] === "city" ||
       ["categories", "cars", "blogs", "shop", "sale", "faq", "about", "contact"].includes(
         segments[0]
       ) ||
       String(segments[0] || "").endsWith("-policy") ||
       segments[0] === "terms-conditions" ||
       segments[0] === "cash-on-delivery" ||
+      segments[0] === "advance-payment" ||
       (segments.length === 1 && !reserved.has(segments[0]));
     // RSC payloads and redirects vary by router headers (the _rsc hash check answers 307 with a
     // header-specific target). Publicly caching them can replay a stale target and loop prefetches.
@@ -428,10 +451,11 @@ export async function middleware(request) {
       // _rsc hashes replays forever (ERR_TOO_MANY_REDIRECTS on the /sale prefetch).
       response.headers.set("Cache-Control", "private, no-store");
     } else if (!wroteCookie && isCatalog && !isRedirect) {
-      // max-age=0 + no stale-while-revalidate: browsers must re-check every time. With swr, Chrome
-      // replayed stale cached _rsc 307s between two hashes (prefetch redirect loop on /sale).
-      // s-maxage still lets a shared cache hold catalog HTML for 5 minutes.
-      response.headers.set("Cache-Control", "public, max-age=0, s-maxage=300");
+      // max-age=0: browsers revalidate. s-maxage + SWR: CDN/shared cache (city + category ISR).
+      response.headers.set(
+        "Cache-Control",
+        "public, max-age=0, s-maxage=300, stale-while-revalidate=86400"
+      );
     }
   } catch {
     /* ignore */
