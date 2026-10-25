@@ -2,9 +2,24 @@ import Link from "next/link";
 import InfoBar from "./InfoBar";
 import { sanitizePageHtml } from "@/lib/sanitizeHtml";
 
+function stripLaunchPlaceholder(html) {
+  return String(html || "")
+    .replace(/Placeholder copy for launch[^<.]*(?:\.|<)/gi, "")
+    .replace(/·\s*Placeholder copy for launch[^<]*/gi, "")
+    .replace(/final legal review pending\.?/gi, "");
+}
+
 export default function PageView({ page, slug }) {
   if (!page) return null;
-  const safeContent = sanitizePageHtml(page.content);
+  const safeContent = sanitizePageHtml(stripLaunchPlaceholder(page.content));
+  const updatedAt = page.updatedAt || page.publishedAt || null;
+  const updatedLabel = updatedAt
+    ? new Date(updatedAt).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
   return (
     <div
@@ -85,6 +100,12 @@ export default function PageView({ page, slug }) {
               marginBottom: 28,
             }}
           />
+
+          {updatedLabel ? (
+            <p style={{ margin: "0 0 20px", fontSize: 13, color: "#888888" }}>
+              Last updated: {updatedLabel}
+            </p>
+          ) : null}
 
           {safeContent ? (
             <div

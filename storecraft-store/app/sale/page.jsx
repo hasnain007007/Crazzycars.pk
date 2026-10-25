@@ -11,14 +11,20 @@ import {
 import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { withBrandTitleSuffix } from "@/lib/brand";
 
 /** Refresh deal grid periodically so SSR HTML stays current. */
 export const revalidate = 120;
 
+const SALE_TITLE = withBrandTitleSuffix("Hot Deals & Sale", { maxLen: 60 });
+
 export const metadata = buildPageMetadata({
-  title: `Hot Deals & Sale — ${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"}`,
+  title: SALE_TITLE,
   description:
-    "Shop live sale deals on car accessories in Pakistan — LED lights, spoilers, carbon fiber trims, body kits and more. Cash on Delivery nationwide from CrazzyCars.pk.",
+    "Shop live sale deals on car accessories in Pakistan — LED lights, spoilers, carbon fiber trims, body kits and more. Cash on Delivery nationwide.".slice(
+      0,
+      160
+    ),
   path: "/sale",
   absoluteTitle: true,
 });
