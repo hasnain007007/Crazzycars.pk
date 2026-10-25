@@ -170,6 +170,23 @@ const productSchema = new mongoose.Schema(
     categories: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
     shortDescription: { type: String, default: "" },
     longDescription: { type: String, default: "" },
+    /** Product-specific FAQs (admin-editable, max 8); merged above shared FAQs. */
+    faqs: {
+      type: [
+        {
+          question: { type: String, trim: true, maxlength: 300 },
+          answer: { type: String, trim: true, maxlength: 4000 },
+          sortOrder: { type: Number, default: 0 },
+        },
+      ],
+      default: [],
+      validate: {
+        validator(v) {
+          return !Array.isArray(v) || v.length <= 8;
+        },
+        message: "A product may have at most 8 FAQs",
+      },
+    },
     pricing: {
       regularPrice: { type: Number, required: true },
       salePrice: { type: Number },

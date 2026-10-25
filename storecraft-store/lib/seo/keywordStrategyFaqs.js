@@ -14,6 +14,7 @@ import {
   returnsFaqAnswer,
   standardDeliveryFeeStatement,
 } from "../storePolicyCopy.js";
+import { COD_LONG, DELIVERY_SHORT, RETURNS_SHORT } from "../policy";
 import {
   GENERATION_BY_SLUG,
   aliasesForSlug,
@@ -83,15 +84,14 @@ function trustedStoreFaq() {
 }
 
 function fallbackShared() {
-  const booking = formatPkrAmount(COD_ADVANCE_AMOUNT);
   return [
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
-      answer: `Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from ${booking}, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
+      answer: COD_LONG(),
     },
     {
       question: "How much are delivery charges?",
-      answer: `${standardDeliveryFeeStatement()} Roof or trunk spoilers and Express (Daewoo) use a different courier rate shown at checkout.`,
+      answer: `${DELIVERY_SHORT()} Roof or trunk spoilers and Express (Daewoo) use a different courier rate shown at checkout.`,
     },
     {
       question: "How long does delivery take?",
@@ -99,7 +99,7 @@ function fallbackShared() {
     },
     {
       question: "What is your return or exchange policy?",
-      answer: returnsFaqAnswer(),
+      answer: RETURNS_SHORT(),
     },
     {
       question: "How do I know if a part fits my car?",
@@ -1659,15 +1659,14 @@ function liveProductPrice(product) {
  * Grounded in store policy only — no fabricated fitment claims.
  */
 export function defaultProductFaqs() {
-  const fees = feeAmounts();
   return [
     {
       question: "Do you offer Cash on Delivery?",
-      answer: `Yes. Cash on Delivery is available nationwide on eligible orders. For COD, pay a small booking advance (from ${fees.booking}, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
+      answer: COD_LONG(),
     },
     {
       question: "How much is delivery?",
-      answer: `Standard delivery is a flat ${fees.regular} on every order. Roof/trunk spoilers and Express (Daewoo) use a different courier rate shown at checkout. Bulky carts use the bulky fee shown at checkout.`,
+      answer: DELIVERY_SHORT(),
     },
     {
       question: "How do I know if this part fits my car?",
@@ -1676,7 +1675,7 @@ export function defaultProductFaqs() {
     },
     {
       question: "What is your returns policy?",
-      answer: returnsFaqAnswer(),
+      answer: RETURNS_SHORT(),
     },
     {
       question: "How long does delivery take?",
@@ -1846,6 +1845,32 @@ export function buildVehicleKeywordFaqs(vehicle, { hasSplitterProducts = false }
   return items;
 }
 
+function normFaqQ(q) {
+  return String(q || "")
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Merge product.faqs above shared; product question wins on duplicate text. */
+export function mergeProductFaqs(productFaqs, sharedFaqs) {
+  const out = [];
+  const seen = new Set();
+  for (const list of [productFaqs, sharedFaqs]) {
+    for (const item of list || []) {
+      const q = String(item?.question || "").trim();
+      const a = String(item?.answer || "").trim();
+      if (!q || !a) continue;
+      const key = normFaqQ(q);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ question: q, answer: a });
+    }
+  }
+  return out.slice(0, 12);
+}
+
 /**
  * @param {object} product
  * @returns {{ question: string, answer: string }[]}
@@ -1881,7 +1906,12 @@ export function buildProductKeywordFaqs(product) {
     }
   }
 
-  return items;
+  const adminFaqs = (Array.isArray(product?.faqs) ? product.faqs : [])
+    .slice()
+    .sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0))
+    .map((f) => ({ question: f.question, answer: f.answer }));
+
+  return mergeProductFaqs(adminFaqs, items);
 }
 
 export function hasProductKeywordFaqs(articleNo) {
