@@ -232,11 +232,17 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     : /<[a-z][\s\S]*>/i.test(heroDesc)
       ? sanitizeCategoryHtml(heroDesc)
       : "";
-  // Hero: keep a short blurb only (first paragraph / ~320 chars) — price lists stay in the grid below.
+  // Hero: short excerpt only. Full catalog description is rendered below the product grid (never truncated).
   const heroHtml = shortenVehicleHeroHtml(rawHeroHtml);
   const heroPlainShort = !heroHtml
     ? shortenVehicleHeroPlain(heroDesc)
     : "";
+  const fullAboutHtml = rawHeroHtml
+    || (/<[a-z][\s\S]*>/i.test(catalogDesc)
+      ? sanitizeCategoryHtml(catalogDesc)
+      : catalogDesc
+        ? `<p>${String(catalogDesc).replace(/</g, "&lt;")}</p>`
+        : "");
 
   const popularAccessories = Array.isArray(vehicle.popularAccessories)
     ? vehicle.popularAccessories.map((s) => String(s || "").trim()).filter(Boolean)
@@ -495,6 +501,30 @@ export default async function VehicleSlugPage({ params, searchParams }) {
           emptyMessage="Products for this car will show once you assign them in admin (compatible vehicles / car catalog). Universal products are not listed here unless you add them to this car."
         />
       </section>
+
+      {fullAboutHtml ? (
+        <section
+          className="store-container prose prose-neutral max-w-none pb-12 md:pb-14"
+          aria-label={`About ${vehicle.displayName} accessories`}
+        >
+          <h2
+            style={{
+              fontFamily: "var(--font-heading), Rajdhani, sans-serif",
+              fontSize: "clamp(18px, 2.4vw, 24px)",
+              fontWeight: 700,
+              color: "#111",
+              margin: "0 0 12px",
+            }}
+          >
+            About {vehicle.make} {vehicle.model}
+            {yearLabel ? ` (${yearLabel})` : ""} accessories
+          </h2>
+          <div
+            className="vehicle-about-body"
+            dangerouslySetInnerHTML={{ __html: fullAboutHtml }}
+          />
+        </section>
+      ) : null}
     </div>
   );
 }
