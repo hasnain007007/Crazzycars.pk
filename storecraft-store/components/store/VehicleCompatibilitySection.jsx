@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { formatYearRange, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
+import { resolveVehicleFitmentRow } from "@/lib/resolveVehicleFitment";
 import { carLinkForFitmentRow } from "@/lib/seo/carLinkMatch";
 
 export function VehicleCompatibilitySection({ product, carLinks = [] }) {
@@ -107,35 +108,41 @@ function ShopByCarLinks({ links }) {
 
 function FitmentTable({ rows, carLinks = [] }) {
   return (
-    <table className="min-w-[320px] w-full text-left text-sm">
+    <table className="min-w-[360px] w-full text-left text-sm">
       <thead>
         <tr className="border-b border-[#EEEEEE] text-xs text-[#888888]">
           <th className="py-2 pr-3 font-semibold">Make</th>
           <th className="py-2 pr-3 font-semibold">Model</th>
+          <th className="py-2 pr-3 font-semibold">Generation</th>
           <th className="py-2 pr-3 font-semibold">Years</th>
           <th className="py-2 font-semibold">Body</th>
         </tr>
       </thead>
       <tbody>
         {rows.map((row, i) => {
-          const car = carLinkForFitmentRow(row, carLinks);
+          const resolved = resolveVehicleFitmentRow(row);
+          const car = carLinkForFitmentRow(resolved, carLinks);
           return (
-            <tr key={row._id || `${row.make}-${row.model}-${i}`} className="border-b border-[#F3F4F6]">
-              <td className="py-2 pr-3 text-[#111111]">{row.make || "—"}</td>
+            <tr
+              key={row._id || `${resolved.make}-${resolved.model}-${resolved.generation}-${i}`}
+              className="border-b border-[#F3F4F6]"
+            >
+              <td className="py-2 pr-3 text-[#111111]">{resolved.make || "—"}</td>
               <td className="py-2 pr-3 text-[#111111]">
                 {car ? (
                   <Link
                     href={car.href || `/cars/${car.slug}`}
                     className="font-medium text-[#C41E1E] underline-offset-2 hover:underline"
                   >
-                    {row.model || "All"}
+                    {resolved.model || "All"}
                   </Link>
                 ) : (
-                  row.model || "All"
+                  resolved.model || "All"
                 )}
               </td>
-              <td className="py-2 pr-3 text-[#555555]">{formatYearRange(row)}</td>
-              <td className="py-2 text-[#555555]">{row.bodyStyle || "All"}</td>
+              <td className="py-2 pr-3 text-[#555555]">{resolved.generation || "—"}</td>
+              <td className="py-2 pr-3 text-[#555555]">{formatYearRange(resolved)}</td>
+              <td className="py-2 text-[#555555]">{resolved.bodyStyle || "All"}</td>
             </tr>
           );
         })}

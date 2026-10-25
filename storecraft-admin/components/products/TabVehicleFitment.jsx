@@ -53,12 +53,14 @@ function findFamilyModels(carData, make, family) {
   });
 }
 
+/** Parent model name only (Civic, Corolla, City) — never the generation nickname. */
 function catalogModelLabel(entry, fallback = "") {
-  return String(entry?.nickname || entry?.generation || entry?.model || fallback || "").trim();
+  return String(entry?.model || fallback || "").trim();
 }
 
+/** Generation nickname / label (Reborn, E170–E210, Classic). */
 function generationLabelForEntry(entry) {
-  return String(entry?.generation || entry?.nickname || entry?.model || "").trim();
+  return String(entry?.generation || entry?.nickname || "").trim();
 }
 
 function applyResolvedGeneration(row, catalogModels) {

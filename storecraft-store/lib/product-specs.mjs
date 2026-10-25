@@ -381,20 +381,57 @@ export function specAdditionalProperties(specs) {
 /**
  * schema.org isAccessoryOrSparePartFor — only for model-specific fitment.
  */
+/** Nickname → parent model (keep in sync with lib/resolveVehicleFitment.js). */
+const SCHEMA_GEN_TO_MODEL = {
+  honda: {
+    reborn: "Civic",
+    rebirth: "Civic",
+    "civic x": "Civic",
+    classic: "City",
+    "7th gen": "City",
+  },
+  toyota: {
+    e120: "Corolla",
+    e140: "Corolla",
+    e170: "Corolla",
+    "e170-e210": "Corolla",
+    "e170–e210": "Corolla",
+  },
+};
+
+function resolveRowForSchema(row) {
+  const make = String(row?.make || "").trim();
+  let model = String(row?.model || "").trim();
+  let generation = String(row?.trim || row?.generation || row?.generationLabel || "").trim();
+  const key = model.toLowerCase().replace(/[—–]/g, "-").replace(/\s+/g, " ");
+  const mapped = SCHEMA_GEN_TO_MODEL[make.toLowerCase()]?.[key];
+  if (mapped) {
+    if (!generation) generation = model;
+    model = mapped;
+  }
+  const years =
+    row?.yearFrom != null && row?.yearTo != null
+      ? Number(row.yearFrom) === Number(row.yearTo)
+        ? String(row.yearFrom)
+        : `${row.yearFrom}–${row.yearTo}`
+      : formatYearRange(row?.yearFrom, row?.yearTo);
+  const name = [make, model, generation, years].filter(Boolean).join(" ");
+  return { make, model, generation, yearFrom: row?.yearFrom, name };
+}
+
 export function fitmentVehiclesForSchema(fitment) {
   const f = fitment && typeof fitment === "object" ? fitment : null;
   if (!f || f.universal || !Array.isArray(f.fits) || !f.fits.length) return [];
   return f.fits.map((row) => {
-    const years = formatYearRange(row.yearFrom, row.yearTo);
-    const name = [row.make, row.model, years].filter(Boolean).join(" ");
+    const resolved = resolveRowForSchema(row);
     const node = {
       "@type": "Car",
-      name,
-      brand: { "@type": "Brand", name: row.make },
-      model: row.model,
+      name: resolved.name,
+      brand: { "@type": "Brand", name: resolved.make },
+      model: resolved.model,
     };
-    if (row.yearFrom != null) node.vehicleModelDate = String(row.yearFrom);
-    if (row.trim) node.vehicleTrim = row.trim;
+    if (resolved.yearFrom != null) node.vehicleModelDate = String(resolved.yearFrom);
+    if (resolved.generation) node.vehicleTrim = resolved.generation;
     return node;
   });
 }

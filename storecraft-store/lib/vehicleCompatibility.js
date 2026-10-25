@@ -163,9 +163,10 @@ export function productMatchesVehicle(product, make, model, year, variant) {
 }
 
 export function formatYearRange(row) {
-  const from = row.yearFrom;
-  const to = row.yearTo ?? CURRENT_YEAR;
+  const from = row?.yearFrom;
+  const to = row?.yearTo ?? CURRENT_YEAR;
   if (from == null) return String(to);
-  const toShort = String(to).slice(-2);
-  return `${from}-${toShort}`;
+  if (Number(from) === Number(to)) return String(from);
+  // Full years with en dash (SEO audit: never 2006-12)
+  return `${from}–${to}`;
 }
