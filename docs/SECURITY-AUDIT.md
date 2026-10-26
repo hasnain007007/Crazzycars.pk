@@ -90,16 +90,16 @@ A compromised admin session, or anyone with `canManageContent`, can persist HTML
 ### H5. Default superadmin password was committed in git
 
 **Where (before this pass):** `storecraft-admin/scripts/seed-admin.mjs`, `README.md` (present since commit `af77cc9`).  
-**This pass:** removed from current source. Script now requires `ADMIN_SEED_PASSWORD` in `.env.local`. README no longer documents a password.
+**This pass:** removed from current source. Seed script requires `ADMIN_EMAIL` and `ADMIN_PASSWORD` from the environment (no hardcoded fallback). README does not document a default login.
 
-**Still true:** the old password string remains in **git history**. Anyone with repo access can recover it. History rewrite was **not** done (destructive; needs your explicit go-ahead).
+**Still true:** old default-credential strings remain in **git history**. Anyone with repo access can recover them. History rewrite was **not** done (destructive; needs your explicit go-ahead).
 
 **Owner must confirm (Cursor cannot login):**
 
-1. `admin@crazzycars.pk` is **not** still using the old seed password.
-2. `ceo@sms` is **not** still on the emergency temp password from the earlier density-verify incident (`docs/CLEAN-SYSTEM.md`). That string is **not** in the repo; whether production was rotated is **unconfirmed**.
+1. The production admin account is **not** still using any password that ever appeared in git history.
+2. The emergency temp password from the earlier density-verify incident (`docs/CLEAN-SYSTEM.md`) was rotated if it was ever applied. Whether production was rotated is **unconfirmed**.
 
-If either account still uses a password that ever lived in git or in an agent transcript, treat it as compromised and rotate (human, in admin UI — Cursor will not rotate production passwords).
+If any account still uses a password that ever lived in git or in an agent transcript, treat it as compromised and rotate (human, in admin UI — Cursor will not rotate production passwords).
 
 ### H6. Next.js 16.2.4 High CVEs (do not blind-upgrade)
 
@@ -177,7 +177,7 @@ Cookie flags (login set): `httpOnly`, `sameSite=lax`, `secure` when `NODE_ENV ==
 ## Owner-only (cannot be closed in this repo)
 
 1. **Confirm `ceo@sms` password** was changed after the density-verify incident. Cursor will not attempt that login.
-2. **Confirm `admin@crazzycars.pk`** is not the old README seed password.
+2. **Confirm the production admin account** is not still on any historical README/seed password.
 3. **Old Shopify admin** stray/unprocessed orders — still needs a human login on the legacy Shopify account. No credentials here.
 4. Decide whether to **rewrite git history** to purge the old seed password (BFG / `git filter-repo`). Do not force-push `main`; `vps-test` rewrite would still need an explicit, informed decision.
 
