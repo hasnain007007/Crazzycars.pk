@@ -554,7 +554,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
 
   const navLinkClass = (item) => {
     const active = isNavItemActive(item);
-    return `store-header-nav-link px-3 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+    return `store-header-nav-link px-3 py-3 text-sm font-semibold tracking-normal transition-colors ${
       active ? "is-active" : ""
     }`;
   };
@@ -649,7 +649,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
             </div>
           </form>
 
-          <div className="ml-auto hidden items-center gap-6 md:flex">
+          <div className="store-header-desktop-actions ml-auto items-center gap-6">
             <HeaderAction href={accountHref} label="Account" icon={<IconAccount />} badge={0} />
             <HeaderAction href="/wishlist" label="Saved" icon={<IconHeart />} badge={badgeWish} />
             <HeaderAction label="Cart" icon={<IconBag />} badge={badgeCart} onClick={() => setOpen(true)} />
@@ -732,16 +732,16 @@ export function StoreHeader({ initialCategoryTree = null }) {
           )
         : null}
 
-      {/* Row 3 — nav */}
+      {/* Row 3 — nav (desktop only; class hides before Tailwind loads) */}
       <nav
-        className="relative z-10 hidden border-b-2 bg-white md:block"
+        className="store-header-desktop-nav relative z-10 border-b-2 bg-white"
         style={{ borderBottomColor: "#C41E1E" }}
         onMouseLeave={() => setMegaOpen(false)}
       >
         <div className="store-container flex items-center gap-1">
           <button
             type="button"
-            className="mr-2 flex items-center gap-2 rounded px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-white"
+            className="mr-2 flex min-h-11 items-center gap-2 rounded-[var(--radius-btn)] px-3 py-2.5 text-sm font-bold tracking-normal text-white"
             style={{ background: "#C41E1E" }}
             onMouseEnter={() =>
               openMega({ label: "Categories", href: "/categories", mega: true })
@@ -761,7 +761,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
             aria-haspopup="true"
           >
             <span aria-hidden>☰</span>
-            Shop by Category
+            Shop by category
           </button>
           {nav.map((item) => (
             <div

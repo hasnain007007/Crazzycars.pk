@@ -27,6 +27,7 @@ const SAVED_VIEWS = [
   { key: "unpaid", label: "Unpaid" },
   { key: "needsAttention", label: "Needs Attention" },
   { key: "today", label: "Today" },
+  { key: "reviewDue", label: "Ask for reviews" },
 ];
 
 function StatCard({ label, value, hint, tone }) {
@@ -92,6 +93,7 @@ export function OrdersPage() {
     today: 0,
     awaitingCustomer: 0,
     advanceUnpaid: 0,
+    reviewDue: 0,
   });
   const [loading, setLoading] = useState(true);
   const [liveSyncBusy, setLiveSyncBusy] = useState(false);
@@ -429,7 +431,7 @@ export function OrdersPage() {
           tone="attention"
           hint="Pending + unpaid order totals"
         />
-        <StatCard label="Today's revenue" value={formatMoney(stats.todayRevenue)} tone="money" />
+        <StatCard label="Today's sales" value={formatMoney(stats.todayRevenue)} tone="money" />
       </div>
 
       {(stats.courierSettled || 0) > 0 ? (

@@ -152,10 +152,17 @@ function priorVisitorWindow(from, to, todayKey) {
 function normalizePaymentKey(raw) {
   const s = String(raw || "").toLowerCase().trim();
   if (!s) return "other";
-  if (s.includes("cod") || s.includes("cash")) return "cod";
+  // Before the COD check: "jazzcash" contains "cash".
   if (s.includes("jazz")) return "jazzcash";
   if (s.includes("easy")) return "easypaisa";
-  if (s.includes("bank") || s.includes("transfer") || s.includes("hbl") || s.includes("meezan")) {
+  if (s.includes("cod") || s.includes("cash")) return "cod";
+  if (
+    s.includes("bank") ||
+    s.includes("transfer") ||
+    s.includes("hbl") ||
+    s.includes("meezan") ||
+    s.includes("ubl")
+  ) {
     return "bank";
   }
   if (s.includes("card") || s.includes("stripe")) return "card";
@@ -419,7 +426,12 @@ export async function GET(request) {
       ]),
       Order.countDocuments(withoutDemo({ createdAt: { $gte: todayStart, $lte: todayEnd } })),
       Order.aggregate([
-        { $match: withoutDemo({ createdAt: { $gte: todayStart, $lte: todayEnd } }) },
+        {
+          $match: withoutDemo({
+            orderStatus: NOT_VOID,
+            createdAt: { $gte: todayStart, $lte: todayEnd },
+          }),
+        },
         { $group: { _id: null, total: sumTotal } },
       ]),
       Order.aggregate([
@@ -434,7 +446,12 @@ export async function GET(request) {
       ]),
       Order.countDocuments(withoutDemo({ createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } })),
       Order.aggregate([
-        { $match: withoutDemo({ createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } }) },
+        {
+          $match: withoutDemo({
+            orderStatus: NOT_VOID,
+            createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
+          }),
+        },
         { $group: { _id: null, total: sumTotal } },
       ]),
       Order.aggregate([
@@ -541,11 +558,11 @@ export async function GET(request) {
       ]),
       Order.aggregate([
         {
-          $match: {
+          $match: withoutDemo({
             orderStatus: NOT_VOID,
             paymentStatus: { $in: ["unpaid", "partial"] },
             createdAt: { $gte: todayStart, $lte: todayEnd },
-          },
+          }),
         },
         { $group: { _id: null, total: sumTotal } },
       ]),

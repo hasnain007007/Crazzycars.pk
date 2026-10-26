@@ -25,20 +25,20 @@ export default function NewArrivals() {
         <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <p
-              className="font-heading mb-1 text-xs font-bold tracking-[0.15em] uppercase"
+              className="font-heading mb-1 text-xs font-bold tracking-normal"
               style={{ color: "var(--color-primary)" }}
             >
-              Fresh Stock
+              Fresh stock
             </p>
             <h2 className="font-heading text-xl font-bold text-[var(--color-text-primary)] md:text-3xl">
-              New Arrivals
+              New arrivals
             </h2>
           </div>
           <Link
             href="/shop?sort=newest"
-            className="text-sm font-semibold uppercase tracking-wide text-[var(--color-primary)] hover:underline"
+            className="text-sm font-semibold tracking-normal text-[var(--color-primary)] hover:underline"
           >
-            View All →
+            View all →
           </Link>
         </div>
         {loading ? (

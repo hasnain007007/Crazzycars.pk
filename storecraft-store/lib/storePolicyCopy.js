@@ -1,6 +1,7 @@
 import { STORE_POLICY } from "../config/store-policy.js";
 import {
   COD_ADVANCE_AMOUNT,
+  COD_ADVANCE_TIERS,
   PREPAID_DISCOUNT_PERCENT,
 } from "../config/checkout-money.js";
 
@@ -72,14 +73,50 @@ export function shippingAdvanceCollapsedEn() {
   return `COD needs a small booking advance (from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}).`;
 }
 
-/** Cart / checkout / PDP banner — English. Customer-facing: ask for advance only (no tier breakdown). */
-export function shippingAdvanceBannerEn() {
-  return `COD orders need a small booking amount (from Rs. 250) before we process — deducted from your total, refunded if the item doesn't fit. Balance on delivery.`;
+/**
+ * COD booking tiers for display: [{ amount: "Rs. 300", range: "Under Rs. 5,000" }, …].
+ */
+export function codAdvanceTierList() {
+  let from = 0;
+  return COD_ADVANCE_TIERS.map((t) => {
+    const range =
+      t.below == null
+        ? `${formatPkrAmount(from)} and above`
+        : from === 0
+          ? `Under ${formatPkrAmount(t.below)}`
+          : `${formatPkrAmount(from)} – ${formatPkrAmount(t.below - 1)}`;
+    const shortRange =
+      t.below == null ? `${formatPkrAmount(from)}+` : from === 0 ? `Under ${formatPkrAmount(t.below)}` : `${formatPkrAmount(from)}+`;
+    // Mobile strip chips — plain words (no < / k+); Pakistani shoppers read these easily
+    const num = (n) => Number(n).toLocaleString("en-PK");
+    const compactRange =
+      t.below == null ? `From ${num(from)}` : from === 0 ? `Under ${num(t.below)}` : `From ${num(from)}`;
+    from = t.below ?? from;
+    return { amount: formatPkrAmount(t.amount), range, shortRange, compactRange };
+  });
 }
 
-/** Cart / checkout / PDP banner — Urdu. Customer-facing: ask for advance only. */
+/** "Under Rs. 5,000" → "under Rs. 5,000" mid-sentence; amounts stay "Rs.". */
+function midSentence(range) {
+  return range.startsWith("Under ") ? `under ${range.slice(6)}` : range;
+}
+
+/** One-line tier summary, e.g. "Rs. 300 under Rs. 5,000 · Rs. 600 for Rs. 5,000 – Rs. 9,999 · …". */
+export function codAdvanceTierSummary() {
+  return codAdvanceTierList()
+    .map((t) => `${t.amount} (${midSentence(t.range)})`)
+    .join(" · ");
+}
+
+/** Cart / checkout / PDP banner — English. */
+export function shippingAdvanceBannerEn() {
+  return `COD orders need a small booking amount before we process: ${codAdvanceTierSummary()}. It is deducted from your total and refunded if the item doesn't fit. Balance on delivery.`;
+}
+
+/** Cart / checkout / PDP banner — Urdu. */
 export function shippingAdvanceBannerUr() {
-  return `COD آرڈر پر کم از کم Rs. 250 بکنگ ایڈوانس درکار ہے — کل سے کٹے گی، فٹ نہ ہونے پر واپس۔ باقی ڈیلیوری پر۔`;
+  const [a, b, c] = codAdvanceTierList();
+  return `COD آرڈر پر بکنگ ایڈوانس: ${a.range.replace("Under ", "")} سے کم پر ${a.amount}، ${b.range} پر ${b.amount}، ${c.range.replace(" and above", "")} یا زیادہ پر ${c.amount} — کل سے کٹے گی، فٹ نہ ہونے پر واپس۔ باقی ڈیلیوری پر۔`;
 }
 
 /** Site-wide top announcement bar — COD booking vs prepaid discount. */
@@ -148,13 +185,31 @@ export function returnsHeroTrustChip() {
   return "Refund for a defective or wrong part · no change-of-mind returns";
 }
 
-/** Homepage hero rail under CTAs — COD booking vs prepaid discount. */
+/**
+ * Homepage hero rail under CTAs.
+ * COD booking / prepaid % already appear in the top announcement bar — do not repeat them here.
+ */
 export function homepageHeroTrustItems() {
+  const days = returnsWindowDays();
   return [
-    `COD booking from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}`,
-    `${PREPAID_DISCOUNT_PERCENT}% off full payment (JazzCash / bank)`,
-    "Nationwide delivery",
+    lahoreEtaStatement(),
+    "Cash on Delivery nationwide",
     "WhatsApp support",
+    `${days}-day return on defective or wrong item`,
+  ];
+}
+
+/**
+ * Homepage trust strip (StatsBar) — true policy signals only, no invented counts.
+ * @returns {{ value: string, label: string }[]}
+ */
+export function homepageTrustStripItems() {
+  const days = returnsWindowDays();
+  return [
+    { value: "COD", label: "Nationwide" },
+    { value: lahoreEtaRange(), label: "Days to Lahore" },
+    { value: "WhatsApp", label: "Support" },
+    { value: `${days}-day`, label: "Return if defective/wrong" },
   ];
 }
 
@@ -198,18 +253,10 @@ export function sanitizeAnnouncementItems(items) {
     }
     return item;
   });
-  const hasOffer = mapped.some((item) =>
-    /booking|prepaid|% off|advance/i.test(String(item?.text || item?.message || ""))
-  );
-  if (hasOffer) return mapped;
-  return [
-    {
-      text: announcementAdvanceDeliveryText(),
-      link: "/checkout",
-      enabled: true,
-    },
-    ...mapped,
-  ];
+  // The COD booking offer has its own band under the header (AdvancePayStrip), so the top
+  // bar is free for other messages; only fall back to the offer when it would be empty.
+  if (mapped.some((item) => String(item?.text || item?.message || "").trim())) return mapped;
+  return [{ text: announcementAdvanceDeliveryText(), link: "/checkout", enabled: true }];
 }
 
 export function getFaqItems() {
@@ -336,3 +383,59 @@ export const SHIPPING_POLICY_INTRO =
   "We deliver car accessories nationwide from Gujranwala (CrazzyCars.pk). Checkout shows the delivery option and fee before you place the order.";
 
 export const SHIPPING_POLICY_SECTIONS = getShippingPolicySections();
+
+/** Advance strip under the header + /advance-payment page (single source for the copy). */
+export function advancePaymentCopy() {
+  const booking = formatPkrAmount(COD_ADVANCE_AMOUNT);
+  const pct = PREPAID_DISCOUNT_PERCENT;
+  return {
+    stripTitle: "COD booking advance",
+    stripTitleShort: "COD booking advance",
+    stripSub: `Deducted from your total. Pay the rest on delivery, or pay in full and save ${pct}%.`,
+    chips: codAdvanceTierList().map((t) => ({
+      value: t.amount,
+      label: t.shortRange,
+      compactLabel: t.compactRange,
+    })),
+    pageTitle: "Advance payment",
+    pageIntro: `Cash on Delivery orders are confirmed after a small booking advance, from ${booking} depending on your order total. It is deducted from your total, so you pay only the balance when the parcel arrives.`,
+    tiers: codAdvanceTierList().map((t) => ({
+      title: `Order ${midSentence(t.range)}`,
+      value: t.amount,
+      note: "",
+    })),
+    prepaid: {
+      title: "Pay in full",
+      value: `${pct}% OFF`,
+      note: "Pay the whole order by JazzCash or bank transfer and get the prepaid discount at checkout.",
+    },
+    higherAdvanceNote: "Some items (like body kits) need a higher advance; the exact amount is always shown at checkout.",
+    deductedNote:
+      "Your advance is deducted from your total bill and refunded if the item doesn't fit. You pay only the balance on delivery.",
+    steps: [
+      "Place your order on CrazzyCars.pk and note your order number.",
+      "Send the advance shown at checkout to one of our official accounts on this page.",
+      "Send the payment screenshot with your order number on WhatsApp. We confirm and dispatch your order.",
+    ],
+    safety:
+      "Send payments only to the accounts on this page. We never ask you to pay to any other number or account.",
+    faq: [
+      {
+        q: "Why do you take a booking advance on Cash on Delivery?",
+        a: "It confirms the order is genuine before we pack and send it, which keeps courier costs and prices low for everyone.",
+      },
+      {
+        q: "Is the advance extra?",
+        a: "No. It is deducted from your total. You pay only the remaining balance in cash when the parcel arrives.",
+      },
+      {
+        q: "What if the item doesn't fit my car?",
+        a: "Your advance is refunded if the item doesn't fit. Check fitment with us on WhatsApp before ordering if you are unsure.",
+      },
+      {
+        q: "How do I get the prepaid discount?",
+        a: `Choose JazzCash or bank transfer at checkout and pay the full amount. The ${pct}% discount is applied automatically.`,
+      },
+    ],
+  };
+}

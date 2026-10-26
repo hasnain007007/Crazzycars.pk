@@ -4,11 +4,11 @@
  * Public — no auth required.
  */
 import { NextResponse } from "next/server";
+import { COD_ADVANCE_AMOUNT, COD_ADVANCE_TIERS } from "@/config/checkout-money";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { buildConfigPaymentMethods } from "@/lib/mobile/paymentInstructions";
-import { normalizeShippingRules } from "@/lib/freeDelivery";
 import { shippingFloorPKR } from "@/lib/shippingTier";
 import {
   deliveryEtaSummary,
@@ -44,8 +44,9 @@ export async function GET() {
       ? "cod"
       : enabledPaymentMethods[0]?.key || "cod";
 
-    const storePayment = normalizeShippingRules(settingsDoc?.storePayment);
-    const codBookingAmount = Math.max(0, Number(storePayment.advancePaymentAmount) || 0);
+    // Lowest tier ("from" amount); the exact advance for a cart comes from POST /cart/quote.
+    const codBookingAmount = COD_ADVANCE_AMOUNT;
+    const codBookingTiers = COD_ADVANCE_TIERS.map((t) => ({ below: t.below, amount: t.amount }));
 
     return NextResponse.json({
       minVersionIos: mobileApp.minVersionIos || "1.0.0",
@@ -65,8 +66,10 @@ export async function GET() {
       currency: "PKR",
       shippingFloorStandard: shippingFloorPKR(false),
       shippingFloorBulky: shippingFloorPKR(true),
-      /** Flat COD booking advance (settings / policy) — trust strip + PDP COD line. */
+      /** Lowest COD booking advance — trust strip "from" amount. */
       codBookingAmount,
+      /** Booking advance by order total: below = upper limit (null = no limit). */
+      codBookingTiers,
       returnsWindowDays: Number(STORE_POLICY.returns?.windowDays) || 7,
       enabledPaymentMethods,
       defaultPaymentMethod,

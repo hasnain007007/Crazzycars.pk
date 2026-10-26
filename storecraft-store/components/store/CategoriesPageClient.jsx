@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { categoryImageUrl } from "@/lib/cloudinaryImage";
+import { applyMasterFallback } from "@/components/store/LocalMediaImg";
 
 function CategoriesPageInner({ initialCategories }) {
   const searchParams = useSearchParams();
@@ -64,16 +65,12 @@ function CategoriesPageInner({ initialCategories }) {
                         left: 0,
                         objectPosition: "center",
                       }}
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        const master = img.getAttribute("data-master") || "";
-                        if (master && img.getAttribute("src") !== master) {
-                          img.src = master;
-                          return;
+                      ref={(img) => {
+                        if (img && img.complete && img.naturalWidth === 0 && img.getAttribute("src")) {
+                          applyMasterFallback(img);
                         }
-                        img.removeAttribute("alt");
-                        img.style.visibility = "hidden";
                       }}
+                      onError={(e) => applyMasterFallback(e.currentTarget)}
                     />
                   ) : (
                     <div

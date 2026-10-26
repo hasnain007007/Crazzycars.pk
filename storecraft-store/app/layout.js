@@ -9,6 +9,7 @@ import MerchantWidgetScripts from "@/components/store/MerchantWidgetScripts";
 import ThemeInjector from "@/components/store/ThemeInjector";
 import { StoreFooter } from "@/components/store/StoreFooter";
 import { StoreHeader } from "@/components/store/StoreHeader";
+import AdvancePayStrip from "@/components/store/AdvancePayStrip";
 import { StoreProviders } from "@/components/store/StoreProviders";
 import { CustomerProvider } from "@/lib/customerAuth";
 import { getPublicStoreSettings } from "@/lib/serverSettings";
@@ -277,6 +278,13 @@ export default async function RootLayout({ children }) {
         }}
         suppressHydrationWarning
       >
+        {/* Ships with HTML so desktop nav / SEO tree stay hidden if CSS chunks 404 mid-deploy */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html:
+              ".cc-seo-nav{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}.store-header-desktop-nav,.store-header-desktop-actions{display:none!important}@media(min-width:768px){.store-header-desktop-nav{display:block!important}.store-header-desktop-actions{display:flex!important}}",
+          }}
+        />
         <ThemeInjector settings={settings} />
         <Suspense fallback={null}>
           <AnalyticsScripts settings={settings} />
@@ -307,6 +315,9 @@ export default async function RootLayout({ children }) {
             </Suspense>
             <Suspense fallback={null}>
               <StoreHeader initialCategoryTree={categoryTree} />
+            </Suspense>
+            <Suspense fallback={null}>
+              <AdvancePayStrip />
             </Suspense>
             <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">{children}</main>
             <Suspense fallback={null}>

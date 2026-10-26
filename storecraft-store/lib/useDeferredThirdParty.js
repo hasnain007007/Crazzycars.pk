@@ -25,7 +25,7 @@ export function useDeferredThirdParty(delayMs = 8000) {
     };
 
     const onInteract = () => arm();
-    const events = ["pointerdown", "keydown", "touchstart"];
+    const events = ["pointerdown", "keydown", "touchstart", "wheel"];
 
     const startTimer = () => {
       timeoutId = window.setTimeout(arm, delayMs);

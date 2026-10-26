@@ -73,3 +73,10 @@ See `SEO_REDIRECT_REVIEW.md` (5 product fallbacks + honda-city / car-emergency-s
 
 **Live slug:** `honda-city-2021-2026-carbon-fiber-gear-knob`  
 Applied on production: name → “Honda City Carbon Fiber Gear Knob Cover 2021–2026”.
+
+## 2026-10-27 SEO/AEO/GEO audit
+
+- Verifier: `scripts/seo-verify.mjs` (branch `seo/T0`)
+- Baseline: `seo-reports/baseline.json` (production, 584 sitemap URLs)
+- OWNER INPUTS: **empty** — Article author name and other facts = NEEDS-OWNER
+- Next: wait for task assignments; data/redirect changes need dry-run + `GO task N`

@@ -2,11 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import HomeHero from "@/components/home/HomeHero";
+import BrandHero from "@/components/home/BrandHero";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
-/** Above-the-fold LCP stays eager (HomeHero). Everything else is code-split. */
+/** Above-the-fold LCP stays eager (BrandHero). Everything else is code-split. */
 const StatsBar = dynamic(() => import("@/components/home/StatsBar"), {
   loading: () => <SectionSkeleton height={72} />,
 });
@@ -84,7 +84,7 @@ export function HomePage({
   return (
     <div style={{ background: "var(--color-background)" }}>
       {sectionEnabled("hero") ? (
-        <HomeHero settings={homepageSettings} initialSlides={initialHeroSlides} />
+        <BrandHero />
       ) : null}
       <StatsBar
         settings={{ brandStory, stats: homepageSettings?.stats }}

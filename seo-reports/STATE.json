@@ -1,0 +1,340 @@
+{
+  "audit": "2026-10-27 SEO/AEO/GEO",
+  "ownerInputs": {
+    "authorName": "",
+    "authorBio": "",
+    "authorPhotoUrl": "",
+    "authorSameAs": "",
+    "brandSpelling": "",
+    "registrationLine": "",
+    "streetAddress": "",
+    "latLong": "",
+    "duplicateProductsKeep": "",
+    "restoreLimeGreenFogLight": "",
+    "reviewTool": ""
+  },
+  "baseline": "seo-reports/baseline.json",
+  "vpsTestUrl": "https://crazzycars.pk",
+  "note": "Task defs derived from baseline HARD failures (Prompt 2 table not in repo). GATE = dry-run stop for redirects/robots/sitemap/DB.",
+  "tasks": {
+    "T0": {
+      "id": "T0",
+      "title": "Verifier + production baseline",
+      "doneChecks": [],
+      "gate": false,
+      "status": "DONE",
+      "branch": "seo/T0",
+      "commits": [
+        "65659d2"
+      ],
+      "plan": "Build scripts/seo-verify.mjs C1\u2013C20; save baseline.json.",
+      "notes": [
+        "Baseline hard_fail C4\u2013C7,C9\u2013C15,C18; soft C8,C19. C1/C2/C3/C16/C17 pass."
+      ]
+    },
+    "T1": {
+      "id": "T1",
+      "title": "llms.txt: only live category URLs (C13)",
+      "doneChecks": [
+        "C13"
+      ],
+      "gate": false,
+      "status": "DONE",
+      "branch": "seo/T1",
+      "commits": [
+        "9b86d01",
+        "ab822e1"
+      ],
+      "plan": "Filter llms category links to active cats with \u22651 live product; use final URLs only; drop 404/301 cats.",
+      "notes": [
+        "C13 pass (126 links). First verify race before CDN; T1b confirms.",
+        "No hard regressions vs baseline.",
+        "Rollback: revert llms.txt route to list all active cats."
+      ],
+      "filesChanged": 1,
+      "checksBefore": {
+        "C13": false
+      },
+      "checksAfter": {
+        "C13": true
+      }
+    },
+    "T2": {
+      "id": "T2",
+      "title": "Add /.well-known/security.txt (C18)",
+      "doneChecks": [
+        "C18"
+      ],
+      "gate": false,
+      "status": "DONE",
+      "branch": "seo/T2",
+      "commits": [
+        "e5eb64a",
+        "fba55b0"
+      ],
+      "plan": "Add app/.well-known/security.txt route (RFC 9116): Contact mailto, Preferred-Languages, no invented org facts.",
+      "notes": [
+        "C18 pass (security.txt Contact present).",
+        "VERIFY: seo-reports/runs/T2-20261026T202652Z.json; no hard regressions vs T1b.",
+        "Rollback: delete storecraft-store/app/.well-known/security.txt/route.js and redeploy."
+      ],
+      "filesChanged": 1,
+      "checksBefore": {
+        "C18": false
+      },
+      "checksAfter": {
+        "C18": true
+      }
+    },
+    "T3": {
+      "id": "T3",
+      "title": "robots.txt: remove Allow paths that 404 (C14)",
+      "doneChecks": [
+        "C14"
+      ],
+      "gate": true,
+      "status": "IN_PROGRESS",
+      "branch": "seo/T3",
+      "commits": [],
+      "plan": "Replace Allow /ai/ with /ai/catalog; fix C14 Allow regex so Disallow is not matched; GATE before deploy.",
+      "notes": [
+        "GO task 3 received; implementing dry-run diff"
+      ],
+      "dryRun": "seo-reports/dry-runs/T3-robots-allow.md"
+    },
+    "T4": {
+      "id": "T4",
+      "title": "Build redirect-map.csv + verify single-hop redirects (C15)",
+      "doneChecks": [
+        "C15",
+        "C1",
+        "C16"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T5": {
+      "id": "T5",
+      "title": "Titles \u226460 characters (C4)",
+      "doneChecks": [
+        "C4"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T6": {
+      "id": "T6",
+      "title": "Meta descriptions \u2264160 characters (C5)",
+      "doneChecks": [
+        "C5"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T7": {
+      "id": "T7",
+      "title": "Deduplicate conflicting titles (C6)",
+      "doneChecks": [
+        "C6"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T8": {
+      "id": "T8",
+      "title": "og:image on all sitemap pages (C7)",
+      "doneChecks": [
+        "C7"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T9": {
+      "id": "T9",
+      "title": "Missing image alt text (C8 soft)",
+      "doneChecks": [
+        "C8"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T10": {
+      "id": "T10",
+      "title": "Vehicle FAQPage questions visible in HTML (C9)",
+      "doneChecks": [
+        "C9"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T11": {
+      "id": "T11",
+      "title": "Vehicle 40\u201360 word direct-answer under H1 (C10)",
+      "doneChecks": [
+        "C10"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T12": {
+      "id": "T12",
+      "title": "Product Offer shippingDetails + return policy (C11)",
+      "doneChecks": [
+        "C11"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T13": {
+      "id": "T13",
+      "title": "Blog listing/post schema, breadcrumbs, Last updated (C12)",
+      "doneChecks": [
+        "C12"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": [
+        "Author Person = NEEDS-OWNER until name provided"
+      ]
+    },
+    "T14": {
+      "id": "T14",
+      "title": "Homepage HTML \u2264300 KB soft target (C19)",
+      "doneChecks": [
+        "C19"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T1b": {
+      "id": "T1b",
+      "title": "Remove default admin credentials + C21",
+      "doneChecks": [
+        "C21"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T15": {
+      "id": "T15",
+      "title": "LocalBusiness entity from owner address/geo",
+      "doneChecks": [
+        "C17"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T16": {
+      "id": "T16",
+      "title": "Reviews scaffold (no fake reviews)",
+      "doneChecks": [],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T17": {
+      "id": "T17",
+      "title": "Category FAQs visible + schema",
+      "doneChecks": [],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T18": {
+      "id": "T18",
+      "title": "Performance pass (Core Web Vitals / HTML budget)",
+      "doneChecks": [
+        "C19"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    }
+  },
+  "blockedStreak": 0,
+  "updatedAt": "2026-10-26T20:39:19.926689+00:00",
+  "goApproved": [
+    "T3"
+  ],
+  "auditCoverage": {
+    "T1": "llms dead category links (C13)",
+    "T1b": "remove default admin credentials + C21",
+    "T2": "security.txt (C18)",
+    "T3": "robots Allow 404s (C14)",
+    "T4": "legacy redirects + regression (C15/C1/C16)",
+    "T5": "titles <=60 (C4)",
+    "T6": "meta descriptions <=160 (C5)",
+    "T7": "duplicate product titles (C6)",
+    "T8": "og:image (C7)",
+    "T9": "image alts soft (C8)",
+    "T10": "visible FAQ on vehicle pages (C9)",
+    "T11": "direct-answer intro vehicle pages (C10)",
+    "T12": "Offer hasMerchantReturnPolicy/shippingDetails (C11)",
+    "T13": "blog author/freshness + Blog/CollectionPage + breadcrumbs (C12) NEEDS-OWNER author",
+    "T14": "homepage HTML weight soft (C19)",
+    "T15": "local business entity (address/geo) NEEDS-OWNER",
+    "T16": "reviews scaffold no fake reviews",
+    "T17": "category FAQs",
+    "T18": "performance (beyond C19)"
+  }
+}

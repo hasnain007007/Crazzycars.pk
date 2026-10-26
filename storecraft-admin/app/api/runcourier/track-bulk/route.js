@@ -9,15 +9,12 @@ import { fetchRunCourierTracking, isRunCourierOrder } from "@/lib/runcourier";
 import { mapRunCourierStatusToOrderStatus, isRunCourierDeliveredStatus } from "@/lib/runcourierWebhook";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
+import { isCodPaymentMethod } from "@/lib/pakistaniPaymentMethods";
 
 export const dynamic = "force-dynamic";
 
 const MAX_IDS = 40;
 
-function isCodPaymentMethod(method) {
-  const m = String(method || "").toLowerCase();
-  return m === "cod" || m.includes("cash");
-}
 
 /**
  * POST /api/runcourier/track-bulk

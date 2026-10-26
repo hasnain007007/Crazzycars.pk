@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
-import { buildDealsMongoFilter } from "@/lib/dealsFilter";
+import { buildDealsMongoFilter, discountFraction } from "@/lib/dealsFilter";
 import { WEBSITE_SEGMENT_FILTER } from "@/lib/productVisibility";
 
 export async function GET(request) {
@@ -17,14 +17,20 @@ export async function GET(request) {
       pricing: { $exists: true },
       ...buildDealsMongoFilter(filter),
     };
-    const rows = await Product.find(query)
+    const found = await Product.find(query)
       .select(
         "name slug media.images pricing inventory featured isDeal newArrival categories rating averageRating ratingAverage reviewCount totalReviews numReviews"
       )
       .sort({ updatedAt: -1, createdAt: -1 })
-      .limit(limit)
+      .limit(500)
       .populate("categories", "name slug")
       .lean();
+    // Biggest discount first, same as the homepage Hot Deals row.
+    const rows = found
+      .map((row, i) => ({ row, i, d: discountFraction(row) }))
+      .sort((a, b) => b.d - a.d || a.i - b.i)
+      .slice(0, limit)
+      .map((x) => x.row);
 
     return NextResponse.json(
       {

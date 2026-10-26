@@ -266,7 +266,7 @@ export function ProductCard({ product }) {
       </Link>
 
       <div className="cc-card-body flex flex-1 flex-col p-2.5">
-        <Link href={href} className="cc-card-title line-clamp-3 text-[13px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E]">
+        <Link href={href} className="cc-card-title line-clamp-2 text-[13px] font-medium leading-snug text-[#111111] hover:text-[#C41E1E]">
           {product.name}
         </Link>
 

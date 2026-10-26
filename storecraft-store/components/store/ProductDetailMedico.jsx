@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { MyCarFitTag } from "@/components/store/MyCar";
+import { OnCarPreviewButton, TryOnButton } from "@/components/store/OnCarPreview";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { resolveProductContentId, trackViewContent } from "@/lib/metaPixel";
@@ -30,12 +32,13 @@ import {
   standardDeliveryFeeStatement,
 } from "@/lib/storePolicyCopy";
 import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
+import { ProductLiveView } from "@/components/store/ProductLiveView";
+import { FakePurchaseToast } from "@/components/store/FakePurchaseToast";
 import {
   PRODUCT_CONTENT_OVERRIDES,
   PRODUCT_H1_OVERRIDES,
   PRODUCT_NAME_OVERRIDES,
 } from "@/lib/seo/gscAudit2026-10.mjs";
-
 const WISHLIST_KEY = "sialkot_wishlist";
 const COMPARE_KEY = "sialkot_compare";
 
@@ -249,6 +252,8 @@ export function ProductDetailMedico({
   product: initialProduct = null,
   relatedProducts = null,
   carLinks = null,
+  /** Units sold in the last 30 days (real orders); shown from 3 up. */
+  soldRecently = 0,
 }) {
   const { addItem } = useCart();
   const router = useRouter();
@@ -649,6 +654,16 @@ export function ProductDetailMedico({
     } else if (!hasVariations) {
       if (product?.inStock === false || (tracksStock && productStock <= 0)) {
         markOutOfStock();
+      }
+    }
+
+    // Honest scarcity: real tracked stock at or under the admin low-stock threshold (default 5).
+    if (stockStatus === "in_stock") {
+      const left = matched ? Number(matched.stock) : tracksStock ? productStock : NaN;
+      const threshold = Number(product?.inventory?.lowStockThreshold) || 5;
+      if (Number.isFinite(left) && left > 0 && left <= threshold) {
+        stockText = `Only ${left} left in stock`;
+        stockColor = "#c2410c";
       }
     }
 
@@ -1132,16 +1147,6 @@ export function ProductDetailMedico({
           </div>
 
           <div className="product-info-col min-w-0 space-y-4">
-            {reviewCount > 0 ? (
-              <p style={{ fontSize: 13, color: "#888888", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-                <StarDisplay rating={reviewAverage ?? 0} size={15} />
-                <span>
-                  ({reviewCount} customer {reviewCount === 1 ? "review" : "reviews"})
-                </span>
-              </p>
-            ) : (
-              <p style={{ fontSize: 13, color: "#888888" }}>No reviews yet. Be the first to share yours.</p>
-            )}
             <h1
               style={{
                 fontFamily: "var(--font-heading)",
@@ -1151,10 +1156,19 @@ export function ProductDetailMedico({
                 lineHeight: 1.3,
                 letterSpacing: "-0.01em",
                 margin: "0 0 8px",
+                textTransform: "none",
               }}
             >
               {displayName}
             </h1>
+            {reviewCount > 0 ? (
+              <p style={{ fontSize: 13, color: "#6B7280", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, margin: 0 }}>
+                <StarDisplay rating={reviewAverage ?? 0} size={15} />
+                <span>
+                  ({reviewCount} customer {reviewCount === 1 ? "review" : "reviews"})
+                </span>
+              </p>
+            ) : null}
             <div className="flex flex-wrap items-center gap-3" style={{ margin: "8px 0" }}>
               {displayHasSale ? (
                 <>
@@ -1272,6 +1286,13 @@ export function ProductDetailMedico({
                 {stockText}
               </span>
             </p>
+            <MyCarFitTag productSlug={product?.slug} />
+            <ProductLiveView productKey={String(product?.slug || product?.id || product?._id || displayName)} />
+            {Number(soldRecently) >= 3 ? (
+              <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600, color: "#9a3412" }}>
+                🔥 {Number(soldRecently)} sold in the last 30 days
+              </p>
+            ) : null}
 
 
             <ProductVariations
@@ -1314,8 +1335,6 @@ export function ProductDetailMedico({
                 </p>
               </div>
             ) : null}
-
-            <RecommendedProductsQuickAdd products={product?.recommendedProducts || []} />
 
             {!productAllowsCod(product) ? (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -1437,8 +1456,8 @@ export function ProductDetailMedico({
                   borderRadius: 8,
                   fontSize: 14,
                   fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
+                  letterSpacing: 0,
+                  textTransform: "none",
                   cursor: canAddToCart ? "pointer" : "not-allowed",
                   transition: "all 0.25s ease",
                   boxShadow: canAddToCart ? "0 4px 15px rgba(0,0,0,0.2)" : "none",
@@ -1492,27 +1511,37 @@ export function ProductDetailMedico({
                 width: "100%",
                 height: 52,
                 marginTop: 10,
-                background: canAddToCart ? "#111111" : "#D1D5DB",
+                background: canAddToCart ? "#C41E1E" : "#D1D5DB",
                 color: "#FFFFFF",
                 border: "none",
                 borderRadius: 8,
                 fontSize: 14,
                 fontWeight: 700,
-                letterSpacing: "0.06em",
+                letterSpacing: 0,
+                textTransform: "none",
                 cursor: canAddToCart ? "pointer" : "not-allowed",
                 transition: "all 0.25s ease",
                 boxShadow: canAddToCart ? "0 4px 15px rgba(0,0,0,0.15)" : "none",
               }}
               onMouseEnter={(e) => {
-                if (canAddToCart) e.currentTarget.style.background = "#000000";
+                if (canAddToCart) e.currentTarget.style.background = "#A01818";
               }}
               onMouseLeave={(e) => {
-                if (canAddToCart) e.currentTarget.style.background = "#111111";
+                if (canAddToCart) e.currentTarget.style.background = "#C41E1E";
               }}
             >
-              Buy Now
+              Buy now
             </button>
+
             </div>
+
+            <div className="pdp-car-tools flex flex-col gap-2 sm:flex-row sm:items-stretch">
+              <OnCarPreviewButton previews={product?.onCarPreviews} productName={product?.name || ""} />
+              <TryOnButton product={product} />
+            </div>
+
+            {/* Upsells after the buy buttons so buyers reach Add to cart without scrolling past them. */}
+            <RecommendedProductsQuickAdd products={product?.recommendedProducts || []} />
 
             <div
               style={{
@@ -1948,6 +1977,15 @@ export function ProductDetailMedico({
       )}
 
     </div>
+
+    <FakePurchaseToast
+      productName={displayName}
+      productImage={
+        (selectedItem?.type === "image" && selectedItem.url) ||
+        images?.[0]?.url ||
+        ""
+      }
+    />
 
     </>
   );

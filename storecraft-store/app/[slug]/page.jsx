@@ -37,6 +37,7 @@ import {
 } from "@/lib/seo/keywordStrategyFaqs";
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
 import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
+import { unitsSoldRecently } from "@/lib/productSalesCount";
 import { toPlainText } from "@/lib/sanitizeHtml";
 import {
   getPageSeoOverride,
@@ -167,7 +168,7 @@ const loadContent = cache(async (slug) => {
     securityHold: { $ne: true },
   })
     .select(
-      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky compatibleVehicles compatibleCars vehicleCompatibility"
+      "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts onCarPreviews customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky advancePercentRequired codEnabled compatibleVehicles compatibleCars vehicleCompatibility"
     )
     .populate("categories", "name slug")
     .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")
@@ -192,7 +193,7 @@ const loadContent = cache(async (slug) => {
         securityHold: { $ne: true },
       })
         .select(
-          "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky compatibleVehicles compatibleCars vehicleCompatibility"
+          "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts onCarPreviews customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky advancePercentRequired codEnabled compatibleVehicles compatibleCars vehicleCompatibility"
         )
         .populate("categories", "name slug")
         .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")
@@ -463,6 +464,7 @@ export default async function ProductPage({ params, searchParams }) {
 
   if (content.type === "product") {
     let approvedReviews = [];
+    const soldRecently = await unitsSoldRecently(content.data?.id || content.data?._id, 30);
     try {
       await dbConnect();
       const productId = content.data?.id || content.data?._id;
@@ -567,6 +569,7 @@ export default async function ProductPage({ params, searchParams }) {
           product={content.data}
           relatedProducts={content.relatedProducts || []}
           carLinks={content.carLinks || []}
+          soldRecently={soldRecently}
         />
       </>
     );

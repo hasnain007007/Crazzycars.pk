@@ -1,4 +1,5 @@
 import { postexPublicTrackingUrl, storefrontTrackingUrl } from "@/lib/postex";
+import { isCodPaymentMethod } from "@/lib/pakistaniPaymentMethods";
 
 export const DEFAULT_WHATSAPP_TEMPLATES = {
   customerOrderConfirmation: {
@@ -158,7 +159,7 @@ function paymentMethodLabel(order) {
   const pm = String(order?.paymentMethod || order?.payment?.method || "").toLowerCase();
   const status = String(order?.paymentStatus || "").toLowerCase();
   let label = "—";
-  if (pm.includes("cod") || pm.includes("cash")) label = "Cash on Delivery";
+  if (isCodPaymentMethod(pm)) label = "Cash on Delivery";
   else if (pm.includes("jazz")) label = "JazzCash";
   else if (pm.includes("easy")) label = "Easypaisa";
   else if (pm.includes("bank") || pm.includes("transfer")) label = "Bank Transfer";
@@ -224,7 +225,7 @@ export function buildPaymentInstructions(order, settings = {}) {
   // Partial — always show received + balance due (works for COD and prepaid)
   if (status === "partial" || (paid > 0 && remaining > 0)) {
     const dueLine =
-      pm.includes("cod") || pm.includes("cash")
+      isCodPaymentMethod(pm)
         ? `🚪 *Balance due on delivery:* Rs. ${remainingStr}`
         : `⏳ *Balance still due:* Rs. ${remainingStr}`;
     return [
@@ -235,7 +236,7 @@ export function buildPaymentInstructions(order, settings = {}) {
   }
 
   // Unpaid / remaining = full total
-  if (pm.includes("cod") || pm.includes("cash")) {
+  if (isCodPaymentMethod(pm)) {
     return `You will pay Rs. ${totalStr} when order arrives 🚪`;
   }
   if (pm.includes("jazz")) {

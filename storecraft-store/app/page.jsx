@@ -45,9 +45,19 @@ export default async function Page() {
   // (client components can still fall back to their own fetches if needed).
   try {
     let tree = [];
-    [bestSellers, hotDeals, heroSlides, carCatalog, activeProductCount, tree] = await Promise.all([
-      shopify ? getBestSellingProducts(24) : fetchBestSellersServer({ limit: 24 }),
-      shopify ? getHotDealProducts(24) : fetchHotDealsServer({ filter: "all", limit: 24 }),
+    // Best sellers skip anything already in Hot Deals, so the two rows show different products.
+    const dealsThenBest = shopify
+      ? Promise.all([getHotDealProducts(24), getBestSellingProducts(24)])
+      : fetchHotDealsServer({ filter: "all", limit: 24 }).then(async (deals) => [
+          deals,
+          await fetchBestSellersServer({
+            limit: 24,
+            excludeIds: (deals || []).map((d) => d.id || d._id).filter(Boolean),
+          }),
+        ]);
+    let pair;
+    [pair, heroSlides, carCatalog, activeProductCount, tree] = await Promise.all([
+      dealsThenBest,
       getHeroSlides(),
       fetchCarCatalogServer({ lean: true }),
       (async () => {
@@ -60,6 +70,7 @@ export default async function Page() {
       })(),
       fetchCategoryTreeServer(),
     ]);
+    [hotDeals, bestSellers] = pair;
     categoryTree = Array.isArray(tree) ? tree : [];
     homepageCategories = pickHomepageCategories(categoryTree)
       .map(serializeHomepageCategory)
@@ -68,8 +79,6 @@ export default async function Page() {
     console.error("[homepage] SSR data load failed:", err?.message || err);
   }
 
-  const desktopPreload = heroSlides[0]?.imageUrl || "";
-  const mobilePreload = heroSlides[0]?.imageUrlMobile || desktopPreload;
 
   const hubItems = [
     { name: "Shop all car accessories", url: "/shop" },
@@ -110,26 +119,9 @@ export default async function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(homeLd) }}
       />
-      {mobilePreload ? (
-        // eslint-disable-next-line @next/next/no-head-element -- preload LCP hero (mobile)
-        <link
-          rel="preload"
-          as="image"
-          href={mobilePreload}
-          media="(max-width: 767px)"
-          fetchPriority="high"
-        />
-      ) : null}
-      {desktopPreload ? (
-        // eslint-disable-next-line @next/next/no-head-element -- preload LCP hero (desktop)
-        <link
-          rel="preload"
-          as="image"
-          href={desktopPreload}
-          media="(min-width: 768px)"
-          fetchPriority="high"
-        />
-      ) : null}
+      {/* Preload the BrandHero car (LCP) — same files as components/home/BrandHero.jsx. */}
+      <link rel="preload" as="image" href="/hero/civic-night-760.webp" media="(max-width: 767px)" fetchPriority="high" />
+      <link rel="preload" as="image" href="/hero/civic-night-1205.webp" media="(min-width: 768px)" fetchPriority="high" />
       <HomePage
         initialBestSellers={bestSellers}
         initialHotDeals={hotDeals}

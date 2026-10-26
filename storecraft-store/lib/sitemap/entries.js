@@ -20,6 +20,7 @@ const STATIC_PAGE_PATHS = [
   "/blogs",
   "/faq",
   "/cash-on-delivery",
+  "/advance-payment",
   "/contact",
   "/about",
   "/shipping-policy",

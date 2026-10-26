@@ -145,7 +145,7 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
       <div className="store-container">
         <form onSubmit={onSubmit} className="filter-by-car-card">
           <h2 className="filter-by-car-title">
-            {title === "Find Parts For Your Car" ? "Filter By Car" : title}
+            {title === "Find Parts For Your Car" ? "Filter by car" : title}
           </h2>
 
           <div className="filter-by-car-fields">
@@ -153,12 +153,12 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
               className="filter-by-car-select"
               value={make}
               onChange={(e) => setMake(e.target.value)}
-              aria-label="Select make"
+              aria-label="Make"
             >
-              <option value="">SELECT MAKE</option>
+              <option value="">Make</option>
               {makes.map((m) => (
                 <option key={m} value={m}>
-                  {String(m).toUpperCase()}
+                  {m}
                 </option>
               ))}
             </select>
@@ -168,12 +168,12 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
               value={modelSlug}
               onChange={(e) => setModelSlug(e.target.value)}
               disabled={!make}
-              aria-label="Select model"
+              aria-label="Model"
             >
-              <option value="">SELECT MODEL</option>
+              <option value="">Model</option>
               {models.map((m) => (
                 <option key={m.slug} value={m.slug}>
-                  {(m.nickname || m.generation || m.model || "").toUpperCase()}
+                  {m.nickname || m.generation || m.model || ""}
                 </option>
               ))}
             </select>
@@ -183,9 +183,9 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
               value={year}
               onChange={(e) => setYear(e.target.value)}
               disabled={!modelSlug}
-              aria-label="Select year"
+              aria-label="Year"
             >
-              <option value="">SELECT YEAR</option>
+              <option value="">Year</option>
               {yearOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
@@ -194,7 +194,7 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
             </select>
 
             <button type="submit" disabled={loading} className="filter-by-car-btn">
-              {loading ? "…" : "FILTER"}
+              {loading ? "…" : "Filter"}
             </button>
           </div>
 

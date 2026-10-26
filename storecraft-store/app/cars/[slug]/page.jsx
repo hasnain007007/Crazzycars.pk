@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RememberMyCar } from "@/components/store/MyCar";
 import { notFound, permanentRedirect } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
@@ -250,6 +251,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
+      <RememberMyCar slug={vehicle.slug} label={vehicle.displayName || `${vehicle.make} ${vehicle.model}`} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}

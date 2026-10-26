@@ -145,7 +145,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
           />
         </div>
         <div className="cc-card-body flex flex-1 flex-col p-2.5">
-          <h3 className="cc-card-title m-0 line-clamp-3 text-[13px] font-medium leading-snug text-[#111111]">
+          <h3 className="cc-card-title m-0 line-clamp-2 text-[13px] font-medium leading-snug text-[#111111]">
             {card.name}
           </h3>
           {reviews ? (

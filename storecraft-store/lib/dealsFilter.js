@@ -19,6 +19,13 @@ function effectivePriceExpr() {
   };
 }
 
+/** Discount fraction (0–1) of a product doc; 0 when it is not on sale. */
+export function discountFraction(p) {
+  const reg = Number(p?.pricing?.regularPrice) || 0;
+  const sale = Number(p?.pricing?.salePrice) || 0;
+  return reg > 0 && sale > 0 && sale < reg ? (reg - sale) / reg : 0;
+}
+
 export function buildDealsMongoFilter(filter) {
   const f = String(filter || "all").toLowerCase().trim();
   const dealBase = { isDeal: true };

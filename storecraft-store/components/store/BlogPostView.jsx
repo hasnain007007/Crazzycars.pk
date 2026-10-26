@@ -25,10 +25,12 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
   }
 
   const formatDate = (date) => {
+    // Fixed zone: server (UTC) and visitor (PKT) must print the same day, or React hydration fails.
     return new Date(date).toLocaleDateString("en-GB", {
       day: "numeric",
       month: "long",
       year: "numeric",
+      timeZone: "Asia/Karachi",
     });
   };
 

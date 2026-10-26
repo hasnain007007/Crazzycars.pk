@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { normalizeStoreEmail } from '@/lib/storeContact'
 import { resolveStoreLogoUrl, trimmedLogoUrl } from '@/lib/storeLogo'
 import { rewriteStorePath } from '@/lib/categoryHandleAliases'
@@ -240,6 +241,21 @@ const PaymentLogo = ({ method }) => {
 }
 
 export default function StoreFooterMedico({ settings, initialCategoryTree = null }) {
+  // Checkout: slim footer only (policies + copyright) so the full link list doesn't pull buyers away.
+  const pathname = usePathname() || ''
+  if (pathname.startsWith('/checkout')) {
+    return (
+      <footer style={{ background: '#111111', color: '#9CA3AF', padding: '18px 16px 22px', fontSize: 12, textAlign: 'center' }}>
+        <nav aria-label="Policies" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px 16px', marginBottom: 8 }}>
+          <Link href="/shipping-policy" style={{ color: '#D1D5DB' }}>Shipping</Link>
+          <Link href="/returns-policy" style={{ color: '#D1D5DB' }}>Returns</Link>
+          <Link href="/privacy-policy" style={{ color: '#D1D5DB' }}>Privacy</Link>
+          <Link href="/contact" style={{ color: '#D1D5DB' }}>Contact</Link>
+        </nav>
+        © {new Date().getFullYear()} CrazzyCars.pk
+      </footer>
+    )
+  }
   const footer = settings?.footer || {}
   const footerEmail = normalizeStoreEmail(
     footer.contactEmail || footer.email || footer.contact?.email || settings?.general?.email || settings?.email

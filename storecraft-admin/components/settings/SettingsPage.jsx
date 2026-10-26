@@ -20,7 +20,7 @@ import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
 import MobileAppSettings from "@/components/settings/MobileAppSettings";
 import WhatsAppTemplateSettings from "@/components/settings/WhatsAppTemplateSettings";
 import PakistaniPaymentSettings from "@/components/settings/PakistaniPaymentSettings";
-import { COD_ADVANCE_AMOUNT } from "@/config/checkout-money";
+import { COD_ADVANCE_TIERS } from "@/config/checkout-money";
 import {
   deliveryChargesShort,
   formatPkrAmount,
@@ -842,20 +842,27 @@ export function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-600">
-                  COD booking advance floor (Rs.)
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={sp.advancePaymentAmount ?? COD_ADVANCE_AMOUNT}
-                  onChange={(e) => patchStorePayment("advancePaymentAmount", parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-                />
+                <p className="text-xs font-medium text-slate-600">COD booking advance (by order total)</p>
+                <ul className="mt-1 space-y-0.5 text-sm text-slate-800 dark:text-slate-200">
+                  {COD_ADVANCE_TIERS.map((t, i) => {
+                    const from = i === 0 ? 0 : COD_ADVANCE_TIERS[i - 1].below;
+                    const range =
+                      t.below == null
+                        ? `${formatPkrAmount(from)} and above`
+                        : i === 0
+                          ? `Under ${formatPkrAmount(t.below)}`
+                          : `${formatPkrAmount(from)} – ${formatPkrAmount(t.below - 1)}`;
+                    return (
+                      <li key={range}>
+                        {range}: <strong>{formatPkrAmount(t.amount)}</strong>
+                      </li>
+                    );
+                  })}
+                </ul>
                 <p className="mt-1 text-xs text-slate-500">
-                  New COD orders: advance = max(this floor, product % advance), capped at order total.
-                  Default {formatPkrAmount(COD_ADVANCE_AMOUNT)}.
+                  New COD orders pay this booking advance, or the product % advance when that is higher,
+                  capped at the order total. Set in code (config/checkout-money.js) so checkout, orders and
+                  the website text always match.
                 </p>
               </div>
               <div>

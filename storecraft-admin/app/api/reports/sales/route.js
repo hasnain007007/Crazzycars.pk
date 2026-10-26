@@ -1,11 +1,19 @@
 /**
  * Sales report: summary, revenue by day, by category, top product.
+ * Days are Asia/Karachi. "All statuses" leaves out cancelled / returned / refunded
+ * (same rule as the dashboard); pick one of those statuses to see it on its own.
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
+import { karachiDayBounds, karachiDayKey, shiftDayKey } from "@/lib/karachiDay";
+import { withoutDemo } from "@/lib/orderDemoFilter";
+
+const TZ = "Asia/Karachi";
+const NOT_VOID = { $nin: ["cancelled", "returned", "refunded"] };
+const ORDER_TOTAL = { $ifNull: ["$pricing.total", { $ifNull: ["$total", 0] }] };
 
 function parseRange(fromStr, toStr) {
   const now = new Date();
@@ -14,7 +22,7 @@ function parseRange(fromStr, toStr) {
 
   let to = now;
   if (ts && /^\d{4}-\d{2}-\d{2}$/.test(ts)) {
-    to = new Date(`${ts}T23:59:59.999Z`);
+    to = karachiDayBounds(ts).end;
   } else if (ts) {
     const d = new Date(ts);
     if (!Number.isNaN(d.getTime())) to = d;
@@ -22,15 +30,13 @@ function parseRange(fromStr, toStr) {
 
   let from = null;
   if (fs && /^\d{4}-\d{2}-\d{2}$/.test(fs)) {
-    from = new Date(`${fs}T00:00:00.000Z`);
+    from = karachiDayBounds(fs).start;
   } else if (fs) {
     const d = new Date(fs);
     if (!Number.isNaN(d.getTime())) from = d;
   }
   if (!from || Number.isNaN(from.getTime())) {
-    from = new Date(to);
-    from.setUTCDate(from.getUTCDate() - 30);
-    from.setUTCHours(0, 0, 0, 0);
+    from = karachiDayBounds(shiftDayKey(karachiDayKey(to), -30)).start;
   }
   return { from, to };
 }
@@ -45,10 +51,10 @@ export async function GET(request) {
     const status = (searchParams.get("status") || "all").trim();
     const { from, to } = parseRange(searchParams.get("from"), searchParams.get("to"));
 
-    const match = { createdAt: { $gte: from, $lte: to } };
-    if (status !== "all") {
-      match.orderStatus = status;
-    }
+    const match = withoutDemo({
+      createdAt: { $gte: from, $lte: to },
+      orderStatus: status !== "all" ? status : NOT_VOID,
+    });
 
     const [summaryAgg, byDay, byCategory, topAgg] = await Promise.all([
       Order.aggregate([
@@ -56,7 +62,7 @@ export async function GET(request) {
         {
           $group: {
             _id: null,
-            totalRevenue: { $sum: "$pricing.total" },
+            totalRevenue: { $sum: ORDER_TOTAL },
             totalOrders: { $sum: 1 },
           },
         },
@@ -65,8 +71,8 @@ export async function GET(request) {
         { $match: match },
         {
           $group: {
-            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "UTC" } },
-            revenue: { $sum: "$pricing.total" },
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: TZ } },
+            revenue: { $sum: ORDER_TOTAL },
             orders: { $sum: 1 },
           },
         },

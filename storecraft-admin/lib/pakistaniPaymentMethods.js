@@ -151,3 +151,13 @@ export function isOfflinePakistaniPayment(method) {
   if (id === "stripe" || id === "paypal") return false;
   return PAKISTANI_PAYMENT_METHOD_KEYS.includes(id);
 }
+
+/**
+ * True for cash on delivery. "jazzcash" contains "cash", so a plain includes("cash")
+ * would wrongly treat JazzCash orders as COD.
+ */
+export function isCodPaymentMethod(method) {
+  const m = String(method || "").toLowerCase().trim();
+  if (!m || m.includes("jazz")) return false;
+  return m === "cod" || m.includes("cod") || m.includes("cash");
+}

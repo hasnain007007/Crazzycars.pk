@@ -18,16 +18,16 @@ import {
 } from "../storecraft-admin/lib/codAdvanceGate.js";
 
 describe("checkout-money defaults", () => {
-  it("prepaid 5% and COD booking floor 250 / policy v2", () => {
+  it("prepaid 5% and COD booking floor 300 / policy v2", () => {
     assert.equal(PREPAID_DISCOUNT_PERCENT, 5);
-    assert.equal(COD_ADVANCE_AMOUNT, 250);
+    assert.equal(COD_ADVANCE_AMOUNT, 300);
     assert.equal(COD_ADVANCE_REQUIRED, true);
     assert.equal(COD_ADVANCE_POLICY_VERSION, 2);
   });
 });
 
 describe("computeCodAdvanceDue booking rule", () => {
-  it("uses flat 250 when no product %", () => {
+  it("uses the order-total tier when no product %", () => {
     const due = computeCodAdvanceDue({
       items: [{ name: "Mat", unitPrice: 2000, quantity: 1, advancePercentRequired: 0 }],
       paymentMethod: "cod",
@@ -37,7 +37,7 @@ describe("computeCodAdvanceDue booking rule", () => {
       bookingAmount: 250,
     });
     assert.equal(due.mode, "booking");
-    assert.equal(due.amount, 250);
+    assert.equal(due.amount, 300);
     assert.equal(due.policyVersion, 2);
   });
 
@@ -131,5 +131,38 @@ describe("codAdvanceGate", () => {
       payment: { advanceRequired: 250, amount: 5000 },
     };
     assert.equal(isCodAdvanceUnpaid(trap), true);
+  });
+});
+
+describe("COD booking tiers by order total", () => {
+  const due = (total) =>
+    computeCodAdvanceDue({
+      items: [{ name: "Item", unitPrice: total, quantity: 1, advancePercentRequired: 0 }],
+      paymentMethod: "cod",
+      shippingCost: 0,
+      orderTotal: total,
+      bookingEnabled: true,
+      bookingAmount: 250,
+    }).amount;
+
+  it("under 5,000 → 300", () => {
+    assert.equal(due(1200), 300);
+    assert.equal(due(4999), 300);
+  });
+  it("5,000 to 9,999 → 600", () => {
+    assert.equal(due(5000), 600);
+    assert.equal(due(9999), 600);
+  });
+  it("10,000 and above → 1,000", () => {
+    assert.equal(due(10000), 1000);
+    assert.equal(due(48000), 1000);
+  });
+  it("prepaid orders need no booking advance", () => {
+    const d = computeCodAdvanceDue({
+      items: [{ name: "Item", unitPrice: 8000, quantity: 1 }],
+      paymentMethod: "jazzcash",
+      orderTotal: 8000,
+    });
+    assert.equal(d.amount, 0);
   });
 });

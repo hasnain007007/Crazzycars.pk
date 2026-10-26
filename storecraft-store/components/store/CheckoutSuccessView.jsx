@@ -18,6 +18,7 @@ import {
   whatsappWaMeDigits,
 } from "@/lib/freeDelivery";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
+import { codBookingAmountForTotal } from "@/config/checkout-money";
 import { WhatsAppPaymentButton } from "@/components/store/WhatsAppPaymentButton";
 import GoogleCustomerReviewsOptIn from "@/components/store/GoogleCustomerReviewsOptIn";
 
@@ -47,7 +48,7 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   const waDisplay = formatWhatsAppDisplay(waNum || storePolicyWhatsApp());
   const amount = advanceRequired > 0
     ? advanceRequired
-    : shipping || rules.advancePaymentAmount || 250;
+    : shipping || codBookingAmountForTotal(order?.pricing?.total ?? order?.total);
   const messageBody = formatAdvancePaymentMessage(
     showPercent
       ? `Please pay at least {amount} in advance (${advanceMaxPercent}% of eligible items).\n\nRemaining on delivery: ${formatPrice(remainingCod)}.\n\nSend payment screenshot on WhatsApp: {whatsapp}`

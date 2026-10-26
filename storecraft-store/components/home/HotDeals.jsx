@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import ProductCard from "@/components/store/ProductCard";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
@@ -115,11 +116,18 @@ export default function HotDeals({ settings, initialProducts = null }) {
             ))}
           </div>
         ) : hasDeals ? (
-          <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
-            {products.map((p) => (
-              <ProductCard key={p.id || p.slug} product={p} />
-            ))}
-          </div>
+          <>
+            <div className="product-grid home-grid--capped mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
+              {products.map((p) => (
+                <ProductCard key={p.id || p.slug} product={p} />
+              ))}
+            </div>
+            {products.length > 6 ? (
+              <Link href="/sale" className="home-grid-more">
+                View all {products.length} deals <span aria-hidden>→</span>
+              </Link>
+            ) : null}
+          </>
         ) : (
           <div className="mt-8 rounded-xl border border-[#E5E7EB] bg-white px-6 py-10 text-center">
             <p className="text-sm font-medium" style={{ color: "#374151" }}>

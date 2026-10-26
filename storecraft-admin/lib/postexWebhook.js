@@ -11,6 +11,7 @@ import {
 import { storefrontTrackingUrl } from "@/lib/postex";
 import { ORDER_STATUS_TIMELINE_TITLES } from "@/lib/orderStatusTimeline";
 import { assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
+import { isCodPaymentMethod } from "@/lib/pakistaniPaymentMethods";
 
 export const POSTEX_WEBHOOK_HEADER = "x-webhook-secret";
 export const RAW_PAYLOAD_LOG_LIMIT = 20;
@@ -108,10 +109,6 @@ export function parsePostexWebhookPayload(body) {
   };
 }
 
-export function isCodPaymentMethod(method) {
-  const m = String(method || "").toLowerCase();
-  return m === "cod" || m.includes("cash");
-}
 
 /**
  * Apply mapped fulfillment (+ COD paid on Delivered only). Mutates order doc.
@@ -255,3 +252,5 @@ export function buildWhatsAppWouldNotify(order, settings, postexStatus) {
     reason: "WhatsApp A dry-run (no provider send)",
   };
 }
+
+export { isCodPaymentMethod };

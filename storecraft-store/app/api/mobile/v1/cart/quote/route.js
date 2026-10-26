@@ -18,6 +18,7 @@ import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import ShippingZone from "@/lib/models/Shipping.model";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { roundRupees } from "@/lib/currency";
+import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import { quoteShipping } from "@/lib/shippingZoneWeight";
 import {
   applyShippingRules,
@@ -140,6 +141,7 @@ export async function POST(request) {
 
   // Build line items
   const lineItems = [];
+  const advanceItems = [];
   let subtotal = 0;
   let totalWeightKg = 0;
   const warnings = [];
@@ -168,6 +170,7 @@ export async function POST(request) {
       total: lineTotal,
       isBulky,
     });
+    advanceItems.push({ name: p.name, unitPrice, quantity: qty, advancePercentRequired: p.advancePercentRequired });
   }
 
   subtotal = roundRupees(subtotal);
@@ -296,8 +299,8 @@ export async function POST(request) {
     afterDiscounts,
     shippingCost,
     shippingEstimated,
-    /** Flat COD booking advance from store settings (same source as GET /config). */
-    codBookingAmount: Math.max(0, Number(storePayment.advancePaymentAmount) || 0),
+    /** COD booking advance for this cart: order-total tier or product % advance (same rule as web checkout). */
+    codBookingAmount: computeCodAdvanceDue({ items: advanceItems, paymentMethod: "cod", orderTotal: total }).amount,
     total,
     totalWeightGrams,
     hasBulky: cartHasBulky,

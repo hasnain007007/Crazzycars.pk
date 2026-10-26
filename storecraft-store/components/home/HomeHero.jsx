@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
-import { homepageHeroTrustItems } from "@/lib/storePolicyCopy";
 import {
   heroHeightStyle,
   mapBannerToSlide,
@@ -14,8 +13,9 @@ const BRAND = "CrazzyCars.pk";
 const SWIPE_PX = 48;
 const SLIDE_MS = 560;
 
+/** COD / prepaid already in the announcement bar; StatsBar owns trust chips. */
 function useTrustItems() {
-  return useMemo(() => homepageHeroTrustItems(), []);
+  return useMemo(() => [], []);
 }
 
 function normalizeButtonUrl(url) {
@@ -125,8 +125,16 @@ function primaryButtonColors(button) {
   };
 }
 
+/** Soften ALL-CAPS CMS labels to sentence case without inventing new wording. */
+function softenCtaLabel(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return "Shop now";
+  if (text !== text.toUpperCase() || !/[A-Z]/.test(text)) return text;
+  return text.charAt(0) + text.slice(1).toLowerCase();
+}
+
 function CtaLink({ button, className, tabIndex }) {
-  const text = String(button?.text || "Shop Now").trim();
+  const text = softenCtaLabel(button?.text || "Shop now");
   const href = normalizeButtonUrl(button?.url || button?.link);
   const style = className.includes("home-hero__btn--ghost")
     ? undefined
@@ -338,6 +346,33 @@ function HeroSlidePanel({
 }
 
 /**
+ * Subtle depth: writes --hs (scroll progress through the hero, 0..1) for a light
+ * parallax. No pointer tilt / glare — designed banner art stays sharp and flat.
+ */
+function useHeroDepth(ref, enabled) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !enabled) return undefined;
+    let raf = 0;
+    const write = () => {
+      raf = 0;
+      const r = el.getBoundingClientRect();
+      const hs = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height)));
+      el.style.setProperty("--hs", hs.toFixed(3));
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(write);
+    };
+    window.addEventListener("scroll", schedule, { passive: true });
+    schedule();
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", schedule);
+    };
+  }, [ref, enabled]);
+}
+
+/**
  * Full-bleed homepage hero. Applies admin Image Display Settings
  * (height, fit, dark overlay, hover zoom). Text overlays only when
  * the banner has heading/subheading in admin.
@@ -353,6 +388,8 @@ export default function HomeHero({ settings, initialSlides = null }) {
   const [dragging, setDragging] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const pointerRef = useRef({ x: 0, y: 0, active: false, locked: false });
+  const sectionRef = useRef(null);
+  useHeroDepth(sectionRef, !reduceMotion && slides.length > 0);
 
   useEffect(() => {
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
@@ -550,7 +587,8 @@ export default function HomeHero({ settings, initialSlides = null }) {
   return (
     <>
       <section
-        className={sectionClass}
+        ref={sectionRef}
+        className={`${sectionClass}${reduceMotion ? "" : " home-hero--depth"}`}
         style={{
           background: slide.backgroundColor || "#0b0b0b",
           ...heightCss,
@@ -576,6 +614,7 @@ export default function HomeHero({ settings, initialSlides = null }) {
           onPointerUp={multi ? endPointer : undefined}
           onPointerCancel={multi ? endPointer : undefined}
         >
+          <div className="home-hero__glare" aria-hidden />
           <div className="home-hero__track" style={trackStyle}>
             {(multi ? slides : [slide]).map((s, i) => (
               <HeroSlidePanel

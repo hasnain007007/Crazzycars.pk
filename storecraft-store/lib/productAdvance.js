@@ -5,13 +5,15 @@
  *   amount = MAX(sum of line % advances, shippingCost) — not stacked.
  *
  * Booking (v2, advanceMode booking) when COD_ADVANCE_REQUIRED:
- *   amount = min(orderTotal, max(COD_ADVANCE_AMOUNT, product % advance))
+ *   amount = min(orderTotal, max(tier for orderTotal, product % advance))
+ *   tiers: COD_ADVANCE_TIERS (300 / 600 / 1000 by order total)
  */
 import { roundRupees } from "@/lib/currency";
 import {
   COD_ADVANCE_AMOUNT,
   COD_ADVANCE_POLICY_VERSION,
   COD_ADVANCE_REQUIRED,
+  codBookingAmountForTotal,
 } from "@/config/checkout-money";
 
 export function normalizeAdvancePercent(raw) {
@@ -114,7 +116,10 @@ export function computeCodAdvanceDue({
   }
 
   if (bookingEnabled) {
-    const flat = Math.max(0, roundRupees(bookingAmount));
+    // Order-total tiers decide the booking amount; bookingAmount is only the fallback
+    // when the total is not known yet.
+    const hasTotal = orderTotal != null && Number.isFinite(Number(orderTotal));
+    const flat = Math.max(0, roundRupees(hasTotal ? codBookingAmountForTotal(orderTotal) : bookingAmount));
     const raw = Math.max(flat, product.amount);
     let amount = raw;
     if (orderTotal != null && Number.isFinite(Number(orderTotal))) {

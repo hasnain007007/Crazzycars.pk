@@ -296,6 +296,8 @@ const orderSchema = new mongoose.Schema(
       default: "site",
       trim: true,
     },
+    /** When admin sent the post-delivery review request on WhatsApp ("Ask for reviews" queue). */
+    reviewRequestedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
