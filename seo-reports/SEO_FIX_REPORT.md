@@ -5,7 +5,7 @@ Source of truth: `seo-reports/STATE.json`. Owner inputs: **EMPTY** (NEEDS-OWNER 
 | Task | Status | Done checks | Branch | Commits | Notes |
 |------|--------|-------------|--------|---------|-------|
 | T0 Verifier + baseline | DONE | — | seo/T0 | 65659d2 | baseline hard fails listed in STATE |
-| T1 llms.txt live cats (C13) | PENDING | C13 | — | — | — |
+| T1 llms.txt live cats (C13) | DONE | C13 | seo/T1 | 9b86d01 | C13 pass; no regressions |
 | T2 security.txt (C18) | PENDING | C18 | — | — | — |
 | T3 robots Allow 404s (C14) | PENDING | C14 | — | — | GATE |
 | T4 redirect-map (C15/C1/C16) | PENDING | C15,C1,C16 | — | — | GATE |
@@ -26,3 +26,8 @@ Source of truth: `seo-reports/STATE.json`. Owner inputs: **EMPTY** (NEEDS-OWNER 
 - Status: DONE
 - Plan: Build verifier; save baseline.
 - Rollback: delete `scripts/seo-verify.mjs` + `seo-reports/baseline.json`.
+
+### T1
+- Status: DONE | C13 pass | commit 9b86d01
+- Plan: Filter llms categories to ≥1 live product; canonical mat slugs.
+- Rollback: revert `storecraft-store/app/llms.txt/route.js`.
