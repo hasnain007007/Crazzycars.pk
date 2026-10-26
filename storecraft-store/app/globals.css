@@ -6879,8 +6879,7 @@ textarea::placeholder {
   }
 
   .pdp-add-btn,
-  .pdp-buy-btn,
-  .pdp-wa-buy-btn {
+  .pdp-buy-btn {
     height: 48px !important;
     font-size: 14px !important;
     min-height: 48px !important;
