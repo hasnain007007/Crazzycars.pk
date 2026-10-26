@@ -4,7 +4,7 @@
  * Public — no auth required.
  */
 import { NextResponse } from "next/server";
-import { COD_ADVANCE_AMOUNT, COD_ADVANCE_TIERS } from "@/config/checkout-money";
+import { COD_ADVANCE_AMOUNT, COD_ADVANCE_TIERS, PREPAID_DISCOUNT_PERCENT } from "@/config/checkout-money";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
@@ -70,6 +70,8 @@ export async function GET() {
       codBookingAmount,
       /** Booking advance by order total: below = upper limit (null = no limit). */
       codBookingTiers,
+      /** % off when the whole order is paid upfront (JazzCash / bank). */
+      prepaidDiscountPercent: PREPAID_DISCOUNT_PERCENT,
       returnsWindowDays: Number(STORE_POLICY.returns?.windowDays) || 7,
       enabledPaymentMethods,
       defaultPaymentMethod,
