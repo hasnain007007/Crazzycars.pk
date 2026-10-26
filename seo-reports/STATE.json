@@ -27,11 +27,25 @@
         "C13"
       ],
       "gate": false,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "branch": "seo/T1",
-      "commits": [],
+      "commits": [
+        "9b86d01",
+        "ab822e1"
+      ],
       "plan": "Filter llms category links to active cats with \u22651 live product; use final URLs only; drop 404/301 cats.",
-      "notes": []
+      "notes": [
+        "C13 pass (126 links). First verify race before CDN; T1b confirms.",
+        "No hard regressions vs baseline.",
+        "Rollback: revert llms.txt route to list all active cats."
+      ],
+      "filesChanged": 1,
+      "checksBefore": {
+        "C13": false
+      },
+      "checksAfter": {
+        "C13": true
+      }
     },
     "T2": {
       "id": "T2",
@@ -40,10 +54,10 @@
         "C18"
       ],
       "gate": false,
-      "status": "PENDING",
-      "branch": null,
+      "status": "IN_PROGRESS",
+      "branch": "seo/T2",
       "commits": [],
-      "plan": "",
+      "plan": "Add app/.well-known/security.txt route (RFC 9116): Contact mailto, Preferred-Languages, no invented org facts.",
       "notes": []
     },
     "T3": {
@@ -208,5 +222,5 @@
     }
   },
   "blockedStreak": 0,
-  "updatedAt": "2026-10-26T20:15:00.000Z"
+  "updatedAt": "2026-10-26T20:22:16.992758+00:00"
 }
