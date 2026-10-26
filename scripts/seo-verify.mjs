@@ -627,8 +627,9 @@ async function main() {
         }
       }
       // Allow lines that 404 (except /feed/) — unique concrete paths only (no wildcards)
+      // Match only real Allow: lines — /Allow:/gi also hits the suffix of Disallow:
       const allows = [
-        ...new Set([...text.matchAll(/Allow:\s*(\S+)/gi)].map((m) => m[1])),
+        ...new Set([...text.matchAll(/(?:^|\n)Allow:\s*(\S+)/gi)].map((m) => m[1])),
       ];
       for (const a of allows) {
         if (a === "/" || a.startsWith("/feed") || /[*?]/.test(a)) continue;

@@ -1,6 +1,18 @@
 {
   "audit": "2026-10-27 SEO/AEO/GEO",
-  "ownerInputs": "EMPTY",
+  "ownerInputs": {
+    "authorName": "",
+    "authorBio": "",
+    "authorPhotoUrl": "",
+    "authorSameAs": "",
+    "brandSpelling": "",
+    "registrationLine": "",
+    "streetAddress": "",
+    "latLong": "",
+    "duplicateProductsKeep": "",
+    "restoreLimeGreenFogLight": "",
+    "reviewTool": ""
+  },
   "baseline": "seo-reports/baseline.json",
   "vpsTestUrl": "https://crazzycars.pk",
   "note": "Task defs derived from baseline HARD failures (Prompt 2 table not in repo). GATE = dry-run stop for redirects/robots/sitemap/DB.",
@@ -54,11 +66,25 @@
         "C18"
       ],
       "gate": false,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "branch": "seo/T2",
-      "commits": [],
+      "commits": [
+        "e5eb64a",
+        "fba55b0"
+      ],
       "plan": "Add app/.well-known/security.txt route (RFC 9116): Contact mailto, Preferred-Languages, no invented org facts.",
-      "notes": []
+      "notes": [
+        "C18 pass (security.txt Contact present).",
+        "VERIFY: seo-reports/runs/T2-20261026T202652Z.json; no hard regressions vs T1b.",
+        "Rollback: delete storecraft-store/app/.well-known/security.txt/route.js and redeploy."
+      ],
+      "filesChanged": 1,
+      "checksBefore": {
+        "C18": false
+      },
+      "checksAfter": {
+        "C18": true
+      }
     },
     "T3": {
       "id": "T3",
@@ -67,11 +93,14 @@
         "C14"
       ],
       "gate": true,
-      "status": "PENDING",
-      "branch": null,
+      "status": "IN_PROGRESS",
+      "branch": "seo/T3",
       "commits": [],
-      "plan": "",
-      "notes": []
+      "plan": "Replace Allow /ai/ with /ai/catalog; fix C14 Allow regex so Disallow is not matched; GATE before deploy.",
+      "notes": [
+        "GO task 3 received; implementing dry-run diff"
+      ],
+      "dryRun": "seo-reports/dry-runs/T3-robots-allow.md"
     },
     "T4": {
       "id": "T4",
@@ -219,8 +248,93 @@
       "commits": [],
       "plan": "",
       "notes": []
+    },
+    "T1b": {
+      "id": "T1b",
+      "title": "Remove default admin credentials + C21",
+      "doneChecks": [
+        "C21"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T15": {
+      "id": "T15",
+      "title": "LocalBusiness entity from owner address/geo",
+      "doneChecks": [
+        "C17"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T16": {
+      "id": "T16",
+      "title": "Reviews scaffold (no fake reviews)",
+      "doneChecks": [],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T17": {
+      "id": "T17",
+      "title": "Category FAQs visible + schema",
+      "doneChecks": [],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T18": {
+      "id": "T18",
+      "title": "Performance pass (Core Web Vitals / HTML budget)",
+      "doneChecks": [
+        "C19"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
     }
   },
   "blockedStreak": 0,
-  "updatedAt": "2026-10-26T20:22:16.992758+00:00"
+  "updatedAt": "2026-10-26T20:39:19.926689+00:00",
+  "goApproved": [
+    "T3"
+  ],
+  "auditCoverage": {
+    "T1": "llms dead category links (C13)",
+    "T1b": "remove default admin credentials + C21",
+    "T2": "security.txt (C18)",
+    "T3": "robots Allow 404s (C14)",
+    "T4": "legacy redirects + regression (C15/C1/C16)",
+    "T5": "titles <=60 (C4)",
+    "T6": "meta descriptions <=160 (C5)",
+    "T7": "duplicate product titles (C6)",
+    "T8": "og:image (C7)",
+    "T9": "image alts soft (C8)",
+    "T10": "visible FAQ on vehicle pages (C9)",
+    "T11": "direct-answer intro vehicle pages (C10)",
+    "T12": "Offer hasMerchantReturnPolicy/shippingDetails (C11)",
+    "T13": "blog author/freshness + Blog/CollectionPage + breadcrumbs (C12) NEEDS-OWNER author",
+    "T14": "homepage HTML weight soft (C19)",
+    "T15": "local business entity (address/geo) NEEDS-OWNER",
+    "T16": "reviews scaffold no fake reviews",
+    "T17": "category FAQs",
+    "T18": "performance (beyond C19)"
+  }
 }
