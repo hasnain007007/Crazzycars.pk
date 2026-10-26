@@ -52,6 +52,16 @@ async function fetchOnce(url, { redirect = "follow", method = "GET" } = {}) {
       bytes: buf ? buf.length : 0,
       headers: res.headers,
     };
+  } catch (err) {
+    const msg = String(err?.message || err || "");
+    return {
+      status: 0,
+      location: "",
+      body: "",
+      bytes: 0,
+      headers: new Headers(),
+      error: msg.includes("abort") ? "timeout" : msg.slice(0, 120),
+    };
   } finally {
     clearTimeout(t);
   }
@@ -303,11 +313,20 @@ function sameUrl(a, b) {
 }
 
 function scanRepoDefaultCreds() {
-  const roots = ["README.md", "docs", "storecraft-store/scripts", "scripts"];
+  const roots = [
+    "README.md",
+    "docs",
+    "storecraft-admin/scripts",
+    "storecraft-store/scripts",
+    "scripts",
+  ];
   const hits = [];
   const patterns = [
     { type: "default-password", re: /password\s*[=:]\s*["']?(admin|password|123456|changeme)/i },
     { type: "default-admin-user", re: /(?:username|email)\s*[=:]\s*["']?admin@/i },
+    { type: "hardcoded-admin-email", re: /(?:const|let)\s+ADMIN_EMAIL\s*=\s*["'][^"']+@/i },
+    { type: "hardcoded-password-literal", re: /password\s*:\s*["'][^"']{6,}["']/i },
+    { type: "first-login-with-email", re: /log\s+in\s+as\s+`?admin@/i },
     { type: "mongodb-default-auth", re: /mongodb:\/\/[^:]+:(password|admin|secret)@/i },
   ];
   function walk(dir, depth = 0) {
@@ -317,6 +336,8 @@ function scanRepoDefaultCreds() {
     const st = fs.statSync(full);
     if (st.isFile()) {
       if (!/\.(md|mjs|js|ts|txt|sh)$/i.test(full)) return;
+      // Skip this verifier file (patterns documented here)
+      if (full.endsWith(`${path.sep}seo-verify.mjs`)) return;
       let text = "";
       try {
         text = fs.readFileSync(full, "utf8");
@@ -365,6 +386,7 @@ async function main() {
     C18: emptyCheck(),
     C19: emptyCheck(true),
     C20: emptyCheck(true),
+    C21: emptyCheck(),
   };
 
   const { urls: sitemapUrls } = await collectSitemapUrls(BASE);
@@ -723,14 +745,21 @@ async function main() {
     }
   }
 
-  // C18 security.txt + repo defaults
+  // C18 security.txt
   {
     const sec = await fetchOnce(`${BASE}/.well-known/security.txt`);
     results.C18.count++;
     if (sec.status !== 200) failCheck(results.C18, `security.txt status ${sec.status}`);
+    else if (!/Contact:\s*mailto:/i.test(sec.body || "")) {
+      failCheck(results.C18, "security.txt missing Contact mailto");
+    }
+  }
+
+  // C21 default-credential text in README / seed / docs
+  {
     const credHits = scanRepoDefaultCreds();
-    results.C18.count += credHits.length;
-    for (const h of credHits.slice(0, 20)) failCheck(results.C18, h);
+    results.C21.count = credHits.length || 1;
+    for (const h of credHits.slice(0, 40)) failCheck(results.C21, h);
   }
 
   // C19 homepage size
