@@ -29,11 +29,10 @@ export async function GET() {
   let vehicleLinks = [];
   try {
     await dbConnect();
-    const [cats, products, vehicles] = await Promise.all([
+    const [cats, products, vehicles, catCounts] = await Promise.all([
       Category.find({ status: "active" })
         .select("name slug")
         .sort({ sortOrder: 1, name: 1 })
-        .limit(40)
         .lean(),
       Product.find(STOREFRONT_PRODUCT_FILTER)
         .select(
@@ -43,9 +42,33 @@ export async function GET() {
         .limit(40)
         .lean(),
       loadShopByCarIndex(),
+      Product.aggregate([
+        { $match: STOREFRONT_PRODUCT_FILTER },
+        { $unwind: "$categories" },
+        { $group: { _id: "$categories", n: { $sum: 1 } } },
+        { $match: { n: { $gte: 1 } } },
+      ]),
     ]);
+    // Only categories with ≥1 live product; never list empty/404 shelves.
+    const liveCatIds = new Set((catCounts || []).map((r) => String(r._id)));
+    // Known redirecting category slugs → final URL (avoid 301s in llms.txt).
+    const CANONICAL_CAT = {
+      "luxury-7d-9d-floor-mats": "floor-mats",
+      "trunk-mats": "floor-mats",
+    };
+    const seenSlugs = new Set();
     categoryLinks = (cats || [])
-      .filter((c) => c.slug)
+      .filter((c) => c.slug && liveCatIds.has(String(c._id)))
+      .map((c) => {
+        const slug = CANONICAL_CAT[c.slug] || c.slug;
+        return { ...c, slug };
+      })
+      .filter((c) => {
+        if (seenSlugs.has(c.slug)) return false;
+        seenSlugs.add(c.slug);
+        return true;
+      })
+      .slice(0, 40)
       .map((c) => `- [${c.name}](${site}/categories/${c.slug})`);
     productLinks = (products || [])
       .filter((p) => p.slug)
