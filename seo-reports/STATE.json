@@ -1,0 +1,212 @@
+{
+  "audit": "2026-10-27 SEO/AEO/GEO",
+  "ownerInputs": "EMPTY",
+  "baseline": "seo-reports/baseline.json",
+  "vpsTestUrl": "https://crazzycars.pk",
+  "note": "Task defs derived from baseline HARD failures (Prompt 2 table not in repo). GATE = dry-run stop for redirects/robots/sitemap/DB.",
+  "tasks": {
+    "T0": {
+      "id": "T0",
+      "title": "Verifier + production baseline",
+      "doneChecks": [],
+      "gate": false,
+      "status": "DONE",
+      "branch": "seo/T0",
+      "commits": [
+        "65659d2"
+      ],
+      "plan": "Build scripts/seo-verify.mjs C1\u2013C20; save baseline.json.",
+      "notes": [
+        "Baseline hard_fail C4\u2013C7,C9\u2013C15,C18; soft C8,C19. C1/C2/C3/C16/C17 pass."
+      ]
+    },
+    "T1": {
+      "id": "T1",
+      "title": "llms.txt: only live category URLs (C13)",
+      "doneChecks": [
+        "C13"
+      ],
+      "gate": false,
+      "status": "IN_PROGRESS",
+      "branch": "seo/T1",
+      "commits": [],
+      "plan": "Filter llms category links to active cats with \u22651 live product; use final URLs only; drop 404/301 cats.",
+      "notes": []
+    },
+    "T2": {
+      "id": "T2",
+      "title": "Add /.well-known/security.txt (C18)",
+      "doneChecks": [
+        "C18"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T3": {
+      "id": "T3",
+      "title": "robots.txt: remove Allow paths that 404 (C14)",
+      "doneChecks": [
+        "C14"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T4": {
+      "id": "T4",
+      "title": "Build redirect-map.csv + verify single-hop redirects (C15)",
+      "doneChecks": [
+        "C15",
+        "C1",
+        "C16"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T5": {
+      "id": "T5",
+      "title": "Titles \u226460 characters (C4)",
+      "doneChecks": [
+        "C4"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T6": {
+      "id": "T6",
+      "title": "Meta descriptions \u2264160 characters (C5)",
+      "doneChecks": [
+        "C5"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T7": {
+      "id": "T7",
+      "title": "Deduplicate conflicting titles (C6)",
+      "doneChecks": [
+        "C6"
+      ],
+      "gate": true,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T8": {
+      "id": "T8",
+      "title": "og:image on all sitemap pages (C7)",
+      "doneChecks": [
+        "C7"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T9": {
+      "id": "T9",
+      "title": "Missing image alt text (C8 soft)",
+      "doneChecks": [
+        "C8"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T10": {
+      "id": "T10",
+      "title": "Vehicle FAQPage questions visible in HTML (C9)",
+      "doneChecks": [
+        "C9"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T11": {
+      "id": "T11",
+      "title": "Vehicle 40\u201360 word direct-answer under H1 (C10)",
+      "doneChecks": [
+        "C10"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T12": {
+      "id": "T12",
+      "title": "Product Offer shippingDetails + return policy (C11)",
+      "doneChecks": [
+        "C11"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    },
+    "T13": {
+      "id": "T13",
+      "title": "Blog listing/post schema, breadcrumbs, Last updated (C12)",
+      "doneChecks": [
+        "C12"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": [
+        "Author Person = NEEDS-OWNER until name provided"
+      ]
+    },
+    "T14": {
+      "id": "T14",
+      "title": "Homepage HTML \u2264300 KB soft target (C19)",
+      "doneChecks": [
+        "C19"
+      ],
+      "gate": false,
+      "status": "PENDING",
+      "branch": null,
+      "commits": [],
+      "plan": "",
+      "notes": []
+    }
+  },
+  "blockedStreak": 0,
+  "updatedAt": "2026-10-26T20:15:00.000Z"
+}
