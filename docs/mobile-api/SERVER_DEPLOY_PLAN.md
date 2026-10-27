@@ -47,7 +47,7 @@ openssl rand -hex 64   # → MOBILE_JWT_SECRET
 
 | Variable | Required | Notes |
 |----------|----------|-------|
-| `MOBILE_JWT_SECRET` | **Yes** | Separate from `JWT_SECRET`. Missing → mobile auth routes 500. |
+| `MOBILE_JWT_SECRET` | Recommended | Separate from `JWT_SECRET`. If missing, a separate key is derived from `JWT_SECRET` (HMAC-SHA256, `lib/mobile/jwtSecret.js`); setting it later signs out app users once. |
 | `JWT_SECRET` | Already set | Unchanged — web cookies only |
 | Existing store secrets | Keep | Mongo, Resend, Meta CAPI, couriers, etc. |
 

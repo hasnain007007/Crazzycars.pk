@@ -7,6 +7,7 @@
  * Access token claims: aud:'crazzycars-mobile', typ:'mobile_access', type:'store_customer'
  */
 import jwt from "jsonwebtoken";
+import { getMobileJwtSecret } from "@/lib/mobile/jwtSecret";
 import { dbConnect } from "@/lib/db";
 import Customer from "@/lib/models/Customer.model";
 
@@ -14,20 +15,7 @@ const MOBILE_AUD = "crazzycars-mobile";
 const MOBILE_TYP = "mobile_access";
 const ACCESS_TTL = "15m";
 
-/**
- * Get MOBILE_JWT_SECRET. In production (NODE_ENV=production) never falls back.
- * Returns the secret or throws a 500 error object.
- */
-export function getMobileJwtSecret() {
-  const secret = process.env.MOBILE_JWT_SECRET;
-  if (!secret) {
-    const err = new Error("MOBILE_JWT_SECRET is not configured.");
-    err.statusCode = 500;
-    err.code = "CONFIG_ERROR";
-    throw err;
-  }
-  return secret;
-}
+export { getMobileJwtSecret };
 
 /**
  * Sign a mobile access token (15m TTL).
