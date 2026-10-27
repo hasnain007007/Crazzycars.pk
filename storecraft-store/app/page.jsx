@@ -1,5 +1,4 @@
 import { HomePage } from "@/components/store/HomePage";
-import HomeSeoIntro from "@/components/home/HomeSeoIntro";
 import { fetchHotDealsServer } from "@/lib/serverHotDeals";
 import { fetchBestSellersServer } from "@/lib/serverBestSellers";
 import { fetchCarCatalogServer } from "@/lib/serverCarCatalog";
@@ -14,7 +13,6 @@ import { categoryHref } from "@/lib/categories";
 import { homeHubCollectionJsonLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { getPageSeoOverride } from "@/lib/seo/gscAudit2026-10.mjs";
-import { getServerStoreSettings } from "@/lib/serverSettings";
 import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 
 export const revalidate = 300;
@@ -105,14 +103,6 @@ export default async function Page() {
     items: hubItems,
   });
 
-  let homepageIntroHtml = "";
-  try {
-    const settings = await getServerStoreSettings();
-    homepageIntroHtml = String(settings?.homepageIntroHtml || settings?.seo?.homepageIntroHtml || "").trim();
-  } catch {
-    homepageIntroHtml = "";
-  }
-
   return (
     <>
       <script
@@ -131,7 +121,6 @@ export default async function Page() {
         initialCategoryTree={categoryTree}
         activeProductCount={activeProductCount}
       />
-      <HomeSeoIntro introHtml={homepageIntroHtml} />
     </>
   );
 }
