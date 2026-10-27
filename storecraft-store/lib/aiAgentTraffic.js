@@ -45,7 +45,9 @@ const UA_RULES = [
   { source: "google_extended", pattern: /Google-Extended/i },
   { source: "bing", pattern: /bingbot|BingPreview/i },
   { source: "apple", pattern: /Applebot-Extended|Applebot/i },
-  { source: "meta", pattern: /meta-externalagent/i },
+  // Facebook/Instagram link-preview crawler — NOT Meta AI chat. Kept as source "meta"
+  // for schema compatibility; admin UI must label UA hits as "Meta crawler", not "Meta AI".
+  { source: "meta", pattern: /meta-externalagent|Meta-ExternalAgent|facebookexternalhit/i },
   { source: "amazon", pattern: /Amazonbot/i },
   { source: "bytespider", pattern: /Bytespider/i },
   // Documented tokens; often absent in the wild (Grok spoofs browsers).
@@ -108,12 +110,71 @@ const SKIP_PATH_PREFIXES = [
   "/llms.txt",
   "/ai/",
   "/.well-known/",
+  "/media/",
+  "/og/",
 ];
+
+/** Indexing bots that are NOT AI-chat agents (search / social link preview). */
+export const SEARCH_SOCIAL_CRAWLER_SOURCES = new Set([
+  "bing",
+  "apple",
+  "amazon",
+  "bytespider",
+  "meta", // meta-externalagent / facebookexternalhit — not Meta AI chat
+]);
+
+/** Sources that can represent AI chat UIs (referrer/utm) or AI training crawlers. */
+export const AI_CHAT_SOURCES = new Set([
+  "chatgpt",
+  "copilot",
+  "perplexity",
+  "claude",
+  "gemini",
+  "grok",
+  "deepseek",
+  "you",
+  "google_extended",
+  "other_ai",
+]);
 
 export function shouldSkipAiVisitPath(pathname) {
   const p = String(pathname || "");
   if (!p || p === "/api/analytics/ai-visit") return true;
   return SKIP_PATH_PREFIXES.some((prefix) => p === prefix || p.startsWith(prefix));
+}
+
+/**
+ * Skip non-document traffic that inflated "hits" (RSC payloads, prefetches, HEAD).
+ * @param {{ method?: string, url?: string, nextUrl?: { searchParams?: URLSearchParams }, headers?: Headers | { get: (k: string) => string|null } }} request
+ */
+export function shouldSkipAiVisitRequest(request) {
+  const method = String(request?.method || "GET").toUpperCase();
+  if (method !== "GET") return true;
+
+  const headers = request?.headers;
+  const get = (k) => {
+    if (!headers) return "";
+    if (typeof headers.get === "function") return headers.get(k) || "";
+    return headers[k] || headers[k.toLowerCase()] || "";
+  };
+
+  if (get("next-router-prefetch") === "1" || get("Next-Router-Prefetch") === "1") return true;
+  if (get("purpose") === "prefetch" || get("Sec-Purpose") === "prefetch") return true;
+
+  const rawUrl = String(request?.url || "");
+  if (/[?&]_rsc=/.test(rawUrl)) return true;
+  try {
+    const sp = request?.nextUrl?.searchParams;
+    if (sp?.has?.("_rsc")) return true;
+  } catch {
+    /* ignore */
+  }
+
+  // Soft-nav RSC often sends Next-Router-State-Tree without a full document Accept.
+  const accept = String(get("accept") || "");
+  if (accept.includes("text/x-component") || accept.includes("rsc")) return true;
+
+  return false;
 }
 
 function normalizeHost(hostname) {

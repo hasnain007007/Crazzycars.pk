@@ -23,6 +23,18 @@ const SOURCE_LABELS = {
   other_ai: "Other AI",
 };
 
+/**
+ * Search/social link-preview crawlers — NOT AI chat agents.
+ * meta-externalagent was previously mislabeled "Meta AI".
+ */
+const SEARCH_SOCIAL_CRAWLER_SOURCES = new Set([
+  "bing",
+  "apple",
+  "amazon",
+  "bytespider",
+  "meta",
+]);
+
 /** Sources that are crawler-UA-only (no human chat-UI referrer path). */
 const CRAWLER_ONLY_SOURCES = new Set([
   "google_extended",
@@ -31,10 +43,21 @@ const CRAWLER_ONLY_SOURCES = new Set([
   "amazon",
   "bytespider",
   "other_ai",
+  "meta",
 ]);
 
 function isShopperDetection(detection) {
   return detection === "referrer" || detection === "utm";
+}
+
+/** Honest label: Meta UA crawler ≠ Meta AI chat referrer. */
+function sourceLabel(source, { shopper = 0, crawler = 0 } = {}) {
+  if (source === "meta") {
+    if (shopper > 0 && crawler === 0) return "Meta AI";
+    if (shopper > 0 && crawler > 0) return "Meta AI + Meta crawler";
+    return "Meta crawler";
+  }
+  return SOURCE_LABELS[source] || source;
 }
 
 const MAX_RANGE_DAYS = 366;
@@ -225,6 +248,17 @@ export async function GET(request) {
 
     const total = crawlerVisits + shopperVisits;
 
+    let aiCrawlerVisits = 0;
+    let searchSocialCrawlerVisits = 0;
+    for (const [source, bucket] of visitsBySource.entries()) {
+      if (SEARCH_SOCIAL_CRAWLER_SOURCES.has(source)) {
+        searchSocialCrawlerVisits += bucket.crawler;
+        // Meta.ai / utm shopper clicks still count as AI shoppers (already in shopperVisits).
+      } else {
+        aiCrawlerVisits += bucket.crawler;
+      }
+    }
+
     const sourceKeys = new Set([
       ...visitsBySource.keys(),
       ...ordersBySource.keys(),
@@ -239,14 +273,17 @@ export async function GET(request) {
           bucket.shopper > 0
             ? Math.round((attr.orders / bucket.shopper) * 1000) / 10
             : 0;
+        const searchSocial = SEARCH_SOCIAL_CRAWLER_SOURCES.has(source);
         const row = {
           source,
-          label: SOURCE_LABELS[source] || source,
+          label: sourceLabel(source, bucket),
           count: visits,
           visits,
           crawlerVisits: bucket.crawler,
           shopperVisits: bucket.shopper,
-          crawlerOnly: CRAWLER_ONLY_SOURCES.has(source) || (bucket.shopper === 0 && bucket.crawler > 0),
+          searchSocialCrawler: searchSocial,
+          crawlerOnly:
+            CRAWLER_ONLY_SOURCES.has(source) || (bucket.shopper === 0 && bucket.crawler > 0),
           percent: total > 0 ? Math.round((visits / total) * 1000) / 10 : 0,
           shopperPercent:
             shopperVisits > 0 ? Math.round((bucket.shopper / shopperVisits) * 1000) / 10 : 0,
@@ -290,6 +327,10 @@ export async function GET(request) {
       toYmd: ymdUtc(to),
       total,
       crawlerVisits,
+      /** AI training/chat crawlers only (excludes Bing/Apple/Meta link-preview/etc.). */
+      aiCrawlerVisits,
+      /** Search + social link-preview bots (not AI chat agents). */
+      searchSocialCrawlerVisits,
       shopperVisits,
       shopperConversionRate,
       attributedOrders,
@@ -299,7 +340,10 @@ export async function GET(request) {
       recentQueries: recentQueries.map((row) => ({
         query: row.referrerQuery,
         source: row.source,
-        sourceLabel: SOURCE_LABELS[row.source] || row.source,
+        sourceLabel: sourceLabel(row.source, {
+          shopper: isShopperDetection(row.detection) ? 1 : 0,
+          crawler: isShopperDetection(row.detection) ? 0 : 1,
+        }),
         path: row.path || "/",
         detection: row.detection,
         createdAt: row.createdAt,

@@ -4,7 +4,11 @@ import {
   STORE_JWT_COOKIE_NAME,
   STORE_JWT_COOKIE_NAME_LEGACY,
 } from "@/lib/constants";
-import { classifyAiTraffic, shouldSkipAiVisitPath } from "@/lib/aiAgentTraffic";
+import {
+  classifyAiTraffic,
+  shouldSkipAiVisitPath,
+  shouldSkipAiVisitRequest,
+} from "@/lib/aiAgentTraffic";
 import { applyAiAttributionCookies } from "@/lib/aiAttribution";
 import { applyOrderAttributionCookies } from "@/lib/orderAttribution";
 import { AI_INGEST_INTERNAL_TOKEN } from "@/lib/aiIngestInternal";
@@ -318,7 +322,7 @@ export async function middleware(request) {
   }
   let aiHit = null;
 
-  if (!shouldSkipAiVisitPath(pathname)) {
+  if (!shouldSkipAiVisitPath(pathname) && !shouldSkipAiVisitRequest(request)) {
     const userAgent = request.headers.get("user-agent") || "";
     const referrer = request.headers.get("referer") || "";
     aiHit = classifyAiTraffic({

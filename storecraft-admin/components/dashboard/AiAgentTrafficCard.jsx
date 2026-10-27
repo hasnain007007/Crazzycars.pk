@@ -57,6 +57,8 @@ function formatPkr(n) {
 const EMPTY_DATA = {
   total: 0,
   crawlerVisits: 0,
+  aiCrawlerVisits: 0,
+  searchSocialCrawlerVisits: 0,
   shopperVisits: 0,
   shopperConversionRate: 0,
   attributedOrders: 0,
@@ -108,9 +110,20 @@ export function AiAgentTrafficCard() {
       }
       setPeriodLabel(json.data?.label || (preset === "custom" ? "Custom range" : `Last ${preset} days`));
       setWindowDays(Number(json.data?.attributionWindowDays) || 30);
+      const crawlerVisits = Number(json.data?.crawlerVisits) || 0;
+      const aiCrawlerVisits =
+        json.data?.aiCrawlerVisits != null
+          ? Number(json.data.aiCrawlerVisits) || 0
+          : crawlerVisits;
+      const searchSocialCrawlerVisits =
+        json.data?.searchSocialCrawlerVisits != null
+          ? Number(json.data.searchSocialCrawlerVisits) || 0
+          : Math.max(0, crawlerVisits - aiCrawlerVisits);
       setData({
         total: Number(json.data?.total) || 0,
-        crawlerVisits: Number(json.data?.crawlerVisits) || 0,
+        crawlerVisits,
+        aiCrawlerVisits,
+        searchSocialCrawlerVisits,
         shopperVisits: Number(json.data?.shopperVisits) || 0,
         shopperConversionRate: Number(json.data?.shopperConversionRate) || 0,
         attributedOrders: Number(json.data?.attributedOrders) || 0,
@@ -171,10 +184,11 @@ export function AiAgentTrafficCard() {
         <div className="min-w-0 max-w-xl">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">AI agent traffic</h3>
           <p className="text-xs text-slate-400">
-            Most “visits” here are AI crawlers indexing pages — they never check out. Only{" "}
-            <span className="font-medium text-slate-600 dark:text-slate-300">shopper clicks</span>{" "}
-            (chat referrer / UTM) can convert, via a {windowDays}-day first-touch cookie. Click a
-            source with orders to see which orders.
+            <span className="font-medium text-slate-600 dark:text-slate-300">AI crawlers</span>{" "}
+            (ChatGPT, Claude, Perplexity, …) index pages and cannot buy.{" "}
+            <span className="font-medium text-slate-600 dark:text-slate-300">Shopper clicks</span>{" "}
+            need a chat referrer or UTM ({windowDays}-day cookie). Bing / Apple / Meta link-preview
+            bots are listed separately — they are not AI chat agents. Prefetch/RSC hits are ignored.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -239,18 +253,18 @@ export function AiAgentTrafficCard() {
         <p className="mt-4 text-sm text-red-600">{error}</p>
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <div className="rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2.5 dark:border-amber-900/40 dark:bg-amber-950/20">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-800/70 dark:text-amber-400/80">
-                Crawler hits
+                AI crawlers
               </p>
               <p className="mt-0.5 text-2xl font-bold tabular-nums text-amber-950 dark:text-amber-100">
-                {loading && data.crawlerVisits === 0
+                {loading && data.aiCrawlerVisits === 0
                   ? "…"
-                  : data.crawlerVisits.toLocaleString("en-PK")}
+                  : data.aiCrawlerVisits.toLocaleString("en-PK")}
               </p>
               <p className="mt-0.5 text-[10px] text-amber-800/60 dark:text-amber-400/60">
-                Bots · cannot buy
+                ChatGPT · Claude · etc.
               </p>
             </div>
             <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
@@ -265,6 +279,17 @@ export function AiAgentTrafficCard() {
               <p className="mt-0.5 text-[10px] text-slate-400">
                 Conv {data.shopperConversionRate}%
               </p>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/40 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-950/30">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                Other bots
+              </p>
+              <p className="mt-0.5 text-2xl font-bold tabular-nums text-slate-700 dark:text-slate-200">
+                {loading && data.searchSocialCrawlerVisits === 0
+                  ? "…"
+                  : data.searchSocialCrawlerVisits.toLocaleString("en-PK")}
+              </p>
+              <p className="mt-0.5 text-[10px] text-slate-400">Bing · Apple · Meta preview</p>
             </div>
             <button
               type="button"
@@ -295,9 +320,10 @@ export function AiAgentTrafficCard() {
             {data.total > 0 ? (
               <>
                 {" "}
-                · {data.crawlerVisits.toLocaleString("en-PK")} of {data.total.toLocaleString("en-PK")}{" "}
-                hits are crawlers ({data.total ? Math.round((data.crawlerVisits / data.total) * 100) : 0}
-                %)
+                · AI crawlers {data.aiCrawlerVisits.toLocaleString("en-PK")} · other bots{" "}
+                {data.searchSocialCrawlerVisits.toLocaleString("en-PK")} · shoppers{" "}
+                {data.shopperVisits.toLocaleString("en-PK")} (of {data.total.toLocaleString("en-PK")}{" "}
+                logged hits)
               </>
             ) : null}
           </p>
@@ -360,9 +386,13 @@ export function AiAgentTrafficCard() {
                                 />
                                 <span className="font-medium text-slate-800 dark:text-slate-100">
                                   {row.label}
-                                  {row.crawlerOnly && shoppers === 0 ? (
+                                  {row.searchSocialCrawler && shoppers === 0 ? (
+                                    <span className="ml-1 text-[10px] font-normal text-slate-500">
+                                      search/social
+                                    </span>
+                                  ) : row.crawlerOnly && shoppers === 0 ? (
                                     <span className="ml-1 text-[10px] font-normal text-amber-700">
-                                      bot
+                                      AI bot
                                     </span>
                                   ) : null}
                                   {clickable ? (
