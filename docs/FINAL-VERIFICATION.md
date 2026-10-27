@@ -31,7 +31,7 @@ Start-of-pass local HEAD and both containers were `e9c9864` (matched). Section B
 **Cursor cannot verify (owner):**
 
 1. Staff re-login notice after the JWT `type: "admin"` check
-2. `admin@crazzycars.pk` password rotation off the old seed value
+2. Production admin password rotation off any historical seed value
 3. Meta catalog `762691786907213` re-sync in Commerce Manager
 
 **Other (not this pass):** unknown `/products/{slug}` is 308 then 404; unknown `/collections/{slug}` 308s to `/categories`.
@@ -71,7 +71,7 @@ Start-of-pass local HEAD and both containers were `e9c9864` (matched). Section B
 | **H.2** | Store JWT vs admin route | **PASS** | Throwaway `type: "store_customer"` HS256 cookie `admin_token` against admin `127.0.0.1:3000`: `GET /api/settings` **401**, `GET /api/orders` **401**, `GET /dashboard` **307** `/login?from=%2Fdashboard`. Anonymous `/api/settings` **401**. No secrets in those bodies |
 | **H.3** | Settings never return secret fields | **PASS** (public + unauth admin) | Public `GET https://crazzycars.pk/api/settings`: `secretKey`/`webhookSecret`/`clientSecret` absent; `payment: {}`. Admin GET unauthenticated **401**. `redactSettingsSecrets` deletes `payment.stripe` / `payment.paypal` / stripe key fields. Those field names do not exist in the JS tree. **Not** re-tested as a logged-in admin (no staff login this pass) |
 | **H.4** | Staff told to re-login | **UNCONFIRMED** | No commit message, live banner, or session evidence that tokens without `type: "admin"` were communicated to staff |
-| **H.5** | `admin@crazzycars.pk` password rotated | **UNCONFIRMED** | Requires owner confirmation. Not inferred from code |
+| **H.5** | Production admin password rotated off historical seed | **UNCONFIRMED** | Requires owner confirmation. Not inferred from code |
 | **I.1** | Meta catalog 762691786907213 | **UNCONFIRMED** (status only) | Not re-queried from Commerce Manager this pass. Prior session: 668 items, mixed suffix/clean slugs. Site resolver now 308s suffix `/products/` URLs in **one** hop (B.2/B.3) |
 | **I.2** | Owner action in Commerce Manager | **UNCONFIRMED** | No evidence of a feed re-sync since the catalog was found. Still outstanding on the Meta side |
 | **J.1** | Favicon | **PASS** | Live store + admin HTML: `/favicon.ico?v=3`, `/icon.png?v=3`, `/apple-touch-icon.png?v=3`. Wordmark commit `e9c9864` (separate from `26a174e` C-crop). Store also on `b4f7c92` after B |

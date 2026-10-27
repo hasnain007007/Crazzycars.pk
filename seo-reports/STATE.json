@@ -93,14 +93,26 @@
         "C14"
       ],
       "gate": true,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "branch": "seo/T3",
-      "commits": [],
+      "commits": [
+        "c194b4a",
+        "bc81fd5"
+      ],
       "plan": "Replace Allow /ai/ with /ai/catalog; fix C14 Allow regex so Disallow is not matched; GATE before deploy.",
       "notes": [
-        "GO task 3 received; implementing dry-run diff"
+        "C14 pass; Allow /ai/catalog live; C14 regex fixed",
+        "Spot: robots Allow set OK; /ai/catalog 200; security.txt OK; llms 126/126 200",
+        "Rollback: revert robots.js allow list + C14 regex; redeploy"
       ],
-      "dryRun": "seo-reports/dry-runs/T3-robots-allow.md"
+      "dryRun": "seo-reports/dry-runs/T3-robots-allow.md",
+      "filesChanged": 2,
+      "checksBefore": {
+        "C14": false
+      },
+      "checksAfter": {
+        "C14": true
+      }
     },
     "T4": {
       "id": "T4",
@@ -256,10 +268,10 @@
         "C21"
       ],
       "gate": false,
-      "status": "PENDING",
-      "branch": null,
+      "status": "IN_PROGRESS",
+      "branch": "seo/T1b",
       "commits": [],
-      "plan": "",
+      "plan": "Remove default admin login text; seed from ADMIN_EMAIL/ADMIN_PASSWORD only; C21; history scan types/paths; rotate list.",
       "notes": []
     },
     "T15": {
@@ -312,7 +324,7 @@
     }
   },
   "blockedStreak": 0,
-  "updatedAt": "2026-10-26T20:39:19.926689+00:00",
+  "updatedAt": "2026-10-26T20:44:56.446110+00:00",
   "goApproved": [
     "T3"
   ],

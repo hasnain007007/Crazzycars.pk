@@ -114,9 +114,9 @@ Committed templates: `storecraft-store/.env.local.example` and `storecraft-admin
    - SSL via Let's Encrypt (`certbot`).
 4. Set production env vars on the server (never commit secrets).
 
-## First login
+## First admin user
 
-Set `ADMIN_SEED_PASSWORD` in `storecraft-admin/.env.local` (min 12 characters), then run `node scripts/seed-admin.mjs`. Log in as `admin@crazzycars.pk` with that password. Change it immediately in production. Never commit the password.
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` (min 12 characters) in `storecraft-admin/.env.local`, then run `node scripts/seed-admin.mjs` from `storecraft-admin`. The script fails if either variable is missing. Never commit credentials.
 
 ## Required third-party accounts
 

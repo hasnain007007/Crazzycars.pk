@@ -1,5 +1,6 @@
 /**
- * Seeds the default superadmin account in MongoDB if missing.
+ * Seeds the superadmin account in MongoDB if missing.
+ * Requires ADMIN_EMAIL and ADMIN_PASSWORD from the environment — no hardcoded defaults.
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,19 +15,30 @@ const envPath = path.resolve(__dirname, "../.env.local");
 
 dotenv.config({ path: envPath });
 
-const ADMIN_EMAIL = "admin@crazzycars.pk";
-
-function seedPassword() {
-  const password = String(process.env.ADMIN_SEED_PASSWORD || "").trim();
-  if (password.length < 12) {
+function requireAdminCreds() {
+  const email = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  const password = String(process.env.ADMIN_PASSWORD || "").trim();
+  if (!email) {
     throw new Error(
-      "ADMIN_SEED_PASSWORD must be set in .env.local (min 12 characters). Do not hardcode a password in this script."
+      "ADMIN_EMAIL is missing. Set it in the environment (or storecraft-admin/.env.local) before seeding."
     );
   }
-  return password;
+  if (!password) {
+    throw new Error(
+      "ADMIN_PASSWORD is missing. Set it in the environment (or storecraft-admin/.env.local) before seeding. Never hardcode a password."
+    );
+  }
+  if (password.length < 12) {
+    throw new Error("ADMIN_PASSWORD must be at least 12 characters.");
+  }
+  if (!email.includes("@")) {
+    throw new Error("ADMIN_EMAIL must be a valid email address.");
+  }
+  return { email, password };
 }
 
-const LEGACY_EMAILS = ["admin@example.com", "crazzycars.pk"];
+/** Optional migration targets only — never used as the new account email. */
+const LEGACY_EMAILS = ["admin@example.com"];
 
 async function seedAdmin() {
   const { MONGODB_URI } = process.env;
@@ -34,10 +46,12 @@ async function seedAdmin() {
     throw new Error("MONGODB_URI is missing in .env.local");
   }
 
+  const { email: ADMIN_EMAIL, password } = requireAdminCreds();
+
   await mongoose.connect(MONGODB_URI, { bufferCommands: false });
 
   const force = process.argv.includes("--force");
-  const hashedPassword = await bcrypt.hash(seedPassword(), 12);
+  const hashedPassword = await bcrypt.hash(password, 12);
   let existingUser = await User.findOne({ email: ADMIN_EMAIL });
 
   if (!existingUser) {
@@ -52,30 +66,28 @@ async function seedAdmin() {
   }
 
   if (existingUser) {
-    // Always re-activate; --force also resets password from ADMIN_SEED_PASSWORD.
     existingUser.email = ADMIN_EMAIL;
     existingUser.status = "active";
     existingUser.role = "superadmin";
-    existingUser.name = "Crazzycars.pk";
     if (force) existingUser.password = hashedPassword;
     await existingUser.save();
     console.log(
       force
-        ? `Superadmin reset (active + password): ${ADMIN_EMAIL}`
-        : `Superadmin already exists — set active: ${ADMIN_EMAIL}`
+        ? `Superadmin reset (active + password) for ADMIN_EMAIL`
+        : `Superadmin already exists — set active for ADMIN_EMAIL`
     );
     return;
   }
 
   await User.create({
-    name: "Crazzycars.pk",
+    name: "Store Admin",
     email: ADMIN_EMAIL,
     password: hashedPassword,
     role: "superadmin",
     status: "active",
   });
 
-  console.log(`Superadmin created successfully: ${ADMIN_EMAIL}`);
+  console.log("Superadmin created successfully for ADMIN_EMAIL");
 }
 
 seedAdmin()
@@ -85,6 +97,10 @@ seedAdmin()
   })
   .catch(async (error) => {
     console.error("Failed to seed superadmin:", error.message);
-    await mongoose.connection.close();
+    try {
+      await mongoose.connection.close();
+    } catch {
+      /* ignore */
+    }
     process.exit(1);
   });
