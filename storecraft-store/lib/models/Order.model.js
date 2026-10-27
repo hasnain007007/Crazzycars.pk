@@ -6,6 +6,10 @@ const attributionSchema = buildAttributionSchema(mongoose);
 const orderItemSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", default: null },
+    /** Product slug snapshot for mobile reorder / deep links. */
+    slug: { type: String, default: "", trim: true },
+    /** Variant ObjectId when using the modern variant matrix. */
+    variantId: { type: mongoose.Schema.Types.ObjectId, default: null },
     /** Immutable catalogue/pixel ID snapshot captured when the order is placed. */
     articleNo: { type: String, default: "", trim: true },
     name: { type: String, required: true, trim: true },
@@ -285,6 +289,13 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
     invoiceNumber: { type: String, default: "", trim: true, index: true },
+
+    orderSource: {
+      type: String,
+      enum: ["site", "mobile", ""],
+      default: "site",
+      trim: true,
+    },
     /** When admin sent the post-delivery review request on WhatsApp ("Ask for reviews" queue). */
     reviewRequestedAt: { type: Date, default: null },
   },

@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-10-04T21:37:40.776Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "db": "crazzycars_local_verify",
+  "note": "Tokens and secrets redacted. Fake local-verify data only.",
+  "files": [
+    "auth-login",
+    "auth-refresh",
+    "auth-register",
+    "cart-quote",
+    "categories",
+    "config",
+    "create-order",
+    "create-order-guest",
+    "error-cod-blocked",
+    "error-idempotency-reused",
+    "error-min-order",
+    "error-out-of-stock",
+    "home",
+    "me",
+    "order-detail",
+    "orders-list",
+    "product-detail",
+    "products-list",
+    "tracking-not-found",
+    "tracking-unavailable",
+    "vehicles"
+  ]
+}

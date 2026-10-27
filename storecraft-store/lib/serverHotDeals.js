@@ -5,6 +5,7 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { buildDealsMongoFilter, discountFraction } from "@/lib/dealsFilter";
+import { WEBSITE_SEGMENT_FILTER } from "@/lib/productVisibility";
 
 /**
  * @param {{ filter?: string, limit?: number }} opts
@@ -17,6 +18,7 @@ export async function fetchHotDealsServer({ filter = "all", limit = 500 } = {}) 
     const f = String(filter || "all").toLowerCase();
     const query = {
       status: { $regex: /^active$/i },
+      ...WEBSITE_SEGMENT_FILTER,
       pricing: { $exists: true },
       ...buildDealsMongoFilter(f),
     };

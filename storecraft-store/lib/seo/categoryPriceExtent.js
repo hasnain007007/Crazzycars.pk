@@ -3,7 +3,7 @@
  */
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
-import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { getActiveDescendantCategoryIds } from "@/lib/storeCategoryData";
 
 function priceOf(p) {
@@ -33,7 +33,7 @@ export async function getCategoryPriceExtent(slug) {
   const allCategoryIds = [category._id, ...descendantIds];
 
   const products = await Product.find({
-    ...STOREFRONT_PRODUCT_FILTER,
+    ...WEBSITE_PRODUCT_FILTER,
     $or: [{ categories: { $in: allCategoryIds } }, { category: { $in: allCategoryIds } }],
   })
     .select("pricing.regularPrice pricing.salePrice")

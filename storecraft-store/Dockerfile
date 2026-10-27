@@ -71,6 +71,10 @@ COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod 755 /app/docker-entrypoint.sh \
   && chown nextjs:nodejs /app/docker-entrypoint.sh
 COPY --chown=nextjs:nodejs healthcheck.js ./healthcheck.js
+# Preview isolation guard (runs when PREVIEW_GUARD=1 — see docs/mobile-api/PREVIEW_DEPLOY.md)
+COPY --chown=nextjs:nodejs scripts/previewMongoGuard.mjs ./previewMongoGuard.mjs
+COPY --chown=nextjs:nodejs scripts/assert-preview-mongo.mjs ./assert-preview-mongo.mjs
+
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

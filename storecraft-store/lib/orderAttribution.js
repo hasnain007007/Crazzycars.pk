@@ -532,9 +532,18 @@ export function applyOrderAttributionCookies(request, response) {
 /**
  * Read attribution from request cookies for checkout stamping.
  */
+function cookieGet(request, name) {
+  try {
+    return request?.cookies?.get?.(name)?.value;
+  } catch {
+    return undefined;
+  }
+}
+
 export function readOrderAttributionFromRequest(request) {
-  let ft = expandTouch(decodeTouch(request.cookies.get(ATTR_FT_COOKIE)?.value));
-  let lt = expandTouch(decodeTouch(request.cookies.get(ATTR_LT_COOKIE)?.value));
+  // Plain Request (mobile synthetic) has no Next.js cookies API — treat as Direct.
+  let ft = expandTouch(decodeTouch(cookieGet(request, ATTR_FT_COOKIE)));
+  let lt = expandTouch(decodeTouch(cookieGet(request, ATTR_LT_COOKIE)));
 
   // Drop staff-tool touches left over in cookies (Ads Manager, admin, etc.).
   if (ft && isStaffToolReferrer(ft.referrerHost)) ft = null;

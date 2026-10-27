@@ -158,6 +158,7 @@ export function serializeCategoryTreeNode(node) {
     icon: node.icon || node.homepageIcon || "",
     sortOrder: node.sortOrder || 0,
     isFeatured: Boolean(node.isFeatured || node.featured),
+    segment: node.segment === "bike" ? "bike" : "car",
     children: Array.isArray(node.children) ? node.children.map(serializeCategoryTreeNode) : [],
   };
 }
@@ -169,7 +170,7 @@ export function serializeCategoryTreeNode(node) {
 export async function loadStoreCategoriesTreeSlim() {
   const rows = await Category.find({ status: ACTIVE })
     .select(
-      "name slug image icon homepageIcon sortOrder isFeatured featured level parents parentCategory parentId"
+      "name slug image icon homepageIcon sortOrder isFeatured featured level parents parentCategory parentId segment"
     )
     .sort({ level: 1, sortOrder: 1, name: 1 })
     .lean();

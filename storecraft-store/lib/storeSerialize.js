@@ -3,6 +3,7 @@ import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 import { serializeStoreOption } from "@/lib/variationOptions";
 import { combinationSignature } from "@/lib/variantMatrix";
 import { sanitizeProductHtml, toPlainText } from "@/lib/sanitizeHtml";
+import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 
 /** Internal ops labels that must not appear on the public PDP. */
 const INTERNAL_NOTE_LABEL_RE =
@@ -45,7 +46,7 @@ function fixTruncatedButto(value) {
 
 function mapImagesWithSafeAlt(images) {
   return (images || []).map((i) => ({
-    url: i?.url || "",
+    url: absoluteMediaUrl(i?.url),
     isMain: !!i?.isMain,
     altText: fixTruncatedButto(i?.altText || ""),
   }));
@@ -97,10 +98,10 @@ function serializeMediaVideos(videos) {
   if (!Array.isArray(videos)) return [];
   return videos
     .map((video) => ({
-      url: String(video?.url || "").trim(),
-      originalUrl: String(video?.originalUrl || "").trim(),
+      url: absoluteMediaUrl(video?.url),
+      originalUrl: absoluteMediaUrl(video?.originalUrl) || String(video?.originalUrl || "").trim(),
       publicId: String(video?.publicId || "").trim(),
-      thumbnail: String(video?.thumbnail || "").trim(),
+      thumbnail: absoluteMediaUrl(video?.thumbnail),
       format: String(video?.format || "webm").trim() || "webm",
       duration: Math.max(0, Number(video?.duration) || 0),
       size: Math.max(0, Number(video?.size) || 0),
@@ -129,13 +130,14 @@ export function serializeStoreProductSummary(p, opts = {}) {
     ...rawImgs.filter((i) => !i?.isMain),
   ].filter(Boolean);
   const mediaImages = mainFirst.slice(0, maxImages || rawImgs.length);
-  const summaryImage =
+  const summaryImage = absoluteMediaUrl(
     mediaImages.find((i) => i?.isMain)?.url ||
-    mediaImages[0]?.url ||
-    rawImgs.find((i) => i?.isMain)?.url ||
-    rawImgs[0]?.url ||
-    null;
-  const summaryImages = mediaImages.map((i) => i?.url).filter(Boolean);
+      mediaImages[0]?.url ||
+      rawImgs.find((i) => i?.isMain)?.url ||
+      rawImgs[0]?.url ||
+      ""
+  ) || null;
+  const summaryImages = mediaImages.map((i) => absoluteMediaUrl(i?.url)).filter(Boolean);
   return {
     id: productDocId(p),
     name: fixTruncatedButto(p.name),
@@ -223,7 +225,9 @@ function serializeVariantForStore(v) {
     sku: v.sku || "",
     trackStock: v.trackStock !== false,
     isAvailable: v.isAvailable !== false,
-    image: v.image?.url ? { url: v.image.url, publicId: v.image.publicId || "" } : null,
+    image: v.image?.url
+      ? { url: absoluteMediaUrl(v.image.url), publicId: v.image.publicId || "" }
+      : null,
   };
 }
 
@@ -283,7 +287,7 @@ export function serializeStoreProductDetail(p) {
       videos: serializeMediaVideos(p.media?.videos),
     },
     videos: serializeMediaVideos(p.media?.videos),
-    videoUrl: p.media?.videoUrl || "",
+    videoUrl: absoluteMediaUrl(p.media?.videoUrl),
     videoType: p.media?.videoType || "",
     usesVariantMatrix,
     variationTypes,
@@ -311,12 +315,9 @@ export function serializeStoreProductDetail(p) {
           weightDelta: Number(c.weightDelta) || 0,
           stock: Math.max(0, Number(c.stock) || 0),
           sku: c.sku || "",
-          image:
-            typeof c.image === "string"
-              ? c.image
-              : c.image?.url
-                ? String(c.image.url)
-                : "",
+          image: absoluteMediaUrl(
+            typeof c.image === "string" ? c.image : c.image?.url ? String(c.image.url) : ""
+          ),
         }))
       : [],
     variations: (p.variations || []).map((v, idx) => ({

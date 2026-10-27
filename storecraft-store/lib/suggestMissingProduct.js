@@ -11,6 +11,7 @@ import {
   looksLikeProductSlug,
   slugParamToSearchQuery,
 } from "@/lib/missingProductHelpers";
+import { WEBSITE_SEGMENT_FILTER } from "@/lib/productVisibility";
 
 export {
   FAST_404_CATEGORIES,
@@ -38,7 +39,7 @@ export async function suggestProductsForMissingSlug(rawSlug, opts = {}) {
   try {
     await dbConnect();
     const parsed = parseSearchQuery(q);
-    const { rows } = await queryProductsSmart(Product, { status: "active" }, q, {
+    const { rows } = await queryProductsSmart(Product, { status: "active", ...WEBSITE_SEGMENT_FILTER }, q, {
       limit: 8,
       skip: 0,
       select: SELECT,
@@ -82,6 +83,7 @@ export async function loadSimilarActiveProducts(product, { limit = 6 } = {}) {
     if (categoryIds.length) {
       rows = await Product.find({
         status: "active",
+        ...WEBSITE_SEGMENT_FILTER,
         _id: { $ne: product._id },
         categories: { $in: categoryIds },
       })

@@ -4,7 +4,7 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { buildMerchantRssXml, productToMerchantItem } from "@/lib/merchantFeed";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { STORE_POLICY } from "@/config/store-policy";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function GET() {
     const shippingFeePKR = Number(STORE_POLICY?.shipping?.standardFeePKR) || 250;
 
     await dbConnect();
-    const products = await Product.find(STOREFRONT_PRODUCT_FILTER)
+    const products = await Product.find(WEBSITE_PRODUCT_FILTER)
       .select(
         "name slug articleNo ean partNumber condition vendor shortDescription longDescription seo media pricing inventory categories updatedAt variationCombinations codEnabled isBulky"
       )

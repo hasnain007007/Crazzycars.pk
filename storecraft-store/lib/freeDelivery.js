@@ -3,11 +3,17 @@
  * Flat STORE_POLICY fee only — no order-value waiver.
  */
 import { formatPrice, roundRupees } from "@/lib/currency";
+import {
+  collapseRepeatedCurrencyPrefix,
+  fillAmountPlaceholder,
+} from "@/lib/advanceMessageFormat";
 import { isAdvancePaymentMethod } from "@/lib/pakistaniPaymentMethods";
 import { STORE_POLICY } from "@/config/store-policy";
 import { PREPAID_DISCOUNT_PERCENT, COD_ADVANCE_AMOUNT } from "@/config/checkout-money";
 import { standardDeliveryFeeShort } from "@/lib/storePolicyCopy";
 import { shippingFloorPKR } from "@/lib/shippingTier";
+
+export { collapseRepeatedCurrencyPrefix, fillAmountPlaceholder };
 
 const DEFAULT_ADVANCE_MESSAGE =
   "A Rs. {amount} booking amount is required to confirm your COD order. It is deducted from your total and fully refunded if the item doesn't fit or doesn't match your confirmed order.\n\nSend the payment screenshot on WhatsApp: {whatsapp}\n\nBalance is collected on delivery.";
@@ -183,6 +189,10 @@ export function applyWhatsAppPlaceholder(text, whatsapp) {
   return String(text || "").replace(/\{whatsapp\}/gi, wa);
 }
 
+/**
+ * Fill {amount} / {whatsapp} in CMS advance templates.
+ * Normalises Rs./PKR so CMS "Rs. {amount}" never becomes "Rs. Rs.300".
+ */
 export function formatAdvancePaymentMessage(message, amount, whatsapp) {
   const amt = Math.max(0, Number(amount) || 0);
   const amountStr = formatPrice(amt);

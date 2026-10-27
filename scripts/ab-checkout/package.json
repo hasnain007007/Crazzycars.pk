@@ -1,0 +1,9 @@
+{
+  "name": "ab-checkout",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "mongodb-memory-server": "^10.1.4",
+    "mongoose": "^9.4.1"
+  }
+}

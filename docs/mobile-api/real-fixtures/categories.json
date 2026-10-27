@@ -1,0 +1,64 @@
+{
+  "categories": [
+    {
+      "_id": "6ac2c71efdf15f953bf2aa65",
+      "name": "Lights",
+      "slug": "lights",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "icon": "",
+      "sortOrder": 0,
+      "isFeatured": false,
+      "children": []
+    },
+    {
+      "_id": "6ac2c71efdf15f953bf2aa66",
+      "name": "Exterior",
+      "slug": "exterior",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "icon": "",
+      "sortOrder": 1,
+      "isFeatured": false,
+      "children": []
+    },
+    {
+      "_id": "6ac2c71efdf15f953bf2aa67",
+      "name": "Interior",
+      "slug": "interior",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "icon": "",
+      "sortOrder": 2,
+      "isFeatured": false,
+      "children": []
+    },
+    {
+      "_id": "6ac2c71efdf15f953bf2aa68",
+      "name": "Body Kits & Extensions",
+      "slug": "body-kits-extensions",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "icon": "",
+      "sortOrder": 3,
+      "isFeatured": false,
+      "children": []
+    },
+    {
+      "_id": "6ac2c71efdf15f953bf2aa69",
+      "name": "Floor Mats",
+      "slug": "floor-mats",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "icon": "",
+      "sortOrder": 4,
+      "isFeatured": false,
+      "children": []
+    },
+    {
+      "_id": "6ac2c71efdf15f953bf2aa6a",
+      "name": "Mirrors",
+      "slug": "mirrors",
+      "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+      "icon": "",
+      "sortOrder": 5,
+      "isFeatured": false,
+      "children": []
+    }
+  ]
+}

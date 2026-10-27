@@ -2,6 +2,7 @@
  * SSR category tree for layout header / mega-menu / footer.
  * React.cache() dedupes within a single request (layout + any other caller).
  */
+import { filterCategoryTreeBySegment } from "@/lib/segment";
 import { cache } from "react";
 import { dbConnect } from "@/lib/db";
 import {
@@ -25,9 +26,13 @@ export const fetchCategoryTreeServer = cache(async () => {
       loadStoreCategoriesTreeSlim(),
       getCategoryIdsWithProducts(),
     ]);
-    const payload = pruneCategoryTreeWithoutProducts(
-      (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode),
-      withProducts
+    // Website menus are the car store; bike categories appear only in the app until /bikes ships.
+    const payload = filterCategoryTreeBySegment(
+      pruneCategoryTreeWithoutProducts(
+        (Array.isArray(tree) ? tree : []).map(serializeCategoryTreeNode),
+        withProducts
+      ),
+      "car"
     );
     setCachedCategoryTreePayload(payload);
     return payload;

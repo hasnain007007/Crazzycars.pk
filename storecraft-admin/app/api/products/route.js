@@ -245,6 +245,7 @@ export async function POST(request) {
     const doc = await Product.create({
       name,
       slug,
+      segment: body.segment === "bike" ? "bike" : "car",
       articleNo: articleTrim,
       ean: body.ean || "",
       categories,

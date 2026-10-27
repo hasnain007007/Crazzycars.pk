@@ -9,6 +9,7 @@ import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { PRODUCT_CARD_SELECT } from "@/lib/serverProductFetch";
+import { WEBSITE_SEGMENT_FILTER } from "@/lib/productVisibility";
 
 const SALES_WINDOW_DAYS = 90;
 const NOT_SOLD = ["cancelled", "returned", "refunded"];
@@ -34,7 +35,7 @@ export async function fetchBestSellersServer({ limit = 500, excludeIds = [] } = 
   const exclude = new Set((excludeIds || []).map(String));
   try {
     await dbConnect();
-    const base = { status: { $regex: /^active$/i } };
+    const base = { status: { $regex: /^active$/i }, ...WEBSITE_SEGMENT_FILTER };
 
     let soldIds = [];
     try {

@@ -1,0 +1,77 @@
+{
+  "order": {
+    "id": "6ac2c723e8107da9613b5623",
+    "orderNumber": "ORD-2026-00004",
+    "status": "pending",
+    "paymentStatus": "unpaid",
+    "paymentMethod": "cod",
+    "total": 2749,
+    "pricing": {
+      "subtotal": 2499,
+      "discount": 0,
+      "shippingCost": 250,
+      "total": 2749
+    },
+    "items": [
+      {
+        "productId": "6ac2c71efdf15f953bf2aa76",
+        "slug": "led-headlight-bulb-h4",
+        "name": "LED Headlight Bulb H4",
+        "quantity": 1,
+        "unitPrice": 2499,
+        "total": 2499,
+        "image": "https://res.cloudinary.com/demo/image/upload/w_600,h_600,c_fill/sample.jpg",
+        "variantId": "",
+        "variationLabel": ""
+      }
+    ],
+    "timeline": [
+      {
+        "status": "placed",
+        "title": "Order Placed",
+        "description": "Order #ORD-2026-00004 received successfully",
+        "timestamp": "2026-10-04T21:37:39.917Z"
+      }
+    ],
+    "tracking": {
+      "number": "",
+      "url": "",
+      "courier": "Postex"
+    },
+    "shippingCity": "Lahore",
+    "shippingProvince": "Punjab",
+    "createdAt": "2026-10-04T21:37:39.919Z",
+    "paymentInstructions": {
+      "paymentMethod": "cod",
+      "amountDue": 250,
+      "remainingOnDelivery": 2499,
+      "currency": "PKR",
+      "title": "Confirm Your Order",
+      "message": "Pay delivery charges of Rs.250 and send screenshot on WhatsApp: 03000000000",
+      "accountLines": [
+        {
+          "label": "Bank",
+          "value": "Fake Meezan Local"
+        },
+        {
+          "label": "Account",
+          "value": "00000000000000"
+        },
+        {
+          "label": "Title",
+          "value": "LOCAL VERIFY FAKE"
+        },
+        {
+          "label": "IBAN",
+          "value": "PK00FAKE0000000000000000"
+        }
+      ],
+      "whatsapp": {
+        "number": "03000000000",
+        "display": "03000000000",
+        "waMeUrl": "https://wa.me/923000000000?text=Hi%20CrazzyCars%2C%20I%20paid%20for%20order%20ORD-2026-00004.%0AAmount%3A%20Rs.250.%0ASending%20payment%20screenshot%20now.",
+        "prefilledMessage": "Hi CrazzyCars, I paid for order ORD-2026-00004.\nAmount: Rs.250.\nSending payment screenshot now."
+      }
+    }
+  }
+}

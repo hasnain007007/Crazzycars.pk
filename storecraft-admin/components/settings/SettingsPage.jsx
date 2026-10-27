@@ -17,6 +17,7 @@ import SeoSettings from "@/components/settings/SeoSettings";
 import HomepageSettings from "@/components/settings/HomepageSettings";
 import { EmailTemplatesSettings } from "@/components/settings/EmailTemplatesSettings";
 import WhatsAppSettings from "@/components/settings/WhatsAppSettings";
+import MobileAppSettings from "@/components/settings/MobileAppSettings";
 import WhatsAppTemplateSettings from "@/components/settings/WhatsAppTemplateSettings";
 import PakistaniPaymentSettings from "@/components/settings/PakistaniPaymentSettings";
 import { COD_ADVANCE_TIERS } from "@/config/checkout-money";
@@ -54,6 +55,7 @@ const TABS = [
   "Checkout",
   "Homepage",
   "Courier",
+  "Mobile App",
 ];
 
 function deepClone(o) {
@@ -1317,6 +1319,12 @@ export function SettingsPage() {
           onPatch={(partial) => setS({ ...s, courier: { ...courier, ...partial } })}
           onSave={() => save({ courier })}
         />
+      ) : null}
+
+      {tab === 19 ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+          <MobileAppSettings />
+        </div>
       ) : null}
     </div>
   );

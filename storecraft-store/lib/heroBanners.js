@@ -21,6 +21,8 @@ export async function getHeroSlides() {
     const rows = await Banner.find({
       status: { $regex: /^(active|published)$/i },
       placement: "hero_slider",
+      // Website is the car store; bike banners are for the app's Bikes home only.
+      segment: { $in: ["car", null] },
     })
       .sort({ sortOrder: 1, createdAt: 1 })
       .lean();
