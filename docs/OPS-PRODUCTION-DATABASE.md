@@ -1,6 +1,21 @@
 # Production database access (CrazzyCars)
 
-**Last verified:** 2026-10-02
+**Last verified:** 2026-10-27
+
+## Same data, new VPS
+
+On **2026-10-27** production moved from Hostinger `31.97.107.181` to **`179.197.250.101`**.  
+This is the **same** CrazzyCars catalog, orders, customers, and media — only the server changed. Not a fresh database.
+
+| | |
+|--|--|
+| Live store | https://crazzycars.pk |
+| Live admin | https://admin.crazzycars.pk |
+| Order Hub | https://orderhub.crazzycars.pk |
+| Coolify panel | https://panel.crazzycars.pk |
+| VPS | `179.197.250.101` |
+
+Post-cutover counts (approx.): **411** products · **596** orders · **335** customers.
 
 ## What production actually uses
 
@@ -24,12 +39,12 @@ Those files are labeled with an explicit WARNING above `MONGODB_URI`. Treat any 
 
 | Source | Host | Fingerprint (sha256-16) |
 |--------|------|-------------------------|
-| Coolify runtime (prod) | `sialkot-mongo:27017` | `84143ac0cb2c3085` |
+| Coolify runtime (prod) on `179.197.250.101` | `sialkot-mongo:27017` | `84143ac0cb2c3085` |
 | Local `.env.local` (legacy Atlas) | `cluster0.yg8dcwr.mongodb.net` | `317ae4de8eb24f84` |
 
 ## How to read/write real production Mongo
 
-1. SSH to the VPS as root with the working key only: `id_ed25519` (avoid multi-key probes — fail2ban will ban the IP).
+1. SSH to the VPS as root with the working key only: `id_ed25519` (avoid multi-key probes — fail2ban will ban the IP). Host: `179.197.250.101`.
 2. Run queries **on the VPS**, against Docker Mongo, e.g.:
 
 ```bash
@@ -44,4 +59,5 @@ Or `docker exec` into the store/admin container (same URI is already in their en
 ## Related
 
 - Coolify store/admin apps: `NEXT_PUBLIC_SITE_URL` / admin URL on `crazzycars.pk`
+- Host path notes on the VPS: `/data/crazzycars/README-MIGRATE.md`
 - Held SKUs (`securityHold`) live only on VPS Mongo until reactivated there
