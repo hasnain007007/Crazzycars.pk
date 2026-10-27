@@ -13,7 +13,7 @@ import { categoryHref } from "@/lib/categories";
 import { homeHubCollectionJsonLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { getPageSeoOverride } from "@/lib/seo/gscAudit2026-10.mjs";
-import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
+import { withBrandTitleSuffix } from "@/lib/brand";
 
 export const revalidate = 300;
 
