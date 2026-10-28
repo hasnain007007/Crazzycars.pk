@@ -22,6 +22,7 @@ import { resolveProductRedirectPath, resolveFlatProductFallback } from "@/lib/pr
 import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveOldBlogNewsPath } from "@/lib/oldBlogNewsRedirects.mjs";
 import { resolveCollectionRedirect } from "@/lib/collectionRedirectMap.mjs";
+import { isGoneNonCarCategoryPath } from "@/lib/goneCategoryPaths.mjs";
 import { STRIP_QUERY_KEYS } from "@/lib/stripQueryKeys.mjs";
 
 function redirectPath(request, pathname, status = 308) {
@@ -119,6 +120,17 @@ export async function middleware(request) {
     lower.endsWith(".atom") &&
     (lower.startsWith("/collections/") || lower === "/blogs/news.atom")
   ) {
+    return new NextResponse("Gone", {
+      status: 410,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=86400",
+      },
+    });
+  }
+
+  // S3: dead non-car legacy categories (zero clicks) → 410. Redirecting fragrance paths stay 308.
+  if (isGoneNonCarCategoryPath(lower)) {
     return new NextResponse("Gone", {
       status: 410,
       headers: {
