@@ -1,11 +1,13 @@
 {
   "branch": "fix/empty-main-images-1029",
-  "granted": [],
-  "awaiting": "GO EMPTY-IMAGES",
+  "commit": "794c4da",
+  "status": "APPLIED",
+  "dump": "empty-images-20261028T222646Z.archive",
   "counts": {
-    "empty_main": 65,
-    "promote": 15,
-    "hide_noindex": 50,
-    "main_404": 0
-  }
+    "promoted": 15,
+    "placeholder_urgent": 6,
+    "hidden": 44,
+    "still_needing_photos": 6
+  },
+  "live": "crazzycars-store:live @ 794c4da"
 }
