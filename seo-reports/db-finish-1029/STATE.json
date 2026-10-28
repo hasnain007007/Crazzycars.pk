@@ -15,7 +15,7 @@
     "D1": {
       "result": "dry-run only",
       "token": "R4",
-      "commit": null,
+      "commit": "dd661e8",
       "report": "D1-r4-dry-run.md",
       "verify": "seo-verify-D1.txt"
     }
