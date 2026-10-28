@@ -6,13 +6,13 @@
   "atlasNeverWrite": "317ae4de8eb24f84",
   "granted": [],
   "tasks": {
-    "R0": { "status": "done", "report": "R0-sources.md" },
-    "R1": { "status": "done", "report": "R1-gap-analysis.md" },
-    "R2": { "status": "done", "report": "R2-media-photos.md" },
-    "R3": { "status": "done", "report": "R3-rebuild-plan.md" },
-    "R4": { "status": "dry_run_only", "report": "R4-dry-run.md", "awaiting": "GRANTED R4" },
-    "R5": { "status": "done_proposals_disabled", "report": "R5-prevent-repeat.md", "runbook": "RESTORE.md" },
-    "R6": { "status": "done", "report": "R6-verify.md", "note": "live OK; missing content still 404" }
+    "R0": { "status": "done", "report": "R0-sources.md", "commit": "37c8ec7" },
+    "R1": { "status": "done", "report": "R1-gap-analysis.md", "commit": "f3fb7ff" },
+    "R2": { "status": "done", "report": "R2-media-photos.md", "commit": "2628771" },
+    "R3": { "status": "done", "report": "R3-rebuild-plan.md", "commit": "d1ef27b" },
+    "R4": { "status": "dry_run_only", "report": "R4-dry-run.md", "commit": "39ca01e", "awaiting": "GRANTED R4" },
+    "R5": { "status": "done_proposals_disabled", "report": "R5-prevent-repeat.md", "runbook": "RESTORE.md", "commit": "1e644e1" },
+    "R6": { "status": "done", "report": "R6-verify.md", "commit": "d936836", "note": "live OK; missing content still 404" }
   },
   "notes": [
     "GRANTED empty → no production writes",
