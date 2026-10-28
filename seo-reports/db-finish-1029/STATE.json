@@ -51,7 +51,7 @@
     },
     "D6": {
       "result": "done",
-      "commit": null,
+      "commit": "f338d07",
       "report": "D6-final-verify.md",
       "verify": "seo-verify-D6.txt",
       "countsAfter": {
