@@ -1,7 +1,9 @@
 import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ProductDetailMedico } from "@/components/store/ProductDetailMedico";
+import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
 import PageView from "@/components/store/PageView";
+import { blogsForProduct } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import Page from "@/lib/models/Page.model";
@@ -559,6 +561,18 @@ export default async function ProductPage({ params, searchParams }) {
           relatedProducts={content.relatedProducts || []}
           carLinks={content.carLinks || []}
           soldRecently={soldRecently}
+        />
+        <InternalBlogLinks
+          title="From the blog"
+          links={blogsForProduct({
+            name: content.data?.name,
+            categorySlugs: (content.data?.categories || [])
+              .map((c) => String(c?.slug || c || "").trim())
+              .filter(Boolean),
+            carSlugs: (content.carLinks || [])
+              .map((c) => String(c?.slug || "").trim())
+              .filter(Boolean),
+          })}
         />
       </>
     );

@@ -1,9 +1,12 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
+import { after } from "next/server";
 import { notFound } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
 import BlogPostView from "@/components/store/BlogPostView";
+import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { withSafeMetadata, isNextNavigationError } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
@@ -11,7 +14,13 @@ import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
 import { recordBlogPostPageView } from "@/lib/blogEngagement";
 import { blogContentModifiedAt } from "@/lib/blogContentDate";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
+import { relatedGuidesForBlog } from "@/lib/seo/blogInternalLinks.mjs";
+import { dbRelatedGuidesForBlog } from "@/lib/seo/blogLinksFromDb";
 import { BRAND } from "@/lib/brand";
+
+/** ISR — view counter runs in after() so HTML can be cached (S7c). */
+export const revalidate = 600;
+
 const BASE_URL = getSiteUrl();
 
 function withClientId(doc) {
@@ -40,37 +49,51 @@ const loadBlogPostForMeta = cache(async (slug) => {
   }
 });
 
-/** Real page render — increments Mongo `views` once per request. */
-async function loadBlogPostAndCountView(slug) {
-  try {
-    await dbConnect();
-    const post = await recordBlogPostPageView(BlogPost, String(slug || "").trim());
-    if (!post) return null;
-    const plain = JSON.parse(JSON.stringify(post));
-    return withClientId({ ...plain, content: sanitizeBlogHtml(plain.content) });
-  } catch (e) {
-    console.error("Blog post load error:", e);
-    return null;
-  }
-}
+/** Cached published post body — no view increment (S7c). */
+const loadBlogPostCached = cache(async (slug) => {
+  const key = String(slug || "").trim();
+  if (!key) return null;
+  return unstable_cache(
+    async () => {
+      try {
+        await dbConnect();
+        const post = await BlogPost.findOne({ slug: key, status: "published" }).lean();
+        if (!post) return null;
+        const plain = JSON.parse(JSON.stringify(post));
+        return withClientId({ ...plain, content: sanitizeBlogHtml(plain.content) });
+      } catch (e) {
+        console.error("Blog post load error:", e);
+        return null;
+      }
+    },
+    ["blog-post", key],
+    { revalidate: 600, tags: [`blog:${key}`] }
+  )();
+});
 
-async function loadRecentPosts(excludeSlug) {
-  try {
-    await dbConnect();
-    const posts = await BlogPost.find({
-      status: "published",
-      slug: { $ne: String(excludeSlug) },
-    })
-      .select("title slug featuredImage publishedAt readTime categories")
-      .sort({ publishedAt: -1 })
-      .limit(3)
-      .lean();
-    const raw = JSON.parse(JSON.stringify(posts));
-    return raw.map((p) => withClientId(p));
-  } catch (e) {
-    return [];
-  }
-}
+const loadRecentPosts = cache(async (excludeSlug) => {
+  const key = String(excludeSlug || "").trim();
+  return unstable_cache(
+    async () => {
+      try {
+        await dbConnect();
+        const posts = await BlogPost.find({
+          status: "published",
+          slug: { $ne: key },
+        })
+          .select("title slug featuredImage publishedAt readTime categories")
+          .sort({ publishedAt: -1 })
+          .limit(3)
+          .lean();
+        return JSON.parse(JSON.stringify(posts)).map((p) => withClientId(p));
+      } catch {
+        return [];
+      }
+    },
+    ["blog-recent", key],
+    { revalidate: 600, tags: ["blog:list"] }
+  )();
+});
 
 export const generateMetadata = withSafeMetadata(async function blogPostMetadata({ params }) {
   const { slug } = await params;
@@ -109,8 +132,6 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
   };
 });
 
-export const dynamic = "force-dynamic";
-
 export default async function BlogPostPage({ params }) {
   try {
     const { slug } = await params;
@@ -125,13 +146,25 @@ export default async function BlogPostPage({ params }) {
     }
 
     const [post, recentPosts] = await Promise.all([
-      loadBlogPostAndCountView(slugStr),
+      loadBlogPostCached(slugStr),
       loadRecentPosts(slugStr),
     ]);
 
     if (!post) {
       notFound();
     }
+
+    // Non-blocking view bump — must not force-dynamic the HTML (S7c).
+    after(() => {
+      recordBlogPostPageView(BlogPost, slugStr).catch(() => {});
+    });
+
+    const relatedGuides = [
+      ...relatedGuidesForBlog(post),
+      ...(await dbRelatedGuidesForBlog(post, 5)),
+    ]
+      .filter((l, i, arr) => l?.href && arr.findIndex((x) => x.href === l.href) === i)
+      .slice(0, 5);
 
     const articleSection = Array.isArray(post.categories)
       ? post.categories.map((c) => String(c).trim()).filter(Boolean)
@@ -184,6 +217,7 @@ export default async function BlogPostPage({ params }) {
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }} />
         ) : null}
         <BlogPostView initialPost={post} initialRecent={recentPosts} />
+        <InternalBlogLinks title="Related guides" links={relatedGuides} />
       </div>
     );
   } catch (error) {

@@ -38,9 +38,12 @@ import {
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { BRAND_NAME } from "@/lib/brand";
+import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
+import { blogsForCategory } from "@/lib/seo/blogInternalLinks.mjs";
+import { dbBlogsForCategory } from "@/lib/seo/blogLinksFromDb";
 
 /** ISR: catalog HTML edge-cache friendly; admin revalidate webhook still purges. */
-export const revalidate = 300;
+export const revalidate = 600;
 export const dynamicParams = true;
 
 const BASE_URL = getSiteUrl();
@@ -344,6 +347,12 @@ export default async function CategoryPage({ params, searchParams }) {
       }
     }
     const faqLd = faqPageJsonLd(visibleFaqs);
+    const fromBlogLinks = [
+      ...blogsForCategory(catSlug, data.category?.name),
+      ...(await dbBlogsForCategory(catSlug, data.category?.name, 5)),
+    ]
+      .filter((l, i, arr) => l?.href && arr.findIndex((x) => x.href === l.href) === i)
+      .slice(0, 5);
 
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
@@ -400,6 +409,7 @@ export default async function CategoryPage({ params, searchParams }) {
           />
         ) : null}
         <FaqSection title={`${data.category?.name || "Category"} FAQs`} items={visibleFaqs} />
+        <InternalBlogLinks title="From the blog" links={fromBlogLinks} />
       </div>
     );
   }

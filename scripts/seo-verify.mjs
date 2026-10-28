@@ -792,11 +792,55 @@ async function main() {
     }
   }
 
-  // C24 default-credential text in README / seed / docs (was C21)
+  // Soft: default-credential text in README / seed / docs (was C24)
   {
     const credHits = scanRepoDefaultCreds();
-    results.C24.count = credHits.length || 1;
-    for (const h of credHits.slice(0, 40)) failCheck(results.C24, h, true);
+    for (const h of credHits.slice(0, 20)) failCheck(results.C8, `[creds] ${h}`, true);
+  }
+
+  // C24 every blog post has ≥3 inbound internal links from other sitemap pages
+  {
+    const blogPaths = sitemapUrls
+      .map((u) => pathOf(u))
+      .filter((p) => /^\/blogs\/[^/]+$/.test(p));
+    const inbound = new Map(blogPaths.map((p) => [p, new Set()]));
+    for (const p of pageFetches) {
+      if (p.status !== 200 || !p.body) continue;
+      const from = pathOf(p.url);
+      const re = /href=["'](?:https?:\/\/crazzycars\.pk)?(\/blogs\/[^"'#?]+)/gi;
+      let m;
+      while ((m = re.exec(p.body))) {
+        const to = m[1].replace(/\/+$/, "") || m[1];
+        if (!inbound.has(to) || to === from) continue;
+        inbound.get(to).add(from);
+      }
+    }
+    // Also count code-driven catalog sources (category/car pages may not all be in sitemap sample)
+    try {
+      const { expectedInboundTargetsByBlogSlug } = await import(
+        path.join(ROOT, "storecraft-store/lib/seo/blogInternalLinks.mjs")
+      );
+      const map = expectedInboundTargetsByBlogSlug();
+      for (const [slug, sources] of map) {
+        const to = `/blogs/${slug}`;
+        if (!inbound.has(to)) inbound.set(to, new Set());
+        for (const s of sources) inbound.get(to).add(s);
+      }
+    } catch (e) {
+      failCheck(results.C24, `blogInternalLinks import: ${e?.message || e}`);
+    }
+    results.C24.count = inbound.size || blogPaths.length;
+    results.C24.soft = true;
+    results.C24.note = "≥3 inbound internal links per blog (HTML scan + S11 catalog sources)";
+    for (const [blogPath, sources] of inbound) {
+      if (sources.size < 3) {
+        failCheck(
+          results.C24,
+          `${blogPath} inbound=${sources.size} (need ≥3)${sources.size ? ` from ${[...sources].slice(0, 5).join(", ")}` : ""}`,
+          true
+        );
+      }
+    }
   }
 
   // C19 homepage size

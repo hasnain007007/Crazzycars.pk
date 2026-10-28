@@ -28,8 +28,10 @@ import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
 import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 import { getCarPageMeta } from "@/lib/seo/carPageMeta2026-10.mjs";
+import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
+import { blogsForCar } from "@/lib/seo/blogInternalLinks.mjs";
 
-export const revalidate = 300;
+export const revalidate = 600;
 
 const BRAND = BRAND_NAME;
 const SITE = "https://crazzycars.pk";
@@ -500,6 +502,10 @@ export default async function VehicleSlugPage({ params, searchParams }) {
           emptyMessage="Products for this car will show once you assign them in admin (compatible vehicles / car catalog). Universal products are not listed here unless you add them to this car."
         />
       </section>
+      <InternalBlogLinks
+        title="From the blog"
+        links={blogsForCar(vehicle.slug, vehicle.displayName)}
+      />
     </div>
   );
 }
