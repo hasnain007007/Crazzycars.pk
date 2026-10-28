@@ -17,7 +17,8 @@
       "awaiting": "GRANTED DOOR-SET4"
     },
     "F3": {
-      "status": "pending",
+      "status": "dry_run_only",
+      "report": "F3-blog-images-dry-run.md",
       "awaiting": "GRANTED BLOG-IMAGES"
     },
     "F4": {
