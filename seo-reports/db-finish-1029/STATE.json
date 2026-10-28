@@ -1,6 +1,8 @@
 {
   "branch": "fix/db-finish-1029",
-  "granted": [],
+  "granted": [
+    "R4"
+  ],
   "fingerprint": "84143ac0cb2c3085",
   "startedAt": "2026-10-28T22:46:42Z",
   "baseline": {
@@ -13,11 +15,21 @@
   },
   "steps": {
     "D1": {
-      "result": "dry-run only",
+      "result": "done",
       "token": "R4",
-      "commit": "dd661e8",
-      "report": "D1-r4-dry-run.md",
-      "verify": "seo-verify-D1.txt"
+      "commit": null,
+      "report": "D1-r4-apply.md",
+      "dump": "/data/crazzycars-mongo-backups/db-finish-r4-20261028T230513Z/sialkot_motorsports.archive.gz",
+      "publishedBlogs": 14,
+      "heldBlogs": 6,
+      "draftProducts": 20,
+      "countsAfter": {
+        "products": 430,
+        "blogs": 38,
+        "blogsPublished": 32,
+        "orders": 603,
+        "customers": 342
+      }
     },
     "D2": {
       "result": "dry-run only",
@@ -66,12 +78,11 @@
       "top20Non200": 2
     }
   },
-  "status": "COMPLETED_WITH_PENDING_ITEMS",
+  "status": "R4_APPLIED_PENDING_OTHER_TOKENS",
   "pendingTokens": [
-    "R4",
     "L1",
     "L2",
     "S6-DB"
   ],
-  "finishedAt": "2026-10-28T22:57:18Z"
+  "finishedAt": "2026-10-28T23:15:26Z"
 }

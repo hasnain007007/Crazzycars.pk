@@ -59,7 +59,7 @@ export const OLD_BLOG_NEWS_REDIRECTS = [
   },
   {
     source: "/blogs/news/how-to-install-batman-style-side-mirror-covers-step-by-step-guide",
-    destination: "/blogs/side-mirror-covers-carbon-fiber-accents-guide",
+    destination: "/blogs/batman-style-side-mirror-covers-pakistan-fitment-guide",
     permanent: true,
   },
   {
