@@ -13,11 +13,12 @@ export default function BrandHero() {
       <div className="brand-hero__inner">
         <div className="brand-hero__copy">
           <p className="brand-hero__kicker">Body kits · LED lighting · Carbon accessories</p>
-          <p className="brand-hero__title">
+          {/* Single homepage H1 — same visible hero styling (F4). */}
+          <h1 className="brand-hero__title">
             Gaari Wohi,
             <br />
             <span>Andaz Naya.</span>
-          </p>
+          </h1>
           <p className="brand-hero__sub">
             Accessories made for your exact car, delivered across Pakistan with Cash on Delivery.
           </p>
