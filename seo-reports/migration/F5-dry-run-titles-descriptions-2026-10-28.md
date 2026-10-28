@@ -22,7 +22,7 @@
 | x door-handle-panels | **70** | 156 | DB `$set` title |
 | `/categories/splitters-side-skirts` | 62 | 144 | OK (already ≤65) |
 | `/categories/interior-lights` | 63 | 153 | OK |
-| `/categories/exterior` | 52 | 155 | OK |
+| `/categories/exterior` | 52 | **168** (HTML entities; raw ~155) | DB `$set` shorter meta |
 | `/advance-payment` | 43 | **166** | **code** on `fix/F5` |
 | `/about` | 65 | **173** | **code** on `fix/F5` (clamp) |
 
@@ -42,6 +42,14 @@ Optional desc trim (center-console currently 163):
 | OLD (163) | NEW (~152) |
 |-----------|------------|
 | Buy Toyota Corolla carbon-style center console kit (gear + glass/cup holder) for 2014–2026. Pioneer kit in Pakistan by CrazzyCars.pk. Sale Rs. 7,499. COD eligible. | Buy Toyota Corolla carbon center console kit (gear + glass holder) for 2014–2026. Sale Rs. 7,499 in Pakistan at CrazzyCars.pk. COD eligible. |
+
+## Exterior description (HTML entity-safe ≤158)
+
+| OLD | NEW (~148) |
+|-----|------------|
+| Shop body kits, splitters, spoilers, mirror covers & more for your car\'s exterior. Premium fitment for Honda, Toyota & Suzuki. Cash on delivery nationwide. | Body kits, splitters, spoilers and mirror covers for Honda, Toyota and Suzuki. Premium fitment. Cash on delivery nationwide at CrazzyCars.pk. |
+
+Also `$set` `seo.metaDescription` on category `exterior`.
 
 ## Apply sketch (after GO F5 + backup)
 
