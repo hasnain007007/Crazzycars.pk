@@ -387,6 +387,7 @@ async function main() {
     C19: emptyCheck(true),
     C20: emptyCheck(true),
     C21: emptyCheck(),
+    C24: emptyCheck(true),
   };
 
   const { urls: sitemapUrls } = await collectSitemapUrls(BASE);
@@ -755,11 +756,37 @@ async function main() {
     }
   }
 
-  // C21 default-credential text in README / seed / docs
+  // C21 internal link crawl (scripts/link-check.mjs)
+  {
+    const { spawnSync } = await import("node:child_process");
+    const linkCheckPath = path.join(ROOT, "scripts", "link-check.mjs");
+    const run = spawnSync(process.execPath, [linkCheckPath, "--json", "--quiet"], {
+      env: { ...process.env, BASE_URL: BASE },
+      encoding: "utf8",
+      maxBuffer: 8 * 1024 * 1024,
+    });
+    let report = null;
+    try {
+      report = JSON.parse(run.stdout || "{}");
+    } catch {
+      report = null;
+    }
+    results.C21.count = Number(report?.checked) || 0;
+    if (run.status !== 0 && !report) {
+      failCheck(results.C21, `link-check exited ${run.status}: ${(run.stderr || "").slice(0, 200)}`);
+    } else {
+      for (const f of report?.failures || []) failCheck(results.C21, f);
+      if ((report?.failed || 0) > (report?.failures || []).length) {
+        failCheck(results.C21, `… +${report.failed - report.failures.length} more`);
+      }
+    }
+  }
+
+  // C24 default-credential text in README / seed / docs (was C21)
   {
     const credHits = scanRepoDefaultCreds();
-    results.C21.count = credHits.length || 1;
-    for (const h of credHits.slice(0, 40)) failCheck(results.C21, h);
+    results.C24.count = credHits.length || 1;
+    for (const h of credHits.slice(0, 40)) failCheck(results.C24, h, true);
   }
 
   // C19 homepage size

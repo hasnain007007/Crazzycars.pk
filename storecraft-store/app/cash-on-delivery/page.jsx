@@ -197,15 +197,18 @@ export default function CashOnDeliveryPage() {
           Returns Policy
         </Link>{" "}
         or the{" "}
+        {/* TODO(M4c): restore blog posts then switch back to
+            /blogs/car-accessories-returns-wrong-item-pakistan-crazzycars and
+            /blogs/crazzycars-delivery-charges-regular-vs-bulky-pakistan */}
         <Link
-          href="/blogs/car-accessories-returns-wrong-item-pakistan-crazzycars"
+          href="/returns-policy"
           className="font-semibold text-red-700 underline-offset-2 hover:underline"
         >
           returns &amp; wrong-item guide
         </Link>
         . Delivery fee details:{" "}
         <Link
-          href="/blogs/crazzycars-delivery-charges-regular-vs-bulky-pakistan"
+          href="/shipping-policy"
           className="font-semibold text-red-700 underline-offset-2 hover:underline"
         >
           regular vs bulky charges

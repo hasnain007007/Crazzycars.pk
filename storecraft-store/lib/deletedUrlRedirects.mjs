@@ -11,6 +11,9 @@ export const DELETED_URL_REDIRECTS = [
   { source: "/changan-alsvin-2021-present-rear-bumper-led-lights", destination: "/cars/changan-alsvin-2021-present", permanent: true },
   { source: "/gold-leopard-dashboard-ornament-sculpture", destination: "/categories/air-freshener-decoration", permanent: true },
   { source: "/gold-lion-dashboard-ornament-sculpture", destination: "/categories/air-freshener-decoration", permanent: true },
+  // Empty shelves (0 live products) — 404 via isEmptyCategoryTree; keep slugs discoverable.
+  { source: "/categories/fragrances", destination: "/categories/air-freshener-decoration", permanent: true },
+  { source: "/categories/hanging-perfumes", destination: "/categories/air-freshener-decoration", permanent: true },
   { source: "/haval-h6-rubber-infotainment-screen-protector", destination: "/cars/haval-h6-2021-present", permanent: true },
   { source: "/hks-style-chameleon-exhaust-muffler-tip-universal", destination: "/categories/exhaust-systems-tips", permanent: true },
   { source: "/honda-city-2015-2023-r-type-ducktail-trunk-spoiler", destination: "/cars/honda-city-classic-2009-2020", permanent: true },

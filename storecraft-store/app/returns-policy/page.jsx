@@ -17,9 +17,10 @@ export default function ReturnsPolicyPage() {
       intro={page.intro}
       sections={page.sections}
       relatedLinks={[
+        // TODO(M4c): restore /blogs/car-accessories-returns-wrong-item-pakistan-crazzycars
         {
-          title: "Returns & wrong-item plain guide",
-          href: "/blogs/car-accessories-returns-wrong-item-pakistan-crazzycars",
+          title: "FAQ — returns & wrong-item",
+          href: "/faq",
         },
       ]}
     />
