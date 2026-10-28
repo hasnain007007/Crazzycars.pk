@@ -34,6 +34,13 @@
       "report": "D3-l2-dry-run.md",
       "verify": "seo-verify-D3.txt",
       "l1OverlapProducts": 0
+    },
+    "D4": {
+      "result": "dry-run only",
+      "token": "S6-DB",
+      "commit": null,
+      "report": "D4-s6-db-dry-run.md",
+      "verify": "seo-verify-D4.txt"
     }
   },
   "status": "IN_PROGRESS"
