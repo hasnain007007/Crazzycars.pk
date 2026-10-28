@@ -165,7 +165,7 @@ function serializeOrder(doc, productImageById = null) {
       url: o.trackingUrl || o.tracking?.url || "",
       notifiedAt: o.tracking?.notifiedAt || null,
     },
-    statusHistory: (o.statusHistory || []).map((h) => ({
+    statusHistory: (Array.isArray(o.statusHistory) ? o.statusHistory : []).map((h) => ({
       id: h._id?.toString(),
       status: h.status,
       changedBy: h.changedBy,
@@ -182,14 +182,14 @@ function serializeOrder(doc, productImageById = null) {
     whatsappNotified: Boolean(o.whatsappNotified),
     codConfirmed: Boolean(o.codConfirmed),
     customerCancelled: isCustomerWaCancelled(o),
-    timeline: (o.timeline || []).map((t) => ({
+    timeline: (Array.isArray(o.timeline) ? o.timeline : []).map((t) => ({
       status: t.status,
       title: t.title,
       description: t.description || "",
       timestamp: t.timestamp,
       by: t.by || "system",
     })),
-    emailHistory: (o.emailHistory || []).map((em) => ({
+    emailHistory: (Array.isArray(o.emailHistory) ? o.emailHistory : []).map((em) => ({
       type: em.type,
       subject: em.subject || "",
       to: em.to || "",

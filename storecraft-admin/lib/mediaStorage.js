@@ -14,10 +14,10 @@ export const MEDIA_URL_PREFIX = "/media";
 
 export function getMediaRoot() {
   const fromEnv = String(process.env.MEDIA_ROOT || "").trim();
-  if (fromEnv) return path.resolve(fromEnv);
+  if (fromEnv) return path.resolve(/*turbopackIgnore: true*/ fromEnv);
   if (process.env.NODE_ENV === "production") return DEFAULT_MEDIA_ROOT;
   // Local dev: keep files outside Next public/ so they persist and are served via /media route
-  return path.resolve(process.cwd(), "media");
+  return path.resolve(/*turbopackIgnore: true*/ process.cwd(), "media");
 }
 
 export function getStorePublicOrigin() {
@@ -79,8 +79,9 @@ export function resolveMediaFilePath(urlPath) {
     .replace(/\\/g, "/");
   if (!cleaned || cleaned.includes("..")) return null;
   const root = getMediaRoot();
-  const abs = path.resolve(root, cleaned);
-  if (!abs.startsWith(path.resolve(root) + path.sep) && abs !== path.resolve(root)) {
+  const abs = path.resolve(/*turbopackIgnore: true*/ root, cleaned);
+  const rootAbs = path.resolve(/*turbopackIgnore: true*/ root);
+  if (!abs.startsWith(rootAbs + path.sep) && abs !== rootAbs) {
     return null;
   }
   return abs;
