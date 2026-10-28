@@ -62,11 +62,19 @@ export const DELETED_URL_REDIRECTS = [
   { source: "/cars/suzuki-fronx-2025-present", destination: "/cars/suzuki-swift-2025-present", permanent: true },
 ];
 
+/** Flat product rows (not /cars/ or /categories/) that permanently redirect. */
+const FLAT_PRODUCT_REDIRECTS = DELETED_URL_REDIRECTS.filter(
+  (r) => !r.source.startsWith("/cars/") && !r.source.startsWith("/categories/")
+);
+
+/** Flat product slugs that permanently redirect (exclude from listings/feeds/llms). */
+export const REDIRECTED_PRODUCT_SLUGS = FLAT_PRODUCT_REDIRECTS.map((r) =>
+  r.source.replace(/^\/+/, "").toLowerCase()
+);
+
 /** Flat slug → destination path (no leading slash on key). */
 const FLAT_MAP = new Map(
-  DELETED_URL_REDIRECTS.filter((r) => !r.source.startsWith("/cars/") && !r.source.startsWith("/categories/")).map(
-    (r) => [r.source.replace(/^\/+/, "").toLowerCase(), r.destination]
-  )
+  FLAT_PRODUCT_REDIRECTS.map((r) => [r.source.replace(/^\/+/, "").toLowerCase(), r.destination])
 );
 
 const PATH_MAP = new Map(
