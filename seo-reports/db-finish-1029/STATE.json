@@ -44,7 +44,7 @@
     },
     "D5": {
       "result": "done",
-      "commit": null,
+      "commit": "e2efb36",
       "report": "D5-indexing-list.md",
       "indexingList": "INDEXING-LIST.md",
       "touchedUrls": 0
