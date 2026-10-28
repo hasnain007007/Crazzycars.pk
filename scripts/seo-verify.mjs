@@ -837,7 +837,8 @@ async function main() {
     }
   }
 
-  // C23 every sitemap URL returns 200 with no redirect
+  // C23 every sitemap URL returns 200 with no redirect, is indexable, and is self-canonical.
+  // (C2 covers the same HTML checks; C23 re-asserts them as a hard sitemap hygiene gate.)
   {
     results.C23.count = pageFetches.length;
     for (const p of pageFetches) {
@@ -846,7 +847,15 @@ async function main() {
           results.C23,
           `${pathOf(p.url)} → ${p.status}${p.location ? ` ${p.location}` : ""}`
         );
+        continue;
       }
+      const html = p.body || "";
+      const pathname = pathOf(p.url);
+      const robots = extractRobotsMeta(html);
+      if (/\bnoindex\b/.test(robots)) failCheck(results.C23, `${pathname} noindex in sitemap`);
+      const canon = extractCanonical(html);
+      if (!canon) failCheck(results.C23, `${pathname} missing canonical`);
+      else if (!sameUrl(canon, p.url)) failCheck(results.C23, `${pathname} canonical ${canon}`);
     }
   }
 

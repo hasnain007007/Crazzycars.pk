@@ -82,20 +82,25 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
 
     const carMeta = getCarPageMeta(vehicle.slug);
     const seoOverride = getPageSeoOverride(`/cars/${vehicle.slug}`);
-    const titleMeta = carMeta?.title
-      ? { absolute: withBrandTitleSuffix(carMeta.title) }
-      : seoOverride?.title
-        ? { absolute: withBrandTitleSuffix(seoOverride.title) }
-        : buildBrandedAbsoluteTitle(
-            (vehicle.metaTitle || "").trim() || `${vehicle.displayName} Accessories`,
-            { brand: BRAND, max: 60 }
-          );
+    // T1: DB metaTitle wins; carPageMeta2026-10.mjs + GSC overrides are fallback only.
+    const dbTitle = String(vehicle.metaTitle || "").trim();
+    const titleMeta = dbTitle
+      ? buildBrandedAbsoluteTitle(dbTitle, { brand: BRAND, max: 60 })
+      : carMeta?.title
+        ? { absolute: withBrandTitleSuffix(carMeta.title) }
+        : seoOverride?.title
+          ? { absolute: withBrandTitleSuffix(seoOverride.title) }
+          : buildBrandedAbsoluteTitle(`${vehicle.displayName} Accessories`, {
+              brand: BRAND,
+              max: 60,
+            });
     const title = titleMeta.absolute;
     // Prefer Car Catalog Description (merged in loadVehicleBySlug) over legacy Vehicle.metaDescription.
     const catalogDesc =
       String(vehicle.description || "").trim() ||
       String(vehicle.metaDescription || "").trim();
     const description =
+      catalogDesc ||
       (carMeta?.description || "").trim() ||
       (seoOverride?.meta || "").trim() ||
       vehicleMetaDescription(vehicle, catalogDesc);

@@ -263,7 +263,10 @@ export default async function RootLayout({ children }) {
     openingHours: contactHoursToOpeningHoursSpec(settings?.contactPage?.hours),
   });
 
-  const websiteJsonLd = buildWebsiteLd({ name: BRAND_NAME });
+  const websiteJsonLd = buildWebsiteLd({
+    name: BRAND_NAME,
+    sameAs: Array.isArray(general.sameAs) ? general.sameAs : undefined,
+  });
 
   const bodyFont = appearance.fontFamily || undefined;
 

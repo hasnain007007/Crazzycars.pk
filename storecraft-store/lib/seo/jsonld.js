@@ -183,8 +183,9 @@ function applyGtinMpn(node, p) {
 
 /**
  * Shared Offer block for PDP + collection ItemList Products.
- * Shipping fee follows product.isBulky. No CreditCard. No per-Offer return policy
- * (Organization-level policy only — avoids ~40 FreeReturn copies on category pages).
+ * Shipping fee follows product.isBulky. No CreditCard.
+ * hasMerchantReturnPolicy is attached on PDP offers (includeSeller) only —
+ * category ItemList omits it to avoid dozens of FreeReturn copies.
  */
 function buildMerchantOffer({
   url,
@@ -217,6 +218,8 @@ function buildMerchantOffer({
       url: SITE,
       telephone: "+92-328-4010007",
     };
+    // S8 / C11: Google Offer expects merchant return policy on the PDP Offer.
+    offer.hasMerchantReturnPolicy = buildOrganizationReturnPolicy(SITE);
   }
   return offer;
 }
@@ -582,6 +585,12 @@ export function collectionPageJsonLd({
   return ld;
 }
 
+const DEFAULT_SAME_AS = [
+  "https://www.facebook.com/crazzycars.pk",
+  "https://www.instagram.com/crazzycars.pk",
+  "https://www.tiktok.com/@crazzycars.pk",
+];
+
 /**
  * AutoPartsStore — root layout once.
  * Optional LocalBusiness fields (streetAddress, geo, hours, map, priceRange, sameAs)
@@ -701,14 +710,7 @@ export function organizationJsonLd(overrides = {}) {
   const sameAs = Array.isArray(overrides.sameAs)
     ? overrides.sameAs.map((u) => String(u || "").trim()).filter(Boolean)
     : [];
-  if (sameAs.length) ld.sameAs = sameAs;
-  else {
-    ld.sameAs = [
-      "https://www.facebook.com/crazzycars.pk",
-      "https://www.instagram.com/crazzycars.pk",
-      "https://www.tiktok.com/@crazzycars.pk",
-    ];
-  }
+  ld.sameAs = sameAs.length ? sameAs : DEFAULT_SAME_AS;
 
   return ld;
 }
@@ -716,11 +718,15 @@ export function organizationJsonLd(overrides = {}) {
 /** WebSite + SearchAction */
 export function websiteJsonLd(overrides = {}) {
   const SITE = site();
+  const sameAs = Array.isArray(overrides.sameAs)
+    ? overrides.sameAs.map((u) => String(u || "").trim()).filter(Boolean)
+    : DEFAULT_SAME_AS;
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: overrides.name || "CrazzyCars.pk",
     url: SITE,
+    sameAs,
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE}/shop?q={search_term_string}`,

@@ -13,18 +13,17 @@ import { categoryHref } from "@/lib/categories";
 import { homeHubCollectionJsonLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { getPageSeoOverride } from "@/lib/seo/gscAudit2026-10.mjs";
-import { withBrandTitleSuffix } from "@/lib/brand";
 
 export const revalidate = 300;
 
 const homeSeo = getPageSeoOverride("/") || {};
+const HOME_TITLE = homeSeo.title || "Car Accessories in Pakistan | Kits, LEDs & Mats";
 export const metadata = buildPageMetadata({
-  title: withBrandTitleSuffix(
-    homeSeo.title || "Car Accessories in Pakistan – Body Kits, LED Lights, Floor Mats"
-  ),
+  // absoluteTitle: do not append brand again (override already branded / ≤60).
+  title: HOME_TITLE,
   description:
     homeSeo.meta ||
-    "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide. CrazzyCars.pk",
+    "Buy car accessories online in Pakistan: splitters, body kits, LED lights, carbon fiber and interior accessories. COD on eligible items, nationwide delivery.",
   path: "/",
   absoluteTitle: true,
 });

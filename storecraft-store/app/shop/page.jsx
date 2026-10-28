@@ -15,9 +15,10 @@ export const generateMetadata = withSafeMetadata(async function shopMetadata({ s
     ? `Results for “${listing.q}”`
     : listing.sale || listing.deals
       ? "Hot Deals"
-      : "Shop All Car Accessories";
+      : "Shop Car Accessories in Pakistan";
+  // 140–155 chars (T1).
   const description =
-    "Browse premium car accessories in Pakistan. Filter by category, brand, and car make. Cash on delivery available nationwide from CrazzyCars.pk.";
+    "Shop car accessories in Pakistan — body kits, LED lights, carbon fiber, floor mats and interior upgrades. Filter by car make. Cash on Delivery nationwide.";
   const listingSeo = listingMetadata("/shop", listing);
   const base = buildPageMetadata({
     title,

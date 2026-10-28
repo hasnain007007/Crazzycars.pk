@@ -3,6 +3,36 @@
   "startedAt": "2026-10-28T19:25:00.000Z",
   "fingerprintWrite": "84143ac0cb2c3085",
   "atlasNeverWrite": "317ae4de8eb24f84",
-  "tasks": {},
+  "tasks": {
+    "S2a": {
+      "status": "done",
+      "commit": "18320f9",
+      "live": true,
+      "verify": "seo-reports/fix-all-1029/S2a-verify.txt",
+      "notes": "10×308 live; remapped #4,#10,#17; no 410s"
+    },
+    "S2b": {
+      "status": "done_proposal_only",
+      "commit": "18320f9",
+      "verify": "n/a (docs only)",
+      "artifact": "seo-reports/fix-all-1029/S2b-table.md",
+      "notes": "Remaps for #2,#3,#5,#7,#9,#16,#19; 410 candidates #11,#18 only. NOT applied."
+    },
+    "S3": {
+      "status": "done_proposal_only",
+      "artifact": "seo-reports/fix-all-1029/S3-list.md",
+      "notes": "Dry-run only; awaiting GO"
+    },
+    "S4": { "status": "in_progress" },
+    "S7": { "status": "pending" },
+    "S8": { "status": "pending" },
+    "S9": { "status": "pending" },
+    "T1": { "status": "pending" },
+    "M4": { "status": "pending", "gate": true },
+    "L1": { "status": "pending", "gate": true },
+    "L2": { "status": "pending", "gate": true },
+    "S5": { "status": "pending", "gate": true },
+    "S6": { "status": "pending", "gate": true }
+  },
   "notes": []
 }

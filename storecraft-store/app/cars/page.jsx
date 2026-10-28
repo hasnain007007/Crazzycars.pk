@@ -15,9 +15,10 @@ export const generateMetadata = withSafeMetadata(async function carsIndexMetadat
   const listing = parseListingSearchParams(await searchParams);
   const noIndex = listingHasFacets(listing);
   const base = buildPageMetadata({
-    title: "Shop by Car | CrazzyCars.pk",
+    title: "Shop Car Accessories by Make & Model",
+    // 140–155 chars (T1).
     description:
-      "Browse car accessories by make and model — Honda Civic, Toyota Corolla, Suzuki Alto, and more. Generation-matched parts with Cash on Delivery across Pakistan.",
+      "Browse car accessories by make and model — Honda Civic, Toyota Corolla, Suzuki Alto and more. Generation-matched parts with Cash on Delivery across Pakistan.",
     path: "/cars",
     absoluteTitle: true,
     noIndex,

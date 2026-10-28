@@ -121,15 +121,17 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: "Suzuki Liana 2006–2014 accessories in Pakistan: velvet dashboard mat. COD on eligible items. WhatsApp for other parts.",
   },
   "/toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026": {
-    title: "Corolla X Door Handle Panels 2014–2026 Set of 4 | CrazzyCars.pk",
-    meta: "Buy Toyota Corolla X carbon-style interior door handle panels (set of 4) for 2014–2026 Grande/Altis. Sale Rs. 5,999. COD on eligible items at CrazzyCars.pk.",
+    // Live catalogue: Set of 2 / Rs. 4,490 (do not invent Set of 4 / 5,999).
+    title: "Corolla X Door Handle Panels 2014–2026 Set of 2 | CrazzyCars.pk",
+    meta: "Buy Toyota Corolla X carbon-style interior door handle panels (set of 2) for 2014–2026 Grande/Altis. Sale Rs. 4,490. COD on eligible items at CrazzyCars.pk.",
   },
   "/contact": {
     title: "Contact CrazzyCars.pk – Gujranwala",
     meta: `Contact CrazzyCars.pk: WhatsApp ${WA}, email, store address in Gujranwala and opening hours. Ask about fitment, orders and delivery.`,
   },
   "/": {
-    title: "Car Accessories in Pakistan – Body Kits, LED Lights, Floor Mats",
+    // ≤60 chars (T1). Em-dash variant was 63.
+    title: "Car Accessories in Pakistan | Kits, LEDs & Mats",
     meta: "Buy car accessories online in Pakistan: splitters, body kits, LED lights, carbon fiber and interior accessories. COD on eligible items, nationwide delivery.",
   },
   // Phase 4 ranking-page meta only (title/H1/URL unchanged except noted)
