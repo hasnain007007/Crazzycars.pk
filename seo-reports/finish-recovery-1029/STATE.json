@@ -8,10 +8,12 @@
     "F1": {
       "status": "dry_run_only",
       "report": "F1-r4-dry-run.md",
-      "awaiting": "GRANTED R4"
+      "awaiting": "GRANTED R4",
+      "commit": "422cdbc"
     },
     "F2": {
-      "status": "pending",
+      "status": "dry_run_only",
+      "report": "F2-door-set4-dry-run.md",
       "awaiting": "GRANTED DOOR-SET4"
     },
     "F3": {
