@@ -4,6 +4,7 @@ import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
+import { emailButton, getEmailBrand, wrapEmailLayout } from "@/lib/emailLayout";
 
 /** Resend sandbox sender — works before a custom domain is verified. */
 export const RESEND_SANDBOX_FROM = "CrazzyCars.pk <onboarding@resend.dev>";
@@ -108,11 +109,27 @@ function buildSender(fromOverride) {
   return `${fromName} <${fromEmail}>`;
 }
 
+/** Customer-facing Reply-To (never the interim/unbranded FROM host). */
+export function getReplyToEmail() {
+  const candidates = [
+    process.env.REPLY_TO_EMAIL,
+    process.env.CONTACT_EMAIL,
+    "info@crazzycars.pk",
+  ];
+  for (const raw of candidates) {
+    const v = String(raw || "").trim().toLowerCase();
+    if (!v || !v.includes("@")) continue;
+    if (v.includes("imedihelp") || v.includes("onboarding@resend.dev")) continue;
+    return v;
+  }
+  return "info@crazzycars.pk";
+}
+
 /**
  * Send via Resend. If FROM_EMAIL uses an unverified custom domain, retries once
  * with Resend's sandbox sender (onboarding@resend.dev).
  */
-export async function sendEmail({ to, subject, html, from }) {
+export async function sendEmail({ to, subject, html, from, replyTo: replyToOverride }) {
   try {
     const resend = getResend();
     if (!resend) return { success: false, error: "Email not configured (RESEND_API_KEY missing)" };
@@ -138,10 +155,11 @@ export async function sendEmail({ to, subject, html, from }) {
       attempts.push(RESEND_SANDBOX_FROM);
     }
 
+    const replyTo = String(replyToOverride || "").trim() || getReplyToEmail();
+
     let lastError = null;
     for (let i = 0; i < attempts.length; i++) {
       const sender = attempts[i];
-      const replyTo = getFromEmail() || undefined;
       const { data, error } = await resend.emails.send({
         from: sender,
         to: recipients,
@@ -277,100 +295,87 @@ export async function sendAdminOrderNotification(order) {
     .filter(Boolean)
     .join(", ");
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-    <body style="margin:0;padding:0;background:#f8f8f8;font-family:'DM Sans',Arial,sans-serif;">
-      <div style="max-width:600px;margin:0 auto;background:#ffffff;">
-        <div style="background:#111111;padding:24px 40px;text-align:center;">
-          <h1 style="color:#D72323;margin:0;font-size:20px;letter-spacing:0.12em;text-transform:uppercase;">
-            New Order Received
-          </h1>
-        </div>
-        <div style="padding:28px 40px;">
-          <table style="width:100%;border-collapse:collapse;">
-            <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;">Order</td>
-              <td style="padding:6px 0;font-size:14px;font-weight:700;color:#111;text-align:right;">
-                ${order.orderNumber || order._id}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;">Customer</td>
-              <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.customer?.name || addr.name || ""}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;">Phone</td>
-              <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.customer?.phone || addr.phone || ""}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;">Email</td>
-              <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.customer?.email || "—"}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;">Payment</td>
-              <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${order.paymentMethod || "N/A"} · ${order.paymentStatus || ""}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:6px 0;font-size:14px;color:#888;vertical-align:top;">Ship to</td>
-              <td style="padding:6px 0;font-size:14px;color:#111;text-align:right;">
-                ${addressLine || "—"}<br/>
-                ${[addr.city, addr.province || addr.state, addr.country].filter(Boolean).join(", ")}
-              </td>
-            </tr>
-          </table>
+  const brand = getEmailBrand({ storeName });
+  const inner = `
+    <h1 style="margin:0 0 8px;font-size:22px;color:${brand.black};">New order received</h1>
+    <p style="margin:0 0 20px;color:${brand.muted};font-size:14px;">
+      A customer just placed an order on ${brand.storeName}. Open it in admin to confirm and book courier.
+    </p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+      <tr>
+        <td style="padding:6px 0;font-size:14px;color:${brand.muted};">Order</td>
+        <td style="padding:6px 0;font-size:14px;font-weight:700;color:${brand.black};text-align:right;">
+          ${order.orderNumber || order._id}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;font-size:14px;color:${brand.muted};">Customer</td>
+        <td style="padding:6px 0;font-size:14px;color:${brand.black};text-align:right;">
+          ${order.customer?.name || addr.name || ""}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;font-size:14px;color:${brand.muted};">Phone</td>
+        <td style="padding:6px 0;font-size:14px;color:${brand.black};text-align:right;">
+          ${order.customer?.phone || addr.phone || ""}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;font-size:14px;color:${brand.muted};">Email</td>
+        <td style="padding:6px 0;font-size:14px;color:${brand.black};text-align:right;">
+          ${order.customer?.email || "—"}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;font-size:14px;color:${brand.muted};">Payment</td>
+        <td style="padding:6px 0;font-size:14px;color:${brand.black};text-align:right;">
+          ${order.paymentMethod || "N/A"} · ${order.paymentStatus || ""}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;font-size:14px;color:${brand.muted};vertical-align:top;">Ship to</td>
+        <td style="padding:6px 0;font-size:14px;color:${brand.black};text-align:right;">
+          ${addressLine || "—"}<br/>
+          ${[addr.city, addr.province || addr.state, addr.country].filter(Boolean).join(", ")}
+        </td>
+      </tr>
+    </table>
 
-          <h2 style="margin:28px 0 12px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#888;">
-            Products
-          </h2>
-          <table style="width:100%;border-collapse:collapse;">
-            ${buildAdminOrderItemsRows(order)}
-          </table>
+    <h2 style="margin:24px 0 12px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${brand.muted};">
+      Products
+    </h2>
+    <table style="width:100%;border-collapse:collapse;">
+      ${buildAdminOrderItemsRows(order)}
+    </table>
 
-          <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-            <tr>
-              <td style="padding:4px 0;font-size:13px;color:#888;">Subtotal</td>
-              <td style="padding:4px 0;font-size:13px;color:#111;text-align:right;">${formatPrice(subtotal)}</td>
-            </tr>
-            <tr>
-              <td style="padding:4px 0;font-size:13px;color:#888;">Shipping</td>
-              <td style="padding:4px 0;font-size:13px;color:#111;text-align:right;">
-                ${shipping === 0 ? "FREE" : formatPrice(shipping)}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0 0;font-size:15px;font-weight:700;color:#111;border-top:1px solid #eee;">Grand Total</td>
-              <td style="padding:10px 0 0;font-size:16px;font-weight:700;color:#111;text-align:right;border-top:1px solid #eee;">
-                ${formatPrice(total)}
-              </td>
-            </tr>
-          </table>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr>
+        <td style="padding:4px 0;font-size:13px;color:${brand.muted};">Subtotal</td>
+        <td style="padding:4px 0;font-size:13px;color:${brand.black};text-align:right;">${formatPrice(subtotal)}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;font-size:13px;color:${brand.muted};">Shipping</td>
+        <td style="padding:4px 0;font-size:13px;color:${brand.black};text-align:right;">
+          ${shipping === 0 ? "FREE" : formatPrice(shipping)}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0 0;font-size:15px;font-weight:700;color:${brand.black};border-top:1px solid ${brand.border};">Grand Total</td>
+        <td style="padding:10px 0 0;font-size:16px;font-weight:700;color:${brand.black};text-align:right;border-top:1px solid ${brand.border};">
+          ${formatPrice(total)}
+        </td>
+      </tr>
+    </table>
 
-          <div style="text-align:center;margin-top:24px;">
-            <a href="${orderUrl}"
-              style="display:inline-block;padding:12px 28px;background:#C41E1E;color:#fff;text-decoration:none;font-weight:700;border-radius:6px;font-size:13px;">
-              View Order in Admin
-            </a>
-          </div>
-        </div>
-        <div style="background:#111111;padding:16px 40px;text-align:center;">
-          <p style="color:rgba(255,255,255,0.5);font-size:11px;margin:0;">
-            &copy; ${new Date().getFullYear()} ${storeName}
-          </p>
-        </div>
-      </div>
-    </body>
-    </html>
+    <div style="text-align:center;margin-top:28px;">
+      ${emailButton(orderUrl, "View Order in Admin", { bg: brand.red })}
+    </div>
   `;
+  const html = wrapEmailLayout(inner, {
+    storeName,
+    eyebrow: "Staff alert · new order",
+    preheader: `New order ${order.orderNumber || ""} · ${formatPrice(total)}`,
+  });
 
   const subject = `New Order: ${order.orderNumber || order._id} - ${formatPrice(total)}`;
   const sent = await sendEmail({
@@ -517,7 +522,10 @@ export async function resolvePasswordResetEmail(vars = {}) {
 }
 
 export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact = {}) {
-  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'}`;
+  const brand = getEmailBrand({
+    storeName: storeName || undefined,
+    logoUrl: logoUrl || undefined,
+  });
   const codDeliverySection = buildCodDeliveryChargeEmailSection(order, contact);
 
   const items =
@@ -525,18 +533,18 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
       ?.map(
         (item) => `
     <tr>
-      <td style="padding:12px 8px;border-bottom:1px solid #f0f0f0;">
+      <td style="padding:12px 8px;border-bottom:1px solid ${brand.border};">
         ${item.image ? `<img src="${item.image}" alt="${item.name}" width="56" style="border-radius:4px;display:block;" />` : ""}
       </td>
-      <td style="padding:12px 8px;border-bottom:1px solid #f0f0f0;">
-        <p style="margin:0;font-size:14px;color:#111111;font-weight:600;">
+      <td style="padding:12px 8px;border-bottom:1px solid ${brand.border};">
+        <p style="margin:0;font-size:14px;color:${brand.black};font-weight:600;">
           ${item.name}
         </p>
-        ${item.variation ? `<p style="margin:3px 0 0;font-size:12px;color:#888;">${item.variation}</p>` : ""}
-        <p style="margin:3px 0 0;font-size:12px;color:#888;">Qty: ${item.quantity}</p>
+        ${item.variation ? `<p style="margin:3px 0 0;font-size:12px;color:${brand.muted};">${item.variation}</p>` : ""}
+        <p style="margin:3px 0 0;font-size:12px;color:${brand.muted};">Qty: ${item.quantity}</p>
       </td>
-      <td style="padding:12px 8px;border-bottom:1px solid #f0f0f0;text-align:right;">
-        <p style="margin:0;font-size:14px;font-weight:700;color:#111111;">
+      <td style="padding:12px 8px;border-bottom:1px solid ${brand.border};text-align:right;">
+        <p style="margin:0;font-size:14px;font-weight:700;color:${brand.black};">
           ${formatPrice((item.unitPrice || item.price || 0) * item.quantity)}
         </p>
       </td>
@@ -545,196 +553,140 @@ export function buildOrderConfirmationEmail(order, storeName, logoUrl, contact =
       .join("") || "";
 
   const addr = order.shippingAddress;
+  const inner = `
+    <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:18px 16px;text-align:center;margin:0 0 22px;">
+      <p style="margin:0 0 6px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#047857;font-weight:700;">Order confirmed</p>
+      <h1 style="margin:0 0 6px;font-size:22px;color:#065F46;">Thank you, ${order.customer?.name || "there"}!</h1>
+      <p style="margin:0;font-size:14px;color:#047857;">
+        We received your order and will prepare it for delivery.
+      </p>
+    </div>
 
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width">
-      <title>Order Confirmed - ${sName}</title>
-    </head>
-    <body style="margin:0;padding:0;background:#f8f8f8;font-family:'DM Sans',Arial,sans-serif;">
-      <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+    <div style="background:${brand.card};border:1px solid ${brand.border};border-radius:8px;padding:16px 18px;margin:0 0 22px;">
+      <table style="width:100%;border-collapse:collapse;">
+        <tr>
+          <td style="font-size:13px;color:${brand.muted};padding:4px 0;">Order Reference</td>
+          <td style="font-size:13px;font-weight:700;color:${brand.black};text-align:right;padding:4px 0;">
+            ${order.orderNumber || order._id}
+          </td>
+        </tr>
+        <tr>
+          <td style="font-size:13px;color:${brand.muted};padding:4px 0;">Date</td>
+          <td style="font-size:13px;color:${brand.black};text-align:right;padding:4px 0;">
+            ${new Date(order.createdAt || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+          </td>
+        </tr>
+        <tr>
+          <td style="font-size:13px;color:${brand.muted};padding:4px 0;">Payment</td>
+          <td style="font-size:13px;color:${brand.black};text-align:right;padding:4px 0;">
+            ${order.paymentMethod || "N/A"}
+          </td>
+        </tr>
+      </table>
+    </div>
 
-        <!-- Header -->
-        <div style="background:#111111;padding:32px 40px;text-align:center;">
-          ${logoUrl ? `<img src="${logoUrl}" alt="${sName}" style="max-height:50px;object-fit:contain;margin-bottom:8px;" /><br>` : ""}
-          <h1 style="color:#D72323;font-size:24px;margin:0;letter-spacing:0.15em;text-transform:uppercase;">
-            ${sName}
-          </h1>
-          <p style="color:rgba(255,255,255,0.6);font-size:11px;margin:4px 0 0;letter-spacing:0.1em;text-transform:uppercase;">
-            Premium car accessories
-          </p>
-        </div>
+    <h3 style="font-size:12px;font-weight:700;color:${brand.muted};margin:0 0 12px;text-transform:uppercase;letter-spacing:0.08em;">
+      Your order
+    </h3>
+    <table style="width:100%;border-collapse:collapse;">
+      ${items}
+    </table>
 
-        <!-- Success banner -->
-        <div style="background:#f0fdf4;padding:24px 40px;text-align:center;border-bottom:1px solid #bbf7d0;">
-          <p style="font-size:32px;margin:0 0 8px;">&#10003;</p>
-          <h2 style="color:#166534;font-size:20px;margin:0 0 4px;">Order Confirmed!</h2>
-          <p style="color:#16a34a;font-size:14px;margin:0;">
-            Thank you for shopping at CrazzyCars.pk. We will deliver to your doorstep.
-          </p>
-        </div>
+    <table style="width:100%;border-collapse:collapse;margin-top:12px;">
+      <tr>
+        <td style="font-size:13px;color:${brand.muted};padding:4px 0;">Subtotal</td>
+        <td style="font-size:13px;color:${brand.black};text-align:right;padding:4px 0;">
+          ${formatPrice(order.pricing?.subtotal || 0)}
+        </td>
+      </tr>
+      ${
+        order.pricing?.discount > 0
+          ? `<tr>
+        <td style="font-size:13px;color:#16a34a;padding:4px 0;">Discount</td>
+        <td style="font-size:13px;color:#16a34a;text-align:right;padding:4px 0;">
+          -${formatPrice(order.pricing.discount)}
+        </td>
+      </tr>`
+          : ""
+      }
+      <tr>
+        <td style="font-size:13px;color:${brand.muted};padding:4px 0;">Shipping</td>
+        <td style="font-size:13px;color:${brand.black};text-align:right;padding:4px 0;">
+          ${formatPrice(order.pricing?.shippingCost || 0)}
+        </td>
+      </tr>
+    </table>
+    <div style="border-top:2px solid ${brand.black};padding-top:14px;margin-top:8px;text-align:right;">
+      <p style="font-size:18px;font-weight:700;color:${brand.black};margin:0;">
+        Total: ${formatPrice(order.pricing?.total || 0)}
+      </p>
+    </div>
 
-        <!-- Order details -->
-        <div style="padding:32px 40px;">
+    ${
+      addr
+        ? `<div style="margin-top:22px;padding:16px 18px;background:${brand.card};border:1px solid ${brand.border};border-radius:8px;">
+      <h3 style="font-size:12px;font-weight:700;color:${brand.muted};margin:0 0 10px;text-transform:uppercase;letter-spacing:0.08em;">
+        Shipping to
+      </h3>
+      <p style="font-size:13px;color:#374151;margin:0;line-height:1.8;">
+        ${addr.name || ""}<br>
+        ${addr.street || ""}<br>
+        ${addr.city || ""}${addr.state ? `, ${addr.state}` : ""} ${addr.zip || ""}<br>
+        ${addr.country || ""}
+      </p>
+    </div>`
+        : ""
+    }
 
-          <div style="background:#f8f8f8;border-radius:8px;padding:20px;margin-bottom:24px;">
-            <table style="width:100%;border-collapse:collapse;">
-              <tr>
-                <td style="font-size:13px;color:#888;padding:4px 0;">Order Reference</td>
-                <td style="font-size:13px;font-weight:700;color:#111;text-align:right;padding:4px 0;">
-                  ${order.orderNumber || order._id}
-                </td>
-              </tr>
-              <tr>
-                <td style="font-size:13px;color:#888;padding:4px 0;">Date</td>
-                <td style="font-size:13px;color:#111;text-align:right;padding:4px 0;">
-                  ${new Date(order.createdAt || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                </td>
-              </tr>
-              <tr>
-                <td style="font-size:13px;color:#888;padding:4px 0;">Payment</td>
-                <td style="font-size:13px;color:#111;text-align:right;padding:4px 0;">
-                  ${order.paymentMethod || "N/A"}
-                </td>
-              </tr>
-            </table>
-          </div>
+    ${codDeliverySection}
 
-          <!-- Items -->
-          <h3 style="font-size:14px;font-weight:700;color:#111;margin:0 0 16px;text-transform:uppercase;letter-spacing:0.06em;">
-            Your Order
-          </h3>
-          <table style="width:100%;border-collapse:collapse;">
-            ${items}
-          </table>
-
-          <!-- Totals -->
-          <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-            <tr>
-              <td style="font-size:13px;color:#888;padding:4px 0;">Subtotal</td>
-              <td style="font-size:13px;color:#111;text-align:right;padding:4px 0;">
-                ${formatPrice(order.pricing?.subtotal || 0)}
-              </td>
-            </tr>
-            ${
-              order.pricing?.discount > 0
-                ? `<tr>
-              <td style="font-size:13px;color:#16a34a;padding:4px 0;">Discount</td>
-              <td style="font-size:13px;color:#16a34a;text-align:right;padding:4px 0;">
-                -${formatPrice(order.pricing.discount)}
-              </td>
-            </tr>`
-                : ""
-            }
-            <tr>
-              <td style="font-size:13px;color:#888;padding:4px 0;">Shipping</td>
-              <td style="font-size:13px;color:#111;text-align:right;padding:4px 0;">
-                ${formatPrice(order.pricing?.shippingCost || 0)}
-              </td>
-            </tr>
-          </table>
-          <div style="border-top:2px solid #111111;padding-top:16px;margin-top:8px;text-align:right;">
-            <p style="font-size:18px;font-weight:700;color:#111111;margin:0;">
-              Total: ${formatPrice(order.pricing?.total || 0)}
-            </p>
-          </div>
-
-          <!-- Shipping address -->
-          ${
-            addr
-              ? `<div style="margin-top:24px;padding:20px;background:#f8f8f8;border-radius:8px;">
-            <h3 style="font-size:13px;font-weight:700;color:#111;margin:0 0 12px;text-transform:uppercase;letter-spacing:0.06em;">
-              Shipping To
-            </h3>
-            <p style="font-size:13px;color:#555;margin:0;line-height:1.8;">
-              ${addr.name || ""}<br>
-              ${addr.street || ""}<br>
-              ${addr.city || ""}${addr.state ? `, ${addr.state}` : ""} ${addr.zip || ""}<br>
-              ${addr.country || ""}${addr.nif ? `<br>NIF: ${addr.nif}` : ""}
-            </p>
-          </div>`
-              : ""
-          }
-
-          ${codDeliverySection}
-
-          <!-- CTA -->
-          <div style="text-align:center;margin-top:32px;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crazzycars.pk"}/shop"
-              style="display:inline-block;padding:14px 36px;background:#111111;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border-radius:2px;">
-              Continue Shopping
-            </a>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div style="background:#111111;padding:24px 40px;text-align:center;">
-          <p style="color:rgba(255,255,255,0.5);font-size:11px;margin:0;line-height:1.8;">
-            ${sName} &mdash; Premium car accessories<br>
-            If you have any questions, contact us at ${process.env.FROM_EMAIL || process.env.ADMIN_EMAIL || ""}<br>
-            &copy; ${new Date().getFullYear()} ${sName}. All rights reserved.
-          </p>
-        </div>
-
-      </div>
-    </body>
-    </html>
+    <div style="text-align:center;margin-top:28px;">
+      ${emailButton(`${brand.siteUrl}/shop`, "Continue Shopping")}
+    </div>
   `;
+
+  return wrapEmailLayout(inner, {
+    storeName: brand.storeName,
+    logoUrl: brand.logoUrl,
+    eyebrow: "Order confirmation",
+    preheader: `Order ${order.orderNumber || ""} confirmed · ${formatPrice(order.pricing?.total || 0)}`,
+  });
 }
 
 export function buildShippingEmail(order, storeName, logoUrl) {
-  const sName = storeName || process.env.FROM_NAME || `${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'}`;
+  const brand = getEmailBrand({
+    storeName: storeName || undefined,
+    logoUrl: logoUrl || undefined,
+  });
+  const trackingNumber = order.tracking?.number || order.trackingNumber || "";
+  const trackingUrl =
+    order.tracking?.url ||
+    (trackingNumber ? `${brand.trackUrl}?tracking=${encodeURIComponent(trackingNumber)}` : brand.trackUrl);
 
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
-    <body style="margin:0;padding:0;background:#f8f8f8;font-family:'DM Sans',Arial,sans-serif;">
-      <div style="max-width:600px;margin:0 auto;background:#ffffff;">
-        <div style="background:#111111;padding:32px 40px;text-align:center;">
-          ${logoUrl ? `<img src="${logoUrl}" alt="${sName}" style="max-height:50px;margin-bottom:8px;" /><br>` : ""}
-          <h1 style="color:#D72323;font-size:24px;margin:0;letter-spacing:0.15em;text-transform:uppercase;">
-            ${sName}
-          </h1>
-          <p style="color:rgba(255,255,255,0.6);font-size:11px;margin:4px 0 0;letter-spacing:0.1em;">
-            Your Order Has Shipped!
-          </p>
-        </div>
-        <div style="padding:32px 40px;">
-          <h2 style="color:#111;font-size:20px;margin:0 0 8px;">
-            Great news, ${order.customer?.name || "Customer"}!
-          </h2>
-          <p style="color:#555;font-size:14px;margin:0 0 20px;">
-            Your order <strong>${order.orderNumber}</strong> has been shipped.
-          </p>
-          ${
-            order.tracking?.number
-              ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:24px;text-align:center;margin-bottom:20px;">
-            <p style="color:#888;margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;">Tracking Number</p>
-            <p style="font-size:22px;font-weight:700;color:#111;margin:0;">${order.tracking.number}</p>
-            <p style="color:#888;margin:4px 0 0;font-size:13px;">${order.tracking.carrier || "Courier"}</p>
-            ${
-              order.tracking.url
-                ? `<a href="${order.tracking.url}" style="display:inline-block;margin-top:16px;padding:12px 28px;background:#111111;color:#fff;text-decoration:none;font-weight:700;border-radius:2px;font-size:13px;letter-spacing:0.06em;">
-              Track Your Package
-            </a>`
-                : ""
-            }
-          </div>`
-              : ""
-          }
-          <p style="color:#555;font-size:14px;">Thank you for shopping with us!</p>
-        </div>
-        <div style="background:#111111;padding:20px 40px;text-align:center;">
-          <p style="color:rgba(255,255,255,0.5);font-size:11px;margin:0;">
-            &copy; ${new Date().getFullYear()} ${sName}. All rights reserved.
-          </p>
-        </div>
-      </div>
-    </body>
-    </html>
+  const inner = `
+    <h1 style="margin:0 0 8px;font-size:22px;color:${brand.black};">
+      Great news, ${order.customer?.name || "there"}!
+    </h1>
+    <p style="margin:0 0 20px;color:${brand.muted};font-size:15px;">
+      Your order <strong style="color:${brand.black};">${order.orderNumber}</strong> is on its way.
+    </p>
+    ${
+      trackingNumber
+        ? `<div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:22px;text-align:center;margin:0 0 20px;">
+      <p style="color:${brand.muted};margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;">Tracking number</p>
+      <p style="font-size:22px;font-weight:700;color:${brand.black};margin:0;">${trackingNumber}</p>
+      <p style="color:${brand.muted};margin:6px 0 0;font-size:13px;">${order.tracking?.carrier || order.courier || "Courier"}</p>
+      <div style="margin-top:16px;">${emailButton(trackingUrl, "Track your package")}</div>
+    </div>`
+        : ""
+    }
+    <p style="margin:0;color:${brand.muted};font-size:14px;">Thank you for shopping with ${brand.storeName}.</p>
   `;
+
+  return wrapEmailLayout(inner, {
+    storeName: brand.storeName,
+    logoUrl: brand.logoUrl,
+    eyebrow: "Shipping update",
+    preheader: `Order ${order.orderNumber || ""} shipped${trackingNumber ? ` · ${trackingNumber}` : ""}`,
+  });
 }

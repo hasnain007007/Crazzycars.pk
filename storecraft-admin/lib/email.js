@@ -1,6 +1,9 @@
 import nodemailer from "nodemailer";
 import { Resend } from "resend";
 import { formatAdminPrice } from "@/lib/currency";
+import { emailButton, getEmailBrand, wrapEmailLayout } from "@/lib/emailLayout";
+
+const RESEND_SANDBOX_FROM = "CrazzyCars.pk <onboarding@resend.dev>";
 
 function getResend() {
   const apiKey = process.env.RESEND_API_KEY;
@@ -30,46 +33,121 @@ function getSmtpTransporter() {
   });
 }
 
-export async function sendEmail({ to, subject, html, text, from }) {
-  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
-  const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER;
-  const fromAddress = from || (fromEmail ? `"${storeName}" <${fromEmail}>` : null);
+function getFromEmail() {
+  return String(process.env.FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || "").trim();
+}
 
-  // Prefer Resend (same stack as storefront) when configured.
+export function getReplyToEmail() {
+  const candidates = [process.env.REPLY_TO_EMAIL, process.env.CONTACT_EMAIL, "info@crazzycars.pk"];
+  for (const raw of candidates) {
+    const v = String(raw || "").trim().toLowerCase();
+    if (!v || !v.includes("@")) continue;
+    if (v.includes("imedihelp") || v.includes("onboarding@resend.dev")) continue;
+    return v;
+  }
+  return "info@crazzycars.pk";
+}
+
+function buildSender(fromOverride) {
+  const storeName = process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
+  const fromEmail = getFromEmail();
+  if (fromOverride && String(fromOverride).trim()) return String(fromOverride).trim();
+  if (!fromEmail) return null;
+  if (fromEmail.includes("<") && fromEmail.includes(">")) return fromEmail;
+  return `${storeName} <${fromEmail}>`;
+}
+
+function formatResendError(error) {
+  if (!error) return "Unknown Resend error";
+  if (typeof error === "string") return error;
+  return error.message || error.name || "Resend send failed";
+}
+
+function isUnverifiedSenderError(error) {
+  const text = formatResendError(error).toLowerCase();
+  return (
+    text.includes("domain is not verified") ||
+    text.includes("not verified") ||
+    text.includes("invalid from") ||
+    text.includes("from address")
+  );
+}
+
+export async function sendEmail({ to, subject, html, text, from, replyTo: replyToOverride }) {
+  const recipients = Array.isArray(to) ? to : [to];
+  if (!recipients.length || !recipients[0]) {
+    return { success: false, error: "No recipient address" };
+  }
+
+  const replyTo = String(replyToOverride || "").trim() || getReplyToEmail();
   const resend = getResend();
-  if (resend && fromEmail) {
-    try {
-      const payload = {
-        from: typeof fromAddress === "string" ? fromAddress : `${storeName} <${fromEmail}>`,
-        to,
-        subject,
-        html,
-      };
-      if (text) payload.text = text;
-      const { data, error } = await resend.emails.send(payload);
-      if (error) {
-        console.error("Resend error:", error);
-        return { success: false, error: error.message };
-      }
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Email error:", error);
-      return { success: false, error: error.message };
+  if (resend) {
+    const attempts = [];
+    const primary = buildSender(from);
+    if (primary) attempts.push(primary);
+    const verifiedFallback = String(process.env.RESEND_VERIFIED_FROM || "").trim();
+    if (verifiedFallback) {
+      const vf = verifiedFallback.includes("<")
+        ? verifiedFallback
+        : `${process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"} <${verifiedFallback}>`;
+      if (!attempts.includes(vf)) attempts.push(vf);
     }
+    if (!primary || !String(primary).includes("onboarding@resend.dev")) {
+      attempts.push(RESEND_SANDBOX_FROM);
+    }
+    if (!attempts.length) {
+      return { success: false, error: "Email not configured (set FROM_EMAIL)" };
+    }
+
+    let lastError = null;
+    for (let i = 0; i < attempts.length; i++) {
+      const sender = attempts[i];
+      try {
+        const payload = {
+          from: sender,
+          to: recipients,
+          subject,
+          html,
+          replyTo,
+        };
+        if (text) payload.text = text;
+        const { data, error } = await resend.emails.send(payload);
+        if (!error) {
+          if (i > 0) {
+            console.warn(`[email] Primary FROM failed; sent via fallback. from=${sender} id=${data?.id}`);
+          }
+          return { success: true, messageId: data?.id, from: sender, usedFallback: i > 0 };
+        }
+        lastError = error;
+        console.error(`[email] Resend error (from=${sender}):`, formatResendError(error));
+        if (i === 0 && attempts.length > 1 && isUnverifiedSenderError(error)) continue;
+        if (i === 0 && attempts.length > 1) continue;
+        break;
+      } catch (error) {
+        lastError = error;
+        console.error("Email error:", error);
+        if (i === 0 && attempts.length > 1) continue;
+        break;
+      }
+    }
+    return { success: false, error: formatResendError(lastError) };
   }
 
   const transporter = getSmtpTransporter();
+  const fromEmail = getFromEmail();
   if (!transporter || !fromEmail) {
     return { success: false, error: "Email not configured (set RESEND_API_KEY + FROM_EMAIL, or SMTP_*)" };
   }
 
   try {
+    const storeName = process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
     const info = await transporter.sendMail({
       from: `"${storeName}" <${fromEmail}>`,
-      to,
+      to: recipients,
       subject,
       html,
       text: text || undefined,
+      replyTo,
     });
     return { success: true, messageId: info.messageId };
   } catch (error) {
@@ -79,196 +157,116 @@ export async function sendEmail({ to, subject, html, text, from }) {
 }
 
 export function buildOrderConfirmationEmail(order, storeName, logoUrl) {
+  const brand = getEmailBrand({ storeName: storeName || undefined, logoUrl: logoUrl || undefined });
   const items =
     order.items
       ?.map(
         (item) => `
     <tr>
-      <td style="padding:8px;border-bottom:1px solid #eee">
+      <td style="padding:10px 8px;border-bottom:1px solid ${brand.border}">
         ${item.name}
-        ${item.variation ? `<br><small style="color:#666">${item.variation}</small>` : ""}
+        ${item.variation ? `<br><small style="color:${brand.muted}">${item.variation}</small>` : ""}
       </td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">
-        ${item.quantity}
-      </td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">
+      <td style="padding:10px 8px;border-bottom:1px solid ${brand.border};text-align:center">${item.quantity}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid ${brand.border};text-align:right">
         ${formatAdminPrice(item.unitPrice || item.price || 0)}
       </td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">
+      <td style="padding:10px 8px;border-bottom:1px solid ${brand.border};text-align:right;font-weight:700">
         ${formatAdminPrice((item.unitPrice || item.price || 0) * item.quantity)}
       </td>
-    </tr>
-  `
+    </tr>`
       )
       .join("") || "";
 
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width">
-    </head>
-    <body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif">
-      <div style="max-width:600px;margin:20px auto;background:white;border-radius:8px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1)">
-        
-        <div style="background:#009688;padding:30px;text-align:center">
-          ${logoUrl ? `<img src="${logoUrl}" alt="${storeName}" style="max-height:60px;object-fit:contain;margin-bottom:10px"><br>` : ""}
-          <h1 style="color:white;margin:0;font-size:24px">${storeName}</h1>
-          <p style="color:rgba(255,255,255,0.8);margin:5px 0 0">Order Confirmed — Crazzycars.pk</p>
-        </div>
-        
-        <div style="padding:30px">
-          <h2 style="color:#333;margin:0 0 10px">
-            Your Crazzycars.pk Order is Confirmed
-          </h2>
-          <p style="color:#666;margin:0 0 20px">
-            Dear ${order.customer?.name || "Customer"},<br>
-            Thank you for shopping at Crazzycars.pk. Your order is confirmed and being prepared for delivery.
-          </p>
-          
-          <div style="background:#f0faf9;border:1px solid #009688;border-radius:8px;padding:15px;margin-bottom:20px">
-            <table style="width:100%">
-              <tr>
-                <td style="color:#666;font-size:13px">Order Number</td>
-                <td style="font-weight:bold;text-align:right">${order.orderNumber}</td>
-              </tr>
-              <tr>
-                <td style="color:#666;font-size:13px">Order Date</td>
-                <td style="text-align:right">${new Date(order.createdAt).toLocaleDateString("en-PK")}</td>
-              </tr>
-              <tr>
-                <td style="color:#666;font-size:13px">Payment Method</td>
-                <td style="text-align:right">${order.paymentMethod || "N/A"}</td>
-              </tr>
-              <tr>
-                <td style="color:#666;font-size:13px">Order Status</td>
-                <td style="text-align:right">
-                  <span style="background:#009688;color:white;padding:2px 8px;border-radius:4px;font-size:12px">
-                    ${order.orderStatus || "Pending"}
-                  </span>
-                </td>
-              </tr>
-            </table>
-          </div>
-          
-          <h3 style="color:#333;margin:0 0 10px">Order Items</h3>
-          <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
-            <thead>
-              <tr style="background:#f5f5f5">
-                <th style="padding:10px 8px;text-align:left;font-size:13px">Product</th>
-                <th style="padding:10px 8px;text-align:center;font-size:13px">Qty</th>
-                <th style="padding:10px 8px;text-align:right;font-size:13px">Price</th>
-                <th style="padding:10px 8px;text-align:right;font-size:13px">Total</th>
-              </tr>
-            </thead>
-            <tbody>${items}</tbody>
-          </table>
-          
-          <table style="width:100%;margin-bottom:20px">
-            <tr>
-              <td style="color:#666;padding:4px 0">Subtotal</td>
-              <td style="text-align:right;padding:4px 0">${formatAdminPrice(order.pricing?.subtotal || 0)}</td>
-            </tr>
-            ${
-              order.pricing?.discount > 0
-                ? `
-            <tr>
-              <td style="color:#16a34a;padding:4px 0">Discount</td>
-              <td style="text-align:right;color:#16a34a;padding:4px 0">-${formatAdminPrice(order.pricing.discount)}</td>
-            </tr>`
-                : ""
-            }
-            <tr>
-              <td style="color:#666;padding:4px 0">Shipping</td>
-              <td style="text-align:right;padding:4px 0">${formatAdminPrice(order.pricing?.shippingCost || 0)}</td>
-            </tr>
-            <tr style="border-top:2px solid #009688">
-              <td style="font-weight:bold;padding:8px 0;font-size:16px">Total</td>
-              <td style="text-align:right;font-weight:bold;padding:8px 0;font-size:16px;color:#009688">
-                ${formatAdminPrice(order.pricing?.total || 0)}
-              </td>
-            </tr>
-          </table>
-          
-          ${
-            order.shippingAddress
-              ? `
-          <div style="background:#f9f9f9;border-radius:8px;padding:15px;margin-bottom:20px">
-            <h3 style="color:#333;margin:0 0 10px;font-size:14px">Shipping Address</h3>
-            <p style="color:#555;margin:0;line-height:1.6">
-              ${order.shippingAddress.name || ""}<br>
-              ${order.shippingAddress.street || ""}<br>
-              ${order.shippingAddress.city || ""}, ${order.shippingAddress.state || ""}<br>
-              ${order.shippingAddress.country || ""}
-            </p>
-          </div>`
-              : ""
-          }
-          
-          <p style="color:#666;font-size:13px">
-            If you have any questions, reply to this email or contact us.
-          </p>
-        </div>
-        
-        <div style="background:#f5f5f5;padding:20px;text-align:center;border-top:1px solid #eee">
-          <p style="color:#999;font-size:12px;margin:0">
-            © ${new Date().getFullYear()} ${storeName}. All rights reserved.
-          </p>
-          <p style="color:#009688;font-size:12px;margin:5px 0 0">
-            Thank you for shopping at Crazzycars.pk!
-          </p>
-        </div>
-        
-      </div>
-    </body>
-    </html>
+  const inner = `
+    <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:18px;text-align:center;margin:0 0 20px;">
+      <h1 style="margin:0 0 6px;font-size:22px;color:#065F46;">Order confirmed</h1>
+      <p style="margin:0;color:#047857;font-size:14px;">Thank you for shopping at ${brand.storeName}.</p>
+    </div>
+    <p style="margin:0 0 16px;color:${brand.muted};">Dear ${order.customer?.name || "Customer"},</p>
+    <div style="background:${brand.card};border:1px solid ${brand.border};border-radius:8px;padding:14px 16px;margin:0 0 18px;">
+      <table style="width:100%">
+        <tr><td style="color:${brand.muted};font-size:13px;padding:4px 0">Order Number</td><td style="font-weight:700;text-align:right">${order.orderNumber}</td></tr>
+        <tr><td style="color:${brand.muted};font-size:13px;padding:4px 0">Order Date</td><td style="text-align:right">${new Date(order.createdAt).toLocaleDateString("en-PK")}</td></tr>
+        <tr><td style="color:${brand.muted};font-size:13px;padding:4px 0">Payment</td><td style="text-align:right">${order.paymentMethod || "N/A"}</td></tr>
+        <tr><td style="color:${brand.muted};font-size:13px;padding:4px 0">Status</td><td style="text-align:right;font-weight:700">${order.orderStatus || "Pending"}</td></tr>
+      </table>
+    </div>
+    <h3 style="margin:0 0 10px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${brand.muted}">Order items</h3>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+      <thead>
+        <tr style="background:${brand.card}">
+          <th style="padding:10px 8px;text-align:left;font-size:12px">Product</th>
+          <th style="padding:10px 8px;text-align:center;font-size:12px">Qty</th>
+          <th style="padding:10px 8px;text-align:right;font-size:12px">Price</th>
+          <th style="padding:10px 8px;text-align:right;font-size:12px">Total</th>
+        </tr>
+      </thead>
+      <tbody>${items}</tbody>
+    </table>
+    <table style="width:100%;margin-bottom:18px">
+      <tr><td style="color:${brand.muted};padding:4px 0">Subtotal</td><td style="text-align:right;padding:4px 0">${formatAdminPrice(order.pricing?.subtotal || 0)}</td></tr>
+      ${
+        order.pricing?.discount > 0
+          ? `<tr><td style="color:#16a34a;padding:4px 0">Discount</td><td style="text-align:right;color:#16a34a;padding:4px 0">-${formatAdminPrice(order.pricing.discount)}</td></tr>`
+          : ""
+      }
+      <tr><td style="color:${brand.muted};padding:4px 0">Shipping</td><td style="text-align:right;padding:4px 0">${formatAdminPrice(order.pricing?.shippingCost || 0)}</td></tr>
+      <tr style="border-top:2px solid ${brand.black}"><td style="font-weight:700;padding:10px 0;font-size:16px">Total</td><td style="text-align:right;font-weight:700;padding:10px 0;font-size:16px;color:${brand.red}">${formatAdminPrice(order.pricing?.total || 0)}</td></tr>
+    </table>
+    ${
+      order.shippingAddress
+        ? `<div style="background:${brand.card};border:1px solid ${brand.border};border-radius:8px;padding:14px 16px;margin-bottom:18px">
+      <h3 style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${brand.muted}">Shipping address</h3>
+      <p style="margin:0;color:#374151;line-height:1.7;font-size:13px">
+        ${order.shippingAddress.name || ""}<br>
+        ${order.shippingAddress.street || ""}<br>
+        ${order.shippingAddress.city || ""}, ${order.shippingAddress.state || ""}<br>
+        ${order.shippingAddress.country || ""}
+      </p>
+    </div>`
+        : ""
+    }
+    <div style="text-align:center">${emailButton(`${brand.siteUrl}/shop`, "Continue Shopping")}</div>
   `;
+
+  return wrapEmailLayout(inner, {
+    storeName: brand.storeName,
+    logoUrl: brand.logoUrl,
+    eyebrow: "Order confirmation",
+    preheader: `Order ${order.orderNumber || ""} confirmed`,
+  });
 }
 
 export function buildShippingEmail(order, storeName, logoUrl) {
-  return `
-    <!DOCTYPE html>
-    <html>
-    <body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif">
-      <div style="max-width:600px;margin:20px auto;background:white;border-radius:8px;overflow:hidden">
-        <div style="background:#009688;padding:30px;text-align:center">
-          ${logoUrl ? `<img src="${logoUrl}" alt="${storeName}" style="max-height:60px;margin-bottom:10px"><br>` : ""}
-          <h1 style="color:white;margin:0">${storeName}</h1>
-          <p style="color:rgba(255,255,255,0.8);margin:5px 0 0">Your Order Has Shipped!</p>
-        </div>
-        <div style="padding:30px">
-          <h2 style="color:#333">Great news, ${order.customer?.name || "Customer"}!</h2>
-          <p style="color:#666">Your order <strong>${order.orderNumber}</strong> has been shipped.</p>
-          
-          ${
-            order.tracking?.number
-              ? `
-          <div style="background:#f0faf9;border:1px solid #009688;border-radius:8px;padding:20px;margin:20px 0;text-align:center">
-            <p style="color:#666;margin:0 0 5px;font-size:13px">TRACKING NUMBER</p>
-            <p style="font-size:24px;font-weight:bold;color:#009688;margin:0">${order.tracking.number}</p>
-            <p style="color:#666;margin:5px 0 0">${order.tracking.carrier || "Courier"}</p>
-            ${
-              order.tracking.url
-                ? `
-            <a href="${order.tracking.url}" style="display:inline-block;margin-top:15px;background:#009688;color:white;padding:10px 25px;border-radius:5px;text-decoration:none;font-weight:bold">
-              Track Your Package →
-            </a>`
-                : ""
-            }
-          </div>`
-              : ""
-          }
-          
-          <p style="color:#666">Thank you for shopping at Crazzycars.pk!</p>
-        </div>
-        <div style="background:#f5f5f5;padding:20px;text-align:center">
-          <p style="color:#999;font-size:12px;margin:0">© ${new Date().getFullYear()} ${storeName}</p>
-        </div>
-      </div>
-    </body>
-    </html>
+  const brand = getEmailBrand({ storeName: storeName || undefined, logoUrl: logoUrl || undefined });
+  const trackingNumber = order.tracking?.number || order.trackingNumber || "";
+  const trackingUrl =
+    order.tracking?.url ||
+    (trackingNumber ? `${brand.trackUrl}?tracking=${encodeURIComponent(trackingNumber)}` : brand.trackUrl);
+
+  const inner = `
+    <h1 style="margin:0 0 8px;font-size:22px;color:${brand.black}">Your order has shipped</h1>
+    <p style="margin:0 0 18px;color:${brand.muted}">Great news, ${order.customer?.name || "Customer"} — order <strong style="color:${brand.black}">${order.orderNumber}</strong> is on the way.</p>
+    ${
+      trackingNumber
+        ? `<div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:20px;margin:0 0 18px;text-align:center">
+      <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:${brand.muted}">Tracking number</p>
+      <p style="margin:0;font-size:22px;font-weight:700;color:${brand.black}">${trackingNumber}</p>
+      <p style="margin:6px 0 0;color:${brand.muted}">${order.tracking?.carrier || order.courier || "Courier"}</p>
+      <div style="margin-top:14px">${emailButton(trackingUrl, "Track your package")}</div>
+    </div>`
+        : ""
+    }
+    <p style="margin:0;color:${brand.muted}">Thank you for shopping at ${brand.storeName}.</p>
   `;
+
+  return wrapEmailLayout(inner, {
+    storeName: brand.storeName,
+    logoUrl: brand.logoUrl,
+    eyebrow: "Shipping update",
+    preheader: `Order ${order.orderNumber || ""} shipped`,
+  });
 }
 
 export async function recordEmailSent(orderId, emailType, subject, to, resultStatus = "sent") {

@@ -4,6 +4,7 @@
 import { formatAdminPrice } from "@/lib/currency";
 import { dbConnect } from "@/lib/db";
 import { recordEmailSent, sendEmail } from "@/lib/email";
+import { wrapEmailLayout } from "@/lib/emailLayout";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import {
   applyTemplateVars,
@@ -38,19 +39,32 @@ function formatWhen(value) {
   return d.toLocaleString("en-PK", { timeZone: "Asia/Karachi" });
 }
 
-function itemsHtml(order, formatPrice) {
+function itemsHtml(order, formatMoney) {
   const rows = Array.isArray(order?.items) ? order.items : [];
-  if (!rows.length) return "<p>No items</p>";
+  if (!rows.length) return `<p style="color:#6B7280;font-size:14px;">No items</p>`;
   const body = rows
     .map((item) => {
       const name = String(item.name || "Item");
       const qty = Number(item.quantity) || 1;
-      const line = formatPrice((Number(item.unitPrice || item.price) || 0) * qty);
-      const variation = item.variation ? ` (${item.variation})` : "";
-      return `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${name}${variation} × ${qty}</td><td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right">${line}</td></tr>`;
+      const line = formatMoney((Number(item.unitPrice || item.price) || 0) * qty);
+      const variation = item.variation
+        ? `<div style="font-size:12px;color:#6B7280;margin-top:2px;">${item.variation}</div>`
+        : "";
+      const img = item.image
+        ? `<img src="${item.image}" alt="" width="48" height="48" style="border-radius:4px;object-fit:cover;display:block;border:1px solid #E5E7EB;" />`
+        : "";
+      return `<tr>
+        <td style="padding:10px 8px 10px 0;border-bottom:1px solid #E5E7EB;width:56px;vertical-align:top;">${img}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #E5E7EB;vertical-align:top;">
+          <div style="font-size:14px;font-weight:600;color:#111;">${name}</div>
+          ${variation}
+          <div style="font-size:12px;color:#6B7280;margin-top:2px;">Qty: ${qty}</div>
+        </td>
+        <td style="padding:10px 0;border-bottom:1px solid #E5E7EB;text-align:right;vertical-align:top;font-size:14px;font-weight:700;color:#111;white-space:nowrap;">${line}</td>
+      </tr>`;
     })
     .join("");
-  return `<table style="width:100%;border-collapse:collapse;font-size:14px">${body}</table>`;
+  return `<table style="width:100%;border-collapse:collapse;">${body}</table>`;
 }
 
 function companyAddress(settings) {
@@ -111,18 +125,12 @@ export function buildOrderEmailVars(order, settings = {}, extra = {}, formatPric
   };
 }
 
-function wrapLayout(store, inner) {
-  if (/<html/i.test(inner)) return inner;
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8f8f8;font-family:Arial,sans-serif">
-  <div style="max-width:600px;margin:0 auto;background:#fff">
-    <div style="background:#111;padding:20px 28px;text-align:center">
-      <p style="color:#D72323;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin:0">${store}</p>
-    </div>
-    <div style="padding:28px;font-size:15px;line-height:1.6;color:#222">${inner}</div>
-    <div style="background:#111;padding:16px 28px;text-align:center">
-      <p style="color:rgba(255,255,255,.5);font-size:11px;margin:0">&copy; ${new Date().getFullYear()} ${store}</p>
-    </div>
-  </div></body></html>`;
+function wrapLayout(store, inner, { preheader, eyebrow } = {}) {
+  return wrapEmailLayout(inner, {
+    storeName: store,
+    preheader,
+    eyebrow: eyebrow || "CrazzyCars.pk update",
+  });
 }
 
 export async function loadEmailRuntimeSettings() {
@@ -159,7 +167,17 @@ export function resolveTemplatedEmail(templateKey, order, settings, extra = {}) 
     applyTemplateVars(String(tpl.subject || "").trim() || defaults.subject, vars) ||
     `${vars.store_name}`;
   const rawBody = String(tpl.body || "").trim() || defaults.body;
-  const html = wrapLayout(vars.store_name, applyTemplateVars(rawBody, vars));
+  const html = wrapLayout(vars.store_name, applyTemplateVars(rawBody, vars), {
+    preheader: subject,
+    eyebrow:
+      templateKey === "orderShipped"
+        ? "Shipping update"
+        : templateKey === "orderConfirmation"
+          ? "Order confirmation"
+          : templateKey === "passwordReset"
+            ? "Account security"
+            : "CrazzyCars.pk update",
+  });
   return { subject, html, vars };
 }
 

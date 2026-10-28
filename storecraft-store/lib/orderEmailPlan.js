@@ -90,85 +90,78 @@ export const EMAIL_VAR_CHIPS = [
 
 export const DEFAULT_EMAIL_TEMPLATES = {
   orderConfirmation: {
-    subject: "Order {order_id} : Order Received",
-    body: `<p>Dear {customer.first_name},</p>
-<p>We have received your order. Important details are below.</p>
-<p>Order Date/Time: {order_datetime}<br>
-Order Number: {order_id}<br>
-Payment Status: {payment_status}<br>
-Order Status: {order_status}</p>
-<p><strong>Order Items</strong></p>
+    subject: "Order {order_id} confirmed | {store_name}",
+    body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Thanks, {customer.first_name}!</h1>
+<p style="margin:0 0 18px;color:#6B7280;">We received your order and will prepare it for delivery.</p>
+<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:14px 16px;margin:0 0 18px;">
+  <p style="margin:0 0 6px;font-size:13px;color:#6B7280;">Order <strong style="color:#111;">{order_id}</strong></p>
+  <p style="margin:0 0 6px;font-size:13px;color:#6B7280;">Placed: {order_datetime}</p>
+  <p style="margin:0 0 6px;font-size:13px;color:#6B7280;">Payment: {payment_status}</p>
+  <p style="margin:0;font-size:13px;color:#6B7280;">Status: {order_status}</p>
+</div>
+<p style="margin:0 0 10px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;font-weight:700;">Items</p>
 {order_items}
-<p>Shipping: {order_shipping}<br>
-Total: {order_total}</p>
-<p>— {company.name}</p>`,
+<p style="margin:16px 0 0;font-size:14px;color:#6B7280;">Shipping: {order_shipping}</p>
+<p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#111;">Total: {order_total}</p>`,
   },
   orderPaymentReceived: {
-    subject: "Order {order_id} : Payment Completed",
-    body: `<p>Dear {customer.first_name},</p>
-<p>Thank you for your payment. We have started processing your order.</p>
-<p>Order Date/Time: {order_datetime}<br>
-Order Number: {order_id}<br>
-Payment Status: {payment_status}<br>
-Order Status: {order_status}</p>
-<p><strong>Order Items</strong></p>
+    subject: "Payment received for order {order_id} | {store_name}",
+    body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Payment received</h1>
+<p style="margin:0 0 18px;color:#6B7280;">Hi {customer.first_name}, thank you — we have marked order <strong>{order_id}</strong> as paid and started processing.</p>
+<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:14px 16px;margin:0 0 18px;">
+  <p style="margin:0 0 6px;font-size:13px;color:#6B7280;">Payment status: <strong style="color:#111;">{payment_status}</strong></p>
+  <p style="margin:0;font-size:13px;color:#6B7280;">Order status: {order_status}</p>
+</div>
 {order_items}
-<p>Total: {order_total}</p>
-<p>— {company.name}</p>`,
+<p style="margin:16px 0 0;font-size:18px;font-weight:700;color:#111;">Total: {order_total}</p>`,
   },
   orderShipped: {
-    subject: "Your {store_name} order #{order_id} is on its way! 🚚",
-    body: `<p>Dear {customer.first_name},</p>
-<p>Your order is on the way.</p>
-<p>Order Number: {order_id}<br>
-Courier: {courier}<br>
-Tracking ID: {tracking_number}</p>
-<p>Track your parcel: <a href="{tracking_link}">{tracking_link}</a></p>
-<p>— {company.name}</p>`,
+    subject: "Your order {order_id} is on the way | {store_name}",
+    body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Your order is on the way</h1>
+<p style="margin:0 0 18px;color:#6B7280;">Hi {customer.first_name}, order <strong>{order_id}</strong> has been handed to the courier.</p>
+<div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:18px;text-align:center;margin:0 0 18px;">
+  <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;">Tracking number</p>
+  <p style="margin:0;font-size:22px;font-weight:700;color:#111;">{tracking_number}</p>
+  <p style="margin:6px 0 0;font-size:13px;color:#6B7280;">{courier}</p>
+</div>
+<p style="margin:0;text-align:center;"><a href="{tracking_link}" style="display:inline-block;padding:12px 24px;background:#111;color:#fff;text-decoration:none;font-weight:700;border-radius:4px;font-size:13px;">Track your package</a></p>`,
   },
   orderDelivered: {
-    subject: "Order {order_id} : Delivered",
-    body: `<p>Dear {customer.first_name},</p>
-<p>Your order has been delivered. We hope you enjoy it.</p>
-<p>Order Number: {order_id}<br>
-Courier: {courier}<br>
-Tracking ID: {tracking_number}</p>
-<p>— {company.name}</p>`,
+    subject: "Order {order_id} delivered | {store_name}",
+    body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Delivered</h1>
+<p style="margin:0 0 18px;color:#6B7280;">Hi {customer.first_name}, order <strong>{order_id}</strong> has been marked delivered. We hope you love it.</p>
+<p style="margin:0;font-size:13px;color:#6B7280;">Courier: {courier}<br/>Tracking: {tracking_number}</p>`,
   },
   orderCancelled: {
-    subject: "Order {order_id} : Cancelled",
-    body: `<p>Dear {customer.first_name},</p>
-<p>Your order {order_id} has been cancelled.</p>
-<p>If you did not request this, reply to this email or contact us on WhatsApp.</p>
-<p>— {company.name}</p>`,
+    subject: "Order {order_id} cancelled | {store_name}",
+    body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Order cancelled</h1>
+<p style="margin:0 0 12px;color:#6B7280;">Hi {customer.first_name}, order <strong>{order_id}</strong> has been cancelled.</p>
+<p style="margin:0;color:#6B7280;">If you did not request this, reply to this email or WhatsApp us and we will help right away.</p>`,
   },
   orderStatusUpdate: {
-    subject: "Order {order_id} : Status Update",
-    body: `<p>Dear {customer.first_name},</p>
-<p>Your order status is now: <strong>{order_status}</strong>.</p>
-<p>Order Number: {order_id}<br>
-Payment Status: {payment_status}</p>
-<p>— {company.name}</p>`,
+    subject: "Order {order_id} update: {order_status} | {store_name}",
+    body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Order update</h1>
+<p style="margin:0 0 12px;color:#6B7280;">Hi {customer.first_name}, your order <strong>{order_id}</strong> is now <strong style="color:#111;">{order_status}</strong>.</p>
+<p style="margin:0;font-size:13px;color:#6B7280;">Payment status: {payment_status}</p>`,
   },
   customerWelcome: {
-    subject: "Welcome",
-    body: `<p>Dear {customer.first_name},</p>
-<p>Welcome to {store_name}. Your account is ready.</p>
-<p>— {company.name}</p>`,
+    subject: "Welcome to {store_name}",
+    body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Welcome, {customer.first_name}!</h1>
+<p style="margin:0 0 12px;color:#6B7280;">Your {store_name} account is ready. Browse car-specific accessories, save favourites, and track orders anytime.</p>
+<p style="margin:0;text-align:center;"><a href="https://crazzycars.pk/shop" style="display:inline-block;padding:12px 24px;background:#111;color:#fff;text-decoration:none;font-weight:700;border-radius:4px;font-size:13px;">Start shopping</a></p>`,
   },
   passwordReset: {
     subject: "Reset your password | {store_name}",
-    body: `<p>Dear {customer.first_name},</p>
-<p>Click this link to reset your password (valid for 1 hour):</p>
-<p><a href="{reset_link}">{reset_link}</a></p>
-<p>If you did not ask for this, you can ignore this email.</p>
-<p>— {company.name}</p>`,
+    body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Reset your password</h1>
+<p style="margin:0 0 18px;color:#6B7280;">Hi {customer.first_name}, use the button below within 1 hour to choose a new password.</p>
+<p style="margin:0 0 18px;text-align:center;"><a href="{reset_link}" style="display:inline-block;padding:12px 24px;background:#D72323;color:#fff;text-decoration:none;font-weight:700;border-radius:4px;font-size:13px;">Reset password</a></p>
+<p style="margin:0;font-size:13px;color:#6B7280;">If you did not ask for this, you can ignore this email.</p>`,
   },
   abandonedCart: {
     subject: "You left items in your cart | {store_name}",
-    body: `<p>Dear {customer.first_name},</p>
-<p>You still have items waiting in your cart at {store_name}.</p>
-<p>— {company.name}</p>`,
+    body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Still thinking it over?</h1>
+<p style="margin:0 0 18px;color:#6B7280;">Hi {customer.first_name}, your cart at {store_name} is waiting. Complete checkout before stock moves.</p>
+<p style="margin:0;text-align:center;"><a href="https://crazzycars.pk/cart" style="display:inline-block;padding:12px 24px;background:#111;color:#fff;text-decoration:none;font-weight:700;border-radius:4px;font-size:13px;">Return to cart</a></p>`,
   },
 };
 
