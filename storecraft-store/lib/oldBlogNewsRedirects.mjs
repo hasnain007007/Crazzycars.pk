@@ -67,6 +67,42 @@ export const OLD_BLOG_NEWS_REDIRECTS = [
     destination: "/cars/toyota-corolla-e170-2014-2026",
     permanent: true,
   },
+  // S2b remaps (finish-1029) — destinations verified 200 on live
+  {
+    source: "/blogs/news/best-car-accessories-for-hyundai-elantra-in-pakistan-2024",
+    destination: "/cars/hyundai-elantra-2020-2024",
+    permanent: true,
+  },
+  {
+    source: "/blogs/news/best-car-accessories-for-suzuki-swift-2025-in-pakistan",
+    destination: "/cars/suzuki-swift-2025-present",
+    permanent: true,
+  },
+  {
+    source: "/blogs/news/best-car-accessories-online-pakistan-2026-complete-guide",
+    destination: "/shop",
+    permanent: true,
+  },
+  {
+    source: "/blogs/news/best-suzuki-alto-accessories-in-pakistan-complete-upgrade-guide",
+    destination: "/cars/suzuki-alto-2020-present",
+    permanent: true,
+  },
+  {
+    source: "/blogs/news/brembo-caliper-covers-pakistan-review-2026",
+    destination: "/car-brembo-style-brake-caliper-covers-universal-fit",
+    permanent: true,
+  },
+  {
+    source: "/blogs/news/multimedia-steering-wheel-buttons-price-pakistan-2026",
+    destination: "/honda-civic-reborn-2006-2012-multimedia-steering-wheel-audio-control-buttons",
+    permanent: true,
+  },
+  {
+    source: "/blogs/news/toyota-corolla-steering-monogram-trending-pakistan-2026",
+    destination: "/toyota-corolla-2009-2026-carbon-steering-monogram-abs",
+    permanent: true,
+  },
 ];
 
 const PATH_MAP = new Map(

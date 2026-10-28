@@ -1,0 +1,26 @@
+{
+  "branch": "seo/finish-1029",
+  "startedAt": "2026-10-28T21:18:00.000Z",
+  "fingerprintWrite": "84143ac0cb2c3085",
+  "atlasNeverWrite": "317ae4de8eb24f84",
+  "granted": [],
+  "ownerInputs": {
+    "oldVpsOrMongo": "",
+    "newestMongodump": "",
+    "oldMediaUploadsPath": "",
+    "doorHandlePanels": ""
+  },
+  "tasks": {
+    "S2b": { "status": "pending" },
+    "S3": { "status": "pending" },
+    "S5": { "status": "pending", "awaiting": "GO S5 in GRANTED" },
+    "S7c-INDEXES": { "status": "pending", "awaiting": "GO S7c-INDEXES in GRANTED" },
+    "Speed": { "status": "pending" },
+    "M4": { "status": "pending", "awaiting": "OWNER INPUTS + GRANTED" },
+    "L1": { "status": "pending", "awaiting": "OWNER INPUTS + GRANTED" },
+    "L2": { "status": "pending", "awaiting": "OWNER INPUTS + GRANTED" },
+    "S6-DB": { "status": "pending", "awaiting": "GO S6 after M4+L1" },
+    "FINAL": { "status": "pending" }
+  },
+  "notes": []
+}
