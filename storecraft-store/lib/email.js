@@ -125,6 +125,14 @@ export async function sendEmail({ to, subject, html, from }) {
     const primary = buildSender(from);
     const attempts = [];
     if (primary) attempts.push(primary);
+    // Optional verified-domain FROM (same Resend account) when crazzycars.pk is not on this key.
+    const verifiedFallback = String(process.env.RESEND_VERIFIED_FROM || "").trim();
+    if (verifiedFallback) {
+      const vf = verifiedFallback.includes("<")
+        ? verifiedFallback
+        : `${process.env.FROM_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"} <${verifiedFallback}>`;
+      if (!attempts.includes(vf)) attempts.push(vf);
+    }
     // Always allow sandbox fallback when primary is custom / missing.
     if (!primary || !primary.includes("onboarding@resend.dev")) {
       attempts.push(RESEND_SANDBOX_FROM);
