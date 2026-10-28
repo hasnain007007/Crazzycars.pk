@@ -22,7 +22,7 @@
     "D2": {
       "result": "dry-run only",
       "token": "L1",
-      "commit": null,
+      "commit": "a37b093",
       "report": "D2-l1-dry-run.md",
       "verify": "seo-verify-D2.txt",
       "doorHandle": "skip Set of 4 @ 5999 confirmed"
