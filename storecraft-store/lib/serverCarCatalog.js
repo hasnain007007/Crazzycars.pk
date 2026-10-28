@@ -1,6 +1,7 @@
 /**
  * SSR car catalog for homepage ShopByCar + ShopByVehicle (one load, shared props).
  */
+import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import { buildCatalogFromMakes } from "@/lib/carCatalogApi";
 import { CAR_MAKES, CAR_DATA, QUICK_CAR_PILLS } from "@/lib/carCatalog";
@@ -101,89 +102,95 @@ function buildAllModelsList(activeMakes) {
  */
 export async function fetchCarCatalogServer(opts = {}) {
   const lean = Boolean(opts.lean);
-  try {
-    await dbConnect();
-    const docs = await CarCatalog.find({ isActive: true }).sort({ order: 1, name: 1 }).lean();
+  return unstable_cache(
+    async () => {
+      try {
+        await dbConnect();
+        const docs = await CarCatalog.find({ isActive: true }).sort({ order: 1, name: 1 }).lean();
 
-    if (!docs.length) {
-      return JSON.parse(JSON.stringify(fallbackPayload()));
-    }
+        if (!docs.length) {
+          return JSON.parse(JSON.stringify(fallbackPayload()));
+        }
 
-    const activeMakes = docs
-      .filter((m) => m.isActive !== false)
-      .map((m) => ({
-        ...m,
-        models: (m.models || []).filter((mod) => mod.isActive !== false),
-      }));
+        const activeMakes = docs
+          .filter((m) => m.isActive !== false)
+          .map((m) => ({
+            ...m,
+            models: (m.models || []).filter((mod) => mod.isActive !== false),
+          }));
 
-    const { makes, carData, makesMeta } = buildCatalogFromMakes(activeMakes);
+        const { makes, carData, makesMeta } = buildCatalogFromMakes(activeMakes);
 
-    const quickPills = [];
-    const priority = [
-      ["Honda", "Civic"],
-      ["Toyota", "Corolla"],
-      ["Suzuki", "Alto"],
-      ["KIA", "Sportage"],
-      ["Toyota", "Prado"],
-    ];
-    for (const [make, model] of priority) {
-      if (carData[make]?.some((m) => m.model === model)) quickPills.push({ make, model });
-    }
+        const quickPills = [];
+        const priority = [
+          ["Honda", "Civic"],
+          ["Toyota", "Corolla"],
+          ["Suzuki", "Alto"],
+          ["KIA", "Sportage"],
+          ["Toyota", "Prado"],
+        ];
+        for (const [make, model] of priority) {
+          if (carData[make]?.some((m) => m.model === model)) quickPills.push({ make, model });
+        }
 
-    // Homepage carousel: only generations with ≥1 sellable product (e.g. hide BYD Shark 6).
-    // CarCatalog / Vehicle docs are not deleted — Filter By Car still lists them.
-    const slugsWithProducts = await vehicleSlugsWithStorefrontProducts();
-    const keepIfHasProducts = (row) =>
-      slugsWithProducts.has(String(row?.slug || "").trim());
+        // Homepage carousel: only generations with ≥1 sellable product (e.g. hide BYD Shark 6).
+        // CarCatalog / Vehicle docs are not deleted — Filter By Car still lists them.
+        const slugsWithProducts = await vehicleSlugsWithStorefrontProducts();
+        const keepIfHasProducts = (row) =>
+          slugsWithProducts.has(String(row?.slug || "").trim());
 
-    let vehicles = buildAllModelsList(activeMakes).filter(keepIfHasProducts);
-    let popular = buildPopularList(activeMakes).filter(keepIfHasProducts);
-    let slimCarData = carData;
-    if (lean) {
-      const slimVehicle = (v) => ({
-        make: v.make,
-        model: v.model,
-        slug: v.slug,
-        years: Array.isArray(v.years) ? v.years.slice(0, 12) : [],
-        yearFrom: v.yearFrom,
-        yearTo: v.yearTo,
-        bodyStyle: v.bodyStyle || "",
-        image: v.image || "",
-        isPopular: Boolean(v.isPopular),
-        popularOrder: Number(v.popularOrder) || 9999,
-      });
-      vehicles = vehicles.map(slimVehicle);
-      popular = popular.map(slimVehicle);
-      slimCarData = {};
-      for (const [make, models] of Object.entries(carData || {})) {
-        slimCarData[make] = (models || []).map((m) => ({
-          model: m.model,
-          slug: m.slug,
-          years: Array.isArray(m.years) ? m.years.slice(0, 12) : [],
-          yearFrom: m.yearFrom,
-          yearTo: m.yearTo,
-          image: m.image || "",
-          isPopular: Boolean(m.isPopular),
-          popularOrder: Number(m.popularOrder) || 9999,
-          bodyStyle: m.bodyStyle || "",
-        }));
+        let vehicles = buildAllModelsList(activeMakes).filter(keepIfHasProducts);
+        let popular = buildPopularList(activeMakes).filter(keepIfHasProducts);
+        let slimCarData = carData;
+        if (lean) {
+          const slimVehicle = (v) => ({
+            make: v.make,
+            model: v.model,
+            slug: v.slug,
+            years: Array.isArray(v.years) ? v.years.slice(0, 12) : [],
+            yearFrom: v.yearFrom,
+            yearTo: v.yearTo,
+            bodyStyle: v.bodyStyle || "",
+            image: v.image || "",
+            isPopular: Boolean(v.isPopular),
+            popularOrder: Number(v.popularOrder) || 9999,
+          });
+          vehicles = vehicles.map(slimVehicle);
+          popular = popular.map(slimVehicle);
+          slimCarData = {};
+          for (const [make, models] of Object.entries(carData || {})) {
+            slimCarData[make] = (models || []).map((m) => ({
+              model: m.model,
+              slug: m.slug,
+              years: Array.isArray(m.years) ? m.years.slice(0, 12) : [],
+              yearFrom: m.yearFrom,
+              yearTo: m.yearTo,
+              image: m.image || "",
+              isPopular: Boolean(m.isPopular),
+              popularOrder: Number(m.popularOrder) || 9999,
+              bodyStyle: m.bodyStyle || "",
+            }));
+          }
+        }
+
+        return JSON.parse(
+          JSON.stringify({
+            success: true,
+            source: "database",
+            makes,
+            carData: slimCarData,
+            makesMeta: lean ? {} : makesMeta || {},
+            quickPills: quickPills.length ? quickPills : QUICK_CAR_PILLS,
+            popular,
+            vehicles,
+          })
+        );
+      } catch (err) {
+        console.error("[fetchCarCatalogServer]", err?.message || err);
+        return JSON.parse(JSON.stringify(fallbackPayload()));
       }
-    }
-
-    return JSON.parse(
-      JSON.stringify({
-        success: true,
-        source: "database",
-        makes,
-        carData: slimCarData,
-        makesMeta: lean ? {} : makesMeta || {},
-        quickPills: quickPills.length ? quickPills : QUICK_CAR_PILLS,
-        popular,
-        vehicles,
-      })
-    );
-  } catch (err) {
-    console.error("[fetchCarCatalogServer]", err?.message || err);
-    return JSON.parse(JSON.stringify(fallbackPayload()));
-  }
+    },
+    ["car-catalog", lean ? "lean" : "full"],
+    { revalidate: 600, tags: ["cars:catalog"] }
+  )();
 }

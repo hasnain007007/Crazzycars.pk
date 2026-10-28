@@ -4,6 +4,7 @@
  * `excludeIds` keeps products already shown in Hot Deals out, so the two rows never repeat.
  */
 import mongoose from "mongoose";
+import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order.model";
 import Product from "@/lib/models/Product.model";
@@ -32,49 +33,58 @@ async function topSoldProductIds(limit) {
  */
 export async function fetchBestSellersServer({ limit = 500, excludeIds = [] } = {}) {
   const lim = Math.min(500, Math.max(1, Number(limit) || 500));
-  const exclude = new Set((excludeIds || []).map(String));
-  try {
-    await dbConnect();
-    const base = { ...WEBSITE_PRODUCT_FILTER };
+  const excludeKey = (excludeIds || []).map(String).sort().join(",");
+  return unstable_cache(
+    async () => {
+      const exclude = new Set((excludeIds || []).map(String));
+      try {
+        await dbConnect();
+        const base = { ...WEBSITE_PRODUCT_FILTER };
 
-    let soldIds = [];
-    try {
-      soldIds = (await topSoldProductIds(lim + exclude.size + 20)).filter((id) => !exclude.has(String(id)));
-    } catch (err) {
-      console.error("[fetchBestSellersServer] sales ranking", err?.message || err);
-    }
+        let soldIds = [];
+        try {
+          soldIds = (await topSoldProductIds(lim + exclude.size + 20)).filter(
+            (id) => !exclude.has(String(id))
+          );
+        } catch (err) {
+          console.error("[fetchBestSellersServer] sales ranking", err?.message || err);
+        }
 
-    const sold = soldIds.length
-      ? await Product.find({ ...base, _id: { $in: soldIds } })
-          .select(PRODUCT_CARD_SELECT)
-          .populate("categories", "name slug")
-          .lean()
-      : [];
-    const rank = new Map(soldIds.map((id, i) => [String(id), i]));
-    sold.sort((a, b) => rank.get(String(a._id)) - rank.get(String(b._id)));
+        const sold = soldIds.length
+          ? await Product.find({ ...base, _id: { $in: soldIds } })
+              .select(PRODUCT_CARD_SELECT)
+              .populate("categories", "name slug")
+              .lean()
+          : [];
+        const rank = new Map(soldIds.map((id, i) => [String(id), i]));
+        sold.sort((a, b) => rank.get(String(a._id)) - rank.get(String(b._id)));
 
-    const taken = new Set([...exclude, ...sold.map((p) => String(p._id))]);
-    const need = lim - sold.length;
-    const featured =
-      need > 0
-        ? await Product.find({
-            ...base,
-            $or: [{ featured: true }, { isFeatured: true }],
-            _id: { $nin: [...taken].filter((id) => mongoose.isValidObjectId(id)) },
-          })
-            .select(PRODUCT_CARD_SELECT)
-            .populate("categories", "name slug")
-            .sort({ updatedAt: -1, createdAt: -1 })
-            .limit(need)
-            .lean()
-        : [];
+        const taken = new Set([...exclude, ...sold.map((p) => String(p._id))]);
+        const need = lim - sold.length;
+        const featured =
+          need > 0
+            ? await Product.find({
+                ...base,
+                $or: [{ featured: true }, { isFeatured: true }],
+                _id: { $nin: [...taken].filter((id) => mongoose.isValidObjectId(id)) },
+              })
+                .select(PRODUCT_CARD_SELECT)
+                .populate("categories", "name slug")
+                .sort({ updatedAt: -1, createdAt: -1 })
+                .limit(need)
+                .lean()
+            : [];
 
-    const rows = [...sold, ...featured].slice(0, lim);
-    return JSON.parse(
-      JSON.stringify(rows.map((row) => serializeStoreProductSummary(row, { maxImages: 1 })))
-    );
-  } catch (err) {
-    console.error("[fetchBestSellersServer]", err?.message || err);
-    return [];
-  }
+        const rows = [...sold, ...featured].slice(0, lim);
+        return JSON.parse(
+          JSON.stringify(rows.map((row) => serializeStoreProductSummary(row, { maxImages: 1 })))
+        );
+      } catch (err) {
+        console.error("[fetchBestSellersServer]", err?.message || err);
+        return [];
+      }
+    },
+    ["best-sellers", String(lim), excludeKey],
+    { revalidate: 600, tags: ["products:home"] }
+  )();
 }

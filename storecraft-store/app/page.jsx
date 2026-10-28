@@ -14,7 +14,7 @@ import { homeHubCollectionJsonLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { getPageSeoOverride } from "@/lib/seo/gscAudit2026-10.mjs";
 
-export const revalidate = 300;
+export const revalidate = 600;
 
 const homeSeo = getPageSeoOverride("/") || {};
 const HOME_TITLE = homeSeo.title || "Car Accessories in Pakistan | Kits, LEDs & Mats";

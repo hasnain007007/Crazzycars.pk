@@ -359,6 +359,11 @@ const nextConfig = {
         source,
         headers: [
           {
+            // S7c: immutable-ish product images at the origin (edge can layer longer TTL).
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+          },
+          {
             key: "Content-Security-Policy",
             value: "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'; sandbox",
           },
