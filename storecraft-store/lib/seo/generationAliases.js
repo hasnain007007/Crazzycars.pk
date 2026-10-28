@@ -448,7 +448,8 @@ export const CATEGORY_SEO_OWNER_LOCKED = {
 export const CATEGORY_KEYWORD_META = {
   ...CATEGORY_SEO_OWNER_LOCKED,
   "splitters-side-skirts": {
-    metaTitle: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars.pk",
+    // Avoid "&" — HTML &amp; encoding pushed the live <title> to 66 chars (F5).
+    metaTitle: "Car Side Skirts and Bumper Splitters | CrazzyCars.pk",
     metaDescription:
       "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic and Corolla. COD on eligible items, nationwide delivery.",
     absoluteTitle: true,
@@ -466,7 +467,7 @@ export const CATEGORY_KEYWORD_META = {
     absoluteTitle: true,
   },
   "interior-lights": {
-    metaTitle: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Interior Ambient Lights Price in Pakistan | CrazzyCars.pk",
     metaDescription:
       "Buy car interior lights in Pakistan: ambient dashboard strips, footwell RGB lights, door welcome logo lights and roof star lights. COD on eligible items.",
     absoluteTitle: true,
