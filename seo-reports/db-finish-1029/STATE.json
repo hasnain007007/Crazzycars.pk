@@ -48,7 +48,30 @@
       "report": "D5-indexing-list.md",
       "indexingList": "INDEXING-LIST.md",
       "touchedUrls": 0
+    },
+    "D6": {
+      "result": "done",
+      "commit": null,
+      "report": "D6-final-verify.md",
+      "verify": "seo-verify-D6.txt",
+      "countsAfter": {
+        "products": 410,
+        "blogs": 18,
+        "categories": 84,
+        "vehicles": 68,
+        "orders": 603,
+        "customers": 342
+      },
+      "sitemapSample": "37/37 200 self-canonical indexable (40 sampled; 3 may be soft)",
+      "top20Non200": 2
     }
   },
-  "status": "IN_PROGRESS"
+  "status": "COMPLETED_WITH_PENDING_ITEMS",
+  "pendingTokens": [
+    "R4",
+    "L1",
+    "L2",
+    "S6-DB"
+  ],
+  "finishedAt": "2026-10-28T22:57:18Z"
 }
