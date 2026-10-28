@@ -1,0 +1,31 @@
+{
+  "branch": "fix/finish-recovery-1029",
+  "startedAt": "2026-10-28T22:03:00.000Z",
+  "fingerprintWrite": "84143ac0cb2c3085",
+  "atlasNeverWrite": "317ae4de8eb24f84",
+  "granted": [],
+  "tasks": {
+    "F1": {
+      "status": "dry_run_only",
+      "report": "F1-r4-dry-run.md",
+      "awaiting": "GRANTED R4"
+    },
+    "F2": {
+      "status": "pending",
+      "awaiting": "GRANTED DOOR-SET4"
+    },
+    "F3": {
+      "status": "pending",
+      "awaiting": "GRANTED BLOG-IMAGES"
+    },
+    "F4": {
+      "status": "pending"
+    },
+    "F5": {
+      "status": "pending"
+    },
+    "F6": {
+      "status": "pending"
+    }
+  }
+}
