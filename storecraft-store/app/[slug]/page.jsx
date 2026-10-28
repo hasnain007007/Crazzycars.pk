@@ -18,6 +18,7 @@ import {
 import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
+import { pdpImageUrl } from "@/lib/cloudinaryImage";
 import { resolveProductImageUrls, resolvePrimaryProductImageUrl } from "@/lib/productImages";
 import {
   productJsonLd as buildProductJsonLd,
@@ -60,13 +61,12 @@ function stripHtml(s) {
 }
 
 function buildProductSeoTitle({ name, metaTitle, slug }) {
-  // Prefer admin/product SEO title when set — code PAGE_SEO_OVERRIDES must not
-  // hide a freshly saved seo.metaTitle from Google.
+  // S6: PAGE_SEO_OVERRIDES titles win (≤60 keyword map). Else admin metaTitle, else name.
+  const override = getPageSeoOverride(`/${String(slug || "").trim()}`);
+  if (override?.title) return String(override.title).trim();
+
   const fromProduct = String(metaTitle || "").trim();
   if (fromProduct) return withBrandTitleSuffix(fromProduct);
-
-  const override = getPageSeoOverride(`/${String(slug || "").trim()}`);
-  if (override?.title) return withBrandTitleSuffix(override.title);
 
   return withBrandTitleSuffix(String(name || "").trim());
 }
@@ -309,20 +309,22 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     const displayName =
       PRODUCT_H1_OVERRIDES[slugKey] ||
       String(p.name || "").replace(/\bButto\b/g, "Button");
-    // Prefer product seo.metaDescription; override only fills gaps.
+    // S6 override meta wins when present; else product SEO / content.
     const description =
-      (p.seo?.metaDescription || p.metaDescription || "").trim().replace(/\bButto\b/g, "Button") ||
       (seoOverride?.meta || "").trim() ||
+      (p.seo?.metaDescription || p.metaDescription || "").trim().replace(/\bButto\b/g, "Button") ||
       stripHtml(contentOverride?.shortDescription || p.shortDescription || "").slice(0, 160) ||
       stripHtml(contentOverride?.descriptionHtml || p.longDescription || "").slice(0, 160) ||
       `Buy ${displayName} at ${BRAND}. Cash on Delivery nationwide.`;
     const keywords = Array.isArray(p.seo?.metaKeywords)
       ? p.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
       : [];
-    const mainImg =
+    const mainImgRaw =
       resolvePrimaryProductImageUrl(p) ||
       p.media?.images?.find((i) => i?.isMain)?.url ||
       p.media?.images?.[0]?.url;
+    // OG/Twitter use -sm.webp so crawlers/browsers do not prefetch the multi-MB master during LCP.
+    const mainImg = mainImgRaw ? pdpImageUrl(mainImgRaw, 720) : "";
     const ogAlt = contentOverride?.imageAlt || displayName;
 
     return {

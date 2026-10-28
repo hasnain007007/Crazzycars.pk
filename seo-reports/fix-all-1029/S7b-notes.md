@@ -19,5 +19,18 @@ Also checked: HTML home ~450 KB / cat ~246 KB / PDP ~175 KB; unused JS mostly GT
 
 `-sm.webp` confirmed live for Brembo product (~84 KB) and carbon-fiber category (~137 KB).
 
-## After
-See `S7b-lh-*-after.json` once Coolify redeploy finishes and LH re-run completes.
+## After (Lighthouse mobile, post-deploy `e0cef61`)
+
+| Page | Before LCP | After LCP | Before CLS | After CLS |
+|------|------------|-----------|------------|-----------|
+| Home | 3.0 s | **2.9 s** | 0.175 | **0.039** ✓ |
+| Category carbon-fiber | 4.3 s | **3.2 s** | 0.175 | **0.039** ✓ |
+| PDP Brembo | 9.9 s | **2.6 s** | 0.176 | **0.039** ✓ |
+
+- **CLS target (&lt;0.1):** met on all three (Rajdhani `display:optional` + sized header Suspense fallbacks).
+- **LCP target (&lt;2.5 s):** PDP near-miss (2.6); home/cat still limited by TTFB (~0.5–0.8 s) + hero/banner bytes. PDP LCP image is now `-sm.webp` (~84 KB) instead of 1.36 MB master.
+- Artifacts: `S7b-lh-{home,cat,pdp}-after.json`
+
+## Remaining (optional)
+- Home/cat LCP still &gt;2.5 s mainly TTFB + render path; hero already small (16 KB).
+- PDP may still reference master in JSON-LD/client payload (OG now `-sm`).
