@@ -30,7 +30,7 @@
     "D3": {
       "result": "dry-run only",
       "token": "L2",
-      "commit": null,
+      "commit": "9f293c4",
       "report": "D3-l2-dry-run.md",
       "verify": "seo-verify-D3.txt",
       "l1OverlapProducts": 0
