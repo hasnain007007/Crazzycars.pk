@@ -41,6 +41,13 @@
       "commit": "8c68efb",
       "report": "D4-s6-db-dry-run.md",
       "verify": "seo-verify-D4.txt"
+    },
+    "D5": {
+      "result": "done",
+      "commit": null,
+      "report": "D5-indexing-list.md",
+      "indexingList": "INDEXING-LIST.md",
+      "touchedUrls": 0
     }
   },
   "status": "IN_PROGRESS"
