@@ -114,6 +114,34 @@ export async function middleware(request) {
 
   const lower = pathname.toLowerCase();
 
+  // S10: Shopify Atom feeds are gone — do not 308 into live HTML (soft-404 / duplicate).
+  if (
+    lower.endsWith(".atom") &&
+    (lower.startsWith("/collections/") || lower === "/blogs/news.atom")
+  ) {
+    return new NextResponse("Gone", {
+      status: 410,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=86400",
+      },
+    });
+  }
+
+  // S10: ?page=1 duplicates the base listing URL — 308 to the clean path (keep other params).
+  if (lower === "/blogs" || lower === "/shop" || lower === "/cars") {
+    if (request.nextUrl.searchParams.get("page") === "1") {
+      const dest = new URL(lower, request.nextUrl.origin);
+      for (const [key, value] of request.nextUrl.searchParams.entries()) {
+        const k = String(key).toLowerCase();
+        if (k === "page") continue;
+        if (STRIP_QUERY_KEYS.has(k) || k.startsWith("utm_")) continue;
+        dest.searchParams.append(key, value);
+      }
+      return withPaidCookie(request, NextResponse.redirect(dest, 308));
+    }
+  }
+
   // Public SEO URLs are /car-accessories-{city}; App Router needs /city/[city].
   // Rewrite (not redirect) so the browser URL stays hyphenated.
   {
@@ -203,11 +231,9 @@ export async function middleware(request) {
   // S1: /blogs?search|q|sort|filter stay reachable (noindex,follow + canonical /blogs).
   // Do not 308-collapse those query URLs — listingMetadata/robots handle indexing.
 
-  // /cars index is not paginated — drop ?page= Soft 404 / duplicate URLs.
-  if (lower === "/cars") {
-    if (request.nextUrl.searchParams.has("page")) {
-      return withPaidCookie(request, NextResponse.redirect(new URL("/cars", request.url), 308));
-    }
+  // /cars index is not paginated — drop any remaining ?page=N Soft 404 / duplicate URLs.
+  if (lower === "/cars" && request.nextUrl.searchParams.has("page")) {
+    return withPaidCookie(request, NextResponse.redirect(new URL("/cars", request.url), 308));
   }
 
   // Soft-404 / duplicate deal facets — /sale is the money URL.

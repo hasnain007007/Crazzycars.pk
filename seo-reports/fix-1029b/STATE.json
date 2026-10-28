@@ -1,0 +1,14 @@
+{
+  "branch": "seo/fix-1029b",
+  "startedAt": "2026-10-28T20:40:00.000Z",
+  "fingerprintWrite": "84143ac0cb2c3085",
+  "atlasNeverWrite": "317ae4de8eb24f84",
+  "tasks": {
+    "S10": { "status": "pending" },
+    "S7c": { "status": "pending" },
+    "S11": { "status": "pending" },
+    "S5": { "status": "pending", "awaiting": "GO S5" },
+    "S6-DB": { "status": "pending", "awaiting": "GO S6 after M4+L1", "notes": "Reuse fix-all-1029/S6-dry-run.md" }
+  },
+  "notes": []
+}
