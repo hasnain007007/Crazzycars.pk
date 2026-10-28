@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T23:41:38.120Z",
+  "generatedAt": "2026-10-28T23:59:05.333Z",
   "baseUrl": "https://crazzycars.pk",
   "sitemapUrlCount": 508,
   "checks": {
@@ -74,6 +74,7 @@
       "count": 508,
       "failures": [
         "/air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump description 166 chars",
+        "/blogs/delivery-charges-regular-vs-bulky-pakistan description 223 chars",
         "/civic-rebirth-side-mirror-rgb-indicator description 170 chars",
         "/double-cylinder-air-compressor-pump description 166 chars",
         "/honda-city-premium-fog-lights-with-covers-2012-2015 description 165 chars",
@@ -112,8 +113,7 @@
         "/toyota-mark-x-front-bumper-drl-cover-oem-fitting-drl-515 description 166 chars",
         "/toyota-mark-x-sports-style-smoke-tail-lights-2004-2009 description 166 chars",
         "/toyota-mark-x-trd-style-body-kit-2004-2009-unpainted-fiberglass description 166 chars",
-        "/toyota-mark-x-vertex-style-body-kit-2006-2009 description 166 chars",
-        "… +4 more"
+        "… +5 more"
       ],
       "soft": false
     },
@@ -342,10 +342,10 @@
       "pass": false,
       "count": 1,
       "failures": [
-        "homepage 426.1 KB > 300 KB target"
+        "homepage 424.9 KB > 300 KB target"
       ],
       "soft": true,
-      "kb": 426.1
+      "kb": 424.9
     },
     "C20": {
       "pass": true,
@@ -355,7 +355,7 @@
     },
     "C21": {
       "pass": true,
-      "count": 220,
+      "count": 219,
       "failures": [],
       "soft": false
     },
