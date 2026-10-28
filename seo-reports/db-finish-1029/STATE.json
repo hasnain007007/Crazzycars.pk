@@ -1,0 +1,24 @@
+{
+  "branch": "fix/db-finish-1029",
+  "granted": [],
+  "fingerprint": "84143ac0cb2c3085",
+  "startedAt": "2026-10-28T22:46:42Z",
+  "baseline": {
+    "products": 410,
+    "blogs": 18,
+    "categories": 84,
+    "vehicles": 68,
+    "orders": 603,
+    "customers": 342
+  },
+  "steps": {
+    "D1": {
+      "result": "dry-run only",
+      "token": "R4",
+      "commit": null,
+      "report": "D1-r4-dry-run.md",
+      "verify": "seo-verify-D1.txt"
+    }
+  },
+  "status": "IN_PROGRESS"
+}
