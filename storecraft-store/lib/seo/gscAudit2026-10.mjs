@@ -60,7 +60,8 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: "LED indicator lights for Corolla, Civic and City. Side mirror indicators for the Toyota Corolla are priced from Rs. 4,999. COD on eligible items.",
   },
   "/categories/splitters-side-skirts": {
-    title: "Car Side Skirts & Bumper Splitters in Pakistan | CrazzyCars.pk",
+    // Keep raw title ≤65 (HTML &amp; encoding must not push SERP length over).
+    title: "Car Side Skirts and Bumper Splitters | CrazzyCars.pk",
     meta: "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic and Corolla. COD on eligible items, nationwide delivery.",
   },
   "/categories/quarter-window-louvers": {
@@ -68,7 +69,7 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: "Quarter window louvers for Civic, Corolla, City, Alto, Yaris and Prius in Pakistan. Carbon and black options. COD on eligible items, nationwide delivery.",
   },
   "/categories/interior-lights": {
-    title: "Car Interior & Ambient Lights Price in Pakistan | CrazzyCars.pk",
+    title: "Car Interior Ambient Lights Price in Pakistan | CrazzyCars.pk",
     meta: "Buy car interior lights in Pakistan: ambient dashboard strips, footwell RGB lights, door welcome logo lights and roof star lights. COD on eligible items.",
   },
   "/categories/led-lighting": {
