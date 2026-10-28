@@ -707,10 +707,10 @@ export function organizationJsonLd(overrides = {}) {
   const priceRange = String(overrides.priceRange || "").trim();
   if (priceRange) ld.priceRange = priceRange;
 
-  const sameAs = Array.isArray(overrides.sameAs)
+  const fromOverride = Array.isArray(overrides.sameAs)
     ? overrides.sameAs.map((u) => String(u || "").trim()).filter(Boolean)
     : [];
-  ld.sameAs = sameAs.length ? sameAs : DEFAULT_SAME_AS;
+  ld.sameAs = fromOverride.length ? fromOverride : DEFAULT_SAME_AS;
 
   return ld;
 }
@@ -718,9 +718,10 @@ export function organizationJsonLd(overrides = {}) {
 /** WebSite + SearchAction */
 export function websiteJsonLd(overrides = {}) {
   const SITE = site();
-  const sameAs = Array.isArray(overrides.sameAs)
+  const fromOverride = Array.isArray(overrides.sameAs)
     ? overrides.sameAs.map((u) => String(u || "").trim()).filter(Boolean)
-    : DEFAULT_SAME_AS;
+    : [];
+  const sameAs = fromOverride.length ? fromOverride : DEFAULT_SAME_AS;
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",

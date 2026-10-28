@@ -67,6 +67,7 @@ export function localMediaPath(src) {
 /**
  * Prefer prebuilt -400.webp thumbs for card-sized local media.
  * Categories and products use `{stem}-400.webp` beside the master.
+ * S7 also writes `{stem}-sm.webp` next to masters >300KB (original kept).
  * Missing thumbs: <img onError> falls back to the original master URL.
  * Use thumbs for any request up to 800px-wide slots (promo cards, grids).
  */
@@ -76,10 +77,11 @@ function localMediaForWidth(src, width) {
   if (!path || !(w > 0 && w <= 800)) {
     return path || unwrapNextImageUrl(src) || String(src || "").trim();
   }
-  if (/-400\.(webp|jpe?g|png)$/i.test(path)) {
+  if (/-400\.(webp|jpe?g|png)$/i.test(path) || /-sm\.webp$/i.test(path)) {
     return path;
   }
   if (/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
+    // Prefer -400; if a listing passes a known-large master, -sm is a safe mid-size.
     return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
   }
   return path || unwrapNextImageUrl(src) || String(src || "").trim();

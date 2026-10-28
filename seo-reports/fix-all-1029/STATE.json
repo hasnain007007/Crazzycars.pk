@@ -8,31 +8,53 @@
       "status": "done",
       "commit": "18320f9",
       "live": true,
-      "verify": "seo-reports/fix-all-1029/S2a-verify.txt",
-      "notes": "10×308 live; remapped #4,#10,#17; no 410s"
+      "verify": "seo-reports/fix-all-1029/S2a-verify.txt"
     },
     "S2b": {
       "status": "done_proposal_only",
       "commit": "18320f9",
-      "verify": "n/a (docs only)",
       "artifact": "seo-reports/fix-all-1029/S2b-table.md",
-      "notes": "Remaps for #2,#3,#5,#7,#9,#16,#19; 410 candidates #11,#18 only. NOT applied."
+      "notes": "NOT applied; 410 candidates #11,#18 only"
     },
     "S3": {
       "status": "done_proposal_only",
-      "artifact": "seo-reports/fix-all-1029/S3-list.md",
-      "notes": "Dry-run only; awaiting GO"
+      "artifact": "seo-reports/fix-all-1029/S3-list.md"
     },
-    "S4": { "status": "in_progress" },
-    "S7": { "status": "pending" },
-    "S8": { "status": "pending" },
-    "S9": { "status": "pending" },
-    "T1": { "status": "pending" },
-    "M4": { "status": "pending", "gate": true },
-    "L1": { "status": "pending", "gate": true },
-    "L2": { "status": "pending", "gate": true },
-    "S5": { "status": "pending", "gate": true },
-    "S6": { "status": "pending", "gate": true }
+    "S4": {
+      "status": "done",
+      "commit": "c0391f8",
+      "verify": "seo-reports/fix-all-1029/T1-verify.txt",
+      "notes": "C23 pass (200 + indexable + self-canonical)"
+    },
+    "S7": {
+      "status": "partial",
+      "artifact": "seo-reports/fix-all-1029/S7-notes.md",
+      "notes": "85 -sm.webp copies; LH home LCP 3.0s CLS 0.175 (above target); before baseline missing"
+    },
+    "S8": {
+      "status": "done",
+      "commit": "c0391f8",
+      "verify": "seo-reports/fix-all-1029/T1-verify.txt",
+      "notes": "Offer hasMerchantReturnPolicy on PDP; WebSite sameAs fix pending redeploy if empty array"
+    },
+    "S9": {
+      "status": "done",
+      "artifact": "seo-reports/fix-all-1029/S9-canonical-audit.md"
+    },
+    "T1": {
+      "status": "done",
+      "commit": "c0391f8",
+      "live": true,
+      "verify": "seo-reports/fix-all-1029/T1-verify.txt"
+    },
+    "M4": { "status": "blocked_dry_run", "awaiting": "GO M4", "artifact": "seo-reports/fix-all-1029/M4-dry-run.md" },
+    "L1": { "status": "awaiting_go", "awaiting": "GO L1", "artifact": "seo-reports/fix-all-1029/L1-dry-run-m4b-reapply.md", "notes": "after M4 settled; fresh mongodump required" },
+    "L2": { "status": "awaiting_go", "awaiting": "GO L2", "artifact": "seo-reports/fix-all-1029/L2-dry-run-low-ctr-titles.md", "notes": "no slug overlap with L1; do not same write as L1" },
+    "S5": { "status": "blocked", "awaiting": "GO S5 + slugs", "artifact": "seo-reports/fix-all-1029/S5-dry-run.md" },
+    "S6": { "status": "blocked", "awaiting": "GO S6 + keyword file", "artifact": "seo-reports/fix-all-1029/S6-dry-run.md" }
   },
-  "notes": []
+  "notes": [
+    "Coolify webhook idle — store image rebuilt manually after each push.",
+    "S2b remaps and S3 proposals not applied."
+  ]
 }
