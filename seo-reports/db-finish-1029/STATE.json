@@ -26,6 +26,14 @@
       "report": "D2-l1-dry-run.md",
       "verify": "seo-verify-D2.txt",
       "doorHandle": "skip Set of 4 @ 5999 confirmed"
+    },
+    "D3": {
+      "result": "dry-run only",
+      "token": "L2",
+      "commit": null,
+      "report": "D3-l2-dry-run.md",
+      "verify": "seo-verify-D3.txt",
+      "l1OverlapProducts": 0
     }
   },
   "status": "IN_PROGRESS"
