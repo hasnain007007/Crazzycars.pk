@@ -207,10 +207,17 @@ export async function sendEmail({ to, subject, html, from, replyTo: replyToOverr
 /** Send a test message to ADMIN_EMAIL / CONTACT_EMAIL (uses sendEmail + sandbox fallback). */
 export async function sendTestEmail(toOverride) {
   const to = String(toOverride || "").trim() || getAdminEmail();
+  const brand = getEmailBrand();
+  const html = wrapEmailLayout(
+    `<h1 style="margin:0 0 8px;font-size:22px;color:${brand.black};">Email test working</h1>
+     <p style="margin:0 0 12px;color:${brand.muted};">Sent at ${new Date().toISOString()}</p>
+     <p style="margin:0;color:${brand.muted};font-size:13px;">Reply-To is set to <strong>${getReplyToEmail()}</strong>.</p>`,
+    { eyebrow: "System check", preheader: "CrazzyCars.pk email test" }
+  );
   const result = await sendEmail({
     to,
     subject: `${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"} - Email Test`,
-    html: `<h1>Email test working!</h1><p>Sent at ${new Date().toISOString()}</p>`,
+    html,
   });
   return { ...result, to };
 }
