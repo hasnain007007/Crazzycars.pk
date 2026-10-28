@@ -1,0 +1,1 @@
+DRY-RUN ONLY — task S7c-INDEXES not applied (GRANTED empty / OWNER INPUTS blank). See status md.

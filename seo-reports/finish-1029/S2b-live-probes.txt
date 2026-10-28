@@ -1,0 +1,10 @@
+=== S2b live probes ===
+/blogs/news/best-car-accessories-for-hyundai-elantra-in-pakistan-2024 -> 308 https://crazzycars.pk/cars/hyundai-elantra-2020-2024 final=200 (expect 308 /cars/hyundai-elantra-2020-2024)
+/blogs/news/brembo-caliper-covers-pakistan-review-2026 -> 308 https://crazzycars.pk/car-brembo-style-brake-caliper-covers-universal-fit final=200 (expect 308 /car-brembo-style-brake-caliper-covers-universal-fit)
+/blogs/news/best-car-accessories-online-pakistan-2026-complete-guide -> 308 https://crazzycars.pk/shop final=200 (expect 308 /shop)
+=== S3 live probes ===
+/categories/cutlery-gadgets 410 
+/categories/makeup-pouches 410 
+/categories/kitchen-accessories 410 
+/categories/fragrances 308 https://crazzycars.pk/categories/air-freshener-decoration
+/categories/car-care-safety 200 

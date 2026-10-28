@@ -1,0 +1,40 @@
+sitemap_urls=532
+sitemap_ok=532 sitemap_fail=0
+home status=200 robots=index, follow canon=https://crazzycars.pk
+=== top20 ===
+/ clicks=139.0 status=200
+/cars/toyota-corolla-e140-2009-2014 clicks=23.0 status=200
+/car-heads-up-display-hud clicks=20.0 status=200
+/toyota-corolla-airflow-ambient-led-ac-vent-trims-plug-and-play clicks=19.0 status=200
+/changan-oshan-x7-batman-style-side-mirror-covers clicks=19.0 status=200
+/toyota-corolla-2012-top-ac-panel clicks=18.0 status=200
+/toyota-yaris-2020-2026-trunk-lip-spoiler-abs-plastic clicks=16.0 status=200
+/categories/splitters-side-skirts clicks=14.0 status=200
+/categories/led-indicator-lights clicks=13.0 status=200
+/cars/deepal-s05-2024-present clicks=13.0 status=200
+/2pcs-front-bumper-lip-splitter-chin-spoiler-for-honda-civic-11th-gen-2022-2026-gloss-black clicks=13.0 status=200
+/honda-city-2008-2014-complete-body-kit clicks=12.0 status=200
+/cars/toyota-corolla-e170-2014-2026 clicks=12.0 status=200
+/devil-eye-led-rear-windshield-light clicks=11.0 status=200
+/categories/quarter-window-louvers clicks=11.0 status=200
+/categories/interior-lights clicks=11.0 status=200
+/cars/honda-civic-reborn-2006-2012 clicks=11.0 status=200
+/products/toyota-corolla-2012-top-ac-panel clicks=10.0 status=308 redirect->https://crazzycars.pk/toyota-corolla-2012-top-ac-panel final=200
+/products/hyundai-elantra-2023-2026-sporty-style-body-kit-fibreglass-crazzycars-pk clicks=10.0 status=308 redirect->https://crazzycars.pk/hyundai-elantra-2023-2026-sporty-style-body-kit-fibreglass final=200
+/toyota-aqua-2016-2019-front-body-kit-fibreglass clicks=9.0 status=200
+=== touched ===
+/blogs/news/best-car-accessories-for-hyundai-elantra-in-pakistan-2024 308 https://crazzycars.pk/cars/hyundai-elantra-2020-2024
+/blogs/news/best-car-accessories-for-suzuki-swift-2025-in-pakistan 308 https://crazzycars.pk/cars/suzuki-swift-2025-present
+/blogs/news/best-car-accessories-online-pakistan-2026-complete-guide 308 https://crazzycars.pk/shop
+/blogs/news/best-suzuki-alto-accessories-in-pakistan-complete-upgrade-guide 308 https://crazzycars.pk/cars/suzuki-alto-2020-present
+/blogs/news/brembo-caliper-covers-pakistan-review-2026 308 https://crazzycars.pk/car-brembo-style-brake-caliper-covers-universal-fit
+/blogs/news/multimedia-steering-wheel-buttons-price-pakistan-2026 308 https://crazzycars.pk/honda-civic-reborn-2006-2012-multimedia-steering-wheel-audio-control-buttons
+/blogs/news/toyota-corolla-steering-monogram-trending-pakistan-2026 308 https://crazzycars.pk/toyota-corolla-2009-2026-carbon-steering-monogram-abs
+/categories/cutlery-gadgets 410 
+/categories/makeup-pouches 410 
+/categories/kitchen-accessories 410 
+/categories/fragrances 308 https://crazzycars.pk/categories/air-freshener-decoration
+/categories/car-care-safety 200 
+/cars/hyundai-elantra-2020-2024 200 
+/shop 200 
+/car-brembo-style-brake-caliper-covers-universal-fit 200 

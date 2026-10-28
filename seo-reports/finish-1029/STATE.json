@@ -1,6 +1,7 @@
 {
   "branch": "seo/finish-1029",
   "startedAt": "2026-10-28T21:18:00.000Z",
+  "finishedAt": "2026-10-28T21:34:00.000Z",
   "fingerprintWrite": "84143ac0cb2c3085",
   "atlasNeverWrite": "317ae4de8eb24f84",
   "granted": [],
@@ -10,17 +11,36 @@
     "oldMediaUploadsPath": "",
     "doorHandlePanels": ""
   },
+  "liveCommit": "455dc3d",
   "tasks": {
-    "S2b": { "status": "pending" },
-    "S3": { "status": "pending" },
-    "S5": { "status": "pending", "awaiting": "GO S5 in GRANTED" },
-    "S7c-INDEXES": { "status": "pending", "awaiting": "GO S7c-INDEXES in GRANTED" },
-    "Speed": { "status": "pending" },
-    "M4": { "status": "pending", "awaiting": "OWNER INPUTS + GRANTED" },
-    "L1": { "status": "pending", "awaiting": "OWNER INPUTS + GRANTED" },
-    "L2": { "status": "pending", "awaiting": "OWNER INPUTS + GRANTED" },
-    "S6-DB": { "status": "pending", "awaiting": "GO S6 after M4+L1" },
-    "FINAL": { "status": "pending" }
+    "S2b": {
+      "status": "done",
+      "commit": "79d5dc8",
+      "verify": "S2b-verify.txt",
+      "live": "7 remaps 308→200; 2×410 candidates listed only (had impressions)"
+    },
+    "S3": {
+      "status": "done",
+      "commit": "455dc3d",
+      "verify": "S3-verify.txt",
+      "live": "11 non-car categories 410; fragrance 308 kept; empty car cats already 404/noindex; car-care-safety kept"
+    },
+    "S5": { "status": "dry_run_only", "awaiting": "GRANTED S5 + GO S5", "file": "S5-status.md" },
+    "S7c-INDEXES": { "status": "dry_run_only", "awaiting": "GRANTED S7c-INDEXES + GO S7c-INDEXES", "file": "S7c-INDEXES-status.md" },
+    "Speed": { "status": "done_doc_only", "file": "Speed-edge-cache-steps.md", "notes": "ops steps not applied" },
+    "M4": { "status": "dry_run_only", "awaiting": "OWNER INPUTS + GRANTED + GO M4" },
+    "L1": { "status": "dry_run_only", "awaiting": "OWNER INPUTS + GRANTED + GO L1" },
+    "L2": { "status": "dry_run_only", "awaiting": "OWNER INPUTS + GRANTED + GO L2" },
+    "S6-DB": { "status": "dry_run_only", "awaiting": "GO S6 after M4+L1", "file": "M4-L1-L2-S6-status.md" },
+    "FINAL": {
+      "status": "done",
+      "verify": "FINAL-verify.txt",
+      "crawl": "FINAL-live-crawl.txt",
+      "notes": "sitemap 532/532 200 indexable self-canonical; hard_fail pre-existing C4–C7,C9,C10,C12,C15"
+    }
   },
-  "notes": []
+  "notes": [
+    "Deployed crazzycars-store:live manually (Coolify webhook idle).",
+    "seo-verify hard fails are pre-existing catalog checks, not introduced by this loop."
+  ]
 }
