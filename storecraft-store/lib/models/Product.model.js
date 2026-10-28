@@ -7,6 +7,9 @@ const imageSchema = new mongoose.Schema(
     originalSize: { type: Number },
     finalSize: { type: Number },
     isMain: { type: Boolean, default: false },
+    /** Branded pending-photo placeholder — omit from Merchant + Product schema image. */
+    isPlaceholder: { type: Boolean, default: false },
+    alt: { type: String, default: "" },
     altText: { type: String, default: "" },
     imageName: { type: String, default: "" },
     width: { type: Number },

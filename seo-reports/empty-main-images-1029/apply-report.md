@@ -100,3 +100,10 @@ Flags: `seo.excludeFromMerchantFeed=true`, `seo.omitProductSchemaImage=true`, `m
 
 Flags: `seo.robots=noindex,follow`, `seo.excludeFromSitemap=true`, `seo.excludeFromListings=true`. Not deleted.
 
+
+## Verify
+
+- Dump: `empty-images-20261028T222646Z.archive` before writes
+- Store deploy: `crazzycars-store:live` @ `cdc3d4b` (+ schema-image omit hotfix)
+- seo-verify: see `seo-verify.txt` (pre-existing hard fails C4–C7,C9,C10,C12,C15; C23 sitemap pass)
+- Live crawl: `crawl.md` — promote 14/15 PDP 200 (1 pre-existing 308 to car hub); urgent placeholders 200; hide 38/44 noindex (3 pre-existing 308, 3 already 404); hide absent from sitemap; urgent absent from `/feed/products.xml`

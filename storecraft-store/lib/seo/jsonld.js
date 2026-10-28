@@ -401,9 +401,11 @@ export function productJsonLd(p) {
     p.category ||
     (Array.isArray(p.categories) ? p.categories.map((c) => c?.name).filter(Boolean).join(" > ") : "") ||
     undefined;
+  const placeholderUrl = (u) => /-placeholder(\.|\-sm\.|\-md\.|\-lg\.)/i.test(String(u || ""));
   const omitSchemaImage =
     p?.seo?.omitProductSchemaImage === true ||
-    (Array.isArray(p?.media?.images) && p.media.images.some((im) => im?.isPlaceholder === true));
+    (Array.isArray(p?.media?.images) && p.media.images.some((im) => im?.isPlaceholder === true)) ||
+    images.some(placeholderUrl);
 
   const ld = {
     "@context": "https://schema.org",
@@ -417,7 +419,8 @@ export function productJsonLd(p) {
   };
 
   // Google Product / Merchant need a real photo — omit placeholder images from JSON-LD.
-  if (images.length && !omitSchemaImage) ld.image = images;
+  const realImages = images.filter((u) => !placeholderUrl(u));
+  if (realImages.length && !omitSchemaImage) ld.image = realImages;
 
   if (price != null) {
     ld.offers = buildMerchantOffer({

@@ -403,12 +403,23 @@ function toProductLd(product, reviews = []) {
   const shortDesc =
     contentOverride?.shortDescription || product.shortDescription || "";
   const seoMeta = getPageSeoOverride(`/${slugKey}`)?.meta || "";
+  const rawMediaImages = Array.isArray(product.media?.images) ? product.media.images : [];
   return buildProductJsonLd({
     name: displayName,
     slug: product.slug,
     urlPath: `/${product.slug}`,
     images,
-    media: { images: images.map((url) => ({ url, isMain: url === images[0] })) },
+    media: {
+      images: images.map((url) => {
+        const raw = rawMediaImages.find((im) => String(im?.url || "") === url) || {};
+        return {
+          url,
+          isMain: url === images[0],
+          isPlaceholder: raw.isPlaceholder === true || /-placeholder(\.|-)/i.test(url),
+        };
+      }),
+    },
+    seo: product.seo || {},
     longDescription: descHtml,
     descriptionHtml: descHtml,
     shortDescription: toPlainText(shortDesc),
