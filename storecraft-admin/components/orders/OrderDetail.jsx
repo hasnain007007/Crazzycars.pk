@@ -116,7 +116,7 @@ const SHIPPING_PROVINCES = [
 ];
 
 function shippingInstructionsFromOrder(order) {
-  const notes = order?.internalNotes || [];
+  const notes = Array.isArray(order?.internalNotes) ? order.internalNotes : [];
   for (let i = notes.length - 1; i >= 0; i--) {
     const text = String(notes[i]?.note || "");
     if (text.startsWith("Shipping instructions:")) {

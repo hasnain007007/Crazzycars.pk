@@ -64,7 +64,7 @@ export function buildOrderActivityEvents(order) {
     });
   }
 
-  for (const n of order.internalNotes || []) {
+  for (const n of Array.isArray(order.internalNotes) ? order.internalNotes : []) {
     events.push({
       id: `note-${n.id || n.addedAt}`,
       at: when(n.addedAt),

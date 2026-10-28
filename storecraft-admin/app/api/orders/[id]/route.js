@@ -24,6 +24,7 @@ import { orderOriginLabel, serializeAttribution } from "@/lib/orderOrigin";
 import { serializeCustomerNetwork } from "@/lib/customerIpDisplay";
 import { assertCodAdvanceAllowsDispatch, assertCodAdvanceAllowsStatus } from "@/lib/codAdvanceGate";
 import { archiveCurrentTracking, serializePreviousTrackings } from "@/lib/previousTrackings";
+import { ensureInternalNotesArray, normalizeInternalNotes } from "@/lib/internalNotes";
 
 function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
@@ -171,7 +172,7 @@ function serializeOrder(doc, productImageById = null) {
       changedAt: h.changedAt,
       note: h.note || "",
     })),
-    internalNotes: (o.internalNotes || []).map((n) => ({
+    internalNotes: normalizeInternalNotes(o.internalNotes).map((n) => ({
       id: n._id?.toString(),
       note: n.note,
       addedBy: n.addedBy,
@@ -659,6 +660,7 @@ export async function PUT(request, context) {
 
       const instructions = String(body.shippingInstructions || "").trim();
       if (instructions) {
+        ensureInternalNotesArray(order);
         order.internalNotes.push({
           note: `Shipping instructions: ${instructions.slice(0, 2000)}`,
           addedBy: adminName,
@@ -681,6 +683,7 @@ export async function PUT(request, context) {
     if (body.internalNote && typeof body.internalNote.note === "string") {
       const text = body.internalNote.note.trim();
       if (text) {
+        ensureInternalNotesArray(order);
         order.internalNotes.push({
           note: text.slice(0, 5000),
           addedBy: adminName,

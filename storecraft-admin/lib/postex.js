@@ -506,7 +506,12 @@ export function buildPostexCreatePayload(order, settings = {}, bookingOptions = 
     city ||
     "Address not provided";
 
-  const internalNotes = (order.internalNotes || [])
+  const notesArr = Array.isArray(order.internalNotes)
+    ? order.internalNotes
+    : typeof order.internalNotes === "string" && order.internalNotes.trim()
+      ? [{ note: order.internalNotes }]
+      : [];
+  const internalNotes = notesArr
     .map((n) => String(n?.note || "").trim())
     .filter(Boolean)
     .slice(-2)
