@@ -164,9 +164,9 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: "Suzuki Liana 2006–2014 accessories in Pakistan: velvet dashboard mat. COD on eligible items. WhatsApp for other parts.",
   },
   "/toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026": {
-    // Live catalogue: Set of 2 / Rs. 4,490 (do not invent Set of 4 / 5,999).
-    title: "Corolla X Door Handle Panels 2014–2026 Set of 2 | CrazzyCars.pk",
-    meta: "Buy Toyota Corolla X carbon-style interior door handle panels (set of 2) for 2014–2026 Grande/Altis. Sale Rs. 4,490. COD on eligible items at CrazzyCars.pk.",
+    // Live catalogue: Set of 4 / Rs. 5,999 (DOOR-SET4 2026-10-29).
+    title: "Corolla X Door Handle Panels 2014–2026 Set of 4 | CrazzyCars.pk",
+    meta: "Buy Toyota Corolla X carbon-style interior door handle panels (set of 4) for 2014–2026 Grande/Altis. Sale Rs. 5,999. COD on eligible items at CrazzyCars.pk.",
   },
   "/contact": {
     title: "Contact CrazzyCars.pk – Gujranwala",

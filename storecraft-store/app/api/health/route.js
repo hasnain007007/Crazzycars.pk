@@ -23,11 +23,33 @@ async function probe() {
         setTimeout(() => reject(new Error("Mongo ping timed out")), PING_MS);
       }),
     ]);
+    // Catalog pulse for R5-HEALTH-ALERT (compare off-box vs yesterday baseline).
+    let catalog = null;
+    try {
+      const products = await db.collection("products").countDocuments({});
+      const blogs = await db.collection("blogposts").countDocuments({});
+      const newest = await db
+        .collection("products")
+        .find({}, { projection: { createdAt: 1 } })
+        .sort({ createdAt: -1 })
+        .limit(1)
+        .toArray();
+      catalog = {
+        products,
+        blogs,
+        newestProductCreatedAt: newest[0]?.createdAt
+          ? new Date(newest[0].createdAt).toISOString()
+          : null,
+      };
+    } catch {
+      catalog = { error: "catalog_count_failed" };
+    }
     return NextResponse.json(
       {
         ok: true,
         service: SERVICE,
         db: "ok",
+        catalog,
         ts: new Date().toISOString(),
         ms: Date.now() - started,
       },

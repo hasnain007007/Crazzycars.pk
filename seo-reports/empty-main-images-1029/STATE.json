@@ -1,0 +1,11 @@
+{
+  "branch": "fix/empty-main-images-1029",
+  "granted": [],
+  "awaiting": "GO EMPTY-IMAGES",
+  "counts": {
+    "empty_main": 65,
+    "promote": 15,
+    "hide_noindex": 50,
+    "main_404": 0
+  }
+}
