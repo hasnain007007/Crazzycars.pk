@@ -36,6 +36,33 @@ function preferHttps(urlString) {
   }
 }
 
+/** Old store hosts that still appear in DB absolute URLs after VPS cutover. */
+const LEGACY_MEDIA_HOSTS = new Set([
+  "sialkotmotorsports.com",
+  "www.sialkotmotorsports.com",
+]);
+
+/** Remap legacy absolute /media|/uploads URLs onto the configured public origin. */
+function rewriteLegacyMediaHost(urlString) {
+  const s = String(urlString || "").trim();
+  if (!s) return s;
+  try {
+    const u = new URL(s);
+    if (!LEGACY_MEDIA_HOSTS.has(u.hostname.toLowerCase())) return s;
+    const path = u.pathname || "";
+    if (!/^\/(media|uploads)\b/i.test(path)) return s;
+    const origin = siteOrigin();
+    if (!origin) {
+      u.hostname = "crazzycars.pk";
+      u.protocol = "https:";
+      return u.toString();
+    }
+    return preferHttps(new URL(`${path}${u.search || ""}`, `${origin}/`).toString());
+  } catch {
+    return s;
+  }
+}
+
 /**
  * @param {unknown} input string URL, media object `{ url }`, or empty
  * @returns {string} absolute URL (https for public hosts) or ""
@@ -52,8 +79,8 @@ export function absoluteMediaUrl(input) {
     s = `https:${s}`;
   }
 
-  if (/^https:\/\//i.test(s)) return s;
-  if (/^http:\/\//i.test(s)) return preferHttps(s);
+  if (/^https:\/\//i.test(s)) return rewriteLegacyMediaHost(s);
+  if (/^http:\/\//i.test(s)) return rewriteLegacyMediaHost(preferHttps(s));
 
   // Relative site path
   if (s.startsWith("/")) {
