@@ -5,7 +5,7 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { getSaleTab, SALE_SSR_LIMIT } from "@/lib/saleTabs";
-import { WEBSITE_SEGMENT_FILTER } from "@/lib/productVisibility";
+import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 function effectivePriceExpr() {
   return {
@@ -82,8 +82,7 @@ export async function fetchSaleProductsServer({
     const tab = getSaleTab(tabId);
     const lim = Math.min(48, Math.max(1, Number(limit) || SALE_SSR_LIMIT));
     const filter = {
-      status: { $regex: /^active$/i },
-      ...WEBSITE_SEGMENT_FILTER,
+      ...WEBSITE_PRODUCT_FILTER,
       ...buildSaleMongoFilter(tab),
     };
 

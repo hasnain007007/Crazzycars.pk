@@ -18,9 +18,10 @@ import mongoose from "mongoose";
 import CarCatalog from "@/lib/models/CarCatalog.model";
 import Vehicle from "@/lib/models/Vehicle.model";
 import { exclusiveYearOverlap } from "@/lib/fitmentGeneration";
+import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
 
 export function activeProductStatusFilter() {
-  return { status: { $regex: /^active$/i }, securityHold: { $ne: true } };
+  return { ...STOREFRONT_PRODUCT_FILTER };
 }
 
 export function escapeRegex(s) {
