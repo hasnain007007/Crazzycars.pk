@@ -387,6 +387,7 @@ async function main() {
     C19: emptyCheck(true),
     C20: emptyCheck(true),
     C21: emptyCheck(),
+    C22: emptyCheck(),
     C24: emptyCheck(true),
   };
 
@@ -598,25 +599,33 @@ async function main() {
     if (paths.length > 1) failCheck(results.C6, `duplicate description (${paths.length}): ${d.slice(0, 70)} → ${paths.slice(0, 5).join(", ")}`);
   }
 
-  // C13 llms.txt
+  // C13 llms.txt (+ C22: ≥100 links, none broken/redirecting)
   {
     const llms = await fetchOnce(`${BASE}/llms.txt`);
     results.C13.count++;
     if (llms.status !== 200) {
       failCheck(results.C13, `/llms.txt status ${llms.status}`);
+      failCheck(results.C22, `/llms.txt status ${llms.status}`);
     } else {
       const links = llmsLinks(llms.body, BASE);
       results.C13.count = links.length;
+      results.C22.count = links.length;
+      if (links.length < 100) {
+        failCheck(results.C22, `llms.txt has ${links.length} links (need ≥100)`);
+      }
+      const bytes = Buffer.byteLength(llms.body || "", "utf8");
+      if (bytes > 30 * 1024) {
+        failCheck(results.C22, `llms.txt ${bytes} bytes > 30 KB`);
+      }
       const linkChecks = await mapPool(links, CONCURRENCY, async (u) => {
         const r = await fetchOnce(u, { redirect: "manual" });
         return { u, status: r.status, location: r.location };
       });
       for (const c of linkChecks) {
         if (c.status !== 200) {
-          failCheck(
-            results.C13,
-            `${pathOf(c.u)} → ${c.status}${c.location ? ` ${c.location}` : ""}`
-          );
+          const msg = `${pathOf(c.u)} → ${c.status}${c.location ? ` ${c.location}` : ""}`;
+          failCheck(results.C13, msg);
+          failCheck(results.C22, msg);
         }
       }
     }
