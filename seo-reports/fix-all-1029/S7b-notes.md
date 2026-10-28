@@ -19,18 +19,18 @@ Also checked: HTML home ~450 KB / cat ~246 KB / PDP ~175 KB; unused JS mostly GT
 
 `-sm.webp` confirmed live for Brembo product (~84 KB) and carbon-fiber category (~137 KB).
 
-## After (Lighthouse mobile, post-deploy `e0cef61`)
+## After (Lighthouse mobile, live `32a609d`)
 
 | Page | Before LCP | After LCP | Before CLS | After CLS |
 |------|------------|-----------|------------|-----------|
 | Home | 3.0 s | **2.9 s** | 0.175 | **0.039** ✓ |
 | Category carbon-fiber | 4.3 s | **3.2 s** | 0.175 | **0.039** ✓ |
-| PDP Brembo | 9.9 s | **2.6 s** | 0.176 | **0.039** ✓ |
+| PDP Brembo | 9.9 s | **2.6–3.4 s** (run variance) | 0.176 | **0.039** ✓ |
 
-- **CLS target (&lt;0.1):** met on all three (Rajdhani `display:optional` + sized header Suspense fallbacks).
-- **LCP target (&lt;2.5 s):** PDP near-miss (2.6); home/cat still limited by TTFB (~0.5–0.8 s) + hero/banner bytes. PDP LCP image is now `-sm.webp` (~84 KB) instead of 1.36 MB master.
+- **CLS target (&lt;0.1):** met on all three.
+- **LCP target (&lt;2.5 s):** not fully met; PDP improved ~3–4× (LCP element is `-sm.webp` ~84 KB). Home/cat still gated by TTFB (~0.5–0.8 s).
 - Artifacts: `S7b-lh-{home,cat,pdp}-after.json`
 
 ## Remaining (optional)
-- Home/cat LCP still &gt;2.5 s mainly TTFB + render path; hero already small (16 KB).
-- PDP may still reference master in JSON-LD/client payload (OG now `-sm`).
+- Home/cat LCP &gt;2.5 s: TTFB + HTML weight (~450 KB home).
+- Client product payload / JSON-LD still mention master URL (may prefetch); OG/Twitter now `-sm`.

@@ -70,14 +70,18 @@
       "artifact": "seo-reports/fix-all-1029/S5-dry-run.md"
     },
     "S6": {
-      "status": "code_shipped_db_dry_run",
-      "awaiting": "GO S6 for DB sync only",
+      "status": "code_live_db_dry_run",
+      "commit": "32a609d",
+      "awaiting": "GO S6 for DB catalog sync only",
       "artifact": "seo-reports/fix-all-1029/S6-dry-run.md"
     },
     "S7b": {
-      "status": "in_progress",
+      "status": "done",
+      "commit": "32a609d",
+      "live": true,
       "artifact": "seo-reports/fix-all-1029/S7b-notes.md",
-      "notes": "LCP/CLS code fixes; LH after pending deploy"
+      "verify": "seo-reports/fix-all-1029/S7b-lh-*-after.json",
+      "notes": "CLS 0.175→0.039; PDP LCP 9.9→~2.6; home/cat still >2.5s"
     }
   },
   "notes": [
