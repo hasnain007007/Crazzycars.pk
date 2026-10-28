@@ -388,6 +388,7 @@ async function main() {
     C20: emptyCheck(true),
     C21: emptyCheck(),
     C22: emptyCheck(),
+    C23: emptyCheck(),
     C24: emptyCheck(true),
   };
 
@@ -833,6 +834,19 @@ async function main() {
     });
     for (const c of checks) {
       if (c.status >= 400) failCheck(results.C20, `${c.h} → ${c.status}`, true);
+    }
+  }
+
+  // C23 every sitemap URL returns 200 with no redirect
+  {
+    results.C23.count = pageFetches.length;
+    for (const p of pageFetches) {
+      if (p.redirected || p.status !== 200) {
+        failCheck(
+          results.C23,
+          `${pathOf(p.url)} → ${p.status}${p.location ? ` ${p.location}` : ""}`
+        );
+      }
     }
   }
 

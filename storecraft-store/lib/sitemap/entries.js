@@ -9,6 +9,26 @@ import { MAX_SITEMAP_URLS } from "@/lib/sitemap/xml";
 import { getCategoryIdsWithProducts } from "@/lib/storeCategoryData";
 import { STOREFRONT_PRODUCT_FILTER, WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { CITY_LANDING_SLUGS, cityPath } from "@/lib/cityLandingPages";
+import { DELETED_URL_REDIRECTS } from "@/lib/deletedUrlRedirects.mjs";
+
+/** Paths that permanently redirect — never emit in sitemaps (F3). */
+const REDIRECT_SOURCE_PATHS = new Set(
+  DELETED_URL_REDIRECTS.map((r) => String(r.source || "").replace(/\/+$/, "").toLowerCase() || "/")
+);
+
+function isRedirectSourcePath(path) {
+  const p = String(path || "").replace(/\/+$/, "").toLowerCase() || "/";
+  return REDIRECT_SOURCE_PATHS.has(p);
+}
+
+/** Active website products with a sellable price and no deleted-URL redirect. */
+const SITEMAP_PRODUCT_FILTER = {
+  ...WEBSITE_PRODUCT_FILTER,
+  $or: [
+    { "pricing.salePrice": { $gt: 0 } },
+    { "pricing.regularPrice": { $gt: 0 } },
+  ],
+};
 
 /** Static storefront routes (no query strings, no redirect aliases). */
 const STATIC_PAGE_PATHS = [
@@ -188,7 +208,7 @@ export async function fetchSitemapContext(headers) {
 
   const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts] =
     await Promise.all([
-      Product.find(WEBSITE_PRODUCT_FILTER).select("slug updatedAt").lean(),
+      Product.find(SITEMAP_PRODUCT_FILTER).select("slug updatedAt pricing").lean(),
       Category.find({ status: "active" }).select("slug updatedAt contentUpdatedAt _id").lean(),
       Vehicle.find({ isActive: true }).select("slug updatedAt contentUpdatedAt _id").lean(),
       categoryIdsWithProducts(),
@@ -211,11 +231,11 @@ export async function fetchSitemapContext(headers) {
   const lastmodCtx = { products, categories, vehicles, blogPosts, cmsBySlug };
 
   const productEntries = products
-    .filter((p) => p.slug)
+    .filter((p) => p.slug && !isRedirectSourcePath(`/${p.slug}`))
     .map((p) => toEntry(headers, `/${p.slug}`, p.updatedAt, "weekly", 0.7));
 
   const categoryEntries = categories
-    .filter((c) => c.slug && withProducts.has(String(c._id)))
+    .filter((c) => c.slug && withProducts.has(String(c._id)) && !isRedirectSourcePath(`/categories/${c.slug}`))
     .map((c) =>
       toEntry(
         headers,
@@ -227,7 +247,7 @@ export async function fetchSitemapContext(headers) {
     );
 
   const carEntries = vehicles
-    .filter((v) => v.slug && vehiclesWithProducts.has(String(v._id)))
+    .filter((v) => v.slug && vehiclesWithProducts.has(String(v._id)) && !isRedirectSourcePath(`/cars/${v.slug}`))
     .map((v) => {
       // Car hub lastmod = vehicle document only (contentUpdatedAt → updatedAt).
       // Do not blend in product freshness — that made every lastmod look like
@@ -236,7 +256,7 @@ export async function fetchSitemapContext(headers) {
       return toEntry(headers, `/cars/${v.slug}`, lastmod, "weekly", 0.8);
     });
 
-  const staticPageEntries = STATIC_PAGE_PATHS.map((path) =>
+  const staticPageEntries = STATIC_PAGE_PATHS.filter((path) => !isRedirectSourcePath(path)).map((path) =>
     toEntry(
       headers,
       path,
@@ -249,14 +269,19 @@ export async function fetchSitemapContext(headers) {
   const cmsPageEntries = cmsPages
     .filter((page) => {
       const slug = String(page.slug || "").trim().toLowerCase();
-      return slug && !RESERVED_PAGE_SLUGS.has(slug) && !productSlugSet.has(slug);
+      return (
+        slug &&
+        !RESERVED_PAGE_SLUGS.has(slug) &&
+        !productSlugSet.has(slug) &&
+        !isRedirectSourcePath(`/${slug}`)
+      );
     })
     .map((page) => toEntry(headers, `/${page.slug}`, page.updatedAt, "monthly", 0.5));
 
   const pageEntries = [...staticPageEntries, ...cmsPageEntries];
 
   const blogEntries = blogPosts
-    .filter((post) => post.slug)
+    .filter((post) => post.slug && !isRedirectSourcePath(`/blogs/${post.slug}`))
     .map((post) =>
       toEntry(
         headers,
