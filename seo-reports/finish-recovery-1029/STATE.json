@@ -1,6 +1,7 @@
 {
   "branch": "fix/finish-recovery-1029",
   "startedAt": "2026-10-28T22:03:00.000Z",
+  "finishedAt": "2026-10-28T22:20:00.000Z",
   "fingerprintWrite": "84143ac0cb2c3085",
   "atlasNeverWrite": "317ae4de8eb24f84",
   "granted": [],
@@ -26,17 +27,23 @@
     "F4": {
       "status": "done",
       "report": "F4-wrong-photos.md",
-      "note": "hide vezel proposed; no GRANT write"
+      "commit": "0586300"
     },
     "F5": {
       "status": "proposals_only",
       "report": "F5-prevent-repeat.md",
-      "runbook": "RESTORE.md"
+      "runbook": "RESTORE.md",
+      "commit": "b23c34f"
     },
     "F6": {
       "status": "done",
-      "report": "F6-verify.md"
+      "report": "F6-verify.md",
+      "commit": "6f204d8"
     }
   },
-  "finishedAt": "2026-10-28T22:20:00.000Z"
+  "notes": [
+    "GRANTED empty \u2014 no production writes",
+    "21 missing active products have 404 image files \u2014 insert as draft only when R4",
+    "seo-verify hard fails C4-C7,C9,C10,C12,C15 baseline unchanged"
+  ]
 }
