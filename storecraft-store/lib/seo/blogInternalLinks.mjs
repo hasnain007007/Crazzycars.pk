@@ -99,6 +99,55 @@ export const BLOG_LINK_CATALOG = [
     categories: ["sun-shades", "interior", "floor-mats"],
     cars: [],
   },
+  {
+    slug: "are-aftermarket-car-accessories-safe",
+    title: "Are Aftermarket Car Accessories Safe?",
+    keywords: ["aftermarket", "safe", "quality"],
+    categories: ["exterior", "universal-accessories", "car-care-safety"],
+    cars: [],
+  },
+  {
+    slug: "best-floor-mats-pakistani-weather-guide",
+    title: "Best Floor Mats for Pakistani Weather",
+    keywords: ["floor mat", "weather", "mud", "rain"],
+    categories: ["floor-mats", "interior"],
+    cars: [],
+  },
+  {
+    slug: "cod-vs-online-payment-car-accessories-pakistan",
+    title: "COD vs Online Payment for Car Accessories",
+    keywords: ["cod", "payment", "online payment"],
+    categories: ["exterior", "interior", "universal-accessories"],
+    cars: [],
+  },
+  {
+    slug: "dash-cameras-pakistan-why-every-driver-needs-one",
+    title: "Dash Cameras in Pakistan — Why Every Driver Needs One",
+    keywords: ["dash cam", "camera", "gadget"],
+    categories: ["gadgets", "car-care-safety", "utility"],
+    cars: [],
+  },
+  {
+    slug: "exhaust-tips-systems-sound-performance",
+    title: "Exhaust Tips & Systems — Sound and Performance",
+    keywords: ["exhaust", "muffler", "tip"],
+    categories: ["exhaust-systems-tips", "exterior"],
+    cars: [],
+  },
+  {
+    slug: "how-to-choose-right-front-grille",
+    title: "How to Choose the Right Front Grille",
+    keywords: ["grille", "front grille"],
+    categories: ["front-grilles", "exterior"],
+    cars: [],
+  },
+  {
+    slug: "seat-covers-buying-guide-pakistan-climate",
+    title: "Seat Covers Buying Guide for Pakistan Climate",
+    keywords: ["seat cover", "seats", "climate"],
+    categories: ["interior", "steering-wheel-covers"],
+    cars: [],
+  },
 ];
 
 function norm(s) {
