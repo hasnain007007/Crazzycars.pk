@@ -20,6 +20,7 @@ import {
 import { buildFbcFromFbclid } from "@/lib/metaClickIds";
 import { resolveProductRedirectPath, resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
+import { resolveOldBlogNewsPath } from "@/lib/oldBlogNewsRedirects.mjs";
 import { resolveCollectionRedirect } from "@/lib/collectionRedirectMap.mjs";
 import { STRIP_QUERY_KEYS } from "@/lib/stripQueryKeys.mjs";
 
@@ -189,6 +190,14 @@ export async function middleware(request) {
   // Shopify blog home
   if (lower === "/blogs/news" || lower === "/blog/news") {
     return withPaidCookie(request, redirectPath(request, "/blogs", 308));
+  }
+
+  // S2a: /blogs/news/<handle> → closest live 200 page (single hop, 308).
+  {
+    const newsDest = resolveOldBlogNewsPath(lower.replace(/\/+$/, "") || "/");
+    if (newsDest) {
+      return withPaidCookie(request, redirectPath(request, newsDest, 308));
+    }
   }
 
   // S1: /blogs?search|q|sort|filter stay reachable (noindex,follow + canonical /blogs).

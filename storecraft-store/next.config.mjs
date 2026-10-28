@@ -1,12 +1,15 @@
 /** @type {import('next').NextConfig} */
 import { buildLegacyRedirects } from "./lib/legacyHandleMaps.mjs";
 import { DELETED_URL_REDIRECTS } from "./lib/deletedUrlRedirects.mjs";
+import { OLD_BLOG_NEWS_REDIRECTS } from "./lib/oldBlogNewsRedirects.mjs";
 
 const nextConfig = {
   async redirects() {
     return [
       // Deleted catalogue / car URLs → live parents (SEO audit 16 Oct 2026).
       ...DELETED_URL_REDIRECTS,
+      // Shopify /blogs/news/<handle> → closest live page (S2a, no 410s).
+      ...OLD_BLOG_NEWS_REDIRECTS,
       {
         source: "/posts",
         destination: "/blogs",
