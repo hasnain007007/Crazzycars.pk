@@ -18,7 +18,6 @@ import {
 import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
-import { pdpImageUrl } from "@/lib/cloudinaryImage";
 import { resolveProductImageUrls, resolvePrimaryProductImageUrl } from "@/lib/productImages";
 import {
   productJsonLd as buildProductJsonLd,
@@ -493,17 +492,12 @@ export default async function ProductPage({ params, searchParams }) {
         return null;
       }
     })();
-    const lcpSrc = resolvePrimaryProductImageUrl(content.data) || "";
-    // One LCP candidate only: -sm.webp at 720 (matches ProductDetailMedico). No competing -400 / master / srcset.
-    const lcpUrl = lcpSrc ? pdpImageUrl(lcpSrc, 720) : "";
+    // LCP: ProductDetailMedico main img uses pdpImageUrl(-sm) + fetchPriority=high.
+    // Next auto-preloads that URL — do not add a second <link rel=preload> (was racing).
     const ssrReviews = approvedReviews.slice(0, 5);
 
     return (
       <>
-        {lcpUrl ? (
-          // eslint-disable-next-line @next/next/no-head-element -- preload PDP LCP image
-          <link rel="preload" as="image" href={lcpUrl} fetchPriority="high" />
-        ) : null}
         {isCompleteProductJsonLd(productLd) ? (
           <script
             type="application/ld+json"

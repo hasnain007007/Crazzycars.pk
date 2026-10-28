@@ -45,9 +45,9 @@ const inter = Inter({
 const rajdhani = Rajdhani({
   subsets: ["latin"],
   variable: "--font-rajdhani",
-  display: "swap",
+  // optional = no late swap CLS on <main> (was 0.175). Inter stays swap for body text.
+  display: "optional",
   weight: ["600", "700"],
-  // Preload heading font too — late Rajdhani swap shifted <main> (CLS 0.175).
   preload: true,
   adjustFontFallback: true,
 });
@@ -319,10 +319,11 @@ export default async function RootLayout({ children }) {
             <Suspense fallback={null}>
               <ScrollToTop />
             </Suspense>
-            <Suspense fallback={null}>
+            {/* Sized fallbacks prevent null→header CLS (~0.175 on <main>). */}
+            <Suspense fallback={<div aria-hidden style={{ minHeight: 64 }} />}>
               <StoreHeader initialCategoryTree={categoryTree} />
             </Suspense>
-            <Suspense fallback={null}>
+            <Suspense fallback={<div aria-hidden className="adv-band" style={{ minHeight: 48 }} />}>
               <AdvancePayStrip />
             </Suspense>
             <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">{children}</main>
