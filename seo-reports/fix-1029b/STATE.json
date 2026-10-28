@@ -4,11 +4,21 @@
   "fingerprintWrite": "84143ac0cb2c3085",
   "atlasNeverWrite": "317ae4de8eb24f84",
   "tasks": {
-    "S10": { "status": "pending" },
-    "S7c": { "status": "pending" },
-    "S11": { "status": "pending" },
+    "S10": {
+      "status": "done",
+      "commit": "37ab1fa",
+      "probes": "S10-probes.txt",
+      "verify": "S10-verify.txt",
+      "notes": "atom 410; ?page=1 308; /products/ still redirects to flat slug"
+    },
+    "S7c": { "status": "in_progress" },
+    "S11": { "status": "in_progress" },
     "S5": { "status": "pending", "awaiting": "GO S5" },
-    "S6-DB": { "status": "pending", "awaiting": "GO S6 after M4+L1", "notes": "Reuse fix-all-1029/S6-dry-run.md" }
+    "S6-DB": {
+      "status": "pending",
+      "awaiting": "GO S6 after M4+L1",
+      "notes": "Reuse fix-all-1029/S6-dry-run.md"
+    }
   },
   "notes": []
 }
