@@ -18,6 +18,14 @@
       "commit": "dd661e8",
       "report": "D1-r4-dry-run.md",
       "verify": "seo-verify-D1.txt"
+    },
+    "D2": {
+      "result": "dry-run only",
+      "token": "L1",
+      "commit": null,
+      "report": "D2-l1-dry-run.md",
+      "verify": "seo-verify-D2.txt",
+      "doorHandle": "skip Set of 4 @ 5999 confirmed"
     }
   },
   "status": "IN_PROGRESS"
