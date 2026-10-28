@@ -13,8 +13,9 @@ export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
   title: "Advance Payment: How to Pay",
+  // Keep 140–158 chars for SERP snippets (F5).
   description:
-    "Cash on Delivery booking advance at CrazzyCars.pk: amounts by order total, our official JazzCash, Raast QR and bank accounts, and how to send your payment screenshot.",
+    "COD booking advance at CrazzyCars.pk: amounts by order total, JazzCash, Raast QR and bank details, plus how to send your payment screenshot.",
   path: "/advance-payment",
 });
 
