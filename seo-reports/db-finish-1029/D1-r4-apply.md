@@ -70,3 +70,7 @@ Archive also at: `/data/crazzycars-mongo-backups/db-finish-r4-20261028T230513Z/s
 - Held drafts: HTTP 404 on storefront; absent from sitemap.
 - Draft products: absent from sitemap.
 - Orders/customers unchanged.
+
+## seo-verify
+
+See `seo-verify-D1-apply.txt`. Pre-existing hard fails unchanged; C24 soft (new posts lack inbound links yet).

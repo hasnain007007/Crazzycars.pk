@@ -17,7 +17,7 @@
     "D1": {
       "result": "done",
       "token": "R4",
-      "commit": null,
+      "commit": "812de90",
       "report": "D1-r4-apply.md",
       "dump": "/data/crazzycars-mongo-backups/db-finish-r4-20261028T230513Z/sialkot_motorsports.archive.gz",
       "publishedBlogs": 14,
@@ -29,7 +29,8 @@
         "blogsPublished": 32,
         "orders": 603,
         "customers": 342
-      }
+      },
+      "verify": "seo-verify-D1-apply.txt"
     },
     "D2": {
       "result": "dry-run only",
