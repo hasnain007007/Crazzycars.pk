@@ -1,0 +1,26 @@
+=== S1 live probes ===
+200  https://crazzycars.pk/blogs
+     name="robots" content="index, follow"
+     rel="canonical" href="https://crazzycars.pk/blogs"
+200  https://crazzycars.pk/blogs?search=led
+     name="robots" content="noindex, follow"
+     rel="canonical" href="https://crazzycars.pk/blogs"
+200  https://crazzycars.pk/shop?q=led
+     name="robots" content="noindex, follow"
+     rel="canonical" href="https://crazzycars.pk/shop"
+200  https://crazzycars.pk/shop
+     name="robots" content="index, follow"
+     rel="canonical" href="https://crazzycars.pk/shop"
+200  https://crazzycars.pk/cars?q=civic
+     name="robots" content="noindex, follow"
+     rel="canonical" href="https://crazzycars.pk/cars"
+200  https://crazzycars.pk/cars
+     name="robots" content="index, follow"
+     rel="canonical" href="https://crazzycars.pk/cars"
+
+=== robots.txt: search/q must NOT be Disallow-added for listings ===
+(no listing search Disallow lines — OK)
+
+=== sitemap must not contain query URLs ===
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>

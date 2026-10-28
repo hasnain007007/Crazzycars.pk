@@ -5,17 +5,31 @@
   "atlasNeverWrite": "317ae4de8eb24f84",
   "tasks": {
     "S1": {
-      "status": "shipping",
+      "status": "done",
       "gate": false,
+      "commit": "18cf34c",
+      "live": true,
+      "verify": [
+        "seo-reports/improve-1028/S1-seo-verify.txt",
+        "seo-reports/improve-1028/S1-seo-verify.json",
+        "seo-reports/improve-1028/S1-verify-probes.txt"
+      ],
       "files": [
         "storecraft-store/app/blogs/page.jsx",
         "storecraft-store/app/cars/page.jsx",
         "storecraft-store/lib/listingQuery.js",
         "storecraft-store/middleware.js"
       ],
-      "notes": "Removed middleware 308 that collapsed /blogs?search=; faceted listings noindex+base canonical; no robots Disallow for search/q."
+      "notes": "Faceted /blogs|/shop|/cars render noindex,follow with base canonical; middleware no longer 308-collapses /blogs?search=; no robots Disallow for search/q."
     },
-    "S2": { "status": "pending", "gate": true, "awaiting": "GO S2" },
+    "S2": {
+      "status": "awaiting_go",
+      "gate": true,
+      "awaiting": "GO S2",
+      "dryRun": "seo-reports/improve-1028/S2-dry-run-blog-redirects.md",
+      "urls": "seo-reports/improve-1028/old-blog-urls.txt",
+      "counts": { "found": 19, "briefSaid": 24, "redirect308": 10, "gone410": 9 }
+    },
     "S3": { "status": "pending", "gate": true, "awaiting": "GO S3" },
     "S4": { "status": "pending", "gate": false },
     "S5": { "status": "pending", "gate": true, "awaiting": "GO S5 + blog slugs" },
@@ -24,5 +38,7 @@
     "S8": { "status": "pending", "gate": false },
     "S9": { "status": "pending", "gate": false }
   },
-  "notes": []
+  "notes": [
+    "Coolify webhook did not auto-deploy S1; store image rebuilt manually on VPS."
+  ]
 }

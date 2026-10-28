@@ -1,0 +1,386 @@
+seo-verify BASE=https://crazzycars.pk concurrency=4
+sitemap urls: 532
+{
+  "C1": {
+    "pass": true,
+    "count": 532,
+    "failures": [],
+    "soft": false
+  },
+  "C2": {
+    "pass": true,
+    "count": 532,
+    "failures": [],
+    "soft": false
+  },
+  "C3": {
+    "pass": true,
+    "count": 532,
+    "failures": [],
+    "soft": false
+  },
+  "C4": {
+    "pass": false,
+    "count": 532,
+    "failures": [
+      "/ title 63 chars",
+      "/about title 65 chars",
+      "/blogs/led-ambient-lighting-car-buyer-guide title 64 chars",
+      "/blogs/side-mirror-covers-carbon-fiber-accents-guide title 61 chars",
+      "/car-accessories-rawalpindi title 61 chars",
+      "/categories/interior-lights title 61 chars",
+      "/categories/spoilers-diffusers title 62 chars",
+      "/civic-rebirth-side-mirror-rgb-indicator title 62 chars",
+      "/toyota-corolla-carbon-fiber-center-console-gear-glass-holder-2014-2026 title 72 chars",
+      "/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026 title 75 chars",
+      "/toyota-corolla-carbon-fiber-interior-door-panels-4pcs-2014-2026 title 72 chars",
+      "/toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026 title 70 chars"
+    ],
+    "soft": false
+  },
+  "C5": {
+    "pass": false,
+    "count": 532,
+    "failures": [
+      "/categories/exterior description 168 chars",
+      "/civic-rebirth-side-mirror-rgb-indicator description 164 chars",
+      "/sale description 163 chars",
+      "/toyota-corolla-carbon-fiber-center-console-gear-glass-holder-2014-2026 description 163 chars",
+      "/toyota-corolla-e120-dynamic-back-bumper-light-rgb-2002-2008 description 164 chars",
+      "/universal-crystal-led-gear-knob-touch-activated-premium-car-shifter description 161 chars"
+    ],
+    "soft": false
+  },
+  "C6": {
+    "pass": false,
+    "count": 532,
+    "failures": [
+      "duplicate title (2): Toyota Corolla Velvet Dashboard Mat | CrazzyCars.pk → /toyota-corolla-2008-2013-velvet-dashboard-mat, /toyota-corolla-2014-2026-velvet-dashboard-mat"
+    ],
+    "soft": false
+  },
+  "C7": {
+    "pass": false,
+    "count": 532,
+    "failures": [
+      "/blogs/7d-vs-9d-vs-tpe-floor-mats-pakistan missing og:image",
+      "/blogs/body-kit-price-in-pakistan-2026 missing og:image",
+      "/blogs/honda-city-2021-modification-cost-pakistan missing og:image",
+      "/privacy-policy missing og:image",
+      "/terms-conditions missing og:image"
+    ],
+    "soft": false
+  },
+  "C8": {
+    "pass": false,
+    "count": 5830,
+    "failures": [
+      "/ img missing alt: /hero/civic-night-760.webp",
+      "/ img missing alt: /media/uploads/c4txnxtweazpj7hdi1st-8bd8190af9-400.webp"
+    ],
+    "soft": true,
+    "note": "2 images missing alt of 5830"
+  },
+  "C9": {
+    "pass": false,
+    "count": 59,
+    "failures": [
+      "/cars/audi-a4-2008-present FAQ LD not visible: Do you offer Cash on Delivery (COD) in Pakistan?",
+      "/cars/audi-a4-2008-present FAQ LD not visible: How much are delivery charges?",
+      "/cars/audi-a4-2008-present FAQ LD not visible: How long does delivery take?",
+      "/cars/audi-a4-2008-present FAQ LD not visible: What is your return or exchange policy?",
+      "/cars/audi-a4-2008-present FAQ LD not visible: Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
+      "/cars/audi-a4-2008-present FAQ LD not visible: What is Audi A4 (2008–2026) also called when shopping parts in Pakistan?",
+      "/cars/audi-a4-2008-present only 2 vehicle-specific FAQ questions (need ≥4)",
+      "/cars/audi-a5-2008-present FAQ LD not visible: Do you offer Cash on Delivery (COD) in Pakistan?",
+      "/cars/audi-a5-2008-present FAQ LD not visible: How much are delivery charges?",
+      "/cars/audi-a5-2008-present FAQ LD not visible: How long does delivery take?",
+      "/cars/audi-a5-2008-present FAQ LD not visible: What is your return or exchange policy?",
+      "/cars/audi-a5-2008-present FAQ LD not visible: Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
+      "/cars/audi-a5-2008-present FAQ LD not visible: What is Audi A5 (2008–2026) also called when shopping parts in Pakistan?",
+      "/cars/audi-a5-2008-present only 2 vehicle-specific FAQ questions (need ≥4)",
+      "/cars/baic-bj40-2020-present FAQ LD not visible: Do you offer Cash on Delivery (COD) in Pakistan?",
+      "/cars/baic-bj40-2020-present FAQ LD not visible: How much are delivery charges?",
+      "/cars/baic-bj40-2020-present FAQ LD not visible: How long does delivery take?",
+      "/cars/baic-bj40-2020-present FAQ LD not visible: What is your return or exchange policy?",
+      "/cars/baic-bj40-2020-present FAQ LD not visible: Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
+      "/cars/baic-bj40-2020-present FAQ LD not visible: What is BAIC BJ40 (2020–2026) also called when shopping parts in Pakistan?",
+      "/cars/baic-bj40-2020-present only 2 vehicle-specific FAQ questions (need ≥4)",
+      "/cars/byd-atto3-2025-present FAQ LD not visible: Do you offer Cash on Delivery (COD) in Pakistan?",
+      "/cars/byd-atto3-2025-present FAQ LD not visible: How much are delivery charges?",
+      "/cars/byd-atto3-2025-present FAQ LD not visible: How long does delivery take?",
+      "/cars/byd-atto3-2025-present FAQ LD not visible: What is your return or exchange policy?",
+      "/cars/byd-atto3-2025-present FAQ LD not visible: Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
+      "/cars/byd-atto3-2025-present FAQ LD not visible: What is BYD Atto 3 (2025–present) also called when shopping parts in Pakistan?",
+      "/cars/byd-atto3-2025-present only 2 vehicle-specific FAQ questions (need ≥4)",
+      "/cars/changan-alsvin-2021-present FAQ LD not visible: Do you offer Cash on Delivery (COD) in Pakistan?",
+      "/cars/changan-alsvin-2021-present FAQ LD not visible: How much are delivery charges?",
+      "/cars/changan-alsvin-2021-present FAQ LD not visible: How long does delivery take?",
+      "/cars/changan-alsvin-2021-present FAQ LD not visible: What is your return or exchange policy?",
+      "/cars/changan-alsvin-2021-present FAQ LD not visible: Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
+      "/cars/changan-alsvin-2021-present FAQ LD not visible: What is Changan Alsvin (2021–present) also called when shopping parts in Pakista",
+      "/cars/changan-alsvin-2021-present only 2 vehicle-specific FAQ questions (need ≥4)",
+      "/cars/changan-oshanx7-2022-present FAQ LD not visible: Do you offer Cash on Delivery (COD) in Pakistan?",
+      "/cars/changan-oshanx7-2022-present FAQ LD not visible: How much are delivery charges?",
+      "/cars/changan-oshanx7-2022-present FAQ LD not visible: How long does delivery take?",
+      "/cars/changan-oshanx7-2022-present FAQ LD not visible: What is your return or exchange policy?",
+      "/cars/changan-oshanx7-2022-present FAQ LD not visible: Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
+      "… +383 more"
+    ],
+    "soft": false
+  },
+  "C10": {
+    "pass": false,
+    "count": 59,
+    "failures": [
+      "/cars/audi-a4-2008-present direct-answer words=1 (need 40–60)",
+      "/cars/audi-a5-2008-present direct-answer words=1 (need 40–60)",
+      "/cars/baic-bj40-2020-present direct-answer words=1 (need 40–60)",
+      "/cars/byd-atto3-2025-present direct-answer words=1 (need 40–60)",
+      "/cars/changan-alsvin-2021-present direct-answer words=1 (need 40–60)",
+      "/cars/changan-oshanx7-2022-present direct-answer words=1 (need 40–60)",
+      "/cars/chery-tiggo4pro-2022-present direct-answer words=1 (need 40–60)",
+      "/cars/chery-tiggo8pro-2022-present direct-answer words=1 (need 40–60)",
+      "/cars/deepal-s05-2024-present direct-answer words=1 (need 40–60)",
+      "/cars/dfsk-glory-580-2018-present direct-answer words=1 (need 40–60)",
+      "/cars/haval-h6-2021-present direct-answer words=1 (need 40–60)",
+      "/cars/honda-brv-2017-present direct-answer words=1 (need 40–60)",
+      "/cars/honda-city-2021-present direct-answer words=4 (need 40–60)",
+      "/cars/honda-city-classic-2009-2020 direct-answer words=4 (need 40–60)",
+      "/cars/honda-civic-11th-gen-2022-present direct-answer words=11 (need 40–60)",
+      "/cars/honda-civic-es-2001-2005 direct-answer words=1 (need 40–60)",
+      "/cars/honda-civic-rebirth-2012-2016 direct-answer words=11 (need 40–60)",
+      "/cars/honda-civic-reborn-2006-2012 direct-answer words=9 (need 40–60)",
+      "/cars/honda-civic-x-2016-2021 direct-answer words=12 (need 40–60)",
+      "/cars/honda-vezel-2013-2018 direct-answer words=4 (need 40–60)",
+      "/cars/honda-vezel-2020-2026 direct-answer words=4 (need 40–60)",
+      "/cars/hyundai-elantra-2020-2024 direct-answer words=4 (need 40–60)",
+      "/cars/hyundai-elantra-hybrid-2025-present direct-answer words=1 (need 40–60)",
+      "/cars/hyundai-sonata-2020-2024 direct-answer words=1 (need 40–60)",
+      "/cars/hyundai-tucson-2020-2024 direct-answer words=1 (need 40–60)",
+      "/cars/kia-picanto-2019-present direct-answer words=1 (need 40–60)",
+      "/cars/kia-sorento-2021-2024 direct-answer words=1 (need 40–60)",
+      "/cars/kia-sportage-2019-2024 direct-answer words=1 (need 40–60)",
+      "/cars/kia-stonic-2021-present direct-answer words=1 (need 40–60)",
+      "/cars/mercedes-benz-e-class-2009-present direct-answer words=1 (need 40–60)",
+      "/cars/mg-hs-2020-2025 direct-answer words=1 (need 40–60)",
+      "/cars/nissan-note-2012-present direct-answer words=1 (need 40–60)",
+      "/cars/proton-x70-2020-present direct-answer words=1 (need 40–60)",
+      "/cars/suzuki-alto-2020-present direct-answer words=1 (need 40–60)",
+      "/cars/suzuki-alto-old-2000-2012 direct-answer words=1 (need 40–60)",
+      "/cars/suzuki-cultus-2017-present direct-answer words=1 (need 40–60)",
+      "/cars/suzuki-liana-2006-2014 direct-answer words=1 (need 40–60)",
+      "/cars/suzuki-swift-2018-2024 direct-answer words=4 (need 40–60)",
+      "/cars/suzuki-swift-2025-present direct-answer words=1 (need 40–60)",
+      "/cars/suzuki-wagonr-2014-present direct-answer words=1 (need 40–60)",
+      "… +19 more"
+    ],
+    "soft": false
+  },
+  "C11": {
+    "pass": false,
+    "count": 398,
+    "failures": [
+      "/2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color offers missing hasMerchantReturnPolicy",
+      "/2pcs-front-bumper-lip-splitter-chin-spoiler-for-honda-civic-11th-gen-2022-2026-gloss-black offers missing hasMerchantReturnPolicy",
+      "/3-color-switchback-fog-led-light-with-flasher-h11-white-yellow-blue-2-pcs offers missing hasMerchantReturnPolicy",
+      "/4-in-1-45w-fast-car-charger-usb-type-c-built-in-ios-android-cable offers missing hasMerchantReturnPolicy",
+      "/air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump offers missing hasMerchantReturnPolicy",
+      "/audi-a4-premium-metal-key-cover offers missing hasMerchantReturnPolicy",
+      "/audi-a5-premium-metal-key-cover offers missing hasMerchantReturnPolicy",
+      "/baic-bj40-premium-metal-key-cover offers missing hasMerchantReturnPolicy",
+      "/batman-style-side-mirror-cover-toyota-aqua-2012-present offers missing hasMerchantReturnPolicy",
+      "/batman-style-side-mirror-cover-toyota-vitz-2010-present offers missing hasMerchantReturnPolicy",
+      "/batman-style-side-mirror-cover-toyota-yaris-2020-2026 offers missing hasMerchantReturnPolicy",
+      "/bright-led-indicator-bulbs-2-pcs offers missing hasMerchantReturnPolicy",
+      "/byd-atto-3-2025-2026-tpe-floor-mats-premium offers missing hasMerchantReturnPolicy",
+      "/car-bonnet-hood-spacer-aluminum-2-pcs offers missing hasMerchantReturnPolicy",
+      "/car-brembo-style-brake-caliper-covers-universal-fit offers missing hasMerchantReturnPolicy",
+      "/car-dashboard-ambient-light-strip-premium-2pcs offers missing hasMerchantReturnPolicy",
+      "/car-decoration-solar-powered-aeroplane offers missing hasMerchantReturnPolicy",
+      "/car-door-welcome-logo-lights offers missing hasMerchantReturnPolicy",
+      "/car-front-bumper-splitter-abs-plastic-3pcs offers missing hasMerchantReturnPolicy",
+      "/car-front-bumper-splitter-abs-plastic-4pcs offers missing hasMerchantReturnPolicy",
+      "/car-grill-white-flashers-strobe-led-4pcs offers missing hasMerchantReturnPolicy",
+      "/car-heads-up-display-hud offers missing hasMerchantReturnPolicy",
+      "/car-interior-ambient-lights-5-point-dashboard-doors offers missing hasMerchantReturnPolicy",
+      "/car-modified-stainless-steel-exhaust-tip offers missing hasMerchantReturnPolicy",
+      "/car-rear-bumper-splitter-cut-style-universal offers missing hasMerchantReturnPolicy",
+      "/car-rear-bumper-splitter-simple-universal offers missing hasMerchantReturnPolicy",
+      "/car-rgb-atmosphere-light-interior-footwell-led-lights-4-pcs offers missing hasMerchantReturnPolicy",
+      "/car-side-splitter-abs-plastic-4pcs offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-dashboard-trim-for-honda-civic-11th-gen-2022-2026 offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-door-handle-covers-for-hyundai-elantra-2020-2024-cn7-4pcs offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-door-handle-covers-for-hyundai-sonata-2020-2024-dn8-4pcs offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-door-handle-covers-hyundai-elantra-hybrid-2025-present-4pcs offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-gear-shift-console-trim-for-toyota-corolla-2014-2018-e170 offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-hand-stitched-steering-wheel-cover offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-side-air-flow-vents-fender-trim offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-side-mirror-cover-hyundai-elantra-2020-2024 offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-side-mirror-cover-hyundai-elantra-hybrid-2025-present offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-side-mirror-cover-hyundai-sonata-2020-2024 offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-side-mirror-cover-suzuki-swift-2025-present offers missing hasMerchantReturnPolicy",
+      "/carbon-fiber-steering-wheel-trim-for-honda-civic-11th-gen-2022-2026 offers missing hasMerchantReturnPolicy",
+      "… +358 more"
+    ],
+    "soft": false
+  },
+  "C12": {
+    "pass": false,
+    "count": 19,
+    "failures": [
+      "/blogs missing Blog/CollectionPage JSON-LD",
+      "/blogs/7d-vs-9d-vs-tpe-floor-mats-pakistan missing visible breadcrumb",
+      "/blogs/7d-vs-9d-vs-tpe-floor-mats-pakistan missing BreadcrumbList",
+      "/blogs/7d-vs-9d-vs-tpe-floor-mats-pakistan missing Last updated",
+      "/blogs/are-aftermarket-car-accessories-safe missing visible breadcrumb",
+      "/blogs/are-aftermarket-car-accessories-safe missing BreadcrumbList",
+      "/blogs/are-aftermarket-car-accessories-safe missing Last updated",
+      "/blogs/best-body-kit-styles-toyota-corolla-pakistan missing visible breadcrumb",
+      "/blogs/best-body-kit-styles-toyota-corolla-pakistan missing BreadcrumbList",
+      "/blogs/best-body-kit-styles-toyota-corolla-pakistan missing Last updated",
+      "/blogs/best-floor-mats-pakistani-weather-guide missing visible breadcrumb",
+      "/blogs/best-floor-mats-pakistani-weather-guide missing BreadcrumbList",
+      "/blogs/best-floor-mats-pakistani-weather-guide missing Last updated",
+      "/blogs/body-kit-price-in-pakistan-2026 missing visible breadcrumb",
+      "/blogs/body-kit-price-in-pakistan-2026 missing BreadcrumbList",
+      "/blogs/body-kit-price-in-pakistan-2026 missing Last updated",
+      "/blogs/car-care-101-essential-products-pakistan missing visible breadcrumb",
+      "/blogs/car-care-101-essential-products-pakistan missing BreadcrumbList",
+      "/blogs/car-care-101-essential-products-pakistan missing Last updated",
+      "/blogs/car-perfume-air-freshener-guide missing visible breadcrumb",
+      "/blogs/car-perfume-air-freshener-guide missing BreadcrumbList",
+      "/blogs/car-perfume-air-freshener-guide missing Last updated",
+      "/blogs/cod-vs-online-payment-car-accessories-pakistan missing visible breadcrumb",
+      "/blogs/cod-vs-online-payment-car-accessories-pakistan missing BreadcrumbList",
+      "/blogs/cod-vs-online-payment-car-accessories-pakistan missing Last updated",
+      "/blogs/dash-cameras-pakistan-why-every-driver-needs-one missing visible breadcrumb",
+      "/blogs/dash-cameras-pakistan-why-every-driver-needs-one missing BreadcrumbList",
+      "/blogs/dash-cameras-pakistan-why-every-driver-needs-one missing Last updated",
+      "/blogs/exhaust-tips-systems-sound-performance missing visible breadcrumb",
+      "/blogs/exhaust-tips-systems-sound-performance missing BreadcrumbList",
+      "/blogs/exhaust-tips-systems-sound-performance missing Last updated",
+      "/blogs/honda-city-2021-modification-cost-pakistan missing visible breadcrumb",
+      "/blogs/honda-city-2021-modification-cost-pakistan missing BreadcrumbList",
+      "/blogs/honda-city-2021-modification-cost-pakistan missing Last updated",
+      "/blogs/honda-civic-accessories-guide-every-generation missing visible breadcrumb",
+      "/blogs/honda-civic-accessories-guide-every-generation missing BreadcrumbList",
+      "/blogs/honda-civic-accessories-guide-every-generation missing Last updated",
+      "/blogs/how-to-choose-right-front-grille missing visible breadcrumb",
+      "/blogs/how-to-choose-right-front-grille missing BreadcrumbList",
+      "/blogs/how-to-choose-right-front-grille missing Last updated",
+      "… +15 more"
+    ],
+    "soft": false,
+    "note": "Author Person check skipped/NEEDS-OWNER (no named author in OWNER INPUTS)"
+  },
+  "C13": {
+    "pass": true,
+    "count": 127,
+    "failures": [],
+    "soft": false
+  },
+  "C14": {
+    "pass": true,
+    "count": 1,
+    "failures": [],
+    "soft": false
+  },
+  "C15": {
+    "pass": false,
+    "count": 0,
+    "failures": [
+      "seo-reports/redirect-map.csv not built"
+    ],
+    "soft": false,
+    "note": "Create redirect-map.csv then re-run"
+  },
+  "C16": {
+    "pass": true,
+    "count": 532,
+    "failures": [],
+    "soft": false
+  },
+  "C17": {
+    "pass": true,
+    "count": 398,
+    "failures": [],
+    "soft": false
+  },
+  "C18": {
+    "pass": true,
+    "count": 1,
+    "failures": [],
+    "soft": false
+  },
+  "C19": {
+    "pass": false,
+    "count": 1,
+    "failures": [
+      "homepage 440.3 KB > 300 KB target"
+    ],
+    "soft": true,
+    "kb": 440.3
+  },
+  "C20": {
+    "pass": true,
+    "count": 80,
+    "failures": [],
+    "soft": true
+  },
+  "C21": {
+    "pass": true,
+    "count": 209,
+    "failures": [],
+    "soft": false
+  },
+  "C22": {
+    "pass": true,
+    "count": 127,
+    "failures": [],
+    "soft": false
+  },
+  "C23": {
+    "pass": true,
+    "count": 532,
+    "failures": [],
+    "soft": false
+  },
+  "C24": {
+    "pass": false,
+    "count": 1,
+    "failures": [
+      "scripts/verify-mobile-api.mjs:581:hardcoded-password-literal"
+    ],
+    "soft": true
+  }
+}
+SUMMARY hard_fail=C4,C5,C6,C7,C9,C10,C11,C12,C15 soft_fail=C8,C19,C24 out=seo-reports/improve-1028/S1-seo-verify.json
+
+======== S1 live probes (attached) ========
+=== S1 live probes ===
+200  https://crazzycars.pk/blogs
+     name="robots" content="index, follow"
+     rel="canonical" href="https://crazzycars.pk/blogs"
+200  https://crazzycars.pk/blogs?search=led
+     name="robots" content="noindex, follow"
+     rel="canonical" href="https://crazzycars.pk/blogs"
+200  https://crazzycars.pk/shop?q=led
+     name="robots" content="noindex, follow"
+     rel="canonical" href="https://crazzycars.pk/shop"
+200  https://crazzycars.pk/shop
+     name="robots" content="index, follow"
+     rel="canonical" href="https://crazzycars.pk/shop"
+200  https://crazzycars.pk/cars?q=civic
+     name="robots" content="noindex, follow"
+     rel="canonical" href="https://crazzycars.pk/cars"
+200  https://crazzycars.pk/cars
+     name="robots" content="index, follow"
+     rel="canonical" href="https://crazzycars.pk/cars"
+
+=== robots.txt: search/q must NOT be Disallow-added for listings ===
+(no listing search Disallow lines — OK)
+
+=== sitemap must not contain query URLs ===
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
