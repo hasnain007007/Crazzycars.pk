@@ -1,0 +1,22 @@
+{
+  "branch": "fix/recovery-1029",
+  "startedAt": "2026-10-28T21:48:00.000Z",
+  "finishedAt": "2026-10-28T21:59:00.000Z",
+  "fingerprintWrite": "84143ac0cb2c3085",
+  "atlasNeverWrite": "317ae4de8eb24f84",
+  "granted": [],
+  "tasks": {
+    "R0": { "status": "done", "report": "R0-sources.md" },
+    "R1": { "status": "done", "report": "R1-gap-analysis.md" },
+    "R2": { "status": "done", "report": "R2-media-photos.md" },
+    "R3": { "status": "done", "report": "R3-rebuild-plan.md" },
+    "R4": { "status": "dry_run_only", "report": "R4-dry-run.md", "awaiting": "GRANTED R4" },
+    "R5": { "status": "done_proposals_disabled", "report": "R5-prevent-repeat.md", "runbook": "RESTORE.md" },
+    "R6": { "status": "done", "report": "R6-verify.md", "note": "live OK; missing content still 404" }
+  },
+  "notes": [
+    "GRANTED empty → no production writes",
+    "Best content source: Mac docker crazzycars_local_real :27028",
+    "Old VPS 31.97.107.181 unreachable"
+  ]
+}
