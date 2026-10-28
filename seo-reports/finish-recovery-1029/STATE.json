@@ -27,7 +27,9 @@
       "note": "hide vezel proposed; no GRANT write"
     },
     "F5": {
-      "status": "pending"
+      "status": "proposals_only",
+      "report": "F5-prevent-repeat.md",
+      "runbook": "RESTORE.md"
     },
     "F6": {
       "status": "pending"
