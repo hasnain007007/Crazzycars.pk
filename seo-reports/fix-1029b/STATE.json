@@ -3,22 +3,41 @@
   "startedAt": "2026-10-28T20:40:00.000Z",
   "fingerprintWrite": "84143ac0cb2c3085",
   "atlasNeverWrite": "317ae4de8eb24f84",
+  "liveCommit": "09f3d32",
   "tasks": {
     "S10": {
       "status": "done",
       "commit": "37ab1fa",
-      "probes": "S10-probes.txt",
       "verify": "S10-verify.txt",
-      "notes": "atom 410; ?page=1 308; /products/ still redirects to flat slug"
+      "probes": "S10-probes.txt",
+      "live": "atom 410; blogs?page=1 308; /products/ still redirects"
     },
-    "S7c": { "status": "in_progress" },
-    "S11": { "status": "in_progress" },
-    "S5": { "status": "pending", "awaiting": "GO S5" },
+    "S11": {
+      "status": "done",
+      "commits": ["54572da", "09f3d32"],
+      "verify": "S11-verify.txt",
+      "notes": "C24 pass after catalog expand; Related guides + From the blog live"
+    },
+    "S7c": {
+      "status": "done_code",
+      "commit": "6f5bff5",
+      "verify": "S7c-verify.txt",
+      "notes": "ISR+query cache+media Cache-Control live; indexes await GO S7c-INDEXES; home/cat LCP still ~3s",
+      "awaiting": ["GO S7c-INDEXES"]
+    },
+    "S5": {
+      "status": "dry_run_ready",
+      "file": "S5-dry-run.md",
+      "awaiting": "GO S5"
+    },
     "S6-DB": {
       "status": "pending",
       "awaiting": "GO S6 after M4+L1",
-      "notes": "Reuse fix-all-1029/S6-dry-run.md"
+      "notes": "Reuse seo-reports/fix-all-1029/S6-dry-run.md; apply with L1"
     }
   },
-  "notes": []
+  "notes": [
+    "Deployed manually to crazzycars-store:live (Coolify webhook idle).",
+    "Never write Atlas 317ae4de8eb24f84."
+  ]
 }
