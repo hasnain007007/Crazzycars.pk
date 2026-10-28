@@ -7,7 +7,11 @@ import BlogPost from "@/lib/models/BlogPost.model";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { MAX_SITEMAP_URLS } from "@/lib/sitemap/xml";
 import { getCategoryIdsWithProducts } from "@/lib/storeCategoryData";
-import { STOREFRONT_PRODUCT_FILTER, WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
+import {
+  STOREFRONT_PRODUCT_FILTER,
+  WEBSITE_PRODUCT_FILTER,
+  SITEMAP_LISTING_EXTRA,
+} from "@/lib/productVisibility";
 import { CITY_LANDING_SLUGS, cityPath } from "@/lib/cityLandingPages";
 import { DELETED_URL_REDIRECTS } from "@/lib/deletedUrlRedirects.mjs";
 
@@ -24,6 +28,7 @@ function isRedirectSourcePath(path) {
 /** Active website products with a sellable price and no deleted-URL redirect. */
 const SITEMAP_PRODUCT_FILTER = {
   ...WEBSITE_PRODUCT_FILTER,
+  ...SITEMAP_LISTING_EXTRA,
   $or: [
     { "pricing.salePrice": { $gt: 0 } },
     { "pricing.regularPrice": { $gt: 0 } },

@@ -245,6 +245,14 @@ const productSchema = new mongoose.Schema(
       metaKeywords: [{ type: String, trim: true }],
       /** When true, omit this SKU from /feed/products.xml (Merchant Center). */
       excludeFromMerchantFeed: { type: Boolean, default: false },
+      /** When true, omit from sitemap-products.xml. */
+      excludeFromSitemap: { type: Boolean, default: false },
+      /** When true, omit from shop/category/home listing grids (PDP still resolves). */
+      excludeFromListings: { type: Boolean, default: false },
+      /** e.g. "noindex, follow" — storefront metadata robots. */
+      robots: { type: String, default: "" },
+      /** When true, Product JSON-LD omits image (placeholder / pending photo). */
+      omitProductSchemaImage: { type: Boolean, default: false },
     },
     isUniversal: { type: Boolean, default: false, index: true },
     /** Vehicle ObjectIds (Shop by Car generations) — preferred over legacy string rows */

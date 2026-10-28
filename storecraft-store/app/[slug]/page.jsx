@@ -329,11 +329,14 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     const mainImg = mainImgRaw ? pdpImageUrl(mainImgRaw, 720) : "";
     const ogAlt = contentOverride?.imageAlt || displayName;
 
+    const robotsRaw = String(p.seo?.robots || "").toLowerCase();
+    const noindex = robotsRaw.includes("noindex") || p.seo?.excludeFromSitemap === true;
     return {
       title: { absolute: title },
       description,
       ...(keywords.length ? { keywords } : {}),
       alternates: { canonical },
+      ...(noindex ? { robots: { index: false, follow: true } } : {}),
       openGraph: {
         title: title,
         description,

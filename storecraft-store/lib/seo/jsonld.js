@@ -401,6 +401,9 @@ export function productJsonLd(p) {
     p.category ||
     (Array.isArray(p.categories) ? p.categories.map((c) => c?.name).filter(Boolean).join(" > ") : "") ||
     undefined;
+  const omitSchemaImage =
+    p?.seo?.omitProductSchemaImage === true ||
+    (Array.isArray(p?.media?.images) && p.media.images.some((im) => im?.isPlaceholder === true));
 
   const ld = {
     "@context": "https://schema.org",
@@ -413,8 +416,8 @@ export function productJsonLd(p) {
     brand: { "@type": "Brand", name: String(p.brand || p.vendor || "CrazzyCars.pk").trim() || "CrazzyCars.pk" },
   };
 
-  // Google Product rich results require image — omit the field when empty (never emit []).
-  if (images.length) ld.image = images;
+  // Google Product / Merchant need a real photo — omit placeholder images from JSON-LD.
+  if (images.length && !omitSchemaImage) ld.image = images;
 
   if (price != null) {
     ld.offers = buildMerchantOffer({

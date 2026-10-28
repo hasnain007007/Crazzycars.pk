@@ -145,11 +145,13 @@ function scoreImageForSlug(slug, url) {
 }
 
 function rankedFeedImages(product, siteUrl) {
+  if (product?.seo?.excludeFromMerchantFeed === true) return [];
   const imgs = Array.isArray(product?.media?.images) ? product.media.images : [];
   const ranked = imgs
     .map((img, index) => {
+      if (img?.isPlaceholder) return null;
       const url = absUrl(img?.url || "", siteUrl);
-      if (!url || isBlockedImageHost(url)) return null;
+      if (!url || isBlockedImageHost(url) || /-placeholder\.webp$/i.test(url)) return null;
       const slugScore = scoreImageForSlug(product?.slug, url);
       const mainBoost = img?.isMain ? 0.02 : 0;
       return { url, score: slugScore + mainBoost, index };

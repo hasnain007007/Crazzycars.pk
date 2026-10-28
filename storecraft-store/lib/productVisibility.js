@@ -20,6 +20,12 @@ export const WEBSITE_SEGMENT_FILTER = { segment: { $in: ["car", null] } };
 export const WEBSITE_PRODUCT_FILTER = {
   ...STOREFRONT_PRODUCT_FILTER,
   ...WEBSITE_SEGMENT_FILTER,
+  "seo.excludeFromListings": { $ne: true },
+};
+
+/** Sitemap products: same as website listings, plus explicit sitemap exclusion. */
+export const SITEMAP_LISTING_EXTRA = {
+  "seo.excludeFromSitemap": { $ne: true },
 };
 
 /** Merge hold exclusion into an existing product filter object. */
