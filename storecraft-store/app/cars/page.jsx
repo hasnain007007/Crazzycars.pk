@@ -5,15 +5,28 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { loadShopByCarIndex } from "@/lib/vehiclePageData";
 import { safeJsonLd } from "@/lib/safeJsonLd";
+import { listingHasFacets, parseListingSearchParams } from "@/lib/listingQuery";
+import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW } from "@/lib/seo/robotsMeta";
+import { withSafeMetadata } from "@/lib/safeMetadata";
 
 export const revalidate = 300;
 
-export const metadata = buildPageMetadata({
-  title: "Shop by Car | CrazzyCars.pk",
-  description:
-    "Browse car accessories by make and model — Honda Civic, Toyota Corolla, Suzuki Alto, and more. Generation-matched parts with Cash on Delivery across Pakistan.",
-  path: "/cars",
-  absoluteTitle: true,
+export const generateMetadata = withSafeMetadata(async function carsIndexMetadata({ searchParams }) {
+  const listing = parseListingSearchParams(await searchParams);
+  const noIndex = listingHasFacets(listing);
+  const base = buildPageMetadata({
+    title: "Shop by Car | CrazzyCars.pk",
+    description:
+      "Browse car accessories by make and model — Honda Civic, Toyota Corolla, Suzuki Alto, and more. Generation-matched parts with Cash on Delivery across Pakistan.",
+    path: "/cars",
+    absoluteTitle: true,
+    noIndex,
+  });
+  return {
+    ...base,
+    // S1: facet/search URLs stay noindex,follow with canonical to clean /cars.
+    robots: noIndex ? ROBOTS_NOINDEX_FOLLOW : ROBOTS_INDEX_FOLLOW,
+  };
 });
 
 function yearLabel(v) {

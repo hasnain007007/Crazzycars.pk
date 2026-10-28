@@ -7,11 +7,18 @@ import { withSafeMetadata } from "@/lib/safeMetadata";
 
 export const dynamic = "force-dynamic";
 
-export const generateMetadata = withSafeMetadata(async function blogsMetadata({ searchParams }) {
-  const sp = (await searchParams) || {};
+function blogsListingIsFaceted(sp) {
   const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
   const search = String(sp.search || sp.q || "").trim();
-  const noIndex = page > 1 || Boolean(search);
+  const sort = String(sp.sort || "").trim();
+  const filter = String(sp.filter || sp.category || "").trim();
+  // S1: any search/q/sort/filter (or page>1) → noindex,follow; canonical stays /blogs.
+  return page > 1 || Boolean(search || sort || filter);
+}
+
+export const generateMetadata = withSafeMetadata(async function blogsMetadata({ searchParams }) {
+  const sp = (await searchParams) || {};
+  const noIndex = blogsListingIsFaceted(sp);
   const base = buildPageMetadata({
     title: "Car Accessories Blog | Guides & Tips | CrazzyCars.pk",
     description:

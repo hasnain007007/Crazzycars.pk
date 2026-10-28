@@ -191,15 +191,8 @@ export async function middleware(request) {
     return withPaidCookie(request, redirectPath(request, "/blogs", 308));
   }
 
-  // Soft-404: /blogs?search=… is thin / duplicate of /blogs — collapse to clean index.
-  if (lower === "/blogs" || lower === "/blog") {
-    const search = String(
-      request.nextUrl.searchParams.get("search") || request.nextUrl.searchParams.get("q") || ""
-    ).trim();
-    if (search) {
-      return withPaidCookie(request, NextResponse.redirect(new URL("/blogs", request.url), 308));
-    }
-  }
+  // S1: /blogs?search|q|sort|filter stay reachable (noindex,follow + canonical /blogs).
+  // Do not 308-collapse those query URLs — listingMetadata/robots handle indexing.
 
   // /cars index is not paginated — drop ?page= Soft 404 / duplicate URLs.
   if (lower === "/cars") {

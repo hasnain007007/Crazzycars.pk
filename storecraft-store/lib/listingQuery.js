@@ -60,8 +60,9 @@ export function parseListingSearchParams(sp) {
       readSearchParam(sp, "per_page") || readSearchParam(sp, "show")
     ),
     page: Math.max(1, parseInt(readSearchParam(sp, "page"), 10) || 1),
-    q: readSearchParam(sp, "q"),
-    category: readSearchParam(sp, "category"),
+    // Accept both `q` and `search` (S1 / SearchAction + toolbar aliases).
+    q: readSearchParam(sp, "q") || readSearchParam(sp, "search"),
+    category: readSearchParam(sp, "category") || readSearchParam(sp, "filter"),
     sale: truthyFlag(readSearchParam(sp, "sale")),
     deals: truthyFlag(readSearchParam(sp, "deals")),
     make: readSearchParam(sp, "make") || readSearchParam(sp, "carMake"),
