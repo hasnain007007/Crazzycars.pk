@@ -22,7 +22,9 @@
       "awaiting": "GRANTED BLOG-IMAGES"
     },
     "F4": {
-      "status": "pending"
+      "status": "done",
+      "report": "F4-wrong-photos.md",
+      "note": "hide vezel proposed; no GRANT write"
     },
     "F5": {
       "status": "pending"
