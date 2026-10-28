@@ -56,21 +56,32 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: "Deepal S05 (SO5) Batman style side mirror covers in carbon fibre or gloss black ABS. Price in Pakistan, COD on eligible items, nationwide delivery.",
   },
   "/categories/led-indicator-lights": {
-    title: "LED Indicator Lights & Mirror Indicators | CrazzyCars.pk",
-    meta: "LED indicator lights for Corolla, Civic and City. Side mirror indicators for the Toyota Corolla are priced from Rs. 4,999. COD on eligible items.",
+    title: "LED Indicator Bulbs for Cars | CrazzyCars.pk",
+    meta: "LED indicator for car and LED indicator bulb pairs from Rs. 1,199. Side mirror indicator options for Corolla, Civic and City. COD on eligible items.",
   },
   "/categories/splitters-side-skirts": {
-    // Keep raw title ≤65 (HTML &amp; encoding must not push SERP length over).
-    title: "Car Side Skirts and Bumper Splitters | CrazzyCars.pk",
-    meta: "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic and Corolla. COD on eligible items, nationwide delivery.",
+    title: "Car Side Skirts, Front Splitters | CrazzyCars.pk",
+    meta: "Shop car side skirts, bumper splitters, front splitters and back bumper splitters in Pakistan. Civic and Corolla lip kits. COD on eligible items.",
   },
   "/categories/quarter-window-louvers": {
-    title: "Quarter Window Louvers Price in Pakistan | Civic, Corolla",
-    meta: "Quarter window louvers for Civic, Corolla, City, Alto, Yaris and Prius in Pakistan. Carbon and black options. COD on eligible items, nationwide delivery.",
+    title: "Window Louvers Price in Pakistan | CrazzyCars.pk",
+    meta: "Quarter window louvers and quarter glass louvers for Civic, Corolla, City, Alto, Yaris and Prius in Pakistan. COD on eligible items, nationwide delivery.",
   },
   "/categories/interior-lights": {
-    title: "Car Interior Ambient Lights Price in Pakistan | CrazzyCars.pk",
-    meta: "Buy car interior lights in Pakistan: ambient dashboard strips, footwell RGB lights, door welcome logo lights and roof star lights. COD on eligible items.",
+    title: "Car Interior Lights Price in Pakistan | CrazzyCars.pk",
+    meta: "Car interior lights and LED lights for car interior from Rs. 499. Ambient light for car price in Pakistan on each listing. COD on eligible items.",
+  },
+  "/categories/side-mirror-covers": {
+    title: "Car Side Mirror Covers | Carbon Fiber | CrazzyCars.pk",
+    meta: "Car side mirror cover and carbon fiber side mirror cover pairs for City, BR-V, Civic, Corolla and Alto. COD on eligible items, nationwide delivery.",
+  },
+  "/categories/exterior": {
+    title: "Car Exterior Accessories Pakistan | CrazzyCars.pk",
+    meta: "Car exterior accessories in Pakistan: car spoilers, splitter kits and universal car accessories. Spoiler price in Pakistan on every listing. COD eligible.",
+  },
+  "/categories/carbon-fiber": {
+    title: "Carbon Fiber Car Accessories Pakistan | CrazzyCars.pk",
+    meta: "Carbon fiber-look car exterior accessories and cabin trims in Pakistan. Universal car accessories with fitment notes. COD on eligible items.",
   },
   "/categories/led-lighting": {
     title: "Car LED Lights in Pakistan – Headlights, Indicators, DRL",
@@ -89,32 +100,64 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: "Track your CrazzyCars.pk order with your PostEx or Run Courier tracking number, or WhatsApp 03284010007 for help. Nationwide delivery from Gujranwala.",
   },
   "/car-heads-up-display-hud": {
-    title: "Car HUD Heads Up Display Price in Pakistan | CrazzyCars.pk",
-    meta: "Car HUD heads up display in Pakistan: speed, voltage and over-speed alarm, auto on/off, plug-and-play. Rs. 3,499. COD on eligible items, nationwide delivery.",
+    title: "Heads Up Display Pakistan | Car HUD | CrazzyCars.pk",
+    meta: "Heads up display Pakistan: car HUD display with speed, voltage and over-speed alarm. Price in Pakistan Rs. 3,499. COD on eligible items, nationwide.",
   },
   "/cars/toyota-yaris-2020-present": {
-    title: "Toyota Yaris 2020–2026 Accessories in Pakistan | CrazzyCars.pk",
-    meta: "Toyota Yaris 2020–2026 accessories in Pakistan: TPE floor mats, dashboard mat, key cover, spoilers, louvers, body kit. COD on eligible items, nationwide.",
+    title: "Yaris Accessories Pakistan | Body Kit, Spoiler",
+    meta: "Toyota Yaris accessories Pakistan: body kit, spoiler, TPE floor mats, dashboard mat and key cover. COD on eligible items, nationwide delivery.",
   },
   "/cars/suzuki-alto-2020-present": {
-    title: "Suzuki Alto 2019–2026 Accessories in Pakistan | CrazzyCars.pk",
-    meta: "Suzuki Alto 2019–2026 accessories in Pakistan: lava tail lights, steering controls, roof spoiler, indicators, mats and key covers. COD on eligible items.",
+    title: "Alto Accessories Pakistan | Body Kit, Spoiler",
+    meta: "Suzuki Alto accessories Pakistan: body kit, spoiler, lava tail lights, mats and key covers listed by year. COD on eligible items nationwide.",
   },
   "/cars/suzuki-swift-2025-present": {
-    title: "Suzuki Swift 2025–Present Accessories in Pakistan | CrazzyCars.pk",
-    meta: "Suzuki Swift 2025–present accessories in Pakistan: floor mats, dashboard mat, key cover, carbon side mirror and door handle covers. COD on eligible items.",
+    title: "Swift Accessories Pakistan | Body Kit, Spoiler",
+    meta: "Suzuki Swift accessories Pakistan: body kit, spoiler, floor mats, dashboard mat and carbon mirror covers. COD on eligible items, nationwide.",
   },
   "/cars/toyota-aqua-2012-present": {
-    title: "Toyota Aqua Accessories & Body Kits in Pakistan | CrazzyCars.pk",
-    meta: "Toyota Aqua accessories in Pakistan: body kits by year, Batman side mirror covers, front splitters, floor mats and dashboard mat. COD on eligible items.",
+    title: "Aqua Accessories Pakistan | Body Kit, Mirrors",
+    meta: "Aqua body kit price in Pakistan on kit listings. Aqua accessories including Aqua side mirror cover, splitters and mats. COD on eligible items.",
   },
   "/cars/honda-civic-x-2016-2021": {
-    title: "Honda Civic X 2016–2021 Accessories & Carbon Interior Trims",
-    meta: "Honda Civic X 2016–2021 accessories in Pakistan: carbon interior trims, DRLs, fog lamps, spoilers, grille and more. COD on eligible items.",
+    title: "Civic X Accessories Pakistan | Interior, Spoiler",
+    meta: "Civic X interior, carbon fiber interior, RS trunk spoiler and body kit accessories in Pakistan. COD on eligible items nationwide from Gujranwala.",
+  },
+  "/cars/honda-civic-reborn-2006-2012": {
+    title: "Reborn Accessories Pakistan | Parts, Grill",
+    meta: "Reborn accessories and Reborn parts in Pakistan: front grill, gear knob cover, body kit and spoilers. COD on eligible items, nationwide delivery.",
+  },
+  "/cars/honda-civic-rebirth-2012-2016": {
+    title: "Rebirth Accessories Pakistan | Spoiler, Kit",
+    meta: "Rebirth accessories in Pakistan: spoiler, body kit and exterior upgrades for Civic Rebirth 2012–2016. COD on eligible items from Gujranwala.",
+  },
+  "/cars/toyota-corolla-e170-2014-2026": {
+    title: "Corolla E170 Accessories Pakistan | Spoiler",
+    meta: "Corolla E170 accessories in Pakistan: 2015–2026 RS trunk spoiler, Grande carbon steering trim and body kits. COD on eligible items nationwide.",
+  },
+  "/cars/toyota-corolla-e140-2009-2014": {
+    title: "Corolla E140 Accessories Pakistan | Body Kit",
+    meta: "2012 accessories for Corolla E140 in Pakistan: body kit, Nike style headlights and Canadian grill listings with prices. COD on eligible items.",
   },
   "/cars/honda-city-2021-present": {
-    title: "Honda City 2021–Present Accessories in Pakistan",
-    meta: "Honda City 2021–2026 accessories in Pakistan: trunk spoiler, gear knob, fog lights, body kits and mats. COD on eligible items.",
+    title: "City Accessories Pakistan | Body Kit, Spoiler",
+    meta: "City accessories Pakistan: body kit price in Pakistan on kit pages, trunk lip spoiler and paddle shifter covers. COD on eligible items nationwide.",
+  },
+  "/cars/honda-city-classic-2009-2020": {
+    title: "City Classic Accessories Pakistan | Body Kit",
+    meta: "Honda City Classic accessories Pakistan: body kit, trunk spoiler and cabin upgrades listed by year. COD on eligible items from Gujranwala store.",
+  },
+  "/cars/hyundai-elantra-2020-2024": {
+    title: "Elantra Accessories Pakistan | Body Kit",
+    meta: "Hyundai Elantra accessories Pakistan: body kit, spoiler and carbon trims with year fitment notes. COD on eligible items from Gujranwala store.",
+  },
+  "/cars/toyota-raize-2019-present": {
+    title: "Raize Accessories Pakistan | Body Kit, Spoiler",
+    meta: "Toyota Raize accessories Pakistan: body kit, spoiler and Batman-style mirror covers listed by year. COD on eligible items from Gujranwala store.",
+  },
+  "/cars/deepal-s05-2024-present": {
+    title: "Deepal S05 Accessories Pakistan | Body Kit",
+    meta: "Deepal S05 (SO5) accessories in Pakistan: body kit, spoiler and Batman-style side mirror covers. COD on eligible items, nationwide delivery.",
   },
   "/cars/suzuki-liana-2006-2014": {
     title: "Suzuki Liana 2006–2014 Accessories | CrazzyCars.pk",
@@ -134,10 +177,6 @@ const PAGE_SEO_OVERRIDES_BASE = {
     title: "Car Accessories in Pakistan | Kits, LEDs & Mats",
     meta: "Buy car accessories online in Pakistan: splitters, body kits, LED lights, carbon fiber and interior accessories. COD on eligible items, nationwide delivery.",
   },
-  // Phase 4 ranking-page meta only (title/H1/URL unchanged except noted)
-  "/cars/toyota-corolla-e140-2009-2014": {
-    meta: "Toyota Corolla E140 (2009–2014) accessories in Pakistan: body kits, grilles, projector headlights, spoilers and LEDs. COD on eligible items, nationwide.",
-  },
   // Ranking page: title locked; fix truncated "Butto" in meta only
   "/toyota-corolla-2012-top-ac-panel": {
     meta: "Corolla AC vent cover price in Pakistan: Top AC Panel Center Dashboard AC Vent Button 2008-2013 for Toyota Corolla 2012. Cash on Delivery & nationwide delivery.",
@@ -152,8 +191,13 @@ export const CATEGORY_APPLY_SKIP = new Set(["led-headlights-bulbs"]);
 
 /** Category H1 overrides (display name). */
 export const CATEGORY_H1_OVERRIDES = {
-  "interior-lights": "Car Interior Lights & Ambient Lights in Pakistan",
-  "led-indicator-lights": "LED Indicator Lights & Side Mirror Indicators in Pakistan",
+  "interior-lights": "Car Interior Lights and Ambient Lights in Pakistan",
+  "led-indicator-lights": "LED Indicator Lights for Cars in Pakistan",
+  "splitters-side-skirts": "Car Side Skirts and Bumper Splitters in Pakistan",
+  "side-mirror-covers": "Car Side Mirror Covers in Pakistan",
+  "quarter-window-louvers": "Window Louvers and Quarter Glass Louvers",
+  exterior: "Car Exterior Accessories in Pakistan",
+  "carbon-fiber": "Carbon Fiber Car Accessories in Pakistan",
 };
 
 /** Product H1 override (ranking page truncation fix only). */

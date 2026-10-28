@@ -18,7 +18,7 @@ import {
 import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
-import { cloudinarySrcSet, pdpImageUrl } from "@/lib/cloudinaryImage";
+import { pdpImageUrl } from "@/lib/cloudinaryImage";
 import { resolveProductImageUrls, resolvePrimaryProductImageUrl } from "@/lib/productImages";
 import {
   productJsonLd as buildProductJsonLd,
@@ -494,22 +494,15 @@ export default async function ProductPage({ params, searchParams }) {
       }
     })();
     const lcpSrc = resolvePrimaryProductImageUrl(content.data) || "";
+    // One LCP candidate only: -sm.webp at 720 (matches ProductDetailMedico). No competing -400 / master / srcset.
     const lcpUrl = lcpSrc ? pdpImageUrl(lcpSrc, 720) : "";
-    const lcpSrcSet = lcpSrc ? cloudinarySrcSet(lcpSrc, [480, 720, 900], { crop: "limit" }) : "";
     const ssrReviews = approvedReviews.slice(0, 5);
 
     return (
       <>
         {lcpUrl ? (
           // eslint-disable-next-line @next/next/no-head-element -- preload PDP LCP image
-          <link
-            rel="preload"
-            as="image"
-            href={lcpUrl}
-            imageSrcSet={lcpSrcSet || undefined}
-            imageSizes="(max-width: 768px) 100vw, 420px"
-            fetchPriority="high"
-          />
+          <link rel="preload" as="image" href={lcpUrl} fetchPriority="high" />
         ) : null}
         {isCompleteProductJsonLd(productLd) ? (
           <script

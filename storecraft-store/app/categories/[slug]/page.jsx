@@ -38,6 +38,7 @@ import {
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { BRAND_NAME } from "@/lib/brand";
+import { categoryBannerUrl } from "@/lib/cloudinaryImage";
 
 /** ISR: catalog HTML edge-cache friendly; admin revalidate webhook still purges. */
 export const revalidate = 300;
@@ -345,8 +346,19 @@ export default async function CategoryPage({ params, searchParams }) {
     }
     const faqLd = faqPageJsonLd(visibleFaqs);
 
+    // Single LCP preload — category hero uses -sm.webp (not -800, which 404'd and raced with the master).
+    const lcpRaw =
+      data.category?.image?.url ||
+      (Array.isArray(data.category?.bannerImages) ? data.category.bannerImages[0]?.url : "") ||
+      "";
+    const lcpUrl = lcpRaw ? categoryBannerUrl(lcpRaw) : "";
+
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
+        {lcpUrl ? (
+          // eslint-disable-next-line @next/next/no-head-element -- preload category LCP image only
+          <link rel="preload" as="image" href={lcpUrl} fetchPriority="high" />
+        ) : null}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}

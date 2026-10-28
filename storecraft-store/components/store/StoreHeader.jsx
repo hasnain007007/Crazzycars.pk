@@ -605,8 +605,12 @@ export function StoreHeader({ initialCategoryTree = null }) {
               <img
                 src={trimmedLogoUrl(brand.logo)}
                 alt={brand.storeName}
+                width={148}
+                height={40}
+                decoding="async"
+                fetchPriority="low"
                 className="h-10 max-w-[min(148px,42vw)] object-contain md:h-16 md:max-w-[220px]"
-                style={{ width: "auto", objectFit: "contain" }}
+                style={{ width: "auto", height: "2.5rem", aspectRatio: "148 / 40", objectFit: "contain" }}
               />
             ) : brand.showStoreName ? (
               <span className="flex min-w-0 flex-col items-center md:items-start">
@@ -817,8 +821,11 @@ export function StoreHeader({ initialCategoryTree = null }) {
                       <img
                         src={trimmedLogoUrl(brand.logo)}
                         alt={brand.storeName}
+                        width={160}
+                        height={40}
+                        decoding="async"
                         className="h-10 max-w-[160px] object-contain"
-                        style={{ height: 40, width: "auto", maxWidth: 160, objectFit: "contain" }}
+                        style={{ height: 40, width: "auto", maxWidth: 160, aspectRatio: "160 / 40", objectFit: "contain" }}
                       />
                     ) : (
                       <span className="flex flex-col items-center leading-none">

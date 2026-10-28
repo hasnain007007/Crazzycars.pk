@@ -11,7 +11,7 @@ const DEFAULT_HERO = {
 const DEFAULT_STORY = {
   badge: "Who We Are",
   title: "Built for Pakistani Car Enthusiasts",
-  paragraph1: `${STORE} is based in Gujranwala, Pakistan, and focuses on exterior and lighting upgrades that fit real Pakistani driving conditions.`,
+  paragraph1: `${STORE} (also known as Crazy Cars / CrazyCars.pk) is based in Gujranwala, Pakistan, and focuses on exterior and lighting upgrades that fit real Pakistani driving conditions.`,
   paragraph2:
     "From bumper splitters and spoilers to LED headlights and body kits, we stock accessories chosen for fitment, finish, and everyday use.",
   paragraph3:

@@ -27,7 +27,7 @@
       "notes": "C23 pass (200 + indexable + self-canonical)"
     },
     "S7": {
-      "status": "partial",
+      "status": "superseded_by_S7b",
       "artifact": "seo-reports/fix-all-1029/S7-notes.md",
       "notes": "85 -sm.webp copies; LH home LCP 3.0s CLS 0.175 (above target); before baseline missing"
     },
@@ -47,11 +47,38 @@
       "live": true,
       "verify": "seo-reports/fix-all-1029/T1-verify.txt"
     },
-    "M4": { "status": "blocked_dry_run", "awaiting": "GO M4", "artifact": "seo-reports/fix-all-1029/M4-dry-run.md" },
-    "L1": { "status": "awaiting_go", "awaiting": "GO L1", "artifact": "seo-reports/fix-all-1029/L1-dry-run-m4b-reapply.md", "notes": "after M4 settled; fresh mongodump required" },
-    "L2": { "status": "awaiting_go", "awaiting": "GO L2", "artifact": "seo-reports/fix-all-1029/L2-dry-run-low-ctr-titles.md", "notes": "no slug overlap with L1; do not same write as L1" },
-    "S5": { "status": "blocked", "awaiting": "GO S5 + slugs", "artifact": "seo-reports/fix-all-1029/S5-dry-run.md" },
-    "S6": { "status": "blocked", "awaiting": "GO S6 + keyword file", "artifact": "seo-reports/fix-all-1029/S6-dry-run.md" }
+    "M4": {
+      "status": "blocked_dry_run",
+      "awaiting": "GO M4",
+      "artifact": "seo-reports/fix-all-1029/M4-dry-run.md"
+    },
+    "L1": {
+      "status": "awaiting_go",
+      "awaiting": "GO L1",
+      "artifact": "seo-reports/fix-all-1029/L1-dry-run-m4b-reapply.md",
+      "notes": "after M4 settled; fresh mongodump required"
+    },
+    "L2": {
+      "status": "awaiting_go",
+      "awaiting": "GO L2",
+      "artifact": "seo-reports/fix-all-1029/L2-dry-run-low-ctr-titles.md",
+      "notes": "no slug overlap with L1; do not same write as L1"
+    },
+    "S5": {
+      "status": "dry_run",
+      "awaiting": "GO S5 + optional GSC slugs",
+      "artifact": "seo-reports/fix-all-1029/S5-dry-run.md"
+    },
+    "S6": {
+      "status": "code_shipped_db_dry_run",
+      "awaiting": "GO S6 for DB sync only",
+      "artifact": "seo-reports/fix-all-1029/S6-dry-run.md"
+    },
+    "S7b": {
+      "status": "in_progress",
+      "artifact": "seo-reports/fix-all-1029/S7b-notes.md",
+      "notes": "LCP/CLS code fixes; LH after pending deploy"
+    }
   },
   "notes": [
     "Coolify webhook idle — store image rebuilt manually after each push.",

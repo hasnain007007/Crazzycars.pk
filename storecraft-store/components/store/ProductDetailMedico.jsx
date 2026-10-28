@@ -1040,15 +1040,17 @@ export function ProductDetailMedico({
                   alt={selectedItem.altText || product.name}
                   watermark={productImageWatermark}
                   className="h-full w-full"
-                  width={900}
+                  // 720 → local -sm.webp (not the multi-MB master). Matches preload in [slug]/page.
+                  width={720}
                   crop="limit"
-                  widths={[640, 900, 1200]}
+                  widths={[480, 720]}
                   sizes="(max-width: 768px) 100vw, 420px"
                   loading={selectedIndex === 0 ? "eager" : "lazy"}
                   fetchPriority={selectedIndex === 0 ? "high" : "low"}
                   imgStyle={{
                     width: "100%",
                     height: "100%",
+                    aspectRatio: "1 / 1",
                     objectFit: "cover",
                     objectPosition: "center",
                   }}

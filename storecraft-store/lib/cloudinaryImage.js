@@ -65,26 +65,26 @@ export function localMediaPath(src) {
 }
 
 /**
- * Prefer prebuilt -400.webp thumbs for card-sized local media.
- * Categories and products use `{stem}-400.webp` beside the master.
- * S7 also writes `{stem}-sm.webp` next to masters >300KB (original kept).
- * Missing thumbs: <img onError> falls back to the original master URL.
- * Use thumbs for any request up to 800px-wide slots (promo cards, grids).
+ * Local /media derivatives (masters kept on disk):
+ *  - `{stem}-400.webp` — cards / thumbs (≤480 CSS px @2×)
+ *  - `{stem}-sm.webp`  — PDP / banners (S7 compressed; never multi-MB masters)
+ * Missing derivatives: <img onError> falls back to the master URL.
  */
 function localMediaForWidth(src, width) {
   const path = localMediaPath(src) || "";
+  const fallback = path || unwrapNextImageUrl(src) || String(src || "").trim();
+  if (!path) return fallback;
+  if (/-(400|sm|800)\.(webp|jpe?g|png)$/i.test(path)) return path;
+  if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
+    return fallback;
+  }
   const w = Number(width) || 0;
-  if (!path || !(w > 0 && w <= 800)) {
-    return path || unwrapNextImageUrl(src) || String(src || "").trim();
-  }
-  if (/-400\.(webp|jpe?g|png)$/i.test(path) || /-sm\.webp$/i.test(path)) {
-    return path;
-  }
-  if (/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
-    // Prefer -400; if a listing passes a known-large master, -sm is a safe mid-size.
+  // Small slots → -400; everything else (incl. unknown width) → -sm so LCP never
+  // pulls a multi-megabyte master. onError restores the master if -sm is absent.
+  if (w > 0 && w <= 480) {
     return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
   }
-  return path || unwrapNextImageUrl(src) || String(src || "").trim();
+  return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-sm.webp");
 }
 
 export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto", gravity, effects = [] } = {}) {
@@ -162,17 +162,17 @@ export function categoryImageUrl(src, width = 360) {
 }
 
 /**
- * Category page hero banner — prefer prebuilt `-800.webp` (≈316 CSS px @ 2× DPR).
- * Falls back to master via <img onError> when the derivative is missing.
+ * Category page hero banner — prefer S7 `-sm.webp` (many `-800.webp` files 404'd and
+ * poisoned LCP). LocalMediaImg falls back to master when -sm is missing.
  */
 export function categoryBannerUrl(src) {
   const path = localMediaPath(src) || "";
   if (path && /\/media\/(categories|uploads|brand)\//i.test(path)) {
-    if (/-800\.webp$/i.test(path)) return path;
+    if (/-(sm|800)\.webp$/i.test(path)) return path.replace(/-800\.webp$/i, "-sm.webp");
     if (/-400\.(webp|jpe?g|png)$/i.test(path)) {
-      return path.replace(/-400\.(webp|jpe?g|png)$/i, "-800.webp");
+      return path.replace(/-400\.(webp|jpe?g|png)$/i, "-sm.webp");
     }
-    return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-800.webp");
+    return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-sm.webp");
   }
   return cloudinaryUrl(src, { width: 800, height: 480, crop: "fill" });
 }

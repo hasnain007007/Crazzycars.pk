@@ -38,6 +38,8 @@ const inter = Inter({
   display: "swap",
   weight: ["400", "600"],
   preload: true,
+  // Metric-matched fallback cuts the ~0.175 CLS from late font swap (S7b).
+  adjustFontFallback: true,
 });
 
 const rajdhani = Rajdhani({
@@ -45,8 +47,9 @@ const rajdhani = Rajdhani({
   variable: "--font-rajdhani",
   display: "swap",
   weight: ["600", "700"],
-  // Body Inter is the LCP font; heading font can swap after first paint.
-  preload: false,
+  // Preload heading font too — late Rajdhani swap shifted <main> (CLS 0.175).
+  preload: true,
+  adjustFontFallback: true,
 });
 
 const FALLBACK_DESCRIPTION =

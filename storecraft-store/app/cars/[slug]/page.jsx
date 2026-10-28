@@ -82,14 +82,14 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
 
     const carMeta = getCarPageMeta(vehicle.slug);
     const seoOverride = getPageSeoOverride(`/cars/${vehicle.slug}`);
-    // T1: DB metaTitle wins; carPageMeta2026-10.mjs + GSC overrides are fallback only.
+    // S6: PAGE_SEO_OVERRIDES titles win (≤60, keyword-mapped). Else DB, then carPageMeta.
     const dbTitle = String(vehicle.metaTitle || "").trim();
-    const titleMeta = dbTitle
-      ? buildBrandedAbsoluteTitle(dbTitle, { brand: BRAND, max: 60 })
-      : carMeta?.title
-        ? { absolute: withBrandTitleSuffix(carMeta.title) }
-        : seoOverride?.title
-          ? { absolute: withBrandTitleSuffix(seoOverride.title) }
+    const titleMeta = seoOverride?.title
+      ? { absolute: String(seoOverride.title).trim() }
+      : dbTitle
+        ? buildBrandedAbsoluteTitle(dbTitle, { brand: BRAND, max: 60 })
+        : carMeta?.title
+          ? { absolute: withBrandTitleSuffix(carMeta.title) }
           : buildBrandedAbsoluteTitle(`${vehicle.displayName} Accessories`, {
               brand: BRAND,
               max: 60,
@@ -100,9 +100,9 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
       String(vehicle.description || "").trim() ||
       String(vehicle.metaDescription || "").trim();
     const description =
+      (seoOverride?.meta || "").trim() ||
       catalogDesc ||
       (carMeta?.description || "").trim() ||
-      (seoOverride?.meta || "").trim() ||
       vehicleMetaDescription(vehicle, catalogDesc);
     const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
     const canonical =

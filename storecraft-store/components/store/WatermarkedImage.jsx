@@ -96,9 +96,9 @@ export function WatermarkedImage({
     ...(itemProp ? { itemProp } : {}),
     onLoad: () => setLoaded(true),
     onError: () => {
-      // Thumb (-400.webp) missing → fall back to the original master URL once.
+      // Derivative (-400 / -sm / -800) missing → fall back to the original master URL once.
       const master = String(src || "").trim();
-      if (!retrySrc && master && resolved !== master && !/-400\./i.test(master)) {
+      if (!retrySrc && master && resolved !== master && !/-(400|sm|800)\./i.test(master)) {
         setRetrySrc(master);
         setLoaded(false);
         return;

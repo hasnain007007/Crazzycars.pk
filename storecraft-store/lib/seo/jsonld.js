@@ -630,6 +630,9 @@ export function organizationJsonLd(overrides = {}) {
     "@type": "AutoPartsStore",
     "@id": orgId,
     name: overrides.name || "CrazzyCars.pk",
+    alternateName: Array.isArray(overrides.alternateName)
+      ? overrides.alternateName.map((n) => String(n || "").trim()).filter(Boolean)
+      : ["Crazy Cars", "CrazyCars.pk"],
     url: SITE,
     logo: {
       "@type": "ImageObject",

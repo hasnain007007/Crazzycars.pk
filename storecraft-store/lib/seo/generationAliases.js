@@ -448,28 +448,46 @@ export const CATEGORY_SEO_OWNER_LOCKED = {
 export const CATEGORY_KEYWORD_META = {
   ...CATEGORY_SEO_OWNER_LOCKED,
   "splitters-side-skirts": {
-    // Avoid "&" — HTML &amp; encoding pushed the live <title> to 66 chars (F5).
-    metaTitle: "Car Side Skirts and Bumper Splitters | CrazzyCars.pk",
+    // ≤60 chars; avoid "&" (HTML &amp; inflates SERP length).
+    metaTitle: "Car Side Skirts, Front Splitters | CrazzyCars.pk",
     metaDescription:
-      "Buy car side skirts, front and rear bumper splitters and lip kits in Pakistan for Civic and Corolla. COD on eligible items, nationwide delivery.",
+      "Shop car side skirts, bumper splitters, front splitters and back bumper splitters in Pakistan. Civic and Corolla lip kits. COD on eligible items.",
     absoluteTitle: true,
   },
   "led-indicator-lights": {
-    metaTitle: "LED Indicator Lights & Mirror Indicators | CrazzyCars.pk",
+    metaTitle: "LED Indicator Bulbs for Cars | CrazzyCars.pk",
     metaDescription:
-      "LED indicator lights for Corolla, Civic and City. Side mirror indicators for the Toyota Corolla are priced from Rs. 4,999. COD on eligible items.",
+      "LED indicator for car and LED indicator bulb pairs from Rs. 1,199. Side mirror indicator options for Corolla, Civic and City. COD on eligible items.",
     absoluteTitle: true,
   },
   "quarter-window-louvers": {
-    metaTitle: "Quarter Window Louvers Price in Pakistan | Civic, Corolla",
+    metaTitle: "Window Louvers Price in Pakistan | CrazzyCars.pk",
     metaDescription:
-      "Quarter window louvers for Civic, Corolla, City, Alto, Yaris and Prius in Pakistan. Carbon and black options. COD on eligible items, nationwide delivery.",
+      "Quarter window louvers and quarter glass louvers for Civic, Corolla, City, Alto, Yaris and Prius in Pakistan. COD on eligible items, nationwide delivery.",
     absoluteTitle: true,
   },
   "interior-lights": {
-    metaTitle: "Car Interior Ambient Lights Price in Pakistan | CrazzyCars.pk",
+    metaTitle: "Car Interior Lights Price in Pakistan | CrazzyCars.pk",
     metaDescription:
-      "Buy car interior lights in Pakistan: ambient dashboard strips, footwell RGB lights, door welcome logo lights and roof star lights. COD on eligible items.",
+      "Car interior lights and LED lights for car interior from Rs. 499. Ambient light for car price in Pakistan on each listing. COD on eligible items.",
+    absoluteTitle: true,
+  },
+  "side-mirror-covers": {
+    metaTitle: "Car Side Mirror Covers | Carbon Fiber | CrazzyCars.pk",
+    metaDescription:
+      "Car side mirror cover and carbon fiber side mirror cover pairs for City, BR-V, Civic, Corolla and Alto. COD on eligible items, nationwide delivery.",
+    absoluteTitle: true,
+  },
+  exterior: {
+    metaTitle: "Car Exterior Accessories Pakistan | CrazzyCars.pk",
+    metaDescription:
+      "Car exterior accessories in Pakistan: car spoilers, splitter kits and universal car accessories. Spoiler price in Pakistan on every listing. COD eligible.",
+    absoluteTitle: true,
+  },
+  "carbon-fiber": {
+    metaTitle: "Carbon Fiber Car Accessories Pakistan | CrazzyCars.pk",
+    metaDescription:
+      "Carbon fiber-look car exterior accessories and cabin trims in Pakistan. Universal car accessories with fitment notes. COD on eligible items.",
     absoluteTitle: true,
   },
   "led-lighting": {
