@@ -14,12 +14,14 @@
     "F2": {
       "status": "dry_run_only",
       "report": "F2-door-set4-dry-run.md",
-      "awaiting": "GRANTED DOOR-SET4"
+      "awaiting": "GRANTED DOOR-SET4",
+      "commit": "679fa76"
     },
     "F3": {
       "status": "dry_run_only",
       "report": "F3-blog-images-dry-run.md",
-      "awaiting": "GRANTED BLOG-IMAGES"
+      "awaiting": "GRANTED BLOG-IMAGES",
+      "commit": "e9f4683"
     },
     "F4": {
       "status": "done",
@@ -32,7 +34,9 @@
       "runbook": "RESTORE.md"
     },
     "F6": {
-      "status": "pending"
+      "status": "done",
+      "report": "F6-verify.md"
     }
-  }
+  },
+  "finishedAt": "2026-10-28T22:20:00.000Z"
 }
