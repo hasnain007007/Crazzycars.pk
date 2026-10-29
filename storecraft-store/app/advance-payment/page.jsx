@@ -2,6 +2,7 @@ import Link from "next/link";
 import CopyButton from "@/components/store/CopyButton";
 import { paymentQrFor } from "@/config/payment-qr";
 import { STORE_CONTACT } from "@/config/store-policy";
+import { PREPAID_DISCOUNT_PERCENT } from "@/config/checkout-money";
 import { dbConnect } from "@/lib/db";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { buildStoreSettingsPayload, toPublicClientSettings } from "@/lib/normalizeStoreSettings";
@@ -38,16 +39,19 @@ const BRAND_ACCENT = {
   ubl: "#0055a4",
 };
 
-/** Official accounts from admin Settings → Payments (only methods with an account number). */
-async function loadAccounts() {
+/** Official accounts + prepaid % from admin Settings (SSR — never client-only). */
+async function loadPaymentPageData() {
   try {
     await dbConnect();
     const raw =
       (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
       (await Settings.findOne({}).lean()) ||
       {};
-    const pub = toPublicClientSettings(buildStoreSettingsPayload(raw), { includePaymentAccounts: true });
-    return getEnabledPakistaniMethods(pub.pakistaniPaymentMethods)
+    const full = buildStoreSettingsPayload(raw);
+    const pub = toPublicClientSettings(full, { includePaymentAccounts: true });
+    const prepaidPercent =
+      Number(full.storePayment?.advancePaymentDiscountPercent) || PREPAID_DISCOUNT_PERCENT;
+    const accounts = getEnabledPakistaniMethods(pub.pakistaniPaymentMethods)
       .filter((m) => m.key !== "cod" && (m.accountNumber || m.iban))
       .map((m) => {
         const qr = paymentQrFor(m.key, m);
@@ -58,22 +62,29 @@ async function loadAccounts() {
           accent: BRAND_ACCENT[m.key] || "#c41e1e",
           qr,
           rows: [
-            (m.accountTitle || m.accountName) && { label: "Account title", value: m.accountTitle || m.accountName },
+            (m.accountTitle || m.accountName) && {
+              label: "Account title",
+              value: m.accountTitle || m.accountName,
+            },
             m.accountNumber && { label: "Account number", value: m.accountNumber, copy: true },
             m.iban && { label: "IBAN", value: m.iban, copy: true },
             qr?.tillId && { label: "Till ID", value: qr.tillId, copy: true },
           ].filter(Boolean),
         };
       });
+    return { accounts, prepaidPercent };
   } catch (e) {
     console.error("advance-payment accounts:", e);
-    return [];
+    return { accounts: [], prepaidPercent: PREPAID_DISCOUNT_PERCENT };
   }
 }
 
 export default async function AdvancePaymentPage() {
-  const c = advancePaymentCopy();
-  const accounts = await loadAccounts();
+  const { accounts, prepaidPercent } = await loadPaymentPageData();
+  const c = advancePaymentCopy({
+    prepaidPercent,
+    hasAccounts: accounts.length > 0,
+  });
   const hasQr = accounts.some((a) => a.qr);
   const wa = STORE_CONTACT.phoneE164.replace(/\D/g, "");
   const waLink = `https://wa.me/${wa}?text=${encodeURIComponent(
@@ -82,7 +93,11 @@ export default async function AdvancePaymentPage() {
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: c.faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    mainEntity: c.faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   };
 
   return (
@@ -145,7 +160,14 @@ export default async function AdvancePaymentPage() {
                 {a.qr ? (
                   <div className="adv-qr">
                     {/* eslint-disable-next-line @next/next/no-img-element -- static QR; must stay pixel-sharp */}
-                    <img src={a.qr.src} alt={a.qr.alt} width={a.qr.width} height={a.qr.height} loading="lazy" decoding="async" />
+                    <img
+                      src={a.qr.src}
+                      alt={a.qr.alt}
+                      width={a.qr.width}
+                      height={a.qr.height}
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <p className="adv-qr__links">
                       <a href={a.qr.src} download>
                         Save QR
@@ -173,7 +195,9 @@ export default async function AdvancePaymentPage() {
             ))}
           </div>
         ) : (
-          <p className="adv-muted">Account details are shown at checkout after you choose a payment method.</p>
+          <p className="adv-muted">
+            Account details are shown at checkout after you choose a payment method.
+          </p>
         )}
         <p className="adv-important">
           <strong>Important:</strong> {c.safety}

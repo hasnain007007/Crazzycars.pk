@@ -120,8 +120,15 @@ export function shippingAdvanceBannerUr() {
 }
 
 /** Site-wide top announcement bar — COD booking vs prepaid discount. */
-export function announcementAdvanceDeliveryText() {
-  return `COD from Rs. ${COD_ADVANCE_AMOUNT} booking · or ${PREPAID_DISCOUNT_PERCENT}% off full payment`;
+export function announcementAdvanceDeliveryText(prepaidPercent = PREPAID_DISCOUNT_PERCENT) {
+  const pct = Math.min(100, Math.max(0, Number(prepaidPercent) || PREPAID_DISCOUNT_PERCENT));
+  return `COD from Rs. ${COD_ADVANCE_AMOUNT} booking · or ${pct}% off full payment`;
+}
+
+/** Prepaid % offer line — always pass live Settings percent so banner/page never disagree. */
+export function prepaidDiscountAnnouncementText(prepaidPercent = PREPAID_DISCOUNT_PERCENT) {
+  const pct = Math.min(100, Math.max(0, Number(prepaidPercent) || PREPAID_DISCOUNT_PERCENT));
+  return `${pct}% off when you pay in full (JazzCash / bank)`;
 }
 
 /** True for outdated top-bar lines we rewrite to the booking / prepaid offer. */
@@ -234,11 +241,22 @@ export function sanitizeCustomerShippingNote(text) {
   return raw;
 }
 
-export function sanitizeAnnouncementItems(items) {
+export function sanitizeAnnouncementItems(items, opts = {}) {
+  const prepaidPercent =
+    opts.prepaidPercent != null ? opts.prepaidPercent : PREPAID_DISCOUNT_PERCENT;
   const list = Array.isArray(items) ? items : [];
   const mapped = list.map((item) => {
     if (!item || typeof item !== "object") return item;
     const text = String(item.text || item.message || "").trim();
+    // Rewrite any prepaid-% line to the live Settings percent (never hardcode a stale %).
+    if (/\d+\s*%\s*off.*(?:full payment|JazzCash|bank)/i.test(text) || /pay in full/i.test(text)) {
+      return {
+        ...item,
+        text: prepaidDiscountAnnouncementText(prepaidPercent),
+        link: item.link || "/checkout",
+        enabled: item.enabled !== false,
+      };
+    }
     if (
       looksLikeFreeDeliveryCopy(text) ||
       looksLikeFeeOnlyAnnouncement(text) ||
@@ -246,7 +264,7 @@ export function sanitizeAnnouncementItems(items) {
     ) {
       return {
         ...item,
-        text: announcementAdvanceDeliveryText(),
+        text: announcementAdvanceDeliveryText(prepaidPercent),
         link: item.link || "/checkout",
         enabled: item.enabled !== false,
       };
@@ -256,7 +274,9 @@ export function sanitizeAnnouncementItems(items) {
   // The COD booking offer has its own band under the header (AdvancePayStrip), so the top
   // bar is free for other messages; only fall back to the offer when it would be empty.
   if (mapped.some((item) => String(item?.text || item?.message || "").trim())) return mapped;
-  return [{ text: announcementAdvanceDeliveryText(), link: "/checkout", enabled: true }];
+  return [
+    { text: announcementAdvanceDeliveryText(prepaidPercent), link: "/checkout", enabled: true },
+  ];
 }
 
 export function getFaqItems() {
@@ -385,9 +405,13 @@ export const SHIPPING_POLICY_INTRO =
 export const SHIPPING_POLICY_SECTIONS = getShippingPolicySections();
 
 /** Advance strip under the header + /advance-payment page (single source for the copy). */
-export function advancePaymentCopy() {
+export function advancePaymentCopy(opts = {}) {
   const booking = formatPkrAmount(COD_ADVANCE_AMOUNT);
-  const pct = PREPAID_DISCOUNT_PERCENT;
+  const pct = Math.min(
+    100,
+    Math.max(0, Number(opts.prepaidPercent) || PREPAID_DISCOUNT_PERCENT)
+  );
+  const hasAccounts = opts.hasAccounts === true;
   return {
     stripTitle: "COD booking advance",
     stripTitleShort: "COD booking advance",
@@ -414,11 +438,14 @@ export function advancePaymentCopy() {
       "Your advance is deducted from your total bill and refunded if the item doesn't fit. You pay only the balance on delivery.",
     steps: [
       "Place your order on CrazzyCars.pk and note your order number.",
-      "Send the advance shown at checkout to one of our official accounts on this page.",
+      hasAccounts
+        ? "Send the advance shown at checkout to one of our official accounts on this page."
+        : "Send the advance shown at checkout to the official account details shown after you choose a payment method.",
       "Send the payment screenshot with your order number on WhatsApp. We confirm and dispatch your order.",
     ],
-    safety:
-      "Send payments only to the accounts on this page. We never ask you to pay to any other number or account.",
+    safety: hasAccounts
+      ? "Send payments only to the accounts on this page. We never ask you to pay to any other number or account."
+      : "Send payments only to the official account details shown at checkout after you choose a payment method. We never ask you to pay to any other number or account.",
     faq: [
       {
         q: "Why do you take a booking advance on Cash on Delivery?",

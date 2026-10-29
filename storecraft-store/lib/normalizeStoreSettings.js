@@ -11,11 +11,14 @@ import {
   standardDeliveryFeeStatement,
   announcementAdvanceDeliveryText,
 } from "@/lib/storePolicyCopy";
+import { asOptionalSettingsString, asSettingsString } from "@/lib/settingsString";
+
+export { asOptionalSettingsString, asSettingsString } from "@/lib/settingsString";
 
 export const DEFAULT_ANNOUNCEMENT_BAR = {
   enabled: true,
   items: [
-    { text: announcementAdvanceDeliveryText(), link: "/checkout", enabled: true },
+    { text: announcementAdvanceDeliveryText(PREPAID_DISCOUNT_PERCENT), link: "/checkout", enabled: true },
     {
       text: `${PREPAID_DISCOUNT_PERCENT}% off when you pay in full (JazzCash / bank)`,
       link: "/checkout",
@@ -195,28 +198,32 @@ export function normalizeCheckoutMessages(raw, storefront = {}) {
   const m = raw && typeof raw === "object" ? raw : {};
   return {
     orderSuccessMessage:
-      m.orderSuccessMessage?.trim() ||
-      cx.successTitle?.trim() ||
-      cx.title?.trim() ||
+      asSettingsString(m.orderSuccessMessage) ||
+      asSettingsString(cx.successTitle) ||
+      asSettingsString(cx.title) ||
       DEFAULT_CHECKOUT_MESSAGES.orderSuccessMessage,
     orderSuccessSubtext:
-      m.orderSuccessSubtext?.trim() ||
-      cx.successMessage?.trim() ||
-      cx.thankYouMessage?.trim() ||
+      asSettingsString(m.orderSuccessSubtext) ||
+      asSettingsString(cx.successMessage) ||
+      asSettingsString(cx.thankYouMessage) ||
       DEFAULT_CHECKOUT_MESSAGES.orderSuccessSubtext,
-    codInstructions: m.codInstructions?.trim() || DEFAULT_CHECKOUT_MESSAGES.codInstructions,
+    codInstructions:
+      asSettingsString(m.codInstructions) || DEFAULT_CHECKOUT_MESSAGES.codInstructions,
     shippingNote: sanitizeCustomerShippingNote(
-      m.shippingNote?.trim() || DEFAULT_CHECKOUT_MESSAGES.shippingNote
+      asSettingsString(m.shippingNote) || DEFAULT_CHECKOUT_MESSAGES.shippingNote
     ),
-    cartEmptyMessage: m.cartEmptyMessage?.trim() || DEFAULT_CHECKOUT_MESSAGES.cartEmptyMessage,
-    failedTitle: cx.failedTitle?.trim() || "Payment Failed",
-    failedMessage: cx.failedMessage?.trim() || "Your payment could not be processed.",
+    cartEmptyMessage:
+      asSettingsString(m.cartEmptyMessage) || DEFAULT_CHECKOUT_MESSAGES.cartEmptyMessage,
+    failedTitle: asSettingsString(cx.failedTitle) || "Payment Failed",
+    failedMessage: asSettingsString(cx.failedMessage) || "Your payment could not be processed.",
     paymentConfirmedMessage:
-      cx.paymentConfirmedMessage?.trim() || DEFAULT_CHECKOUT_MESSAGES.paymentConfirmedMessage,
-    codAdvanceNote: cx.codAdvanceNote?.trim() || DEFAULT_CHECKOUT_MESSAGES.codAdvanceNote,
-    footerMessage: cx.footerMessage?.trim() || "",
-    emailSubject: cx.emailSubject?.trim() || "",
-    emailMessage: cx.emailMessage?.trim() || "",
+      asSettingsString(cx.paymentConfirmedMessage) ||
+      DEFAULT_CHECKOUT_MESSAGES.paymentConfirmedMessage,
+    codAdvanceNote:
+      asSettingsString(cx.codAdvanceNote) || DEFAULT_CHECKOUT_MESSAGES.codAdvanceNote,
+    footerMessage: asOptionalSettingsString(cx.footerMessage),
+    emailSubject: asOptionalSettingsString(cx.emailSubject),
+    emailMessage: asOptionalSettingsString(cx.emailMessage),
   };
 }
 
@@ -224,8 +231,8 @@ export function normalizeStorePayment(raw) {
   const p = raw && typeof raw === "object" ? raw : {};
   return {
     codEnabled: p.codEnabled !== false,
-    codLabel: p.codLabel?.trim() || DEFAULT_STORE_PAYMENT.codLabel,
-    codDescription: p.codDescription?.trim() || DEFAULT_STORE_PAYMENT.codDescription,
+    codLabel: asSettingsString(p.codLabel) || DEFAULT_STORE_PAYMENT.codLabel,
+    codDescription: asSettingsString(p.codDescription) || DEFAULT_STORE_PAYMENT.codDescription,
     codFee: Number(p.codFee) || 0,
     minimumOrderAmount: Number(p.minimumOrderAmount) || 0,
     freeShippingThreshold: 0,
@@ -239,16 +246,21 @@ export function normalizeStorePayment(raw) {
         ? Boolean(p.advancePaymentMessageEnabled)
         : DEFAULT_STORE_PAYMENT.advancePaymentMessageEnabled,
     advancePaymentMessageTitle:
-      p.advancePaymentMessageTitle?.trim() || DEFAULT_STORE_PAYMENT.advancePaymentMessageTitle,
+      asSettingsString(p.advancePaymentMessageTitle) ||
+      DEFAULT_STORE_PAYMENT.advancePaymentMessageTitle,
     advancePaymentMessage:
-      p.advancePaymentMessage?.trim() || DEFAULT_STORE_PAYMENT.advancePaymentMessage,
+      asSettingsString(p.advancePaymentMessage) || DEFAULT_STORE_PAYMENT.advancePaymentMessage,
     advancePaymentDiscountEnabled:
       p.advancePaymentDiscountEnabled !== undefined
         ? Boolean(p.advancePaymentDiscountEnabled)
         : DEFAULT_STORE_PAYMENT.advancePaymentDiscountEnabled,
     advancePaymentDiscountPercent: Math.min(
       100,
-      Math.max(0, Number(p.advancePaymentDiscountPercent) || DEFAULT_STORE_PAYMENT.advancePaymentDiscountPercent)
+      Math.max(
+        0,
+        Number(p.advancePaymentDiscountPercent) ||
+          DEFAULT_STORE_PAYMENT.advancePaymentDiscountPercent
+      )
     ),
     flatDeliveryCharge: STORE_POLICY.shipping.standardFeePKR,
   };
@@ -264,12 +276,12 @@ export function normalizeProductBadgeUi(raw) {
     showSaleBadge: raw.showSaleBadge !== false && master,
     showNewBadge: raw.showNewBadge !== false && master,
     showCodBadge: false,
-    saleBadgeText: raw.saleBadgeText?.trim() || DEFAULT_PRODUCT_BADGE_UI.saleBadgeText,
-    newBadgeText: raw.newBadgeText?.trim() || DEFAULT_PRODUCT_BADGE_UI.newBadgeText,
-    saleBadgeColor: raw.saleBadgeColor?.trim() || DEFAULT_PRODUCT_BADGE_UI.saleBadgeColor,
-    newBadgeColor: raw.newBadgeColor?.trim() || DEFAULT_PRODUCT_BADGE_UI.newBadgeColor,
-    codBadgeText: raw.codBadgeText?.trim() || DEFAULT_PRODUCT_BADGE_UI.codBadgeText,
-    codBadgeColor: raw.codBadgeColor?.trim() || DEFAULT_PRODUCT_BADGE_UI.codBadgeColor,
+    saleBadgeText: asSettingsString(raw.saleBadgeText) || DEFAULT_PRODUCT_BADGE_UI.saleBadgeText,
+    newBadgeText: asSettingsString(raw.newBadgeText) || DEFAULT_PRODUCT_BADGE_UI.newBadgeText,
+    saleBadgeColor: asSettingsString(raw.saleBadgeColor) || DEFAULT_PRODUCT_BADGE_UI.saleBadgeColor,
+    newBadgeColor: asSettingsString(raw.newBadgeColor) || DEFAULT_PRODUCT_BADGE_UI.newBadgeColor,
+    codBadgeText: asSettingsString(raw.codBadgeText) || DEFAULT_PRODUCT_BADGE_UI.codBadgeText,
+    codBadgeColor: asSettingsString(raw.codBadgeColor) || DEFAULT_PRODUCT_BADGE_UI.codBadgeColor,
     raw,
   };
 }
@@ -359,17 +371,22 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
   const f = settings.footer || {};
   const wa = settings.whatsapp || {};
   const checkoutSuccess = settings.storefront?.checkoutSuccess || settings.checkoutSuccess || {};
+  const storePaymentEarly = normalizeStorePayment(settings?.storePayment);
+  const prepaidPct = storePaymentEarly.advancePaymentDiscountPercent;
   const announcementBarRaw = settings?.announcementBar || DEFAULT_ANNOUNCEMENT_BAR;
   const announcementBar = {
     ...announcementBarRaw,
-    items: sanitizeAnnouncementItems(announcementBarRaw.items || DEFAULT_ANNOUNCEMENT_BAR.items),
+    items: sanitizeAnnouncementItems(
+      announcementBarRaw.items || DEFAULT_ANNOUNCEMENT_BAR.items,
+      { prepaidPercent: prepaidPct }
+    ),
   };
   const trustBadges = normalizeTrustBadges(settings?.trustBadges);
   const brandStory = normalizeBrandStory(settings?.brandStory);
   const homepageSettings = normalizeHomepageSettings(settings?.homepageSettings);
   const appearance = normalizeAppearance(settings?.appearance, settings?.seo);
   const checkoutMessages = normalizeCheckoutMessages(settings?.checkoutMessages, settings?.storefront);
-  const storePayment = normalizeStorePayment(settings?.storePayment);
+  const storePayment = storePaymentEarly;
   const productBadgeUi = normalizeProductBadgeUi(settings?.productBadges);
   const productImageWatermark = normalizeProductImageWatermark(settings?.productImageWatermark);
   const megaMenu = normalizeMegaMenu(settings?.megaMenu);
@@ -395,7 +412,21 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
     favicon: faviconString,
     faviconUrl: faviconString,
     showStoreName: g.showStoreName !== false,
-    address: g.address?.trim() || f.registeredAddress?.trim() || f.contact?.address?.trim() || "",
+    storeName: asSettingsString(g.storeName) || asSettingsString(settings?.storeName) || "",
+    phone: asOptionalSettingsString(g.phone),
+    email: asOptionalSettingsString(g.email),
+    whatsapp: asOptionalSettingsString(g.whatsapp),
+    website: asOptionalSettingsString(g.website),
+    address:
+      asSettingsString(g.address) ||
+      asSettingsString(f.registeredAddress) ||
+      asSettingsString(f.contact?.address) ||
+      "",
+    addressLocality:
+      asOptionalSettingsString(g.addressLocality) ||
+      (typeof g.address === "object" && g.address
+        ? asOptionalSettingsString(g.address.city || g.address.addressLocality)
+        : ""),
   };
 
   const data = {
@@ -419,10 +450,13 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
     notifications: settings?.notifications || {},
     footer: {
       ...(typeof settings?.footer === "object" && settings.footer ? settings.footer : {}),
-      copyrightText: f.copyrightText || "",
-      tagline: f.tagline || "",
-      contactEmail: f.contactEmail || f.email || f.contact?.email || "",
-      phone: f.phone || f.contact?.phone || "",
+      copyrightText: asOptionalSettingsString(f.copyrightText),
+      tagline: asOptionalSettingsString(f.tagline),
+      contactEmail:
+        asOptionalSettingsString(f.contactEmail) ||
+        asOptionalSettingsString(f.email) ||
+        asOptionalSettingsString(f.contact?.email),
+      phone: asOptionalSettingsString(f.phone) || asOptionalSettingsString(f.contact?.phone),
       paymentMethods: (Array.isArray(f.paymentMethods) ? f.paymentMethods : []).filter((m) => {
         const t = String(m?.type || m?.name || m || "").toLowerCase();
         return t !== "stripe" && t !== "paypal";
@@ -441,26 +475,30 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
     },
     whatsapp: {
       enabled: wa.enabled === true,
-      number: wa.number || "",
-      message: wa.message || "Hi! I have a question about your accessories.",
+      number: asOptionalSettingsString(wa.number),
+      message: asSettingsString(wa.message) || "Hi! I have a question about your accessories.",
       showInNav: wa.showInNav === true,
       showInFooter: wa.showInFooter !== false,
       showFloating: wa.showFloating !== false,
       position: wa.position === "bottom-right" ? "bottom-right" : "bottom-left",
-      buttonColor: wa.buttonColor?.trim() || "#25D366",
+      buttonColor: asSettingsString(wa.buttonColor) || "#25D366",
     },
     checkoutSuccess: checkoutSuccess || {},
     aboutPage: settings?.aboutPage || {},
     contactPage: settings?.contactPage || {},
     storefront: settings?.storefront || {},
     checkout,
-    storeName: sanitizeStoreName(g.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"),
+    storeName: sanitizeStoreName(
+      asSettingsString(g.storeName) ||
+        process.env.NEXT_PUBLIC_STORE_NAME ||
+        "CrazzyCars.pk"
+    ),
     logoUrl: logoString,
-    phone: g.phone || "",
-    email: g.email || "",
-    footerText: g.footerText || "",
-    website: g.website || "",
-    currency: g.currency || "PKR",
+    phone: asOptionalSettingsString(g.phone),
+    email: asOptionalSettingsString(g.email),
+    footerText: asOptionalSettingsString(g.footerText),
+    website: asOptionalSettingsString(g.website),
+    currency: asSettingsString(g.currency) || "PKR",
     footerMeta: {
       tagline: f.tagline || "",
       social: f.social || {},
@@ -482,13 +520,13 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
     },
     whatsappNormalized: {
       enabled: wa.enabled === true,
-      number: wa.number || "",
-      message: wa.message || "Hi! I have a question about your accessories.",
+      number: asOptionalSettingsString(wa.number),
+      message: asSettingsString(wa.message) || "Hi! I have a question about your accessories.",
       showInNav: wa.showInNav === true,
       showInFooter: wa.showInFooter !== false,
       showFloating: wa.showFloating !== false,
       position: wa.position === "bottom-right" ? "bottom-right" : "bottom-left",
-      buttonColor: wa.buttonColor?.trim() || "#25D366",
+      buttonColor: asSettingsString(wa.buttonColor) || "#25D366",
     },
   };
 
