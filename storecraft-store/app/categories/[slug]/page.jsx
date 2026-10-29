@@ -226,7 +226,9 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
         openGraph: {
           title,
           description,
+          type: "website",
           url: listingSeo.alternates.canonical,
+          siteName: BRAND_NAME,
           images: ogImage,
         },
         twitter: {
@@ -260,7 +262,9 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
       openGraph: {
         title: titleMeta.absolute,
         description: collection.description || "",
+        type: "website",
         url: listingSeo.alternates.canonical,
+        siteName: BRAND_NAME,
         images: collection.image?.url ? [{ url: collection.image.url }] : [],
       },
     };

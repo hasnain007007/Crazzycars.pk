@@ -341,9 +341,10 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
         title: title,
         description,
         // Next.js metadata only allows website|article|profile|… — not OG "product".
-        // Product schema stays in JSON-LD (toProductLd).
+        // Emit og:type=product via <meta> in the page body (see Product page JSX).
         type: "website",
         url: canonical,
+        siteName: BRAND_NAME,
         images: mainImg ? [{ url: mainImg, width: 800, height: 800, alt: ogAlt }] : [],
       },
       twitter: {
@@ -539,6 +540,8 @@ export default async function ProductPage({ params, searchParams }) {
 
     return (
       <>
+        {/* OG product type — Next.js rejects openGraph.type=product */}
+        <meta property="og:type" content="product" />
         {lcpHref ? (
           <link rel="preload" as="image" href={lcpHref} fetchPriority="high" />
         ) : null}
