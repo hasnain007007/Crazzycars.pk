@@ -964,14 +964,19 @@ async function main() {
           if (b) out.add(b);
         }
       }
-      // og / twitter
+      // og / twitter (exact image URL props only — not :alt/:width/:height)
       const metaRe = /<meta\b([^>]*)>/gi;
       while ((m = metaRe.exec(html))) {
         const t = m[1];
         const prop = (
           (t.match(/\b(?:property|name)=["']([^"']+)["']/i) || [])[1] || ""
         ).toLowerCase();
-        if (!/(^og:image|^twitter:image)/.test(prop)) continue;
+        if (
+          !/^(og:image|og:image:url|og:image:secure_url|twitter:image|twitter:image:src)$/.test(
+            prop
+          )
+        )
+          continue;
         const content = (t.match(/\bcontent=["']([^"']+)["']/i) || [])[1];
         const a = absUrl(content, pageUrl);
         if (a) out.add(a);
@@ -1005,6 +1010,18 @@ async function main() {
         // Only check same-origin media / next static / absolute same host
         if (!imgUrl.includes("crazzycars.pk") && !imgUrl.startsWith(BASE)) continue;
         if (imgUrl.includes("/_next/image")) continue; // unwrap not needed; local media is direct
+        // Skip non-image URLs (JSON-LD/name leftovers, bare numbers, page titles)
+        try {
+          const pathOnly = new URL(imgUrl).pathname;
+          if (
+            !/\.(?:webp|jpe?g|png|gif|avif|svg)(?:$|\?)/i.test(pathOnly) &&
+            !pathOnly.startsWith("/media/")
+          ) {
+            continue;
+          }
+        } catch {
+          continue;
+        }
         if (seen.has(imgUrl)) continue;
         seen.add(imgUrl);
         imageJobs.push({ imgUrl, from: pathname, type: t });
