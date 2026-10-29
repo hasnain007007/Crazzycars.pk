@@ -103,7 +103,7 @@ const settingsSchema = new mongoose.Schema(
       advancePaymentMessageEnabled: { type: Boolean, default: true },
       advancePaymentMessageTitle: { type: String, default: "Pay booking amount to confirm COD" },
       advancePaymentDiscountEnabled: { type: Boolean, default: true },
-      advancePaymentDiscountPercent: { type: Number, default: 5 },
+      advancePaymentDiscountPercent: { type: Number, default: 4 },
       flatDeliveryCharge: { type: Number, default: 250 },
     },
     finance: {

@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { PREPAID_DISCOUNT_PERCENT } from "@/config/checkout-money";
+import { dbConnect } from "@/lib/db";
+import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getFaqItems } from "@/lib/storePolicyCopy";
 import { safeJsonLd } from "@/lib/safeJsonLd";
@@ -11,8 +14,22 @@ export const metadata = buildPageMetadata({
   absoluteTitle: true,
 });
 
-export default function FaqPage() {
-  const faqs = getFaqItems();
+async function loadPrepaidPercent() {
+  try {
+    await dbConnect();
+    const doc =
+      (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
+      (await Settings.findOne({}).lean());
+    const n = Number(doc?.storePayment?.advancePaymentDiscountPercent);
+    return Number.isFinite(n) && n >= 0 ? n : PREPAID_DISCOUNT_PERCENT;
+  } catch {
+    return PREPAID_DISCOUNT_PERCENT;
+  }
+}
+
+export default async function FaqPage() {
+  const prepaidPercent = await loadPrepaidPercent();
+  const faqs = getFaqItems({ prepaidPercent });
   const ld = {
     "@context": "https://schema.org",
     "@type": "FAQPage",

@@ -392,6 +392,8 @@ async function main() {
     C24: emptyCheck(true),
     /** Crawl every sitemap HTML page; HEAD every img/preload/og/twitter/JSON-LD image URL. */
     C25: emptyCheck(),
+    /** Prepaid % in HTML must match Settings; payments API must be 200. */
+    C26: emptyCheck(),
   };
 
   const { urls: sitemapUrls } = await collectSitemapUrls(BASE);
@@ -1072,6 +1074,57 @@ async function main() {
       results.C25.artifact = c25Path;
     } catch (e) {
       results.C25.failures.push(`artifact write: ${e.message}`);
+    }
+  }
+
+  // C26 — prepaid % copy matches Settings; /api/settings?payments=1 returns 200
+  {
+    const pay = await fetchOnce(`${BASE}/api/settings?payments=1`);
+    results.C26.count = 1;
+    if (pay.status !== 200) {
+      failCheck(results.C26, `/api/settings?payments=1 → ${pay.status}`);
+    } else {
+      let expectedPct = null;
+      try {
+        const parsed = JSON.parse(pay.body || "{}");
+        const data = parsed?.data || parsed?.settings || parsed;
+        expectedPct = Number(data?.storePayment?.advancePaymentDiscountPercent);
+      } catch (e) {
+        failCheck(results.C26, `payments JSON parse: ${e.message}`);
+      }
+      if (!Number.isFinite(expectedPct) || expectedPct < 0) {
+        failCheck(results.C26, "storePayment.advancePaymentDiscountPercent missing/invalid");
+      } else {
+        const htmlPages = pageFetches.filter((p) => p.status === 200 && p.body);
+        results.C26.note = `expectedPrepaidPercent=${expectedPct}; scanned ${htmlPages.length} HTML pages`;
+        const offerRe =
+          /(\d+)\s*%\s*off when you pay in full|save\s+(\d+)\s*%/gi;
+        let hits = 0;
+        for (const p of htmlPages) {
+          offerRe.lastIndex = 0;
+          let m;
+          while ((m = offerRe.exec(p.body))) {
+            hits++;
+            const shown = Number(m[1] || m[2]);
+            if (shown !== expectedPct) {
+              failCheck(
+                results.C26,
+                `${pathOf(p.url)} → prepaid copy ${shown}% ≠ settings ${expectedPct}%`
+              );
+            }
+          }
+        }
+        results.C26.count = hits + 1;
+        // Also flag stale hardcoded 2%/5% prepaid phrases that bypass the offerRe shape
+        for (const p of htmlPages) {
+          if (expectedPct !== 2 && /\b2%\s*off\b|or\s+2%\s+off|save\s+2%/i.test(p.body)) {
+            failCheck(results.C26, `${pathOf(p.url)} → stale 2% prepaid copy (settings ${expectedPct}%)`);
+          }
+          if (expectedPct !== 5 && /\b5%\s*off\b|or\s+5%\s+off|save\s+5%/i.test(p.body)) {
+            failCheck(results.C26, `${pathOf(p.url)} → stale 5% prepaid copy (settings ${expectedPct}%)`);
+          }
+        }
+      }
     }
   }
 

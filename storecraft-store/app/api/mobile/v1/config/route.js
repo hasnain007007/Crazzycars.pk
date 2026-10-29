@@ -70,8 +70,15 @@ export async function GET() {
       codBookingAmount,
       /** Booking advance by order total: below = upper limit (null = no limit). */
       codBookingTiers,
-      /** % off when the whole order is paid upfront (JazzCash / bank). */
-      prepaidDiscountPercent: PREPAID_DISCOUNT_PERCENT,
+      /** % off when the whole order is paid upfront (JazzCash / bank) — live Settings only. */
+      prepaidDiscountPercent: Math.min(
+        100,
+        Math.max(
+          0,
+          Number(settingsDoc?.storePayment?.advancePaymentDiscountPercent) ||
+            PREPAID_DISCOUNT_PERCENT
+        )
+      ),
       returnsWindowDays: Number(STORE_POLICY.returns?.windowDays) || 7,
       enabledPaymentMethods,
       defaultPaymentMethod,

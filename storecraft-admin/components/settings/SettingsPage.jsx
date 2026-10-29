@@ -266,7 +266,7 @@ export function SettingsPage() {
       advancePaymentDiscountEnabled: raw.advancePaymentDiscountEnabled !== false,
       advancePaymentDiscountPercent: Math.min(
         100,
-        Math.max(0, Number(raw.advancePaymentDiscountPercent) || 5)
+        Math.max(0, Number(raw.advancePaymentDiscountPercent) || 4)
       ),
       flatDeliveryCharge: 250,
       majorCitiesDays: String(raw.majorCitiesDays || "2-3").trim(),
@@ -813,14 +813,15 @@ export function SettingsPage() {
                   min={0}
                   max={100}
                   step={0.5}
-                  value={sp.advancePaymentDiscountPercent ?? 5}
+                  value={sp.advancePaymentDiscountPercent ?? 4}
                   onChange={(e) =>
                     patchStorePayment("advancePaymentDiscountPercent", parseFloat(e.target.value) || 0)
                   }
                   className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
                 />
                 <p className="mt-1 text-xs text-slate-500">
-                  e.g. 5 = customer gets 5% off when paying via JazzCash / bank / Meezan (not COD)
+                  Percent off product total when paying via JazzCash / Easypaisa / bank (not COD). Live
+                  storefront always reads this Settings value.
                 </p>
               </div>
             </div>

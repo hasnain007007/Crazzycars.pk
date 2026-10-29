@@ -25,7 +25,7 @@ import {
 } from "@/lib/freeDelivery";
 import { productAllowsCod } from "@/lib/codEligibility";
 import { computeCodAdvanceDue } from "@/lib/productAdvance";
-import { codBookingAmountForTotal } from "@/config/checkout-money";
+import { PREPAID_DISCOUNT_PERCENT, codBookingAmountForTotal } from "@/config/checkout-money";
 import {
   getEnabledPakistaniMethods,
   isAdvancePaymentMethod,
@@ -1433,7 +1433,9 @@ export function CheckoutView() {
                           }}
                         >
                           {(() => {
-                            const pct = Number(shippingRules.advancePaymentDiscountPercent) || 5;
+                            const pct =
+                              Number(shippingRules.advancePaymentDiscountPercent) ||
+                              PREPAID_DISCOUNT_PERCENT;
                             const save = Math.round((Number(subtotal) || 0) * pct / 100);
                             return save > 0 ? `${pct}% OFF · Save Rs.${save.toLocaleString("en-PK")}` : `${pct}% OFF`;
                           })()}

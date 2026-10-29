@@ -2,7 +2,8 @@
  * Checkout money rules — single source for prepaid % and COD booking advance.
  * Live Settings may override prepaid % / advance amount; these are defaults + fallbacks.
  */
-export const PREPAID_DISCOUNT_PERCENT = 5;
+/** Fallback only when Settings.storePayment.advancePaymentDiscountPercent is missing. */
+export const PREPAID_DISCOUNT_PERCENT = 4;
 
 /**
  * COD booking advance by order total (PKR), checked in order; `below: null` = no upper limit.

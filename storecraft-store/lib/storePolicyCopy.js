@@ -292,7 +292,11 @@ export function sanitizeAnnouncementItems(items, opts = {}) {
   ];
 }
 
-export function getFaqItems() {
+export function getFaqItems(opts = {}) {
+  const prepaidPercent = Math.min(
+    100,
+    Math.max(0, Number(opts.prepaidPercent) || PREPAID_DISCOUNT_PERCENT)
+  );
   return [
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
@@ -302,6 +306,10 @@ export function getFaqItems() {
     {
       question: "How much are delivery charges?",
       answer: `${standardDeliveryFeeStatement()} Roof or trunk spoilers and Express (Daewoo) use a different courier rate shown at checkout.`,
+    },
+    {
+      question: "How do I get the prepaid discount?",
+      answer: `Pay the full order with JazzCash or bank transfer at checkout. You save ${prepaidPercent}% off the product total (delivery still applies). The discount is applied automatically — look for “save ${prepaidPercent}%” at checkout.`,
     },
     {
       question: "How do I pay with JazzCash or bank transfer?",
