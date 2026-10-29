@@ -83,20 +83,25 @@ export const DEFAULT_HOMEPAGE_SETTINGS = {
   },
 };
 
-export function normalizeHomepageSettings(raw) {
+export function normalizeHomepageSettings(raw, opts = {}) {
   const d = DEFAULT_HOMEPAGE_SETTINGS;
   if (!raw || typeof raw !== "object") return { ...d };
+  const prepaidPercent = opts.prepaidPercent;
 
   return {
     announcementMessages:
       Array.isArray(raw.announcementMessages) && raw.announcementMessages.length
         ? raw.announcementMessages.map((m) => {
             const text = String(m?.text ?? "").trim();
+            const needsOffer =
+              !text ||
+              looksLikeFreeDeliveryCopy(text) ||
+              /delivery\s+rs\.?\s*[\d,]+/i.test(text) ||
+              (/\d+\s*%\s*off/i.test(text) && /full payment/i.test(text));
             return {
-              text:
-                !text || looksLikeFreeDeliveryCopy(text) || /delivery\s+rs\.?\s*[\d,]+/i.test(text)
-                  ? announcementAdvanceDeliveryText()
-                  : text,
+              text: needsOffer
+                ? announcementAdvanceDeliveryText(prepaidPercent)
+                : text,
               isActive: m?.isActive !== false,
             };
           })
