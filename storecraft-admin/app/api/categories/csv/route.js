@@ -20,6 +20,19 @@ import {
 } from "@/lib/csv";
 import { CATEGORY_CSV_HEADERS, CATEGORY_CSV_SAMPLE_ROWS } from "@/lib/categoryCsv";
 
+/** Return a real Date; fall back to ObjectId timestamp when value is unusable. */
+function ensureValidCategoryDate(value, objectId) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value === "string" || typeof value === "number") {
+    const d = new Date(value);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  if (objectId && typeof objectId.getTimestamp === "function") {
+    return objectId.getTimestamp();
+  }
+  return new Date();
+}
+
 async function uniqueCategorySlug(base, excludeId) {
   const root = slugify(base || "category") || "category";
   let slug = root;
@@ -125,6 +138,13 @@ export async function POST(request) {
     for (let idx = 0; idx < sorted.length; idx += 1) {
       const row = sorted[idx];
       try {
+        // Timestamps are server-owned. Extra CSV columns (exports, Mongo dumps)
+        // must never overwrite createdAt/updatedAt — invalid values like "{}"
+        // break Category validation on save.
+        delete row.createdAt;
+        delete row.updatedAt;
+        delete row.__v;
+
         const name = String(row.name || "").trim();
         if (!name) throw new Error("name is required");
 
@@ -183,11 +203,18 @@ export async function POST(request) {
         if (existing) {
           const slug = await uniqueCategorySlug(requestedSlug, existing._id);
           Object.assign(existing, fields, { slug });
+          // Strip accidental timestamp props and repair invalid dates left
+          // in the DB (e.g. createdAt: {} from the 2026-10-29 two-brand rewrite).
+          existing.set("createdAt", ensureValidCategoryDate(existing.createdAt, existing._id));
+          existing.set("updatedAt", new Date());
           await existing.save();
           updated += 1;
         } else {
           const slug = await uniqueCategorySlug(requestedSlug);
-          await Category.create({ ...fields, slug });
+          const doc = { ...fields, slug };
+          delete doc.createdAt;
+          delete doc.updatedAt;
+          await Category.create(doc);
           created += 1;
         }
       } catch (e) {

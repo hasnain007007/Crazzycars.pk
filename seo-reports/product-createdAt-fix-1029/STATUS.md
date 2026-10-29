@@ -82,6 +82,13 @@ Recovery R1 also noted **66** slugs only in Mac `crazzycars_local_real` (21 acti
 
 ---
 
-## 6. Deploy
+## 6. Deploy (confirmed)
 
-Admin image rebuild required for CSV fix (see ship log). Auto-deploy poller: `/data/crazzycars/scripts/deploy-vps-test.sh` (Coolify panel still Homefy-only).
+| Item | Value |
+|------|-------|
+| Commit | `277cc54` on `vps-test` |
+| Images | `crazzycars-admin:277cc54` + `crazzycars-store:277cc54` (tagged `:live`) |
+| Health | admin `/login` 200, `/api/health` 200; store `/api/health` 200 |
+| DB post-deploy | `createdAt` empty `{}` = **0**; Date = **430/430** |
+
+Deployed via `/data/crazzycars/scripts/deploy-vps-test.sh` `FORCE=1` (Coolify UI remains Homefy-only; crazzycars uses hand-run containers + poller).

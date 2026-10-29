@@ -1,5 +1,6 @@
 /**
  * Category CSV column contract (import + export + template).
+ * `createdAt` / `updatedAt` are never imported (ignored if present).
  */
 export const CATEGORY_CSV_HEADERS = [
   "name",
