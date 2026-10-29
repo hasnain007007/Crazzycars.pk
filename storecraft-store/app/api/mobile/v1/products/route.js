@@ -18,6 +18,7 @@ import Vehicle from "@/lib/models/Vehicle.model";
 import { FIT_SCOPES, fitScopeFilter, fitmentLabels } from "@/lib/mobile/fitsVehicle";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { ACTIVE_STATUS, getActiveDescendantCategoryIds } from "@/lib/storeCategoryData";
 import { ANY_SEGMENT, parseSegment, segmentFilter, segmentOf } from "@/lib/segment";
 
 export const dynamic = "force-dynamic";
@@ -55,8 +56,19 @@ export async function GET(request) {
     let segment = parseSegment(searchParams.get("segment"));
 
     if (categorySlug) {
-      const cat = await Category.findOne({ slug: categorySlug }).select("_id").lean();
-      if (cat) filter.categories = cat._id;
+      // Same scope as the website category page: the category plus every active sub-category.
+      const cat = await Category.findOne({ slug: categorySlug, status: ACTIVE_STATUS })
+        .select("_id")
+        .lean();
+      if (cat) {
+        const allIds = [cat._id, ...(await getActiveDescendantCategoryIds(cat._id))];
+        filter.$and = [
+          ...(filter.$and || []),
+          { $or: [{ categories: { $in: allIds } }, { category: { $in: allIds } }] },
+        ];
+      } else {
+        filter._id = null;
+      }
     }
 
     if (vehicleSlug) {

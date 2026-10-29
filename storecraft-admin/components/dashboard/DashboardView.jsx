@@ -1,14 +1,14 @@
 /**
- * Modern ops dashboard — forest green / amber accents, live visitors, full widgets.
+ * Ops dashboard: KPIs (today / period / month), sales trend, what needs attention,
+ * best sellers, cities, courier and recent orders. All figures come from /api/dashboard.
  */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AiAgentTrafficCard } from "./AiAgentTrafficCard";
 import { BusinessInsightsCard } from "./BusinessInsightsCard";
 import { CategorySalesDonut } from "./CategorySalesDonut";
+import { CourierCard } from "./CourierCard";
 import { DashboardDateRange } from "./DashboardDateRange";
-import { DeliveryReturnRatioCard } from "./DeliveryReturnRatioCard";
 import { InventoryAlertsCard } from "./InventoryAlertsCard";
 import { KpiCards } from "./KpiCards";
 import { LiveUsersCard } from "./LiveUsersCard";
@@ -16,8 +16,9 @@ import { OrdersByOriginCard } from "./OrdersByOriginCard";
 import { PaymentMethodsCard } from "./PaymentMethodsCard";
 import { QuickActions } from "./QuickActions";
 import { RecentOrdersTable } from "./RecentOrdersTable";
-import { RevenueCostBarChart } from "./RevenueCostBarChart";
 import { SalesTrendChart } from "./SalesTrendChart";
+import { TopCitiesCard } from "./TopCitiesCard";
+import { TopProductsCard } from "./TopProductsCard";
 import { StockAlertBanner } from "@/components/stock-alerts/StockAlertBanner";
 import { CloudinaryAlertBanner } from "./CloudinaryAlertBanner";
 
@@ -25,54 +26,59 @@ const emptyData = {
   todaySales: 0,
   todayPaidSales: 0,
   todayOrders: 0,
-  todayOrderValue: 0,
   todaySalesGrowth: 0,
   todayOrdersGrowth: 0,
+  pendingOrders: 0,
   todayVisitors: 0,
   yesterdayVisitors: 0,
   todayVisitorsGrowth: 0,
-  periodVisitors: 0,
   todayConversionRate: null,
   yesterdayConversionRate: null,
-  todayConversionGrowth: null,
-  periodConversionRate: null,
-  priorPeriodConversionRate: null,
-  periodConversionGrowth: null,
-  monthlyRevenue: 0,
-  monthlyPaidRevenue: 0,
-  lastMonthRevenue: 0,
-  lastMonthPaidRevenue: 0,
-  monthlyGrowth: 0,
-  periodSales: 0,
   periodOrders: 0,
-  totalRevenue: 0,
-  totalSell: 0,
-  totalProfit: 0,
-  totalCost: 0,
-  profitMargin: 0,
-  profitCostCoverage: 100,
-  profitGrowth: 0,
-  totalCustomers: 0,
-  pendingOrders: 0,
   ordersReceived: 0,
+  periodBooked: 0,
+  periodBookedGrowth: null,
+  avgOrderValue: 0,
+  priorAvgOrderValue: null,
+  periodCollected: 0,
+  periodToCollect: 0,
+  unpaidOrdersPeriod: 0,
+  partialOrdersPeriod: 0,
+  cancelledOrdersPeriod: 0,
+  cancelRate: null,
+  periodVisitors: 0,
+  periodConversionRate: null,
+  periodConversionGrowth: null,
+  conversionTrackedDays: 0,
+  conversionOrders: 0,
+  conversionVisitors: 0,
+  monthlyRevenue: 0,
+  lastMonthSameDaysRevenue: 0,
+  lastMonthRevenue: 0,
+  monthlyGrowth: 0,
+  totalProfit: 0,
+  profitMargin: null,
+  profitCostCoverage: null,
+  profitGrowth: null,
   ordersDispatched: 0,
   ordersDelivered: 0,
   ordersReturned: 0,
   courierSettled: 0,
   deliveryRatio: null,
   returnRatio: null,
+  stuckShipped: 0,
+  orderGaps: [],
   recentOrders: [],
-  orderStatusCounts: {},
-  salesLast7Days: [],
   salesTrend: [],
   chartMode: "day",
   lowStockProducts: [],
   salesByCategory: [],
   paymentMethods: [],
   ordersByOrigin: [],
-  weekdayRevenueVsCost: [],
+  topProducts: [],
+  topCities: [],
   insights: [],
-  range: { id: "last30", label: "Last 30 days", from: null, to: null },
+  range: { id: "last30", label: "Last 30 days", from: null, to: null, days: 30 },
 };
 
 function ymdLocal(d = new Date()) {
@@ -141,7 +147,7 @@ export function DashboardView() {
   };
 
   const rangeLabel = data.range?.label || "Last 30 days";
-  const trendData = data.salesTrend?.length ? data.salesTrend : data.salesLast7Days;
+  const gaps = Array.isArray(data.orderGaps) ? data.orderGaps : [];
 
   return (
     <div className="dashboard-instrument -mx-4 -my-5 min-h-[calc(100vh-3.5rem)] bg-bg-base px-4 py-5 text-text-primary md:-mx-6 md:-my-6 md:px-6 md:py-6">
@@ -173,81 +179,46 @@ export function DashboardView() {
         </div>
       </div>
 
+      {gaps.length && !data.financialsHidden ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <strong>Missing orders:</strong> no orders are recorded for{" "}
+          {gaps.map((g) => `${g.label} (${g.days} days)`).join(", ")}. Totals for {rangeLabel} are lower than
+          real sales — those orders are probably still in the old database.
+        </div>
+      ) : null}
+
       <div className={loading ? "pointer-events-none opacity-60 transition" : "transition"}>
-        {/* Hero KPIs */}
         <KpiCards data={data} />
 
-        {/* Courier delivery / return portion */}
-        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <DeliveryReturnRatioCard
-            data={data}
-            from={customFrom}
-            to={customTo}
-            onRangeChange={onRangeChange}
-            loading={loading}
-          />
-          <div className="rounded-xl border border-border-hairline bg-bg-panel p-5 shadow-none">
-            <h3
-              className="text-[10px] font-semibold uppercase tracking-[0.14em]"
-              style={{ color: "var(--text-muted)" }}
-            >
-              Courier funnel ({rangeLabel})
-            </h3>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { label: "Received", value: data.ordersReceived, color: "var(--text-primary)" },
-                { label: "Dispatched", value: data.ordersDispatched, color: "#085041" },
-                { label: "Delivered", value: data.ordersDelivered, color: "#0C5132" },
-                { label: "Returned", value: data.ordersReturned, color: "#7A2E0B" },
-              ].map((row) => (
-                <div key={row.label}>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-                    {row.label}
-                  </p>
-                  <p className="font-gauge mt-1 text-2xl font-bold tabular-nums" style={{ color: row.color }}>
-                    {(Number(row.value) || 0).toLocaleString("en-PK")}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-[11px]" style={{ color: "var(--text-muted)" }}>
-              Dispatched = courier activity in this window (shipped, delivered, or returned dated here). Delivered /
-              returned can include parcels that left the warehouse before the selected from-date.
-            </p>
-          </div>
-        </div>
-
-        {/* Charts row */}
         <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <SalesTrendChart data={trendData} rangeLabel={rangeLabel} chartMode={data.chartMode} loading={loading} />
-          <RevenueCostBarChart data={data.weekdayRevenueVsCost} />
-          <CategorySalesDonut data={data.salesByCategory} />
-        </div>
-
-        {/* Orders + actions + payments + origin */}
-        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-12">
-          <div className="lg:col-span-6">
-            <RecentOrdersTable orders={data.recentOrders} />
+          <div className="lg:col-span-2">
+            <SalesTrendChart data={data.salesTrend} rangeLabel={rangeLabel} chartMode={data.chartMode} loading={loading} />
           </div>
-          <div className="lg:col-span-3 space-y-4">
-            <QuickActions />
-            <OrdersByOriginCard data={data} rangeLabel={rangeLabel} />
-          </div>
-          <div className="lg:col-span-3">
-            <PaymentMethodsCard methods={data.paymentMethods} />
-          </div>
-        </div>
-
-        {/* Live + inventory + insights */}
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <LiveUsersCard variant="card" />
-          <InventoryAlertsCard products={data.lowStockProducts} />
           <BusinessInsightsCard insights={data.insights} />
         </div>
 
-        {/* AI discoverability / referrer proxy — not sales attribution */}
-        <div className="mt-5">
-          <AiAgentTrafficCard />
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <TopProductsCard products={data.topProducts} rangeLabel={rangeLabel} />
+          <TopCitiesCard cities={data.topCities} rangeLabel={rangeLabel} />
+          <CategorySalesDonut data={data.salesByCategory} />
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <CourierCard data={data} />
+          </div>
+          <PaymentMethodsCard methods={data.paymentMethods} />
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <RecentOrdersTable orders={data.recentOrders} />
+          </div>
+          <div className="space-y-4">
+            <QuickActions />
+            <InventoryAlertsCard products={data.lowStockProducts} />
+            <OrdersByOriginCard data={data} rangeLabel={rangeLabel} />
+          </div>
         </div>
 
         <p className="mt-8 text-center text-[11px] font-medium tracking-wide text-slate-400">

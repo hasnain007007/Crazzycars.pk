@@ -1,5 +1,5 @@
 /**
- * Revenue trend — forest green area chart (reference style).
+ * Sales trend — booked order value per day (or week), orders in the tooltip.
  */
 "use client";
 
@@ -25,6 +25,9 @@ function CustomTooltip({ active, payload, label }) {
       <p className="font-semibold tabular-nums" style={{ color: GREEN }}>
         {formatAdminPrice(Number(payload[0]?.value) || 0)}
       </p>
+      <p className="text-xs tabular-nums text-slate-500">
+        {Number(payload[0]?.payload?.orders) || 0} orders
+      </p>
     </div>
   );
 }
@@ -43,11 +46,13 @@ export function SalesTrendChart({ data, rangeLabel, chartMode, loading = false }
       (data || []).map((d) => ({
         label: d.label,
         revenue: Number(d.revenue) || 0,
+        orders: Number(d.orders) || 0,
       })),
     [data]
   );
 
   const total = useMemo(() => rows.reduce((s, r) => s + r.revenue, 0), [rows]);
+  const orderCount = useMemo(() => rows.reduce((s, r) => s + r.orders, 0), [rows]);
   const hasRevenue = total > 0;
   /** Don't flash the "no revenue" empty state while the first fetch is in flight. */
   const showEmpty = !loading && (!rows.length || !hasRevenue);
@@ -59,13 +64,13 @@ export function SalesTrendChart({ data, rangeLabel, chartMode, loading = false }
         <div>
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Sales trend</h3>
           <p className="text-xs text-slate-400">
-            Paid revenue · {rangeLabel || "Period"}
-            {chartMode === "week" ? " · weekly" : ""}
+            Booked sales per {chartMode === "week" ? "week" : "day"} · {rangeLabel || "Period"}
           </p>
         </div>
         {hasRevenue ? (
-          <p className="text-sm font-bold tabular-nums" style={{ color: GREEN }}>
+          <p className="text-right text-sm font-bold tabular-nums" style={{ color: GREEN }}>
             {formatAdminPrice(total)}
+            <span className="block text-[11px] font-medium text-slate-400">{orderCount} orders</span>
           </p>
         ) : null}
       </div>
@@ -79,13 +84,13 @@ export function SalesTrendChart({ data, rangeLabel, chartMode, loading = false }
                 <div key={i} className="h-2 flex-1 animate-pulse rounded bg-slate-200/70 dark:bg-slate-800" />
               ))}
             </div>
-            <p className="text-center text-[11px] text-slate-400">Loading paid revenue…</p>
+            <p className="text-center text-[11px] text-slate-400">Loading sales…</p>
           </div>
         ) : showEmpty ? (
           <div className="flex h-full flex-col items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-950/50">
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-300">No paid revenue in this period</p>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300">No orders in this period</p>
             <p className="mt-1 max-w-xs text-center text-xs text-slate-400">
-              This chart only counts orders marked paid. Unpaid or pending orders won’t appear here — switch period or mark payments received.
+              Pick a longer period to see the trend.
             </p>
           </div>
         ) : (

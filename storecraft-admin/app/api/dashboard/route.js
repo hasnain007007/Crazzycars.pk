@@ -1,11 +1,12 @@
 /**
  * Dashboard metrics with optional date range filter.
- * Extended for the modern ops dashboard (KPIs, category, payments, weekday, insights).
  *
- * Rules (PKT / Asia/Karachi):
- * - Today / Monthly "sales" = booked order value (all non-void) — COD-friendly.
- * - "Paid collected" (periodSales) = paymentStatus=paid only.
- * - Net Profit uses paid, non-cancelled cohort (cost coverage flagged when thin).
+ * Rules (PKT / Asia/Karachi) — the maths lives in lib/dashboardMetrics.js:
+ * - Sales = booked order value (all non-void) — COD-friendly.
+ * - Collected = paid orders + delivered COD parcels + advances received.
+ * - To collect = still owed on open orders (total − advance received).
+ * - Conversion only uses days where visitor tracking ran (no inflated rates from missing days).
+ * - Profit = realised sales (paid / delivered) on items that have a cost price.
  * - Courier Dispatched = activity in window (ship / deliver / return), not "in transit only".
  */
 import { NextResponse } from "next/server";
@@ -13,6 +14,17 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import { hasCapability, stripFinancialDashboardData } from "@/lib/permissions";
 import { buildChartBuckets, resolveDashboardRange } from "@/lib/dashboardRanges";
+import {
+  findOrderGaps,
+  ordersByDay,
+  pctChange,
+  profitSummary,
+  summarizeOrders,
+  topCities,
+  topProducts,
+  trackedConversion,
+  isVoidOrder,
+} from "@/lib/dashboardMetrics";
 import { karachiDayBounds, karachiDayKey, shiftDayKey } from "@/lib/karachiDay";
 import Customer from "@/lib/models/Customer.model";
 import DailyVisitor from "@/lib/models/DailyVisitor.model";
@@ -25,6 +37,12 @@ import { withoutDemo } from "@/lib/orderDemoFilter";
 const TZ = "Asia/Karachi";
 const sumTotal = { $sum: { $ifNull: ["$pricing.total", { $ifNull: ["$total", 0] }] } };
 const NOT_VOID = { $nin: ["cancelled", "returned", "refunded"] };
+const ORDER_FIELDS =
+  "createdAt orderStatus paymentStatus paymentMethod payment.method payment.paidAmount pricing.total pricing.discount total " +
+  "items.productId items.quantity items.unitPrice items.unitCost items.name shippingAddress.city " +
+  "attribution.label attribution.channel aiAttributedSource";
+/** Parcels still "shipped" after this many days usually mean courier status is not syncing. */
+const STUCK_SHIPPED_DAYS = 10;
 
 function dateMatch(from, to) {
   if (!from && !to) return withoutDemo({});
@@ -108,13 +126,6 @@ function courierReturnedMatch(from, to) {
   });
 }
 
-function pctChange(current, previous) {
-  const c = Number(current) || 0;
-  const p = Number(previous) || 0;
-  if (p === 0) return c > 0 ? 100 : 0;
-  return Math.round(((c - p) / p) * 1000) / 10;
-}
-
 /** Orders ÷ unique visitors → conversion % (1 decimal). Null when no visitors. */
 function conversionRate(orders, visitors) {
   const v = Number(visitors) || 0;
@@ -132,8 +143,8 @@ function visitorDayKeyFilter(from, to, todayKey) {
   return { dayKey: { $lte: toKey } };
 }
 
-/** Prior window of equal length (for conversion trend). */
-function priorVisitorWindow(from, to, todayKey) {
+/** Prior window of equal length (for growth + conversion trend). */
+function priorWindowFor(from, to) {
   if (!from || !to) return null;
   const fromKey = karachiDayKey(from);
   const toKey = karachiDayKey(to);
@@ -143,6 +154,7 @@ function priorVisitorWindow(from, to, todayKey) {
   const priorToKey = shiftDayKey(fromKey, -1);
   const priorFromKey = shiftDayKey(priorToKey, -(days - 1));
   return {
+    days,
     visitorFilter: { dayKey: { $gte: priorFromKey, $lte: priorToKey } },
     orderFrom: karachiDayBounds(priorFromKey).start,
     orderTo: karachiDayBounds(priorToKey).end,
@@ -180,45 +192,13 @@ const PAYMENT_LABELS = {
   other: "Other",
 };
 
-/**
- * Profit on collected money: order total − COGS.
- * Snapshot unitCost of 0 is treated as missing so product costPerItem can fill in.
- */
-function computeOrderProfit(order, costByProduct) {
-  let cost = 0;
-  let lineSell = 0;
-  for (const it of order.items || []) {
-    const qty = Math.max(0, Number(it.quantity) || 0);
-    const unitPrice = Math.max(0, Number(it.unitPrice) || 0);
-    let unitCost = Number(it.unitCost);
-    if (!Number.isFinite(unitCost) || unitCost <= 0) {
-      unitCost = it.productId ? costByProduct.get(String(it.productId)) || 0 : 0;
-    }
-    lineSell += unitPrice * qty;
-    cost += unitCost * qty;
-  }
-  const revenue = Math.max(0, Number(order.pricing?.total ?? order.total ?? lineSell) || 0);
-  return { profit: revenue - cost, cost, sell: revenue };
-}
-
-function sumProfits(orders, costByProduct) {
-  let totalProfit = 0;
-  let totalCost = 0;
-  let totalSell = 0;
+async function loadCostAndCategoryMaps(orders) {
+  const productIds = new Set();
   for (const o of orders) {
-    const { profit, cost, sell } = computeOrderProfit(o, costByProduct);
-    totalProfit += profit;
-    totalCost += cost;
-    totalSell += sell;
+    for (const it of o.items || []) {
+      if (it.productId) productIds.add(String(it.productId));
+    }
   }
-  return {
-    totalProfit: Math.round(totalProfit * 100) / 100,
-    totalCost: Math.round(totalCost * 100) / 100,
-    totalSell: Math.round(totalSell * 100) / 100,
-  };
-}
-
-async function loadCostAndCategoryMaps(productIds) {
   const costByProduct = new Map();
   const categoryByProduct = new Map();
   if (!productIds.size) return { costByProduct, categoryByProduct };
@@ -235,21 +215,24 @@ async function loadCostAndCategoryMaps(productIds) {
   return { costByProduct, categoryByProduct };
 }
 
-function collectProductIds(...orderLists) {
-  const productIds = new Set();
-  for (const orders of orderLists) {
-    for (const o of orders || []) {
-      for (const it of o.items || []) {
-        if (it.productId) productIds.add(String(it.productId));
-      }
-    }
-  }
-  return productIds;
+function countMap(rows) {
+  const map = new Map();
+  for (const r of rows) if (r._id) map.set(r._id, r.n);
+  return map;
+}
+
+function formatDayKey(key) {
+  return karachiDayBounds(key).start.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    timeZone: TZ,
+  });
 }
 
 export async function GET(request) {
   try {
-    if (!getRequestUser(request)) {
+    const user = getRequestUser(request);
+    if (!user) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
@@ -268,138 +251,84 @@ export async function GET(request) {
     const yesterdayKey = shiftDayKey(todayKey, -1);
     const { start: todayStart, end: todayEnd } = karachiDayBounds(todayKey);
     const { start: yesterdayStart, end: yesterdayEnd } = karachiDayBounds(yesterdayKey);
-    const [ty, tm] = todayKey.split("-").map(Number);
+    const [ty, tm, td] = todayKey.split("-").map(Number);
     const monthStart = new Date(`${ty}-${String(tm).padStart(2, "0")}-01T00:00:00+05:00`);
     const prevMonth = tm === 1 ? { y: ty - 1, m: 12 } : { y: ty, m: tm - 1 };
-    const lastMonthStart = new Date(
-      `${prevMonth.y}-${String(prevMonth.m).padStart(2, "0")}-01T00:00:00+05:00`
-    );
+    const prevMm = String(prevMonth.m).padStart(2, "0");
+    const lastMonthStart = new Date(`${prevMonth.y}-${prevMm}-01T00:00:00+05:00`);
     const lastMonthEnd = new Date(monthStart.getTime() - 1);
-    const weekFrom = karachiDayBounds(shiftDayKey(todayKey, -6)).start;
-
-    const sellMatch = {
-      ...period,
-      orderStatus: NOT_VOID,
-    };
-    const paidMatch = {
-      ...period,
-      paymentStatus: "paid",
-      orderStatus: NOT_VOID,
-    };
-    const priorPaidMatch = withoutDemo({
-      createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
-      paymentStatus: "paid",
-      orderStatus: NOT_VOID,
-    });
+    // Month-to-date vs the same days of last month (a full month always "beats" a partial one).
+    const prevMonthDays = new Date(Date.UTC(prevMonth.y, prevMonth.m, 0)).getUTCDate();
+    const lastMonthSameDayEnd = karachiDayBounds(
+      `${prevMonth.y}-${prevMm}-${String(Math.min(td, prevMonthDays)).padStart(2, "0")}`
+    ).end;
 
     const chartFrom = range.from || karachiDayBounds(shiftDayKey(todayKey, -29)).start;
     const chartTo = range.to || todayEnd;
-    const { mode: chartMode, buckets } = buildChartBuckets(
-      range.id === "all" ? chartFrom : range.from || chartFrom,
-      range.id === "all" ? chartTo : range.to || chartTo
-    );
+    const { mode: chartMode, buckets } = buildChartBuckets(chartFrom, chartTo);
 
-    const trendCreatedAt =
-      range.from || range.to
-        ? {
-            ...(range.from ? { $gte: range.from } : {}),
-            ...(range.to ? { $lte: range.to } : {}),
-          }
-        : { $gte: chartFrom, $lte: chartTo };
-
-    const priorWindow = priorVisitorWindow(range.from, range.to, todayKey);
+    const prior = priorWindowFor(range.from, range.to);
     const periodVisitorFilter = visitorDayKeyFilter(range.from, range.to, todayKey);
+    const stuckBefore = new Date(now.getTime() - STUCK_SHIPPED_DAYS * 24 * 60 * 60 * 1000);
+    const bookedAgg = (from, to) =>
+      Order.aggregate([
+        { $match: withoutDemo({ orderStatus: NOT_VOID, createdAt: { $gte: from, $lte: to } }) },
+        { $group: { _id: null, total: sumTotal } },
+      ]);
 
     const [
-      periodSalesAgg,
-      periodOrdersCount,
-      periodPaidOrdersCount,
-      totalSellAgg,
+      periodOrders,
+      priorOrders,
+      chartOrders,
       totalCustomers,
       pendingOrdersAllTime,
-      pendingOrdersPeriod,
-      pendingOrdersToday,
-      ordersReceived,
       ordersDispatched,
       ordersDelivered,
       ordersReturned,
+      stuckShipped,
       recentOrdersDocs,
-      statusAgg,
-      salesByDayAgg,
       lowStockProducts,
-      profitOrders,
-      priorProfitOrders,
-      todayPaidAgg,
-      todayOrderCount,
-      todayOrderValueAgg,
-      yesterdayPaidAgg,
-      yesterdayOrderCount,
-      yesterdayOrderValueAgg,
-      monthPaidAgg,
+      todayOrders,
+      yesterdayOrders,
       monthBookedAgg,
-      lastMonthPaidAgg,
+      lastMonthSameDaysAgg,
       lastMonthBookedAgg,
-      paymentAgg,
-      categoryOrders,
-      weekdayOrders,
+      periodVisitorRows,
+      priorVisitorRows,
       todayVisitorCount,
       yesterdayVisitorCount,
-      periodVisitorCount,
-      priorPeriodVisitorCount,
-      priorPeriodOrderCount,
-      unpaidOrdersPeriod,
-      partialOrdersPeriod,
-      unpaidOrdersToday,
-      unpaidValuePeriodAgg,
-      unpaidValueTodayAgg,
-      originOrders,
     ] = await Promise.all([
-      Order.aggregate([{ $match: paidMatch }, { $group: { _id: null, total: sumTotal } }]),
-      Order.countDocuments(period),
-      Order.countDocuments(paidMatch),
-      Order.aggregate([{ $match: sellMatch }, { $group: { _id: null, total: sumTotal } }]),
+      Order.find(period).select(ORDER_FIELDS).lean(),
+      prior
+        ? Order.find(withoutDemo({ createdAt: { $gte: prior.orderFrom, $lte: prior.orderTo } }))
+            .select(ORDER_FIELDS)
+            .lean()
+        : Promise.resolve(null),
+      // "All time" charts the last 30 days; other ranges chart the range itself.
+      range.from
+        ? Promise.resolve(null)
+        : Order.find(dateMatch(chartFrom, chartTo)).select("createdAt orderStatus pricing.total total").lean(),
       Customer.countDocuments(),
       Order.countDocuments(withoutDemo({ orderStatus: "pending" })),
-      Order.countDocuments({ ...period, orderStatus: "pending" }),
-      Order.countDocuments(
-        withoutDemo({
-          orderStatus: "pending",
-          createdAt: { $gte: todayStart, $lte: todayEnd },
-        })
-      ),
-      Order.countDocuments(period),
-      // Courier activity in selected days (dispatch or settle — not "currently shipped only").
       Order.countDocuments(courierDispatchedMatch(range.from, range.to)),
       Order.countDocuments(courierEventMatch("deliveredAt", "delivered", range.from, range.to)),
       Order.countDocuments(courierReturnedMatch(range.from, range.to)),
+      Order.countDocuments(
+        withoutDemo({
+          orderStatus: "shipped",
+          $or: [
+            { shippedAt: { $lt: stuckBefore } },
+            { shippedAt: null, createdAt: { $lt: stuckBefore } },
+          ],
+        })
+      ),
       Order.find(period)
         .sort({ createdAt: -1 })
         .limit(10)
         .populate("customer.customerId", "name email")
         .lean(),
-      Order.aggregate([
-        { $match: period },
-        { $group: { _id: "$orderStatus", count: { $sum: 1 } } },
-      ]),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            paymentStatus: "paid",
-            orderStatus: NOT_VOID,
-            createdAt: trendCreatedAt,
-          }),
-        },
-        {
-          $group: {
-            _id: {
-              $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: TZ },
-            },
-            revenue: sumTotal,
-          },
-        },
-        { $sort: { _id: 1 } },
-      ]),
       Product.find({
+        status: "active",
         "inventory.quantity": { $exists: true, $ne: null },
         $or: [{ "inventory.trackInventory": true }, { "inventory.trackInventory": { $exists: false } }],
         $expr: {
@@ -407,197 +336,141 @@ export async function GET(request) {
         },
       })
         .select("name inventory.quantity inventory.lowStockThreshold")
+        .sort({ "inventory.quantity": 1 })
         .lean(),
-      Order.find(paidMatch)
-        .select("items.productId items.quantity items.unitPrice items.unitCost items.name pricing.total total")
+      Order.find(withoutDemo({ createdAt: { $gte: todayStart, $lte: todayEnd } }))
+        .select(ORDER_FIELDS)
         .lean(),
-      Order.find(priorPaidMatch)
-        .select("items.productId items.quantity items.unitPrice items.unitCost items.name pricing.total total")
+      Order.find(withoutDemo({ createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } }))
+        .select(ORDER_FIELDS)
         .lean(),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            paymentStatus: "paid",
-            orderStatus: NOT_VOID,
-            createdAt: { $gte: todayStart, $lte: todayEnd },
-          }),
-        },
-        { $group: { _id: null, total: sumTotal } },
+      bookedAgg(monthStart, todayEnd),
+      bookedAgg(lastMonthStart, lastMonthSameDayEnd),
+      bookedAgg(lastMonthStart, lastMonthEnd),
+      DailyVisitor.aggregate([
+        { $match: periodVisitorFilter },
+        { $group: { _id: "$dayKey", n: { $sum: 1 } } },
       ]),
-      Order.countDocuments(withoutDemo({ createdAt: { $gte: todayStart, $lte: todayEnd } })),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            orderStatus: NOT_VOID,
-            createdAt: { $gte: todayStart, $lte: todayEnd },
-          }),
-        },
-        { $group: { _id: null, total: sumTotal } },
-      ]),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            paymentStatus: "paid",
-            orderStatus: NOT_VOID,
-            createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
-          }),
-        },
-        { $group: { _id: null, total: sumTotal } },
-      ]),
-      Order.countDocuments(withoutDemo({ createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } })),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            orderStatus: NOT_VOID,
-            createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd },
-          }),
-        },
-        { $group: { _id: null, total: sumTotal } },
-      ]),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            paymentStatus: "paid",
-            orderStatus: NOT_VOID,
-            createdAt: { $gte: monthStart, $lte: todayEnd },
-          }),
-        },
-        { $group: { _id: null, total: sumTotal } },
-      ]),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            orderStatus: NOT_VOID,
-            createdAt: { $gte: monthStart, $lte: todayEnd },
-          }),
-        },
-        { $group: { _id: null, total: sumTotal } },
-      ]),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            paymentStatus: "paid",
-            orderStatus: NOT_VOID,
-            createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
-          }),
-        },
-        { $group: { _id: null, total: sumTotal } },
-      ]),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            orderStatus: NOT_VOID,
-            createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
-          }),
-        },
-        { $group: { _id: null, total: sumTotal } },
-      ]),
-      Order.aggregate([
-        { $match: paidMatch },
-        {
-          $group: {
-            _id: { $ifNull: ["$paymentMethod", "$payment.method"] },
-            count: { $sum: 1 },
-            total: sumTotal,
-          },
-        },
-      ]),
-      Order.find(paidMatch)
-        .select("items.productId items.quantity items.unitPrice items.name")
-        .lean(),
-      Order.find(
-        withoutDemo({
-          paymentStatus: "paid",
-          orderStatus: NOT_VOID,
-          createdAt: { $gte: weekFrom, $lte: todayEnd },
-        })
-      )
-        .select(
-          "createdAt items.productId items.quantity items.unitPrice items.unitCost pricing.total total"
-        )
-        .lean(),
+      prior
+        ? DailyVisitor.aggregate([
+            { $match: prior.visitorFilter },
+            { $group: { _id: "$dayKey", n: { $sum: 1 } } },
+          ])
+        : Promise.resolve([]),
       DailyVisitor.countDocuments({ dayKey: todayKey }),
       DailyVisitor.countDocuments({ dayKey: yesterdayKey }),
-      DailyVisitor.countDocuments(periodVisitorFilter),
-      priorWindow
-        ? DailyVisitor.countDocuments(priorWindow.visitorFilter)
-        : Promise.resolve(0),
-      priorWindow
-        ? Order.countDocuments(
-            withoutDemo({
-              createdAt: { $gte: priorWindow.orderFrom, $lte: priorWindow.orderTo },
-            })
-          )
-        : Promise.resolve(0),
-      Order.countDocuments({
-        ...period,
-        orderStatus: NOT_VOID,
-        paymentStatus: "unpaid",
-      }),
-      Order.countDocuments({
-        ...period,
-        orderStatus: NOT_VOID,
-        paymentStatus: "partial",
-      }),
-      Order.countDocuments(
-        withoutDemo({
-          orderStatus: NOT_VOID,
-          paymentStatus: "unpaid",
-          createdAt: { $gte: todayStart, $lte: todayEnd },
-        })
-      ),
-      Order.aggregate([
-        {
-          $match: {
-            ...period,
-            orderStatus: NOT_VOID,
-            paymentStatus: { $in: ["unpaid", "partial"] },
-          },
-        },
-        { $group: { _id: null, total: sumTotal } },
-      ]),
-      Order.aggregate([
-        {
-          $match: withoutDemo({
-            orderStatus: NOT_VOID,
-            paymentStatus: { $in: ["unpaid", "partial"] },
-            createdAt: { $gte: todayStart, $lte: todayEnd },
-          }),
-        },
-        { $group: { _id: null, total: sumTotal } },
-      ]),
-      Order.find(period)
-        .select("attribution.label attribution.channel aiAttributedSource")
-        .lean(),
     ]);
 
-    const periodSales = periodSalesAgg[0]?.total ?? 0;
-    const totalRevenue = periodSales;
-    const totalSellOpen = totalSellAgg[0]?.total ?? 0;
-    const calendarTodayPaid = todayPaidAgg[0]?.total ?? 0;
-    const todayOrderValue = todayOrderValueAgg[0]?.total ?? 0;
-    void yesterdayPaidAgg; // paid-only kept for possible future paid-today trends
-    const yesterdayOrderValue = yesterdayOrderValueAgg[0]?.total ?? 0;
-    const thisMonthPaid = monthPaidAgg[0]?.total ?? 0;
-    const thisMonthBooked = monthBookedAgg[0]?.total ?? 0;
-    const lastMonthPaid = lastMonthPaidAgg[0]?.total ?? 0;
+    // ── Money + order counts ─────────────────────────────────────────────
+    const summary = summarizeOrders(periodOrders);
+    const priorSummary = priorOrders ? summarizeOrders(priorOrders) : null;
+    const today = summarizeOrders(todayOrders);
+    const yesterday = summarizeOrders(yesterdayOrders);
+    const monthBooked = monthBookedAgg[0]?.total ?? 0;
+    const lastMonthSameDays = lastMonthSameDaysAgg[0]?.total ?? 0;
     const lastMonthBooked = lastMonthBookedAgg[0]?.total ?? 0;
 
-    const productIds = collectProductIds(profitOrders, priorProfitOrders, categoryOrders, weekdayOrders);
-    const { costByProduct, categoryByProduct } = await loadCostAndCategoryMaps(productIds);
+    const { costByProduct, categoryByProduct } = await loadCostAndCategoryMaps([
+      ...periodOrders,
+      ...(priorOrders || []),
+    ]);
+    const profit = profitSummary(periodOrders, costByProduct);
+    const priorProfit = priorOrders ? profitSummary(priorOrders, costByProduct) : null;
 
-    const { totalProfit, totalCost, totalSell } = sumProfits(profitOrders, costByProduct);
-    const { totalProfit: priorProfit } = sumProfits(priorProfitOrders, costByProduct);
-    const profitMargin = totalSell > 0 ? Math.round((totalProfit / totalSell) * 1000) / 10 : 0;
-    let ordersWithCost = 0;
-    for (const o of profitOrders) {
-      const { cost } = computeOrderProfit(o, costByProduct);
-      if (cost > 0) ordersWithCost += 1;
+    // ── Visitors + conversion (tracked days only) ────────────────────────
+    const periodDayOrders = ordersByDay(periodOrders);
+    const periodVisitorsByDay = countMap(periodVisitorRows);
+    const periodVisitors = [...periodVisitorsByDay.values()].reduce((s, n) => s + n, 0);
+    const conversion = trackedConversion(periodVisitorsByDay, periodDayOrders);
+    const priorConversion = priorOrders
+      ? trackedConversion(countMap(priorVisitorRows), ordersByDay(priorOrders))
+      : null;
+    const todayConversionRate = conversionRate(todayOrders.length, todayVisitorCount);
+    const yesterdayConversionRate = conversionRate(yesterdayOrders.length, yesterdayVisitorCount);
+
+    // Calendar days in the window (for "tracked X of Y days" and gap detection).
+    const firstOrderKey = periodOrders.length
+      ? karachiDayKey(new Date(Math.min(...periodOrders.map((o) => new Date(o.createdAt).getTime()))))
+      : todayKey;
+    const windowFromKey = range.from ? karachiDayKey(range.from) : firstOrderKey;
+    const windowToKey = range.to ? karachiDayKey(range.to) : todayKey;
+    const windowDayKeys = [];
+    for (let k = windowFromKey; k <= windowToKey && windowDayKeys.length < 800; k = shiftDayKey(k, 1)) {
+      windowDayKeys.push(k);
     }
-    const profitCostCoverage =
-      profitOrders.length > 0 ? Math.round((ordersWithCost / profitOrders.length) * 1000) / 10 : 100;
+    const orderGaps = findOrderGaps(
+      windowDayKeys.filter((k) => k < todayKey),
+      periodDayOrders
+    ).map((g) => ({ ...g, label: `${formatDayKey(g.from)} – ${formatDayKey(g.to)}` }));
 
-    const orderStatusCounts = {
+    // ── Sales trend (booked sales + order count) ─────────────────────────
+    const chartDayOrders = chartOrders ? ordersByDay(chartOrders) : periodDayOrders;
+    const salesTrend = buckets.map((b) => {
+      let revenue = 0;
+      let orders = 0;
+      for (let key = karachiDayKey(b.from); key <= karachiDayKey(b.to); key = shiftDayKey(key, 1)) {
+        const row = chartDayOrders.get(key);
+        if (row) {
+          revenue += row.booked;
+          orders += row.orders;
+        }
+      }
+      return { date: b.key, label: b.label, revenue: Math.round(revenue), orders };
+    });
+
+    // ── Mix cards ────────────────────────────────────────────────────────
+    const liveOrders = periodOrders.filter((o) => !isVoidOrder(o));
+    const paymentCounts = {};
+    for (const o of liveOrders) {
+      const key = normalizePaymentKey(o.paymentMethod || o.payment?.method);
+      paymentCounts[key] = (paymentCounts[key] || 0) + 1;
+    }
+    const paymentMethods = Object.entries(paymentCounts)
+      .map(([key, count]) => ({
+        key,
+        label: PAYMENT_LABELS[key] || key,
+        count,
+        percent: liveOrders.length ? Math.round((count / liveOrders.length) * 1000) / 10 : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    const originCounts = {};
+    for (const o of periodOrders) {
+      const label = orderOriginLabel(o) || "Direct";
+      originCounts[label] = (originCounts[label] || 0) + 1;
+    }
+    const ordersByOrigin = Object.entries(originCounts)
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+
+    const catSell = {};
+    for (const o of liveOrders) {
+      for (const it of o.items || []) {
+        const line = Math.max(0, Number(it.quantity) || 0) * Math.max(0, Number(it.unitPrice) || 0);
+        const catName = it.productId
+          ? categoryByProduct.get(String(it.productId)) || "Uncategorized"
+          : "Uncategorized";
+        catSell[catName] = (catSell[catName] || 0) + line;
+      }
+    }
+    const catEntries = Object.entries(catSell).sort((a, b) => b[1] - a[1]);
+    const catTotal = catEntries.reduce((s, [, v]) => s + v, 0) || 1;
+    const salesByCategory = catEntries.slice(0, 5).map(([name, value]) => ({
+      name,
+      value: Math.round(value),
+      percent: Math.round((value / catTotal) * 1000) / 10,
+    }));
+    if (catEntries.length > 5) {
+      const rest = catEntries.slice(5).reduce((s, [, v]) => s + v, 0);
+      salesByCategory.push({
+        name: "Other",
+        value: Math.round(rest),
+        percent: Math.round((rest / catTotal) * 1000) / 10,
+      });
+    }
+
+    const statusCounts = {
       pending: 0,
       confirmed: 0,
       processing: 0,
@@ -609,120 +482,8 @@ export async function GET(request) {
       refunded: 0,
       disputed: 0,
     };
-    for (const row of statusAgg) {
-      if (row._id && Object.prototype.hasOwnProperty.call(orderStatusCounts, row._id)) {
-        orderStatusCounts[row._id] = row.count;
-      }
-    }
-
-    const revenueByDay = {};
-    for (const row of salesByDayAgg) {
-      if (row._id) revenueByDay[row._id] = row.revenue;
-    }
-
-    let salesTrend = [];
-    if (chartMode === "day" && buckets.length) {
-      salesTrend = buckets.map((b) => ({
-        date: b.key,
-        label: b.label,
-        revenue: revenueByDay[b.key] ?? 0,
-      }));
-    } else if (buckets.length) {
-      salesTrend = buckets.map((b) => {
-        let rev = 0;
-        for (let key = karachiDayKey(b.from); key <= karachiDayKey(b.to); key = shiftDayKey(key, 1)) {
-          rev += revenueByDay[key] ?? 0;
-        }
-        return { date: b.key, label: b.label, revenue: rev };
-      });
-    } else {
-      for (let i = 29; i >= 0; i -= 1) {
-        const key = shiftDayKey(todayKey, -i);
-        const { start } = karachiDayBounds(key);
-        salesTrend.push({
-          date: key,
-          label: start.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: TZ }),
-          revenue: revenueByDay[key] ?? 0,
-        });
-      }
-    }
-
-    const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const labelToIdx = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
-    const weekdayRevenueVsCost = weekdayLabels.map((label) => ({
-      label,
-      revenue: 0,
-      cost: 0,
-    }));
-    for (const o of weekdayOrders) {
-      const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: TZ,
-        weekday: "short",
-      }).formatToParts(new Date(o.createdAt));
-      const wd = parts.find((p) => p.type === "weekday")?.value;
-      const idx = labelToIdx[wd];
-      if (idx == null) continue;
-      const { cost, sell } = computeOrderProfit(o, costByProduct);
-      weekdayRevenueVsCost[idx].revenue += sell;
-      weekdayRevenueVsCost[idx].cost += cost;
-    }
-    for (const row of weekdayRevenueVsCost) {
-      row.revenue = Math.round(row.revenue * 100) / 100;
-      row.cost = Math.round(row.cost * 100) / 100;
-    }
-
-    const paymentTotals = {};
-    let paymentSum = 0;
-    for (const row of paymentAgg) {
-      const key = normalizePaymentKey(row._id);
-      paymentTotals[key] = (paymentTotals[key] || 0) + (Number(row.count) || 0);
-      paymentSum += Number(row.count) || 0;
-    }
-    const paymentMethods = Object.entries(paymentTotals)
-      .map(([key, count]) => ({
-        key,
-        label: PAYMENT_LABELS[key] || key,
-        count,
-        percent: paymentSum ? Math.round((count / paymentSum) * 1000) / 10 : 0,
-      }))
-      .sort((a, b) => b.count - a.count);
-
-    const originCounts = {};
-    for (const o of originOrders || []) {
-      const label = orderOriginLabel(o) || "Direct";
-      originCounts[label] = (originCounts[label] || 0) + 1;
-    }
-    const ordersByOrigin = Object.entries(originCounts)
-      .map(([label, count]) => ({ label, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 12);
-
-    const catSell = {};
-    for (const o of categoryOrders) {
-      for (const it of o.items || []) {
-        const qty = Math.max(0, Number(it.quantity) || 0);
-        const unitPrice = Math.max(0, Number(it.unitPrice) || 0);
-        const line = qty * unitPrice;
-        const catName = it.productId
-          ? categoryByProduct.get(String(it.productId)) || "Uncategorized"
-          : "Uncategorized";
-        catSell[catName] = (catSell[catName] || 0) + line;
-      }
-    }
-    const catEntries = Object.entries(catSell).sort((a, b) => b[1] - a[1]);
-    const catTotal = catEntries.reduce((s, [, v]) => s + v, 0) || 1;
-    let salesByCategory = catEntries.slice(0, 5).map(([name, value]) => ({
-      name,
-      value: Math.round(value * 100) / 100,
-      percent: Math.round((value / catTotal) * 1000) / 10,
-    }));
-    if (catEntries.length > 5) {
-      const rest = catEntries.slice(5).reduce((s, [, v]) => s + v, 0);
-      salesByCategory.push({
-        name: "Other",
-        value: Math.round(rest * 100) / 100,
-        percent: Math.round((rest / catTotal) * 1000) / 10,
-      });
+    for (const o of periodOrders) {
+      if (Object.prototype.hasOwnProperty.call(statusCounts, o.orderStatus)) statusCounts[o.orderStatus] += 1;
     }
 
     const recentOrders = recentOrdersDocs.map((o) => ({
@@ -743,143 +504,162 @@ export async function GET(request) {
       threshold: p.inventory?.lowStockThreshold ?? 5,
     }));
 
-    const insights = [];
-    const bestWeekday = [...weekdayRevenueVsCost].sort((a, b) => b.revenue - a.revenue)[0];
-    if (bestWeekday?.revenue > 0) {
-      insights.push({
-        icon: "bolt",
-        text: `${bestWeekday.label} is your strongest day this week (Rs ${Math.round(bestWeekday.revenue).toLocaleString("en-PK")} paid). Consider promos on quieter days.`,
-      });
-    }
-    if (profitMargin > 0) {
-      insights.push({
-        icon: "bolt",
-        text:
-          profitCostCoverage < 80
-            ? `Net margin shows ${profitMargin}% but only ${profitCostCoverage}% of paid orders have product cost filled — update cost-per-item for accurate profit.`
-            : `Net margin is ${profitMargin}% on paid sales in this period. Keep cost-per-item updated for accurate profit.`,
-      });
-    }
-    const codShare = paymentMethods.find((p) => p.key === "cod")?.percent || 0;
-    if (codShare >= 40) {
-      insights.push({
-        icon: "bolt",
-        text: `COD is ${codShare}% of paid orders. Nudge customers to JazzCash/Easypaisa to lower returns and collection delays.`,
-      });
-    }
-    if (ordersReturned > 0 && ordersReceived > 0) {
-      const settledForInsight = ordersDelivered + ordersReturned;
-      const retPct =
-        settledForInsight > 0
-          ? Math.round((ordersReturned / settledForInsight) * 1000) / 10
-          : Math.round((ordersReturned / ordersReceived) * 1000) / 10;
-      insights.push({
-        icon: "bolt",
-        text: `Return ratio is ${retPct}% of settled courier orders (delivered + returned) in this period. Review returned SKUs and city patterns.`,
-      });
-    }
-    const periodConvInsight = conversionRate(periodOrdersCount, periodVisitorCount);
-    if (periodConvInsight != null && periodVisitorCount > 0) {
-      insights.push({
-        icon: "bolt",
-        text: `Conversion is ${periodConvInsight}% (${periodOrdersCount} orders ÷ ${periodVisitorCount} visitors) for ${range.label}.`,
-      });
-    }
-    if (!insights.length) {
-      insights.push({
-        icon: "bolt",
-        text: "Keep adding orders and product costs — insights will appear as your data grows.",
-      });
-    }
-
-    const trendPaidTotal = salesTrend.reduce((s, b) => s + (Number(b.revenue) || 0), 0);
-
     const courierSettled = (Number(ordersDelivered) || 0) + (Number(ordersReturned) || 0);
     const deliveryRatio =
       courierSettled > 0 ? Math.round((ordersDelivered / courierSettled) * 1000) / 10 : null;
     const returnRatio =
       courierSettled > 0 ? Math.round((ordersReturned / courierSettled) * 1000) / 10 : null;
 
-    const user = getRequestUser(request);
+    const cities = topCities(periodOrders);
+    const products = topProducts(periodOrders);
+
+    // ── Insights: things to act on, most urgent first ───────────────────
+    const insights = [];
+    for (const g of orderGaps) {
+      insights.push({
+        tone: "alert",
+        text: `No orders are recorded ${g.label} (${g.days} days). That looks like missing data (for example from the database move), not a slow week — the totals for this period are too low.`,
+      });
+    }
+    if (stuckShipped > 0) {
+      insights.push({
+        tone: "alert",
+        text: `${stuckShipped} parcel${stuckShipped === 1 ? " has" : "s have"} been "shipped" for over ${STUCK_SHIPPED_DAYS} days. Update them to delivered or returned so collected money and return rate are correct.`,
+      });
+    }
+    if (summary.pendingConfirm > 0) {
+      insights.push({
+        tone: "action",
+        text: `${summary.pendingConfirm} order${summary.pendingConfirm === 1 ? " is" : "s are"} still pending in ${range.label} (${pendingOrdersAllTime} in total). Confirm or cancel them so they are dispatched.`,
+      });
+    }
+    if (profit.coverage != null && profit.coverage < 80) {
+      const names = profit.missingCost.map((m) => m.name).slice(0, 3).join(", ");
+      insights.push({
+        tone: "action",
+        text: `Profit only covers ${profit.coverage}% of sales — the rest have no cost price. Add cost price for ${names || "these products"}.`,
+      });
+    }
+    if (conversion.days > 0 && conversion.days < windowDayKeys.length) {
+      insights.push({
+        tone: "info",
+        text: `Visitor tracking covers ${conversion.days} of ${windowDayKeys.length} days in ${range.label}, so conversion uses only those days (${conversion.orders} orders ÷ ${conversion.visitors.toLocaleString("en-PK")} visitors).`,
+      });
+    }
+    if (returnRatio != null && returnRatio >= 15) {
+      insights.push({
+        tone: "action",
+        text: `Return rate is ${returnRatio}% of settled parcels. Ask for the booking advance on high-value COD orders and call to confirm before dispatch.`,
+      });
+    }
+    if (cities[0] && cities[0].city !== "Unknown") {
+      insights.push({
+        tone: "info",
+        text: `${cities[0].city} brings the most orders (${cities[0].percent}%). Consider city-targeted ads there.`,
+      });
+    }
+    if (!insights.length) {
+      insights.push({ tone: "info", text: "All good — no issues found for this period." });
+    }
+
     const data = {
       range: {
         id: range.id,
         label: range.label,
         from: range.from ? range.from.toISOString() : null,
         to: range.to ? range.to.toISOString() : null,
+        days: windowDayKeys.length,
       },
-      periodSales,
-      periodOrders: periodOrdersCount,
-      periodPaidOrders: periodPaidOrdersCount,
-      // COD-first: big numbers = booked order value (all non-void), not only paymentStatus=paid.
-      todaySales: todayOrderValue,
-      todayPaidSales: calendarTodayPaid,
-      todayOrders: todayOrderCount,
-      todayOrderValue,
-      todaySalesGrowth: pctChange(todayOrderValue, yesterdayOrderValue),
-      todayOrdersGrowth: pctChange(todayOrderCount, yesterdayOrderCount),
+      timezone: TZ,
+      todayKey,
+
+      // Today
+      todaySales: today.booked,
+      todayOrderValue: today.booked,
+      todayPaidSales: today.collected,
+      todayOrders: todayOrders.length,
+      todaySalesGrowth: pctChange(today.booked, yesterday.booked),
+      todayOrdersGrowth: pctChange(todayOrders.length, yesterdayOrders.length),
+      pendingOrders: today.pendingConfirm,
+      unpaidOrdersToday: today.unpaidOrders,
+      unpaidOrderValueToday: today.outstanding,
       todayVisitors: todayVisitorCount,
       yesterdayVisitors: yesterdayVisitorCount,
       todayVisitorsGrowth: pctChange(todayVisitorCount, yesterdayVisitorCount),
-      periodVisitors: periodVisitorCount,
-      todayConversionRate: conversionRate(todayOrderCount, todayVisitorCount),
-      yesterdayConversionRate: conversionRate(yesterdayOrderCount, yesterdayVisitorCount),
-      todayConversionGrowth: (() => {
-        const cur = conversionRate(todayOrderCount, todayVisitorCount);
-        const prev = conversionRate(yesterdayOrderCount, yesterdayVisitorCount);
-        if (cur == null || prev == null) return null;
-        return pctChange(cur, prev);
-      })(),
-      periodConversionRate: conversionRate(periodOrdersCount, periodVisitorCount),
-      priorPeriodConversionRate: conversionRate(priorPeriodOrderCount, priorPeriodVisitorCount),
-      periodConversionGrowth: (() => {
-        const cur = conversionRate(periodOrdersCount, periodVisitorCount);
-        const prev = conversionRate(priorPeriodOrderCount, priorPeriodVisitorCount);
-        if (cur == null || prev == null) return null;
-        return pctChange(cur, prev);
-      })(),
-      monthlyRevenue: thisMonthBooked,
-      monthlyPaidRevenue: thisMonthPaid,
-      lastMonthRevenue: lastMonthBooked,
-      lastMonthPaidRevenue: lastMonthPaid,
-      monthlyGrowth: pctChange(thisMonthBooked, lastMonthBooked),
-      timezone: TZ,
-      todayKey,
-      totalRevenue,
-      totalSell,
-      totalSellOpen,
-      totalProfit,
-      totalCost,
-      profitMargin,
-      profitCostCoverage,
-      profitGrowth: pctChange(totalProfit, priorProfit),
-      totalCustomers,
-      pendingOrders: pendingOrdersToday,
-      pendingOrdersPeriod,
+      todayConversionRate,
+      yesterdayConversionRate,
+
+      // Period
+      periodOrders: summary.orders,
+      ordersReceived: summary.orders,
+      periodBooked: summary.booked,
+      totalSellOpen: summary.booked,
+      priorPeriodBooked: priorSummary ? priorSummary.booked : null,
+      periodBookedGrowth: priorSummary ? pctChange(summary.booked, priorSummary.booked) : null,
+      periodOrdersGrowth: priorSummary ? pctChange(summary.orders, priorSummary.orders) : null,
+      avgOrderValue: summary.avgOrderValue,
+      priorAvgOrderValue: priorSummary ? priorSummary.avgOrderValue : null,
+      periodCollected: summary.collected,
+      periodSales: summary.collected,
+      totalRevenue: summary.collected,
+      periodToCollect: summary.outstanding,
+      unpaidOrderValuePeriod: summary.outstanding,
+      periodPaidOrders: summary.paidOrders,
+      unpaidOrdersPeriod: summary.unpaidOrders,
+      partialOrdersPeriod: summary.partialOrders,
+      pendingOrdersPeriod: summary.pendingConfirm,
       pendingOrdersAllTime,
-      unpaidOrdersPeriod,
-      partialOrdersPeriod,
-      unpaidOrdersToday,
-      unpaidOrderValuePeriod: unpaidValuePeriodAgg[0]?.total ?? 0,
-      unpaidOrderValueToday: unpaidValueTodayAgg[0]?.total ?? 0,
-      ordersReceived,
+      cancelledOrdersPeriod: summary.cancelled,
+      cancelRate: summary.cancelRate,
+      periodVisitors,
+      periodConversionRate: conversion.rate,
+      conversionTrackedDays: conversion.days,
+      conversionOrders: conversion.orders,
+      conversionVisitors: conversion.visitors,
+      priorPeriodConversionRate: priorConversion?.rate ?? null,
+      periodConversionGrowth:
+        conversion.rate != null && priorConversion?.rate != null
+          ? pctChange(conversion.rate, priorConversion.rate)
+          : null,
+
+      // Month
+      monthlyRevenue: monthBooked,
+      lastMonthSameDaysRevenue: lastMonthSameDays,
+      lastMonthRevenue: lastMonthBooked,
+      monthlyGrowth: pctChange(monthBooked, lastMonthSameDays),
+
+      // Profit
+      totalProfit: profit.profit,
+      profitMargin: profit.margin,
+      profitCostCoverage: profit.coverage,
+      profitRealisedSales: profit.realisedSales,
+      profitRealisedOrders: profit.realisedOrders,
+      profitMissingCost: profit.missingCost,
+      profitGrowth: priorProfit ? pctChange(profit.profit, priorProfit.profit) : null,
+
+      // Courier
       ordersDispatched,
       ordersDelivered,
       ordersReturned,
       courierSettled,
       deliveryRatio,
       returnRatio,
+      stuckShipped,
+
+      totalCustomers,
+      orderGaps,
       recentOrders,
-      orderStatusCounts,
-      salesLast7Days: salesTrend,
+      orderStatusCounts: statusCounts,
       salesTrend,
-      salesTrendTotal: Math.round(trendPaidTotal * 100) / 100,
+      salesTrendTotal: salesTrend.reduce((s, b) => s + b.revenue, 0),
+      salesTrendOrders: salesTrend.reduce((s, b) => s + b.orders, 0),
       chartMode,
       lowStockProducts: lowStock,
       salesByCategory,
       paymentMethods,
       ordersByOrigin,
-      weekdayRevenueVsCost,
+      topProducts: products,
+      topCities: cities,
       insights,
     };
 
@@ -887,10 +667,7 @@ export async function GET(request) {
       stripFinancialDashboardData(data);
     }
 
-    return NextResponse.json({
-      success: true,
-      data,
-    });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message || "Dashboard failed." },
@@ -898,3 +675,4 @@ export async function GET(request) {
     );
   }
 }
+

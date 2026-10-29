@@ -39,7 +39,7 @@ export function CategorySalesDonut({ data }) {
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Sales by category</h3>
-      <p className="text-xs text-slate-400">Paid sales mix</p>
+      <p className="text-xs text-slate-400">Share of booked sales (cancelled &amp; returned not counted)</p>
       <div className="mt-2 flex h-56 flex-col items-center sm:flex-row">
         {!rows.length ? (
           <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
@@ -68,17 +68,17 @@ export function CategorySalesDonut({ data }) {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <ul className="w-full space-y-2 sm:w-1/2">
+            <ul className="w-full min-w-0 space-y-2 sm:w-1/2">
               {rows.map((r, i) => (
                 <li key={r.name} className="flex items-center justify-between gap-2 text-xs">
-                  <span className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                  <span className="flex min-w-0 items-center gap-2 text-slate-700 dark:text-slate-200" title={r.name}>
                     <span
                       className="h-2.5 w-2.5 shrink-0 rounded-full"
                       style={{ background: COLORS[i % COLORS.length] }}
                     />
                     <span className="truncate">{r.name}</span>
                   </span>
-                  <span className="tabular-nums font-semibold text-slate-900 dark:text-white">
+                  <span className="shrink-0 tabular-nums font-semibold text-slate-900 dark:text-white">
                     {r.percent}%
                   </span>
                 </li>

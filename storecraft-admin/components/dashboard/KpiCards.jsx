@@ -18,7 +18,7 @@ const TONE_VAR = {
   line: "var(--accent-line)",
 };
 
-function TrendTick({ value, tone = "money" }) {
+function TrendTick({ value, tone = "money", label = "vs prior" }) {
   if (value == null || value === "") return null;
   const n = Number(value);
   if (!Number.isFinite(n)) return null;
@@ -26,7 +26,7 @@ function TrendTick({ value, tone = "money" }) {
   const color = TONE_VAR[tone] || TONE_VAR.money;
 
   return (
-    <div className="mt-2.5 flex items-center gap-2" title={`${up ? "+" : ""}${n}% vs prior`}>
+    <div className="mt-2.5 flex items-center gap-2" title={`${up ? "+" : ""}${n}% ${label}`}>
       <span
         className="block h-0.5 w-9 shrink-0 rounded-[1px]"
         style={{ background: color, transform: up ? "skewX(-18deg)" : "skewX(18deg)" }}
@@ -38,6 +38,9 @@ function TrendTick({ value, tone = "money" }) {
       >
         <span aria-hidden>{up ? "↑" : "↓"}</span>
         {Math.abs(n).toLocaleString("en-PK", { maximumFractionDigits: 1 })}%
+      </span>
+      <span className="text-[10.5px]" style={{ color: "var(--text-muted)" }}>
+        {label}
       </span>
     </div>
   );
@@ -82,7 +85,7 @@ function GaugeValue({ children, money = false, color = "var(--text-primary)" }) 
   );
 }
 
-function HeroCard({ label, value, trend, tone = "money", hint, money = false }) {
+function HeroCard({ label, value, trend, trendLabel, tone = "money", hint, money = false }) {
   const valueColor =
     tone === "attention"
       ? "var(--accent-attention)"
@@ -105,7 +108,7 @@ function HeroCard({ label, value, trend, tone = "money", hint, money = false }) 
           {value}
         </GaugeValue>
       </div>
-      <TrendTick value={trend} tone={tone} />
+      <TrendTick value={trend} tone={tone} label={trendLabel} />
       {hint ? (
         <p className="mt-2 text-[11px] leading-snug" style={{ color: "var(--text-muted)" }}>
           {hint}
@@ -124,111 +127,147 @@ function formatRate(n) {
   return `${Number(n).toLocaleString("en-PK", { maximumFractionDigits: 1 })}%`;
 }
 
+function GroupLabel({ children }) {
+  return (
+    <p
+      className="col-span-full mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] first:mt-0"
+      style={{ color: "var(--text-muted)" }}
+    >
+      {children}
+    </p>
+  );
+}
+
 export function KpiCards({ data }) {
   const d = data || {};
-  const margin = Number(d.profitMargin) || 0;
   const rangeLabel = d.range?.label || "period";
-  const pendingToday = Number(d.pendingOrders) || 0;
-  const pendingPeriod = Number(d.pendingOrdersPeriod) || 0;
-  const paidOrders = Number(d.periodPaidOrders) || 0;
-  const todayOrders = Number(d.todayOrders) || 0;
-  const periodOrders = Number(d.periodOrders) || 0;
-  const unpaidPeriod = Number(d.unpaidOrdersPeriod) || 0;
-  const partialPeriod = Number(d.partialOrdersPeriod) || 0;
-  const unpaidToday = Number(d.unpaidOrdersToday) || 0;
-  const periodVisitors = Number(d.periodVisitors) || 0;
-  const todayConv = d.todayConversionRate;
-  const periodConv = d.periodConversionRate;
+  const hasPrior = d.periodBookedGrowth != null;
+  const priorLabel = "vs previous period";
+  const trackedDays = Number(d.conversionTrackedDays) || 0;
+  const rangeDays = Number(d.range?.days) || 0;
+  const coverage = d.profitCostCoverage;
+  const outstandingCount = (Number(d.unpaidOrdersPeriod) || 0) + (Number(d.partialOrdersPeriod) || 0);
 
   return (
     <div
       className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
       data-kpi-source="storecraft-admin/components/dashboard/KpiCards.jsx"
     >
+      <GroupLabel>Today</GroupLabel>
       <HeroCard
-        label="Today's Sales"
+        label="Sales today"
         value={formatAdminPrice(d.todaySales)}
         trend={d.todaySalesGrowth}
+        trendLabel="vs yesterday"
         tone="money"
         money
-        hint={`Order value today (PKT)${
-          Number(d.todayPaidSales) > 0 ? ` · ${formatAdminPrice(d.todayPaidSales)} paid` : ""
-        }${unpaidToday > 0 ? ` · ${formatCount(unpaidToday)} unpaid COD` : ""}`}
+        hint={`Order value booked today${
+          Number(d.todayPaidSales) > 0 ? ` · ${formatAdminPrice(d.todayPaidSales)} already collected` : ""
+        }`}
       />
-
       <HeroCard
-        label="Today's Orders"
-        value={formatCount(todayOrders)}
+        label="Orders today"
+        value={formatCount(d.todayOrders)}
         trend={d.todayOrdersGrowth}
+        trendLabel="vs yesterday"
         tone="line"
-        hint={`${formatCount(pendingToday)} pending · ${formatCount(unpaidToday)} unpaid COD`}
+        hint={`${formatCount(d.pendingOrders)} waiting for confirmation`}
       />
-
       <HeroCard
-        label="Today's Visitors"
+        label="Visitors today"
         value={formatCount(d.todayVisitors)}
         trend={d.todayVisitorsGrowth}
+        trendLabel="vs yesterday"
         tone="line"
-        hint={`Unique sessions today · ${formatRate(todayConv)} conversion · vs ${formatCount(d.yesterdayVisitors)} yesterday`}
+        hint={`${formatCount(d.yesterdayVisitors)} yesterday · unique visitors on the website`}
       />
-
       <HeroCard
-        label="Conversion Rate"
-        value={formatRate(periodConv)}
-        trend={d.periodConversionGrowth}
+        label="Conversion today"
+        value={formatRate(d.todayConversionRate)}
         tone="line"
-        hint={`${formatCount(periodOrders)} orders ÷ ${formatCount(periodVisitors)} visitors · ${rangeLabel}${
-          todayConv != null ? ` · today ${formatRate(todayConv)}` : ""
+        hint={`${formatCount(d.todayOrders)} orders ÷ ${formatCount(d.todayVisitors)} visitors${
+          d.yesterdayConversionRate != null ? ` · yesterday ${formatRate(d.yesterdayConversionRate)}` : ""
         }`}
       />
 
+      <GroupLabel>{rangeLabel}</GroupLabel>
       <HeroCard
-        label="Monthly Revenue"
-        value={formatAdminPrice(d.monthlyRevenue)}
-        trend={d.monthlyGrowth}
+        label="Sales"
+        value={formatAdminPrice(d.periodBooked)}
+        trend={hasPrior ? d.periodBookedGrowth : null}
+        trendLabel={priorLabel}
         tone="money"
         money
-        hint={`Booked this month (PKT)${
-          Number(d.monthlyPaidRevenue) > 0 ? ` · ${formatAdminPrice(d.monthlyPaidRevenue)} paid` : " · none paid yet"
-        } · vs ${formatAdminPrice(d.lastMonthRevenue)} last month`}
+        hint={`${formatCount(d.periodOrders)} orders booked (cancelled & returned not counted)`}
       />
-
-      {/* Period order count (not rupees) — follows Last 7 / 30 days / custom range */}
       <HeroCard
-        label="Orders received"
-        value={formatCount(periodOrders)}
+        label="Average order"
+        value={formatAdminPrice(d.avgOrderValue)}
         tone="line"
-        hint={`Payment: ${formatCount(paidOrders)} paid · ${formatCount(unpaidPeriod)} unpaid · ${formatCount(partialPeriod)} partial · Status pending: ${formatCount(pendingPeriod)} · ${rangeLabel}`}
-      />
-
-      {/* Period: paid Rs is the glance figure */}
-      <HeroCard
-        label="Paid collected"
-        value={formatAdminPrice(d.periodSales)}
-        tone={unpaidPeriod > 0 || pendingPeriod > 0 ? "attention" : "money"}
         money
-        hint={`Cash/mark-paid revenue · ${formatCount(paidOrders)} paid of ${formatCount(periodOrders)} orders · ${rangeLabel}`}
+        hint={`${formatCount(d.cancelledOrdersPeriod)} cancelled${
+          d.cancelRate != null ? ` (${formatRate(d.cancelRate)})` : ""
+        }${d.priorAvgOrderValue ? ` · previous ${formatAdminPrice(d.priorAvgOrderValue)}` : ""}`}
       />
-
       <HeroCard
-        label="Unpaid COD pipeline"
-        value={formatAdminPrice(d.unpaidOrderValuePeriod)}
+        label="Collected"
+        value={formatAdminPrice(d.periodCollected)}
+        tone="money"
+        money
+        hint="Paid orders + delivered COD + advances received"
+      />
+      <HeroCard
+        label="Still to collect"
+        value={formatAdminPrice(d.periodToCollect)}
         tone="attention"
         money
-        hint={`${formatCount(unpaidPeriod + partialPeriod)} awaiting advance / collection · ${rangeLabel}`}
+        hint={`${formatCount(outstandingCount)} open orders (advance already received is subtracted)`}
       />
 
+      <GroupLabel>This month &amp; health</GroupLabel>
       <HeroCard
-        label="Net Profit"
-        value={formatAdminPrice(d.totalProfit)}
-        trend={d.profitGrowth ?? d.monthlyGrowth}
+        label="Sales this month"
+        value={formatAdminPrice(d.monthlyRevenue)}
+        trend={d.monthlyGrowth}
+        trendLabel="vs same days last month"
         tone="money"
         money
-        hint={`${margin}% margin on paid sales${
-          Number(d.profitCostCoverage) < 80
-            ? ` · only ${Number(d.profitCostCoverage)}% have cost data`
-            : ""
-        } · ${rangeLabel}`}
+        hint={`Same days last month ${formatAdminPrice(d.lastMonthSameDaysRevenue)} · full last month ${formatAdminPrice(d.lastMonthRevenue)}`}
+      />
+      <HeroCard
+        label="Conversion rate"
+        value={formatRate(d.periodConversionRate)}
+        trend={d.periodConversionGrowth}
+        trendLabel={priorLabel}
+        tone="line"
+        hint={
+          trackedDays > 0
+            ? `${formatCount(d.conversionOrders)} orders ÷ ${formatCount(d.conversionVisitors)} visitors${
+                rangeDays && trackedDays < rangeDays ? ` · ${trackedDays} of ${rangeDays} days tracked` : ""
+              }`
+            : "No visitor data in this period"
+        }
+      />
+      <HeroCard
+        label="Gross profit"
+        value={coverage == null ? "—" : formatAdminPrice(d.totalProfit)}
+        trend={coverage == null ? null : d.profitGrowth}
+        trendLabel={priorLabel}
+        tone="money"
+        money
+        hint={
+          coverage == null
+            ? "No paid or delivered orders yet"
+            : `${formatRate(d.profitMargin)} margin · cost price known for ${formatRate(coverage)} of sales`
+        }
+      />
+      <HeroCard
+        label="Delivery success"
+        value={formatRate(d.deliveryRatio)}
+        tone={d.returnRatio != null && d.returnRatio >= 15 ? "attention" : "line"}
+        hint={`${formatCount(d.ordersDelivered)} delivered · ${formatCount(d.ordersReturned)} returned${
+          Number(d.stuckShipped) > 0 ? ` · ${formatCount(d.stuckShipped)} stuck in shipped` : ""
+        }`}
       />
     </div>
   );

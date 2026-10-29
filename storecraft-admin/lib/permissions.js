@@ -168,6 +168,16 @@ export const FINANCIAL_DASHBOARD_KEYS = [
   "weekdayRevenueVsCost",
   "unpaidOrderValuePeriod",
   "unpaidOrderValueToday",
+  "periodBooked",
+  "priorPeriodBooked",
+  "periodBookedGrowth",
+  "avgOrderValue",
+  "priorAvgOrderValue",
+  "periodCollected",
+  "periodToCollect",
+  "lastMonthSameDaysRevenue",
+  "profitRealisedSales",
+  "profitMissingCost",
 ];
 
 /**
@@ -178,6 +188,13 @@ export function stripFinancialDashboardData(data) {
   if (!data || typeof data !== "object") return data;
   for (const key of FINANCIAL_DASHBOARD_KEYS) {
     delete data[key];
+  }
+  // Keep units / order counts for ops staff; drop the rupee columns.
+  if (Array.isArray(data.topProducts)) {
+    data.topProducts = data.topProducts.map(({ revenue: _revenue, ...row }) => row);
+  }
+  if (Array.isArray(data.topCities)) {
+    data.topCities = data.topCities.map(({ booked: _booked, ...row }) => row);
   }
   if (Array.isArray(data.insights)) {
     data.insights = data.insights.filter((row) => {
