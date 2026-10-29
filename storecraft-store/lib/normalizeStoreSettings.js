@@ -154,6 +154,21 @@ function imageUrlFromField(v) {
   return "";
 }
 
+function localMediaFileExists(mediaPath) {
+  const p = String(mediaPath || "").split("?")[0];
+  if (!p.startsWith("/media/")) return true; // non-media URLs not checked here
+  try {
+    // Lazy require so the module stays usable in tests without fs mocking.
+    const fs = require("node:fs");
+    const root = String(process.env.MEDIA_ROOT || "/app/media").replace(/\/+$/, "");
+    const rel = p.slice("/media/".length);
+    if (!rel || rel.includes("..")) return false;
+    return fs.existsSync(/* turbopackIgnore: true */ `${root}/${rel}`);
+  } catch {
+    return true;
+  }
+}
+
 export function normalizeBrandStory(raw) {
   if (!raw || typeof raw !== "object") return { ...DEFAULT_BRAND_STORY };
   const stats =
@@ -163,12 +178,17 @@ export function normalizeBrandStory(raw) {
           label: String(s?.label ?? ""),
         }))
       : DEFAULT_BRAND_STORY.stats;
+  let image1 = imageUrlFromField(raw.image1);
+  let image2 = imageUrlFromField(raw.image2);
+  // Drop dead /media refs so C25/home do not emit 404 image URLs (no DB write).
+  if (image1 && !localMediaFileExists(image1)) image1 = "";
+  if (image2 && !localMediaFileExists(image2)) image2 = "";
   return {
     ...DEFAULT_BRAND_STORY,
     ...raw,
     enabled: raw.enabled !== false,
-    image1: imageUrlFromField(raw.image1),
-    image2: imageUrlFromField(raw.image2),
+    image1,
+    image2,
     stats,
   };
 }
