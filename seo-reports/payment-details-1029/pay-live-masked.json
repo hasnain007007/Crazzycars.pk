@@ -1,0 +1,245 @@
+SETTINGS_ID ObjectId('6a0e3e36bf7a3246cb4962a6')
+UPDATED {}
+HAS_PM true
+{
+  "pakistaniPaymentMethods": {
+    "cod": {
+      "enabled": true,
+      "label": "Cash on Delivery",
+      "accountName": "",
+      "accountTitle": "",
+      "bankName": "",
+      "accountNumber": {
+        "empty": true,
+        "len": 0,
+        "last4": ""
+      },
+      "iban": {
+        "empty": true,
+        "len": 0,
+        "last4": ""
+      }
+    },
+    "jazzcash": {
+      "enabled": true,
+      "label": "JazzCash",
+      "accountName": "Sialkot Motorsports",
+      "accountTitle": "",
+      "bankName": "",
+      "accountNumber": {
+        "empty": false,
+        "len": 11,
+        "last4": "7799",
+        "hasSpaces": false,
+        "preview": "*******7799"
+      },
+      "iban": {
+        "empty": true,
+        "len": 0,
+        "last4": ""
+      }
+    },
+    "easypaisa": {
+      "enabled": true,
+      "label": "Easypaisa",
+      "accountName": "",
+      "accountTitle": "",
+      "bankName": "",
+      "accountNumber": {
+        "empty": true,
+        "len": 0,
+        "last4": ""
+      },
+      "iban": {
+        "empty": true,
+        "len": 0,
+        "last4": ""
+      }
+    },
+    "bankTransfer": {
+      "enabled": true,
+      "label": "Bank Alfalah",
+      "accountName": "",
+      "accountTitle": "Sialkot Motorsports",
+      "bankName": "Bank Alfalah",
+      "accountNumber": {
+        "empty": false,
+        "len": 15,
+        "last4": "4815",
+        "hasSpaces": false,
+        "preview": "***********4815"
+      },
+      "iban": {
+        "empty": false,
+        "len": 24,
+        "last4": "4815",
+        "hasSpaces": false,
+        "preview": "********************4815"
+      }
+    },
+    "hbl": {
+      "enabled": false,
+      "label": "HBL",
+      "accountName": "",
+      "accountTitle": "",
+      "bankName": "",
+      "accountNumber": {
+        "empty": true,
+        "len": 0,
+        "last4": ""
+      },
+      "iban": {
+        "empty": true,
+        "len": 0,
+        "last4": ""
+      }
+    },
+    "meezan": {
+      "enabled": true,
+      "label": "Meezan Bank",
+      "accountName": "",
+      "accountTitle": "Hussnian Kamran",
+      "bankName": "Meezan Bank",
+      "accountNumber": {
+        "empty": false,
+        "len": 15,
+        "last4": "7081",
+        "hasSpaces": false,
+        "preview": "***********7081"
+      },
+      "iban": {
+        "empty": false,
+        "len": 24,
+        "last4": "7081",
+        "hasSpaces": false,
+        "preview": "********************7081"
+      }
+    },
+    "ubl": {
+      "enabled": false,
+      "label": "UBL",
+      "accountName": "",
+      "accountTitle": "",
+      "bankName": "",
+      "accountNumber": {
+        "empty": true,
+        "len": 0,
+        "last4": ""
+      },
+      "iban": {
+        "empty": true,
+        "len": 0,
+        "last4": ""
+      }
+    }
+  },
+  "storePayment": {
+    "codEnabled": true,
+    "codLabel": "Cash on Delivery",
+    "codDescription": "Pay when your order arrives at your doorstep.",
+    "codFee": 0,
+    "minimumOrderAmount": 1,
+    "freeShippingThreshold": 0,
+    "majorCitiesDays": "2-3",
+    "otherAreasDays": "3-4",
+    "deliveryNote": "Delivery charges Rs. 250",
+    "freeShippingOnAdvancePayment": false,
+    "freeShippingOnOrderAbove": 0,
+    "freeShippingOnOrderAboveEnabled": false,
+    "advancePaymentMessage": "Important: You must pay the delivery charges of {amount} in advance to confirm your Cash on Delivery order.\n\nAfter paying, send the payment screenshot on WhatsApp: {whatsapp}\n\nProduct payment will be collected on delivery. Without the delivery-charge payment + screenshot, we cannot process your order.",
+    "advancePaymentAmount": 250,
+    "advancePaymentMessageEnabled": true,
+    "advancePaymentMessageTitle": "Confirm Your Order",
+    "advancePaymentDiscountEnabled": true,
+    "advancePaymentDiscountPercent": 2,
+    "flatDeliveryCharge": 250
+  },
+  "payment": {
+    "stripe": {
+      "publishableKey": "",
+      "secretKey": "",
+      "mode": "sandbox",
+      "webhookSecret": ""
+    },
+    "paypal": {
+      "clientId": "",
+      "clientSecret": "",
+      "mode": "sandbox"
+    }
+  },
+  "whatsapp": {
+    "enabled": true,
+    "number": "03284210007",
+    "message": "Hi! I have a question about car accessories from Sialkot Motorsports.",
+    "showInNav": false,
+    "showInFooter": true,
+    "showFloating": true,
+    "position": "bottom-right",
+    "buttonColor": "#25D366"
+  },
+  "general_phone": {
+    "phone": "03284210007",
+    "email": "",
+    "storeName": "Sialkot Motorsports",
+    "whatsapp": null
+  },
+  "announcementBar": {
+    "enabled": true,
+    "items": [
+      {
+        "text": "Sialkot Motorsports - Trusted by Customers Across Pakistan",
+        "link": "",
+        "enabled": true,
+        "_id": {
+          "$oid": "6a1063d6b2e77e2b0f08030a"
+        }
+      },
+      {
+        "text": "Cash on Delivery Available - Pay When It Arrives",
+        "link": "/shipping-policy",
+        "enabled": true,
+        "_id": {
+          "$oid": "6a1063d6b2e77e2b0f08030b"
+        }
+      },
+      {
+        "text": "Delivery Rs. 250",
+        "link": "/shipping-policy",
+        "enabled": true,
+        "_id": {
+          "$oid": "6a1063d6b2e77e2b0f08030c"
+        }
+      }
+    ],
+    "backgroundColor": "#000000",
+    "textColor": "#FFFFFF"
+  },
+  "footer_keys": [
+    "tagline",
+    "social",
+    "columns",
+    "contact",
+    "copyrightText",
+    "showLogoInFooter",
+    "companyName",
+    "companyNumber",
+    "vatNumber",
+    "registeredAddress",
+    "trustpilotUrl",
+    "shopLinks",
+    "customerCareLinks",
+    "categoriesLinks",
+    "contactEmail",
+    "email",
+    "phone",
+    "showPaymentIcons",
+    "paymentMethods",
+    "newsletter",
+    "appLinks"
+  ],
+  "social": null,
+  "courier": {
+    "deliveryCharge": null,
+    "bulky": null
+  }
+}

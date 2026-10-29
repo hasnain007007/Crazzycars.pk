@@ -1,0 +1,8 @@
+{
+  "branch": "fix/payment-details-1029",
+  "fingerprint": "84143ac0cb2c3085",
+  "GRANTED": [],
+  "status": "AWAITING_GO_PAYMENT-DETAILS",
+  "rootCause": "settings.general.address is object {city:Gujranwala}; buildStoreSettingsPayload calls .trim() → TypeError; advance-payment loadAccounts returns []; /api/settings?payments=1 returns 500 so checkout cannot load account numbers. Payment account fields themselves are still present in live DB.",
+  "doNotInvent": ["easypaisa.accountNumber"]
+}

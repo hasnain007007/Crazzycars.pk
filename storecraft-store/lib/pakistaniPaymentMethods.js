@@ -81,9 +81,24 @@ export function normalizePakistaniPaymentMethods(raw) {
   return out;
 }
 
+function hasPaymentAccountNumber(method) {
+  return Boolean(String(method?.accountNumber || "").trim() || String(method?.iban || "").trim());
+}
+
+/**
+ * Enabled payment methods for storefront UI.
+ * Easypaisa (and other wallets/banks) stay hidden until an account number/IBAN exists.
+ * COD never requires account numbers.
+ */
 export function getEnabledPakistaniMethods(methods) {
   const m = normalizePakistaniPaymentMethods(methods);
-  return PAKISTANI_PAYMENT_METHOD_KEYS.filter((key) => m[key]?.enabled === true).map((key) => ({
+  return PAKISTANI_PAYMENT_METHOD_KEYS.filter((key) => {
+    if (m[key]?.enabled !== true) return false;
+    if (key === "cod") return true;
+    // Hide Easypaisa until the owner supplies a number; also hide empty bank rows.
+    if (key === "easypaisa") return hasPaymentAccountNumber(m[key]);
+    return true;
+  }).map((key) => ({
     key,
     ...m[key],
   }));

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useStorePayment } from "@/context/StoreSettingsContext";
+import { PREPAID_DISCOUNT_PERCENT } from "@/config/checkout-money";
 import { advancePaymentCopy } from "@/lib/storePolicyCopy";
 
 const HIDDEN_ON = ["/checkout", "/advance-payment"];
@@ -9,8 +11,11 @@ const HIDDEN_ON = ["/checkout", "/advance-payment"];
 /** Site-wide band under the header: COD booking advance tiers + link to /advance-payment. */
 export default function AdvancePayStrip() {
   const pathname = usePathname() || "/";
+  const storePayment = useStorePayment();
   if (HIDDEN_ON.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return null;
-  const c = advancePaymentCopy();
+  const prepaidPercent =
+    Number(storePayment?.advancePaymentDiscountPercent) || PREPAID_DISCOUNT_PERCENT;
+  const c = advancePaymentCopy({ prepaidPercent, hasAccounts: true });
 
   return (
     <div className="adv-band" role="note" aria-label="Cash on Delivery booking advance">
