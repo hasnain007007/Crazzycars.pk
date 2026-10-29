@@ -8,6 +8,10 @@ import Review from "@/lib/models/Review.model";
 import { listingMongoSortSpec } from "@/lib/productListing";
 import { pruneCategoryTreeWithoutProducts } from "@/lib/emptyLeafCategory";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
+import {
+  normalizeCategoryParentRefs,
+  normalizeMongoObjectId,
+} from "@/lib/normalizeMongoObjectId";
 
 export { pruneCategoryTreeWithoutProducts };
 
@@ -21,20 +25,17 @@ export function resolveParentIds(cat) {
   const seen = new Set();
   if (Array.isArray(cat.parents) && cat.parents.length) {
     for (const p of cat.parents) {
-      const id = String(p?._id || p || "");
-      if (id && !seen.has(id)) {
+      const id = normalizeMongoObjectId(p) || String(p?._id || p || "");
+      if (id && /^[a-f0-9]{24}$/i.test(id) && !seen.has(id)) {
         seen.add(id);
         ids.push(id);
       }
     }
   }
-  const legacy = cat.parentCategory?._id
-    ? String(cat.parentCategory._id)
-    : cat.parentCategory
-      ? String(cat.parentCategory)
-      : cat.parentId
-        ? String(cat.parentId)
-        : "";
+  const legacy =
+    normalizeMongoObjectId(cat.parentCategory) ||
+    normalizeMongoObjectId(cat.parentId) ||
+    "";
   if (legacy && !seen.has(legacy)) ids.push(legacy);
   return ids;
 }
@@ -175,10 +176,13 @@ export async function loadStoreCategoriesTreeSlim() {
     .sort({ level: 1, sortOrder: 1, name: 1 })
     .lean();
 
-  const categories = rows.map((c) => ({
-    ...c,
-    isFeatured: Boolean(c.isFeatured || c.featured),
-  }));
+  const categories = rows.map((c) => {
+    normalizeCategoryParentRefs(c);
+    return {
+      ...c,
+      isFeatured: Boolean(c.isFeatured || c.featured),
+    };
+  });
 
   return buildCategoryTree(categories);
 }
@@ -250,11 +254,13 @@ export async function loadStoreCategoriesTree(wantTree, opts = {}) {
   }
 
   const rows = await Category.find(filter)
-    .populate("parentCategory", "name slug")
-    .populate("parents", "name slug")
     .sort({ level: 1, sortOrder: 1, name: 1 })
     .lean();
 
+  // Coerce clone-mangled ObjectId refs before using parents (avoid CastError on populate).
+  for (const c of rows) normalizeCategoryParentRefs(c);
+
+  const nameById = new Map(rows.map((c) => [String(c._id), c.name || ""]));
   const categoryIds = rows.map((c) => c._id);
   const idStrSet = new Set(categoryIds.map(String));
   const childrenMap = buildChildrenIdMap(rows);
@@ -279,9 +285,9 @@ export async function loadStoreCategoriesTree(wantTree, opts = {}) {
       ...c,
       parentId,
       parentIds,
-      parentName: c.parentCategory?.name || "",
+      parentName: parentId ? nameById.get(String(parentId)) || "" : "",
       parentCategory: parentId
-        ? { _id: parentId, name: c.parentCategory?.name || "" }
+        ? { _id: parentId, name: nameById.get(String(parentId)) || "" }
         : null,
       productCount: includeProductCounts ? countProductsInScope(products, scoped) : 0,
       subcategoryCount: (childrenMap.get(self) || []).length,
@@ -302,16 +308,47 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
   const page = Math.max(1, Number(opts.page) || 1);
   const skip = (page - 1) * limit;
 
-  const category = await Category.findOne({
+  // Do not populate until parent refs are coerced — clone corruption can leave
+  // ObjectIds as `{ buffer: {0..11} }`, which makes Mongoose throw CastError 500s.
+  const rawCategory = await Category.findOne({
     slug: slugStr,
     status: ACTIVE,
-  })
-    .populate("parentCategory", "name slug")
-    .populate("parents", "name slug")
-    .populate("ancestors", "name slug")
-    .lean();
+  }).lean();
 
-  if (!category) return null;
+  if (!rawCategory) return null;
+
+  normalizeCategoryParentRefs(rawCategory);
+
+  const parentIds = [
+    rawCategory.parentCategory,
+    ...(Array.isArray(rawCategory.parents) ? rawCategory.parents : []),
+    ...(Array.isArray(rawCategory.ancestors) ? rawCategory.ancestors : []),
+  ]
+    .map((id) => normalizeMongoObjectId(id))
+    .filter(Boolean);
+  const uniqueParentIds = [...new Set(parentIds)];
+
+  const parentDocs = uniqueParentIds.length
+    ? await Category.find({ _id: { $in: uniqueParentIds } })
+        .select("name slug")
+        .lean()
+    : [];
+  const parentById = new Map(parentDocs.map((p) => [String(p._id), p]));
+
+  const mapRef = (id) => {
+    const hex = normalizeMongoObjectId(id);
+    if (!hex) return null;
+    return parentById.get(hex) || { _id: hex };
+  };
+
+  const category = {
+    ...rawCategory,
+    parentCategory: rawCategory.parentCategory
+      ? mapRef(rawCategory.parentCategory)
+      : null,
+    parents: (rawCategory.parents || []).map(mapRef).filter(Boolean),
+    ancestors: (rawCategory.ancestors || []).map(mapRef).filter(Boolean),
+  };
 
   const catId = category._id;
 

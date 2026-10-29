@@ -78,7 +78,8 @@ const loadCachedCategoryDetail = (slugStr, page, pageSize, sort) =>
       if (!detail) return null;
       return JSON.parse(JSON.stringify(detail));
     },
-    ["category-detail-v9", slugStr, String(page), String(pageSize), String(sort)],
+    // v10: bust stale empty payloads after ObjectId/string category-ref repairs (2026-10-29).
+    ["category-detail-v10", slugStr, String(page), String(pageSize), String(sort)],
     { revalidate: 300 }
   )();
 

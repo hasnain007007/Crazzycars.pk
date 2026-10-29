@@ -1,0 +1,40 @@
+Checking 36 category URLs against https://crazzycars.pk
+200 /categories/exterior  products≈197
+200 /categories/interior  products≈85
+200 /categories/led-lighting  products≈60
+200 /categories/carbon-fiber  products≈98
+200 /categories/car-care-safety  products≈4
+200 /categories/universal-accessories  products≈44
+200 /categories/body-kits-extensions  products≈48
+200 /categories/splitters-side-skirts  products≈26
+200 /categories/spoilers-diffusers  products≈29
+200 /categories/side-mirror-covers  products≈21
+200 /categories/quarter-window-louvers  products≈14
+200 /categories/exhaust-systems-tips  products≈2
+200 /categories/steering-wheel-covers  products≈2
+200 /categories/multimedia-steering-controls  products≈6
+200 /categories/air-freshener-decoration  products≈4
+200 /categories/interior-lights  products≈10
+200 /categories/sos-flasher-led-lights  products≈10
+200 /categories/led-headlights-bulbs  products≈8
+200 /categories/led-indicator-lights  products≈19
+200 /categories/carbon-fiber-accessories  products≈94
+200 /categories/car-care-cleaning  products≈1
+200 /categories/emergency-safety  products≈3
+200 /categories/door-handle-covers  products≈17
+200 /categories/front-grilles  products≈13
+200 /categories/gadgets  products≈39
+200 /categories/air-press  products≈3
+200 /categories/dashboard-mats  products≈32
+200 /categories/sun-shades  products≈1
+200 /categories/floor-mats  products≈25
+200 /categories/arm-rests-console-boxes  products≈1
+200 /categories/fog-lamps-drl-covers  products≈12
+200 /categories/backlights-tail-lamps  products≈10
+200 /categories/rear-reflectors  products≈1
+200 /categories/key-covers-key-chains  products≈38
+200 /categories/utility  products≈2
+200 /categories/fender-light  products≈2
+
+Summary: 36/36 returned 200
+OK: all category sitemap URLs returned 200

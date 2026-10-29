@@ -114,7 +114,12 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
           >
             <span>{post.author?.name || `${process.env.NEXT_PUBLIC_STORE_NAME || 'CrazzyCars.pk'}`}</span>
             <span>·</span>
-            <span>{formatDate(post.publishedAt || post.createdAt)}</span>
+            <span>
+              Last updated:{" "}
+              {formatDate(
+                post.contentUpdatedAt || post.updatedAt || post.publishedAt || post.createdAt
+              )}
+            </span>
             <span>·</span>
             <span>{post.readTime || 3} min read</span>
             {post.categories?.[0] ? (
