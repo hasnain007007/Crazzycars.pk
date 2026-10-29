@@ -1,0 +1,179 @@
+{
+  "fingerprint": "84143ac0cb2c3085",
+  "token": "PHOTO-FIX",
+  "count": 14,
+  "ops": [
+    {
+      "token": "PHOTO-FIX",
+      "op": "$set",
+      "product": "suzuki-alto-2018-2023-multimedia-steering-wheel-audio-control-buttons-panel",
+      "field": "media.images (main)",
+      "action": "replace_from_own_photos",
+      "image": "premium-metal-key-cover-1-822f07371e.webp",
+      "reason": "main_slug_mismatch",
+      "belongsGuess": "premium-metal-key-cover",
+      "before": "premium-metal-key-cover-1-822f07371e.webp",
+      "after": "(own product photos only \u2014 DO NOT reuse competitor/other product)"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "$set",
+      "product": "honda-vezel-2013-2018-fog-lamps-drl-cover-hd011-l2",
+      "field": "media.images (main)",
+      "action": "replace_from_own_photos",
+      "image": "osram-projector-lights-3-colour-premium-quality-1-fcc6deaa81.webp",
+      "reason": "main_slug_mismatch",
+      "belongsGuess": "osram-projector-lights-3-colour-premium-quality",
+      "before": "osram-projector-lights-3-colour-premium-quality-1-fcc6deaa81.webp",
+      "after": "(own product photos only \u2014 DO NOT reuse competitor/other product)"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "$pull",
+      "product": "toyota-corolla-2015-2026-rgb-side-style",
+      "field": "media.images",
+      "action": "remove",
+      "image": "/media/products/toyota-corolla-rgb-side-style-and-back-bumper-light-1-d5bba4e978.webp",
+      "belongsTo": "toyota-corolla-rgb-side-style-and-back-bumper-light",
+      "before": "/media/products/toyota-corolla-rgb-side-style-and-back-bumper-light-1-d5bba4e978.webp",
+      "after": null,
+      "reason": "shared_file_wrong_product"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "$pull",
+      "product": "toyota-corolla-2009-2013-trd-style-front-grill",
+      "field": "media.images",
+      "action": "remove",
+      "image": "/media/products/toyota-corolla-trd-style-front-grille-gloss-black-abs-1-5b3b1314d9.webp",
+      "belongsTo": "toyota-corolla-trd-style-front-grille-gloss-black-abs",
+      "before": "/media/products/toyota-corolla-trd-style-front-grille-gloss-black-abs-1-5b3b1314d9.webp",
+      "after": null,
+      "reason": "shared_file_wrong_product"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "$pull",
+      "product": "universal-front-bumper-splitter-canard-1pcs-matt-black-abs",
+      "field": "media.images",
+      "action": "remove",
+      "image": "/media/products/universal-front-splitter-style-4-gloss-black-canard-3pcs-1-6267f55d74.webp",
+      "belongsTo": "universal-front-splitter-style-4-gloss-black-canard-3pcs",
+      "before": "/media/products/universal-front-splitter-style-4-gloss-black-canard-3pcs-1-6267f55d74.webp",
+      "after": null,
+      "reason": "shared_file_wrong_product"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "$pull",
+      "product": "universal-front-bumper-splitter-canard-1pcs-matt-black-abs",
+      "field": "media.images",
+      "action": "remove",
+      "image": "/media/products/universal-front-splitter-style-4-gloss-black-canard-3pcs-2-034216a978.webp",
+      "belongsTo": "universal-front-splitter-style-4-gloss-black-canard-3pcs",
+      "before": "/media/products/universal-front-splitter-style-4-gloss-black-canard-3pcs-2-034216a978.webp",
+      "after": null,
+      "reason": "shared_file_wrong_product"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "$pull",
+      "product": "honda-vezel-2013-2018-fog-lamps-drl-cover-hd011-l2",
+      "field": "media.images",
+      "action": "remove",
+      "image": "/media/products/osram-projector-lights-3-colour-premium-quality-1-fcc6deaa81.webp",
+      "belongsTo": "osram-projector-lights-3-colour-premium-quality",
+      "before": "/media/products/osram-projector-lights-3-colour-premium-quality-1-fcc6deaa81.webp",
+      "after": null,
+      "reason": "shared_file_wrong_product"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "$pull",
+      "product": "toyota-corolla-2008-2010-diamond-style-chrome-front-grille",
+      "field": "media.images",
+      "action": "remove",
+      "image": "/media/products/toyota-corolla-2008-2011-front-chrome-grilles-set-unpainted-steel-1-3d2a57629c.webp",
+      "belongsTo": "toyota-corolla-2008-2011-front-chrome-grilles-set-unpainted-steel",
+      "before": "/media/products/toyota-corolla-2008-2011-front-chrome-grilles-set-unpainted-steel-1-3d2a57629c.webp",
+      "after": null,
+      "reason": "shared_file_wrong_product"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "$pull",
+      "product": "toyota-corolla-carbon-fiber-center-console-gear-glass-holder-2014-2026",
+      "field": "media.images",
+      "action": "remove",
+      "image": "/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-nologo-04518dd4fc.webp",
+      "belongsTo": "toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026",
+      "before": "/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-nologo-04518dd4fc.webp",
+      "after": null,
+      "reason": "shared_file_wrong_product"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "review",
+      "product": "suzuki-alto-2018-2023-multimedia-steering-wheel-audio-control-buttons-panel",
+      "field": "media.main",
+      "action": "replace_from_own_photos",
+      "image": "premium-metal-key-cover-1-822f07371e.webp",
+      "reason": "name_vs_image expect steering",
+      "before": "premium-metal-key-cover-1-822f07371e.webp",
+      "after": "(own photos matching product name)"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "review",
+      "product": "toyota-corolla-carbon-fiber-center-console-gear-glass-holder-2014-2026",
+      "field": "media.main",
+      "action": "replace_from_own_photos",
+      "image": "toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-nologo-04518dd4fc.webp",
+      "reason": "name_vs_image expect console",
+      "before": "toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-nologo-04518dd4fc.webp",
+      "after": "(own photos matching product name)"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "hide_or_replace",
+      "product": "honda-vezel-2013-2018-rear-bumper-brake-lamp",
+      "field": "media.images",
+      "action": "replace_from_own_photos_or_hide",
+      "image": "/media/products/honda-vezel-2013-2018-rear-bumper-brake-lamp-2-27bb228716.webp",
+      "watermark": "GULAUTOS.PK",
+      "before": "honda-vezel-2013-2018-rear-bumper-brake-lamp-2-27bb228716.webp",
+      "after": "(own photo only \u2014 never reuse competitor watermarked file)",
+      "reason": "ocr_foreign_watermark"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "hide_or_replace",
+      "product": "honda-vezel-2013-2018-rear-bumper-brake-lamp",
+      "field": "media.images",
+      "action": "replace_from_own_photos_or_hide",
+      "image": "/media/products/honda-vezel-2013-2018-rear-bumper-brake-lamp-1-d008aef3cf.webp",
+      "watermark": "GULAUTOS.PK",
+      "before": "honda-vezel-2013-2018-rear-bumper-brake-lamp-1-d008aef3cf.webp",
+      "after": "(own photo only \u2014 never reuse competitor watermarked file)",
+      "reason": "ocr_foreign_watermark"
+    },
+    {
+      "token": "PHOTO-FIX",
+      "op": "$set",
+      "product": "honda-vezel-2020-2026 (cars)",
+      "field": "image",
+      "action": "replace_from_own_photos",
+      "image": "/media/cars/honda-vezel-2020-2026-c0f99d9134.webp (404 on homepage)",
+      "before": "/media/products/honda-vezel-2013-2018-complete-body-kit-1-c0f99d9134.webp (DB) / missing cars/ path (HTML)",
+      "after": "(own 2020-2026 Vezel car photo under /media/cars/...)",
+      "reason": "missing_car_image_and_wrong_db_path"
+    }
+  ],
+  "note": "Dry-run only. Never reuse competitor photos. Prefer remove shared/wrong; replace only from product own /media files.",
+  "ocr": {
+    "scanned": 941,
+    "flagged": 2,
+    "errors": 20,
+    "note": "First-pass tesseract over 941 masters; 20 decode/timeout errors. Flagged GULAUTOS.PK on 2 brake-lamp images."
+  }
+}

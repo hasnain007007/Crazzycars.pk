@@ -1,16 +1,39 @@
 {
   "branch": "fix/img-hotfix-1029",
-  "startedAt": "2026-10-29T00:00:00Z",
+  "finishedAt": "2026-10-29T01:20:00Z",
   "GRANTED": [],
   "mediaVolumeHost": "/data/crazzycars/media",
   "mediaVolumeContainer": "/app/media",
   "fingerprint": "84143ac0cb2c3085",
+  "liveImage": "crazzycars-store:live",
+  "commits": [
+    "7ede227",
+    "73c8a9c",
+    "9b3e6e7",
+    "fe9c4c7"
+  ],
   "steps": {
-    "H1a_code": "in_progress",
-    "H1b_generate_sm": "in_progress",
-    "H1c_502": "pending",
-    "H1d_C25": "pending",
-    "H2_audit": "pending",
-    "H3_live": "pending"
+    "H1a_code": "done_live",
+    "H1b_generate_sm": "done_941_on_persistent_volume",
+    "H1c_502": "not_reproduced_files_200",
+    "H1d_C25": "done_1_broken_car",
+    "H2_audit": "done_dry_runs_await_GO",
+    "H3_live": "done_pdp_100_lcp_2.7s"
+  },
+  "metrics": {
+    "c25_broken": 1,
+    "pdp_main_200": {
+      "ok": 399,
+      "total": 399,
+      "bad": []
+    },
+    "lighthouse": {
+      "perf": 0.94,
+      "lcp_ms": 2724.1414999999997,
+      "lcp": "2.7\u00a0s"
+    },
+    "brand_ops": 2501,
+    "photo_ops": 14,
+    "ocr_flagged": 2
   }
 }

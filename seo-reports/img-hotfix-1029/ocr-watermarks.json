@@ -1,0 +1,127 @@
+{
+  "total": 941,
+  "flagged_count": 2,
+  "flagged": [
+    {
+      "file": "honda-vezel-2013-2018-rear-bumper-brake-lamp-2-27bb228716.webp",
+      "text_len": 24,
+      "flags": [
+        "GULAUTOS.PK"
+      ],
+      "hits": [
+        "J Ne /\u2014<$F ) GULAUTOS.PK"
+      ],
+      "text_sample": "J Ne /\u2014<$F ) GULAUTOS.PK"
+    },
+    {
+      "file": "honda-vezel-2013-2018-rear-bumper-brake-lamp-1-d008aef3cf.webp",
+      "text_len": 24,
+      "flags": [
+        "GULAUTOS.PK"
+      ],
+      "hits": [
+        "J Ne /\u2014<$F ) GULAUTOS.PK"
+      ],
+      "text_sample": "J Ne /\u2014<$F ) GULAUTOS.PK"
+    }
+  ],
+  "errors": [
+    {
+      "file": "carbon-fiber-dashboard-trim-for-honda-civic-11th-gen-2022-2026-2-78645952c2.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/carbon-fiber-dashboard-trim-for-hond"
+    },
+    {
+      "file": "toyota-corolla-carbon-fiber-center-console-gear-glass-holder-2014-2026-5-81c66613ef.webp",
+      "error": "TimeoutExpired:Command '['tesseract', '/tmp/ocr-out/toyota-corolla-carbon-fiber-center-console-"
+    },
+    {
+      "file": "corolla-e210-grande-led-rear-reflector-2-52893c0f6a.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/corolla-e210-grande-led-rear-reflect"
+    },
+    {
+      "file": "toyota-corolla-2022-2024-sports-body-kit-1-c9a841a8f0.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/toyota-corolla-2022-2024-sports-body"
+    },
+    {
+      "file": "honda-civic-x-2016-2021-ativus-style-body-kit-d7-4pcs-3-dd3f8049e1.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/honda-civic-x-2016-2021-ativus-style"
+    },
+    {
+      "file": "toyota-corolla-carbon-fiber-gear-knob-cover-2014-2026-1-cb09cb1315.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/toyota-corolla-carbon-fiber-gear-kno"
+    },
+    {
+      "file": "honda-civic-11th-gen-2022-present-carbon-window-quarter-covers-pair-2-572e26bbe5.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/honda-civic-11th-gen-2022-present-ca"
+    },
+    {
+      "file": "honda-civic-x-2016-2021-ativus-style-body-kit-d3-1-0b2c11742c.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/honda-civic-x-2016-2021-ativus-style"
+    },
+    {
+      "file": "honda-civic-x-2016-2021-carbon-fiber-front-dashboard-trims-3pcs-1-0f7f3914d5.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/honda-civic-x-2016-2021-carbon-fiber"
+    },
+    {
+      "file": "toyota-corolla-2015-2026-trunk-lip-spoiler-abs-plastic-1-9c03d7b234.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/toyota-corolla-2015-2026-trunk-lip-s"
+    },
+    {
+      "file": "honda-city-2020-2026-carbon-door-handle-cover-abs-2-5ba8121651.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/honda-city-2020-2026-carbon-door-han"
+    },
+    {
+      "file": "toyota-corolla-2012-2014-body-kit-d7-2-ff5ee52e18.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/toyota-corolla-2012-2014-body-kit-d7"
+    },
+    {
+      "file": "honda-city-2010-2020-trunk-lip-spoiler-mugen-style-1-9e62571730.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/honda-city-2010-2020-trunk-lip-spoil"
+    },
+    {
+      "file": "honda-civic-x-2016-2021-carbon-fiber-steering-multimedia-trims-1-beffb7fe80.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/honda-civic-x-2016-2021-carbon-fiber"
+    },
+    {
+      "file": "universal-amber-grill-lights-4pcs-5-593b7aed4a.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/universal-amber-grill-lights-4pcs-5-"
+    },
+    {
+      "file": "toyota-corolla-e140-2009-2013-carbon-door-handle-cover-1-f0c55db474.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/toyota-corolla-e140-2009-2013-carbon"
+    },
+    {
+      "file": "honda-civic-2001-2005-rear-trunk-spoiler-unpainted-abs-1-b7d45c956c.webp",
+      "error": "TimeoutExpired:Command '['tesseract', '/tmp/ocr-out/honda-civic-2001-2005-rear-trunk-spoiler-un"
+    },
+    {
+      "file": "suzuki-alto-2019-2026-tpe-floor-mats-premium-1-db3655f55b.webp",
+      "error": "TimeoutExpired:Command '['tesseract', '/tmp/ocr-out/suzuki-alto-2019-2026-tpe-floor-mats-premiu"
+    },
+    {
+      "file": "honda-civic-2022-2024-yofer-style-body-kit-4pcs-fibreglass-1-aace7c3170.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/honda-civic-2022-2024-yofer-style-bo"
+    },
+    {
+      "file": "carbon-fiber-window-power-control-trims-honda-civic-11th-gen-2022-2026-4pcs-6-25e186e3f8.webp",
+      "error": "dwebp",
+      "stderr": "Decoding of /data/crazzycars/media/products/carbon-fiber-window-power-control-tr"
+    }
+  ]
+}
