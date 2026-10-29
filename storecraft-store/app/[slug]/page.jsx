@@ -20,7 +20,7 @@ import {
 import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
-import { pdpImageUrl } from "@/lib/cloudinaryImage";
+import { pdpImageUrlExisting } from "@/lib/resolveLocalMedia";
 import { resolveProductImageUrls, resolvePrimaryProductImageUrl } from "@/lib/productImages";
 import {
   productJsonLd as buildProductJsonLd,
@@ -325,8 +325,8 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
       resolvePrimaryProductImageUrl(p) ||
       p.media?.images?.find((i) => i?.isMain)?.url ||
       p.media?.images?.[0]?.url;
-    // OG/Twitter use -sm.webp so crawlers/browsers do not prefetch the multi-MB master during LCP.
-    const mainImg = mainImgRaw ? pdpImageUrl(mainImgRaw, 720) : "";
+    // OG/Twitter: only a derivative that exists on disk (-sm → -400 → original). Never preload a 404.
+    const mainImg = mainImgRaw ? pdpImageUrlExisting(mainImgRaw) : "";
     const ogAlt = contentOverride?.imageAlt || displayName;
 
     const robotsRaw = String(p.seo?.robots || "").toLowerCase();
@@ -510,12 +510,38 @@ export default async function ProductPage({ params, searchParams }) {
         return null;
       }
     })();
-    // LCP: ProductDetailMedico main img uses pdpImageUrl(-sm) + fetchPriority=high.
-    // Next auto-preloads that URL — do not add a second <link rel=preload> (was racing).
+    // LCP: rewrite gallery URLs to an on-disk derivative (-sm → -400 → original)
+    // so the eager main <img> / browser preload never hits a missing -sm.webp.
+    const productForView = (() => {
+      const p = content.data;
+      const images = Array.isArray(p?.media?.images) ? p.media.images : [];
+      if (!images.length) return p;
+      return {
+        ...p,
+        media: {
+          ...p.media,
+          images: images.map((img) => {
+            const url = String(img?.url || "").trim();
+            if (!url) return img;
+            return { ...img, url: pdpImageUrlExisting(url), _masterUrl: url };
+          }),
+        },
+      };
+    })();
+    const lcpHref = (() => {
+      const main =
+        productForView?.media?.images?.find((i) => i?.isMain)?.url ||
+        productForView?.media?.images?.[0]?.url ||
+        "";
+      return main ? String(main).split("?")[0] : "";
+    })();
     const ssrReviews = approvedReviews.slice(0, 5);
 
     return (
       <>
+        {lcpHref ? (
+          <link rel="preload" as="image" href={lcpHref} fetchPriority="high" />
+        ) : null}
         {isCompleteProductJsonLd(productLd) ? (
           <script
             type="application/ld+json"
@@ -571,7 +597,7 @@ export default async function ProductPage({ params, searchParams }) {
           </section>
         ) : null}
         <ProductDetailMedico
-          product={content.data}
+          product={productForView}
           relatedProducts={content.relatedProducts || []}
           carLinks={content.carLinks || []}
           soldRecently={soldRecently}

@@ -66,9 +66,13 @@ export function localMediaPath(src) {
 
 /**
  * Local /media derivatives (masters kept on disk):
- *  - `{stem}-400.webp` — cards / thumbs (≤480 CSS px @2×)
+ *  - `{stem}-400.webp` — cards / thumbs (≤480 CSS px @2×); nearly always present
  *  - `{stem}-sm.webp`  — PDP / banners (S7 compressed; never multi-MB masters)
- * Missing derivatives: <img onError> falls back to the master URL.
+ * Missing derivatives: <img onError> falls back -400 → master (see WatermarkedImage).
+ *
+ * Client-side we cannot stat the disk. Prefer -400 for mid sizes when a caller
+ * has not already resolved an existing path via resolveExistingLocalMedia (SSR).
+ * Large PDP slots still request -sm; onError + SSR preload use existence checks.
  */
 function localMediaForWidth(src, width) {
   const path = localMediaPath(src) || "";
@@ -79,12 +83,25 @@ function localMediaForWidth(src, width) {
     return fallback;
   }
   const w = Number(width) || 0;
-  // Small slots → -400; everything else (incl. unknown width) → -sm so LCP never
-  // pulls a multi-megabyte master. onError restores the master if -sm is absent.
+  // Small / mid cards → -400 (high hit rate).
   if (w > 0 && w <= 480) {
     return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
   }
+  // PDP-sized: ask for -sm; WatermarkedImage onError falls back to -400 then master.
   return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-sm.webp");
+}
+
+/** Build sibling derivative path from any /media URL. */
+export function localMediaDerivative(src, kind /* "sm" | "400" | "800" | "original" */) {
+  const path = localMediaPath(src) || "";
+  if (!path) return String(src || "").trim();
+  const master = path.replace(/-(400|sm|800)\.(webp|jpe?g|png|gif|avif)$/i, ".$2");
+  const stem = master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "");
+  if (kind === "original") return master;
+  if (kind === "sm") return `${stem}-sm.webp`;
+  if (kind === "400") return `${stem}-400.webp`;
+  if (kind === "800") return `${stem}-800.webp`;
+  return master;
 }
 
 export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "auto", format = "auto", gravity, effects = [] } = {}) {

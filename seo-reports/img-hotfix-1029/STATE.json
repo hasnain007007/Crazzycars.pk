@@ -1,0 +1,16 @@
+{
+  "branch": "fix/img-hotfix-1029",
+  "startedAt": "2026-10-29T00:00:00Z",
+  "GRANTED": [],
+  "mediaVolumeHost": "/data/crazzycars/media",
+  "mediaVolumeContainer": "/app/media",
+  "fingerprint": "84143ac0cb2c3085",
+  "steps": {
+    "H1a_code": "in_progress",
+    "H1b_generate_sm": "in_progress",
+    "H1c_502": "pending",
+    "H1d_C25": "pending",
+    "H2_audit": "pending",
+    "H3_live": "pending"
+  }
+}
