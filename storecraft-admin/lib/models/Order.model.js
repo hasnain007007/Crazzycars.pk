@@ -369,4 +369,27 @@ orderSchema.index({ trackingNumber: 1 });
 orderSchema.index({ "tracking.number": 1 });
 orderSchema.index({ orderNumber: 1 });
 
+/** Display labels that once got saved as the method ("Meezan transfer") → enum key. */
+const LEGACY_PAYMENT_METHODS = [
+  [/jazz/, "jazzcash"],
+  [/easy/, "easypaisa"],
+  [/meezan/, "meezan"],
+  [/hbl/, "hbl"],
+  [/ubl/, "ubl"],
+  [/bank|transfer/, "bankTransfer"],
+  [/stripe|card/, "stripe"],
+  [/paypal/, "paypal"],
+  [/cod|cash/, "cod"],
+];
+
+// Without this, any save of such a legacy order fails validation (status updates, courier sync).
+orderSchema.pre("validate", function normalizeLegacyPaymentMethod() {
+  const enumValues = this.schema.path("paymentMethod").enumValues;
+  const raw = String(this.paymentMethod || "");
+  if (!raw || enumValues.includes(raw)) return;
+  const s = raw.toLowerCase();
+  const hit = LEGACY_PAYMENT_METHODS.find(([re]) => re.test(s));
+  if (hit) this.paymentMethod = hit[1];
+});
+
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);

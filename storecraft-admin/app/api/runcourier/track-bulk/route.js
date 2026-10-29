@@ -57,134 +57,140 @@ export async function POST(request) {
     let syncedCount = 0;
 
     for (const id of orderIds) {
-      const order = byId.get(id);
-      if (!order) {
-        results.push({ orderId: id, success: false, error: "Order not found" });
-        failCount += 1;
-        continue;
-      }
+      // One bad order (e.g. a legacy field value) must not abort the rest of the batch.
+      try {
+        const order = byId.get(id);
+        if (!order) {
+          results.push({ orderId: id, success: false, error: "Order not found" });
+          failCount += 1;
+          continue;
+        }
 
-      // Skip obvious PostEx-only rows unless they somehow have RC markers
-      if (!isRunCourierOrder(order) && String(order.courier || "").toLowerCase().includes("postex")) {
-        results.push({
-          orderId: id,
-          orderNumber: order.orderNumber,
-          success: false,
-          skipped: true,
-          error: "Not a Run Courier shipment",
+        // Skip obvious PostEx-only rows unless they somehow have RC markers
+        if (!isRunCourierOrder(order) && String(order.courier || "").toLowerCase().includes("postex")) {
+          results.push({
+            orderId: id,
+            orderNumber: order.orderNumber,
+            success: false,
+            skipped: true,
+            error: "Not a Run Courier shipment",
+          });
+          skipCount += 1;
+          continue;
+        }
+
+        const trackingNumber = String(order.trackingNumber || order.tracking?.number || "").trim();
+        if (!trackingNumber) {
+          results.push({
+            orderId: id,
+            orderNumber: order.orderNumber,
+            success: false,
+            skipped: true,
+            error: "No tracking number",
+          });
+          skipCount += 1;
+          continue;
+        }
+
+        const live = await fetchRunCourierTracking(trackingNumber, {
+          settingsCourier: settings?.courier,
         });
-        skipCount += 1;
-        continue;
-      }
 
-      const trackingNumber = String(order.trackingNumber || order.tracking?.number || "").trim();
-      if (!trackingNumber) {
-        results.push({
-          orderId: id,
-          orderNumber: order.orderNumber,
-          success: false,
-          skipped: true,
-          error: "No tracking number",
-        });
-        skipCount += 1;
-        continue;
-      }
+        if (!live?.success) {
+          results.push({
+            orderId: id,
+            orderNumber: order.orderNumber,
+            trackingNumber,
+            success: false,
+            error: live?.error || "Tracking failed",
+          });
+          failCount += 1;
+          continue;
+        }
 
-      const live = await fetchRunCourierTracking(trackingNumber, {
-        settingsCourier: settings?.courier,
-      });
+        if (!order.tracking) order.tracking = {};
+        order.tracking.lastStatus = live.status || "";
+        order.tracking.lastStatusAt = new Date();
+        order.tracking.currentLocation = live.currentLocation || live.location || "";
+        order.tracking.destinationCity = live.destination || order.tracking.destinationCity || "";
+        order.tracking.destinationReceived = Boolean(live.destinationReceived);
+        if (!order.tracking.number) order.tracking.number = trackingNumber;
+        if (!order.tracking.carrier) {
+          order.tracking.carrier = order.courier || live.courier || "Run Courier";
+        }
+        order.markModified("tracking");
 
-      if (!live?.success) {
+        let orderStatusSynced = null;
+        const mapped = syncOrderStatus ? mapRunCourierStatusToOrderStatus(live.status) : null;
+        if (mapped && order.orderStatus !== mapped) {
+          if (!(order.orderStatus === "delivered" && mapped === "shipped")) {
+            const gate = assertCodAdvanceAllowsStatus(order, mapped);
+            if (!gate.ok) {
+              await order.save({ validateModifiedOnly: true });
+              results.push({
+                orderId: String(order._id),
+                orderNumber: order.orderNumber,
+                trackingNumber,
+                status: live.status,
+                orderStatus: order.orderStatus,
+                orderStatusSynced: null,
+                blocked: gate.error,
+              });
+              continue;
+            }
+            const prev = order.orderStatus;
+            order.orderStatus = mapped;
+            if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
+            order.statusHistory.push({
+              status: mapped,
+              changedBy: user.name || "Admin",
+              changedAt: new Date(),
+              note: `Synced from Run Courier live status: ${live.status} (was ${prev})`,
+            });
+            const statusInfo = ORDER_STATUS_TIMELINE_TITLES[mapped] || {
+              title: mapped,
+              description: "",
+            };
+            if (!Array.isArray(order.timeline)) order.timeline = [];
+            order.timeline.push({
+              status: mapped,
+              title: statusInfo.title,
+              description: `Synced from Run Courier: ${live.status}`,
+              timestamp: new Date(),
+              by: "admin",
+            });
+            order.markModified("timeline");
+            orderStatusSynced = mapped;
+            syncedCount += 1;
+
+            if (isRunCourierDeliveredStatus(live.status)) {
+              if (!order.deliveredAt) order.deliveredAt = new Date();
+              if (isCodPaymentMethod(order.paymentMethod) && order.paymentStatus !== "paid") {
+                order.paymentStatus = "paid";
+                if (!order.payment || typeof order.payment !== "object") order.payment = {};
+                order.payment.paidAt = new Date();
+                order.markModified("payment");
+              }
+            }
+          }
+        }
+
+        await order.save({ validateModifiedOnly: true });
+        okCount += 1;
         results.push({
           orderId: id,
           orderNumber: order.orderNumber,
           trackingNumber,
-          success: false,
-          error: live?.error || "Tracking failed",
+          success: true,
+          status: live.status,
+          location: live.currentLocation || live.location || "",
+          orderStatusSynced,
+          events: Array.isArray(live.events) ? live.events.slice(0, 5) : [],
         });
+      } catch (err) {
+        results.push({ orderId: id, success: false, error: err.message || "Update failed" });
         failCount += 1;
-        continue;
       }
-
-      if (!order.tracking) order.tracking = {};
-      order.tracking.lastStatus = live.status || "";
-      order.tracking.lastStatusAt = new Date();
-      order.tracking.currentLocation = live.currentLocation || live.location || "";
-      order.tracking.destinationCity = live.destination || order.tracking.destinationCity || "";
-      order.tracking.destinationReceived = Boolean(live.destinationReceived);
-      if (!order.tracking.number) order.tracking.number = trackingNumber;
-      if (!order.tracking.carrier) {
-        order.tracking.carrier = order.courier || live.courier || "Run Courier";
-      }
-      order.markModified("tracking");
-
-      let orderStatusSynced = null;
-      const mapped = syncOrderStatus ? mapRunCourierStatusToOrderStatus(live.status) : null;
-      if (mapped && order.orderStatus !== mapped) {
-        if (!(order.orderStatus === "delivered" && mapped === "shipped")) {
-          const gate = assertCodAdvanceAllowsStatus(order, mapped);
-          if (!gate.ok) {
-            await order.save();
-            results.push({
-              orderId: String(order._id),
-              orderNumber: order.orderNumber,
-              trackingNumber,
-              status: live.status,
-              orderStatus: order.orderStatus,
-              orderStatusSynced: null,
-              blocked: gate.error,
-            });
-            continue;
-          }
-          const prev = order.orderStatus;
-          order.orderStatus = mapped;
-          if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
-          order.statusHistory.push({
-            status: mapped,
-            changedBy: user.name || "Admin",
-            changedAt: new Date(),
-            note: `Synced from Run Courier live status: ${live.status} (was ${prev})`,
-          });
-          const statusInfo = ORDER_STATUS_TIMELINE_TITLES[mapped] || {
-            title: mapped,
-            description: "",
-          };
-          if (!Array.isArray(order.timeline)) order.timeline = [];
-          order.timeline.push({
-            status: mapped,
-            title: statusInfo.title,
-            description: `Synced from Run Courier: ${live.status}`,
-            timestamp: new Date(),
-            by: "admin",
-          });
-          order.markModified("timeline");
-          orderStatusSynced = mapped;
-          syncedCount += 1;
-
-          if (isRunCourierDeliveredStatus(live.status)) {
-            if (!order.deliveredAt) order.deliveredAt = new Date();
-            if (isCodPaymentMethod(order.paymentMethod) && order.paymentStatus !== "paid") {
-              order.paymentStatus = "paid";
-              if (!order.payment || typeof order.payment !== "object") order.payment = {};
-              order.payment.paidAt = new Date();
-              order.markModified("payment");
-            }
-          }
-        }
-      }
-
-      await order.save();
-      okCount += 1;
-      results.push({
-        orderId: id,
-        orderNumber: order.orderNumber,
-        trackingNumber,
-        success: true,
-        status: live.status,
-        location: live.currentLocation || live.location || "",
-        orderStatusSynced,
-        events: Array.isArray(live.events) ? live.events.slice(0, 5) : [],
-      });
     }
 
     return NextResponse.json({

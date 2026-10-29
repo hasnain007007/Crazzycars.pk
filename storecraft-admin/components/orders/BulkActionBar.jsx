@@ -342,24 +342,6 @@ export function BulkActionBar({
     setLiveResults(null);
     setLiveProgress(`Fetching live status for ${ids.length} order(s)…`);
     try {
-      const body = JSON.stringify({ orderIds: ids, syncOrderStatus: true });
-      const [postexRes, rcRes] = await Promise.all([
-        fetch("/api/postex/track-bulk", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body,
-        }),
-        fetch("/api/runcourier/track-bulk", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body,
-        }),
-      ]);
-      const postexJson = await postexRes.json().catch(() => ({}));
-      const rcJson = await rcRes.json().catch(() => ({}));
-
       const mergeCounts = (a = {}, b = {}) => ({
         okCount: (a.okCount || 0) + (b.okCount || 0),
         syncedCount: (a.syncedCount || 0) + (b.syncedCount || 0),
@@ -367,9 +349,33 @@ export function BulkActionBar({
         failCount: (a.failCount || 0) + (b.failCount || 0),
         results: [...(a.results || []), ...(b.results || [])],
       });
+      const post = async (url, orderIds) => {
+        const res = await fetch(url, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderIds, syncOrderStatus: true }),
+        });
+        const json = await res.json().catch(() => ({}));
+        return res.ok && json.success ? json : { success: false, error: json.error };
+      };
 
-      const postexOk = postexRes.ok && postexJson.success;
-      const rcOk = rcRes.ok && rcJson.success;
+      // The track-bulk APIs accept at most 40 ids per call — send every selected order, 40 at a time.
+      let postexJson = { success: false };
+      let rcJson = { success: false };
+      for (let i = 0; i < ids.length; i += 40) {
+        const chunk = ids.slice(i, i + 40);
+        setLiveProgress(`Fetching live status… ${Math.min(i + 40, ids.length)} / ${ids.length}`);
+        const [p, r] = await Promise.all([
+          post("/api/postex/track-bulk", chunk),
+          post("/api/runcourier/track-bulk", chunk),
+        ]);
+        postexJson = { ...mergeCounts(postexJson, p), success: postexJson.success || p.success, error: p.error };
+        rcJson = { ...mergeCounts(rcJson, r), success: rcJson.success || r.success, error: r.error };
+      }
+
+      const postexOk = postexJson.success;
+      const rcOk = rcJson.success;
       if (!postexOk && !rcOk) {
         toast.error(postexJson.error || rcJson.error || "Live status refresh failed");
         return;
