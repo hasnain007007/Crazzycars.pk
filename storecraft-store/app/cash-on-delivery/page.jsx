@@ -59,7 +59,7 @@ function codLandingFaqs() {
     {
       question: "Can I use COD on a body kit?",
       answer:
-        "No. Products whose name or URL identify them as a body kit cannot use Cash on Delivery. Use JazzCash, Meezan, or bank transfer for those orders. Underbody LED kits are not treated as body kits.",
+        "No. Products in the body-kits category, or whose name/URL contains “body kit”, cannot use Cash on Delivery. Use JazzCash, Meezan, or bank transfer for those orders. Underbody LED kits are not treated as body kits.",
     },
   ].filter(Boolean);
 
@@ -90,7 +90,7 @@ function codLandingFaqs() {
       {
         question: "Can I use COD on a body kit?",
         answer:
-          "No. Products whose name or URL identify them as a body kit cannot use Cash on Delivery. Use JazzCash, Meezan, or bank transfer for those orders. Underbody LED kits are not treated as body kits.",
+          "No. Products in the body-kits category, or whose name/URL contains “body kit”, cannot use Cash on Delivery. Use JazzCash, Meezan, or bank transfer for those orders. Underbody LED kits are not treated as body kits.",
       },
     ];
   }
@@ -162,10 +162,10 @@ export default function CashOnDeliveryPage() {
         <strong>Body kits cannot be ordered on Cash on Delivery.</strong>
       </p>
       <p className="mt-2 text-gray-700 leading-relaxed">
-        If the product name or URL includes “body kit” / “body kits” (for example a complete body kit
-        with front splitter, side skirts, and rear lip), checkout will not offer COD. Pay the full
-        order with <strong>JazzCash, Meezan, or bank transfer</strong> instead, then send your payment
-        screenshot on WhatsApp.
+        If the product is in the body-kits category, or the name/URL includes “body kit” / “body kits”
+        (for example a complete body kit with front splitter, side skirts, and rear lip), checkout will
+        not offer COD. Pay the full order with <strong>JazzCash, Meezan, or bank transfer</strong>{" "}
+        instead, then send your payment screenshot on WhatsApp.
       </p>
       <p className="mt-2 text-gray-700 leading-relaxed">
         <strong>Note:</strong> LED “underbody” light kits are <strong>not</strong> body kits — those

@@ -373,6 +373,7 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
       description: page.seo?.metaDescription || "",
       type: "website",
       url: `${BASE_URL}/${slugStr}`,
+      siteName: BRAND_NAME,
     },
     twitter: {
       card: "summary_large_image",

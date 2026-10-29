@@ -32,4 +32,23 @@ describe("body kit COD block", () => {
     assert.equal(productAllowsCod({ name: "Bright LED Indicator Bulbs", codEnabled: true }), true);
     assert.equal(productAllowsCod({ name: "Bright LED Indicator Bulbs", codEnabled: false }), false);
   });
+
+  test("body-kits category products are prepaid even without body kit in the title", () => {
+    assert.equal(
+      isBodyKitProduct({
+        name: "Civic front lip extension set",
+        slug: "civic-front-lip-extension-set",
+        categorySlugs: ["body-kits-extensions"],
+      }),
+      true
+    );
+    assert.equal(
+      productAllowsCod({
+        name: "Civic front lip extension set",
+        categorySlug: "body-kits",
+        codEnabled: true,
+      }),
+      false
+    );
+  });
 });

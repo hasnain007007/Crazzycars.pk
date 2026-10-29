@@ -14,6 +14,12 @@ VPS_ADMIN_PATH="${VPS_ADMIN_PATH:-/var/www/storecraft-admin}"
 # Default: CCSMS repo. Override: DEPLOY_ROOT=/Users/mac/Desktop/Ecommerce ./scripts/deploy-vps.sh
 ROOT="${DEPLOY_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 
+# Block deploy when CI is red for this commit (CI_GATE_MODE=warn to soft-fail; SKIP_CI_GATE=1 to bypass).
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ "${SKIP_CI_GATE:-0}" != "1" ]; then
+  (cd "$ROOT" && bash "$SCRIPT_DIR/assert-ci-green.sh") || exit $?
+fi
+
 RSYNC_EXCLUDES=(
   --exclude='.next'
   --exclude='node_modules'

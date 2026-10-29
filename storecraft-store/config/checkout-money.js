@@ -7,12 +7,13 @@ export const PREPAID_DISCOUNT_PERCENT = 4;
 
 /**
  * COD booking advance by order total (PKR), checked in order; `below: null` = no upper limit.
- * Under 5,000 → 300 · 5,000–9,999 → 600 · 10,000 and above → 1,000 (owner, Oct 2026).
+ * Under 5,000 → 300 · 5,000–10,000 inclusive → 600 · over 10,000 → 1,000 (owner, Oct 2026).
  * A product's own % advance still wins when it is higher.
+ * `below` is exclusive: middle tier uses 10001 so Rs. 10,000 still maps to 600.
  */
 export const COD_ADVANCE_TIERS = Object.freeze([
   Object.freeze({ below: 5000, amount: 300 }),
-  Object.freeze({ below: 10000, amount: 600 }),
+  Object.freeze({ below: 10001, amount: 600 }),
   Object.freeze({ below: null, amount: 1000 }),
 ]);
 

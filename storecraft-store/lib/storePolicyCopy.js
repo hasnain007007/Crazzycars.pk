@@ -59,7 +59,7 @@ export function deliveryEtaSummary() {
 export function standardDeliveryFeeStatement() {
   const regular = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
   const bulky = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
-  return `Delivery is ${regular} for regular items, or ${bulky} when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). COD orders require a booking advance (from Rs. 250) before processing; the balance is Cash on Delivery. There is no order-value waiver for delivery.`;
+  return `Delivery is ${regular} for regular items, or ${bulky} when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). COD orders require a booking advance (from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}; ${codAdvanceTierSummary()}) before processing; the balance is Cash on Delivery. Body kits are prepaid only. There is no order-value waiver for delivery.`;
 }
 
 export function standardDeliveryFeeShort() {
@@ -300,8 +300,7 @@ export function getFaqItems(opts = {}) {
   return [
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
-      answer:
-        "Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from Rs. 250, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.",
+      answer: `Yes. Cash on Delivery is available nationwide on eligible items. For COD orders, pay a small booking advance (${codAdvanceTierSummary()}) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery. Body kits (body-kits category or titles containing “body kit”) are prepaid only — JazzCash, Meezan, or bank transfer.`,
     },
     {
       question: "How much are delivery charges?",
@@ -414,7 +413,7 @@ export function getShippingPolicySections() {
     {
       heading: "Cash on Delivery",
       paragraphs: [
-        "COD is available on eligible products. Body kits cannot be ordered on Cash on Delivery — use JazzCash, Meezan, or bank transfer. COD orders need a booking advance (from Rs. 250) before we process; checkout shows the exact amount. Send your payment screenshot on WhatsApp; the balance is collected on delivery.",
+        `COD is available on eligible products. Body kits (products in the body-kits category or with “body kit” in the title) cannot use Cash on Delivery — use JazzCash, Meezan, or bank transfer. COD orders need a booking advance (${codAdvanceTierSummary()}) before we process; checkout shows the exact amount. Send your payment screenshot on WhatsApp; the balance is collected on delivery.`,
       ],
     },
   ];
@@ -454,7 +453,8 @@ export function advancePaymentCopy(opts = {}) {
       value: `${pct}% OFF`,
       note: "Pay the whole order by JazzCash or bank transfer and get the prepaid discount at checkout.",
     },
-    higherAdvanceNote: "Some items (like body kits) need a higher advance; the exact amount is always shown at checkout.",
+    higherAdvanceNote:
+      "Body kits are prepaid only (no COD). Some other items may require a product % advance; checkout always shows the exact amount.",
     deductedNote:
       "Your advance is deducted from your total bill and refunded if the item doesn't fit. You pay only the balance on delivery.",
     steps: [
