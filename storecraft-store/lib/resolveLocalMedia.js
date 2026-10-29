@@ -1,28 +1,28 @@
 /**
  * Server-only: pick a /media derivative that actually exists on disk.
- * Prefer -sm → -400 → original. Never return a path that is missing when possible.
+ * Prefer -sm → -400 → original.
  *
- * MEDIA root: bind-mounted at /app/media in production (= /data/crazzycars/media on host).
+ * Avoid path.join(dynamic) — Turbopack treats it as whole-project tracing and
+ * fails the production build. Use string paths + turbopackIgnore on fs calls.
  */
 import fs from "node:fs";
-import path from "node:path";
 import { localMediaPath, unwrapNextImageUrl } from "@/lib/cloudinaryImage";
 
-const MEDIA_ROOT = process.env.MEDIA_ROOT || path.join(/*turbopackIgnore: true*/ process.cwd(), "media");
+const MEDIA_ROOT = String(process.env.MEDIA_ROOT || "/app/media").replace(/\/+$/, "");
 
 function diskPathForMediaUrl(mediaPath) {
   const p = String(mediaPath || "").split("?")[0];
   if (!p.startsWith("/media/")) return "";
   const rel = p.slice("/media/".length);
-  if (!rel || rel.includes("..")) return "";
-  return path.join(/*turbopackIgnore: true*/ MEDIA_ROOT, rel);
+  if (!rel || rel.includes("..") || rel.startsWith("/")) return "";
+  return `${MEDIA_ROOT}/${rel}`;
 }
 
 function existsMedia(mediaPath) {
   const disk = diskPathForMediaUrl(mediaPath);
   if (!disk) return false;
   try {
-    return fs.existsSync(/*turbopackIgnore: true*/ disk) && fs.statSync(/*turbopackIgnore: true*/ disk).isFile();
+    return fs.existsSync(/* turbopackIgnore: true */ disk);
   } catch {
     return false;
   }
@@ -35,14 +35,15 @@ export function mediaMasterPath(mediaPath) {
 }
 
 /**
- * @param {string} src - product/category image URL or /media path
+ * @param {string} src
  * @param {{ prefer?: Array<"sm"|"400"|"800"|"original"> }} [opts]
- * @returns {string} best existing URL path (or original input if not local /media)
  */
 export function resolveExistingLocalMedia(src, opts = {}) {
   const prefer = opts.prefer || ["sm", "400", "original"];
   const raw = unwrapNextImageUrl(src);
-  const pathOnly = localMediaPath(raw) || (String(raw || "").startsWith("/media/") ? String(raw).split("?")[0] : "");
+  const pathOnly =
+    localMediaPath(raw) ||
+    (String(raw || "").startsWith("/media/") ? String(raw).split("?")[0] : "");
   if (!pathOnly) return String(src || "").trim();
 
   const master = mediaMasterPath(pathOnly);
@@ -66,7 +67,6 @@ export function resolveExistingLocalMedia(src, opts = {}) {
   return master || pathOnly;
 }
 
-/** PDP / OG / preload: never advertise a missing -sm. */
 export function pdpImageUrlExisting(src) {
   return resolveExistingLocalMedia(src, { prefer: ["sm", "400", "original"] });
 }
