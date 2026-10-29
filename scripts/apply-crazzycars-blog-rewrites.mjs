@@ -170,6 +170,9 @@ async function main() {
       content: html,
       seo: {
         ...(existing.seo || {}),
+        // Storefront reads seo.metaTitle / seo.metaDescription (not title/description).
+        metaTitle: title,
+        metaDescription: meta_description,
         title: title,
         description: meta_description,
       },
