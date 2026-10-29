@@ -1,0 +1,154 @@
+{
+  "products": 430,
+  "emptyMain": 44,
+  "emptyMainSlugs": [
+    "suzuki-swift-2018-2024-complete-body-kit-fibreglass-crazzycars-pk",
+    "honda-civic-reborn-2006-2011-body-kit-d4-crazzycars-pk",
+    "honda-civic-reborn-2006-2011-body-kit-d1-crazzycars-pk",
+    "kia-sportage-awd-premium-metal-key-cover",
+    "honda-civic-3-button-premium-metal-key-cover",
+    "honda-civic-4-button-premium-metal-key-cover",
+    "honda-city-2022-3-button-premium-metal-key-cover",
+    "honda-civic-2022-premium-metal-key-cover",
+    "honda-vezel-premium-metal-key-cover",
+    "honda-brv-premium-metal-key-cover",
+    "honda-civic-rebirth-premium-metal-key-cover",
+    "toyota-corolla-grande-premium-metal-key-cover",
+    "toyota-fortuner-4-button-premium-metal-key-cover",
+    "toyota-prado-premium-metal-key-cover",
+    "toyota-yaris-premium-metal-key-cover",
+    "toyota-prius-premium-metal-key-cover",
+    "kia-sportage-alpha-premium-metal-key-cover",
+    "kia-sorento-3-button-premium-metal-key-cover",
+    "kia-stonic-3-button-premium-metal-key-cover",
+    "hyundai-tucson-premium-metal-key-cover",
+    "hyundai-elantra-premium-metal-key-cover",
+    "hyundai-sonata-premium-metal-key-cover",
+    "mg-hs-premium-metal-key-cover",
+    "oshan-x7-premium-metal-key-cover",
+    "audi-a4-premium-metal-key-cover",
+    "audi-a5-premium-metal-key-cover",
+    "mercedes-benz-e260-premium-metal-key-cover",
+    "mercedes-benz-e-class-premium-metal-key-cover",
+    "haval-h6-premium-metal-key-cover",
+    "nissan-note-premium-metal-key-cover",
+    "baic-bj40-premium-metal-key-cover",
+    "chery-tiggo-8-pro-premium-metal-key-cover",
+    "chery-tiggo-4-pro-premium-metal-key-cover",
+    "suzuki-swift-premium-metal-key-cover",
+    "honda-city-2009-2021-premium-metal-key-cover",
+    "suzuki-alto-premium-metal-key-cover",
+    "universal-car-led-reflector-bumper-side-marker-light",
+    "toyota-prius-2012-quarter-glass-louvers-carbon-fiber",
+    "universal-car-digital-eyes-led-panel-lights",
+    "toyota-corolla-x-dynamic-back-bumper-light-rgb-2022-2023",
+    "toyota-corolla-2002-2008-black-abs-mesh-grill",
+    "suzuki-alto-2019-2026-premium-air-press-without-chrome",
+    "sogo-universal-car-grass-floor-mats-in-roll-custom-fitting-premium-quality-1",
+    "universal-usb-car-humidifier-atmosphere-light-laser-roof-light"
+  ],
+  "mainMismatch": [
+    {
+      "product": "suzuki-alto-2018-2023-multimedia-steering-wheel-audio-control-buttons-panel",
+      "image": "premium-metal-key-cover-1-822f07371e.webp",
+      "overlap": 0,
+      "belongsGuess": "premium-metal-key-cover"
+    },
+    {
+      "product": "honda-vezel-2013-2018-fog-lamps-drl-cover-hd011-l2",
+      "image": "osram-projector-lights-3-colour-premium-quality-1-fcc6deaa81.webp",
+      "overlap": 0,
+      "belongsGuess": "osram-projector-lights-3-colour-premium-quality"
+    }
+  ],
+  "shared": [
+    {
+      "image": "/media/products/toyota-corolla-rgb-side-style-and-back-bumper-light-1-d5bba4e978.webp",
+      "products": [
+        "toyota-corolla-2015-2026-rgb-side-style",
+        "toyota-corolla-rgb-side-style-and-back-bumper-light"
+      ]
+    },
+    {
+      "image": "/media/products/toyota-corolla-trd-style-front-grille-gloss-black-abs-1-5b3b1314d9.webp",
+      "products": [
+        "toyota-corolla-trd-style-front-grille-gloss-black-abs",
+        "toyota-corolla-2009-2013-trd-style-front-grill"
+      ]
+    },
+    {
+      "image": "/media/products/universal-front-splitter-style-4-gloss-black-canard-3pcs-1-6267f55d74.webp",
+      "products": [
+        "universal-front-splitter-style-4-gloss-black-canard-3pcs",
+        "universal-front-bumper-splitter-canard-1pcs-matt-black-abs"
+      ]
+    },
+    {
+      "image": "/media/products/universal-front-splitter-style-4-gloss-black-canard-3pcs-2-034216a978.webp",
+      "products": [
+        "universal-front-splitter-style-4-gloss-black-canard-3pcs",
+        "universal-front-bumper-splitter-canard-1pcs-matt-black-abs"
+      ]
+    },
+    {
+      "image": "/media/products/osram-projector-lights-3-colour-premium-quality-1-fcc6deaa81.webp",
+      "products": [
+        "osram-projector-lights-3-colour-premium-quality",
+        "honda-vezel-2013-2018-fog-lamps-drl-cover-hd011-l2"
+      ]
+    },
+    {
+      "image": "/media/products/toyota-corolla-2008-2011-front-chrome-grilles-set-unpainted-steel-1-3d2a57629c.webp",
+      "products": [
+        "toyota-corolla-2008-2010-diamond-style-chrome-front-grille",
+        "toyota-corolla-2008-2011-front-chrome-grilles-set-unpainted-steel"
+      ]
+    },
+    {
+      "image": "/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-nologo-04518dd4fc.webp",
+      "products": [
+        "toyota-corolla-carbon-fiber-center-console-gear-glass-holder-2014-2026",
+        "toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026"
+      ]
+    }
+  ],
+  "foreignDesc": [],
+  "nameImg": [
+    {
+      "product": "suzuki-alto-2018-2023-multimedia-steering-wheel-audio-control-buttons-panel",
+      "name": "Suzuki Alto 2018-2023 Multimedia Steering Wheel Audio Control Buttons Panel",
+      "image": "premium-metal-key-cover-1-822f07371e.webp",
+      "expect": "steering"
+    },
+    {
+      "product": "honda-civic-x-2016-2021-carbon-fiber-ac-vent-trims-full-set",
+      "name": "Honda Civic X 2016-2021 Carbon AC Steering Trim Full Set",
+      "image": "honda-civic-x-2016-2021-carbon-fiber-ac-vent-trims-full-set-1-e8495c0093.webp",
+      "expect": "steering"
+    },
+    {
+      "product": "toyota-corolla-2012-top-ac-panel",
+      "name": "Toyota Corolla 2012 Top AC Panel Center Dashboard AC Vent Button 2008-2013",
+      "image": "toyota-corolla-2012-top-ac-panel-1-210e0307d9.webp",
+      "expect": "dashboard"
+    },
+    {
+      "product": "car-decoration-solar-powered-aeroplane",
+      "name": "Solar Powered Aeroplane Car Dashboard Decoration",
+      "image": "car-decoration-solar-powered-aeroplane-1-d136477563.webp",
+      "expect": "dashboard"
+    },
+    {
+      "product": "dynamic-car-underglow-lights",
+      "name": "Dynamic Car Underglow RGB LED Underbody Kit",
+      "image": "dynamic-car-underglow-lights-1-933e03f25a.webp",
+      "expect": "body kits?"
+    },
+    {
+      "product": "toyota-corolla-carbon-fiber-center-console-gear-glass-holder-2014-2026",
+      "name": "Toyota Corolla Carbon Fiber Center Console Kit 2014\u20132026 (Gear + Glass Holder)",
+      "image": "toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-nologo-04518dd4fc.webp",
+      "expect": "console"
+    }
+  ]
+}
