@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { getWatermarkOverlayStyle } from "@/lib/productImageWatermark";
-import { cardImageUrl, cloudinarySrcSet, cloudinaryUrl } from "@/lib/cloudinaryImage";
+import {
+  cardImageUrl,
+  cloudinarySrcSet,
+  cloudinaryUrl,
+  localMediaDerivative,
+  isLocalMedia,
+} from "@/lib/cloudinaryImage";
 
 export function WatermarkedImage({
   src,
@@ -96,14 +102,31 @@ export function WatermarkedImage({
     ...(itemProp ? { itemProp } : {}),
     onLoad: () => setLoaded(true),
     onError: () => {
-      // Derivative (-400 / -sm / -800) missing → fall back to the original master URL once.
-      const master = String(src || "").trim();
+      // Derivative chain for local /media: -sm → -400 → master → give up.
+      // Never leave a visitor on a broken <img>.
+      const master = String(src || "").trim().split("?")[0];
+      if (isLocalMedia(master) || master.startsWith("/media/")) {
+        const as400 = localMediaDerivative(master, "400");
+        const asOrig = localMediaDerivative(master, "original");
+        if (!retrySrc && /-(sm|800)\./i.test(resolved) && as400 && as400 !== resolved) {
+          setRetrySrc(as400);
+          setLoaded(false);
+          return;
+        }
+        if (asOrig && resolved !== asOrig && retrySrc !== asOrig) {
+          setRetrySrc(asOrig);
+          setLoaded(false);
+          return;
+        }
+        setFailed(true);
+        return;
+      }
       if (!retrySrc && master && resolved !== master && !/-(400|sm|800)\./i.test(master)) {
         setRetrySrc(master);
         setLoaded(false);
         return;
       }
-      const fallback = cardImageUrl(src, width) || String(src || "").split("?")[0];
+      const fallback = cardImageUrl(src, width) || master;
       if (!retrySrc && fallback && fallback !== resolved) {
         setRetrySrc(fallback);
         setLoaded(false);

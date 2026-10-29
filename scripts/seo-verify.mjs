@@ -390,6 +390,8 @@ async function main() {
     C22: emptyCheck(),
     C23: emptyCheck(),
     C24: emptyCheck(true),
+    /** Crawl every sitemap HTML page; HEAD every img/preload/og/twitter/JSON-LD image URL. */
+    C25: emptyCheck(),
   };
 
   const { urls: sitemapUrls } = await collectSitemapUrls(BASE);
@@ -900,6 +902,159 @@ async function main() {
       const canon = extractCanonical(html);
       if (!canon) failCheck(results.C23, `${pathname} missing canonical`);
       else if (!sameUrl(canon, p.url)) failCheck(results.C23, `${pathname} canonical ${canon}`);
+    }
+  }
+
+  // C25 — every img src/srcset, preload, og:image, twitter:image, JSON-LD image must HEAD 200
+  {
+    const byType = { product: 0, category: 0, car: 0, blog: 0, other: 0, broken: 0 };
+    const broken = [];
+    const seen = new Set();
+
+    function pageType(pathname) {
+      if (/^\/blogs\//.test(pathname)) return "blog";
+      if (/^\/categories\//.test(pathname)) return "category";
+      if (/^\/cars\//.test(pathname)) return "car";
+      if (pathname === "/" || pathname === "/shop" || pathname === "/sale" || pathname.startsWith("/pages"))
+        return "other";
+      // product PDPs are /{slug} without a prefix
+      if (/^\/[a-z0-9][a-z0-9-]{2,}$/i.test(pathname) && !pathname.startsWith("/api")) return "product";
+      return "other";
+    }
+
+    function absUrl(u, pageUrl) {
+      const s = String(u || "").trim();
+      if (!s || s.startsWith("data:") || s.startsWith("blob:")) return "";
+      try {
+        return new URL(s, pageUrl).href.split("#")[0];
+      } catch {
+        return "";
+      }
+    }
+
+    function collectImageUrls(html, pageUrl) {
+      const out = new Set();
+      if (!html) return out;
+      const attrs = [
+        /\bsrc=["']([^"']+)["']/gi,
+        /\bsrcset=["']([^"']+)["']/gi,
+        /\bcontent=["'](https?:\/\/[^"']+\.(?:webp|jpe?g|png|gif|avif|svg)[^"']*)["']/gi,
+      ];
+      // preload as=image
+      const preloadRe = /<link[^>]+rel=["']preload["'][^>]*>/gi;
+      let m;
+      while ((m = preloadRe.exec(html))) {
+        const tag = m[0];
+        if (!/\bas=["']image["']/i.test(tag)) continue;
+        const href = (tag.match(/\bhref=["']([^"']+)["']/i) || [])[1];
+        const a = absUrl(href, pageUrl);
+        if (a) out.add(a);
+      }
+      // img src + srcset
+      const imgRe = /<img\b([^>]*)>/gi;
+      while ((m = imgRe.exec(html))) {
+        const attrsStr = m[1];
+        const src = (attrsStr.match(/\bsrc=["']([^"']+)["']/i) || [])[1];
+        const a = absUrl(src, pageUrl);
+        if (a) out.add(a);
+        const srcset = (attrsStr.match(/\bsrcset=["']([^"']+)["']/i) || [])[1] || "";
+        for (const part of srcset.split(",")) {
+          const u = part.trim().split(/\s+/)[0];
+          const b = absUrl(u, pageUrl);
+          if (b) out.add(b);
+        }
+      }
+      // og / twitter
+      const metaRe = /<meta\b([^>]*)>/gi;
+      while ((m = metaRe.exec(html))) {
+        const t = m[1];
+        const prop = (
+          (t.match(/\b(?:property|name)=["']([^"']+)["']/i) || [])[1] || ""
+        ).toLowerCase();
+        if (!/(^og:image|^twitter:image)/.test(prop)) continue;
+        const content = (t.match(/\bcontent=["']([^"']+)["']/i) || [])[1];
+        const a = absUrl(content, pageUrl);
+        if (a) out.add(a);
+      }
+      // JSON-LD image fields
+      try {
+        for (const root of extractJsonLdBlocks(html)) {
+          for (const n of walkLd(root)) {
+            const imgs = [].concat(n.image || n.thumbnailUrl || n.contentUrl || []);
+            for (const im of imgs) {
+              const u = typeof im === "string" ? im : im?.url || im?.contentUrl || "";
+              const a = absUrl(u, pageUrl);
+              if (a) out.add(a);
+            }
+          }
+        }
+      } catch {
+        /* ignore ld parse */
+      }
+      return out;
+    }
+
+    const pages = pageFetches.filter((p) => p.status === 200 && p.body);
+    // Also include homepage if somehow missing
+    const imageJobs = [];
+    for (const p of pages) {
+      const pathname = pathOf(p.url);
+      const t = pageType(pathname);
+      byType[t] = (byType[t] || 0) + 1;
+      for (const imgUrl of collectImageUrls(p.body, p.url)) {
+        // Only check same-origin media / next static / absolute same host
+        if (!imgUrl.includes("crazzycars.pk") && !imgUrl.startsWith(BASE)) continue;
+        if (imgUrl.includes("/_next/image")) continue; // unwrap not needed; local media is direct
+        if (seen.has(imgUrl)) continue;
+        seen.add(imgUrl);
+        imageJobs.push({ imgUrl, from: pathname, type: t });
+      }
+    }
+
+    results.C25.count = imageJobs.length;
+    results.C25.note = `unique image URLs from ${pages.length} HTML pages; byPageType=${JSON.stringify(byType)}`;
+    const heads = await mapPool(imageJobs, Math.min(CONCURRENCY, 6), async (job) => {
+      const r = await fetchOnce(job.imgUrl, { redirect: "follow", method: "HEAD" });
+      // Some CDNs dislike HEAD — retry GET if 405/403
+      if (r.status === 405 || r.status === 403 || r.status === 0) {
+        const g = await fetchOnce(job.imgUrl, { redirect: "follow", method: "GET" });
+        return { ...job, status: g.status };
+      }
+      return { ...job, status: r.status };
+    });
+    const brokenByType = { product: 0, category: 0, car: 0, blog: 0, other: 0 };
+    for (const h of heads) {
+      if (h.status !== 200) {
+        byType.broken++;
+        brokenByType[h.type] = (brokenByType[h.type] || 0) + 1;
+        broken.push(`${h.from} → ${h.imgUrl} (${h.status})`);
+        failCheck(results.C25, `${h.from} → ${h.imgUrl.slice(0, 160)} → ${h.status}`);
+      }
+    }
+    results.C25.byType = byType;
+    results.C25.brokenByType = brokenByType;
+    // Persist full broken list beside report
+    try {
+      const c25Path = path.join(path.dirname(OUT), "C25-image-urls.json");
+      fs.writeFileSync(
+        c25Path,
+        JSON.stringify(
+          {
+            generatedAt: new Date().toISOString(),
+            total: imageJobs.length,
+            broken: broken.length,
+            byType,
+            brokenByType,
+            failures: broken,
+            allUrls: imageJobs.map((j) => j.imgUrl),
+          },
+          null,
+          2
+        )
+      );
+      results.C25.artifact = c25Path;
+    } catch (e) {
+      results.C25.failures.push(`artifact write: ${e.message}`);
     }
   }
 
