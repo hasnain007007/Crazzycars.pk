@@ -57,7 +57,10 @@ export async function GET(request) {
     const settingsDoc =
       (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY }).lean()) ||
       (await Settings.findOne({}).lean());
-    const homepage = normalizeHomepageSettings(settingsDoc?.homepageSettings);
+    const prepaidPercent = Number(settingsDoc?.storePayment?.advancePaymentDiscountPercent);
+    const homepage = normalizeHomepageSettings(settingsDoc?.homepageSettings, {
+      prepaidPercent: Number.isFinite(prepaidPercent) ? prepaidPercent : undefined,
+    });
 
     let [
       banners,

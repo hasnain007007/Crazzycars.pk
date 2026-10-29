@@ -403,7 +403,9 @@ export function buildStoreSettingsPayload(rawSettings = {}) {
   };
   const trustBadges = normalizeTrustBadges(settings?.trustBadges);
   const brandStory = normalizeBrandStory(settings?.brandStory);
-  const homepageSettings = normalizeHomepageSettings(settings?.homepageSettings);
+  const homepageSettings = normalizeHomepageSettings(settings?.homepageSettings, {
+    prepaidPercent: prepaidPct,
+  });
   const appearance = normalizeAppearance(settings?.appearance, settings?.seo);
   const checkoutMessages = normalizeCheckoutMessages(settings?.checkoutMessages, settings?.storefront);
   const storePayment = storePaymentEarly;

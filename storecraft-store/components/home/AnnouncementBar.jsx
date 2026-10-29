@@ -33,9 +33,10 @@ export default function AnnouncementBar() {
           return;
         }
         if (announcementBar?.items?.length > 0) {
-          const items = sanitizeAnnouncementItems(announcementBar.items).filter(
-            (item) => item.enabled !== false && String(item.text || "").trim()
-          );
+          const prepaidPercent = Number(s?.storePayment?.advancePaymentDiscountPercent);
+          const items = sanitizeAnnouncementItems(announcementBar.items, {
+            prepaidPercent: Number.isFinite(prepaidPercent) ? prepaidPercent : undefined,
+          }).filter((item) => item.enabled !== false && String(item.text || "").trim());
           setBar({
             enabled: announcementBar.enabled !== false,
             items: items.length ? items : DEFAULT_ITEMS,

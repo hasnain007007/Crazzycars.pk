@@ -248,7 +248,20 @@ export function sanitizeAnnouncementItems(items, opts = {}) {
   const mapped = list.map((item) => {
     if (!item || typeof item !== "object") return item;
     const text = String(item.text || item.message || "").trim();
-    // Rewrite any prepaid-% line to the live Settings percent (never hardcode a stale %).
+    // COD booking + prepaid combo (or any stale "X% off full payment") → one Settings-backed line.
+    if (
+      /booking/i.test(text) &&
+      /\d+\s*%\s*off/i.test(text) &&
+      /full payment/i.test(text)
+    ) {
+      return {
+        ...item,
+        text: announcementAdvanceDeliveryText(prepaidPercent),
+        link: item.link || "/checkout",
+        enabled: item.enabled !== false,
+      };
+    }
+    // Prepaid-only lines (page/banner/hero) share the same Settings percent.
     if (/\d+\s*%\s*off.*(?:full payment|JazzCash|bank)/i.test(text) || /pay in full/i.test(text)) {
       return {
         ...item,
