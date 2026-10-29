@@ -26,6 +26,19 @@ import { sanitizeMediaImages } from "@/lib/productMutations";
 import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
 import { denySecurityHoldMutation } from "@/lib/securityHold";
 
+/** Return a real Date; fall back to ObjectId timestamp when value is unusable. */
+function ensureValidProductDate(value, objectId) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value === "string" || typeof value === "number") {
+    const d = new Date(value);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  if (objectId && typeof objectId.getTimestamp === "function") {
+    return objectId.getTimestamp();
+  }
+  return new Date();
+}
+
 async function uniqueProductSlug(base, excludeId) {
   const root = slugify(base || "product") || "product";
   let slug = root;
@@ -156,6 +169,13 @@ export async function POST(request) {
     for (let idx = 0; idx < rows.length; idx += 1) {
       const row = rows[idx];
       try {
+        // Timestamps are server-owned. Extra CSV columns (exports, Mongo dumps)
+        // must never overwrite createdAt/updatedAt — invalid values like "{}"
+        // break Product validation on save.
+        delete row.createdAt;
+        delete row.updatedAt;
+        delete row.__v;
+
         const name = String(row.name || "").trim();
         if (!name) throw new Error("name is required");
 
@@ -274,11 +294,18 @@ export async function POST(request) {
             };
           }
           Object.assign(existing, fields, { slug });
+          // Strip any accidental timestamp props and repair invalid dates left
+          // in the DB (e.g. createdAt: {} from the 2026-10-29 two-brand rewrite).
+          existing.set("createdAt", ensureValidProductDate(existing.createdAt, existing._id));
+          existing.set("updatedAt", new Date());
           await existing.save();
           updated += 1;
         } else {
           const slug = await uniqueProductSlug(requestedSlug);
-          await Product.create({ ...fields, slug });
+          const doc = { ...fields, slug };
+          delete doc.createdAt;
+          delete doc.updatedAt;
+          await Product.create(doc);
           created += 1;
         }
       } catch (e) {

@@ -6,6 +6,7 @@
  * then `articleNo` if no slug match. `sku` is not used for upsert matching today.
  * On update, scalar columns present in the row overwrite the DB (blank cell clears
  * that field). Exception: blank `imageUrls` keeps the existing gallery.
+ * `createdAt` / `updatedAt` are never imported (ignored if present).
  */
 export const PRODUCT_CSV_HEADERS = [
   "name",
