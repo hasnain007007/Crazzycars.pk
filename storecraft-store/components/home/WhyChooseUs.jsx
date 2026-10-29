@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { COD_ADVANCE_AMOUNT, PREPAID_DISCOUNT_PERCENT } from "@/config/checkout-money";
 import { STORE_CONTACT } from "@/config/store-policy";
+import { useStorePayment } from "@/context/StoreSettingsContext";
 import { formatPkrAmount } from "@/lib/storePolicyCopy";
 import { editorialCoverUrl, editorialInsetUrl } from "@/lib/cloudinaryImage";
 
@@ -15,6 +18,9 @@ function mediaUrl(field) {
 }
 
 export default function WhyChooseUs({ story = null, heroImage = "" }) {
+  const storePayment = useStorePayment();
+  const prepaidPercent =
+    Number(storePayment?.advancePaymentDiscountPercent) || PREPAID_DISCOUNT_PERCENT;
   const city = STORE_CONTACT.address.city;
   const coverRaw = mediaUrl(story?.image1) || String(heroImage || "").trim();
   const insetRaw = mediaUrl(story?.image2);
@@ -62,7 +68,7 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
           After you order on COD, send the booking amount (from {formatPkrAmount(COD_ADVANCE_AMOUNT)},
           by order total) on WhatsApp. That small payment confirms your order is real so we
           can pack and dispatch quickly — it is deducted from your total and refunded if the item
-          doesn&apos;t fit. Prefer full payment? Get {PREPAID_DISCOUNT_PERCENT}% off with JazzCash
+          doesn&apos;t fit. Prefer full payment? Get {prepaidPercent}% off with JazzCash
           or bank transfer.
         </p>
         <div className="shop-band__actions">
@@ -77,7 +83,7 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
         <p className="shop-band__chips">
           <span>Year-fit catalog</span>
           <span>COD booking from {formatPkrAmount(COD_ADVANCE_AMOUNT)}</span>
-          <span>{PREPAID_DISCOUNT_PERCENT}% off full pay</span>
+          <span>{prepaidPercent}% off full pay</span>
           <span>From {city}</span>
         </p>
       </div>
