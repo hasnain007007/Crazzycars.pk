@@ -1,0 +1,238 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "title": "Car Accessories in Pakistan | Kits, LEDs &amp; Mats",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk",
+    "og:type": "website",
+    "signals": [
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/honda-civic-x-2016-2021-body-kit-d1",
+    "status": 200,
+    "title": "Honda Civic X 2016-2021 Body Kit D1 | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/honda-civic-x-2016-2021-body-kit-d1",
+    "og:type": "website",
+    "signals": [
+      "stale250",
+      "CROSS_BRAND_SETTINGS",
+      "bodykit_prepaid_copy"
+    ]
+  },
+  {
+    "path": "/toyota-corolla-2018-2021-body-kit-d1",
+    "status": 200,
+    "title": "Toyota Corolla 2018-2021 Body Kit D1 | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/toyota-corolla-2018-2021-body-kit-d1",
+    "og:type": "website",
+    "signals": [
+      "stale250",
+      "CROSS_BRAND_SETTINGS",
+      "bodykit_prepaid_copy"
+    ]
+  },
+  {
+    "path": "/suzuki-swift-2022-2024-rs-style-body-kit-fibreglass",
+    "status": 200,
+    "title": "Suzuki Swift 2022-2024 RS Style Body Kit Fibreglass",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/suzuki-swift-2022-2024-rs-style-body-kit-fibreglass",
+    "og:type": "website",
+    "signals": [
+      "stale250",
+      "CROSS_BRAND_SETTINGS",
+      "bodykit_prepaid_copy"
+    ]
+  },
+  {
+    "path": "/toyota-corolla-2014-2026-interior-door-handle-carbon-fiber-trims-4pcs",
+    "status": 200,
+    "title": "Toyota Corolla 2014-2026 Interior Door Handle Carbon Fiber Trims 4PCS",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/toyota-corolla-2014-2026-interior-door-handle-carbon-fiber-trims-4pcs",
+    "og:type": "website",
+    "signals": [
+      "stale250",
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/toyota-corolla-airflow-ambient-led-ac-vent-trims-plug-and-play",
+    "status": 200,
+    "title": "Toyota Corolla AirFlow Ambient LED AC Vent Trims Plug and Play | Crazz",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/toyota-corolla-airflow-ambient-led-ac-vent-trims-plug-and-play",
+    "og:type": "website",
+    "signals": [
+      "stale250",
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/categories/led-lighting",
+    "status": 200,
+    "title": "Car LED Lights in Pakistan \u2013 Headlights, Indicators, DRL",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/categories/led-lighting",
+    "og:type": "website",
+    "signals": [
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/categories/exterior",
+    "status": 200,
+    "title": "Car Exterior Accessories Pakistan | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/categories/exterior",
+    "og:type": "website",
+    "signals": [
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/categories/interior",
+    "status": 200,
+    "title": "Interior | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/categories/interior",
+    "og:type": "website",
+    "signals": [
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/blogs/delivery-charges-regular-vs-bulky-pakistan",
+    "status": 200,
+    "title": "Delivery Charges Explained | CrazzyCars",
+    "og:site_name": "",
+    "og:url": "https://crazzycars.pk/blogs/delivery-charges-regular-vs-bulky-pakistan",
+    "og:type": "article",
+    "signals": [
+      "CROSS_BRAND_SETTINGS",
+      "bodykit_prepaid_copy",
+      "rewrite_meta",
+      "rewrite_body"
+    ]
+  },
+  {
+    "path": "/blogs/car-accessories-returns-wrong-item-pakistan",
+    "status": 200,
+    "title": "Returns &amp; Wrong Item Policy | CrazzyCars",
+    "og:site_name": "",
+    "og:url": "https://crazzycars.pk/blogs/car-accessories-returns-wrong-item-pakistan",
+    "og:type": "article",
+    "signals": [
+      "CROSS_BRAND_SETTINGS",
+      "rewrite_meta"
+    ]
+  },
+  {
+    "path": "/blogs/front-splitters-side-skirts-buying-guide-pakistan",
+    "status": 200,
+    "title": "Front Splitters &amp; Side Skirts Buying Guide",
+    "og:site_name": "",
+    "og:url": "https://crazzycars.pk/blogs/front-splitters-side-skirts-buying-guide-pakistan",
+    "og:type": "article",
+    "signals": [
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/faq",
+    "status": 200,
+    "title": "FAQ \u2014 Shipping, COD &amp; Fitment | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/faq",
+    "og:type": "website",
+    "signals": [
+      "stale250",
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/shipping-policy",
+    "status": 200,
+    "title": "Shipping Policy | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/shipping-policy",
+    "og:type": "website",
+    "signals": [
+      "stale250",
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/checkout",
+    "status": 200,
+    "title": "Checkout | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/checkout",
+    "og:type": "website",
+    "signals": [
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/shop",
+    "status": 200,
+    "title": "Shop Car Accessories in Pakistan | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/shop",
+    "og:type": "website",
+    "signals": [
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/cash-on-delivery",
+    "status": 200,
+    "title": "Cash on Delivery (COD) in Pakistan | CrazzyCars.pk",
+    "og:site_name": "",
+    "og:url": "https://crazzycars.pk/cash-on-delivery",
+    "og:type": "website",
+    "signals": [
+      "stale250",
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/advance-payment",
+    "status": 200,
+    "title": "Advance Payment: How to Pay | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/advance-payment",
+    "og:type": "website",
+    "signals": [
+      "CROSS_BRAND_SETTINGS"
+    ]
+  },
+  {
+    "path": "/blogs/toyota-corolla-rgb-bumper-neon-mirror-lights-pakistan",
+    "status": 200,
+    "title": "Corolla RGB &amp; Neon Mirror Lights: CrazzyCars Pick",
+    "og:site_name": "",
+    "og:url": "https://crazzycars.pk/blogs/toyota-corolla-rgb-bumper-neon-mirror-lights-pakistan",
+    "og:type": "article",
+    "signals": [
+      "CROSS_BRAND_SETTINGS",
+      "rewrite_meta"
+    ]
+  },
+  {
+    "path": "/categories/carbon-fiber",
+    "status": 200,
+    "title": "Carbon Fiber Car Accessories Pakistan | CrazzyCars.pk",
+    "og:site_name": "CrazzyCars.pk",
+    "og:url": "https://crazzycars.pk/categories/carbon-fiber",
+    "og:type": "website",
+    "signals": [
+      "CROSS_BRAND_SETTINGS"
+    ]
+  }
+]
