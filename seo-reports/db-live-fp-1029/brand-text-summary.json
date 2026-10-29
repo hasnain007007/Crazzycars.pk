@@ -1,0 +1,181 @@
+{
+  fingerprint: '187aad8c44fe3a84',
+  token: 'BRAND-TEXT',
+  db: 'crazzycars_motorsports',
+  count: 93,
+  byCollection: {
+    products: 0,
+    categories: 0,
+    blogposts: 0,
+    vehicles: 93,
+    settings: 0
+  },
+  sample: [
+    {
+      collection: 'vehicles',
+      slug: 'toyota-corolla-e140-2009-2014',
+      id: '6a5cd43ceb06d36eb2ac1cd7',
+      field: 'metaTitle',
+      before: 'Toyota Corolla 2009–2014 Accessories & Body Kits in Pakistan | Sialkot Motorsports',
+      after: 'Toyota Corolla 2009–2014 Accessories & Body Kits in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 82,
+      afterLen: 76
+    },
+    {
+      collection: 'vehicles',
+      slug: 'toyota-corolla-e170-2014-2026',
+      id: '6a5cd43deb06d36eb2ac1cd8',
+      field: 'metaTitle',
+      before: 'Toyota Corolla 2014–2026 Accessories & Body Kits in Pakistan | Sialkot Motorsports',
+      after: 'Toyota Corolla 2014–2026 Accessories & Body Kits in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 82,
+      afterLen: 76
+    },
+    {
+      collection: 'vehicles',
+      slug: 'toyota-yaris-2020-present',
+      id: '6a5cd43deb06d36eb2ac1cd9',
+      field: 'metaTitle',
+      before: 'Toyota Yaris Accessories in Pakistan | Body Kits & LED | Sialkot Motorsports',
+      after: 'Toyota Yaris Accessories in Pakistan | Body Kits & LED | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 76,
+      afterLen: 70
+    },
+    {
+      collection: 'vehicles',
+      slug: 'toyota-aqua-2012-present',
+      id: '6a5cd43deb06d36eb2ac1cda',
+      field: 'metaTitle',
+      before: 'Toyota Aqua Accessories in Pakistan | Sialkot Motorsports',
+      after: 'Toyota Aqua Accessories in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 57,
+      afterLen: 51
+    },
+    {
+      collection: 'vehicles',
+      slug: 'toyota-vitz-2012-present',
+      id: '6a5cd43deb06d36eb2ac1cdb',
+      field: 'metaTitle',
+      before: 'Toyota Vitz Accessories in Pakistan | Sialkot Motorsports',
+      after: 'Toyota Vitz Accessories in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 57,
+      afterLen: 51
+    },
+    {
+      collection: 'vehicles',
+      slug: 'honda-civic-reborn-2006-2012',
+      id: '6a5cd43deb06d36eb2ac1cdc',
+      field: 'metaTitle',
+      before: 'Honda Civic Reborn 2006–2012 Accessories in Pakistan | Sialkot Motorsports',
+      after: 'Honda Civic Reborn 2006–2012 Accessories in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 74,
+      afterLen: 68
+    },
+    {
+      collection: 'vehicles',
+      slug: 'honda-civic-rebirth-2012-2016',
+      id: '6a5cd43deb06d36eb2ac1cdd',
+      field: 'metaTitle',
+      before: 'Honda Civic Rebirth 2012–2016 Accessories & Body Kits | Sialkot Motorsports',
+      after: 'Honda Civic Rebirth 2012–2016 Accessories & Body Kits | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 75,
+      afterLen: 69
+    },
+    {
+      collection: 'vehicles',
+      slug: 'honda-civic-x-2016-2021',
+      id: '6a5cd43deb06d36eb2ac1cde',
+      field: 'metaTitle',
+      before: 'Honda Civic X 2016–2021 Accessories & Body Kits in Pakistan | Sialkot Motorsports',
+      after: 'Honda Civic X 2016–2021 Accessories & Body Kits in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 81,
+      afterLen: 75
+    },
+    {
+      collection: 'vehicles',
+      slug: 'honda-civic-11th-gen-2022-present',
+      id: '6a5cd43deb06d36eb2ac1cdf',
+      field: 'metaTitle',
+      before: 'Honda Civic 11th Gen 2022+ Accessories in Pakistan | Sialkot Motorsports',
+      after: 'Honda Civic 11th Gen 2022+ Accessories in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 72,
+      afterLen: 66
+    },
+    {
+      collection: 'vehicles',
+      slug: 'honda-city-classic-2009-2020',
+      id: '6a5cd43deb06d36eb2ac1ce0',
+      field: 'metaTitle',
+      before: 'Honda City 2009–2020 Accessories & Body Kits in Pakistan | Sialkot Motorsports',
+      after: 'Honda City 2009–2020 Accessories & Body Kits in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 78,
+      afterLen: 72
+    },
+    {
+      collection: 'vehicles',
+      slug: 'honda-city-2021-present',
+      id: '6a5cd43deb06d36eb2ac1ce1',
+      field: 'metaTitle',
+      before: 'Honda City 2021–Present Accessories in Pakistan | Sialkot Motorsports',
+      after: 'Honda City 2021–Present Accessories in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 69,
+      afterLen: 63
+    },
+    {
+      collection: 'vehicles',
+      slug: 'honda-city-2021-present',
+      id: '6a5cd43deb06d36eb2ac1ce1',
+      field: 'metaDescription',
+      before: 'Premium Honda City 2021-Present accessories in Pakistan — interior, exterior & LED upgrades from Sialkot Motorsports. COD all over Pakistan.',
+      after: 'Premium Honda City 2021-Present accessories in Pakistan — interior, exterior & LED upgrades from CrazzyCars.pk. COD all over Pakistan.',
+      op: '$set',
+      beforeLen: 140,
+      afterLen: 134
+    },
+    {
+      collection: 'vehicles',
+      slug: 'hyundai-elantra-2020-2024',
+      id: '6a5cd43deb06d36eb2ac1ce2',
+      field: 'metaTitle',
+      before: 'Hyundai Elantra 2020–2024 Accessories in Pakistan | Sialkot Motorsports',
+      after: 'Hyundai Elantra 2020–2024 Accessories in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 71,
+      afterLen: 65
+    },
+    {
+      collection: 'vehicles',
+      slug: 'hyundai-elantra-hybrid-2025-present',
+      id: '6a5cd43deb06d36eb2ac1ce3',
+      field: 'metaTitle',
+      before: 'Hyundai Elantra Hybrid 2025+ Accessories in Pakistan | Sialkot Motorsports',
+      after: 'Hyundai Elantra Hybrid 2025+ Accessories in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 74,
+      afterLen: 68
+    },
+    {
+      collection: 'vehicles',
+      slug: 'hyundai-sonata-2020-2024',
+      id: '6a5cd43eeb06d36eb2ac1ce4',
+      field: 'metaTitle',
+      before: 'Hyundai Sonata 2020–2024 Accessories in Pakistan | Sialkot Motorsports',
+      after: 'Hyundai Sonata 2020–2024 Accessories in Pakistan | CrazzyCars.pk',
+      op: '$set',
+      beforeLen: 70,
+      afterLen: 64
+    }
+  ],
+  settingsHits: 0
+}

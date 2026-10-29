@@ -33,10 +33,13 @@ describe("previewMongoGuard", () => {
   });
 
   it("rejects production DB name and fingerprint", () => {
-    const p = parseMongoUri("mongodb://sialkot-mongo:27017/sialkot_motorsports");
-    assert.equal(p.fingerprint, PROD_URI_FINGERPRINT);
-    assert.equal(evaluatePreviewMongoTarget(p).ok, false);
+    const legacy = parseMongoUri("mongodb://sialkot-mongo:27017/sialkot_motorsports");
+    assert.equal(evaluatePreviewMongoTarget(legacy).ok, false);
     assert.equal(evaluatePreviewDbName("sialkot_motorsports").ok, false);
+    const live = parseMongoUri("mongodb://sialkot-mongo:27017/crazzycars_motorsports");
+    assert.equal(live.fingerprint, PROD_URI_FINGERPRINT);
+    assert.equal(evaluatePreviewMongoTarget(live).ok, false);
+    assert.equal(evaluatePreviewDbName("crazzycars_motorsports").ok, false);
   });
 
   it("rejects container names that are not preview", () => {

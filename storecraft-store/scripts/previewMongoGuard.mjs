@@ -4,9 +4,17 @@
  */
 import { createHash } from "node:crypto";
 
-export const PROD_DB_NAMES = new Set(["sialkot_motorsports", "sialkotmotorsports"]);
-/** sha256-16 of production URI — docs/OPS-PRODUCTION-DATABASE.md */
-export const PROD_URI_FINGERPRINT = "84143ac0cb2c3085";
+export const PROD_DB_NAMES = new Set([
+  "crazzycars_motorsports",
+  "sialkot_motorsports",
+  "sialkotmotorsports",
+]);
+/** Live write fingerprint — docs/OPS-PRODUCTION-DATABASE.md */
+export const LIVE_URI_FINGERPRINT = "187aad8c44fe3a84";
+/** Legacy twin on same host — still refuse for preview */
+export const LEGACY_URI_FINGERPRINT = "84143ac0cb2c3085";
+/** @deprecated use LIVE_URI_FINGERPRINT; kept so old tests still see a prod FP constant */
+export const PROD_URI_FINGERPRINT = LIVE_URI_FINGERPRINT;
 
 /**
  * @param {string} uri
@@ -46,8 +54,11 @@ export function evaluatePreviewMongoTarget({ host, dbName, fingerprint }) {
     return { ok: false, reason: `database "${dbName}" is the production DB name` };
   }
 
-  if (fingerprint === PROD_URI_FINGERPRINT) {
-    return { ok: false, reason: "MONGODB_URI fingerprint matches production (84143ac0cb2c3085)" };
+  if (fingerprint === LIVE_URI_FINGERPRINT) {
+    return { ok: false, reason: "MONGODB_URI fingerprint matches live production (187aad8c44fe3a84)" };
+  }
+  if (fingerprint === LEGACY_URI_FINGERPRINT) {
+    return { ok: false, reason: "MONGODB_URI fingerprint matches legacy twin (84143ac0cb2c3085)" };
   }
 
   if (/crazzycars\.pk$/i.test(host) || /mongodb\.net$/i.test(host)) {

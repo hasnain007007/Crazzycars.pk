@@ -1,7 +1,7 @@
 /**
  * Refuse non-throwaway / production Mongo URIs for A/B harness.
  */
-const PRODUCTION_DB = /\bsialkot_motorsports\b/i;
+const PRODUCTION_DB = /\b(crazzycars_motorsports|sialkot_motorsports)\b/i;
 const PRODUCTION_HINT = /\b(production|prod-mongo|sialkot-mongo)\b/i;
 const THROWAYWAY_DB = /(ab|test|preview)/i;
 
@@ -20,7 +20,7 @@ export function assertThrowawayMongoUri(uri, label = "MONGODB_URI") {
 
   const hay = `${raw}\n${dbName}`;
   if (PRODUCTION_DB.test(hay)) {
-    throw new Error(`${label}: refuses production DB name (sialkot_motorsports)`);
+    throw new Error(`${label}: refuses production DB name (crazzycars_motorsports / sialkot_motorsports)`);
   }
   if (PRODUCTION_HINT.test(hay) && !THROWAYWAY_DB.test(dbName)) {
     throw new Error(`${label}: refuses URI that looks like production without a throwaway DB name`);

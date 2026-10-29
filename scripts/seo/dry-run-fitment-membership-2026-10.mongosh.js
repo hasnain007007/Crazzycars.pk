@@ -1,15 +1,19 @@
 /* eslint-disable */
 /**
- * PHASE A dry-run — mongosh script for sialkot_motorsports.
- *   docker exec sialkot-mongo mongosh sialkot_motorsports --quiet /tmp/dry.js
- * Never writes.
+ * PHASE A dry-run — mongosh script for crazzycars_motorsports (live FP 187aad8c44fe3a84).
+ *   docker exec sialkot-mongo mongosh crazzycars_motorsports --quiet /tmp/dry.js
+ * Never writes. Refuse sialkot_motorsports / Atlas.
  */
 (() => {
-  const PROD_FP = "84143ac0cb2c3085";
-  // Fingerprint computed outside; this script assumes already verified.
+  const LIVE_DB = "crazzycars_motorsports";
+  // Fingerprint computed outside; this script assumes already verified as 187aad8c44fe3a84.
 
   print("=== DRY RUN (no writes) ===");
   print("DB:", db.getName());
+  if (db.getName() !== LIVE_DB) {
+    print("STOP: refusing non-live DB (expected crazzycars_motorsports)");
+    quit(2);
+  }
   print(
     "Touch plan if GO: products.compatibleVehicles ($pull), products.categories ($pull / $addToSet)."
   );

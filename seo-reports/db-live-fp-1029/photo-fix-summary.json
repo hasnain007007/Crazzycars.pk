@@ -1,0 +1,91 @@
+{
+  fingerprint: '187aad8c44fe3a84',
+  token: 'PHOTO-FIX',
+  db: 'crazzycars_motorsports',
+  sharedFileGroups: 7,
+  sharedSample: [
+    {
+      file: 'toyota-corolla-rgb-side-style-and-back-bumper-light-1-d5bba4e978.webp',
+      owners: [
+        'toyota-corolla-2015-2026-rgb-side-style',
+        'toyota-corolla-rgb-side-style-and-back-bumper-light'
+      ],
+      urls: [
+        '/media/products/toyota-corolla-rgb-side-style-and-back-bumper-light-1-d5bba4e978.webp'
+      ]
+    },
+    {
+      file: 'toyota-corolla-trd-style-front-grille-gloss-black-abs-1-5b3b1314d9.webp',
+      owners: [
+        'toyota-corolla-trd-style-front-grille-gloss-black-abs',
+        'toyota-corolla-2009-2013-trd-style-front-grill'
+      ],
+      urls: [
+        '/media/products/toyota-corolla-trd-style-front-grille-gloss-black-abs-1-5b3b1314d9.webp'
+      ]
+    },
+    {
+      file: 'universal-front-splitter-style-4-gloss-black-canard-3pcs-1-6267f55d74.webp',
+      owners: [
+        'universal-front-splitter-style-4-gloss-black-canard-3pcs',
+        'universal-front-bumper-splitter-canard-1pcs-matt-black-abs'
+      ],
+      urls: [
+        '/media/products/universal-front-splitter-style-4-gloss-black-canard-3pcs-1-6267f55d74.webp'
+      ]
+    },
+    {
+      file: 'universal-front-splitter-style-4-gloss-black-canard-3pcs-2-034216a978.webp',
+      owners: [
+        'universal-front-splitter-style-4-gloss-black-canard-3pcs',
+        'universal-front-bumper-splitter-canard-1pcs-matt-black-abs'
+      ],
+      urls: [
+        '/media/products/universal-front-splitter-style-4-gloss-black-canard-3pcs-2-034216a978.webp'
+      ]
+    },
+    {
+      file: 'osram-projector-lights-3-colour-premium-quality-1-fcc6deaa81.webp',
+      owners: [
+        'osram-projector-lights-3-colour-premium-quality',
+        'honda-vezel-2013-2018-fog-lamps-drl-cover-hd011-l2'
+      ],
+      urls: [
+        '/media/products/osram-projector-lights-3-colour-premium-quality-1-fcc6deaa81.webp'
+      ]
+    },
+    {
+      file: 'toyota-corolla-2008-2011-front-chrome-grilles-set-unpainted-steel-1-3d2a57629c.webp',
+      owners: [
+        'toyota-corolla-2008-2010-diamond-style-chrome-front-grille',
+        'toyota-corolla-2008-2011-front-chrome-grilles-set-unpainted-steel'
+      ],
+      urls: [
+        '/media/products/toyota-corolla-2008-2011-front-chrome-grilles-set-unpainted-steel-1-3d2a57629c.webp'
+      ]
+    },
+    {
+      file: 'toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-nologo-04518dd4fc.webp',
+      owners: [
+        'toyota-corolla-carbon-fiber-center-console-gear-glass-holder-2014-2026',
+        'toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026'
+      ],
+      urls: [
+        '/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-nologo-04518dd4fc.webp'
+      ]
+    }
+  ],
+  mainMismatchCount: 2,
+  mainMismatchSample: [
+    {
+      slug: 'suzuki-alto-2018-2023-multimedia-steering-wheel-audio-control-buttons-panel',
+      main: '/media/products/premium-metal-key-cover-1-822f07371e.webp',
+      reason: 'main_slug_token_mismatch'
+    },
+    {
+      slug: 'honda-vezel-2013-2018-fog-lamps-drl-cover-hd011-l2',
+      main: '/media/products/osram-projector-lights-3-colour-premium-quality-1-fcc6deaa81.webp',
+      reason: 'main_slug_token_mismatch'
+    }
+  ]
+}

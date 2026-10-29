@@ -3,14 +3,19 @@
  * Run on VPS against sialkot-mongo. Never writes.
  *
  *   docker cp script.js sialkot-mongo:/tmp/dry.js
- *   docker exec sialkot-mongo mongosh sialkot_motorsports --quiet /tmp/dry.js
+ *   docker exec sialkot-mongo mongosh crazzycars_motorsports --quiet /tmp/dry.js
  *
- * Or via node + mongoose with MONGODB_URI=mongodb://sialkot-mongo:27017/sialkot_motorsports
+ * Live FP only: 187aad8c44fe3a84 (crazzycars_motorsports). Refuse legacy/Atlas.
  */
 import crypto from "node:crypto";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  LIVE_URI_FINGERPRINT,
+  ATLAS_URI_FINGERPRINT,
+  assertLiveWriteFingerprint,
+} from "../mongo/prodFingerprint.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
@@ -28,8 +33,8 @@ try {
   mongoose = createRequire(path.join(ROOT, "storecraft-store/package.json"))("mongoose");
 }
 
-const PROD_FP = "84143ac0cb2c3085";
-const ATLAS_FP = "317ae4de8eb24f84";
+const PROD_FP = LIVE_URI_FINGERPRINT;
+const ATLAS_FP = ATLAS_URI_FINGERPRINT;
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || "";
 
 function uriFingerprint(uri) {
@@ -64,16 +69,13 @@ async function main() {
   const fp = uriFingerprint(MONGO_URI);
   console.log("URI (redacted):", String(MONGO_URI).replace(/:([^:@/]+)@/, ":***@"));
   console.log("DATABASE_FINGERPRINT:", fp);
-  console.log("Expected prod:", PROD_FP, "| Atlas (do not use):", ATLAS_FP);
-  if (fp === ATLAS_FP) {
-    console.error("STOP: Atlas fingerprint — refusing.");
+  console.log("Expected live:", PROD_FP, "| Atlas (never):", ATLAS_FP);
+  const gate = assertLiveWriteFingerprint(fp);
+  if (!gate.ok) {
+    console.error("STOP:", gate.reason);
     process.exit(2);
   }
-  if (fp !== PROD_FP) {
-    console.error("STOP: fingerprint mismatch — refusing.");
-    process.exit(2);
-  }
-  console.log("OK: Production sialkot-mongo fingerprint matched.");
+  console.log("OK: Live crazzycars_motorsports fingerprint matched.");
   console.log("=== DRY RUN (no writes) ===");
   console.log(
     "Touch plan if GO: products.compatibleVehicles ($pull), products.categories ($pull / $addToSet only)."

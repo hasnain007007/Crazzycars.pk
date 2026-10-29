@@ -1,8 +1,9 @@
 # RESTORE.md — CrazzyCars production Mongo / media
 
-**Write fingerprint only:** `84143ac0cb2c3085` (`sialkot-mongo` / `sialkot_motorsports`).  
+**Write fingerprint only:** `187aad8c44fe3a84` (`sialkot-mongo` / `crazzycars_motorsports`).  
+**Do not write:** legacy twin `84143ac0cb2c3085` (`sialkot_motorsports`).  
 **Never write:** Atlas `317ae4de8eb24f84`.  
-**Never** expose Mongo 27017 publicly.
+**Never** expose Mongo 27017 publicly. Never print connection strings.
 
 ## Quick facts
 
@@ -10,17 +11,20 @@
 |------|--------|
 | VPS | `179.197.250.101` |
 | Mongo container | `sialkot-mongo` |
+| Live DB | `crazzycars_motorsports` (FP `187aad8c44fe3a84`) |
+| Legacy DB (archive only) | `sialkot_motorsports` (FP `84143ac0cb2c3085`) |
 | Data volume | `sialkot-mongo-data` → `/data/db` |
 | Backup bind | `/data/crazzycars/mongo` → `/backup` |
+| Nightly / offsite | `/data/crazzycars-mongo-backups/nightly/` · `/data/crazzycars-mongo-backups/offsite-copy/` |
 | Media | `/data/crazzycars/media` (store+admin mount) |
 | Coolify | apps `crazzycars-store` / `crazzycars-admin` |
 
 ## Before any write
 
-1. Confirm fingerprint `84143ac0cb2c3085`.
-2. Owner message names the step (`GRANTED: R4`, etc.).
+1. Confirm fingerprint `187aad8c44fe3a84` (refuse `84143ac0…` and `317ae4de…`).
+2. Owner message names the step (`GRANTED: …` / `GO …`).
 3. Fresh `mongodump` archive under `/data/crazzycars-mongo-backups/…`.
-4. Restore-test into a **scratch** DB; verify counts.
+4. Restore-test into a **scratch** DB; verify counts (products/orders/customers/blogs).
 5. Prefer field-level `$set`/`$pull`/`$addToSet` and insert-only; never replace/delete live docs.
 6. Media: copy missing files only; never overwrite existing.
 
@@ -28,11 +32,11 @@
 
 ```bash
 # STOP store/admin writes if possible
-STAMP=… # the known-good archive
-docker exec sialkot-mongo mongorestore --drop \
-  --archive=/backup/$STAMP.archive \
-  --nsInclude='sialkot_motorsports.*'
-# Restart store/admin; verify health + sitemap + sample PDPs
+STAMP=… # the known-good archive under /data/crazzycars-mongo-backups/nightly/
+docker exec sialkot-mongo mongorestore --gzip --drop \
+  --archive=/path/to/crazzycars-….archive.gz \
+  --nsInclude='crazzycars_motorsports.*'
+# Restart crazzycars-store / crazzycars-admin; verify health + sitemap + sample PDPs
 ```
 
 Prefer **not** `--drop` for partial recovery — restore to scratch and copy docs by `_id`.

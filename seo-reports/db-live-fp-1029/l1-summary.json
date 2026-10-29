@@ -1,0 +1,20 @@
+{
+  fingerprint: '187aad8c44fe3a84',
+  token: 'L1',
+  door: {
+    _id: ObjectId('6aca877dc7b9bcec06c09a32'),
+    name: 'Toyota Corolla X Carbon Fiber Interior Door Handle Panels 2014–2026 (Set of 4)',
+    pricing: {
+      regularPrice: 7999,
+      salePrice: 5999
+    },
+    metaTitle: 'Corolla X Door Handle Panels 2014–2026 Set of 4 | CrazzyCars.pk',
+    metaDescription: 'Toyota Corolla X Carbon Fiber Interior Door Handle Panels 2014–2026 (Set of 4). Details on CrazzyCars.',
+    seo: {
+      metaTitle: 'Toyota Corolla X Carbon Fiber Interior Door Handle Panels 2014–2026 (S',
+      metaDescription: 'Toyota Corolla X Carbon Fiber Interior Door Handle Panels 2014–2026 (Set of 4). Details on CrazzyCars.'
+    }
+  },
+  needsBrandText: false,
+  note: 'Re-check apply-seo dry-run at GO L1; door already Set of 4 @ 5999/7999 on live'
+}

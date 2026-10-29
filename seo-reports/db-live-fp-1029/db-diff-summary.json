@@ -1,0 +1,37 @@
+{
+  "fingerprintLive": "187aad8c44fe3a84",
+  "fingerprintLegacy": "84143ac0cb2c3085",
+  "liveCounts": {
+    "products": 430,
+    "orders": 605,
+    "customers": 344,
+    "blogposts": 38,
+    "categories": 84,
+    "vehicles": 68
+  },
+  "legacyCounts": {
+    "products": 430,
+    "orders": 603,
+    "customers": 342,
+    "blogposts": 38,
+    "categories": 84,
+    "vehicles": 68
+  },
+  "ordersSince20261028": {
+    "live": 9,
+    "legacy": 0
+  },
+  "newestLiveOrder": {
+    "orderNumber": "ORD-2026-00575",
+    "createdAt": "2026-10-29T06:54:03.278Z"
+  },
+  "legacyNewerOrOnly": {
+    "products": 4,
+    "blogposts": 11,
+    "orders": 0,
+    "customers": 0,
+    "note": "Listed in STATUS.md; not copied"
+  },
+  "liveSettingsStoreName": "CrazzyCars",
+  "liveSettingsSialkotStringHits": 0
+}

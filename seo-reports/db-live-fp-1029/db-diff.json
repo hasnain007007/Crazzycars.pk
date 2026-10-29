@@ -1,0 +1,454 @@
+{
+  liveCounts: {
+    dailyvisitors: 16758,
+    blogposts: 38,
+    featuredmedias: 0,
+    couriersettlementbatches: 0,
+    customerrefreshtokens: 0,
+    products: 430,
+    settings: 1,
+    activitylogs: 3074,
+    loginattempts: 26,
+    categories: 84,
+    productoptions: 6,
+    stockalerts: 1,
+    banners: 4,
+    livepresences: 2,
+    mobiledevices: 0,
+    cartsessions: 753,
+    reviews: 1175,
+    orders: 605,
+    users: 5,
+    couriersettlementlines: 0,
+    shippingzones: 2,
+    ratecards: 1,
+    postexwebhooklogs: 20,
+    invoices: 5,
+    adspendentries: 1,
+    aiagentvisits: 71655,
+    receipts: 2,
+    pages: 4,
+    redirects: 0,
+    customers: 344,
+    coupons: 0,
+    carmodels: 0,
+    runcourierwebhooklogs: 0,
+    idempotencykeys: 0,
+    socialposts: 0,
+    carcatalogs: 15,
+    vehicles: 68
+  },
+  legacyCounts: {
+    blogposts: 38,
+    settings: 1,
+    activitylogs: 3072,
+    categories: 84,
+    carcatalogs: 15,
+    productoptions: 6,
+    stockalerts: 1,
+    customerrefreshtokens: 0,
+    livepresences: 14019,
+    pages: 4,
+    adspendentries: 1,
+    invoices: 5,
+    aiagentvisits: 71360,
+    orders: 603,
+    receipts: 2,
+    users: 5,
+    products: 430,
+    redirects: 0,
+    postexwebhooklogs: 20,
+    coupons: 0,
+    ratecards: 1,
+    loginattempts: 0,
+    idempotencykeys: 0,
+    couriersettlementlines: 0,
+    mobiledevices: 0,
+    cartsessions: 753,
+    vehicles: 68,
+    customers: 342,
+    couriersettlementbatches: 0,
+    runcourierwebhooklogs: 0,
+    banners: 4,
+    carmodels: 0,
+    shippingzones: 2,
+    reviews: 1175,
+    dailyvisitors: 16632,
+    socialposts: 0,
+    featuredmedias: 0
+  },
+  newest: {
+    live: {
+      orders: [
+        {
+          id: '6ae2ed8b53b8ba8a5f5e5705',
+          slug: null,
+          orderNumber: 'ORD-2026-00575',
+          email: null,
+          name: null,
+          createdAt: ISODate('2026-10-29T06:54:03.278Z'),
+          updatedAt: ISODate('2026-10-29T09:34:45.655Z')
+        },
+        {
+          id: '6ae2a6eaaa5a13210c71db40',
+          slug: null,
+          orderNumber: 'ORD-2026-00574',
+          email: null,
+          name: null,
+          createdAt: ISODate('2026-10-29T01:52:42.943Z'),
+          updatedAt: ISODate('2026-10-29T01:53:03.118Z')
+        },
+        {
+          id: '6ae261682e265fec8051bc5f',
+          slug: null,
+          orderNumber: 'ORD-2026-00573',
+          email: null,
+          name: null,
+          createdAt: ISODate('2026-10-28T20:56:08.683Z'),
+          updatedAt: ISODate('2026-10-28T20:56:58.763Z')
+        }
+      ],
+      customers: [
+        {
+          id: '6ae2ed8b53b8ba8a5f5e5703',
+          slug: null,
+          orderNumber: null,
+          email: 'dr***@yahoo.com',
+          name: 'Mustafa Mujeeb',
+          createdAt: ISODate('2026-10-29T06:54:03.175Z'),
+          updatedAt: ISODate('2026-10-29T06:54:03.175Z')
+        },
+        {
+          id: '6ae2a6eaaa5a13210c71db3e',
+          slug: null,
+          orderNumber: null,
+          email: 'sh***@yahoo.com',
+          name: 'Arham Khan',
+          createdAt: ISODate('2026-10-29T01:52:42.748Z'),
+          updatedAt: ISODate('2026-10-29T01:52:42.748Z')
+        },
+        {
+          id: '6ae261682e265fec8051bc5d',
+          slug: null,
+          orderNumber: null,
+          email: 'dc***@gmail.com',
+          name: 'Dawood raza',
+          createdAt: ISODate('2026-10-28T20:56:08.611Z'),
+          updatedAt: ISODate('2026-10-28T20:56:08.611Z')
+        }
+      ],
+      products: [
+        {
+          id: '6ad66c9ab01d55a5a00e4b65',
+          slug: 'universal-lime-green-fog-light-led-h11-pair',
+          orderNumber: null,
+          email: null,
+          name: 'Lime Green H11 LED Fog Light Bulbs (Pair) - Universal',
+          createdAt: ISODate('2026-10-19T19:16:42.512Z'),
+          updatedAt: ISODate('2026-10-29T00:45:05.253Z')
+        },
+        {
+          id: '6ab02170ed76cceb5a08eee5',
+          slug: 'usb-car-roof-star-night-light-galaxy-projector',
+          orderNumber: null,
+          email: null,
+          name: 'USB Car Roof Star Night Light Galaxy Projector (Red)',
+          createdAt: ISODate('2026-09-20T18:09:52.044Z'),
+          updatedAt: ISODate('2026-10-29T00:45:05.253Z')
+        },
+        {
+          id: '6aab0882e91672bf4dc4d809',
+          slug: 'lion-style-car-perfume',
+          orderNumber: null,
+          email: null,
+          name: 'Lion Style Car Perfume',
+          createdAt: ISODate('2026-09-16T21:22:10.634Z'),
+          updatedAt: ISODate('2026-10-29T00:45:05.253Z')
+        }
+      ],
+      blogs: [
+        {
+          id: '6a69275340020f627d5ef259',
+          slug: 'best-body-kit-styles-toyota-corolla-pakistan',
+          orderNumber: null,
+          email: null,
+          name: null,
+          createdAt: {},
+          updatedAt: {}
+        },
+        {
+          id: '6a69275340020f627d5ef25a',
+          slug: 'led-ambient-lighting-car-buyer-guide',
+          orderNumber: null,
+          email: null,
+          name: null,
+          createdAt: {},
+          updatedAt: {}
+        },
+        {
+          id: '6a69275440020f627d5ef25b',
+          slug: 'cod-vs-online-payment-car-accessories-pakistan',
+          orderNumber: null,
+          email: null,
+          name: null,
+          createdAt: {},
+          updatedAt: {}
+        }
+      ]
+    },
+    legacy: {
+      orders: [
+        {
+          id: '6abc2de36addf4c6a118b05e',
+          slug: null,
+          orderNumber: 'PROFIT-DEMO-030',
+          email: null,
+          name: null,
+          createdAt: ISODate('2026-09-29T21:30:11.547Z'),
+          updatedAt: ISODate('2026-09-29T21:30:11.547Z')
+        },
+        {
+          id: '6abc2de36addf4c6a118b05c',
+          slug: null,
+          orderNumber: 'PROFIT-DEMO-029',
+          email: null,
+          name: null,
+          createdAt: ISODate('2026-09-29T21:30:11.478Z'),
+          updatedAt: ISODate('2026-09-29T21:30:11.478Z')
+        },
+        {
+          id: '6abc2de36addf4c6a118b05a',
+          slug: null,
+          orderNumber: 'PROFIT-DEMO-028',
+          email: null,
+          name: null,
+          createdAt: ISODate('2026-09-29T21:30:11.410Z'),
+          updatedAt: ISODate('2026-09-29T21:30:11.410Z')
+        }
+      ],
+      customers: [
+        {
+          id: '6ae261682e265fec8051bc5d',
+          slug: null,
+          orderNumber: null,
+          email: 'dc***@gmail.com',
+          name: 'Dawood raza',
+          createdAt: ISODate('2026-10-28T20:56:08.611Z'),
+          updatedAt: ISODate('2026-10-28T20:56:08.611Z')
+        },
+        {
+          id: '6ae246c558e3d12fd0adf425',
+          slug: null,
+          orderNumber: null,
+          email: 'az***@gmail.com',
+          name: 'Abdul aziz',
+          createdAt: ISODate('2026-10-28T19:02:29.125Z'),
+          updatedAt: ISODate('2026-10-28T19:02:29.125Z')
+        },
+        {
+          id: '6ae244a358e3d12fd0adf419',
+          slug: null,
+          orderNumber: null,
+          email: 'na***@gmail.com',
+          name: 'Nadeem Khan',
+          createdAt: ISODate('2026-10-28T18:53:23.072Z'),
+          updatedAt: ISODate('2026-10-28T18:53:23.072Z')
+        }
+      ],
+      products: [
+        {
+          id: '6aca9d57df66a3bb3f65563e',
+          slug: 'toyota-corolla-carbon-fiber-interior-door-panels-4pcs-2014-2026',
+          orderNumber: null,
+          email: null,
+          name: 'Toyota Corolla Carbon Fiber Interior Door Panels 4PCS 2014–2026',
+          createdAt: ISODate('2026-10-10T20:17:27.530Z'),
+          updatedAt: ISODate('2026-10-10T20:17:27.530Z')
+        },
+        {
+          id: '6aca96e94861cefd369e4d7c',
+          slug: 'toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026',
+          orderNumber: null,
+          email: null,
+          name: 'Toyota Corolla Carbon Fiber Dashboard Trim 3PCS 2014–2026 (L/R + LCD)',
+          createdAt: ISODate('2026-10-10T19:50:01.921Z'),
+          updatedAt: ISODate('2026-10-10T19:58:14.041Z')
+        },
+        {
+          id: '6aca9068045bb1e6653b756f',
+          slug: 'toyota-corolla-carbon-fiber-center-console-gear-glass-holder-2014-2026',
+          orderNumber: null,
+          email: null,
+          name: 'Toyota Corolla Carbon Fiber Center Console Kit 2014–2026 (Gear + Glass Holder)',
+          createdAt: ISODate('2026-10-10T19:22:16.652Z'),
+          updatedAt: ISODate('2026-10-10T19:36:01.837Z')
+        }
+      ],
+      blogs: [
+        {
+          id: '6abee0d055c9cdf5ce9306f6',
+          slug: 'car-chargers-air-compressors-roadside-pakistan',
+          orderNumber: null,
+          email: null,
+          name: null,
+          createdAt: ISODate('2026-10-28T23:11:42.644Z'),
+          updatedAt: ISODate('2026-10-29T01:18:21.421Z')
+        },
+        {
+          id: '6abee0d045b96d0c15bda71f',
+          slug: 'car-air-press-window-visors-fitment-pakistan',
+          orderNumber: null,
+          email: null,
+          name: null,
+          createdAt: ISODate('2026-10-28T23:11:42.640Z'),
+          updatedAt: ISODate('2026-10-29T00:10:04.187Z')
+        },
+        {
+          id: '6abee0cf2f44d96ca762e6a2',
+          slug: 'dashboard-mats-pakistan-sun-glare-buying-guide',
+          orderNumber: null,
+          email: null,
+          name: null,
+          createdAt: ISODate('2026-10-28T23:11:42.638Z'),
+          updatedAt: ISODate('2026-10-29T00:10:04.188Z')
+        }
+      ]
+    }
+  },
+  ordersSince20261028: {
+    live: 9,
+    legacy: 0,
+    liveSample: [
+      {
+        orderNumber: 'ORD-2026-00575',
+        createdAt: ISODate('2026-10-29T06:54:03.278Z')
+      },
+      {
+        orderNumber: 'ORD-2026-00574',
+        createdAt: ISODate('2026-10-29T01:52:42.943Z')
+      },
+      {
+        orderNumber: 'ORD-2026-00573',
+        createdAt: ISODate('2026-10-28T20:56:08.683Z')
+      },
+      {
+        orderNumber: 'ORD-2026-00572',
+        createdAt: ISODate('2026-10-28T19:02:29.165Z')
+      },
+      {
+        orderNumber: 'ORD-2026-00571',
+        createdAt: ISODate('2026-10-28T18:53:23.131Z')
+      },
+      {
+        orderNumber: 'ORD-2026-00570',
+        createdAt: ISODate('2026-10-28T18:27:06.390Z')
+      },
+      {
+        orderNumber: 'ORD-2026-00569',
+        createdAt: ISODate('2026-10-28T18:16:05.081Z')
+      },
+      {
+        orderNumber: 'ORD-2026-00568',
+        createdAt: ISODate('2026-10-28T17:43:58.652Z')
+      },
+      {
+        orderNumber: 'ORD-2026-00567',
+        createdAt: ISODate('2026-10-28T10:59:27.044Z')
+      }
+    ]
+  },
+  legacyOnlyOrNewer: [
+    {
+      kind: 'product_only_in_legacy',
+      slug: 'suzuki-swift-2018-2024-complete-body-kit-fibreglass',
+      legacyUpdatedAt: ISODate('2026-10-29T00:45:06.902Z'),
+      legacyCreatedAt: ISODate('2026-07-19T19:15:51.748Z')
+    },
+    {
+      kind: 'product_only_in_legacy',
+      slug: 'honda-civic-reborn-2006-2011-body-kit-d4',
+      legacyUpdatedAt: ISODate('2026-10-29T00:45:06.898Z'),
+      legacyCreatedAt: ISODate('2026-07-19T19:15:52.519Z')
+    },
+    {
+      kind: 'product_only_in_legacy',
+      slug: 'honda-civic-reborn-2006-2011-body-kit-d1',
+      legacyUpdatedAt: ISODate('2026-10-29T00:45:06.889Z'),
+      legacyCreatedAt: ISODate('2026-07-19T19:15:52.604Z')
+    },
+    {
+      kind: 'product_only_in_legacy',
+      slug: 'lion-car-dashboard-perfume-air-freshener',
+      legacyUpdatedAt: ISODate('2026-10-29T00:45:06.900Z'),
+      legacyCreatedAt: {}
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'toyota-corolla-rgb-bumper-neon-mirror-lights-pakistan',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T01:18:11.070Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'batman-style-side-mirror-covers-pakistan-fitment-guide',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T09:01:32.261Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'trunk-lip-spoiler-buying-guide-pakistan-alsvin-city-corolla',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T01:18:12.749Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'car-door-welcome-logo-lights-pakistan-guide',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T09:43:19.200Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'suzuki-swift-carbon-door-handle-covers-pakistan',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T01:18:15.119Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'car-accessories-returns-wrong-item-pakistan',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T01:18:16.543Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'delivery-charges-regular-vs-bulky-pakistan',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T01:18:17.312Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'front-splitters-side-skirts-buying-guide-pakistan',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T01:18:18.147Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'quarter-window-louvers-civic-corolla-fitment-pakistan',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T08:53:28.218Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'door-handle-covers-buying-guide-pakistan-city-civic-corolla',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T01:18:19.649Z')
+    },
+    {
+      kind: 'blog_legacy_newer',
+      slug: 'car-chargers-air-compressors-roadside-pakistan',
+      liveUpdatedAt: ISODate('2026-10-29T00:00:00.000Z'),
+      legacyUpdatedAt: ISODate('2026-10-29T01:18:21.421Z')
+    }
+  ],
+  legacyOnlyOrNewerCount: 15,
+  legacyOrdersMissingFromLiveSince28: []
+}

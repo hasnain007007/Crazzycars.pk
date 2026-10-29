@@ -22,7 +22,7 @@ Car accessories store for the Pakistan market. A two-app Next.js ecommerce platf
 
 ### Production database (important)
 
-Live Coolify apps use Docker Mongo on the VPS (`sialkot-mongo:27017 / sialkot_motorsports`), reachable only inside the server’s Docker network via SSH. Do not treat laptop `.env.local` Mongo reads/writes as live `crazzycars.pk` data. Full rules: **[docs/OPS-PRODUCTION-DATABASE.md](docs/OPS-PRODUCTION-DATABASE.md)**.
+Live Coolify apps use Docker Mongo on the VPS (`sialkot-mongo` / **`crazzycars_motorsports`**, fingerprint `187aad8c44fe3a84`), reachable only inside the server’s Docker network via SSH. Legacy DB `sialkot_motorsports` (`84143ac0cb2c3085`) and Atlas (`317ae4de8eb24f84`) are **not** write targets. Do not treat laptop `.env.local` Mongo reads/writes as live `crazzycars.pk` data. Full rules: **[docs/OPS-PRODUCTION-DATABASE.md](docs/OPS-PRODUCTION-DATABASE.md)**.
 
 ## Local setup
 

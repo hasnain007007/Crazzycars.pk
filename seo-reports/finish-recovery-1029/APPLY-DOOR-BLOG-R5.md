@@ -1,6 +1,6 @@
 # Applied GRANTED tokens (2026-10-28/29)
 
-**Fingerprint gate:** canonical URI sha256-16 `84143ac0cb2c3085`; writes via `docker exec sialkot-mongo` → `sialkot_motorsports`.  
+**Fingerprint gate:** canonical URI sha256-16 `187aad8c44fe3a84`; writes via `docker exec sialkot-mongo` → `crazzycars_motorsports` only. Refuse `84143ac0cb2c3085` / Atlas `317ae4de8eb24f84`.  
 **Dump:** `/data/crazzycars/mongo/finish-granted-20261028T221900Z.archive` (scratch restore ~108500 docs).
 
 ## DOOR-SET4 — done

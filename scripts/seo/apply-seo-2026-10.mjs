@@ -28,6 +28,12 @@ import {
   PRODUCT_NAME_OVERRIDES,
   PRODUCT_H1_OVERRIDES,
 } from "../../storecraft-store/lib/seo/gscAudit2026-10.mjs";
+import {
+  LIVE_URI_FINGERPRINT,
+  LEGACY_URI_FINGERPRINT,
+  ATLAS_URI_FINGERPRINT,
+  assertLiveWriteFingerprint,
+} from "../mongo/prodFingerprint.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
@@ -42,8 +48,10 @@ const ALLOW_WRITE = argv.has("--allow-write");
 const FORCE_STAGING_ACK = argv.has("--i-know-this-is-staging");
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || "";
-const PROD_FP = "84143ac0cb2c3085";
-const ATLAS_FP = "317ae4de8eb24f84";
+
+const PROD_FP = LIVE_URI_FINGERPRINT; // 187aad8c44fe3a84
+const LEGACY_FP = LEGACY_URI_FINGERPRINT; // 84143ac0cb2c3085 — do not write
+const ATLAS_FP = ATLAS_URI_FINGERPRINT; // 317ae4de8eb24f84 — never write
 
 /** Allowed $set paths only — never price/stock/images/variants. */
 const PRODUCT_ALLOWED_FIELDS = new Set([
@@ -107,13 +115,17 @@ async function main() {
   const fp = uriFingerprint(MONGO_URI);
   console.log(`URI (redacted): ${redactUri(MONGO_URI)}`);
   console.log(`DATABASE_FINGERPRINT: ${fp}`);
-  console.log(`Expected prod: ${PROD_FP} | Legacy Atlas (do not write): ${ATLAS_FP}`);
+  console.log(
+    `Expected live: ${PROD_FP} | Legacy twin (no write): ${LEGACY_FP} | Atlas (never): ${ATLAS_FP}`
+  );
   if (fp === ATLAS_FP) {
-    console.log("WARNING: This is legacy Atlas (317ae4de8eb24f84), NOT production sialkot-mongo.");
+    console.log("WARNING: Legacy Atlas fingerprint — never write.");
+  } else if (fp === LEGACY_FP) {
+    console.log("WARNING: Legacy sialkot_motorsports fingerprint — do not write.");
   } else if (fp === PROD_FP) {
-    console.log("OK: Production sialkot-mongo fingerprint matched.");
+    console.log("OK: Live crazzycars_motorsports fingerprint matched.");
   } else {
-    console.log("WARNING: Fingerprint does not match known prod or Atlas values.");
+    console.log("WARNING: Fingerprint does not match known live / legacy / Atlas values.");
   }
 
   if (!DRY_RUN) {
@@ -121,8 +133,9 @@ async function main() {
       console.error("Refusing write: pass --allow-write with --apply.");
       process.exit(1);
     }
-    if (fp === ATLAS_FP) {
-      console.error("Refusing write to legacy Atlas (317ae4de8eb24f84). Use production sialkot-mongo only.");
+    const gate = assertLiveWriteFingerprint(fp);
+    if (!gate.ok) {
+      console.error(`Refusing write: ${gate.reason}`);
       process.exit(1);
     }
     if (looksLikeProductionUri(MONGO_URI) && !FORCE_STAGING_ACK) {
@@ -435,7 +448,17 @@ async function main() {
   const byType = { product: 0, category: 0, vehicle: 0 };
   for (const c of changes) byType[c.type] = (byType[c.type] || 0) + 1;
   console.log("\n=== DIFF SUMMARY ===");
-  console.log(`Fingerprint: ${fp}${fp === PROD_FP ? " (production OK)" : fp === ATLAS_FP ? " (LEGACY ATLAS — do not apply)" : ""}`);
+  console.log(
+    `Fingerprint: ${fp}${
+      fp === PROD_FP
+        ? " (live OK)"
+        : fp === LEGACY_FP
+          ? " (LEGACY TWIN — do not apply)"
+          : fp === ATLAS_FP
+            ? " (LEGACY ATLAS — never apply)"
+            : ""
+    }`
+  );
   console.log(`Documents with changes: ${changes.length} (products=${byType.product}, categories=${byType.category}, vehicles=${byType.vehicle})`);
   console.log(`Missing slugs: ${missing.length}`);
   for (const m of missing) console.log(`  - ${m.type} ${m.slug}`);
@@ -449,7 +472,7 @@ async function main() {
   console.log(`\nDone. ${changes.length} documents with changes. ${DRY_RUN ? "Dry run only." : "Writes applied."}`);
   if (DRY_RUN) {
     console.log(
-      "\nReal run command (VPS, production URI only):\n  MONGODB_URI='mongodb://sialkot-mongo:27017/sialkot_motorsports' node scripts/seo/apply-seo-2026-10.mjs --apply --allow-write --i-know-this-is-staging\n(Confirm fingerprint 84143ac0cb2c3085 first. Never use Atlas 317ae4de8eb24f84.)"
+      "\nReal run (VPS, live URI only — never print secrets):\n  Use crazzycars-store/admin MONGODB_URI → DB crazzycars_motorsports.\n  Confirm fingerprint 187aad8c44fe3a84 first.\n  Refuse 84143ac0cb2c3085 and Atlas 317ae4de8eb24f84.\n  node scripts/seo/apply-seo-2026-10.mjs --apply --allow-write --i-know-this-is-staging"
     );
   }
 

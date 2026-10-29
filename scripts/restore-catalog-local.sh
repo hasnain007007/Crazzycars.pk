@@ -36,6 +36,7 @@ TARGET_LOWER="$(printf '%s' "$TARGET_DB" | tr '[:upper:]' '[:lower:]')"
 [[ "$TARGET_LOWER" == *local* ]] || die "Refusing DB name without \"local\": $TARGET_DB"
 [[ "$TARGET_LOWER" != *sialkot* ]] || die "Refusing production-like DB name: $TARGET_DB"
 [[ "$TARGET_LOWER" != sialkot_motorsports ]] || die "Refusing production DB name"
+[[ "$TARGET_LOWER" != crazzycars_motorsports ]] || die "Refusing live production DB name"
 [[ "$TARGET_LOWER" != *prod* ]] || die "Refusing DB name containing prod: $TARGET_DB"
 
 # --- safety: host (URI override must still be local) ---
