@@ -87,8 +87,6 @@ export function HomePage({
       {sectionEnabled("hero") ? (
         <BrandHero />
       ) : null}
-      {/* Server-rendered intro (passed from app/page.jsx) — crawlable text under the hero. */}
-      {intro || null}
       <StatsBar
         settings={{ brandStory, stats: homepageSettings?.stats }}
         activeProductCount={activeProductCount}
@@ -127,6 +125,8 @@ export function HomePage({
           }
         />
       ) : null}
+      {/* Server-rendered "About CrazzyCars.pk" (from app/page.jsx) — last block above the footer. */}
+      {intro || null}
     </div>
   );
 }
