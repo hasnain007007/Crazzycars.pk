@@ -19,6 +19,10 @@ import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
 import { getServerStoreSettings } from "@/lib/serverSettings";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
+import { CarFitSelector } from "@/components/store/CarFitSelector";
+import { resolveCarSlug } from "@/lib/carSelector";
+import { loadShopByCarIndex, loadVehicleBySlug } from "@/lib/vehiclePageData";
+import { buildVehiclePageProductFilter } from "@/lib/productVehicleQuery";
 import { listingHref, listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
@@ -67,24 +71,39 @@ export async function generateStaticParams() {
   }
 }
 
-const loadCachedCategoryDetail = (slugStr, page, pageSize, sort) =>
+const loadCachedCategoryDetail = (slugStr, page, pageSize, sort, carSlug = "") =>
   unstable_cache(
     async () => {
       await dbConnect();
+      // "Shop by your car" (?car=): only products that fit that car page.
+      const vehicle = carSlug ? await loadVehicleBySlug(carSlug) : null;
       const detail = await loadStoreCategoryDetail(slugStr, {
         page,
         limit: pageSize,
         sort,
+        extraFilter: vehicle ? buildVehiclePageProductFilter(vehicle) : undefined,
       });
       if (!detail) return null;
       return JSON.parse(JSON.stringify(detail));
     },
-    ["category-detail-v9", slugStr, String(page), String(pageSize), String(sort)],
+    ["category-detail-v10", slugStr, String(page), String(pageSize), String(sort), String(carSlug || "")],
     { revalidate: 300 }
   )();
 
-const getCategoryDetail = cache(async (slugStr, page, pageSize, sort) =>
-  loadCachedCategoryDetail(slugStr, page, pageSize, sort)
+const getCategoryDetail = cache(async (slugStr, page, pageSize, sort, carSlug = "") =>
+  loadCachedCategoryDetail(slugStr, page, pageSize, sort, carSlug)
+);
+
+/** Car pages for the selector (same set as /cars and sitemap-cars.xml). */
+const getCarIndex = cache(() =>
+  unstable_cache(
+    async () => {
+      await dbConnect();
+      return JSON.parse(JSON.stringify(await loadShopByCarIndex()));
+    },
+    ["car-selector-index-v1"],
+    { revalidate: 300 }
+  )()
 );
 
 const getCategoryMeta = cache(async (slugStr) =>
@@ -229,11 +248,13 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
         thin: Boolean(detail && Number(detail.productCount) === 0),
       });
 
+      // ?car= filtered views: crawlable links, but only the unfiltered category is indexed.
+      const carFiltered = Boolean(String((await searchParams)?.car || "").trim());
       return {
         title: titleMeta,
         description,
         ...(keywords.length ? { keywords } : {}),
-        robots: listingSeo.robots,
+        robots: carFiltered ? { index: false, follow: true } : listingSeo.robots,
         openGraph: {
           title,
           description,
@@ -294,7 +315,9 @@ export default async function CategoryPage({ params, searchParams }) {
 
   // Prefer Mongo catalog (seeded categories) so /categories/[slug] never 404s
   // when Shopify is enabled but collections use different handles.
-  const detail = await getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort);
+  const carIndex = await getCarIndex().catch(() => []);
+  const carSlug = resolveCarSlug((await searchParams)?.car, carIndex) || "";
+  const detail = await getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort, carSlug);
   if (detail && isEmptyCategoryTree(detail)) {
     const cat = detail.category || (await getCategoryMeta(slugStr));
     const parent = Array.isArray(detail.breadcrumbs) && detail.breadcrumbs.length > 1
@@ -444,6 +467,13 @@ export default async function CategoryPage({ params, searchParams }) {
           crumbs={uniqueCrumbs}
           showFullDescription={false}
           leadOnly
+        />
+        <CarFitSelector
+          vehicles={carIndex}
+          action={listingPath}
+          currentCar={carSlug}
+          clearHref={listingPath}
+          title={`Shop ${data.category?.name || "parts"} by your car`}
         />
         {priceLine ? (
           <p className="store-container cat-price-line" style={{ padding: "0 16px", margin: "4px auto 0", color: "#555", fontSize: 14 }}>

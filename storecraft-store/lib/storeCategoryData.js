@@ -331,10 +331,12 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
   );
 
   const allCategoryIds = [catId, ...descendantIds];
-  const productQuery = {
+  const categoryQuery = {
     status: ACTIVE,
     $or: [{ categories: { $in: allCategoryIds } }, { category: { $in: allCategoryIds } }],
   };
+  // opts.extraFilter: e.g. the "Shop by your car" fitment filter (?car=).
+  const productQuery = opts.extraFilter ? { $and: [categoryQuery, opts.extraFilter] } : categoryQuery;
 
   const sortSpec = listingMongoSortSpec(opts.sort);
 

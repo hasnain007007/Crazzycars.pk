@@ -23,8 +23,17 @@ export async function GET(request) {
     const vehicle = await loadVehicleBySlug(vehicleSlug);
     if (!vehicle) return NextResponse.json({ fits: false });
     const hit = await Product.exists({ ...buildVehiclePageProductFilter(vehicle), slug: productSlug });
+    // Universal parts are not listed per car — the product page should not say "not listed".
+    const universal = hit
+      ? false
+      : Boolean(
+          await Product.exists({
+            slug: productSlug,
+            $or: [{ isUniversal: true }, { "vehicleCompatibility.fitmentType": "universal" }],
+          })
+        );
     return NextResponse.json(
-      { fits: Boolean(hit) },
+      { fits: Boolean(hit), universal },
       { headers: { "Cache-Control": "public, max-age=0, s-maxage=300" } }
     );
   } catch (err) {

@@ -1,3 +1,6 @@
+import { dbConnect } from "@/lib/db";
+import { CarFitSelector } from "@/components/store/CarFitSelector";
+import { loadShopByCarIndex } from "@/lib/vehiclePageData";
 import { notFound } from "next/navigation";
 import { ShopListingLayout } from "@/components/store/ShopListingLayout";
 import { fetchProductsServer } from "@/lib/serverProductFetch";
@@ -39,7 +42,13 @@ export const generateMetadata = withSafeMetadata(async function shopMetadata({ s
 
 export default async function ShopPage({ searchParams }) {
   const listing = parseListingSearchParams(await searchParams);
-  const { products, total, totalPages } = await fetchProductsServer({ listing });
+  const [{ products, total, totalPages }, carIndex] = await Promise.all([
+    fetchProductsServer({ listing }),
+    (async () => {
+      await dbConnect();
+      return JSON.parse(JSON.stringify(await loadShopByCarIndex()));
+    })().catch(() => []),
+  ]);
   if (listing.page > Math.max(1, Number(totalPages) || 1)) notFound();
 
   const breadcrumbLd = breadcrumbJsonLd([
@@ -70,6 +79,9 @@ export default async function ShopPage({ searchParams }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(collectionLd) }}
       />
+      <div style={{ paddingTop: 16 }}>
+        <CarFitSelector vehicles={carIndex} action="/cars/go" />
+      </div>
       <ShopListingLayout
         pathname="/shop"
         listing={listing}

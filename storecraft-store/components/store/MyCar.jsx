@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * "My car" on the website: car pages remember the shopper's car; product pages show a green
- * "Fits your …" tag when the product is listed for it. No warning when it is not.
+ * "My car" on the website: car pages (and the "Shop by your car" selector) remember the
+ * shopper's car; product pages show "Fits your …" when the product is listed for it, else a
+ * neutral "Check fitment on WhatsApp" link.
  */
 import { useEffect, useState } from "react";
 
@@ -32,7 +33,7 @@ export function RememberMyCar({ slug, label }) {
 /** Render on product pages: green tag when the product fits the remembered car. */
 export function MyCarFitTag({ productSlug }) {
   const [car, setCar] = useState(null);
-  const [fits, setFits] = useState(false);
+  const [fits, setFits] = useState(null);
 
   useEffect(() => {
     const saved = readCar();
@@ -41,10 +42,9 @@ export function MyCarFitTag({ productSlug }) {
     fetch(`/api/fits?product=${encodeURIComponent(productSlug)}&vehicle=${encodeURIComponent(saved.slug)}`)
       .then((r) => r.json())
       .then((d) => {
-        if (!cancelled && d?.fits) {
-          setCar(saved);
-          setFits(true);
-        }
+        if (cancelled || typeof d?.fits !== "boolean" || (!d.fits && d.universal)) return;
+        setCar(saved);
+        setFits(d.fits);
       })
       .catch(() => {});
     return () => {
@@ -52,7 +52,18 @@ export function MyCarFitTag({ productSlug }) {
     };
   }, [productSlug]);
 
-  if (!fits || !car) return null;
+  if (!car || fits == null) return null;
+  if (!fits) {
+    const text = encodeURIComponent(`Does this fit my ${car.label}? https://crazzycars.pk/${productSlug}`);
+    return (
+      <p style={{ margin: "4px 0 8px", fontSize: 13, color: "#374151" }}>
+        Not listed for your {car.label}.{" "}
+        <a href={`https://wa.me/923284010007?text=${text}`} target="_blank" rel="noopener noreferrer" style={{ color: "#047857", fontWeight: 700, textDecoration: "underline" }}>
+          Check fitment on WhatsApp
+        </a>
+      </p>
+    );
+  }
   return (
     <p
       style={{

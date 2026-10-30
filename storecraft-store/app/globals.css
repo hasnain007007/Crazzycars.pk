@@ -7446,3 +7446,14 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .adv-band::after, .adv-band__cta { animation: none; }
 }
+
+/* "Shop by your car" selector (server GET form; see CarFitSelector.jsx) */
+.car-fit-selector { display: block; padding: 12px 16px; margin: 8px auto; }
+.car-fit-selector__label { display: block; font-weight: 700; font-size: 15px; color: #111; margin: 0 0 6px; }
+.car-fit-selector__row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.car-fit-selector__select { flex: 1 1 260px; min-width: 0; max-width: 520px; min-height: 44px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #111; font-size: 15px; }
+.car-fit-selector__btn { min-height: 44px; padding: 0 18px; border: 0; border-radius: 8px; background: #111; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
+.car-fit-selector__clear { font-size: 14px; color: #C41E1E; text-decoration: underline; }
+.car-fit-selector__select:focus-visible,
+.car-fit-selector__btn:focus-visible,
+.car-fit-selector__clear:focus-visible { outline: 3px solid #C41E1E; outline-offset: 2px; }
