@@ -25,6 +25,7 @@ import { paymentLineForProduct, scrubPaymentClaims } from "@/lib/paymentCopy";
 import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { getShippingRate } from "@/lib/shippingFee";
 import {
+  codAdvanceAmountsLabel,
   codBookingAdvanceStatement,
   deliveryFeeOnlyStatement,
   lahoreEtaStatement,
@@ -33,6 +34,8 @@ import {
   returnsExchangePathStatement,
   returnsRefundPathStatement,
   returnsTrustBadge,
+  returnsWindowDays,
+  standardDeliveryFeeShort,
 } from "@/lib/storePolicyCopy";
 import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
 import { ProductLiveView } from "@/components/store/ProductLiveView";
@@ -1541,6 +1544,23 @@ export function ProductDetailMedico({
             </button>
 
             </div>
+
+            {/* Trust strip under the buy buttons — only facts from STORE_POLICY. */}
+            <ul className="pdp-trust-strip" aria-label="Payment, delivery and returns">
+              <li>
+                {productAllowsCod(product)
+                  ? `COD on eligible items (${codAdvanceAmountsLabel()} advance, deducted from your total)`
+                  : "Prepaid only — JazzCash, Meezan or bank transfer"}
+              </li>
+              <li>{standardDeliveryFeeShort()}</li>
+              <li>{returnsWindowDays()}-day returns for defective or wrong items</li>
+              <li>
+                <a href="https://wa.me/923284010007" target="_blank" rel="noopener noreferrer">
+                  WhatsApp 03284010007
+                </a>
+              </li>
+              <li>Shop in Gujranwala</li>
+            </ul>
 
             <div className="pdp-car-tools flex flex-col gap-2 sm:flex-row sm:items-stretch">
               <OnCarPreviewButton previews={product?.onCarPreviews} productName={product?.name || ""} />

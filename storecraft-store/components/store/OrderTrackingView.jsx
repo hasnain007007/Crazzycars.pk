@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -150,6 +151,17 @@ export default function OrderTrackingView() {
                 <span className="cc-track__mono">{data.trackingNumber}</span>
               </div>
             </div>
+
+            {data.reviewUrl ? (
+              <p style={{ margin: "12px 0 0" }}>
+                <Link
+                  href={data.reviewUrl}
+                  style={{ display: "inline-block", padding: "10px 16px", borderRadius: 8, background: "#111", color: "#fff", fontWeight: 700 }}
+                >
+                  Rate your order ★
+                </Link>
+              </p>
+            ) : null}
 
             <div className="cc-track__pipeline" aria-label="Delivery progress">
               {PIPELINE.map((p, i) => {

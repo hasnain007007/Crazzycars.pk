@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import { resolvePublicTracking } from "@/lib/resolvePublicTracking";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
+import Order from "@/lib/models/Order.model";
+import { signReviewRequestToken } from "@/lib/reviewRequestToken";
 import {
   checkPublicTrackingRateLimit,
   clientIpFromRequest,
@@ -50,6 +52,21 @@ export async function GET(request) {
     }
 
     const result = await resolvePublicTracking(trackingNumber, { settingsCourier });
+    // Delivered orders get a signed "Rate your order" link (reviews stay moderated).
+    if (result?.success) {
+      try {
+        const order = await Order.findOne({
+          $or: [{ trackingNumber }, { "tracking.number": trackingNumber }],
+          orderStatus: "delivered",
+        })
+          .select("_id")
+          .lean();
+        const token = order ? signReviewRequestToken(String(order._id)) : "";
+        if (token) result.reviewUrl = `/review/${order._id}?t=${encodeURIComponent(token)}`;
+      } catch {
+        /* no review link */
+      }
+    }
     const status = result.success ? 200 : result.error === "Tracking unavailable" ? 503 : 404;
     return NextResponse.json(result, {
       status,

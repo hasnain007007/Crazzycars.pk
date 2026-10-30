@@ -7457,3 +7457,9 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
 .car-fit-selector__select:focus-visible,
 .car-fit-selector__btn:focus-visible,
 .car-fit-selector__clear:focus-visible { outline: 3px solid #C41E1E; outline-offset: 2px; }
+
+/* PDP trust strip under Add to Cart */
+.pdp-trust-strip { list-style: none; margin: 4px 0 8px; padding: 10px 12px; display: grid; gap: 6px; border: 1px solid #F0F0F0; border-radius: 10px; background: #FAFAFA; font-size: 13px; color: #333; }
+.pdp-trust-strip li { display: flex; gap: 8px; align-items: baseline; }
+.pdp-trust-strip li::before { content: "✓"; color: #047857; font-weight: 700; }
+.pdp-trust-strip a { color: #047857; font-weight: 700; text-decoration: underline; }
