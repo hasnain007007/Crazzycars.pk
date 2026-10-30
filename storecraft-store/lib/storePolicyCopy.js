@@ -4,7 +4,7 @@ import {
   COD_ADVANCE_TIERS,
   PREPAID_DISCOUNT_PERCENT,
 } from "../config/checkout-money.js";
-import { CATEGORY_COD_FAQ_ANSWER, COD_LINE, TRUST_LINE } from "./paymentCopy.js";
+import { CATEGORY_COD_FAQ_ANSWER, COD_LINE, PREPAID_LINE, TRUST_LINE } from "./paymentCopy.js";
 
 export function formatPkrAmount(n) {
   return `Rs. ${Number(n).toLocaleString("en-PK")}`;
@@ -57,10 +57,33 @@ export function deliveryEtaSummary() {
   return `${lahoreEtaStatement()}. ${nonLahoreEtaStatement()}.`;
 }
 
+/** Delivery fee only — no COD wording (safe on prepaid / body-kit pages). */
+export function deliveryFeeOnlyStatement() {
+  const regular = Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK");
+  const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR || 500).toLocaleString("en-PK");
+  return `Rs ${regular} regular, Rs ${bulky} if the order has bulky items.`;
+}
+
+/** COD booking advance — eligible items only. Built from COD_ADVANCE_TIERS. */
+export function codBookingAdvanceStatement() {
+  const amounts = COD_ADVANCE_TIERS.map((t) =>
+    Number(t.amount).toLocaleString("en-PK")
+  );
+  const joined =
+    amounts.length === 3
+      ? `${amounts[0]} / ${amounts[1]} / ${amounts[2]}`
+      : amounts.join(" / ");
+  return `COD on eligible items with a Rs ${joined} booking advance (by order value), deducted from your total.`;
+}
+
+/** Combined delivery + COD line for COD-eligible contexts. */
 export function standardDeliveryFeeStatement() {
-  const regular = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
-  const bulky = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
-  return `Delivery is ${regular} for regular items, or ${bulky} when the order includes bulky items (splitters, side skirts, spoilers, floor mats, etc.). COD orders require a booking advance (from Rs. 250) before processing; the balance is Cash on Delivery. There is no order-value waiver for delivery.`;
+  return `${deliveryFeeOnlyStatement()} ${codBookingAdvanceStatement()}`;
+}
+
+/** Prepaid / non-COD product delivery box line. */
+export function prepaidDeliveryBoxLine() {
+  return `${PREPAID_LINE}. WhatsApp ${STORE_POLICY.contact.whatsapp} for fitment help.`;
 }
 
 export function standardDeliveryFeeShort() {
@@ -71,7 +94,7 @@ export function standardDeliveryFeeShort() {
 
 /** Cart drawer collapsed COD line — English. */
 export function shippingAdvanceCollapsedEn() {
-  return `COD needs a small booking advance (from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}).`;
+  return codBookingAdvanceStatement();
 }
 
 /**
@@ -111,7 +134,7 @@ export function codAdvanceTierSummary() {
 
 /** Cart / checkout / PDP banner — English. */
 export function shippingAdvanceBannerEn() {
-  return `${COD_LINE}: ${codAdvanceTierSummary()}. It is deducted from your total and refunded if the item doesn't fit. Balance on delivery.`;
+  return `${codBookingAdvanceStatement()} Balance on delivery.`;
 }
 
 /** Cart / checkout / PDP banner — Urdu. */
@@ -413,7 +436,7 @@ export function getShippingPolicySections() {
     {
       heading: "Cash on Delivery",
       paragraphs: [
-        "COD is available on eligible products. Body kits cannot be ordered on Cash on Delivery — use JazzCash, Meezan, or bank transfer. COD orders need a booking advance (from Rs. 250) before we process; checkout shows the exact amount. Send your payment screenshot on WhatsApp; the balance is collected on delivery.",
+        `COD is available on eligible products. Body kits cannot be ordered on Cash on Delivery — use JazzCash, Meezan, or bank transfer. ${codBookingAdvanceStatement()} Send your payment screenshot on WhatsApp; the balance is collected on delivery.`,
       ],
     },
   ];

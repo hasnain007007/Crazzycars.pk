@@ -111,6 +111,11 @@ const nextConfig = {
         destination: "/feed/ai-catalog.json",
         permanent: true,
       },
+      {
+        source: "/.well-known/ai-catalog.json",
+        destination: "/feed/ai-catalog.json",
+        permanent: true,
+      },
       // Short Shopify / leftover handles → canonical paths (before /pages/:slug)
       ...buildLegacyRedirects(),
       {

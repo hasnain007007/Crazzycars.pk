@@ -38,7 +38,7 @@ export function getHomepageFaqItems() {
     },
     {
       question: "Do you offer Cash on Delivery?",
-      answer: `Yes, on eligible items. Pay a small booking advance (from Rs. ${std}) to confirm the order, then pay the product balance when the courier delivers. Body kits and some large packages may require full advance — checkout shows what applies.`,
+      answer: `Yes, on eligible items. COD uses a Rs 300 / 600 / 1,000 booking advance by order value, deducted from your total; the balance is paid on delivery. Body kits are prepaid.`,
     },
     {
       question: "How much is shipping?",

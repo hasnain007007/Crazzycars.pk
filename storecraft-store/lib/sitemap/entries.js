@@ -14,6 +14,10 @@ import {
 } from "@/lib/productVisibility";
 import { CITY_LANDING_SLUGS, cityPath } from "@/lib/cityLandingPages";
 import { DELETED_URL_REDIRECTS } from "@/lib/deletedUrlRedirects.mjs";
+import {
+  productHasExternalCanonical,
+  productHasRealImage,
+} from "@/lib/productImages";
 
 /** Paths that permanently redirect — never emit in sitemaps (F3). */
 const REDIRECT_SOURCE_PATHS = new Set(
@@ -34,6 +38,14 @@ const SITEMAP_PRODUCT_FILTER = {
     { "pricing.regularPrice": { $gt: 0 } },
   ],
 };
+
+function isSitemapEligibleProduct(p) {
+  if (!p?.slug || isRedirectSourcePath(`/${p.slug}`)) return false;
+  if (!productHasRealImage(p)) return false;
+  if (productHasExternalCanonical(p)) return false;
+  if (p?.seo?.excludeFromSitemap === true) return false;
+  return true;
+}
 
 /** Static storefront routes (no query strings, no redirect aliases). */
 const STATIC_PAGE_PATHS = [
@@ -219,7 +231,9 @@ export async function fetchSitemapContext(headers) {
 
   const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts] =
     await Promise.all([
-      Product.find(SITEMAP_PRODUCT_FILTER).select("slug updatedAt createdAt pricing").lean(),
+      Product.find(SITEMAP_PRODUCT_FILTER)
+        .select("slug updatedAt createdAt pricing media images image seo")
+        .lean(),
       Category.find({ status: "active" }).select("slug updatedAt createdAt contentUpdatedAt _id").lean(),
       Vehicle.find({ isActive: true }).select("slug updatedAt createdAt contentUpdatedAt _id").lean(),
       categoryIdsWithProducts(),
@@ -244,7 +258,7 @@ export async function fetchSitemapContext(headers) {
   const lastmodCtx = { products, categories, vehicles, blogPosts, cmsBySlug };
 
   const productEntries = products
-    .filter((p) => p.slug && !isRedirectSourcePath(`/${p.slug}`))
+    .filter(isSitemapEligibleProduct)
     .map((p) =>
       toEntry(
         headers,

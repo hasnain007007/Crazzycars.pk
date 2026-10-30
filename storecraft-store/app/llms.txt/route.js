@@ -151,6 +151,7 @@ export async function GET() {
 - AI discovery: ${site}/.well-known/ai.json
 - Sitemap: ${site}/sitemap.xml
 - This file: ${site}/llms.txt
+- Full product list: ${site}/llms-full.txt
 
 `;
 

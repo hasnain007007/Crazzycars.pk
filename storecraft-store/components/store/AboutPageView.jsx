@@ -220,6 +220,18 @@ export default function AboutPageView({ aboutPage }) {
             Contact us
           </Link>{" "}
           or WhatsApp 03284010007.
+          {String(about?.googleReviewUrl || "").trim() ? (
+            <>
+              {" · "}
+              <a
+                href="/review"
+                className="font-semibold text-[#C41E1E] underline"
+                rel="noopener noreferrer"
+              >
+                Review us on Google
+              </a>
+            </>
+          ) : null}
         </p>
       </section>
     </div>

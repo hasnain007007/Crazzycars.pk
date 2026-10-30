@@ -1332,21 +1332,21 @@ export function CheckoutView() {
           <h2 className="mb-2 text-base font-semibold text-zinc-900">Payment</h2>
           {/* One explanation only: the banner states this cart's delivery fee and the COD booking
               amount (English + Urdu); the long policy paragraph above it repeated the same thing. */}
-          <ShippingAdvanceBanner hasBulky={cartHasBulky} className="mb-3" />
-          {!cartAllowsCod ? (
-            <p className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-              Cash on Delivery is not available for
+          {cartAllowsCod ? (
+            <ShippingAdvanceBanner hasBulky={cartHasBulky} className="mb-3" />
+          ) : (
+            <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] font-medium text-amber-950">
+              Prepaid order, delivery across Pakistan. WhatsApp 03284010007 for fitment help.
               {codBlockedNames.length
-                ? ` ${codBlockedNames.slice(0, 3).join(", ")}${
+                ? ` Not available on COD: ${codBlockedNames.slice(0, 3).join(", ")}${
                     codBlockedNames.length > 3 ? ` (+${codBlockedNames.length - 3} more)` : ""
                   }.`
-                : " one or more items in your cart."}{" "}
-              Body kits need JazzCash, Meezan, or bank transfer.{" "}
+                : ""}{" "}
               <Link href="/cash-on-delivery" className="font-semibold underline underline-offset-2">
-                Cash on Delivery details
+                How payment works
               </Link>
             </p>
-          ) : null}
+          )}
           <div
             style={{
               background: "#FFFFFF",

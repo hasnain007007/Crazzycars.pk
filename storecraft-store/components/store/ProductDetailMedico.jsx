@@ -21,16 +21,18 @@ import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { productAllowsCod } from "@/lib/codEligibility";
-import { paymentLineForProduct, PREPAID_LINE, scrubPaymentClaims } from "@/lib/paymentCopy";
+import { paymentLineForProduct, scrubPaymentClaims } from "@/lib/paymentCopy";
 import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { getShippingRate } from "@/lib/shippingFee";
 import {
+  codBookingAdvanceStatement,
+  deliveryFeeOnlyStatement,
   lahoreEtaStatement,
   nonLahoreEtaStatement,
+  prepaidDeliveryBoxLine,
   returnsExchangePathStatement,
   returnsRefundPathStatement,
   returnsTrustBadge,
-  standardDeliveryFeeStatement,
 } from "@/lib/storePolicyCopy";
 import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
 import { ProductLiveView } from "@/components/store/ProductLiveView";
@@ -1343,7 +1345,7 @@ export function ProductDetailMedico({
 
             {!productAllowsCod(product) ? (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                {PREPAID_LINE}. Pay with JazzCash, Meezan, or bank transfer at checkout.{" "}
+                {prepaidDeliveryBoxLine()}{" "}
                 <Link href="/cash-on-delivery" className="font-semibold underline underline-offset-2">
                   How payment works
                 </Link>
@@ -1577,7 +1579,7 @@ export function ProductDetailMedico({
                 />
               ) : (
                 <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] font-medium text-amber-950 sm:text-sm">
-                  {PREPAID_LINE}
+                  {prepaidDeliveryBoxLine()}
                 </p>
               )}
             </div>
@@ -1837,7 +1839,12 @@ export function ProductDetailMedico({
                     >
                       <li>{lahoreEtaLine}</li>
                       <li>{otherCitiesEtaLine}</li>
-                      <li>{standardDeliveryFeeStatement()}</li>
+                      <li>{deliveryFeeOnlyStatement()}</li>
+                      {productAllowsCod(product) ? (
+                        <li>{codBookingAdvanceStatement()}</li>
+                      ) : (
+                        <li>{prepaidDeliveryBoxLine()}</li>
+                      )}
                       <li>{paymentLineForProduct(productAllowsCod(product))}</li>
                     </ul>
                   </div>

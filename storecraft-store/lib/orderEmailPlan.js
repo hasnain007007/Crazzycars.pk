@@ -130,7 +130,8 @@ export const DEFAULT_EMAIL_TEMPLATES = {
     subject: "Order {order_id} delivered | {store_name}",
     body: `<h1 style="margin:0 0 8px;font-size:22px;color:#111;">Delivered</h1>
 <p style="margin:0 0 18px;color:#6B7280;">Hi {customer.first_name}, order <strong>{order_id}</strong> has been marked delivered. We hope you love it.</p>
-<p style="margin:0;font-size:13px;color:#6B7280;">Courier: {courier}<br/>Tracking: {tracking_number}</p>`,
+<p style="margin:0 0 12px;font-size:13px;color:#6B7280;">Courier: {courier}<br/>Tracking: {tracking_number}</p>
+<p style="margin:0;font-size:13px;color:#6B7280;">Happy with your order? <a href="https://crazzycars.pk/review" style="color:#C41E1E;font-weight:700;">Review us on Google</a>.</p>`,
   },
   orderCancelled: {
     subject: "Order {order_id} cancelled | {store_name}",

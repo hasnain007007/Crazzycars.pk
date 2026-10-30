@@ -139,9 +139,11 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
 
     return sanitizeMetadata({
       metadataBase,
+      // No auto-suffix template — children call withBrandTitleSuffix so we never
+      // append "| CrazzyCars.pk" when the total would exceed 60 (or mid-truncate).
       title: {
         default: title,
-        template: `%s${TITLE_SUFFIX}`,
+        template: "%s",
       },
       description,
       icons,
@@ -258,8 +260,10 @@ export default async function RootLayout({ children }) {
     addressRegion: general.addressRegion || undefined,
     postalCode: general.postalCode || undefined,
     addressCountry: general.addressCountry || undefined,
-    latitude: general.latitude ?? general.geoLat,
-    longitude: general.longitude ?? general.geoLng,
+    latitude: general.latitude ?? general.geoLat ?? undefined,
+    longitude: general.longitude ?? general.geoLng ?? undefined,
+    geoLat: general.geoLat ?? general.latitude ?? undefined,
+    geoLng: general.geoLng ?? general.longitude ?? undefined,
     mapUrl: general.mapUrl || general.googleMapsUrl || undefined,
     googleMapsUrl: general.googleMapsUrl || general.mapUrl || undefined,
     foundingDate: general.foundingDate || "2023",

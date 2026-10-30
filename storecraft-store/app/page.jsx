@@ -1,4 +1,5 @@
 import { HomePage } from "@/components/store/HomePage";
+import HomeIndexableIntro from "@/components/home/HomeIndexableIntro";
 import { fetchHotDealsServer } from "@/lib/serverHotDeals";
 import { fetchBestSellersServer } from "@/lib/serverBestSellers";
 import { fetchCarCatalogServer } from "@/lib/serverCarCatalog";
@@ -120,6 +121,7 @@ export default async function Page() {
         initialCategoryTree={categoryTree}
         activeProductCount={activeProductCount}
       />
+      <HomeIndexableIntro />
     </>
   );
 }

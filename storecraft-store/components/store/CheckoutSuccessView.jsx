@@ -550,10 +550,18 @@ export default function CheckoutSuccessView() {
           style={{
             fontSize: 13,
             color: "#888888",
-            margin: "0 0 28px",
+            margin: "0 0 12px",
           }}
         >
           A confirmation email has been sent to your email address.
+        </p>
+        <p style={{ fontSize: 13, margin: "0 0 28px" }}>
+          <a
+            href="/review"
+            style={{ color: "#C41E1E", fontWeight: 700, textDecoration: "underline" }}
+          >
+            Review us on Google
+          </a>
         </p>
 
         <div

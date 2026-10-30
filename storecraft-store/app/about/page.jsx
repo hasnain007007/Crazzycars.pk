@@ -38,5 +38,15 @@ export const dynamic = "force-dynamic";
 
 export default async function AboutPage() {
   const settings = await getServerStoreSettings();
-  return <AboutPageView aboutPage={settings?.aboutPage} />;
+  const googleReviewUrl = String(
+    settings?.general?.googleReviewUrl || settings?.googleReviewUrl || ""
+  ).trim();
+  return (
+    <AboutPageView
+      aboutPage={{
+        ...(settings?.aboutPage || {}),
+        googleReviewUrl,
+      }}
+    />
+  );
 }

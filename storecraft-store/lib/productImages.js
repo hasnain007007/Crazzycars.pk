@@ -58,3 +58,30 @@ export function resolveProductImageUrls(product, { siteUrl } = {}) {
 export function resolvePrimaryProductImageUrl(product, opts) {
   return resolveProductImageUrls(product, opts)[0] || "";
 }
+
+const PLACEHOLDER_IMAGE_RE = /-placeholder(\.|\-sm\.|\-md\.|\-lg\.)/i;
+
+/** True when the product has at least one non-placeholder photo for schema/sitemap. */
+export function productHasRealImage(product) {
+  const media = Array.isArray(product?.media?.images) ? product.media.images : [];
+  if (media.some((im) => im?.isPlaceholder === true)) {
+    const real = media.filter((im) => im?.isPlaceholder !== true && String(im?.url || "").trim());
+    if (!real.length) return false;
+  }
+  const urls = resolveProductImageUrls(product);
+  if (!urls.length) return false;
+  return urls.some((u) => !PLACEHOLDER_IMAGE_RE.test(u));
+}
+
+/** True when seo.canonical points at a different host than this storefront. */
+export function productHasExternalCanonical(product, siteUrl = siteOrigin()) {
+  const raw = String(product?.seo?.canonical || product?.canonical || "").trim();
+  if (!raw || !/^https?:\/\//i.test(raw)) return false;
+  try {
+    const canonHost = new URL(raw).hostname.replace(/^www\./, "").toLowerCase();
+    const siteHost = new URL(siteUrl).hostname.replace(/^www\./, "").toLowerCase();
+    return Boolean(canonHost && siteHost && canonHost !== siteHost);
+  } catch {
+    return false;
+  }
+}

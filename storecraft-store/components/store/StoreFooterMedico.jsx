@@ -21,7 +21,7 @@ const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "Cash on Delivery", href: "/cash-on-delivery" },
   { label: "Contact", href: "/contact" },
   { label: "Privacy Policy", href: "/privacy-policy" },
-  // Terms omitted until CMS has real copy (placeholder → 404).
+  { label: "Terms & Conditions", href: "/terms-conditions" },
   { label: "Shipping Policy", href: "/shipping-policy" },
   { label: "Returns Policy", href: "/returns-policy" },
 ]

@@ -21,7 +21,12 @@ import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
 import { pdpImageUrlExisting } from "@/lib/resolveLocalMedia";
-import { resolveProductImageUrls, resolvePrimaryProductImageUrl } from "@/lib/productImages";
+import {
+  productHasExternalCanonical,
+  productHasRealImage,
+  resolveProductImageUrls,
+  resolvePrimaryProductImageUrl,
+} from "@/lib/productImages";
 import {
   productJsonLd as buildProductJsonLd,
   breadcrumbJsonLd as buildBreadcrumbJsonLd,
@@ -330,7 +335,13 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     const ogAlt = contentOverride?.imageAlt || displayName;
 
     const robotsRaw = String(p.seo?.robots || "").toLowerCase();
-    const noindex = robotsRaw.includes("noindex") || p.seo?.excludeFromSitemap === true;
+    const noPhoto = !productHasRealImage(p);
+    const externalCanon = productHasExternalCanonical(p);
+    const noindex =
+      robotsRaw.includes("noindex") ||
+      p.seo?.excludeFromSitemap === true ||
+      noPhoto ||
+      externalCanon;
     return {
       title: { absolute: title },
       description,

@@ -585,8 +585,18 @@ export function SettingsPage() {
               />
               <Field
                 label="Google Maps / GBP URL"
-                value={g.mapUrl || ""}
-                onChange={(v) => setS({ ...s, general: { ...g, mapUrl: v } })}
+                value={g.mapUrl || g.googleMapsUrl || ""}
+                onChange={(v) =>
+                  setS({
+                    ...s,
+                    general: { ...g, mapUrl: v, googleMapsUrl: v },
+                  })
+                }
+              />
+              <Field
+                label="Google review URL"
+                value={g.googleReviewUrl || ""}
+                onChange={(v) => setS({ ...s, general: { ...g, googleReviewUrl: v } })}
               />
               <Field
                 label="WhatsApp (digits)"
