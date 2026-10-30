@@ -26,10 +26,19 @@
       ? !!__DRY_RUN
       : String(typeof DRY_RUN !== "undefined" ? DRY_RUN : "1") !== "0";
 
+  /**
+   * Corrupt / unusable date values only — empty object `{}`, Invalid Date,
+   * or non-date junk. null/undefined are NOT bad (optional fields may be null).
+   */
   function isBadDate(v) {
-    if (v == null) return true;
+    if (v == null) return false;
     if (v instanceof Date) return Number.isNaN(v.getTime());
+    // BSON empty object `{}` (Date wiped by object-spread) or other non-Date objects
     if (typeof v === "object") return true;
+    if (typeof v === "string" || typeof v === "number") {
+      const d = new Date(v);
+      return Number.isNaN(d.getTime());
+    }
     return true;
   }
 
@@ -43,6 +52,18 @@
       cur = cur[p];
     }
     return { exists: true, value: cur };
+  }
+
+  /** createdAt/updatedAt must always be a real Date; optional dates skip null/missing. */
+  function shouldRepair(field, exists, value) {
+    const required = field === "createdAt" || field === "updatedAt";
+    if (required) {
+      if (!exists || value == null) return true;
+      return isBadDate(value);
+    }
+    // Optional: only repair present corrupt values (e.g. {}), never null/undefined/missing
+    if (!exists || value == null) return false;
+    return isBadDate(value);
   }
 
   const COLLECTIONS = [
@@ -104,10 +125,8 @@
       const fix = {};
 
       for (const field of spec.fields) {
-        const always = field === "createdAt" || field === "updatedAt";
         const { exists, value } = getPath(doc, field);
-        if (!exists && !always) continue;
-        if (exists && !isBadDate(value)) continue;
+        if (!shouldRepair(field, exists, value)) continue;
 
         fieldCounts[field] += 1;
         fix[field] = oidTs;
