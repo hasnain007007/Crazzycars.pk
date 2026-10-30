@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { COD_LINE, PREPAID_LINE, TRUST_LINE } from "@/lib/paymentCopy";
+import { formatPkrAmount } from "@/lib/storePolicyCopy";
+import { STORE_POLICY } from "@/config/store-policy";
 
 const STORE = "CrazzyCars.pk";
+const FEE_REGULAR = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
+const FEE_BULKY = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
+const RETURNS_DAYS = STORE_POLICY.returns.windowDays;
 
 const DEFAULT_HERO = {
   badge: "Our Story",
@@ -48,8 +53,7 @@ const DEFAULT_PROMISE = {
 const DEFAULT_FAQ = [
   {
     question: "Do you deliver across Pakistan?",
-    answer:
-      "Yes. We deliver nationwide. Delivery is Rs 250 for regular items, or Rs 500 for bulky items. Times vary by city.",
+    answer: `Yes. We deliver nationwide. Delivery is ${FEE_REGULAR} for regular items, or ${FEE_BULKY} for bulky items. Times vary by city.`,
   },
   {
     question: "Can I pay with Cash on Delivery?",
@@ -57,7 +61,7 @@ const DEFAULT_FAQ = [
   },
   {
     question: "What is your return policy?",
-    answer: "7 days, defective or wrong item only. Change of mind is not eligible.",
+    answer: `${RETURNS_DAYS} days, defective or wrong item only. Change of mind is not eligible.`,
   },
 ];
 

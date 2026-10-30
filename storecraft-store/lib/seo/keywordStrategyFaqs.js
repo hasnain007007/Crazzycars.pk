@@ -1711,21 +1711,23 @@ export function buildAutoProductFaqs(product) {
     question: "Payment?",
     answer: paymentLineForProduct(allowsCod),
   });
+  const fees = feeAmounts(); // standardFeePKR / bulkyFeePKR from STORE_POLICY
   items.push({
     question: "Delivery charge?",
     answer: bulky
-      ? "Rs 500 for bulky items (this product is bulky)."
-      : "Rs 250, or Rs 500 for bulky items",
+      ? `${fees.bulky} for bulky items (this product is bulky).`
+      : `${fees.regular}, or ${fees.bulky} for bulky items`,
   });
   items.push({
     question: "Returns?",
-    answer: "7 days, defective or wrong item only.",
+    answer: `${STORE_POLICY.returns.windowDays} days, defective or wrong item only.`,
   });
   return items;
 }
 
 export function defaultProductFaqs(product) {
   if (product) return buildAutoProductFaqs(product);
+  const fees = feeAmounts(); // standardFeePKR
   return [
     {
       question: "Payment?",
@@ -1733,7 +1735,7 @@ export function defaultProductFaqs(product) {
     },
     {
       question: "Delivery charge?",
-      answer: "Rs 250, or Rs 500 for bulky items",
+      answer: `${fees.regular}, or ${fees.bulky} for bulky items`,
     },
     {
       question: "Does it fit my car?",
@@ -1742,7 +1744,7 @@ export function defaultProductFaqs(product) {
     },
     {
       question: "Returns?",
-      answer: "7 days, defective or wrong item only.",
+      answer: `${STORE_POLICY.returns.windowDays} days, defective or wrong item only.`,
     },
   ];
 }
