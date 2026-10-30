@@ -1,4 +1,12 @@
 import { looksLikeFreeDeliveryCopy, announcementAdvanceDeliveryText } from "./storePolicyCopy.js";
+import { neutralizeClaimText } from "./displayProductName.js";
+import { STORE_POLICY } from "../config/store-policy.js";
+import { COD_ADVANCE_TIERS } from "../config/checkout-money.js";
+
+const pkr = (n) => Number(n).toLocaleString("en-PK");
+
+/** Default home intro (Settings › Homepage › Home intro overrides it). Fees from STORE_POLICY. */
+export const DEFAULT_HOME_INTRO = `CrazzyCars.pk is a car accessories store in Gujranwala, Pakistan, open since 2023. We stock floor mats, body kits, LED headlights and bulbs, steering covers, interior and exterior styling parts for Toyota, Honda, Suzuki, KIA, Hyundai, Changan, Haval, MG and more. Shop by car to see parts that fit your model and year, with prices in Pakistan shown on every product. Cash on Delivery is available on eligible items (delivery Rs ${pkr(STORE_POLICY.shipping.standardFeePKR)}, or Rs ${pkr(STORE_POLICY.shipping.bulkyFeePKR || 500)} with bulky items; a Rs ${COD_ADVANCE_TIERS.map((t) => pkr(t.amount)).join("/")} booking advance is deducted from your total). Body kits are prepaid only. Visit our shop in Gujranwala or message us on WhatsApp at ${STORE_POLICY.contact.whatsapp} for fitment help.`;
 
 export const DEFAULT_HOMEPAGE_SETTINGS = {
   announcementMessages: [
@@ -107,9 +115,11 @@ export function normalizeHomepageSettings(raw, opts = {}) {
           })
         : d.announcementMessages,
     announcementBgColor: raw.announcementBgColor || d.announcementBgColor,
-    heroHeadline: raw.heroHeadline || d.heroHeadline,
-    heroSubtext: raw.heroSubtext || d.heroSubtext,
+    // Stored copy may still say "Premium …" — no claim words on the storefront.
+    heroHeadline: neutralizeClaimText(raw.heroHeadline || d.heroHeadline),
+    heroSubtext: neutralizeClaimText(raw.heroSubtext || d.heroSubtext),
     heroCtaText: raw.heroCtaText || d.heroCtaText,
+    homeIntro: neutralizeClaimText(String(raw.homeIntro || "").trim()) || DEFAULT_HOME_INTRO,
     heroCtaUrl: raw.heroCtaUrl || d.heroCtaUrl,
     whyChooseUs:
       Array.isArray(raw.whyChooseUs) && raw.whyChooseUs.length
@@ -121,8 +131,8 @@ export function normalizeHomepageSettings(raw, opts = {}) {
             const fallback = d.whyChooseUs.find((x) => /returns/i.test(x.title)) || d.whyChooseUs[2];
             return {
               icon: String(item?.icon ?? ""),
-              title: stale ? fallback.title : title,
-              description: stale ? fallback.description : description,
+              title: neutralizeClaimText(stale ? fallback.title : title),
+              description: neutralizeClaimText(stale ? fallback.description : description),
               isActive: item?.isActive !== false,
             };
           })

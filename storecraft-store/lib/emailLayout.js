@@ -5,7 +5,7 @@
 
 export const EMAIL_BRAND = {
   storeName: "CrazzyCars.pk",
-  tagline: "Premium car accessories · Pakistan",
+  tagline: "Car accessories · Pakistan",
   siteUrl: "https://crazzycars.pk",
   adminUrl: "https://admin.crazzycars.pk",
   logoUrl: "https://crazzycars.pk/media/brand/crazzycars-logo.webp",

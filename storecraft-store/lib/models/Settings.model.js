@@ -262,7 +262,7 @@ const settingsSchema = new mongoose.Schema(
         paragraph1: {
           type: String,
           default:
-            `${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted premium accessories at fair prices — without compromising on quality.`,
+            `${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"} was founded in Gujranwala, Pakistan, by car enthusiasts who wanted good accessories at fair prices.`,
         },
         paragraph2: {
           type: String,
@@ -576,7 +576,7 @@ Shukriya — CrazzyCars.pk ✨`,
         description: {
           type: String,
           default:
-            "We source premium car accessories from trusted manufacturers. Every product is quality-checked before it ships.",
+            "We source car accessories from trusted suppliers. Every product is checked before it ships.",
         },
       },
     },
@@ -646,6 +646,8 @@ Shukriya — CrazzyCars.pk ✨`,
       },
       heroCtaText: { type: String, default: "Shop Now" },
       heroCtaUrl: { type: String, default: "/shop" },
+      /** Home page intro (SEO text block under the hero); empty → storefront default. */
+      homeIntro: { type: String, default: "" },
       whyChooseUs: [
         {
           icon: { type: String, default: "🚚" },

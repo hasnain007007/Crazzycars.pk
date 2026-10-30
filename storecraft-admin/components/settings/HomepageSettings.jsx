@@ -274,6 +274,7 @@ export default function HomepageSettings() {
               ? hp.sectionOrder.filter((s) => s?.id !== "trust")
               : prev.sectionOrder,
             sectionTitles: { ...prev.sectionTitles, ...(hp.sectionTitles || {}) },
+            homeIntro: hp.homeIntro ?? prev.homeIntro,
           }));
         }
       } catch {
@@ -302,6 +303,7 @@ export default function HomepageSettings() {
         hotDeals: form.hotDeals,
         sectionOrder: form.sectionOrder,
         sectionTitles: form.sectionTitles,
+        homeIntro: String(form.homeIntro || "").trim(),
       };
       const res = await fetch("/api/settings", {
         method: "PUT",
@@ -392,6 +394,23 @@ export default function HomepageSettings() {
         >
           Preview — announcement bar
         </div>
+      </Section>
+
+      <Section title="Home intro (SEO text)">
+        <p className="mb-2 text-xs text-slate-500">
+          Shown under the hero as “About CrazzyCars.pk”, about 150–200 words. Leave empty to use the default text.
+          Words like premium / OEM / original / genuine are removed on the storefront.
+        </p>
+        <textarea
+          rows={7}
+          className="w-full rounded border px-2 py-1 text-sm"
+          value={form.homeIntro || ""}
+          onChange={(e) => setForm((f) => ({ ...f, homeIntro: e.target.value }))}
+          aria-label="Home intro text"
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          {String(form.homeIntro || "").trim().split(/\s+/).filter(Boolean).length} words
+        </p>
       </Section>
 
       <Section title="Why Choose Us">

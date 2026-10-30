@@ -1,5 +1,6 @@
 import { HomePage } from "@/components/store/HomePage";
 import HomeIndexableIntro from "@/components/home/HomeIndexableIntro";
+import { getPublicStoreSettings } from "@/lib/serverSettings";
 import { fetchHotDealsServer } from "@/lib/serverHotDeals";
 import { fetchBestSellersServer } from "@/lib/serverBestSellers";
 import { fetchCarCatalogServer } from "@/lib/serverCarCatalog";
@@ -31,6 +32,10 @@ export const metadata = buildPageMetadata({
 
 export default async function Page() {
   const shopify = isShopifyEnabled();
+  // Same per-request cached settings read as the layout.
+  const homeIntro = await getPublicStoreSettings()
+    .then((st) => st?.homepageSettings?.homeIntro || "")
+    .catch(() => "");
   let bestSellers = [];
   let hotDeals = [];
   let heroSlides = [];
@@ -113,6 +118,7 @@ export default async function Page() {
       <link rel="preload" as="image" href="/hero/civic-night-760.webp" media="(max-width: 767px)" fetchPriority="high" />
       <link rel="preload" as="image" href="/hero/civic-night-1205.webp" media="(min-width: 768px)" fetchPriority="high" />
       <HomePage
+        intro={<HomeIndexableIntro text={homeIntro} />}
         initialBestSellers={bestSellers}
         initialHotDeals={hotDeals}
         initialHeroSlides={heroSlides}
@@ -121,7 +127,6 @@ export default async function Page() {
         initialCategoryTree={categoryTree}
         activeProductCount={activeProductCount}
       />
-      <HomeIndexableIntro />
     </>
   );
 }

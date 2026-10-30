@@ -259,7 +259,7 @@ export const CATEGORY_DESCRIPTION_HTML = {
   "interior-lights": `
 <p>Car interior lights at CrazzyCars.pk run from Rs. 499 to Rs. 14,999. The range covers ambient dashboard light strips, RGB footwell lights, door welcome logo projectors and USB roof star lights. Each product page lists fitment, what is in the box and the current price. We ship nationwide from Gujranwala and offer Cash on Delivery on eligible items.</p>
 <h2>Car ambient light for the dashboard and doors</h2>
-<p>The Car Dashboard Ambient Light Strip 2PCS is Rs. 2,499 and the Car Interior Ambient Lights 5 Point Dashboard + Doors is Rs. 3,799. Both add accent lighting along the dashboard and door panels. The Premium Dynamic Ambient Interior Lights Multi-Point is Rs. 6,500.</p>
+<p>The Car Dashboard Ambient Light Strip 2PCS is Rs. 2,499 and the Car Interior Ambient Lights 5 Point Dashboard + Doors is Rs. 3,799. Both add accent lighting along the dashboard and door panels. The Dynamic Ambient Interior Lights Multi-Point is Rs. 6,500.</p>
 <h2>Footwell lights</h2>
 <p>The Car RGB Atmosphere Light is a set of 4 interior footwell LED lights for Rs. 1,299.</p>
 <h2>Door welcome lights and roof star lights</h2>
@@ -324,7 +324,7 @@ export const VEHICLE_DESCRIPTION_HTML = {
 `.trim(),
 
   "suzuki-swift-2025-present": `
-<p>Suzuki Swift 2025–present (4th generation, Z Series) accessories at CrazzyCars.pk: carbon fiber side mirror covers (Rs. 3,999), carbon fiber door handle covers (Rs. 3,399, listed for 2022–2025), TPE floor mats (Rs. 7,799), velvet dashboard mat (Rs. 1,799) and a premium metal key cover (Rs. 1,399).</p>
+<p>Suzuki Swift 2025–present (4th generation, Z Series) accessories at CrazzyCars.pk: carbon fiber side mirror covers (Rs. 3,999), carbon fiber door handle covers (Rs. 3,399, listed for 2022–2025), TPE floor mats (Rs. 7,799), velvet dashboard mat (Rs. 1,799) and a metal key cover (Rs. 1,399).</p>
 <h2>Which Suzuki Swift do you have?</h2>
 <table><thead><tr><th>Generation</th><th>Page</th></tr></thead><tbody>
 <tr><td>Swift 2018–2024</td><td><a href="/cars/suzuki-swift-2018-2024">/cars/suzuki-swift-2018-2024</a></td></tr>
@@ -347,7 +347,7 @@ export const VEHICLE_DESCRIPTION_HTML = {
 `.trim(),
 
   "honda-city-2021-present": `
-<p>Honda City 2021–2026 accessories at CrazzyCars.pk: RS style trunk lip spoiler (Rs. 4,999), carbon fiber gear knob cover (Rs. 3,800), carbon fiber steering trim (Rs. 3,800), premium fog lights with covers (Rs. 6,999), Batman style side mirror covers (Rs. 3,499), Drive 68 and Modulo style fibreglass body kits (Rs. 13,999 each), TPE floor mats (Rs. 7,799) and a velvet dashboard mat (Rs. 1,799).</p>
+<p>Honda City 2021–2026 accessories at CrazzyCars.pk: RS style trunk lip spoiler (Rs. 4,999), carbon fiber gear knob cover (Rs. 3,800), carbon fiber steering trim (Rs. 3,800), fog lights with covers (Rs. 6,999), Batman style side mirror covers (Rs. 3,499), Drive 68 and Modulo style fibreglass body kits (Rs. 13,999 each), TPE floor mats (Rs. 7,799) and a velvet dashboard mat (Rs. 1,799).</p>
 <h2>Which Honda City do you have?</h2>
 <table><thead><tr><th>Generation</th><th>Page</th></tr></thead><tbody>
 <tr><td>Honda City 2009–2020</td><td><a href="/cars/honda-city-classic-2009-2020">/cars/honda-city-classic-2009-2020</a></td></tr>

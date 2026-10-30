@@ -260,7 +260,7 @@ export function buildMerchantRssXml(items, { title, link, description } = {}) {
   const channelLink = link || site;
   const channelDesc =
     description ||
-    "Premium car accessories and auto parts from CrazzyCars.pk — Pakistan COD nationwide.";
+    "Car accessories and auto parts from CrazzyCars.pk — delivery across Pakistan, COD on eligible items.";
 
   const itemXml = (items || [])
     .filter((it) => it.id && it.title && it.link && it.image_link && it.price)

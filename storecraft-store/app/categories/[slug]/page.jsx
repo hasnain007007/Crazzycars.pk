@@ -204,7 +204,7 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
       const title = titleMeta.absolute;
       const description =
         String(kwMeta?.metaDescription || dbMeta || "").trim() ||
-        `Shop ${category.name} at ${BRAND}. Premium car accessories with Cash on Delivery nationwide.`;
+        `Shop ${category.name} at ${BRAND}. Car accessories with COD on eligible items and delivery across Pakistan.`;
       const keywords = Array.isArray(category.seo?.metaKeywords)
         ? category.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
         : [];

@@ -124,7 +124,7 @@ export const CITY_LANDING_DEFAULTS = {
     name: "Islamabad",
     province: "Islamabad Capital Territory",
     h1: "Car Accessories in Islamabad — Fitment-Checked Parts, COD",
-    introHtml: `<p>Islamabad and twin-city drivers order from CrazzyCars.pk for <strong>clean OEM-style upgrades</strong>: forged-look carbon trims, discreet LED lighting, and body kits that still look tidy on Margalla Road. We list exact years so F-series, G-series and Bahria fleets get the right Civic X, City Aspire or Corolla generation.</p><p>Checkout supports Cash on Delivery into Islamabad sectors; WhatsApp support helps confirm colour and fitment before dispatch from Gujranwala.</p>`,
+    introHtml: `<p>Islamabad and twin-city drivers order from CrazzyCars.pk for <strong>clean factory-look upgrades</strong>: forged-look carbon trims, discreet LED lighting, and body kits that still look tidy on Margalla Road. We list exact years so F-series, G-series and Bahria fleets get the right Civic X, City Aspire or Corolla generation.</p><p>Checkout supports Cash on Delivery into Islamabad sectors; WhatsApp support helps confirm colour and fitment before dispatch from Gujranwala.</p>`,
     deliveryNote: feeNote("Islamabad major-city"),
     deliveryDays: "Typically 2–3 business days to Islamabad.",
     metaTitle: "Car Accessories Islamabad | COD | CrazzyCars.pk",

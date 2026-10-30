@@ -726,6 +726,8 @@ Shukriya — CrazzyCars.pk ✨`,
       },
       heroCtaText: { type: String, default: "Shop Now" },
       heroCtaUrl: { type: String, default: "/shop" },
+      /** Home page intro (SEO text block under the hero); empty → storefront default. */
+      homeIntro: { type: String, default: "" },
       whyChooseUs: [
         {
           icon: { type: String, default: "🚚" },

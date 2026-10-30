@@ -152,7 +152,7 @@ const CATEGORY_FAQ_EXTRAS = {
       {
         question: "Do I need to drill to install quarter window covers?",
         answer:
-          "Many covers in this category are designed for OEM-style fit without body modification. Always follow the install notes on the specific product page; if you are unsure, WhatsApp us with your car year and model.",
+          "Many covers in this category are designed for factory-style fit without body modification. Always follow the install notes on the specific product page; if you are unsure, WhatsApp us with your car year and model.",
       },
     ],
   },
@@ -332,7 +332,7 @@ const CATEGORY_FAQ_EXTRAS = {
       {
         question: "Do I need to drill?",
         answer:
-          "Most air-press / visor kits are designed for OEM-style door-frame fit. Follow the listing install notes; WhatsApp us with your year if unsure.",
+          "Most air-press / visor kits are designed for factory-style door-frame fit. Follow the listing install notes; WhatsApp us with your year if unsure.",
       },
     ],
   },
@@ -433,7 +433,7 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "Is this a real Brembo caliper?",
       answer:
-        "No. These are decorative Brembo-style caliper covers — not OEM Brembo parts. They are meant for a sport look over exposed calipers; confirm wheel and caliper clearance on your car before ordering.",
+        "No. These are decorative Brembo-style caliper covers — not Brembo-made parts. They are meant for a sport look over exposed calipers; confirm wheel and caliper clearance on your car before ordering.",
     },
     {
       question: "Is this a universal fit?",
@@ -492,7 +492,7 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "Do I need to modify the body?",
       answer:
-        "The product description states OEM-style fit without body modification. Follow the listing notes; WhatsApp us if your year is unclear.",
+        "The product description states factory-style fit without body modification. Follow the listing notes; WhatsApp us if your year is unclear.",
     },
     {
       question: "Where can I see more Civic Rebirth parts?",
@@ -658,7 +658,7 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "Do I need to modify the body?",
       answer:
-        "The product description states an OEM-style fit that installs without modification. Follow the listing notes; WhatsApp us if your year is unclear.",
+        "The product description states an factory-style fit that installs without modification. Follow the listing notes; WhatsApp us if your year is unclear.",
     },
   ],
   "CC-0203": () => {
@@ -710,7 +710,7 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "What material is it?",
       answer:
-        "Carbon-style covers with an OEM-style fit for the rear quarters, per the product description (not woven carbon fiber unless a listing says otherwise).",
+        "Carbon-style covers with an factory-style fit for the rear quarters, per the product description (not woven carbon fiber unless a listing says otherwise).",
     },
   ],
   "CC-0113": () => [
@@ -898,7 +898,7 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "Is it real carbon fiber?",
       answer:
-        "No. It is ABS plastic with a carbon-style texture, per the product description. OEM-style fit without modification.",
+        "No. It is ABS plastic with a carbon-style texture, per the product description. factory-style fit without modification.",
     },
   ],
   "CC-0007": () => [
@@ -922,7 +922,7 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "What functions are included?",
       answer:
-        "The listing is a 3-in-1 LED rear bumper reflector set: brake + DRL + turn signal, described as plug-and-play OEM-style replacement.",
+        "The listing is a 3-in-1 LED rear bumper reflector set: brake + DRL + turn signal, described as plug-and-play factory-style replacement.",
     },
   ],
   "CC-OX7-MIR-BAT": () => [
@@ -1151,7 +1151,7 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "Do I need to drill?",
       answer:
-        "Many quarter louvers are designed for OEM-style fit without body modification. Follow the install notes on this product page; WhatsApp us with your year if unsure.",
+        "Many quarter louvers are designed for factory-style fit without body modification. Follow the install notes on this product page; WhatsApp us with your year if unsure.",
     },
   ],
   "CC-0119": () => [
@@ -1244,7 +1244,7 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "Do I need to drill?",
       answer:
-        "Many louvers are designed for OEM-style fit without drilling. Follow this product’s install notes; WhatsApp us if unsure.",
+        "Many louvers are designed for factory-style fit without drilling. Follow this product’s install notes; WhatsApp us if unsure.",
     },
   ],
   "CC-0190": () => [
@@ -1427,7 +1427,7 @@ const PRODUCT_FAQ_BY_SKU = {
     {
       question: "Is it plug-and-play?",
       answer:
-        "Rear bumper reflector LEDs are typically OEM-style replacements. Follow the listing wiring notes; WhatsApp us with your year/trim if unsure.",
+        "Rear bumper reflector LEDs are typically factory-style replacements. Follow the listing wiring notes; WhatsApp us with your year/trim if unsure.",
     },
   ],
   "CC-0221": () => [

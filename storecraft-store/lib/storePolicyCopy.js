@@ -490,7 +490,7 @@ export function advancePaymentCopy(opts = {}) {
     faq: [
       {
         q: "Why do you take a booking advance on Cash on Delivery?",
-        a: "It confirms the order is genuine before we pack and send it, which keeps courier costs and prices low for everyone.",
+        a: "It confirms the order is real before we pack and send it, which keeps courier costs and prices low for everyone.",
       },
       {
         q: "Is the advance extra?",

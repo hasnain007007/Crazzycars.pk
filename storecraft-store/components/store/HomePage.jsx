@@ -59,6 +59,7 @@ function mergeHomepageSettings(raw) {
  * Deals / best sellers / story stay code-split.
  */
 export function HomePage({
+  intro = null,
   initialBestSellers = [],
   initialHotDeals = null,
   initialHeroSlides = null,
@@ -86,6 +87,8 @@ export function HomePage({
       {sectionEnabled("hero") ? (
         <BrandHero />
       ) : null}
+      {/* Server-rendered intro (passed from app/page.jsx) — crawlable text under the hero. */}
+      {intro || null}
       <StatsBar
         settings={{ brandStory, stats: homepageSettings?.stats }}
         activeProductCount={activeProductCount}

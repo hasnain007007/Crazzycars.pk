@@ -239,7 +239,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const auditHtml = VEHICLE_DESCRIPTION_HTML[vehicle.slug] || "";
   const heroDesc =
     catalogDesc ||
-    `Upgrade your ${vehicle.displayName} with premium accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber. Cash on Delivery nationwide.`;
+    `Upgrade your ${vehicle.displayName} with accessories in Pakistan — body kits, LED lights, interior styling & carbon fiber. COD on eligible items.`;
   const rawHeroHtml = auditHtml
     ? sanitizeCategoryHtml(auditHtml)
     : /<[a-z][\s\S]*>/i.test(heroDesc)
