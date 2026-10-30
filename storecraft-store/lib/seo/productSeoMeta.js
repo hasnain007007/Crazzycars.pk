@@ -6,6 +6,7 @@
  * Admin edits must always show on the live page.
  */
 import { withBrandTitleSuffix } from "@/lib/brand";
+import { fitMetaDescription } from "@/lib/seo/metaDescription";
 
 export function productSeoTitle({ name, metaTitle, override }) {
   const stored = String(metaTitle || "").trim();
@@ -14,14 +15,11 @@ export function productSeoTitle({ name, metaTitle, override }) {
   return withBrandTitleSuffix(String(name || "").trim());
 }
 
-export function productSeoDescription({ metaDescription, override, fallbacks = [] }) {
-  const stored = String(metaDescription || "").trim();
-  if (stored) return stored;
-  const fromOverride = String(override?.meta || "").trim();
-  if (fromOverride) return fromOverride;
-  for (const f of fallbacks) {
-    const s = String(f || "").trim();
-    if (s) return s;
-  }
-  return "";
+export function productSeoDescription({ metaDescription, override, fallbacks = [], transform = (t) => t }) {
+  // Precedence decides the text; then it is only fitted to 70–160 characters
+  // (short → factual tail appended, long → cut at a word).
+  const chosen = [metaDescription, override?.meta, ...fallbacks]
+    .map((t) => String(t || "").trim())
+    .find(Boolean);
+  return fitMetaDescription([transform(chosen || "")], fallbacks[fallbacks.length - 1] || "");
 }

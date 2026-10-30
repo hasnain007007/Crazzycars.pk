@@ -30,9 +30,11 @@ test("product title: stored metaTitle → code override → template", () => {
   );
   assert.equal(productSeoTitle({ name: "x", metaTitle: "", override }), override.title);
   assert.equal(productSeoTitle({ name: "Floor Mats", metaTitle: "" }), "Floor Mats | CrazzyCars.pk");
-  assert.equal(productSeoDescription({ metaDescription: "stored", override }), "stored");
+  const stored = "Corolla 2014-2026 TPE floor mats price in Pakistan. Raised edges, fitted per model year.";
+  assert.equal(productSeoDescription({ metaDescription: stored, override }), stored);
   assert.equal(productSeoDescription({ metaDescription: " ", override }), "override meta");
-  assert.equal(productSeoDescription({ metaDescription: "", fallbacks: ["", "short"] }), "short");
+  const long = "x ".repeat(120);
+  assert.ok(productSeoDescription({ metaDescription: long }).length <= 160);
 });
 
 test("category price range line and AggregateOffer from live prices", () => {

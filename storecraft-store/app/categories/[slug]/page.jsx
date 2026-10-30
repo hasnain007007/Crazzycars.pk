@@ -219,7 +219,7 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
         String(kwMeta?.metaTitle || dbTitle || "").trim() || category.name;
       const titleMeta = kwMeta?.absoluteTitle
         ? { absolute: withBrandTitleSuffix(String(kwMeta.metaTitle || titleSource).trim()) }
-        : buildBrandedAbsoluteTitle(titleSource, { brand: BRAND, max: 62 });
+        : buildBrandedAbsoluteTitle(titleSource, { brand: BRAND, max: 60 });
       const title = titleMeta.absolute;
       const description =
         String(kwMeta?.metaDescription || dbMeta || "").trim() ||

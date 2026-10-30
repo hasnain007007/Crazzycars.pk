@@ -49,6 +49,8 @@ import {
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
 import { productSeoDescription, productSeoTitle } from "@/lib/seo/productSeoMeta";
 import { displayProductName } from "@/lib/displayProductName";
+import { productAllowsCod } from "@/lib/codEligibility";
+import { scrubPaymentClaims } from "@/lib/paymentCopy";
 import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 import { unitsSoldRecently } from "@/lib/productSalesCount";
 import { toPlainText } from "@/lib/sanitizeHtml";
@@ -363,6 +365,8 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
         stripHtml(contentOverride?.descriptionHtml || p.longDescription || "").slice(0, 160),
         `Buy ${displayName} at ${BRAND}. Delivery across Pakistan.`,
       ],
+      // Prepaid products: no COD wording even if stored in the meta text.
+      transform: (t) => scrubPaymentClaims(t, productAllowsCod(p)),
     });
     const keywords = Array.isArray(p.seo?.metaKeywords)
       ? p.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
