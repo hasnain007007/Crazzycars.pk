@@ -6,6 +6,10 @@ import PageView from "@/components/store/PageView";
 import { blogsForProduct } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
+import { loadVehicleBySlug } from "@/lib/vehiclePageData";
+import { buildVehiclePageProductFilter } from "@/lib/productVehicleQuery";
+import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { ProductRelatedLinks } from "@/components/store/ProductRelatedLinks";
 import Page from "@/lib/models/Page.model";
 import { loadStoreCategoryDetail } from "@/lib/storeCategoryData";
 import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
@@ -43,6 +47,8 @@ import {
   faqPageJsonLd,
 } from "@/lib/seo/keywordStrategyFaqs";
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
+import { productSeoDescription, productSeoTitle } from "@/lib/seo/productSeoMeta";
+import { displayProductName } from "@/lib/displayProductName";
 import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 import { unitsSoldRecently } from "@/lib/productSalesCount";
 import { toPlainText } from "@/lib/sanitizeHtml";
@@ -68,14 +74,11 @@ function stripHtml(s) {
 }
 
 function buildProductSeoTitle({ name, metaTitle, slug }) {
-  // S6: PAGE_SEO_OVERRIDES titles win (≤60 keyword map). Else admin metaTitle, else name.
-  const override = getPageSeoOverride(`/${String(slug || "").trim()}`);
-  if (override?.title) return String(override.title).trim();
-
-  const fromProduct = String(metaTitle || "").trim();
-  if (fromProduct) return withBrandTitleSuffix(fromProduct);
-
-  return withBrandTitleSuffix(String(name || "").trim());
+  return productSeoTitle({
+    name,
+    metaTitle,
+    override: getPageSeoOverride(`/${String(slug || "").trim()}`),
+  });
 }
 
 function querySuffix(searchParams) {
@@ -113,6 +116,40 @@ function relatedFromRecommended(product) {
     const id = String(row._id || row.id || "");
     return !self || id !== self;
   });
+}
+
+/** Crawlable link lists: up to 8 products for the product's car page + 8 from its category. */
+async function loadRelatedLinks(product, carLinks) {
+  const notSelf = { _id: { $ne: product._id } };
+  const out = { car: null, carProducts: [], category: null, categoryProducts: [] };
+  try {
+    const firstCar = (carLinks || []).find((c) => c?.slug);
+    if (firstCar) {
+      const vehicle = await loadVehicleBySlug(firstCar.slug);
+      if (vehicle) {
+        out.car = { slug: vehicle.slug, label: vehicle.displayName || firstCar.label };
+        out.carProducts = await Product.find({ $and: [buildVehiclePageProductFilter(vehicle), notSelf] })
+          .select("name slug")
+          .sort({ featured: -1, createdAt: -1 })
+          .limit(8)
+          .lean();
+      }
+    }
+    const cat = (product.categories || []).find((c) => c && typeof c === "object" && c.slug);
+    if (cat?._id) {
+      out.category = { slug: cat.slug, name: cat.name };
+      const carSlugs = new Set(out.carProducts.map((p) => p.slug));
+      const rows = await Product.find({ ...WEBSITE_PRODUCT_FILTER, categories: cat._id, ...notSelf })
+        .select("name slug")
+        .sort({ featured: -1, createdAt: -1 })
+        .limit(16)
+        .lean();
+      out.categoryProducts = rows.filter((p) => !carSlugs.has(p.slug)).slice(0, 8);
+    }
+  } catch (e) {
+    console.error("loadRelatedLinks:", e);
+  }
+  return JSON.parse(JSON.stringify(out));
 }
 
 async function loadRelatedProducts(product) {
@@ -224,11 +261,13 @@ const loadContent = cache(async (slug) => {
     } catch (e) {
       console.error("resolveProductCarLinks:", e);
     }
+    const relatedLinks = await loadRelatedLinks(product, carLinks);
     return {
       type: "product",
       data: serializeStoreProductDetail(product),
       relatedProducts,
       carLinks,
+      relatedLinks,
     };
   }
 
@@ -314,15 +353,17 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     const seoOverride = getPageSeoOverride(`/${slugKey}`);
     const contentOverride = PRODUCT_CONTENT_OVERRIDES[slugKey] || null;
     const displayName =
-      PRODUCT_H1_OVERRIDES[slugKey] ||
-      String(p.name || "").replace(/\bButto\b/g, "Button");
+      PRODUCT_H1_OVERRIDES[slugKey] || displayProductName(p.name);
     // S6 override meta wins when present; else product SEO / content.
-    const description =
-      (seoOverride?.meta || "").trim() ||
-      (p.seo?.metaDescription || p.metaDescription || "").trim().replace(/\bButto\b/g, "Button") ||
-      stripHtml(contentOverride?.shortDescription || p.shortDescription || "").slice(0, 160) ||
-      stripHtml(contentOverride?.descriptionHtml || p.longDescription || "").slice(0, 160) ||
-      `Buy ${displayName} at ${BRAND}. Cash on Delivery nationwide.`;
+    const description = productSeoDescription({
+      metaDescription: String(p.seo?.metaDescription || p.metaDescription || "").replace(/\bButto\b/g, "Button"),
+      override: seoOverride,
+      fallbacks: [
+        stripHtml(contentOverride?.shortDescription || p.shortDescription || "").slice(0, 160),
+        stripHtml(contentOverride?.descriptionHtml || p.longDescription || "").slice(0, 160),
+        `Buy ${displayName} at ${BRAND}. Delivery across Pakistan.`,
+      ],
+    });
     const keywords = Array.isArray(p.seo?.metaKeywords)
       ? p.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
       : [];
@@ -404,9 +445,7 @@ function toProductLd(product, reviews = []) {
   const genuine = customerReviewsForSchema(reviews);
   const slugKey = String(product?.slug || "").trim();
   const contentOverride = PRODUCT_CONTENT_OVERRIDES[slugKey] || null;
-  const displayName =
-    PRODUCT_H1_OVERRIDES[slugKey] ||
-    String(product.name || "").replace(/\bButto\b/g, "Button");
+  const displayName = PRODUCT_H1_OVERRIDES[slugKey] || displayProductName(product.name);
   const descHtml =
     contentOverride?.descriptionHtml ||
     product.descriptionHtml ||
@@ -468,9 +507,7 @@ function toProductLd(product, reviews = []) {
 function toBreadcrumbLd(product) {
   const cat = product.categories?.[0];
   const slugKey = String(product?.slug || "").trim();
-  const crumbName =
-    PRODUCT_H1_OVERRIDES[slugKey] ||
-    String(product.name || "").replace(/\bButto\b/g, "Button");
+  const crumbName = PRODUCT_H1_OVERRIDES[slugKey] || displayProductName(product.name);
   const items = [{ name: "Home", url: "/" }];
   if (cat?.slug) {
     items.push({ name: cat.name, url: `/categories/${cat.slug}` });
@@ -616,6 +653,7 @@ export default async function ProductPage({ params, searchParams }) {
           carLinks={content.carLinks || []}
           soldRecently={soldRecently}
         />
+        <ProductRelatedLinks {...(content.relatedLinks || {})} />
         <InternalBlogLinks
           title="From the blog"
           links={blogsForProduct({

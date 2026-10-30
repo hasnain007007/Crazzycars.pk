@@ -70,6 +70,8 @@ function VideoPreview({ url, type }) {
   );
 }
 
+const IMAGE_VIEW_DEFAULTS = ["front", "side", "installed", "pack contents", "detail"];
+
 export default function TabMedia({
   value,
   onChange,
@@ -158,6 +160,38 @@ export default function TabMedia({
         existingImageCount={existingImageCount}
         storefrontWatermark={storefrontWatermark}
       />
+
+      {list.length ? (
+        <div className="rounded-lg border border-[#e5e7eb] p-4">
+          <h4 className="text-sm font-semibold text-[#111827]">Image view labels (alt text)</h4>
+          <p className="mt-1 text-xs text-[#6b7280]">
+            The storefront alt text is “{itemName || "Product name"} – view”. Leave empty to use front, side,
+            installed, pack contents, detail by position.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {list.map((img, i) => (
+              <li key={img.url || i} className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url} alt="" className="h-10 w-10 shrink-0 rounded object-cover" />
+                <input
+                  type="text"
+                  list="image-view-options"
+                  value={img.label || ""}
+                  placeholder={IMAGE_VIEW_DEFAULTS[i] || "detail"}
+                  onChange={(e) => onChange(list.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+                  className="h-9 w-full max-w-xs rounded-md border border-[#d1d5db] px-2 text-sm"
+                  aria-label={`View label for image ${i + 1}`}
+                />
+              </li>
+            ))}
+          </ul>
+          <datalist id="image-view-options">
+            {["front", "side", "rear", "installed", "pack contents", "detail", "close-up", "on car"].map((v) => (
+              <option key={v} value={v} />
+            ))}
+          </datalist>
+        </div>
+      ) : null}
 
       {typeof onVideosChange === "function" ? (
         <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-4">

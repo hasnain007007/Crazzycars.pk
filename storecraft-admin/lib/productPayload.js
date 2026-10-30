@@ -255,6 +255,7 @@ export function normalizeMediaImageEntry(img) {
     isMain: Boolean(img?.isMain),
     altText: String(img?.altText || "").trim().slice(0, 500),
     imageName: String(img?.imageName || "").trim().slice(0, 200),
+    label: String(img?.label || "").trim().slice(0, 60),
     width: Number.isFinite(w) && w > 0 ? Math.round(w) : undefined,
     height: Number.isFinite(h) && h > 0 ? Math.round(h) : undefined,
     focalPoint: (() => {

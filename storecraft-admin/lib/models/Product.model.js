@@ -8,6 +8,8 @@ const imageSchema = new mongoose.Schema(
     finalSize: { type: Number },
     isMain: { type: Boolean, default: false },
     altText: { type: String, default: "" },
+    /** Optional view for the alt text: front, side, installed, pack contents, detail… */
+    label: { type: String, default: "", trim: true },
     imageName: { type: String, default: "" },
     width: { type: Number },
     height: { type: Number },

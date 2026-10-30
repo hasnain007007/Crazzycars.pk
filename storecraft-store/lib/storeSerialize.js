@@ -1,3 +1,4 @@
+import { displayProductName } from "@/lib/displayProductName";
 import { productAllowsCod } from "@/lib/codEligibility";
 import { scrubPaymentClaims } from "@/lib/paymentCopy";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
@@ -45,12 +46,26 @@ function fixTruncatedButto(value) {
   return String(value ?? "").replace(/\bButto\b/g, "Button");
 }
 
-function mapImagesWithSafeAlt(images) {
-  return (images || []).map((i) => ({
-    url: absoluteMediaUrl(i?.url),
-    isMain: !!i?.isMain,
-    altText: fixTruncatedButto(i?.altText || ""),
-  }));
+const DEFAULT_IMAGE_VIEWS = ["front", "side", "installed", "pack contents", "detail"];
+const altKey = (t) => displayProductName(t).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+/**
+ * Image alt = "{display name} – {view}". View comes from the image's admin label, else
+ * front / side / installed / pack contents / detail by position. A custom alt written in
+ * admin (anything other than the bare product name) is kept, minus claim words.
+ */
+function mapImagesWithSafeAlt(images, productName = "") {
+  const base = displayProductName(productName);
+  return (images || []).map((i, idx) => {
+    const stored = String(i?.altText || "").trim();
+    const isBareName = !stored || (base && altKey(stored) === altKey(productName));
+    const view = String(i?.label || "").trim() || DEFAULT_IMAGE_VIEWS[idx] || "detail";
+    return {
+      url: absoluteMediaUrl(i?.url),
+      isMain: !!i?.isMain,
+      altText: isBareName && base ? `${base} – ${view}` : displayProductName(stored),
+    };
+  });
 }
 
 function getStock(product) {
@@ -141,7 +156,7 @@ export function serializeStoreProductSummary(p, opts = {}) {
   const summaryImages = mediaImages.map((i) => absoluteMediaUrl(i?.url)).filter(Boolean);
   return {
     id: productDocId(p),
-    name: fixTruncatedButto(p.name),
+    name: displayProductName(p.name),
     slug: p.slug,
     articleNo: p.articleNo || p.inventory?.sku || "",
     shortDescription: scrubPaymentClaims(
@@ -151,7 +166,7 @@ export function serializeStoreProductSummary(p, opts = {}) {
     image: summaryImage,
     images: summaryImages,
     media: {
-      images: mapImagesWithSafeAlt(mediaImages),
+      images: mapImagesWithSafeAlt(mediaImages, p.name),
     },
     price,
     regularPrice,
@@ -259,7 +274,7 @@ export function serializeStoreProductDetail(p) {
 
   return {
     id: productDocId(p),
-    name: fixTruncatedButto(p.name),
+    name: displayProductName(p.name),
     slug: p.slug,
     articleNo: p.articleNo || "",
     ean: p.ean || "",
@@ -285,7 +300,7 @@ export function serializeStoreProductDetail(p) {
     compareAt: regularPrice || price,
     saleSchedule: schedule,
     isOnSale,
-    images: mapImagesWithSafeAlt(p.media?.images),
+    images: mapImagesWithSafeAlt(p.media?.images, p.name),
     onCarPreviews: (Array.isArray(p.onCarPreviews) ? p.onCarPreviews : [])
       .filter((r) => r?.car && r?.image)
       .map((r) => ({
@@ -295,7 +310,7 @@ export function serializeStoreProductDetail(p) {
         aiGenerated: r.aiGenerated === true,
       })),
     media: {
-      images: mapImagesWithSafeAlt(p.media?.images),
+      images: mapImagesWithSafeAlt(p.media?.images, p.name),
       videos: serializeMediaVideos(p.media?.videos),
     },
     videos: serializeMediaVideos(p.media?.videos),
