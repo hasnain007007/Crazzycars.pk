@@ -12,6 +12,19 @@ export const STOREFRONT_PRODUCT_FILTER = {
 };
 
 /**
+ * Storefront filter for ONE product by slug (or Mongo id).
+ * Never write `{ slug, ...STOREFRONT_PRODUCT_FILTER }`: the filter's own `slug` key
+ * overwrites yours and the query returns the first active product.
+ */
+export function storefrontProductLookup(slugOrId) {
+  const key = String(slugOrId || "").trim();
+  const bySlug = { slug: { $eq: key, $nin: REDIRECTED_PRODUCT_SLUGS } };
+  const { slug: _slug, ...rest } = STOREFRONT_PRODUCT_FILTER;
+  const match = /^[a-f0-9]{24}$/i.test(key) ? { $or: [bySlug, { _id: key }] } : bySlug;
+  return { ...rest, ...match };
+}
+
+/**
  * Website = the car store. Bike products (segment "bike") live in the app's Bikes store until the
  * website gets its own /bikes section. Apply to website listing, search, feeds and sitemaps only —
  * not to product detail, cart or checkout, which must still resolve bike products for the app.

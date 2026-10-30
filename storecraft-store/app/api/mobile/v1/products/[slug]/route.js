@@ -10,7 +10,7 @@ import Vehicle from "@/lib/models/Vehicle.model";
 import { fitmentLabels } from "@/lib/mobile/fitsVehicle";
 import { ANY_SEGMENT } from "@/lib/segment";
 import { serializeStoreProductDetail } from "@/lib/storeSerialize";
-import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { STOREFRONT_PRODUCT_FILTER, storefrontProductLookup } from "@/lib/productVisibility";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,7 @@ export async function GET(request, context) {
   }
   try {
     await dbConnect();
-    const p = await Product.findOne({ slug: String(slug), ...STOREFRONT_PRODUCT_FILTER })
+    const p = await Product.findOne(storefrontProductLookup(slug))
       .select(
         "name slug articleNo media pricing inventory status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts customSizing specifications isUniversal compatibleCars vehicleCompatibility compatibleVehicles rating averageRating ratingAverage reviewCount totalReviews numReviews codEnabled isBulky advancePercentRequired"
       )
