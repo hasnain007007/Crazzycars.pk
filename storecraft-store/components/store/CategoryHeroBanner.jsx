@@ -90,7 +90,7 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
             )}
             <div className="cat-hero__brand-text">
               <span className="cat-hero__brand-name">{storeName}</span>
-              <span className="cat-hero__brand-tag">Premium Car Accessories · Pakistan</span>
+              <span className="cat-hero__brand-tag">Car Accessories · Pakistan</span>
             </div>
           </div>
 

@@ -642,7 +642,7 @@ Shukriya — CrazzyCars.pk ✨`,
       heroHeadline: { type: String, default: "UPGRADE YOUR RIDE." },
       heroSubtext: {
         type: String,
-        default: "Premium car accessories delivered across Pakistan. Quality products for every make and model.",
+        default: "Car accessories delivered across Pakistan for every make and model.",
       },
       heroCtaText: { type: String, default: "Shop Now" },
       heroCtaUrl: { type: String, default: "/shop" },

@@ -960,7 +960,8 @@ export function ProductDetailMedico({
 
   return (
     <>
-    <div className="bg-[#FFFFFF] pb-8 md:pb-12">
+    {/* Prepaid-only items (body kits): the site-wide COD booking band is hidden via CSS :has(). */}
+    <div className="bg-[#FFFFFF] pb-8 md:pb-12" data-prepaid-product={productAllowsCod(product) ? undefined : "1"}>
       <style>{`
         @keyframes productViewerPulse {
           0%, 100% { opacity: 1; }

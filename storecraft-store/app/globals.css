@@ -7399,6 +7399,8 @@ textarea::placeholder {
 }
 
 /* ── Advance booking band (under the header) ────────────────────────────── */
+/* Prepaid-only product pages (body kits): no COD booking band. */
+body:has([data-prepaid-product]) .adv-band { display: none; }
 .adv-band { width: 100%; align-self: stretch; position: relative; overflow: hidden; color: #fff; background: linear-gradient(90deg, #8c0e13 0%, #c41e1e 50%, #8c0e13 100%); }
 .adv-band::after { content: ""; position: absolute; top: 0; bottom: 0; left: -30%; width: 20%; pointer-events: none; background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: adv-band-shine 7s ease-in-out 1.5s infinite; }
 .adv-band__inner { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 10px 24px; display: flex; align-items: center; gap: 18px; }

@@ -20,7 +20,7 @@ const FEE = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
 const BULKY = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
 
 function feeNote(cityLabel) {
-  return `${cityLabel} courier from ${FEE} (bulky kits may be ${BULKY}).`;
+  return `Delivery to ${cityLabel}: ${FEE} regular, ${BULKY} if the order has bulky items.`;
 }
 
 /** @typedef {{ slug: string, name: string, province: string, h1: string, introHtml: string, deliveryNote: string, deliveryDays: string, metaTitle: string, metaDescription: string, faq: {question:string,answer:string}[], topCategorySlugs: string[], emitLocalBusiness: boolean }} CityLandingDefault */

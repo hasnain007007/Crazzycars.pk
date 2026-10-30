@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { STORE_CONTACT } from "@/config/store-policy";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
-import { COD_ADVANCE_AMOUNT } from "@/config/checkout-money";
 import {
+  codAdvanceAmountsLabel,
   deliveryEtaSummary,
-  formatPkrAmount,
   getFaqItems,
   returnsFaqAnswer,
   standardDeliveryFeeStatement,
@@ -21,7 +20,7 @@ const BRAND =
   "CrazzyCars.pk";
 
 const META_BASE = "Cash on Delivery (COD) in Pakistan";
-const META_DESCRIPTION = `COD nationwide: pay a small booking advance (from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}), then the balance on delivery. Body kits use JazzCash, Meezan or bank transfer.`;
+const META_DESCRIPTION = `COD on eligible items: a ${codAdvanceAmountsLabel()} booking advance (by order value), deducted from your total; balance on delivery. Body kits are prepaid (JazzCash, Meezan or bank transfer).`;
 
 const titleMeta = buildBrandedAbsoluteTitle(META_BASE, { brand: BRAND });
 
@@ -68,7 +67,7 @@ function codLandingFaqs() {
     return [
       {
         question: "Do you offer Cash on Delivery (COD) in Pakistan?",
-        answer: `Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from ${formatPkrAmount(COD_ADVANCE_AMOUNT)}, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
+        answer: `Yes. Cash on Delivery is available nationwide. For COD orders, pay a ${codAdvanceAmountsLabel()} booking advance by order value (or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
       },
       {
         question: "How much are delivery charges?",
@@ -114,8 +113,8 @@ export default function CashOnDeliveryPage() {
       <h1 className="text-2xl font-bold md:text-3xl text-zinc-900">Cash on Delivery across Pakistan</h1>
       <p className="mt-3 text-gray-700 leading-relaxed">
         Yes — Cash on Delivery is available nationwide on eligible products. For COD orders, pay a
-        small booking advance (from {formatPkrAmount(COD_ADVANCE_AMOUNT)} depending on your order total,
-        or more if the product requires a % advance; see <a href="/advance-payment" className="text-red-700 underline">how to pay</a>) after placing your order and send the screenshot on WhatsApp. It is
+        {codAdvanceAmountsLabel()} booking advance depending on your order total,
+        or more if the product requires a % advance; see <Link href="/advance-payment" className="text-red-700 underline">how to pay</Link>) after placing your order and send the screenshot on WhatsApp. It is
         deducted from your total and refunded if the item doesn&apos;t fit. The balance is collected
         when your order arrives.
       </p>
@@ -127,8 +126,8 @@ export default function CashOnDeliveryPage() {
           (when the product allows it).
         </li>
         <li>
-          <strong>Pay the booking advance</strong> shown at checkout (from{" "}
-          {formatPkrAmount(COD_ADVANCE_AMOUNT)}) — the rest is Cash on Delivery.
+          <strong>Pay the booking advance</strong> shown at checkout ({codAdvanceAmountsLabel()} by
+          order value) — the rest is Cash on Delivery.
         </li>
         <li>
           <strong>Send your payment screenshot on WhatsApp</strong> to{" "}

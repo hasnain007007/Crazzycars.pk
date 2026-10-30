@@ -99,7 +99,7 @@ export default async function Page() {
   ];
   const homeLd = homeHubCollectionJsonLd({
     description:
-      "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide.",
+      "Buy car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. COD on eligible items.",
     items: hubItems,
   });
 

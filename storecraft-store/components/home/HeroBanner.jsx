@@ -29,7 +29,7 @@ const DEFAULT_BTN_BG = '#111111'
 
 /** Shown only when the API returns no banner record */
 const NO_BANNER_HEADING = 'Upgrade Your Ride'
-const NO_BANNER_SUB = 'Premium Car Accessories · Delivered Across Pakistan'
+const NO_BANNER_SUB = 'Car Accessories · Delivered Across Pakistan'
 
 /** Map admin objectPosition values to valid CSS object-position */
 function cssObjectPosition(pos) {

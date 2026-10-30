@@ -285,7 +285,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   const showLogoInFooter = footer.showLogoInFooter !== false
 
   const tagline = footer.tagline
-    || "The original performance-parts shop in Gujranwala"
+    || "Car accessories shop in Gujranwala"
 
   const shopLinks = (settings?.footer?.shopLinks || []).filter(
     (l) => l.enabled !== false

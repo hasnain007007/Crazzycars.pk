@@ -64,16 +64,14 @@ export function deliveryFeeOnlyStatement() {
   return `Rs ${regular} regular, Rs ${bulky} if the order has bulky items.`;
 }
 
+/** "Rs 300 / 600 / 1,000" — the COD booking advance amounts from COD_ADVANCE_TIERS. */
+export function codAdvanceAmountsLabel() {
+  return `Rs ${COD_ADVANCE_TIERS.map((t) => Number(t.amount).toLocaleString("en-PK")).join(" / ")}`;
+}
+
 /** COD booking advance — eligible items only. Built from COD_ADVANCE_TIERS. */
 export function codBookingAdvanceStatement() {
-  const amounts = COD_ADVANCE_TIERS.map((t) =>
-    Number(t.amount).toLocaleString("en-PK")
-  );
-  const joined =
-    amounts.length === 3
-      ? `${amounts[0]} / ${amounts[1]} / ${amounts[2]}`
-      : amounts.join(" / ");
-  return `COD on eligible items with a Rs ${joined} booking advance (by order value), deducted from your total.`;
+  return `COD on eligible items with a ${codAdvanceAmountsLabel()} booking advance (by order value), deducted from your total.`;
 }
 
 /** Combined delivery + COD line for COD-eligible contexts. */

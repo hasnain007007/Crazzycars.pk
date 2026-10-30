@@ -137,11 +137,11 @@ export const KEYWORD_PRODUCT_SEO = {
   },
   "/premium-dynamic-ambient-interior-lights": {
     title: "Car Ambient Light Price in Pakistan, Dynamic RGB",
-    meta: "Premium dynamic RGB ambient interior lights for cars. Rs 6,500. Ambient light for car price in Pakistan with COD on eligible orders.",
+    meta: "Dynamic RGB ambient interior lights for cars. Rs 6,500. Ambient light for car price in Pakistan with COD on eligible orders.",
     priceFaq: {
       question: "What is the ambient light for car price in Pakistan?",
       answer:
-        "Premium dynamic ambient interior lights are Rs 6,500 at CrazzyCars.pk. COD on eligible items; WhatsApp 03284010007 for install tips in Gujranwala.",
+        "Dynamic ambient interior lights are Rs 6,500 at CrazzyCars.pk. COD on eligible items; WhatsApp 03284010007 for install tips in Gujranwala.",
     },
   },
   "/carbon-fiber-hand-stitched-steering-wheel-cover": {

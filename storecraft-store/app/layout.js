@@ -53,7 +53,7 @@ const rajdhani = Rajdhani({
 });
 
 const FALLBACK_DESCRIPTION =
-  "Buy premium car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. Cash on Delivery nationwide. CrazzyCars.pk";
+  "Buy car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. COD on eligible items. CrazzyCars.pk";
 
 export const viewport = {
   width: "device-width",
@@ -206,7 +206,7 @@ export default async function RootLayout({ children }) {
       footer: {
         ...footerRaw,
         copyrightText: footerRaw.copyrightText || settings?.footerMeta?.copyrightText || "",
-        tagline: footerRaw.tagline || settings?.footerMeta?.tagline || "The original performance-parts shop in Gujranwala",
+        tagline: footerRaw.tagline || settings?.footerMeta?.tagline || "Car accessories shop in Gujranwala",
         paymentMethods: footerRaw.paymentMethods || settings?.footerMeta?.paymentMethods || [],
         shopLinks: footerRaw.shopLinks || [],
         customerCareLinks: footerRaw.customerCareLinks || [],

@@ -53,7 +53,7 @@ export default async function ShopPage({ searchParams }) {
         ? "Hot Deals"
         : "Shop All Car Accessories",
     description:
-      "Browse premium car accessories in Pakistan. Filter by category, brand, and car make. Cash on delivery available nationwide from CrazzyCars.pk.",
+      "Browse car accessories in Pakistan. Filter by category, brand and car make. COD on eligible items, delivery across Pakistan from CrazzyCars.pk.",
     url: listingCanonicalPath("/shop", listing),
     products,
     numberOfItems: total,
