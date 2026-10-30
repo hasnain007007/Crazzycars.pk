@@ -103,7 +103,8 @@ describe("product /products/ → flat (and fallbacks)", () => {
     );
     assert.equal(
       resolveProductRedirectPath("honda-civic-reborn-2006-2011-body-kit-d1-crazzycars-pk"),
-      "/honda-civic-reborn-2006-2011-body-kit-d3"
+      // Discontinued kit → its car page, never a different kit's product page.
+      "/cars/honda-civic-reborn-2006-2012"
     );
     assert.equal(
       resolveFlatProductFallback("suzuki-swift-2018-2024-complete-body-kit-fibreglass"),

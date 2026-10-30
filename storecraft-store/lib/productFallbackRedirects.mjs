@@ -12,12 +12,12 @@ import { resolveDeletedFlatSlug, resolveDeletedPath } from "./deletedUrlRedirect
 
 /** @type {Record<string, string>} handle (with or without -crazzycars-pk) → path */
 export const PRODUCT_FALLBACK_REDIRECTS = {
-  "honda-civic-reborn-2006-2011-body-kit-d1": "/honda-civic-reborn-2006-2011-body-kit-d3",
-  "honda-civic-reborn-2006-2011-body-kit-d1-crazzycars-pk":
-    "/honda-civic-reborn-2006-2011-body-kit-d3",
-  "honda-civic-reborn-2006-2011-body-kit-d4": "/honda-civic-reborn-2006-2011-body-kit-d3",
-  "honda-civic-reborn-2006-2011-body-kit-d4-crazzycars-pk":
-    "/honda-civic-reborn-2006-2011-body-kit-d3",
+  // D1 / D4 are discontinued. Send them to the Civic Reborn car page (all Reborn kits on
+  // sale) — not to the D3 product, which is a different kit with its own title.
+  "honda-civic-reborn-2006-2011-body-kit-d1": "/cars/honda-civic-reborn-2006-2012",
+  "honda-civic-reborn-2006-2011-body-kit-d1-crazzycars-pk": "/cars/honda-civic-reborn-2006-2012",
+  "honda-civic-reborn-2006-2011-body-kit-d4": "/cars/honda-civic-reborn-2006-2012",
+  "honda-civic-reborn-2006-2011-body-kit-d4-crazzycars-pk": "/cars/honda-civic-reborn-2006-2012",
   "toyota-corolla-2017-2020-led-side-mirror-sequential-indicator-pair":
     "/toyota-corolla-2014-2026-side-mirror-neon-style-indicator",
   "toyota-corolla-2017-2020-led-side-mirror-sequential-indicator-pair-crazzycars-pk":
