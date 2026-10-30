@@ -294,9 +294,9 @@ export function ProductDetailMedico({
       .catch(() => {});
   }, []);
 
-  /** Always land at the top of the PDP — soft nav + smooth scroll otherwise hit the footer. */
+  /** Land at the top of the PDP on a new visit (Back/Forward restore is handled by ScrollToTop). */
   useLayoutEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || window.__ccRestoring) return;
     const html = document.documentElement;
     const prev = html.style.scrollBehavior;
     html.style.scrollBehavior = "auto";
