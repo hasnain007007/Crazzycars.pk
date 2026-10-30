@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { buildVehiclePageProductFilter } from "@/lib/productVehicleQuery";
+import { aggregateOfferLd, getProductPriceExtent, priceRangeSentence } from "@/lib/seo/categoryPriceExtent";
 import {
   loadProductsForVehicle,
   loadVehicleBySlug,
@@ -26,7 +27,7 @@ import {
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
-import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
+import { BRAND_NAME, stripLegacyBrand, withBrandTitleSuffix } from "@/lib/brand";
 import { getCarPageMeta } from "@/lib/seo/carPageMeta2026-10.mjs";
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
 import { blogsForCar } from "@/lib/seo/blogInternalLinks.mjs";
@@ -85,7 +86,7 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
     const carMeta = getCarPageMeta(vehicle.slug);
     const seoOverride = getPageSeoOverride(`/cars/${vehicle.slug}`);
     // S6: PAGE_SEO_OVERRIDES titles win (≤60, keyword-mapped). Else DB, then carPageMeta.
-    const dbTitle = String(vehicle.metaTitle || "").trim();
+    const dbTitle = stripLegacyBrand(vehicle.metaTitle);
     const titleMeta = seoOverride?.title
       ? { absolute: String(seoOverride.title).trim() }
       : dbTitle
@@ -98,9 +99,10 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
             });
     const title = titleMeta.absolute;
     // Prefer Car Catalog Description (merged in loadVehicleBySlug) over legacy Vehicle.metaDescription.
-    const catalogDesc =
-      String(vehicle.description || "").trim() ||
-      String(vehicle.metaDescription || "").trim();
+    const catalogDesc = stripLegacyBrand(
+      String(vehicle.description || "").trim() || String(vehicle.metaDescription || "").trim(),
+      { replacement: BRAND }
+    );
     const description =
       (seoOverride?.meta || "").trim() ||
       catalogDesc ||
@@ -203,12 +205,16 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     { name: vehicle.displayName, url: `/cars/${vehicle.slug}` },
   ];
   const breadcrumbLd = breadcrumbJsonLd(crumbs);
-  const catalogDesc =
-    String(vehicle.description || "").trim() ||
-    String(vehicle.metaDescription || "").trim();
+  const catalogDesc = stripLegacyBrand(
+    String(vehicle.description || "").trim() || String(vehicle.metaDescription || "").trim(),
+    { replacement: BRAND_NAME }
+  );
   const pageDescription = vehicleMetaDescription(vehicle, catalogDesc);
 
+  const priceExtent = await getProductPriceExtent(buildVehiclePageProductFilter(vehicle));
+  const priceLine = priceRangeSentence(`${vehicle.displayName} accessories`, priceExtent);
   const collectionLd = collectionPageJsonLd({
+    offers: aggregateOfferLd(priceExtent),
     name: `${vehicle.displayName} Accessories`,
     description: pageDescription,
     url: `/cars/${vehicle.slug}`,
@@ -326,6 +332,11 @@ export default async function VehicleSlugPage({ params, searchParams }) {
               >
                 {vehicle.displayName}
               </p>
+              {priceLine ? (
+                <p className="vehicle-hero-price" style={{ margin: "6px 0 0", fontSize: 14, color: "#E5E7EB" }}>
+                  {priceLine}
+                </p>
+              ) : null}
               {nickname &&
               !String(vehicle.displayName || "")
                 .toLowerCase()
@@ -487,6 +498,11 @@ export default async function VehicleSlugPage({ params, searchParams }) {
           </p>
         ) : null}
         <p className="vehicle-mobile-heading__sub">{heroOfferLine}</p>
+        {priceLine ? (
+          <p className="vehicle-price-line" style={{ margin: "6px 0 0", fontSize: 13, color: "#555" }}>
+            {priceLine}
+          </p>
+        ) : null}
       </div>
 
       <section id="compatible-products" className="store-container py-8 md:py-10">

@@ -35,6 +35,20 @@ export function stripTrailingBrandSuffix(raw) {
 }
 
 /**
+ * Old store name left in stored SEO text (car pages were imported from Sialkot Motorsports).
+ * Drops "Sialkot Motorsports" anywhere and a trailing "| Sialkot" brand tag; "Sialkot" as a
+ * delivery city elsewhere in the text is kept.
+ */
+export function stripLegacyBrand(raw, { replacement = "" } = {}) {
+  return String(raw || "")
+    .replace(/\bSialkot\s*Motor\s*sports\b/gi, replacement)
+    .replace(/\s*[|\u2013\u2014–—-]\s*Sialkot\s*$/i, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s*[|\u2013\u2014–—-]\s*$/g, "")
+    .trim();
+}
+
+/**
  * Normalise admin SEO titles: strip brand variants, then add TITLE_SUFFIX once
  * when the branded title fits in maxLen (default 60). Over budget → no suffix.
  * Never truncates mid-word or mid-brand (no "… | CrazzyCar").

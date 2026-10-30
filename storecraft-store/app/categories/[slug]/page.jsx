@@ -25,7 +25,7 @@ import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sortProductsClient } from "@/lib/productListing";
 import { resolveCategoryHandle } from "@/lib/resolveCategoryHandle";
 import { resolveCollectionHandleToPath } from "@/lib/resolveCollectionHandle";
-import { getCategoryPriceExtent } from "@/lib/seo/categoryPriceExtent";
+import { aggregateOfferLd, getCategoryPriceExtent, priceRangeSentence } from "@/lib/seo/categoryPriceExtent";
 import {
   buildCategoryKeywordFaqs,
   faqPageJsonLd,
@@ -354,7 +354,10 @@ export default async function CategoryPage({ params, searchParams }) {
       String(data.category?.description || "").trim() ||
       String(data.category?.shortDescription || "").trim() ||
       undefined;
+    const priceExtent = await getCategoryPriceExtent(data.category?.slug || slugStr);
+    const priceLine = priceRangeSentence(data.category?.name || "", priceExtent);
     const collectionLd = collectionPageJsonLd({
+      offers: aggregateOfferLd(priceExtent),
       name: data.category?.name,
       description: categoryDescription,
       url: `/categories/${data.category?.slug || slugStr}`,
@@ -375,8 +378,7 @@ export default async function CategoryPage({ params, searchParams }) {
 
     let visibleFaqs = [];
     if (isKeywordStrategyCategory(catSlug)) {
-      const extent = await getCategoryPriceExtent(catSlug);
-      const baseFaqs = buildCategoryKeywordFaqs(catSlug, extent);
+      const baseFaqs = buildCategoryKeywordFaqs(catSlug, priceExtent);
       const extraFaqs = CATEGORY_FAQ_OVERRIDES[catSlug] || [];
       const seenQ = new Set(baseFaqs.map((f) => String(f.question || "").toLowerCase()));
       visibleFaqs = [
@@ -443,6 +445,11 @@ export default async function CategoryPage({ params, searchParams }) {
           showFullDescription={false}
           leadOnly
         />
+        {priceLine ? (
+          <p className="store-container cat-price-line" style={{ padding: "0 16px", margin: "4px auto 0", color: "#555", fontSize: 14 }}>
+            {priceLine}
+          </p>
+        ) : null}
         <ProductListingSection
           pathname={listingPath}
           listing={listing}

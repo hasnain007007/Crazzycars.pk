@@ -1,3 +1,4 @@
+import { displayProductName } from "../displayProductName.js";
 /**
  * SEO helpers — JSON-LD structured data for Google / AI shopping citation.
  */
@@ -337,7 +338,7 @@ function buildCollectionProductNode(p) {
   const productNode = {
     "@type": "Product",
     "@id": `${itemUrl}#product`,
-    name: p.name || slug,
+    name: displayProductName(p.name) || slug,
     url: itemUrl,
     brand: { "@type": "Brand", name: String(p.brand || p.vendor || "CrazzyCars.pk").trim() || "CrazzyCars.pk" },
     description: resolveProductDescription(p, slug),
@@ -414,7 +415,7 @@ export function productJsonLd(p) {
     "@context": "https://schema.org",
     "@type": "Product",
     "@id": `${url}#product`,
-    name: p.name,
+    name: displayProductName(p.name),
     url,
     description: resolveProductDescription(p, slug),
     sku: resolveProductSku(p, slug),
@@ -539,13 +540,16 @@ export function collectionPageJsonLd({
   numberOfItems,
   breadcrumb,
   isPartOfName,
+  offers,
 } = {}) {
   const SITE = site();
   const pageUrl = url?.startsWith("http")
     ? url
     : `${SITE}${url?.startsWith("/") ? url : `/${url || ""}`}`;
 
+  // First 24 products only; numberOfItems still reports the full count.
   const list = (Array.isArray(products) ? products : [])
+    .slice(0, 24)
     .map((p, i) => {
       const slug = String(p?.slug || "").trim();
       if (!slug) return null;
@@ -556,7 +560,7 @@ export function collectionPageJsonLd({
         "@type": "ListItem",
         position: i + 1,
         url: itemUrl,
-        name: p.name || slug,
+        name: displayProductName(p.name) || slug,
       };
     })
     .filter(Boolean);
@@ -584,6 +588,7 @@ export function collectionPageJsonLd({
       itemListElement: list,
     },
   };
+  if (offers) ld.offers = offers;
 
   if (breadcrumb) {
     ld.breadcrumb = breadcrumb["@type"]

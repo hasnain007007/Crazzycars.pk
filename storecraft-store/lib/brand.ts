@@ -7,6 +7,7 @@ export {
   BRAND,
   PRODUCT_TITLE_BRAND,
   CATEGORY_TITLE_BRAND,
+  stripLegacyBrand,
   stripTrailingBrandSuffix,
   withBrandTitleSuffix,
 } from "./brand.js";
