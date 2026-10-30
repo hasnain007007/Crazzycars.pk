@@ -3,6 +3,8 @@
  * Offer schema, llms.txt, and related storefront copy.
  * Do not invent alternate COD/prepaid wording elsewhere.
  */
+import { stripCodSentences } from "./prepaidText.js";
+
 export const COD_LINE =
   "Cash on Delivery across Pakistan (small advance booking)";
 
@@ -39,5 +41,7 @@ export function scrubPaymentClaims(text, allowsCod = true) {
   t = t.replace(/Backed by CrazzyCars nationwide Cash on Delivery/gi, TRUST_LINE);
   t = t.replace(/No advance payment required/gi, line);
   t = t.replace(/COD orders need a small booking[^.<]*/gi, COD_LINE);
+  // Prepaid products: any remaining COD / booking-advance sentence becomes the prepaid line.
+  if (!allowsCod) t = stripCodSentences(t);
   return t;
 }
