@@ -11,7 +11,13 @@ export function computeProductSaleState(pricing, now = new Date()) {
   const rawSale = pricing?.salePrice;
   const saleNum =
     rawSale === null || rawSale === undefined || rawSale === "" || Number.isNaN(Number(rawSale)) ? null : Number(rawSale);
-  const hasSalePrice = saleNum !== null && Number.isFinite(saleNum);
+  const regular = Number(pricing?.regularPrice);
+  // Same rule as the storefront: only 0 < sale < regular is a real sale.
+  const hasSalePrice =
+    saleNum !== null &&
+    Number.isFinite(saleNum) &&
+    saleNum > 0 &&
+    (!Number.isFinite(regular) || regular <= 0 || saleNum < regular);
 
   if (!hasSalePrice) {
     return { isOnSale: false, saleBadge: null, effectiveSalePrice: null };

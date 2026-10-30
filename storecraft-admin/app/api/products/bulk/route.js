@@ -231,7 +231,8 @@ async function handleSaveRows({ user, body, request }) {
 
     if (row.regularPrice != null || row.pricing?.regularPrice != null) {
       const price = Number(row.regularPrice ?? row.pricing?.regularPrice);
-      if (Number.isFinite(price) && price >= 0) {
+      // Whole rupees only; the full sale-vs-regular check runs on the product edit form.
+      if (Number.isFinite(price) && price >= 0 && Number.isInteger(price)) {
         $set["pricing.regularPrice"] = price;
       }
     }

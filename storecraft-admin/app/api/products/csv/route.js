@@ -25,6 +25,7 @@ import { PRODUCT_CSV_HEADERS, PRODUCT_CSV_SAMPLE_ROWS } from "@/lib/productCsv";
 import { sanitizeMediaImages } from "@/lib/productMutations";
 import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
 import { denySecurityHoldMutation } from "@/lib/securityHold";
+import { validateProductPricing } from "@/lib/productPriceRules";
 
 /** Return a real Date; fall back to ObjectId timestamp when value is unusable. */
 function ensureValidProductDate(value, objectId) {
@@ -213,7 +214,9 @@ export async function POST(request) {
         );
 
         const saleRaw = String(row.salePrice ?? "").trim();
-        const salePrice = saleRaw === "" ? undefined : num(saleRaw, undefined);
+        const priceCheck = validateProductPricing({ regularPrice, salePrice: saleRaw });
+        if (!priceCheck.ok) throw new Error(priceCheck.error);
+        const { salePrice } = priceCheck;
         const keywords = normalizeMetaKeywords(splitList(row.metaKeywords));
         const featured = truthy(row.featured, false);
 

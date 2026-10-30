@@ -1,0 +1,2463 @@
+[
+  {
+    "_id": "6a835d9833a52e6041af41e1",
+    "sku": "CC-COR-MIRROR-3",
+    "slug": "toyota-corolla-2014-2026-side-mirror-led-indicators",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "Premium Toyota Corolla E170/E210 2014-2026 accessories in Pakistan — Grande body kits, side mirror covers, window louvers, LED upgrades. COD available.",
+          "_id": "6aa8580d7cedff7f0638cac2",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  },
+  {
+    "_id": "6a73ada33cb882a11883e78b",
+    "sku": "CC-COR-BBL-E120",
+    "slug": "toyota-corolla-e120-dynamic-back-bumper-light-rgb-2002-2008",
+    "set": {
+      "pricing.regularPrice": 5500
+    }
+  },
+  {
+    "_id": "6a73a925bf6886e2a38166fd",
+    "sku": "CC-COR-BBL-RGB",
+    "slug": "toyota-corolla-x-dynamic-back-bumper-light-rgb-2022-2023",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "E170–E210",
+          "_id": "6a73adbc71cf2844312aa2b9",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  },
+  {
+    "_id": "6a71072f3261f3cfd4c75540",
+    "sku": "CC-ALS-SPLR-LIP",
+    "slug": "changan-alsvin-trunk-lip-spoiler",
+    "set": {
+      "pricing.regularPrice": 5000
+    }
+  },
+  {
+    "_id": "6a71072d3261f3cfd4c75533",
+    "sku": "CC-HAV-MIR-BAT",
+    "slug": "haval-h6-batman-style-side-mirror-cover",
+    "set": {
+      "pricing.salePrice": 5999
+    }
+  },
+  {
+    "_id": "6a633a63d40b29d18ad3ce69",
+    "sku": "CC-LGT-204",
+    "slug": "civic-rebirth-side-mirror-rgb-indicator",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2012,
+          "yearTo": 2016,
+          "bodyStyle": "Sedan",
+          "notes": "Rebirth",
+          "_id": "6a739f3971cf2844312a9ca5",
+          "generationLabel": "Rebirth",
+          "generationId": "6a7aa19a277a277067df4da7"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Rebirth",
+          "generationId": "6a7aa19a277a277067df4da7",
+          "generationLabel": "Rebirth",
+          "yearFrom": 2012,
+          "yearTo": 2016
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdd"
+      ]
+    }
+  },
+  {
+    "_id": "6a633a62d40b29d18ad3ce68",
+    "sku": "CC-LGT-203",
+    "slug": "honda-city-rgb-side-mirror-indicator-led-dynamic-mirror-lights",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "yearFrom": 2009,
+          "yearTo": 2020,
+          "bodyStyle": "Sedan",
+          "notes": "Classic",
+          "_id": "6a739ff171cf2844312a9dfb",
+          "generationLabel": "Classic",
+          "generationId": "6a7aa19a277a277067df4daa"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "generation": "Classic",
+          "generationId": "6a7aa19a277a277067df4daa",
+          "generationLabel": "Classic",
+          "yearFrom": 2009,
+          "yearTo": 2020
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce0"
+      ]
+    }
+  },
+  {
+    "_id": "6a633a61d40b29d18ad3ce67",
+    "sku": "CC-LGT-202",
+    "slug": "osram-projector-lights-3-colour-premium-quality",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla Cross",
+          "yearFrom": 2020,
+          "yearTo": 2026,
+          "bodyStyle": "SUV",
+          "notes": "Toyota Corolla Cross (2020–present)",
+          "_id": "6a6528880d6ae1a5be2438ac",
+          "generationId": "6a7b180a1b49e4da38a1abd1",
+          "generationLabel": ""
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2009,
+          "yearTo": 2014,
+          "bodyStyle": "Sedan",
+          "notes": "E140",
+          "_id": "6a6528880d6ae1a5be2438ad",
+          "generationLabel": "E140",
+          "generationId": "6a7aa19a277a277067df4da0"
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "E170–E210",
+          "_id": "6a6528880d6ae1a5be2438ae",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2002,
+          "yearTo": 2008,
+          "bodyStyle": "Sedan",
+          "notes": "Toyota Corolla E120 (2002–2008)",
+          "_id": "6a6528880d6ae1a5be2438af",
+          "generationLabel": "E120",
+          "generationId": "6a7b180a1b49e4da38a1abc6"
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla Axio",
+          "yearFrom": 2014,
+          "yearTo": 2022,
+          "bodyStyle": "Sedan",
+          "notes": "Toyota Corolla Axio (2014–2022)",
+          "_id": "6a6528880d6ae1a5be2438b0"
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2006,
+          "yearTo": 2012,
+          "bodyStyle": "Sedan",
+          "notes": "Reborn",
+          "_id": "6a6528880d6ae1a5be2438b1",
+          "generationLabel": "Reborn",
+          "generationId": "6a7aa19a277a277067df4da6"
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2012,
+          "yearTo": 2016,
+          "bodyStyle": "Sedan",
+          "notes": "Rebirth",
+          "_id": "6a6528880d6ae1a5be2438b2",
+          "generationLabel": "Rebirth",
+          "generationId": "6a7aa19a277a277067df4da7"
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a6528880d6ae1a5be2438b3",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2022,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "11th Gen",
+          "_id": "6a6528880d6ae1a5be2438b4",
+          "generationLabel": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla Cross",
+          "generation": "",
+          "generationId": "6a7b180a1b49e4da38a1abd1",
+          "generationLabel": "",
+          "yearFrom": 2020,
+          "yearTo": 2026
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E140",
+          "generationId": "6a7aa19a277a277067df4da0",
+          "generationLabel": "E140",
+          "yearFrom": 2009,
+          "yearTo": 2014
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E120",
+          "generationId": "6a7b180a1b49e4da38a1abc6",
+          "generationLabel": "E120",
+          "yearFrom": 2002,
+          "yearTo": 2008
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla Axio",
+          "generation": "",
+          "generationId": null,
+          "generationLabel": "",
+          "yearFrom": 2014,
+          "yearTo": 2022
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Reborn",
+          "generationId": "6a7aa19a277a277067df4da6",
+          "generationLabel": "Reborn",
+          "yearFrom": 2006,
+          "yearTo": 2012
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Rebirth",
+          "generationId": "6a7aa19a277a277067df4da7",
+          "generationLabel": "Rebirth",
+          "yearFrom": 2012,
+          "yearTo": 2016
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9",
+          "generationLabel": "11th Gen",
+          "yearFrom": 2022,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45889c0c8d16c696453",
+        "6a5cd43ceb06d36eb2ac1cd7",
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8",
+        "6a5ea45689c0c8d16c69644d",
+        "6a5cd43deb06d36eb2ac1cdc",
+        "6a5cd43deb06d36eb2ac1cdd",
+        "6a5cd43deb06d36eb2ac1cde",
+        "6a5cd43deb06d36eb2ac1cdf"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265210786ea8adbf05b3e",
+    "sku": "CC-EXT-140",
+    "slug": "honda-civic-type-r-side-markers-fender-indicator-lights-2016-2021",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a91e7a8abd3a7d60a710652",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265200786ea8adbf05b3d",
+    "sku": "CC-EXT-139",
+    "slug": "honda-civic-side-markers-fender-indicator-lights-2016-2021",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a916196dffb870b95823968",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265150786ea8adbf05b38",
+    "sku": "CC-EXT-122",
+    "slug": "toyota-corolla-tail-lights-new-version-2015-2026",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "E170–E210",
+          "_id": "6a666097d6484b3d9a111487",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265140786ea8adbf05b36",
+    "sku": "CC-EXT-120",
+    "slug": "toyota-corolla-lava-style-tail-lights-2012-2014",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2009,
+          "yearTo": 2014,
+          "bodyStyle": "Sedan",
+          "notes": "E140",
+          "_id": "6a666171d6484b3d9a1114e5",
+          "generationLabel": "E140",
+          "generationId": "6a7aa19a277a277067df4da0"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E140",
+          "generationId": "6a7aa19a277a277067df4da0",
+          "generationLabel": "E140",
+          "yearFrom": 2009,
+          "yearTo": 2014
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43ceb06d36eb2ac1cd7"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265140786ea8adbf05b37",
+    "sku": "CC-EXT-121",
+    "slug": "toyota-corolla-nike-style-3-projector-headlights-2012-2014",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2009,
+          "yearTo": 2014,
+          "bodyStyle": "Sedan",
+          "notes": "E140",
+          "_id": "6a6661521c64aa945cbe8e27",
+          "generationLabel": "E140",
+          "generationId": "6a7aa19a277a277067df4da0"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E140",
+          "generationId": "6a7aa19a277a277067df4da0",
+          "generationLabel": "E140",
+          "yearFrom": 2009,
+          "yearTo": 2014
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43ceb06d36eb2ac1cd7"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265130786ea8adbf05b35",
+    "sku": "CC-EXT-119",
+    "slug": "toyota-corolla-2012-2014-eagle-eyes-red-smoke-led-back-lamps",
+    "set": {
+      "pricing.regularPrice": 48000,
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2009,
+          "yearTo": 2014,
+          "bodyStyle": "Sedan",
+          "notes": "E140",
+          "_id": "6a6661921c64aa945cbe8e7e",
+          "generationLabel": "E140",
+          "generationId": "6a7aa19a277a277067df4da0"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E140",
+          "generationId": "6a7aa19a277a277067df4da0",
+          "generationLabel": "E140",
+          "yearFrom": 2009,
+          "yearTo": 2014
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43ceb06d36eb2ac1cd7"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265120786ea8adbf05b34",
+    "sku": "CC-EXT-118",
+    "slug": "honda-civic-premium-fog-lights-with-covers-2018-2020",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a6661b31c64aa945cbe8e8c",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265110786ea8adbf05b33",
+    "sku": "CC-EXT-117",
+    "slug": "honda-civic-front-bumper-turn-signal-drl-2016-2020",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a653bd5051f678f93a49c85",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265100786ea8adbf05b31",
+    "sku": "CC-EXT-115",
+    "slug": "honda-civic-front-bumper-heart-beat-line-drl-2018-2020",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a653f4cbb3e3c359d794556",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265100786ea8adbf05b32",
+    "sku": "CC-EXT-116",
+    "slug": "honda-civic-front-bumper-mustang-drl-2018-2020",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a653de52b4911f654bb6a33",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a62650f0786ea8adbf05b30",
+    "sku": "CC-EXT-114",
+    "slug": "honda-civic-front-bumper-elegant-drl-2022-2024",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2022,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "11th Gen",
+          "_id": "6a65407cd64c266ab391006d",
+          "generationLabel": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9",
+          "generationLabel": "11th Gen",
+          "yearFrom": 2022,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdf"
+      ]
+    }
+  },
+  {
+    "_id": "6a62650e0786ea8adbf05b2f",
+    "sku": "CC-EXT-113",
+    "slug": "honda-city-premium-fog-lights-with-covers-2020-2022",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "yearFrom": 2021,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "7th Gen",
+          "_id": "6a6661df9e1abe49704a4628",
+          "generationLabel": "7th Gen",
+          "generationId": "6a7aa19a277a277067df4dab"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "generation": "7th Gen",
+          "generationId": "6a7aa19a277a277067df4dab",
+          "generationLabel": "7th Gen",
+          "yearFrom": 2021,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce1"
+      ]
+    }
+  },
+  {
+    "_id": "6a62650d0786ea8adbf05b2e",
+    "sku": "CC-EXT-112",
+    "slug": "honda-city-premium-fog-lights-with-covers-2012-2015",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "yearFrom": 2009,
+          "yearTo": 2020,
+          "bodyStyle": "Sedan",
+          "notes": "Classic",
+          "_id": "6a654174c91d4c8710bcc8f4",
+          "generationLabel": "Classic",
+          "generationId": "6a7aa19a277a277067df4daa"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "generation": "Classic",
+          "generationId": "6a7aa19a277a277067df4daa",
+          "generationLabel": "Classic",
+          "yearFrom": 2009,
+          "yearTo": 2020
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce0"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265090786ea8adbf05b25",
+    "sku": "CC-LGT-105",
+    "slug": "honda-civic-eyebrow-headlight-in-pair-2018-2021",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a666d5e98b1a1ddffab82a1",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265070786ea8adbf05b23",
+    "sku": "CC-LGT-103",
+    "slug": "honda-civic-back-bumper-aesthetic-drl-2018-2020",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a666de4f3018906caca248a",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a6265060786ea8adbf05b22",
+    "sku": "CC-LGT-102",
+    "slug": "toyota-corolla-premium-fog-lights-with-covers-2015-2022",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "E170–E210",
+          "_id": "6a666e09f3018906caca24a8",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  },
+  {
+    "_id": "6a62627e0786ea8adbf05b12",
+    "sku": "CC-EXT-134",
+    "slug": "toyota-mark-x-vertex-style-body-kit-2006-2009",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Mark X",
+          "yearFrom": 2004,
+          "yearTo": 2011,
+          "bodyStyle": "Sedan",
+          "notes": "1 Gen(X120)",
+          "_id": "6a666e27f3018906caca24bd",
+          "generationLabel": "1st Gen (X120)",
+          "generationId": "6a7b180a1b49e4da38a1abc7"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Mark X",
+          "generation": "1st Gen (X120)",
+          "generationId": "6a7b180a1b49e4da38a1abc7",
+          "generationLabel": "1st Gen (X120)",
+          "yearFrom": 2004,
+          "yearTo": 2011
+        }
+      ],
+      "compatibleVehicles": [
+        "6a6545a4f84d25a64bcbd38b",
+        "6a70ff3a132d98da166d1383"
+      ]
+    }
+  },
+  {
+    "_id": "6a62627b0786ea8adbf05b0e",
+    "sku": "CC-EXT-130",
+    "slug": "mark-x-spoiler-unpainted-abs-2004-2009",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Mark X",
+          "yearFrom": 2004,
+          "yearTo": 2011,
+          "bodyStyle": "Sedan",
+          "notes": "1 Gen(X120)",
+          "_id": "6a665c7a09ab267db37c67b3",
+          "generationLabel": "1st Gen (X120)",
+          "generationId": "6a7b180a1b49e4da38a1abc7"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Mark X",
+          "generation": "1st Gen (X120)",
+          "generationId": "6a7b180a1b49e4da38a1abc7",
+          "generationLabel": "1st Gen (X120)",
+          "yearFrom": 2004,
+          "yearTo": 2011
+        }
+      ],
+      "compatibleVehicles": [
+        "6a6545a4f84d25a64bcbd38b",
+        "6a70ff3a132d98da166d1383"
+      ]
+    }
+  },
+  {
+    "_id": "6a6262790786ea8adbf05b0c",
+    "sku": "CC-EXT-128",
+    "slug": "toyota-mark-x-trd-style-body-kit-2004-2009-unpainted-fiberglass",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Mark X",
+          "yearFrom": 2004,
+          "yearTo": 2011,
+          "bodyStyle": "Sedan",
+          "notes": "1 Gen(X120)",
+          "_id": "6a665bcf1c64aa945cbe8cee",
+          "generationLabel": "1st Gen (X120)",
+          "generationId": "6a7b180a1b49e4da38a1abc7"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Mark X",
+          "generation": "1st Gen (X120)",
+          "generationId": "6a7b180a1b49e4da38a1abc7",
+          "generationLabel": "1st Gen (X120)",
+          "yearFrom": 2004,
+          "yearTo": 2011
+        }
+      ],
+      "compatibleVehicles": [
+        "6a6545a4f84d25a64bcbd38b",
+        "6a70ff3a132d98da166d1383"
+      ]
+    }
+  },
+  {
+    "_id": "6a6262760786ea8adbf05b08",
+    "sku": "CC-EXT-111",
+    "slug": "hyundai-elantra-hybrid-rear-trunk-slim-style-spoiler-2026-unpainted-abs",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Hyundai",
+          "model": "Elantra Hybrid",
+          "yearFrom": 2025,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "hyundai-elantra-hybrid-2025-present-CN7 Facelift",
+          "_id": "6a65437ec91d4c8710bcc9ae",
+          "generationLabel": "CN7 Facelift",
+          "generationId": "6a7aa19a277a277067df4daf"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Hyundai",
+          "model": "Elantra Hybrid",
+          "generation": "CN7 Facelift",
+          "generationId": "6a7aa19a277a277067df4daf",
+          "generationLabel": "CN7 Facelift",
+          "yearFrom": 2025,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce3"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea478086726a54a1513a8",
+    "sku": "CC-INT-155",
+    "slug": "toyota-corolla-2008-2013-tpe-floor-mats-premium",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2009,
+          "yearTo": 2014,
+          "bodyStyle": "Sedan",
+          "notes": "E140",
+          "_id": "6a6117651fd40b85693e177e",
+          "generationLabel": "E140",
+          "generationId": "6a7aa19a277a277067df4da0"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E140",
+          "generationId": "6a7aa19a277a277067df4da0",
+          "generationLabel": "E140",
+          "yearFrom": 2009,
+          "yearTo": 2014
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43ceb06d36eb2ac1cd7"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea477086726a54a1513a3",
+    "sku": "CC-INT-150",
+    "slug": "honda-civic-2022-2026-tpe-floor-mats-premium",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2022,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "11th Gen",
+          "_id": "6a611e6882eb15539e530f50",
+          "generationLabel": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9",
+          "generationLabel": "11th Gen",
+          "yearFrom": 2022,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdf"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea477086726a54a1513a6",
+    "sku": "CC-INT-153",
+    "slug": "honda-civic-2007-2011-tpe-floor-mats-premium",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2006,
+          "yearTo": 2012,
+          "bodyStyle": "Sedan",
+          "notes": "Reborn",
+          "_id": "6a611bcf5e0ce6b7bee097b4",
+          "generationLabel": "Reborn",
+          "generationId": "6a7aa19a277a277067df4da6"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Reborn",
+          "generationId": "6a7aa19a277a277067df4da6",
+          "generationLabel": "Reborn",
+          "yearFrom": 2006,
+          "yearTo": 2012
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdc"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea476086726a54a15139f",
+    "sku": "CC-INT-146",
+    "slug": "hyundai-tucson-2020-2024-tpe-floor-mats-premium",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Hyundai",
+          "model": "Tucson",
+          "yearFrom": 2020,
+          "yearTo": 2024,
+          "bodyStyle": "All",
+          "notes": "Hyundai Tucson NX4 (2020–2024)",
+          "_id": "6a665e981c64aa945cbe8d79",
+          "generationId": "6a7b180b1b49e4da38a1abec",
+          "generationLabel": "NX4"
+        },
+        {
+          "make": "Hyundai",
+          "model": "Tucson",
+          "yearFrom": 2024,
+          "yearTo": 2024,
+          "bodyStyle": "SUV",
+          "notes": "Hyundai Tucson NX4 (2020–2024)",
+          "_id": "6a665e981c64aa945cbe8d7a",
+          "generationLabel": "NX4",
+          "generationId": "6a7b180b1b49e4da38a1abec"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Hyundai",
+          "model": "Tucson",
+          "generation": "NX4",
+          "generationId": "6a7b180b1b49e4da38a1abec",
+          "generationLabel": "NX4",
+          "yearFrom": 2020,
+          "yearTo": 2024
+        },
+        {
+          "make": "Hyundai",
+          "model": "Tucson",
+          "generation": "NX4",
+          "generationId": "6a7b180b1b49e4da38a1abec",
+          "generationLabel": "NX4",
+          "yearFrom": 2024,
+          "yearTo": 2024
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45c89c0c8d16c69645e"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea476086726a54a1513a0",
+    "sku": "CC-INT-147",
+    "slug": "suzuki-swift-2022-2026-tpe-floor-mats-premium",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Suzuki",
+          "model": "Swift",
+          "yearFrom": 2025,
+          "yearTo": 2026,
+          "bodyStyle": "Hatchback",
+          "notes": "4th Gen (Z Series)",
+          "_id": "6a611f966aa3ddd98d91870d",
+          "generationLabel": "4th Gen (Z Series)",
+          "generationId": "6a7aa19a277a277067df4db3"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Suzuki",
+          "model": "Swift",
+          "generation": "4th Gen (Z Series)",
+          "generationId": "6a7aa19a277a277067df4db3",
+          "generationLabel": "4th Gen (Z Series)",
+          "yearFrom": 2025,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43eeb06d36eb2ac1ce7"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea475086726a54a151396",
+    "sku": "CC-INT-137",
+    "slug": "honda-civic-2016-2021-tpe-floor-mats-premium",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a612b877abbf28ad2ec40cc",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea475086726a54a151397",
+    "sku": "CC-INT-138",
+    "slug": "honda-city-2021-2026-tpe-floor-mats-premium",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "yearFrom": 2021,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "7th Gen",
+          "_id": "6a612abb18ecf1d508ebe0cc",
+          "generationLabel": "7th Gen",
+          "generationId": "6a7aa19a277a277067df4dab"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "generation": "7th Gen",
+          "generationId": "6a7aa19a277a277067df4dab",
+          "generationLabel": "7th Gen",
+          "yearFrom": 2021,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce1"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea475086726a54a151398",
+    "sku": "CC-INT-139",
+    "slug": "honda-city-2009-2020-tpe-floor-mats-premium",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "yearFrom": 2009,
+          "yearTo": 2020,
+          "bodyStyle": "Sedan",
+          "notes": "Classic",
+          "_id": "6a612a7318ecf1d508ebe0c0",
+          "generationLabel": "Classic",
+          "generationId": "6a7aa19a277a277067df4daa"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "generation": "Classic",
+          "generationId": "6a7aa19a277a277067df4daa",
+          "generationLabel": "Classic",
+          "yearFrom": 2009,
+          "yearTo": 2020
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce0"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea474086726a54a151390",
+    "sku": "CC-INT-131",
+    "slug": "hyundai-elantra-2021-2024-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Hyundai",
+          "model": "Elantra",
+          "yearFrom": 2020,
+          "yearTo": 2024,
+          "bodyStyle": "Sedan",
+          "notes": "Elantra 2020-2024-CN7",
+          "_id": "6a612e39d583c5b40fb132d1",
+          "generationLabel": "CN7",
+          "generationId": "6a7aa19a277a277067df4dae"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Hyundai",
+          "model": "Elantra",
+          "generation": "CN7",
+          "generationId": "6a7aa19a277a277067df4dae",
+          "generationLabel": "CN7",
+          "yearFrom": 2020,
+          "yearTo": 2024
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce2"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea474086726a54a151391",
+    "sku": "CC-INT-132",
+    "slug": "toyota-prius-2009-2015-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Prius",
+          "yearFrom": 2009,
+          "yearTo": 2015,
+          "bodyStyle": "Hatchback",
+          "notes": "Toyota Prius XW30 (2009–2015)",
+          "_id": "6a612d60d583c5b40fb132b3",
+          "generationLabel": "XW30",
+          "generationId": "6a7b180a1b49e4da38a1abc9"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Prius",
+          "generation": "XW30",
+          "generationId": "6a7b180a1b49e4da38a1abc9",
+          "generationLabel": "XW30",
+          "yearFrom": 2009,
+          "yearTo": 2015
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c69644f"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea474086726a54a151392",
+    "sku": "CC-INT-133",
+    "slug": "toyota-corolla-2014-2026-tpe-floor-mats-premium",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "E170–E210",
+          "_id": "6a612cead583c5b40fb1329a",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea473086726a54a15138b",
+    "sku": "CC-INT-126",
+    "slug": "honda-civic-2022-2026-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2022,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "11th Gen",
+          "_id": "6a6130efe6be5c5842c6d4ce",
+          "generationLabel": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9",
+          "generationLabel": "11th Gen",
+          "yearFrom": 2022,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdf"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea472086726a54a151385",
+    "sku": "CC-INT-120",
+    "slug": "toyota-prius-2004-09-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Prius",
+          "yearFrom": 2004,
+          "yearTo": 2009,
+          "bodyStyle": "Hatchback",
+          "notes": "Toyota Prius XW20 (2004–2009)",
+          "_id": "6a6132f9e6be5c5842c6d586",
+          "generationLabel": "XW20",
+          "generationId": "6a7b180a1b49e4da38a1abc8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Prius",
+          "generation": "XW20",
+          "generationId": "6a7b180a1b49e4da38a1abc8",
+          "generationLabel": "XW20",
+          "yearFrom": 2004,
+          "yearTo": 2009
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c69644e"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea472086726a54a151387",
+    "sku": "CC-INT-122",
+    "slug": "hyundai-tucson-2020-2024-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Hyundai",
+          "model": "Tucson",
+          "yearFrom": 2020,
+          "yearTo": 2024,
+          "bodyStyle": "Sedan",
+          "notes": "",
+          "generationId": "6a7b180b1b49e4da38a1abec",
+          "generationLabel": "NX4"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Hyundai",
+          "model": "Tucson",
+          "generation": "NX4",
+          "generationId": "6a7b180b1b49e4da38a1abec",
+          "generationLabel": "NX4",
+          "yearFrom": 2020,
+          "yearTo": 2024
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45c89c0c8d16c69645e"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea471086726a54a15137e",
+    "sku": "CC-INT-113",
+    "slug": "honda-city-2021-2026-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "yearFrom": 2021,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "7th Gen",
+          "_id": "6a6139f4fb3fa75de1db2918",
+          "generationLabel": "7th Gen",
+          "generationId": "6a7aa19a277a277067df4dab"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "generation": "7th Gen",
+          "generationId": "6a7aa19a277a277067df4dab",
+          "generationLabel": "7th Gen",
+          "yearFrom": 2021,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce1"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea471086726a54a15137f",
+    "sku": "CC-INT-114",
+    "slug": "honda-civic-2007-2011-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2006,
+          "yearTo": 2012,
+          "bodyStyle": "Sedan",
+          "notes": "Reborn",
+          "_id": "6a6139b5ec957a1e083bbb86",
+          "generationLabel": "Reborn",
+          "generationId": "6a7aa19a277a277067df4da6"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Reborn",
+          "generationId": "6a7aa19a277a277067df4da6",
+          "generationLabel": "Reborn",
+          "yearFrom": 2006,
+          "yearTo": 2012
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdc"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea470086726a54a151377",
+    "sku": "CC-INT-106",
+    "slug": "honda-civic-2016-21-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a613c888c0faeafcbd5037b",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea470086726a54a151378",
+    "sku": "CC-INT-107",
+    "slug": "honda-civic-2012-2015-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2012,
+          "yearTo": 2016,
+          "bodyStyle": "Sedan",
+          "notes": "Rebirth",
+          "_id": "6a613c4f8c0faeafcbd5036e",
+          "generationLabel": "Rebirth",
+          "generationId": "6a7aa19a277a277067df4da7"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Rebirth",
+          "generationId": "6a7aa19a277a277067df4da7",
+          "generationLabel": "Rebirth",
+          "yearFrom": 2012,
+          "yearTo": 2016
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdd"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea470086726a54a151379",
+    "sku": "CC-INT-108",
+    "slug": "toyota-corolla-2008-2013-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2009,
+          "yearTo": 2014,
+          "bodyStyle": "Sedan",
+          "notes": "E140",
+          "_id": "6a613bfa8c0faeafcbd50354",
+          "generationLabel": "E140",
+          "generationId": "6a7aa19a277a277067df4da0"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E140",
+          "generationId": "6a7aa19a277a277067df4da0",
+          "generationLabel": "E140",
+          "yearFrom": 2009,
+          "yearTo": 2014
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43ceb06d36eb2ac1cd7"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea470086726a54a15137b",
+    "sku": "CC-INT-110",
+    "slug": "suzuki-swift-2022-2026-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Suzuki",
+          "model": "Swift",
+          "yearFrom": 2025,
+          "yearTo": 2026,
+          "bodyStyle": "Hatchback",
+          "notes": "4th Gen (Z Series)",
+          "_id": "6a613b128c0faeafcbd50338",
+          "generationLabel": "4th Gen (Z Series)",
+          "generationId": "6a7aa19a277a277067df4db3"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Suzuki",
+          "model": "Swift",
+          "generation": "4th Gen (Z Series)",
+          "generationId": "6a7aa19a277a277067df4db3",
+          "generationLabel": "4th Gen (Z Series)",
+          "yearFrom": 2025,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43eeb06d36eb2ac1ce7"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea46f086726a54a15136f",
+    "sku": "CC-EXT-107",
+    "slug": "honda-civic-diamond-style-si-grille-2016-2021-glossy-black-abs",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Hatchback",
+          "notes": ""
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "",
+          "generationId": null,
+          "generationLabel": "",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea46f086726a54a151373",
+    "sku": "CC-INT-102",
+    "slug": "toyota-corolla-2014-2026-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "E170–E210",
+          "_id": "6a613da5171f7d7b6d625fb7",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea46f086726a54a151374",
+    "sku": "CC-INT-103",
+    "slug": "honda-city-2009-2020-velvet-dashboard-mat",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "yearFrom": 2009,
+          "yearTo": 2020,
+          "bodyStyle": "Sedan",
+          "notes": "Classic",
+          "_id": "6a613d52171f7d7b6d625f9e",
+          "generationLabel": "Classic",
+          "generationId": "6a7aa19a277a277067df4daa"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "generation": "Classic",
+          "generationId": "6a7aa19a277a277067df4daa",
+          "generationLabel": "Classic",
+          "yearFrom": 2009,
+          "yearTo": 2020
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce0"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea46e086726a54a15136a",
+    "sku": "CC-EXT-102",
+    "slug": "toyota-corolla-2017-21-grill-with-led",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "E170–E210",
+          "_id": "6a6142309c421f1d0d55b918",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea46e086726a54a15136b",
+    "sku": "CC-EXT-103",
+    "slug": "toyota-corolla-2008-2013-premium-air-press-with-chrome-strip",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2009,
+          "yearTo": 2014,
+          "bodyStyle": "Sedan",
+          "notes": "E140",
+          "_id": "6a6140f18c0faeafcbd504ef",
+          "generationLabel": "E140",
+          "generationId": "6a7aa19a277a277067df4da0"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E140",
+          "generationId": "6a7aa19a277a277067df4da0",
+          "generationLabel": "E140",
+          "yearFrom": 2009,
+          "yearTo": 2014
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43ceb06d36eb2ac1cd7"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea46e086726a54a15136c",
+    "sku": "CC-EXT-104",
+    "slug": "honda-civic-2016-2021-premium-air-press-with-chrome-strip",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a61407c8c0faeafcbd504d6",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cde"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea46e086726a54a15136d",
+    "sku": "CC-EXT-105",
+    "slug": "honda-city-2021-2026-txr-air-press-with-chrome",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "yearFrom": 2021,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "7th Gen",
+          "_id": "6a6140098c0faeafcbd504ae",
+          "generationLabel": "7th Gen",
+          "generationId": "6a7aa19a277a277067df4dab"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "City",
+          "generation": "7th Gen",
+          "generationId": "6a7aa19a277a277067df4dab",
+          "generationLabel": "7th Gen",
+          "yearFrom": 2021,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1ce1"
+      ]
+    }
+  },
+  {
+    "_id": "6a5ea46e086726a54a15136e",
+    "sku": "CC-EXT-106",
+    "slug": "toyota-corolla-nike-style-2-projector-headlights-2012-2014",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2012,
+          "yearTo": 2014,
+          "bodyStyle": "Sedan",
+          "notes": ""
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "",
+          "generationId": null,
+          "generationLabel": "",
+          "yearFrom": 2012,
+          "yearTo": 2014
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43ceb06d36eb2ac1cd7"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d227389c0c8d16c692061",
+    "sku": "CC-UNI-INT-GKN-TOY",
+    "slug": "universal-crystal-led-gear-knob-touch-activated-premium-car-shifter",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2006,
+          "yearTo": 2012,
+          "bodyStyle": "Sedan",
+          "notes": "Reborn",
+          "_id": "6a667038a3095043668ca3fb",
+          "generationLabel": "Reborn",
+          "generationId": "6a7aa19a277a277067df4da6"
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2012,
+          "yearTo": 2016,
+          "bodyStyle": "Sedan",
+          "notes": "Rebirth",
+          "_id": "6a667038a3095043668ca3fc",
+          "generationLabel": "Rebirth",
+          "generationId": "6a7aa19a277a277067df4da7"
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2016,
+          "yearTo": 2021,
+          "bodyStyle": "Sedan",
+          "notes": "Civic X",
+          "_id": "6a667038a3095043668ca3fd",
+          "generationLabel": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8"
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "yearFrom": 2022,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "11th Gen",
+          "_id": "6a667038a3095043668ca3fe",
+          "generationLabel": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9"
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2009,
+          "yearTo": 2014,
+          "bodyStyle": "Sedan",
+          "notes": "E140",
+          "_id": "6a667038a3095043668ca3ff",
+          "generationLabel": "E140",
+          "generationId": "6a7aa19a277a277067df4da0"
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "E170–E210",
+          "_id": "6a667038a3095043668ca400",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2002,
+          "yearTo": 2008,
+          "bodyStyle": "Sedan",
+          "notes": "Toyota Corolla E120 (2002–2008)",
+          "_id": "6a667038a3095043668ca401",
+          "generationLabel": "E120",
+          "generationId": "6a7b180a1b49e4da38a1abc6"
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla Axio",
+          "yearFrom": 2014,
+          "yearTo": 2022,
+          "bodyStyle": "Sedan",
+          "notes": "Toyota Corolla Axio (2014–2022)",
+          "_id": "6a667038a3095043668ca402"
+        },
+        {
+          "make": "Suzuki",
+          "model": "Alto",
+          "yearFrom": 2020,
+          "yearTo": 2026,
+          "bodyStyle": "Hatchback",
+          "notes": "Alto",
+          "_id": "6a667038a3095043668ca403",
+          "generationId": "6a7aa19a277a277067df4db2",
+          "generationLabel": ""
+        },
+        {
+          "make": "Suzuki",
+          "model": "Alto (Old)",
+          "yearFrom": 2000,
+          "yearTo": 2012,
+          "bodyStyle": "Hatchback",
+          "notes": "Suzuki Alto (Old) (2000–2012)",
+          "_id": "6a667038a3095043668ca404"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Reborn",
+          "generationId": "6a7aa19a277a277067df4da6",
+          "generationLabel": "Reborn",
+          "yearFrom": 2006,
+          "yearTo": 2012
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Rebirth",
+          "generationId": "6a7aa19a277a277067df4da7",
+          "generationLabel": "Rebirth",
+          "yearFrom": 2012,
+          "yearTo": 2016
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "Civic X",
+          "generationId": "6a7aa19a277a277067df4da8",
+          "generationLabel": "Civic X",
+          "yearFrom": 2016,
+          "yearTo": 2021
+        },
+        {
+          "make": "Honda",
+          "model": "Civic",
+          "generation": "11th Gen",
+          "generationId": "6a7aa19a277a277067df4da9",
+          "generationLabel": "11th Gen",
+          "yearFrom": 2022,
+          "yearTo": 2026
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E140",
+          "generationId": "6a7aa19a277a277067df4da0",
+          "generationLabel": "E140",
+          "yearFrom": 2009,
+          "yearTo": 2014
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E120",
+          "generationId": "6a7b180a1b49e4da38a1abc6",
+          "generationLabel": "E120",
+          "yearFrom": 2002,
+          "yearTo": 2008
+        },
+        {
+          "make": "Toyota",
+          "model": "Corolla Axio",
+          "generation": "",
+          "generationId": null,
+          "generationLabel": "",
+          "yearFrom": 2014,
+          "yearTo": 2022
+        },
+        {
+          "make": "Suzuki",
+          "model": "Alto",
+          "generation": "",
+          "generationId": "6a7aa19a277a277067df4db2",
+          "generationLabel": "",
+          "yearFrom": 2020,
+          "yearTo": 2026
+        },
+        {
+          "make": "Suzuki",
+          "model": "Alto (Old)",
+          "generation": "",
+          "generationId": null,
+          "generationLabel": "",
+          "yearFrom": 2000,
+          "yearTo": 2012
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43deb06d36eb2ac1cdc",
+        "6a5cd43deb06d36eb2ac1cdd",
+        "6a5cd43deb06d36eb2ac1cde",
+        "6a5cd43deb06d36eb2ac1cdf",
+        "6a5cd43ceb06d36eb2ac1cd7",
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8",
+        "6a5ea45689c0c8d16c69644d",
+        "6a5cd43eeb06d36eb2ac1ce6",
+        "6a5ea45b89c0c8d16c69645d"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d227389c0c8d16c692068",
+    "sku": "CC-0187",
+    "slug": "deal-2-toyota-corolla-15-26",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "E170–E210",
+          "_id": "6a6e6eb393aeb3fc391b9b40",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d227189c0c8d16c692055",
+    "sku": "CC-HCX-INT-STC-CF",
+    "slug": "honda-civic-x-2016-2021-carbon-steering-trim-cover",
+    "set": {
+      "categories": [
+        "6a5ccf35eb06d36eb2ac1afc"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d227089c0c8d16c692044",
+    "sku": "CC-0156",
+    "slug": "toyota-corolla-2009-2026-carbon-steering-monogram-abs",
+    "set": {
+      "pricing.salePrice": 799
+    }
+  },
+  {
+    "_id": "6a5d227089c0c8d16c692045",
+    "sku": "CC-0157",
+    "slug": "toyota-corolla-2015-2026-carbon-steering-trim",
+    "set": {
+      "categories": [
+        "6a5ccf35eb06d36eb2ac1afc"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d227089c0c8d16c69204a",
+    "sku": "CC-0162",
+    "slug": "toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler",
+    "set": {
+      "categories": [
+        "6a5ccf34eb06d36eb2ac1af1"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d226789c0c8d16c691fdd",
+    "sku": "CC-0060",
+    "slug": "toyota-aqua-2022-2024-sportline-front-splitter-canards-red-black",
+    "set": {
+      "categories": [
+        "6a5ccf34eb06d36eb2ac1af0"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d226689c0c8d16c691fd2",
+    "sku": "CC-0049",
+    "slug": "toyota-corolla-2012-2014-body-kit-d5",
+    "set": {
+      "pricing.salePrice": 13999
+    }
+  },
+  {
+    "_id": "6a5d224889c0c8d16c691faf",
+    "sku": "CC-ALT-EXT-TL-LAV-SMK-1",
+    "slug": "suzuki-alto-660cc-lava-style-smoke-tail-lights-rear-lamps-pair",
+    "set": {
+      "categories": [
+        "6a5e5e7189c0c8d16c695dcd"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d224889c0c8d16c691fb1",
+    "sku": "CC-0021",
+    "slug": "universal-hand-sewing-top-alcantara-steering-wheel-cover-1-pc-black",
+    "set": {
+      "categories": [
+        "6a5ccf35eb06d36eb2ac1afc",
+        "6a5ccf34eb06d36eb2ac1aee",
+        "6a5ccf34eb06d36eb2ac1af5"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d224789c0c8d16c691fa7",
+    "sku": "CC-0012",
+    "slug": "suzuki-alto-2018-2023-multimedia-steering-wheel-audio-control-buttons-panel",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Suzuki",
+          "model": "Alto",
+          "yearFrom": 2018,
+          "yearTo": 2023,
+          "bodyStyle": "All",
+          "notes": "",
+          "generationId": "6a7aa19a277a277067df4db2",
+          "generationLabel": ""
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Suzuki",
+          "model": "Alto",
+          "generation": "",
+          "generationId": "6a7aa19a277a277067df4db2",
+          "generationLabel": "",
+          "yearFrom": 2018,
+          "yearTo": 2023
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5cd43eeb06d36eb2ac1ce6"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d224789c0c8d16c691faa",
+    "sku": "CC-0015",
+    "slug": "toyota-corolla-2009-2014-rgb-side-mirror-indicator-dragon-style",
+    "set": {
+      "categories": [
+        "6a5ccf35eb06d36eb2ac1afb"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d224689c0c8d16c691f9c",
+    "sku": "CC-0002",
+    "slug": "toyota-corolla-airflow-ambient-led-ac-vent-trims-plug-and-play",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "",
+          "_id": "6a5fcb10f3cb42fe9005009d",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  },
+  {
+    "_id": "6a5d224689c0c8d16c691f9f",
+    "sku": "CC-0004",
+    "slug": "toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair",
+    "set": {
+      "vehicleCompatibility.vehicles": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "yearFrom": 2014,
+          "yearTo": 2026,
+          "bodyStyle": "Sedan",
+          "notes": "Premium Toyota Corolla E170/E210 2014-2026 accessories in Pakistan — Grande body kits, side mirror covers, window louvers, LED upgrades. COD available.",
+          "_id": "6a8dbf5ba9346601b8186ad3",
+          "generationLabel": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1"
+        }
+      ],
+      "compatibleCars": [
+        {
+          "make": "Toyota",
+          "model": "Corolla",
+          "generation": "E170–E210",
+          "generationId": "6a7aa19a277a277067df4da1",
+          "generationLabel": "E170–E210",
+          "yearFrom": 2014,
+          "yearTo": 2026
+        }
+      ],
+      "compatibleVehicles": [
+        "6a5ea45789c0c8d16c696450",
+        "6a5cd43deb06d36eb2ac1cd8"
+      ]
+    }
+  }
+]

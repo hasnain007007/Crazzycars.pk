@@ -28,6 +28,8 @@ import { sanitizeMediaImages, syncStockAlertForProduct } from "@/lib/productMuta
 import { withProductSaleComputed } from "@/lib/productSale";
 import { buildVehicleCompatibilityPayload, vehicleCompatibilityFromProduct } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
+import { validateProductPricing } from "@/lib/productPriceRules";
+import { normalizeFitmentVehiclesForSave } from "@/lib/normalizeFitmentOnSave";
 import { revalidateStorefront, productRevalidatePaths } from "@/lib/revalidateStorefront";
 import { denySecurityHoldMutation } from "@/lib/securityHold";
 import { validateProductActivePublishGate } from "@/lib/productPublishGate";
@@ -226,6 +228,16 @@ export async function PUT(request, context) {
       };
     }
 
+    // Validate whenever prices are sent (the edit form always sends them), so legacy
+    // values like 5999.03 must be corrected before the product can be saved again.
+    if (body.pricing !== undefined) {
+      const priceCheck = validateProductPricing({ regularPrice, salePrice: saleNext });
+      if (!priceCheck.ok) {
+        return NextResponse.json({ success: false, error: priceCheck.error }, { status: 400 });
+      }
+      saleNext = priceCheck.salePrice;
+    }
+
     existing.pricing = {
       regularPrice,
       salePrice: saleNext,
@@ -407,10 +419,12 @@ export async function PUT(request, context) {
       body.compatibleCars !== undefined
     ) {
       const fitPayload = buildVehicleCompatibilityPayload(
-        body.vehicleCompatibility ?? {
-          fitmentType: body.isUniversal ? "universal" : "specific",
-          vehicles: body.compatibleCars,
-        }
+        await normalizeFitmentVehiclesForSave(
+          body.vehicleCompatibility ?? {
+            fitmentType: body.isUniversal ? "universal" : "specific",
+            vehicles: body.compatibleCars,
+          }
+        )
       );
       existing.vehicleCompatibility = fitPayload.vehicleCompatibility;
       existing.isUniversal = fitPayload.isUniversal;

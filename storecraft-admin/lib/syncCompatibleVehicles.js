@@ -33,6 +33,15 @@ export async function resolveCompatibleVehicleIds(rows) {
     .select("_id make model yearFrom yearTo displayName")
     .lean();
 
+  return matchCompatibleVehicleIds(list, candidates);
+}
+
+/**
+ * Pure matcher behind resolveCompatibleVehicleIds: fitment rows × Vehicle docs → Vehicle ids.
+ * @param {Array<{make, model, yearFrom, yearTo}>} list
+ * @param {Array<{_id, make, model, yearFrom, yearTo}>} candidates
+ */
+export function matchCompatibleVehicleIds(list, candidates) {
   const ids = [];
   const seen = new Set();
 

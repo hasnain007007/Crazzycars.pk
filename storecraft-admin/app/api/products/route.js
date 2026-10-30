@@ -26,6 +26,8 @@ import { withProductSaleComputed } from "@/lib/productSale";
 import { getProductSalesBatch } from "@/lib/productSales";
 import { buildVehicleCompatibilityPayload } from "@/lib/vehicleCompatibility";
 import { resolveCompatibleVehicleIds } from "@/lib/syncCompatibleVehicles";
+import { validateProductPricing } from "@/lib/productPriceRules";
+import { normalizeFitmentVehiclesForSave } from "@/lib/normalizeFitmentOnSave";
 import { revalidateStorefront, productRevalidatePaths } from "@/lib/revalidateStorefront";
 import { validateProductActivePublishGate } from "@/lib/productPublishGate";
 import { normalizeOnCarPreviews } from "@/lib/onCarPreviews";
@@ -208,10 +210,14 @@ export async function POST(request) {
     if (!name) {
       return NextResponse.json({ success: false, error: "Name is required." }, { status: 400 });
     }
-    const regularPrice = Number(body.pricing?.regularPrice);
-    if (!Number.isFinite(regularPrice) || regularPrice < 0) {
-      return NextResponse.json({ success: false, error: "Valid regular price is required." }, { status: 400 });
+    const priceCheck = validateProductPricing({
+      regularPrice: body.pricing?.regularPrice,
+      salePrice: body.pricing?.salePrice,
+    });
+    if (!priceCheck.ok) {
+      return NextResponse.json({ success: false, error: priceCheck.error }, { status: 400 });
     }
+    const { regularPrice } = priceCheck;
 
     const statusNext = ["active", "inactive", "draft"].includes(body.status) ? body.status : "draft";
     const articleTrim = String(body.articleNo || "").trim();
@@ -237,7 +243,9 @@ export async function POST(request) {
 
     let slug = await uniqueProductSlug(body.slug || name);
     const categories = normalizeProductCategoryIds(body.categories);
-    const fitPayload = buildVehicleCompatibilityPayload(body.vehicleCompatibility);
+    const fitPayload = buildVehicleCompatibilityPayload(
+      await normalizeFitmentVehiclesForSave(body.vehicleCompatibility)
+    );
     const compatibleVehicles = fitPayload.isUniversal
       ? []
       : await resolveCompatibleVehicleIds(fitPayload.vehicleCompatibility.vehicles || []);
@@ -253,10 +261,7 @@ export async function POST(request) {
       longDescription: typeof body.longDescription === "string" ? body.longDescription : "",
       pricing: {
         regularPrice,
-        salePrice:
-          body.pricing?.salePrice != null && body.pricing.salePrice !== ""
-            ? Number(body.pricing.salePrice)
-            : undefined,
+        salePrice: priceCheck.salePrice,
         costPerItem: Math.max(
           0,
           Number(
