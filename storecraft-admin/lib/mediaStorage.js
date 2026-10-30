@@ -117,6 +117,28 @@ async function writeCardThumbBeside(absMasterPath, folder) {
   }
 }
 
+/**
+ * Product pages load `{stem}-sm.webp` (≤1200 px) first and only fall back to the master on
+ * 404 — build it on upload so a new photo shows straight away without a failed request.
+ */
+async function writePdpSizeBeside(absMasterPath, folder) {
+  if (folder !== "products") return null;
+  if (!/\.(webp|jpe?g|png|gif|avif)$/i.test(absMasterPath) || /-(400|800|sm)\./i.test(absMasterPath)) return null;
+  const outAbs = absMasterPath.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-sm.webp");
+  try {
+    const sharp = (await import("sharp")).default;
+    await sharp(absMasterPath)
+      .rotate()
+      .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 80, effort: 4 })
+      .toFile(outAbs);
+    return outAbs;
+  } catch (err) {
+    console.warn("[mediaStorage] -sm build failed:", err?.message || err);
+    return null;
+  }
+}
+
 export async function writeMediaFile({ folder, filename, buffer }) {
   const root = await ensureMediaRoot();
   const safeFolder = sanitizeMediaFolder(folder);
@@ -128,6 +150,7 @@ export async function writeMediaFile({ folder, filename, buffer }) {
   const abs = path.join(dir, safeName);
   await writeFile(abs, buffer);
   await writeCardThumbBeside(abs, safeFolder);
+  await writePdpSizeBeside(abs, safeFolder);
   const relative = path.join(safeFolder, safeName).replace(/\\/g, "/");
   return {
     absolutePath: abs,
