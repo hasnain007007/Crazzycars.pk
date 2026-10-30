@@ -11,7 +11,7 @@ const days = Number(STORE_POLICY.returns.windowDays);
  */
 export function getHomepageIntroCopy() {
   return {
-    h1: "Car Accessories in Pakistan | Kits, LEDs & Mats",
+    h1: "Car Accessories in Pakistan – CrazzyCars.pk Gujranwala",
     paragraphs: [
       `Shop car accessories online in Pakistan at ${BRAND_NAME}: body kits, spoilers, LED headlights and indicators, TPE floor mats, carbon fiber interior trims and key covers for Honda Civic, Toyota Corolla, Honda City, Suzuki Alto, Yaris and more. Every product lists its model-year fitment. Nationwide delivery from Gujranwala with Cash on Delivery on eligible items.`,
       `${BRAND_NAME} is based in Gujranwala, Punjab, and ships exterior, interior, LED, carbon-fiber and body-kit parts across Pakistan. Shop by category for spoilers and diffusers, splitters and side skirts, LED headlights and bulbs, interior lights, floor mats and door-handle covers — or open Shop by Car to browse generations with the correct year ranges. Every product page shows stock, price in PKR, and vehicle fitment so you can check before you order.`,

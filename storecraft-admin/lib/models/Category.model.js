@@ -41,6 +41,16 @@ const CategorySchema = new mongoose.Schema(
       metaDescription: { type: String, default: "" },
       metaKeywords: [{ type: String }],
     },
+    /** Optional category-specific FAQ (HTML + FAQPage JSON-LD on storefront). */
+    faq: {
+      type: [
+        {
+          question: { type: String, default: "", trim: true },
+          answer: { type: String, default: "", trim: true },
+        },
+      ],
+      default: [],
+    },
     shopifyHandle: { type: String, default: "" },
     shopifyId: { type: String, default: "" },
   },

@@ -622,6 +622,8 @@ export default async function ProductPage({ params, searchParams }) {
   }
 
   if (content.type === "page") {
+    const raw = String(content.data?.content || "");
+    if (!raw.trim() || /placeholder\s+copy/i.test(raw)) notFound();
     return <PageView page={content.data} slug={slugStr} />;
   }
 

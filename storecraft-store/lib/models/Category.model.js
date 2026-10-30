@@ -66,6 +66,16 @@ const categorySchema = new mongoose.Schema(
       metaDescription: { type: String, default: "" },
       metaKeywords: { type: [String], default: [] },
     },
+    /** Optional admin FAQ items — rendered on category page + FAQPage JSON-LD. */
+    faq: {
+      type: [
+        {
+          question: { type: String, default: "", trim: true },
+          answer: { type: String, default: "", trim: true },
+        },
+      ],
+      default: [],
+    },
     /**
      * Crawlable “Related guide” strip on category pages.
      * Populated incrementally when a matching blog post goes live (Mongo write).

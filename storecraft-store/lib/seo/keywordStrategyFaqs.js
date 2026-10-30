@@ -15,6 +15,13 @@ import {
   standardDeliveryFeeStatement,
 } from "../storePolicyCopy.js";
 import {
+  BODY_KIT_COD_FAQ_ANSWER,
+  CATEGORY_COD_FAQ_ANSWER,
+  COD_LINE,
+  paymentLineForProduct,
+} from "../paymentCopy.js";
+import { productAllowsCod } from "../codEligibility.js";
+import {
   GENERATION_BY_SLUG,
   aliasesForSlug,
   aliasesForVehicle,
@@ -83,11 +90,10 @@ function trustedStoreFaq() {
 }
 
 function fallbackShared() {
-  const booking = formatPkrAmount(COD_ADVANCE_AMOUNT);
   return [
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
-      answer: `Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from ${booking}, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
+      answer: CATEGORY_COD_FAQ_ANSWER,
     },
     {
       question: "How much are delivery charges?",
@@ -202,11 +208,12 @@ const CATEGORY_FAQ_EXTRAS = {
   "door-handle-covers": { name: "Door Handle Covers" },
   "body-kits-extensions": {
     name: "Body Kits & Extensions",
+    /** Skip the generic COD FAQ — body kits are prepaid. */
+    skipSharedCod: true,
     extras: [
       {
         question: "Can I use Cash on Delivery on a body kit?",
-        answer:
-          "No. Products whose name or URL identify them as a body kit cannot use Cash on Delivery. Pay the full order with JazzCash, Meezan, or bank transfer, then send your payment screenshot on WhatsApp. LED underbody light kits are not treated as body kits.",
+        answer: BODY_KIT_COD_FAQ_ANSWER,
       },
     ],
   },
@@ -370,7 +377,19 @@ export function buildCategoryKeywordFaqs(slug, range = {}) {
   if (!cfg) return [];
 
   const shared = sharedPolicyFaqs();
-  const items = shared.length ? [...shared] : fallbackShared();
+  let items = shared.length ? [...shared] : fallbackShared();
+  if (cfg.skipSharedCod) {
+    items = items.filter(
+      (f) => !/cash on delivery|cod/i.test(String(f.question || ""))
+    );
+  } else {
+    // Normalize first COD answer to the approved eligible-items wording.
+    items = items.map((f) =>
+      /cash on delivery|cod/i.test(String(f.question || ""))
+        ? { ...f, answer: CATEGORY_COD_FAQ_ANSWER }
+        : f
+    );
+  }
 
   const minLabel = formatPkr(range.min);
   const maxLabel = formatPkr(range.max);
@@ -1658,31 +1677,73 @@ function liveProductPrice(product) {
  * Default PDP FAQ when no SKU-specific builder exists.
  * Grounded in store policy only — no fabricated fitment claims.
  */
-export function defaultProductFaqs() {
-  const fees = feeAmounts();
+/**
+ * Auto product FAQ from fitment / includes / payment / delivery / returns.
+ * JSON-LD must use the same strings (via buildProductKeywordFaqs).
+ */
+export function buildAutoProductFaqs(product) {
+  const allowsCod = productAllowsCod(product);
+  const fitment = buildGatedFitmentFaq(product);
+  const included = String(
+    product?.whatsIncluded ||
+      product?.packageIncludes ||
+      product?.shortDescription ||
+      ""
+  ).trim();
+  const bulky = Boolean(product?.isBulky);
+  const items = [];
+  if (fitment) {
+    items.push(fitment);
+  } else {
+    items.push({
+      question: "Does it fit my car?",
+      answer:
+        "Check the vehicle compatibility table on this product page (make, model, and years). If nothing is listed, WhatsApp us your exact year and model before ordering.",
+    });
+  }
+  items.push({
+    question: "What's included?",
+    answer: included
+      ? included.slice(0, 500)
+      : "See the product description and photos on this page for what ships in the box.",
+  });
+  items.push({
+    question: "Payment?",
+    answer: paymentLineForProduct(allowsCod),
+  });
+  items.push({
+    question: "Delivery charge?",
+    answer: bulky
+      ? "Rs 500 for bulky items (this product is bulky)."
+      : "Rs 250, or Rs 500 for bulky items",
+  });
+  items.push({
+    question: "Returns?",
+    answer: "7 days, defective or wrong item only.",
+  });
+  return items;
+}
+
+export function defaultProductFaqs(product) {
+  if (product) return buildAutoProductFaqs(product);
   return [
     {
-      question: "Do you offer Cash on Delivery?",
-      answer: `Yes. Cash on Delivery is available nationwide on eligible orders. For COD, pay a small booking advance (from ${fees.booking}, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
+      question: "Payment?",
+      answer: COD_LINE,
     },
     {
-      question: "How much is delivery?",
-      answer: `Standard delivery is a flat ${fees.regular} on every order. Roof/trunk spoilers and Express (Daewoo) use a different courier rate shown at checkout. Bulky carts use the bulky fee shown at checkout.`,
+      question: "Delivery charge?",
+      answer: "Rs 250, or Rs 500 for bulky items",
     },
     {
-      question: "How do I know if this part fits my car?",
+      question: "Does it fit my car?",
       answer:
-        "Check the vehicle compatibility table on this product page (make, model, and years). You can also browse Shop by Vehicle. If you are unsure, WhatsApp us your exact year and model before ordering — we will not invent fitment that is not listed here.",
+        "Check the vehicle compatibility table on this product page (make, model, and years).",
     },
     {
-      question: "What is your returns policy?",
-      answer: returnsFaqAnswer(),
+      question: "Returns?",
+      answer: "7 days, defective or wrong item only.",
     },
-    {
-      question: "How long does delivery take?",
-      answer: `Most orders ship within 1–2 business days after payment confirmation (or COD booking confirmation). ${deliveryEtaSummary()}`,
-    },
-    trustedStoreFaq(),
   ];
 }
 
@@ -1852,21 +1913,30 @@ export function buildVehicleKeywordFaqs(vehicle, { hasSplitterProducts = false }
  */
 export function buildProductKeywordFaqs(product) {
   const sku = String(product?.articleNo || "").trim();
-  if (!sku || sku === "CC-0004") return [];
-  const builder = PRODUCT_FAQ_BY_SKU[sku];
+  if (sku === "CC-0004") return [];
+  const builder = sku ? PRODUCT_FAQ_BY_SKU[sku] : null;
 
   let items;
   if (!builder) {
-    items = defaultProductFaqs();
+    items = defaultProductFaqs(product);
   } else {
+    const payLine = paymentLineForProduct(productAllowsCod(product));
     const shared = sharedPolicyFaqs({
       includeFitment: false,
       includeDeliveryTime: false,
       includeTrusted: true,
     });
-    const base = shared.length
+    const base = (shared.length
       ? shared.filter((f) => /cash on delivery|return or exchange|trusted store/i.test(f.question))
-      : [...fallbackShared().filter((f) => /cash on delivery|return or exchange/i.test(f.question)), trustedStoreFaq()];
+      : [
+          ...fallbackShared().filter((f) => /cash on delivery|return or exchange/i.test(f.question)),
+          trustedStoreFaq(),
+        ]
+    ).map((f) =>
+      /cash on delivery|cod|payment/i.test(String(f.question || ""))
+        ? { question: "Payment?", answer: payLine }
+        : f
+    );
 
     const priceLabel = formatPkr(liveProductPrice(product));
     items = [...base, ...builder({ priceLabel, product })];
@@ -1875,7 +1945,6 @@ export function buildProductKeywordFaqs(product) {
   if (!items.some((f) => FITMENT_Q_RE.test(f.question))) {
     const gated = buildGatedFitmentFaq(product);
     if (gated) {
-      // Prefer after COD / near the top; keep list bounded.
       const insertAt = Math.min(2, items.length);
       items = [...items.slice(0, insertAt), gated, ...items.slice(insertAt)].slice(0, 8);
     }

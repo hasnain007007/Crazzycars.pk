@@ -71,9 +71,9 @@ export const CAR_PAGE_META = {
       "Shop Honda City 2021-Present accessories in Pakistan: Body Kit, Floor Mats. Prices from Rs 799. Cash on Delivery across Pakistan on eligible items.",
   },
   "honda-city-classic-2009-2020": {
-    title: "Honda City Classic Accessories Price in Pakistan 2009-2020",
+    title: "Honda City Accessories Price in Pakistan 2009-2020",
     description:
-      "Shop Honda City Classic 2009-2020 accessories in Pakistan: Body Kit, Floor Mats. Prices from Rs 799. Cash on Delivery across Pakistan on eligible items.",
+      "Shop Honda City (2009-2020) accessories in Pakistan: Body Kit, Floor Mats. Prices from Rs 799. Cash on Delivery across Pakistan on eligible items.",
   },
   "honda-civic-11th-gen-2022-present": {
     title: "Honda Civic 11th Gen Accessories Pakistan 2022-Present",

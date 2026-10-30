@@ -97,8 +97,18 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/terms-and-conditions",
+        destination: "/terms-conditions",
+        permanent: true,
+      },
+      {
         source: "/pages/terms-of-service",
         destination: "/terms-conditions",
+        permanent: true,
+      },
+      {
+        source: "/ai-catalog.json",
+        destination: "/feed/ai-catalog.json",
         permanent: true,
       },
       // Short Shopify / leftover handles → canonical paths (before /pages/:slug)

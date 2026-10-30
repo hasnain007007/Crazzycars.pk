@@ -19,7 +19,7 @@ import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { BRAND_NAME } from "@/lib/brand";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 const SITE = "https://crazzycars.pk";
 

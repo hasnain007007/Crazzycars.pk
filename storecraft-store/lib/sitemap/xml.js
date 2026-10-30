@@ -11,11 +11,45 @@ export function escapeXml(value) {
     .replace(/'/g, "&apos;");
 }
 
+/**
+ * Safe lastmod: never throw. Empty object `{}`, Invalid Date, null → "".
+ * Callers should pass `updatedAt ?? createdAt ?? new Date()` when a lastmod is required.
+ */
 export function formatLastMod(value) {
-  if (!value) return "";
-  const d = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString();
+  try {
+    if (value == null) return "";
+    if (typeof value === "object" && !(value instanceof Date) && !(value instanceof String)) {
+      // Corrupt BSON Date that became `{}` — treat as missing.
+      if (!(value instanceof Date) && Object.keys(value).length === 0) return "";
+      if (!(value instanceof Date)) {
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return "";
+        return d.toISOString();
+      }
+    }
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toISOString();
+  } catch {
+    return "";
+  }
+}
+
+/** Prefer updatedAt, then createdAt, then now — always a valid Date. */
+export function safeLastModDate(...candidates) {
+  for (const value of candidates) {
+    try {
+      if (value == null) continue;
+      if (typeof value === "object" && !(value instanceof Date)) {
+        if (Object.keys(value).length === 0) continue;
+      }
+      const d = value instanceof Date ? value : new Date(value);
+      if (!Number.isNaN(d.getTime())) return d;
+    } catch {
+      /* try next */
+    }
+  }
+  return new Date();
 }
 
 /**

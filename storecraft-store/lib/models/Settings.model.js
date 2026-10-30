@@ -51,7 +51,13 @@ const settingsSchema = new mongoose.Schema(
       addressCountry: { type: String, default: "PK" },
       latitude: { type: Number, default: null },
       longitude: { type: Number, default: null },
+      /** Aliases for geoLat/geoLng in admin copy. */
+      geoLat: { type: Number, default: null },
+      geoLng: { type: Number, default: null },
       mapUrl: { type: String, default: "" },
+      googleMapsUrl: { type: String, default: "" },
+      foundingDate: { type: String, default: "2023" },
+      googleReviewUrl: { type: String, default: "" },
       whatsapp: { type: String, default: "" },
       priceRange: { type: String, default: "" },
       sameAs: [{ type: String }],

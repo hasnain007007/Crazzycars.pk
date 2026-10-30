@@ -666,11 +666,19 @@ export function organizationJsonLd(overrides = {}) {
       },
     ],
     address,
+    areaServed: "PK",
+    paymentAccepted: "Cash, JazzCash, Bank transfer",
   };
 
+  const founding = String(overrides.foundingDate || "").trim();
+  if (founding) ld.foundingDate = founding;
+
+  const hasMap = String(overrides.mapUrl || overrides.googleMapsUrl || "").trim();
+  if (hasMap) ld.hasMap = hasMap;
+
   // Number(null) === 0 — never treat missing coords as 0,0 (Gulf of Guinea).
-  const latRaw = overrides.latitude;
-  const lngRaw = overrides.longitude;
+  const latRaw = overrides.latitude ?? overrides.geoLat;
+  const lngRaw = overrides.longitude ?? overrides.geoLng;
   const lat =
     latRaw === null || latRaw === undefined || latRaw === ""
       ? NaN

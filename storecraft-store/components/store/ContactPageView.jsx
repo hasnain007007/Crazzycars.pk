@@ -30,9 +30,13 @@ function digitsOnly(s) {
 export default function ContactPageView({ contactPage, general = {}, localBusiness = {} }) {
   const contact = contactPage && typeof contactPage === "object" ? contactPage : {};
   const hero = pick(contact.hero, DEFAULT_HERO);
-  // Prefer explicit contact hero; fall back to LocalBusiness-aware default.
-  if (!String(contact?.hero?.title || "").trim()) {
-    hero.title = DEFAULT_HERO.title;
+  // Canonical contact H1 (CMS may still hold the old marketing title).
+  const cmsTitle = String(contact?.hero?.title || "").trim();
+  hero.title = "Contact CrazzyCars.pk – Gujranwala";
+  if (cmsTitle && !/contact crazzycars/i.test(cmsTitle)) {
+    hero.subtitle = cmsTitle;
+  } else if (!String(hero.subtitle || "").trim()) {
+    hero.subtitle = DEFAULT_HERO.subtitle;
   }
 
   const email = String(contact.email || general.email || "").trim();
@@ -56,10 +60,16 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
   const postal = String(localBusiness.postalCode || "").trim();
   const mapUrl = String(localBusiness.mapUrl || "").trim();
 
+  // Avoid "Gujranwala Gujranwala" when street already names the city.
+  const streetClean =
+    street && city && new RegExp(`\\b${city}\\b`, "i").test(street) && !/\d/.test(street)
+      ? ""
+      : street;
+  const cityLine = [city, region, postal].filter(Boolean).join(", ");
   const addressLines = [
-    street,
+    streetClean,
     line2,
-    [city, region, postal].filter(Boolean).join(", "),
+    cityLine,
     country && country !== "PK" ? country : country === "PK" ? "Pakistan" : "",
   ]
     .map((l) => String(l || "").trim())
@@ -77,6 +87,9 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
   ].filter(([, url]) => String(url || "").trim());
 
   const faq = Array.isArray(contact.faq) ? contact.faq.filter((f) => f?.question) : [];
+  const googleReviewUrl = String(
+    general.googleReviewUrl || localBusiness.googleReviewUrl || ""
+  ).trim();
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "60vh" }}>
@@ -142,6 +155,16 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
                   </p>
                   <a href={`mailto:${email}`} style={{ color: "#C41E1E", fontSize: 15, textDecoration: "none" }}>
                     {email}
+                  </a>
+                </div>
+              ) : null}
+              {googleReviewUrl ? (
+                <div>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
+                    Reviews
+                  </p>
+                  <a href="/review" style={{ color: "#C41E1E", fontSize: 15, textDecoration: "none" }}>
+                    Review us on Google
                   </a>
                 </div>
               ) : null}

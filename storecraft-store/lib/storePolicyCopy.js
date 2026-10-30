@@ -4,6 +4,7 @@ import {
   COD_ADVANCE_TIERS,
   PREPAID_DISCOUNT_PERCENT,
 } from "../config/checkout-money.js";
+import { CATEGORY_COD_FAQ_ANSWER, COD_LINE, TRUST_LINE } from "./paymentCopy.js";
 
 export function formatPkrAmount(n) {
   return `Rs. ${Number(n).toLocaleString("en-PK")}`;
@@ -110,7 +111,7 @@ export function codAdvanceTierSummary() {
 
 /** Cart / checkout / PDP banner — English. */
 export function shippingAdvanceBannerEn() {
-  return `COD orders need a small booking amount before we process: ${codAdvanceTierSummary()}. It is deducted from your total and refunded if the item doesn't fit. Balance on delivery.`;
+  return `${COD_LINE}: ${codAdvanceTierSummary()}. It is deducted from your total and refunded if the item doesn't fit. Balance on delivery.`;
 }
 
 /** Cart / checkout / PDP banner — Urdu. */
@@ -300,8 +301,7 @@ export function getFaqItems(opts = {}) {
   return [
     {
       question: "Do you offer Cash on Delivery (COD) in Pakistan?",
-      answer:
-        "Yes. Cash on Delivery is available nationwide. For COD orders, pay a small booking advance (from Rs. 250, or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.",
+      answer: CATEGORY_COD_FAQ_ANSWER,
     },
     {
       question: "How much are delivery charges?",
@@ -336,8 +336,7 @@ export function getFaqItems(opts = {}) {
     },
     {
       question: "Is CrazzyCars.pk a trusted store for car accessories in Pakistan?",
-      answer:
-        "CrazzyCars.pk ships car accessories nationwide from Gujranwala. We list vehicle fitment on product pages, offer Cash on Delivery on eligible items (small booking advance, balance on delivery), and handle returns under our published returns policy. Message us on WhatsApp with your order number if you need help — we do not use fake star ratings or invented reviews.",
+      answer: `${TRUST_LINE} We list vehicle fitment on product pages, offer ${COD_LINE} on eligible items, and handle returns under our published returns policy. We do not use fake star ratings or invented reviews.`,
     },
   ];
 }

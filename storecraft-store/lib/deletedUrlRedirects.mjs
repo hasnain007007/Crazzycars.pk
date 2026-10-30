@@ -43,7 +43,7 @@ export const DELETED_URL_REDIRECTS = [
   { source: "/suzuki-fronx-rear-bumper-led-lights", destination: "/categories/rear-reflectors", permanent: true },
   { source: "/suzuki-wagonr-cultus-alto-smoke-fender-running-indicators", destination: "/categories/fender-light", permanent: true },
   { source: "/toyota-corolla-2014-2026-rear-bumper-led-lights", destination: "/cars/toyota-corolla-e170-2014-2026", permanent: true },
-  { source: "/toyota-corolla-2014-2026-side-mirror-led-indicators", destination: "/cars/toyota-corolla-e170-2014-2026", permanent: true },
+  // Active PDP — do not redirect; was incorrectly mapped to a car hub (sitemap gap).
   { source: "/toyota-corolla-e140-2009-2014-rear-bumper-led-lights", destination: "/cars/toyota-corolla-e140-2009-2014", permanent: true },
   { source: "/toyota-fortuner-led-tail-lights-pair", destination: "/cars/toyota-fortuner-2020-present", permanent: true },
   { source: "/toyota-mark-x-side-mirror-led-indicators", destination: "/cars/toyota-mark-x-2009-2022", permanent: true },

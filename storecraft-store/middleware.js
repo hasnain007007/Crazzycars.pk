@@ -161,7 +161,17 @@ export async function middleware(request) {
     if (cityMatch) {
       const dest = request.nextUrl.clone();
       dest.pathname = `/city/${cityMatch[1].toLowerCase()}`;
-      return withPaidCookie(request, NextResponse.rewrite(dest));
+      // ISR-friendly: avoid Set-Cookie on unpaid SEO hits so Cache-Control can stay public.
+      const paid = paidSourceFromRequest(request);
+      const res = NextResponse.rewrite(dest);
+      if (paid) {
+        withPaidCookie(request, res);
+      }
+      res.headers.set(
+        "Cache-Control",
+        "public, s-maxage=3600, stale-while-revalidate=86400"
+      );
+      return res;
     }
     // Hide internal path — one hop to the public SEO URL.
     const internalCity = lower.match(

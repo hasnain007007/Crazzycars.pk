@@ -178,6 +178,7 @@ function emptyForm() {
     isDeal: false,
     newArrival: false,
     codEnabled: true,
+    codEligible: true,
     isBulky: false,
     advancePercentRequired: 0,
     segment: "car",
@@ -331,7 +332,8 @@ function productToForm(p) {
     featured: Boolean(p.featured || p.isFeatured),
     isDeal: Boolean(p.isDeal),
     newArrival: Boolean(p.newArrival),
-    codEnabled: p.codEnabled !== false,
+    codEnabled: p.codEligible !== false && p.codEnabled !== false,
+    codEligible: p.codEligible !== false && p.codEnabled !== false,
     isBulky: p.isBulky === true,
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     segment: p.segment === "bike" ? "bike" : "car",
@@ -442,7 +444,8 @@ function buildApiPayload(form) {
     featured: form.featured,
     isDeal: Boolean(form.isDeal),
     newArrival: form.newArrival,
-    codEnabled: form.codEnabled !== false,
+    codEnabled: form.codEligible !== false && form.codEnabled !== false,
+    codEligible: form.codEligible !== false && form.codEnabled !== false,
     isBulky: form.isBulky === true,
     advancePercentRequired: Math.min(100, Math.max(0, Number(form.advancePercentRequired) || 0)),
     ...buildVehicleCompatibilityPayload(form.vehicleCompatibility || emptyVehicleCompatibility()),
@@ -1207,9 +1210,15 @@ export function ProductEditor({ mode, productId }) {
               <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <input
                   type="checkbox"
-                  checked={isBodyKitProduct(form) ? false : form.codEnabled !== false}
+                  checked={isBodyKitProduct(form) ? false : form.codEligible !== false && form.codEnabled !== false}
                   disabled={isBodyKitProduct(form)}
-                  onChange={(e) => setForm((f) => ({ ...f, codEnabled: e.target.checked }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      codEligible: e.target.checked,
+                      codEnabled: e.target.checked,
+                    }))
+                  }
                   className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#1d6fb8] focus:ring-[#1d6fb8]"
                 />
                 <span>

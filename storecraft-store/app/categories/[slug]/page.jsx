@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
@@ -172,8 +173,18 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
       getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort),
     ]);
 
-    if (isEmptyCategoryTree(detail)) notFound();
-    if (detail && listing.page > (Number(detail.totalPages) || 1)) notFound();
+    // Empty active shelves: soft 200 + noindex (never link from nav/sitemap).
+    if (detail && listing.page > (Number(detail.totalPages) || 1) && !isEmptyCategoryTree(detail)) {
+      notFound();
+    }
+
+    if (category && isEmptyCategoryTree(detail)) {
+      return {
+        title: `${category.name} – Coming soon | ${BRAND}`,
+        description: `${category.name} products are coming soon at ${BRAND}.`,
+        robots: { index: false, follow: true },
+      };
+    }
 
     if (category) {
       const locked = CATEGORY_SEO_OWNER_LOCKED[slugStr] || null;
@@ -284,7 +295,39 @@ export default async function CategoryPage({ params, searchParams }) {
   // Prefer Mongo catalog (seeded categories) so /categories/[slug] never 404s
   // when Shopify is enabled but collections use different handles.
   const detail = await getCategoryDetail(slugStr, listing.page, listing.pageSize, listing.sort);
-  if (isEmptyCategoryTree(detail)) notFound();
+  if (detail && isEmptyCategoryTree(detail)) {
+    const cat = detail.category || (await getCategoryMeta(slugStr));
+    const parent = Array.isArray(detail.breadcrumbs) && detail.breadcrumbs.length > 1
+      ? detail.breadcrumbs[detail.breadcrumbs.length - 2]
+      : null;
+    return (
+      <div className="store-container" style={{ padding: "48px 16px", maxWidth: 720 }}>
+        <h1 className="font-heading text-2xl font-bold text-[#111111]">
+          {cat?.name || slugStr}
+        </h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-[#555555]">
+          {String(cat?.description || cat?.shortDescription || "").trim() ||
+            "This category is active in our catalogue."}{" "}
+          Products are coming soon.
+        </p>
+        <p className="mt-6 text-sm">
+          {parent?.slug ? (
+            <Link href={`/categories/${parent.slug}`} className="font-semibold text-[#C41E1E] underline">
+              Browse {parent.name || "parent category"}
+            </Link>
+          ) : (
+            <Link href="/categories" className="font-semibold text-[#C41E1E] underline">
+              All categories
+            </Link>
+          )}
+          {" · "}
+          <Link href="/shop" className="font-semibold text-[#C41E1E] underline">
+            Shop all
+          </Link>
+        </p>
+      </div>
+    );
+  }
   if (detail && listing.page > (Number(detail.totalPages) || 1)) notFound();
   if (detail) {
     const brand = await getCachedBrand();
@@ -340,6 +383,20 @@ export default async function CategoryPage({ params, searchParams }) {
         ...baseFaqs,
         ...extraFaqs.filter((f) => !seenQ.has(String(f.question || "").toLowerCase())),
       ];
+    }
+    // Admin category.faq JSON — same text in HTML + FAQPage JSON-LD.
+    const adminFaqs = Array.isArray(data.category?.faq)
+      ? data.category.faq.filter((f) => f?.question && f?.answer)
+      : [];
+    if (adminFaqs.length) {
+      const seenQ = new Set(visibleFaqs.map((f) => String(f.question || "").toLowerCase()));
+      for (const f of adminFaqs) {
+        const q = String(f.question || "").toLowerCase();
+        if (!seenQ.has(q)) {
+          visibleFaqs.push({ question: f.question, answer: f.answer });
+          seenQ.add(q);
+        }
+      }
     }
     const { faqPairs, remainderHtml, summaryHtml } = splitCategoryDescriptionHtml(resolvedDescHtml);
     const introRestHtml = splitLeadParagraph(summaryHtml).restHtml;

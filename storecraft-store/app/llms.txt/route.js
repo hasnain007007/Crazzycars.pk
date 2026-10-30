@@ -6,8 +6,10 @@ import { getSiteUrl } from "@/lib/siteUrl";
 import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
 import { productAllowsCod } from "@/lib/codEligibility";
+import { COD_LINE, PREPAID_LINE, TRUST_LINE } from "@/lib/paymentCopy";
 import { loadShopByCarIndex } from "@/lib/vehiclePageData";
-import { GENERATION_BY_SLUG } from "@/lib/seo/generationAliases";
+import { GENERATION_BY_SLUG, aliasesForSlug } from "@/lib/seo/generationAliases";
+import { getServerStoreSettings } from "@/lib/serverSettings";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -29,8 +31,16 @@ export async function GET() {
   let categoryLinks = [];
   let productLinks = [];
   let vehicleLinks = [];
+  let shopAddress = `${STORE_CONTACT.address.city}, ${STORE_CONTACT.address.region}`;
   try {
     await dbConnect();
+    const settings = await getServerStoreSettings().catch(() => null);
+    const g = settings?.general || {};
+    const street = String(g.streetAddress || "").trim();
+    const city = String(g.addressLocality || STORE_CONTACT.address.city || "Gujranwala").trim();
+    const region = String(g.addressRegion || STORE_CONTACT.address.region || "Punjab").trim();
+    shopAddress = [street, city, region].filter(Boolean).join(", ");
+
     const [cats, products, vehicles, catCounts] = await Promise.all([
       Category.find({ status: "active" })
         .select("name slug")
@@ -38,7 +48,7 @@ export async function GET() {
         .lean(),
       Product.find(WEBSITE_PRODUCT_FILTER)
         .select(
-          "name slug pricing.regularPrice pricing.salePrice featured isDeal inventory variationCombinations codEnabled"
+          "name slug pricing.regularPrice pricing.salePrice featured isDeal inventory variationCombinations codEnabled codEligible categories"
         )
         .sort({ featured: -1, isDeal: -1, updatedAt: -1 })
         .limit(24)
@@ -100,10 +110,13 @@ export async function GET() {
       if (!v?.slug || prioritySlugs.includes(v.slug)) continue;
       ordered.push(v);
     }
-    // Every live vehicle page (short lines to stay under 30 KB).
+    // loadShopByCarIndex already drops cars with 0 active products.
     vehicleLinks = ordered.map((v) => {
       const label = v.displayName || `${v.make || ""} ${v.model || ""}`.trim() || v.slug;
-      return `- [${label}](${site}/cars/${v.slug})`;
+      const entry = aliasesForSlug(v.slug) || null;
+      const also = Array.isArray(entry?.aliases) ? entry.aliases.filter(Boolean).slice(0, 4) : [];
+      const alsoBit = also.length ? ` (also: ${also.join(", ")})` : "";
+      return `- [${label}](${site}/cars/${v.slug})${alsoBit}`;
     });
   } catch (err) {
     console.error("[llms.txt] catalogue query failed:", err?.message || err);
@@ -118,10 +131,13 @@ export async function GET() {
 
 ## Store facts
 
+- Founded: 2023
+- Shop: Gujranwala, Punjab (${shopAddress})
+- ${TRUST_LINE}
 - Delivery: nationwide via courier. Rs ${shipStd} regular, Rs ${shipBulky} if the order has bulky items (splitters, side skirts, spoilers, floor mats, body kits). Delivery fee paid in advance where required.
-- Payment: Cash on Delivery on eligible items (product amount paid on delivery); body kits are prepaid (JazzCash or bank transfer).
+- Payment: ${COD_LINE}; body kits — ${PREPAID_LINE}.
 - Returns: within ${STORE_POLICY.returns.windowDays} days only if the item is defective or the wrong item was shipped (full refund). No change-of-mind returns.
-- Contact: WhatsApp ${wa} (E.164 ${waE164}) · ${STORE_CONTACT.email} · ${STORE_CONTACT.address.city}, ${STORE_CONTACT.address.region}
+- Contact: WhatsApp ${wa} (E.164 ${waE164}) · ${STORE_CONTACT.email} · ${shopAddress}
 - Fitment: each product lists vehicle compatibility (make/model/years). Do not invent fitment beyond that table. Generation nicknames (Civic Reborn, Rebirth, Civic X, Corolla E140, etc.) are search aliases only.
 
 ## Key pages

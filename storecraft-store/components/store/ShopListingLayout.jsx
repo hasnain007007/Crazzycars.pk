@@ -31,12 +31,19 @@ export function ShopListingLayout({
     <div className="shop-listing">
       <div className="shop-listing-banner border-b border-[rgba(0,0,0,0.08)] bg-[#F5F5F5] py-2.5 md:py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4">
-          <h1
-            className="font-heading text-lg font-bold uppercase tracking-[0.04em] md:text-2xl md:tracking-[0.05em]"
-            style={{ color: "#111111" }}
-          >
-            {title}
-          </h1>
+          <div className="min-w-0">
+            <h1
+              className="font-heading text-lg font-bold uppercase tracking-[0.04em] md:text-2xl md:tracking-[0.05em]"
+              style={{ color: "#111111" }}
+            >
+              {title}
+            </h1>
+            {title !== "Products" ? (
+              <h2 className="mt-1 font-heading text-sm font-semibold uppercase tracking-[0.04em] text-[#555555] md:text-base">
+                Products
+              </h2>
+            ) : null}
+          </div>
           <nav className="shrink-0 text-xs text-[#555555] md:text-sm" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-[#111111]">
               Home

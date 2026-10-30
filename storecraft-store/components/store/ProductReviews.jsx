@@ -157,11 +157,8 @@ export default function ProductReviews({ productId, productSlug, onReviewCountCh
 
   const wrapperClass = embedded ? "pt-0" : "mt-14 border-t-2 border-zinc-100 pt-12";
 
-  if (loading) {
-    return embedded ? (
-      <div className={`${wrapperClass} py-6 text-center text-sm text-zinc-400`}>Loading reviews…</div>
-    ) : null;
-  }
+  // Never show a client-only "Loading reviews" placeholder (audited soft content).
+  if (loading) return null;
 
   const displayedReviews = showAll ? reviews : reviews.slice(0, 4);
   const avg = stats != null ? Number(stats.average) || 0 : 0;

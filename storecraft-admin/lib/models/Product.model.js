@@ -292,7 +292,12 @@ const productSchema = new mongoose.Schema(
     isFeatured: { type: Boolean, default: false, index: true },
     isDeal: { type: Boolean, default: false, index: true },
     newArrival: { type: Boolean, default: false },
-    /** When false, Cash on Delivery is not offered for carts that include this product. */
+    /**
+     * When false, Cash on Delivery is not offered (admin override).
+     * Preferred field; `codEnabled` kept as legacy alias.
+     */
+    codEligible: { type: Boolean, default: true, index: true },
+    /** @deprecated use codEligible */
     codEnabled: { type: Boolean, default: true, index: true },
     /**
      * Bulky freight (splitters, skirts, spoilers, floor mats, body kits, etc.).

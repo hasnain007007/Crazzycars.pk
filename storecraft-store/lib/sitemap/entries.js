@@ -5,7 +5,7 @@ import Vehicle from "@/lib/models/Vehicle.model";
 import Page from "@/lib/models/Page.model";
 import BlogPost from "@/lib/models/BlogPost.model";
 import { absoluteUrl } from "@/lib/siteUrl";
-import { MAX_SITEMAP_URLS } from "@/lib/sitemap/xml";
+import { MAX_SITEMAP_URLS, safeLastModDate } from "@/lib/sitemap/xml";
 import { getCategoryIdsWithProducts } from "@/lib/storeCategoryData";
 import {
   STOREFRONT_PRODUCT_FILTER,
@@ -51,7 +51,7 @@ const STATIC_PAGE_PATHS = [
   "/shipping-policy",
   "/returns-policy",
   "/privacy-policy",
-  "/terms-conditions",
+  // /terms-conditions only when a published CMS page exists (see cmsPageEntries).
   ...CITY_LANDING_SLUGS.map((slug) => cityPath(slug)),
 ];
 
@@ -84,7 +84,6 @@ const RESERVED_PAGE_SLUGS = new Set([
   "shipping-policy",
   "returns-policy",
   "privacy-policy",
-  "terms-conditions",
   "track-order",
 ]);
 
@@ -116,9 +115,16 @@ function toEntry(headers, path, lastmod, changefreq, priority) {
 }
 
 function asDate(value) {
-  if (!value) return null;
-  const d = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
+  try {
+    if (value == null) return null;
+    if (typeof value === "object" && !(value instanceof Date)) {
+      if (Object.keys(value).length === 0) return null;
+    }
+    const d = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  } catch {
+    return null;
+  }
 }
 
 function maxDate(...values) {
@@ -213,13 +219,15 @@ export async function fetchSitemapContext(headers) {
 
   const [products, categories, vehicles, withProducts, vehiclesWithProducts, cmsPages, blogPosts] =
     await Promise.all([
-      Product.find(SITEMAP_PRODUCT_FILTER).select("slug updatedAt pricing").lean(),
-      Category.find({ status: "active" }).select("slug updatedAt contentUpdatedAt _id").lean(),
-      Vehicle.find({ isActive: true }).select("slug updatedAt contentUpdatedAt _id").lean(),
+      Product.find(SITEMAP_PRODUCT_FILTER).select("slug updatedAt createdAt pricing").lean(),
+      Category.find({ status: "active" }).select("slug updatedAt createdAt contentUpdatedAt _id").lean(),
+      Vehicle.find({ isActive: true }).select("slug updatedAt createdAt contentUpdatedAt _id").lean(),
       categoryIdsWithProducts(),
       vehicleIdsWithProducts(),
-      Page.find({ status: "published" }).select("slug updatedAt").lean(),
-      BlogPost.find({ status: "published" }).select("slug updatedAt publishedAt contentUpdatedAt").lean(),
+      Page.find({ status: "published" }).select("slug updatedAt createdAt").lean(),
+      BlogPost.find({ status: "published" })
+        .select("slug updatedAt createdAt publishedAt contentUpdatedAt")
+        .lean(),
     ]);
 
   const productSlugSet = new Set(
@@ -237,7 +245,15 @@ export async function fetchSitemapContext(headers) {
 
   const productEntries = products
     .filter((p) => p.slug && !isRedirectSourcePath(`/${p.slug}`))
-    .map((p) => toEntry(headers, `/${p.slug}`, p.updatedAt, "weekly", 0.7));
+    .map((p) =>
+      toEntry(
+        headers,
+        `/${p.slug}`,
+        safeLastModDate(p.updatedAt, p.createdAt),
+        "weekly",
+        0.7
+      )
+    );
 
   const categoryEntries = categories
     .filter((c) => c.slug && withProducts.has(String(c._id)) && !isRedirectSourcePath(`/categories/${c.slug}`))
@@ -245,7 +261,7 @@ export async function fetchSitemapContext(headers) {
       toEntry(
         headers,
         `/categories/${c.slug}`,
-        maxDate(c.contentUpdatedAt, c.updatedAt),
+        safeLastModDate(c.contentUpdatedAt, c.updatedAt, c.createdAt),
         "weekly",
         0.8
       )
@@ -257,7 +273,7 @@ export async function fetchSitemapContext(headers) {
       // Car hub lastmod = vehicle document only (contentUpdatedAt → updatedAt).
       // Do not blend in product freshness — that made every lastmod look like
       // "build/reindex time" after catalogue bulk updates.
-      const lastmod = maxDate(v.contentUpdatedAt, v.updatedAt);
+      const lastmod = safeLastModDate(v.contentUpdatedAt, v.updatedAt, v.createdAt);
       return toEntry(headers, `/cars/${v.slug}`, lastmod, "weekly", 0.8);
     });
 
@@ -281,7 +297,9 @@ export async function fetchSitemapContext(headers) {
         !isRedirectSourcePath(`/${slug}`)
       );
     })
-    .map((page) => toEntry(headers, `/${page.slug}`, page.updatedAt, "monthly", 0.5));
+    .map((page) =>
+      toEntry(headers, `/${page.slug}`, safeLastModDate(page.updatedAt, page.createdAt), "monthly", 0.5)
+    );
 
   const pageEntries = [...staticPageEntries, ...cmsPageEntries];
 
@@ -291,7 +309,7 @@ export async function fetchSitemapContext(headers) {
       toEntry(
         headers,
         `/blogs/${post.slug}`,
-        post.contentUpdatedAt || post.publishedAt || post.updatedAt,
+        safeLastModDate(post.contentUpdatedAt, post.publishedAt, post.updatedAt, post.createdAt),
         "weekly",
         0.6
       )

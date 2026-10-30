@@ -21,7 +21,7 @@ const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "Cash on Delivery", href: "/cash-on-delivery" },
   { label: "Contact", href: "/contact" },
   { label: "Privacy Policy", href: "/privacy-policy" },
-  { label: "Terms & Conditions", href: "/terms-conditions" },
+  // Terms omitted until CMS has real copy (placeholder → 404).
   { label: "Shipping Policy", href: "/shipping-policy" },
   { label: "Returns Policy", href: "/returns-policy" },
 ]
@@ -340,6 +340,14 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
             <div className="footer-contact">
               {footerEmail ? <a href={`mailto:${footerEmail}`}>✉ {footerEmail}</a> : null}
               {footerPhone ? <a href={`tel:${footerPhone}`}>☎ {footerPhone}</a> : null}
+              {String(settings?.general?.googleReviewUrl || "").trim() ? (
+                <a
+                  href="/review"
+                  style={{ display: "block", marginTop: 6, color: "#D1D5DB" }}
+                >
+                  Review us on Google
+                </a>
+              ) : null}
             </div>
             {footer.companyName ? (
               <p className="footer-meta" style={{ marginTop: 10, fontWeight: 600 }}>

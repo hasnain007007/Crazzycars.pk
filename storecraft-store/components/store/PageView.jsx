@@ -4,7 +4,11 @@ import { sanitizePageHtml } from "@/lib/sanitizeHtml";
 
 export default function PageView({ page, slug }) {
   if (!page) return null;
+  const raw = String(page.content || "");
+  // Never ship placeholder legal copy — caller should 404 instead.
+  if (/placeholder\s+copy/i.test(raw)) return null;
   const safeContent = sanitizePageHtml(page.content);
+  if (!String(safeContent || "").replace(/<[^>]+>/g, "").trim()) return null;
 
   return (
     <div

@@ -310,9 +310,15 @@ export function TabOptions({
         >
           <input
             type="checkbox"
-            checked={isBodyKitProduct(form) ? false : form.codEnabled !== false}
+            checked={isBodyKitProduct(form) ? false : form.codEligible !== false && form.codEnabled !== false}
             disabled={isBodyKitProduct(form)}
-            onChange={(e) => setForm((f) => ({ ...f, codEnabled: e.target.checked }))}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                codEligible: e.target.checked,
+                codEnabled: e.target.checked,
+              }))
+            }
             className="h-4 w-4 rounded border-[#d1d5db] text-[#1d6fb8] focus:ring-[#1d6fb8]"
           />
           <span className="text-sm font-medium text-[#374151]">

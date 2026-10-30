@@ -184,5 +184,5 @@ export function shopListingTitle(listing) {
       listing.year ? ` ${listing.year}` : ""
     }`;
   }
-  return "Products";
+  return "Shop Car Accessories in Pakistan";
 }

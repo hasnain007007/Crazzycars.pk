@@ -21,6 +21,7 @@ import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { productAllowsCod } from "@/lib/codEligibility";
+import { paymentLineForProduct, PREPAID_LINE } from "@/lib/paymentCopy";
 import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { getShippingRate } from "@/lib/shippingFee";
 import {
@@ -86,7 +87,6 @@ function saveCompare(items) {
 
 const RETURNS_BADGE = returnsTrustBadge();
 const DEFAULT_PRODUCT_PAGE_TRUST_BADGES = [
-  { icon: "🛡️", text: "Premium Quality", subtext: "Exceptional Standards", enabled: true },
   { icon: "↩️", text: RETURNS_BADGE.text, subtext: RETURNS_BADGE.subtext, enabled: true },
   { icon: "🔒", text: "Secure Payment", subtext: "100% Secure Checkout", enabled: true },
   { icon: "🚚", text: "Fast Dispatch", subtext: "Quick Delivery", enabled: true },
@@ -1340,10 +1340,9 @@ export function ProductDetailMedico({
 
             {!productAllowsCod(product) ? (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                Cash on Delivery is not available for body kits. Pay with JazzCash, Meezan, or bank transfer
-                at checkout.{" "}
+                {PREPAID_LINE}. Pay with JazzCash, Meezan, or bank transfer at checkout.{" "}
                 <Link href="/cash-on-delivery" className="font-semibold underline underline-offset-2">
-                  How COD works
+                  How payment works
                 </Link>
               </p>
             ) : Number(product?.advancePercentRequired) > 0 ? (
@@ -1568,10 +1567,16 @@ export function ProductDetailMedico({
                   ✓ {deliveryFeeText}
                 </p>
               </div>
-              <ShippingAdvanceBanner
-                hasBulky={productIsBulkyForShipping(product) ? true : null}
-                className="mt-3"
-              />
+              {productAllowsCod(product) ? (
+                <ShippingAdvanceBanner
+                  hasBulky={productIsBulkyForShipping(product) ? true : null}
+                  className="mt-3"
+                />
+              ) : (
+                <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] font-medium text-amber-950 sm:text-sm">
+                  {PREPAID_LINE}
+                </p>
+              )}
             </div>
 
             {(!productBadges || productBadges?.discreteShipping?.enabled !== false) && (
@@ -1830,11 +1835,7 @@ export function ProductDetailMedico({
                       <li>{lahoreEtaLine}</li>
                       <li>{otherCitiesEtaLine}</li>
                       <li>{standardDeliveryFeeStatement()}</li>
-                      <li>
-                        {productAllowsCod(product)
-                          ? "Cash on Delivery available nationwide"
-                          : "Cash on Delivery is not available for body kits"}
-                      </li>
+                      <li>{paymentLineForProduct(productAllowsCod(product))}</li>
                     </ul>
                   </div>
 
