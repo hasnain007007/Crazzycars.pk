@@ -1,0 +1,34 @@
+Wrong-photo fix — json — 2026-10-30T23:07:45.258Z
+31 products would change (only media.images).
+
+CC-0282	toyota-corolla-carbon-fiber-interior-door-panels-4pcs-2014-2026	1 → 0 photos	remove: steering-wheel trims (CC-0024's photo, carzstore watermark), not door panels
+CC-0281	toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026	1 → 0 photos	remove: cup-holder trim (CC-0280's photo), not a dashboard trim
+CC-0279	toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026	2 → 0 photos	remove: outer door-handle covers with a Yaris (CC-0025's photo), not interior panels
+11	car-door-welcome-logo-lights	1 → 0 photos	remove: a 'bugs ncode' software logo, not a welcome light
+CC-COR-RGB-KIT	toyota-corolla-rgb-side-style-and-back-bumper-light	1 → 0 photos	remove: shark-fin diffuser (CC-0022's photo)
+CC-COR-BBL-2	toyota-corolla-rgb-dynamic-back-bumper-light	1 → 0 photos	remove: a whole white Toyota Yaris car, no bumper light
+CC-COR-MIRROR-3	toyota-corolla-2014-2026-side-mirror-led-indicators	1 → 0 photos	remove: Corolla 2009–2014 indicators (CC-0015's photo), product is 2014–2026
+CC-COR-BBL-E120	toyota-corolla-e120-dynamic-back-bumper-light-rgb-2002-2008	1 → 0 photos	remove: side skirts, not a bumper light
+CC-SWF-DHC-CF	suzuki-swift-2022-2025-carbon-fiber-door-handles-cover	1 → 0 photos	remove: door-handle covers with a Yaris (CC-0025's photo), product is for Swift
+CC-SPO-MIR-BAT	kia-sportage-batman-style-side-mirror-covers	1 → 0 photos	remove: mirror covers on a Toyota Aqua (CC-TAQ-EXT-SMC-CF's photo), product is for KIA Sportage
+CC-VEZ-LED-RBL	honda-vezel-2013-2018-rear-bumper-brake-lamp	1 → 0 photos	remove: an instrument-cluster trim, not a rear bumper brake lamp
+CC-VEZ-DRL-HD011	honda-vezel-2013-2018-fog-lamps-drl-cover-hd011-l2	1 → 0 photos	remove: OSRAM projector bulbs (CC-LGT-202's photo), not a Vezel DRL cover
+CC-VEZ-TRUNK-PVC	honda-vezel-2013-2018-pvc-trunk-mat	1 → 0 photos	remove: a front lip on a Honda City, not a Vezel trunk mat
+CC-COR-GRL-TRD-09	toyota-corolla-2009-2013-trd-style-front-grill	2 → 0 photos	remove: a 2017 Corolla front (CC-0029's photo), product is for 2009–2013
+CC-ALS-SPLR-LIP	changan-alsvin-trunk-lip-spoiler	1 → 0 photos	remove: a spoiler on a Honda City, product is for Changan Alsvin
+CC-CIV-DIFF-X-LED	honda-civic-x-2016-2021-rear-bumper-diffuser-gloss-black-led	1 → 0 photos	remove: Corolla shark-fin diffuser (CC-0022's photo), not a Civic X diffuser
+CC-COR-GRL-DIA-08	toyota-corolla-2008-2010-diamond-style-chrome-front-grille	1 → 0 photos	remove: a 2017 Corolla front, product is a 2008–2010 grille
+CC-COR-GRL-SET-08	toyota-corolla-2008-2011-front-chrome-grilles-set-unpainted-steel	1 → 0 photos	remove: a 2017 Corolla front, product is a 2008–2011 grille set
+CC-HAV-MIR-BAT	haval-h6-batman-style-side-mirror-cover	1 → 0 photos	remove: mirror covers on a Toyota Aqua, product is for Haval H6
+CC-PRI-MIR-BAT-17	toyota-prius-2017-2021-batman-style-side-mirror-covers	1 → 0 photos	remove: mirror covers on a Toyota Aqua, product is for Prius 2017–2021
+CC-CIV-SPLR-MUG-RR	honda-civic-reborn-mugen-rr-rear-trunk-spoiler-2007-2011	1 → 0 photos	remove: a front grille, not a Mugen trunk spoiler
+CC-CIV-SPLR-ES	honda-civic-2001-2005-rear-trunk-spoiler-unpainted-abs	1 → 0 photos	remove: a front grille on a Civic Reborn, not a Civic 2001–2005 trunk spoiler
+CC-BRV-MIR-BAT	honda-brv-batman-style-side-mirror-cover	1 → 0 photos	remove: mirror covers on a Toyota Aqua, product is for Honda BR-V
+CC-RAI-MIR-BAT	toyota-raize-batman-style-side-mirror-cover	1 → 0 photos	remove: mirror covers on a Toyota Aqua, product is for Toyota Raize
+CC-LGT-204	civic-rebirth-side-mirror-rgb-indicator	1 → 0 photos	remove: Corolla 2009–2014 indicators (CC-0015's photo), product is for Civic Rebirth
+CC-LGT-203	honda-city-rgb-side-mirror-indicator-led-dynamic-mirror-lights	1 → 0 photos	remove: Corolla 2009–2014 indicators (CC-0015's photo), product is for Honda City
+CC-EXT-109	honda-civic-rebirth-front-mesh-grille-2014-2016-black-fiberglass	1 → 0 photos	remove: Civic X SI grille (CC-EXT-107's photo), product is a Civic Rebirth mesh grille
+CC-0149	suzuki-alto-carbon-fiber-mirror-covers	2 → 2 photos	main photo → suzuki-alto-carbon-fiber-mirror-covers-2-2a50d483e5.webp
+CC-0131	carbon-fiber-side-mirror-cover-suzuki-swift-2025-present	3 → 3 photos	main photo → carbon-fiber-side-mirror-cover-suzuki-swift-2025-present-2-42a2a377cc.webp
+CC-0120	honda-civic-reborn-2006-2012-abs-plastic-roof-spoiler	2 → 2 photos	main photo → honda-civic-reborn-2006-2012-abs-plastic-roof-spoiler-2-00bea8d1f6.webp
+CC-0014	toyota-corolla-2015-2026-rgb-side-style	1 → 0 photos	remove: shark-fin diffuser (CC-0022's photo)
