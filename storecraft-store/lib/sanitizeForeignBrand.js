@@ -219,7 +219,20 @@ function applyCanonicalFieldFixes(settings) {
   const aboutHero = settings.aboutPage?.hero;
   if (aboutHero && typeof aboutHero === "object") {
     if (!aboutHero.title || STALE_TEMPLATE_TAGLINE.test(aboutHero.title)) {
-      aboutHero.title = CANONICAL_TAGLINE;
+      aboutHero.title = "About CrazzyCars.pk – Car Accessories Shop in Gujranwala";
+    }
+  }
+  if (settings.aboutPage && typeof settings.aboutPage === "object") {
+    if (!settings.aboutPage.seo || typeof settings.aboutPage.seo !== "object") {
+      settings.aboutPage.seo = {};
+    }
+    const aboutSeo = settings.aboutPage.seo;
+    if (!String(aboutSeo.metaTitle || "").trim()) {
+      aboutSeo.metaTitle = "About CrazzyCars.pk – Car Accessories Shop in Gujranwala";
+    }
+    if (!String(aboutSeo.metaDescription || "").trim()) {
+      aboutSeo.metaDescription =
+        "CrazzyCars.pk is a Gujranwala car accessories shop selling since 2023. Body kits, LEDs, mats. Cash on Delivery across Pakistan on eligible items.";
     }
   }
 

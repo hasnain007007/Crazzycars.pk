@@ -3,7 +3,10 @@ import { getServerStoreSettings } from "@/lib/serverSettings";
 import { buildPageMetadata } from "@/lib/pageMetadata";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 
-const STORE = process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
+export const DEFAULT_ABOUT_META_TITLE =
+  "About CrazzyCars.pk – Car Accessories Shop in Gujranwala";
+export const DEFAULT_ABOUT_META_DESCRIPTION =
+  "CrazzyCars.pk is a Gujranwala car accessories shop selling since 2023. Body kits, LEDs, mats. Cash on Delivery across Pakistan on eligible items.";
 
 function clampMetaDescription(raw, fallback) {
   const text = String(raw || "").replace(/\s+/g, " ").trim();
@@ -16,11 +19,11 @@ function clampMetaDescription(raw, fallback) {
 
 export const generateMetadata = withSafeMetadata(async function aboutMetadata() {
   const settings = await getServerStoreSettings();
-  const hero = settings?.aboutPage?.hero || {};
-  const title = hero.title ? `${hero.title} | ${STORE}` : `About Us | ${STORE}`;
+  const seo = settings?.aboutPage?.seo || {};
+  const title = String(seo.metaTitle || "").trim() || DEFAULT_ABOUT_META_TITLE;
   const description = clampMetaDescription(
-    hero.subtitle,
-    `Learn about ${STORE} — premium car accessories delivered across Pakistan.`
+    seo.metaDescription,
+    DEFAULT_ABOUT_META_DESCRIPTION
   );
 
   return buildPageMetadata({

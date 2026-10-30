@@ -79,11 +79,17 @@ const DEFAULT_FAQ = [
   },
 ];
 
+const SEO_DEFAULT = {
+  metaTitle: "About CrazzyCars.pk – Car Accessories Shop in Gujranwala",
+  metaDescription:
+    "CrazzyCars.pk is a Gujranwala car accessories shop selling since 2023. Body kits, LEDs, mats. Cash on Delivery across Pakistan on eligible items.",
+};
+
 const HERO_DEFAULT = {
   badge: "Our Story",
-  title: "The original performance-parts shop in Gujranwala",
+  title: "About CrazzyCars.pk – Car Accessories Shop in Gujranwala",
   subtitle:
-    `At ${process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
+    `At ${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"}, we help drivers upgrade their ride with splitters, LED lighting, body kits, and car care essentials — delivered across Pakistan.`,
 };
 
 const STORY_DEFAULT = {
@@ -109,6 +115,7 @@ export default function AboutPageSettings() {
   const [saving, setSaving] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
 
+  const [seo, setSeo] = useState(SEO_DEFAULT);
   const [hero, setHero] = useState(HERO_DEFAULT);
   const [story, setStory] = useState(STORY_DEFAULT);
   const [stats, setStats] = useState(DEFAULT_STATS);
@@ -123,6 +130,7 @@ export default function AboutPageSettings() {
         const data = await res.json();
         const about = data?.settings?.aboutPage || data?.data?.aboutPage || data?.aboutPage;
         if (about) {
+          if (about.seo) setSeo({ ...SEO_DEFAULT, ...about.seo });
           if (about.hero) setHero({ ...HERO_DEFAULT, ...about.hero });
           if (about.story) setStory({ ...STORY_DEFAULT, ...about.story });
           if (about.stats?.length) setStats(about.stats);
@@ -146,6 +154,7 @@ export default function AboutPageSettings() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           aboutPage: {
+            seo,
             hero,
             story,
             stats,
@@ -206,6 +215,7 @@ export default function AboutPageSettings() {
   };
 
   const sections = [
+    { key: "seo", label: "🔎 SEO" },
     { key: "hero", label: "🎯 Hero" },
     { key: "story", label: "📖 Our Story" },
     { key: "stats", label: "📊 Stats" },
@@ -274,6 +284,62 @@ export default function AboutPageSettings() {
         ))}
       </div>
 
+      {activeSection === "seo" ? (
+        <div style={cardStyle}>
+          <h3
+            style={{
+              fontSize: 15,
+              fontWeight: 600,
+              color: "#111827",
+              marginBottom: 20,
+              paddingBottom: 12,
+              borderBottom: "1px solid #f3f4f6",
+            }}
+          >
+            🔎 Page SEO
+          </h3>
+          <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 16px" }}>
+            Controls the browser tab title and Google meta description for /about. Separate from the on-page hero.
+          </p>
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>SEO title</label>
+            <input
+              style={inputStyle}
+              placeholder={SEO_DEFAULT.metaTitle}
+              value={seo.metaTitle || ""}
+              onChange={(e) => setSeo((s) => ({ ...s, metaTitle: e.target.value }))}
+            />
+            <p
+              style={{
+                fontSize: 11,
+                color: (seo.metaTitle || "").length > 60 ? "#dc2626" : "#9ca3af",
+                marginTop: 6,
+              }}
+            >
+              {(seo.metaTitle || "").length}/60 characters
+            </p>
+          </div>
+          <div>
+            <label style={labelStyle}>Meta description</label>
+            <textarea
+              style={textareaStyle}
+              placeholder={SEO_DEFAULT.metaDescription}
+              value={seo.metaDescription || ""}
+              onChange={(e) => setSeo((s) => ({ ...s, metaDescription: e.target.value }))}
+            />
+            <p
+              style={{
+                fontSize: 11,
+                color: (seo.metaDescription || "").length > 158 ? "#dc2626" : "#9ca3af",
+                marginTop: 6,
+              }}
+            >
+              {(seo.metaDescription || "").length}/158 characters
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       {activeSection === "hero" ? (
         <div style={cardStyle}>
           <h3
@@ -301,7 +367,7 @@ export default function AboutPageSettings() {
             <label style={labelStyle}>Main Headline *</label>
             <input
               style={inputStyle}
-              placeholder="e.g. The original performance-parts shop in Gujranwala"
+              placeholder="e.g. About CrazzyCars.pk – Car Accessories Shop in Gujranwala"
               value={hero.title || ""}
               onChange={(e) => setHero((h) => ({ ...h, title: e.target.value }))}
             />

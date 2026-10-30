@@ -311,9 +311,20 @@ const settingsSchema = new mongoose.Schema(
       abandonedCart: { subject: { type: String, default: "" }, body: { type: String, default: "" } },
     },
     aboutPage: {
+      seo: {
+        metaTitle: {
+          type: String,
+          default: "About CrazzyCars.pk – Car Accessories Shop in Gujranwala",
+        },
+        metaDescription: {
+          type: String,
+          default:
+            "CrazzyCars.pk is a Gujranwala car accessories shop selling since 2023. Body kits, LEDs, mats. Cash on Delivery across Pakistan on eligible items.",
+        },
+      },
       hero: {
         badge: { type: String, default: "Our Story" },
-        title: { type: String, default: "The original performance-parts shop in Gujranwala" },
+        title: { type: String, default: "About CrazzyCars.pk – Car Accessories Shop in Gujranwala" },
         subtitle: {
           type: String,
           default:
