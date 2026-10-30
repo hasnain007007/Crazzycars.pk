@@ -17,7 +17,7 @@ import { safeJsonLd } from "@/lib/safeJsonLd";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { effectiveUnitPrice } from "@/lib/storePricing";
-import { BRAND_NAME } from "@/lib/brand";
+import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 
 export const revalidate = 3600;
 
@@ -85,7 +85,7 @@ export const generateMetadata = withSafeMetadata(async function cityMeta({ param
   const { city } = data;
   const canonical = `${SITE}${cityPath(city.slug)}`;
   return {
-    title: { absolute: city.metaTitle },
+    title: { absolute: withBrandTitleSuffix(city.metaTitle) },
     description: city.metaDescription,
     alternates: { canonical },
     openGraph: {

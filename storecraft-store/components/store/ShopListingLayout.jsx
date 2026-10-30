@@ -62,7 +62,7 @@ export function ShopListingLayout({
         <div className="mx-auto max-w-7xl px-4 py-8 text-center md:py-16">
           <h2 className="font-heading text-xl font-bold text-[#111111]">Products coming soon</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-[#555555]">
-            We&apos;re stocking the shelves with premium car accessories for Pakistan. Check back shortly.
+            We&apos;re stocking the shelves with car accessories for Pakistan. Check back shortly.
           </p>
           <Link
             href="/"

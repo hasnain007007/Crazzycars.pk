@@ -20,7 +20,7 @@ const BRAND =
   "CrazzyCars.pk";
 
 const META_BASE = "Cash on Delivery (COD) in Pakistan";
-const META_DESCRIPTION = `COD on eligible items: a ${codAdvanceAmountsLabel()} booking advance (by order value), deducted from your total; balance on delivery. Body kits are prepaid (JazzCash, Meezan or bank transfer).`;
+const META_DESCRIPTION = `COD on eligible items: ${codAdvanceAmountsLabel()} booking advance by order value, deducted from your total. Body kits are prepaid (JazzCash, Meezan, bank).`;
 
 const titleMeta = buildBrandedAbsoluteTitle(META_BASE, { brand: BRAND });
 

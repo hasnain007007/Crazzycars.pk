@@ -18,7 +18,7 @@ export const revalidate = 120;
 export const metadata = buildPageMetadata({
   title: `Hot Deals & Sale — ${process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk"}`,
   description:
-    "Shop live sale deals on car accessories in Pakistan — LED lights, spoilers, carbon fiber trims, body kits and more. Cash on Delivery nationwide from CrazzyCars.pk.",
+    "Car accessories on sale in Pakistan: LED lights, spoilers, carbon fiber trims and body kits. COD on eligible items, delivery across Pakistan.",
   path: "/sale",
   absoluteTitle: true,
 });
@@ -34,7 +34,7 @@ export default async function SalePage({ searchParams }) {
   const collectionLd = collectionPageJsonLd({
     name: "Sale — Hot Deals on Car Accessories",
     description:
-      "Discounted car accessories currently on sale at CrazzyCars.pk, with Cash on Delivery across Pakistan.",
+      "Discounted car accessories currently on sale at CrazzyCars.pk. COD on eligible items, delivery across Pakistan.",
     url: `${site}/sale`,
     products: initialProducts,
     numberOfItems: initialProducts.length,

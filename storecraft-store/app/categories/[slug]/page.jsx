@@ -42,7 +42,7 @@ import {
   CATEGORY_APPLY_SKIP,
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
-import { BRAND_NAME } from "@/lib/brand";
+import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
 import { blogsForCategory } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbBlogsForCategory } from "@/lib/seo/blogLinksFromDb";
@@ -218,7 +218,7 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
       const titleSource =
         String(kwMeta?.metaTitle || dbTitle || "").trim() || category.name;
       const titleMeta = kwMeta?.absoluteTitle
-        ? { absolute: String(kwMeta.metaTitle || titleSource).trim() }
+        ? { absolute: withBrandTitleSuffix(String(kwMeta.metaTitle || titleSource).trim()) }
         : buildBrandedAbsoluteTitle(titleSource, { brand: BRAND, max: 62 });
       const title = titleMeta.absolute;
       const description =

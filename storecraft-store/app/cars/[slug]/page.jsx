@@ -5,6 +5,7 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
 import { buildVehiclePageProductFilter } from "@/lib/productVehicleQuery";
 import { aggregateOfferLd, getProductPriceExtent, priceRangeSentence } from "@/lib/seo/categoryPriceExtent";
+import { fitMetaDescription } from "@/lib/seo/metaDescription";
 import {
   loadProductsForVehicle,
   loadVehicleBySlug,
@@ -103,11 +104,10 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
       String(vehicle.description || "").trim() || String(vehicle.metaDescription || "").trim(),
       { replacement: BRAND }
     );
-    const description =
-      (seoOverride?.meta || "").trim() ||
-      catalogDesc ||
-      (carMeta?.description || "").trim() ||
-      vehicleMetaDescription(vehicle, catalogDesc);
+    const description = fitMetaDescription(
+      [seoOverride?.meta, catalogDesc, carMeta?.description, vehicleMetaDescription(vehicle, catalogDesc)],
+      `${vehicle.displayName} accessories with prices in Pakistan and delivery across Pakistan.`
+    );
     const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
     const canonical =
       listing.page <= 1

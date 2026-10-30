@@ -30,7 +30,7 @@ export function SalePageChrome({ productCount = 0 }) {
         </span>
         <h1 className="font-display text-2xl text-white uppercase md:text-8xl">Sale</h1>
         <p className="mt-2 max-w-xl text-sm text-white/60 md:mt-4 md:text-lg">
-          Discover up to 50% off premium car accessories — LED lights, spoilers, carbon fiber
+          Discover up to 50% off car accessories — LED lights, spoilers, carbon fiber
           trims, body kits and more. Cash on Delivery across Pakistan.
         </p>
         {count > 0 ? (
