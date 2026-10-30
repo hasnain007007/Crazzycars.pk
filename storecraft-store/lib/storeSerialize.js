@@ -1,4 +1,5 @@
 import { productAllowsCod } from "@/lib/codEligibility";
+import { scrubPaymentClaims } from "@/lib/paymentCopy";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 import { serializeStoreOption } from "@/lib/variationOptions";
 import { combinationSignature } from "@/lib/variantMatrix";
@@ -143,7 +144,10 @@ export function serializeStoreProductSummary(p, opts = {}) {
     name: fixTruncatedButto(p.name),
     slug: p.slug,
     articleNo: p.articleNo || p.inventory?.sku || "",
-    shortDescription: fixTruncatedButto(toPlainText(p.shortDescription || "")),
+    shortDescription: scrubPaymentClaims(
+      fixTruncatedButto(toPlainText(p.shortDescription || "")),
+      productAllowsCod(p)
+    ),
     image: summaryImage,
     images: summaryImages,
     media: {
@@ -262,10 +266,18 @@ export function serializeStoreProductDetail(p) {
     partNumber: p.partNumber || "",
     condition: p.condition || "new",
     vendor: p.vendor || "",
-    shortDescription: fixTruncatedButto(toPlainText(p.shortDescription || "")),
-    longDescription: sanitizeProductHtml(fixTruncatedButto(p.longDescription || "")),
+    shortDescription: scrubPaymentClaims(
+      fixTruncatedButto(toPlainText(p.shortDescription || "")),
+      productAllowsCod(p)
+    ),
+    longDescription: sanitizeProductHtml(
+      scrubPaymentClaims(fixTruncatedButto(p.longDescription || ""), productAllowsCod(p))
+    ),
     descriptionHtml: sanitizeProductHtml(
-      fixTruncatedButto(p.longDescription || p.descriptionHtml || "")
+      scrubPaymentClaims(
+        fixTruncatedButto(p.longDescription || p.descriptionHtml || ""),
+        productAllowsCod(p)
+      )
     ),
     price,
     regularPrice,
@@ -341,15 +353,30 @@ export function serializeStoreProductDetail(p) {
       ? {
           ...p.seo,
           metaTitle: fixTruncatedButto(p.seo.metaTitle || ""),
-          metaDescription: fixTruncatedButto(p.seo.metaDescription || ""),
+          metaDescription: scrubPaymentClaims(
+            fixTruncatedButto(p.seo.metaDescription || ""),
+            productAllowsCod(p)
+          ),
         }
       : {},
     metaTitle: fixTruncatedButto(p.metaTitle || p.seo?.metaTitle || ""),
-    metaDescription: fixTruncatedButto(p.metaDescription || p.seo?.metaDescription || ""),
+    metaDescription: scrubPaymentClaims(
+      fixTruncatedButto(p.metaDescription || p.seo?.metaDescription || ""),
+      productAllowsCod(p)
+    ),
     // PDP stars come from /api/reviews (genuine only); do not trust seed-polluted aggregates.
     averageRating: 0,
     reviewCount: 0,
-    features: filterPublicFeatureList(p.features),
+    features: filterPublicFeatureList(p.features).map((f) =>
+      typeof f === "string"
+        ? scrubPaymentClaims(f, productAllowsCod(p))
+        : {
+            ...f,
+            label: f?.label != null ? scrubPaymentClaims(String(f.label), productAllowsCod(p)) : f?.label,
+            text: f?.text != null ? scrubPaymentClaims(String(f.text), productAllowsCod(p)) : f?.text,
+            name: f?.name != null ? scrubPaymentClaims(String(f.name), productAllowsCod(p)) : f?.name,
+          }
+    ),
     specifications: filterPublicSpecRows(p.specifications),
     codEnabled: productAllowsCod(p),
     isBulky: p.isBulky === true,
