@@ -8,6 +8,7 @@ import {
 } from "../schema/merchantReturnPolicy.mjs";
 import { resolveProductImageUrls } from "../productImages.js";
 import { productAllowsCod } from "../codEligibility.js";
+import { paymentLineForProduct, scrubPaymentClaims } from "../paymentCopy.js";
 import {
   fitmentVehiclesForSchema,
   resolveFitment,
@@ -129,10 +130,12 @@ function resolveProductDescription(p, slug = "") {
     }
     if (!raw && plain) raw = plain;
   }
-  return (
-    raw ||
-    `${name} — shop online at CrazzyCars.pk with Cash on Delivery across Pakistan.`
-  ).slice(0, 5000);
+  const allows = productAllowsCod(p);
+  const cleaned = scrubPaymentClaims(
+    raw || `${name} — shop online at CrazzyCars.pk. ${paymentLineForProduct(allows)}`,
+    allows
+  );
+  return cleaned.slice(0, 5000);
 }
 
 /** Always emit sku so merchant listings have a stable identifier with brand. */
@@ -473,8 +476,8 @@ export function productJsonLd(p) {
   }
   fitmentProps.push({
     "@type": "PropertyValue",
-    name: "Cash on Delivery",
-    value: productAllowsCod(p) ? "Available nationwide (Pakistan)" : "Not available — prepaid only",
+    name: "Payment",
+    value: paymentLineForProduct(productAllowsCod(p)),
   });
   const specProps = specAdditionalProperties(specsFromProduct(p));
   const allProps = [...fitmentProps, ...specProps].slice(0, 24);

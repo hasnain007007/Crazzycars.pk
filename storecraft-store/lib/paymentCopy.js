@@ -21,3 +21,23 @@ export const BODY_KIT_COD_FAQ_ANSWER = `${PREPAID_LINE}. Cash on Delivery is not
 export function paymentLineForProduct(allowsCod) {
   return allowsCod ? COD_LINE : PREPAID_LINE;
 }
+
+/**
+ * Replace banned / outdated COD marketing phrases in product HTML or plain text
+ * without mutating stored admin SEO fields. Used at render / JSON-LD time.
+ */
+export function scrubPaymentClaims(text, allowsCod = true) {
+  let t = String(text || "");
+  if (!t) return t;
+  const line = paymentLineForProduct(allowsCod);
+  t = t.replace(
+    /Cash on Delivery all over Pakistan\s*[—–-]?\s*WhatsApp\s*0?3284010007!?/gi,
+    line
+  );
+  t = t.replace(/Yes\s*[—–-]\s*Cash on Delivery all over Pakistan!?/gi, line);
+  t = t.replace(/Cash on Delivery available nationwide/gi, line);
+  t = t.replace(/Backed by CrazzyCars nationwide Cash on Delivery/gi, TRUST_LINE);
+  t = t.replace(/No advance payment required/gi, line);
+  t = t.replace(/COD orders need a small booking[^.<]*/gi, COD_LINE);
+  return t;
+}

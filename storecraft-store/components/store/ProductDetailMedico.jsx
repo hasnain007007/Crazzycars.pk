@@ -21,7 +21,7 @@ import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { productAllowsCod } from "@/lib/codEligibility";
-import { paymentLineForProduct, PREPAID_LINE } from "@/lib/paymentCopy";
+import { paymentLineForProduct, PREPAID_LINE, scrubPaymentClaims } from "@/lib/paymentCopy";
 import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { getShippingRate } from "@/lib/shippingFee";
 import {
@@ -923,7 +923,10 @@ export function ProductDetailMedico({
   const rawDescription = contentOverride?.descriptionHtml
     ? contentOverride.descriptionHtml
     : product.descriptionHtml || product.longDescription || product.description || "";
-  const fixedDescription = String(rawDescription || "").replace(/\bButto\b/g, "Button");
+  const fixedDescription = scrubPaymentClaims(
+    String(rawDescription || "").replace(/\bButto\b/g, "Button"),
+    productAllowsCod(product)
+  );
   const appended = contentOverride?.appendDescription
     ? `${fixedDescription}<p>${contentOverride.appendDescription}</p>`
     : fixedDescription;

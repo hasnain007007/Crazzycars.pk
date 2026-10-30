@@ -19,7 +19,9 @@ export default function BrandHero() {
       <div className="brand-hero__inner">
         <div className="brand-hero__copy">
           <p className="brand-hero__kicker">Body kits · LED lighting · Carbon accessories</p>
-          {/* Tagline keeps hero styling; document H1 lives in HomeSeoIntro. */}
+          <h1 className="brand-hero__seo-h1" style={{ fontSize: "clamp(1.1rem, 2.6vw, 1.45rem)", fontWeight: 700, margin: "0 0 8px", color: "#111" }}>
+            Car Accessories in Pakistan – CrazzyCars.pk Gujranwala
+          </h1>
           <p className="tagline brand-hero__title">
             Gaari Wohi,
             <br />
