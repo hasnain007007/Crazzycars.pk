@@ -2,6 +2,9 @@
 /**
  * Wrong product photos (visual audit of all 399 active products, 2026-10-31).
  *
+ * Run backups/photo-restore-2026-10-31 FIRST: 47 original photos (recovered from a browser
+ * cache, overwritten on the server around 2026-10-27) fix most products. Only the products
+ * below have no original anywhere.
  * Each photo below was checked by eye. The products in REMOVE show a photo of a different
  * product (copied from a neighbour during the catalogue import; the Shopify export has no
  * photo for them). Their wrong photos are removed so the page shows "Photo coming soon"
@@ -28,34 +31,12 @@ const APPLY = args.includes("--apply") && args.includes("--allow-write");
 
 /** SKU → what the current photo actually shows (and whose photo it is). */
 export const REMOVE = {
-  "CC-0282": "steering-wheel trims (CC-0024's photo, carzstore watermark), not door panels",
-  "CC-0281": "cup-holder trim (CC-0280's photo), not a dashboard trim",
-  "CC-0279": "outer door-handle covers with a Yaris (CC-0025's photo), not interior panels",
-  "11": "a 'bugs ncode' software logo, not a welcome light",
-  "CC-COR-RGB-KIT": "shark-fin diffuser (CC-0022's photo)",
-  "CC-0014": "shark-fin diffuser (CC-0022's photo)",
-  "CC-CIV-DIFF-X-LED": "Corolla shark-fin diffuser (CC-0022's photo), not a Civic X diffuser",
   "CC-COR-BBL-2": "a whole white Toyota Yaris car, no bumper light",
-  "CC-COR-BBL-E120": "side skirts, not a bumper light",
-  "CC-COR-MIRROR-3": "Corolla 2009–2014 indicators (CC-0015's photo), product is 2014–2026",
-  "CC-LGT-204": "Corolla 2009–2014 indicators (CC-0015's photo), product is for Civic Rebirth",
-  "CC-LGT-203": "Corolla 2009–2014 indicators (CC-0015's photo), product is for Honda City",
-  "CC-SWF-DHC-CF": "door-handle covers with a Yaris (CC-0025's photo), product is for Swift",
-  "CC-SPO-MIR-BAT": "mirror covers on a Toyota Aqua (CC-TAQ-EXT-SMC-CF's photo), product is for KIA Sportage",
   "CC-HAV-MIR-BAT": "mirror covers on a Toyota Aqua, product is for Haval H6",
-  "CC-PRI-MIR-BAT-17": "mirror covers on a Toyota Aqua, product is for Prius 2017–2021",
-  "CC-BRV-MIR-BAT": "mirror covers on a Toyota Aqua, product is for Honda BR-V",
   "CC-RAI-MIR-BAT": "mirror covers on a Toyota Aqua, product is for Toyota Raize",
-  "CC-VEZ-LED-RBL": "an instrument-cluster trim, not a rear bumper brake lamp",
   "CC-VEZ-DRL-HD011": "OSRAM projector bulbs (CC-LGT-202's photo), not a Vezel DRL cover",
-  "CC-VEZ-TRUNK-PVC": "a front lip on a Honda City, not a Vezel trunk mat",
   "CC-COR-GRL-TRD-09": "a 2017 Corolla front (CC-0029's photo), product is for 2009–2013",
   "CC-COR-GRL-DIA-08": "a 2017 Corolla front, product is a 2008–2010 grille",
-  "CC-COR-GRL-SET-08": "a 2017 Corolla front, product is a 2008–2011 grille set",
-  "CC-EXT-109": "Civic X SI grille (CC-EXT-107's photo), product is a Civic Rebirth mesh grille",
-  "CC-CIV-SPLR-MUG-RR": "a front grille, not a Mugen trunk spoiler",
-  "CC-CIV-SPLR-ES": "a front grille on a Civic Reborn, not a Civic 2001–2005 trunk spoiler",
-  "CC-ALS-SPLR-LIP": "a spoiler on a Honda City, product is for Changan Alsvin",
 };
 
 /** SKU → file (already in its gallery) that becomes the main photo. */
