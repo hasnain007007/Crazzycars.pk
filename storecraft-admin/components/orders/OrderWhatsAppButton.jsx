@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { STORE_NAME } from "@/lib/constants";
+import toast from "react-hot-toast";
 import {
+  findUnfilledPlaceholders,
   getAdminNewOrderWhatsAppMessage,
   getCustomerOrderWhatsAppMessage,
 } from "@/lib/whatsappTemplates";
@@ -24,6 +26,15 @@ export function buildWaLink(phone, message) {
 }
 
 export function openWhatsApp(phone, message) {
+  // Never send a customer a message with raw {placeholders} (template uses an unknown variable).
+  const unfilled = findUnfilledPlaceholders(message);
+  if (unfilled.length) {
+    toast.error(
+      `WhatsApp not opened: the message still has ${unfilled.join(", ")}. Fix the template in Settings › WhatsApp.`,
+      { duration: 8000 }
+    );
+    return false;
+  }
   const url = buildWaLink(phone, message);
   if (!url) return false;
   window.open(url, "_blank", "noopener,noreferrer");

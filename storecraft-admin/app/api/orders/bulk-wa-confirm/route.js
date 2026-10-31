@@ -11,7 +11,7 @@ import { denyUnlessCapability } from "@/lib/denyCapability";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { buildWaActionUrl } from "@/lib/waActionToken";
-import { getCustomerOrderWhatsAppMessage } from "@/lib/whatsappTemplates";
+import { findUnfilledPlaceholders, getCustomerOrderWhatsAppMessage } from "@/lib/whatsappTemplates";
 import { orderGrandTotal } from "@/lib/orderFormat";
 
 export const dynamic = "force-dynamic";
@@ -183,6 +183,19 @@ export async function POST(request) {
           success: false,
           skipped: true,
           error: "Confirmation template disabled in Settings",
+        });
+        skipCount += 1;
+        continue;
+      }
+
+      const unfilled = findUnfilledPlaceholders(message);
+      if (unfilled.length) {
+        results.push({
+          orderId: id,
+          orderNumber: order.orderNumber,
+          success: false,
+          skipped: true,
+          error: `Template still has ${unfilled.join(", ")} — fix it in Settings › WhatsApp`,
         });
         skipCount += 1;
         continue;

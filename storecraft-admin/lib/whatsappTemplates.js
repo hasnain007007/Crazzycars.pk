@@ -110,7 +110,51 @@ export function buildWhatsAppMessage(template, variables) {
   Object.entries(variables || {}).forEach(([key, value]) => {
     message = message.replaceAll(`{${key}}`, value == null ? "" : String(value));
   });
-  return message;
+  // A variable that filled in as "" (e.g. no advance due) leaves an empty line behind:
+  // collapse runs of blank lines to one and drop trailing spaces.
+  return message
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/** `{placeholders}` still in a built message — template uses a variable the code does not fill. */
+export function findUnfilledPlaceholders(message) {
+  return [...new Set((String(message || "").match(/\{[A-Za-z][A-Za-z0-9_]*\}/g) || []))];
+}
+
+const ADVANCE_PAY_URL = "https://crazzycars.pk/advance-payment";
+
+/**
+ * `{advanceDeliveryAsk}` — what the customer still has to pay before we dispatch.
+ * - COD with a booking advance (payment.advanceRequired, e.g. Rs 300/600/1,000) not yet
+ *   received → ask for the remaining advance, say it is deducted, show the COD balance.
+ * - Prepaid order (body kits, bank/wallet) still unpaid → ask for the full amount.
+ * - Paid, or nothing due before dispatch → "" (the line disappears).
+ */
+export function buildAdvanceDeliveryAsk(order) {
+  const pm = String(order?.paymentMethod || order?.payment?.method || "").toLowerCase();
+  const { status, total, paid } = getOrderPaymentBreakdown(order);
+  if (status === "paid" || total <= 0) return "";
+  const advanceRequired = Math.max(0, Number(order?.payment?.advanceRequired) || 0);
+
+  if (isCodPaymentMethod(pm)) {
+    const due = Math.max(0, advanceRequired - paid);
+    if (!due) return "";
+    const cod = Math.max(0, total - Math.max(paid, advanceRequired));
+    return [
+      `💳 *Booking advance:* Please send *Rs. ${moneyPk(due)}* to confirm this order.`,
+      `It is deducted from your total — you pay *Rs. ${moneyPk(cod)}* on delivery.`,
+      `Account details: ${ADVANCE_PAY_URL}`,
+    ].join("\n");
+  }
+
+  const due = Math.max(0, total - paid);
+  if (!due) return "";
+  return [
+    `💳 *Prepaid order:* Please send *Rs. ${moneyPk(due)}* (JazzCash, Meezan or bank transfer) so we can dispatch.`,
+    `Account details: ${ADVANCE_PAY_URL}`,
+  ].join("\n");
 }
 
 function customerNameFromOrder(order) {
@@ -309,6 +353,7 @@ export function buildCustomerOrderVariables(order, settings = {}, extras = {}) {
     total: total.toLocaleString("en-PK"),
     paymentMethod: paymentMethodLabel(order),
     paymentInstructions: buildPaymentInstructions(order, settings),
+    advanceDeliveryAsk: buildAdvanceDeliveryAsk(order),
     paidAmount: moneyPk(pay.paid),
     remainingBalance: moneyPk(pay.remaining),
     paymentStatus: pay.status || "unpaid",
