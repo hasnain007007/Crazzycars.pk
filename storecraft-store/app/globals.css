@@ -7254,33 +7254,28 @@ textarea::placeholder {
   }
 }
 
-/* Phones: Hot Deals / Best Sellers showed all 24 products (12 rows, ~3,800px each).
-   Show 3 rows and a full-width link to the rest; desktop keeps the full grid. */
+/* Hot Deals / Best Sellers: every card shows (phones too); "Show more" loads the rest in place. */
 .home-grid-more {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 420px;
+  margin: 16px auto 0;
+  min-height: 46px;
+  border: 1.5px solid #111111;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111111 !important;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
 }
-
-@media (max-width: 767px) {
-  .home-grid--capped > :nth-child(n + 7) {
-    display: none;
-  }
-
-  .home-grid-more {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 100%;
-    margin-top: 12px;
-    min-height: 46px;
-    border: 1.5px solid #111111;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #111111 !important;
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-  }
+.home-grid-more:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 

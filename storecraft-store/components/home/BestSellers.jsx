@@ -51,6 +51,26 @@ export default function BestSellers({ initialProducts = [], settings }) {
   }, [tabs]);
 
   const filtered = useMemo(() => products.filter((p) => matchesTab(p, tab)), [products, tab]);
+  // Homepage SSR sends the first 24; "Show more" loads the rest into this same grid.
+  const [showAll, setShowAll] = useState(!hasInitial);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const canShowMore = !showAll && products.length >= 24;
+
+  const loadAll = () => {
+    setLoadingMore(true);
+    fetch("/api/products/best-sellers")
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data?.products) ? data.products : [];
+        setProducts((prev) => {
+          const seen = new Set(prev.map((p) => String(p.id || p.slug)));
+          return [...prev, ...list.filter((p) => !seen.has(String(p.id || p.slug)))];
+        });
+        setShowAll(true);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMore(false));
+  };
 
   if (!loading && products.length === 0) return null;
 
@@ -104,15 +124,15 @@ export default function BestSellers({ initialProducts = [], settings }) {
           <p className="mt-8 text-sm text-[#6B7280]">No products in this tab yet.</p>
         ) : (
           <>
-            <div className="product-grid home-grid--capped mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
               {filtered.map((p) => (
                 <ProductCard key={p.id || p.slug} product={p} />
               ))}
             </div>
-            {filtered.length > 6 ? (
-              <Link href="/shop?sort=featured" className="home-grid-more">
-                View all best sellers <span aria-hidden>→</span>
-              </Link>
+            {canShowMore ? (
+              <button type="button" onClick={loadAll} disabled={loadingMore} className="home-grid-more">
+                {loadingMore ? "Loading…" : "Show more best sellers"} <span aria-hidden>↓</span>
+              </button>
             ) : null}
           </>
         )}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import ProductCard from "@/components/store/ProductCard";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
@@ -29,6 +28,26 @@ export default function HotDeals({ settings, initialProducts = null }) {
   }, [defaultFilter]);
 
   const hasDeals = products.length > 0;
+  // Homepage SSR sends the first 24 deals of the default tab; "Show more" loads the rest here.
+  const [showAll, setShowAll] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const canShowMore = !showAll && ssrSeed != null && active === defaultFilter && products.length >= 24;
+
+  const loadAll = () => {
+    setLoadingMore(true);
+    fetch(`/api/products/deals?filter=${encodeURIComponent(defaultFilter)}&limit=500`)
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data?.products) ? data.products : [];
+        if (list.length) {
+          ssrSeedRef.current = list;
+          setProducts(list);
+        }
+        setShowAll(true);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMore(false));
+  };
 
   useEffect(() => {
     const seed = ssrSeedRef.current;
@@ -117,15 +136,15 @@ export default function HotDeals({ settings, initialProducts = null }) {
           </div>
         ) : hasDeals ? (
           <>
-            <div className="product-grid home-grid--capped mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="product-grid mt-4 grid grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
               {products.map((p) => (
                 <ProductCard key={p.id || p.slug} product={p} />
               ))}
             </div>
-            {products.length > 6 ? (
-              <Link href="/sale" className="home-grid-more">
-                View all {products.length} deals <span aria-hidden>→</span>
-              </Link>
+            {canShowMore ? (
+              <button type="button" onClick={loadAll} disabled={loadingMore} className="home-grid-more">
+                {loadingMore ? "Loading…" : "Show more deals"} <span aria-hidden>↓</span>
+              </button>
             ) : null}
           </>
         ) : (
