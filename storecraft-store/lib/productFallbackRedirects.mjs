@@ -26,9 +26,9 @@ export const PRODUCT_FALLBACK_REDIRECTS = {
   "toyota-corolla-2014-2026-side-mirror-neon-style-indicator":
     "/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair",
   "toyota-corolla-2015-2026-rgb-side-mirror-indicator-dragon-style":
-    "/toyota-corolla-2009-2014-rgb-side-mirror-indicator-dragon-style",
+    "/toyota-corolla-2014-2026-side-mirror-led-indicators",
   "toyota-corolla-2015-2026-rgb-side-mirror-indicator-dragon-style-crazzycars-pk":
-    "/toyota-corolla-2009-2014-rgb-side-mirror-indicator-dragon-style",
+    "/toyota-corolla-2014-2026-side-mirror-led-indicators",
   "suzuki-swift-2018-2024-complete-body-kit-fibreglass":
     "/suzuki-swift-2022-2024-rs-style-body-kit-fibreglass",
   "suzuki-swift-2018-2024-complete-body-kit-fibreglass-crazzycars-pk":
