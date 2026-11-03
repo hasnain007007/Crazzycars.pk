@@ -56,6 +56,7 @@ export function safeLastModDate(...candidates) {
  * @param {SitemapUrl[]} entries
  */
 export function buildUrlSetXml(entries) {
+  const hasImages = entries.some((e) => Array.isArray(e.images) && e.images.length);
   const body = entries
     .map((entry) => {
       const parts = [`  <url>`, `    <loc>${escapeXml(entry.loc)}</loc>`];
@@ -63,13 +64,27 @@ export function buildUrlSetXml(entries) {
       if (lastmod) parts.push(`    <lastmod>${lastmod}</lastmod>`);
       if (entry.changefreq) parts.push(`    <changefreq>${escapeXml(entry.changefreq)}</changefreq>`);
       if (entry.priority != null) parts.push(`    <priority>${Number(entry.priority).toFixed(1)}</priority>`);
+      if (Array.isArray(entry.images)) {
+        for (const img of entry.images) {
+          const loc = typeof img === "string" ? img : img?.loc;
+          if (!loc) continue;
+          parts.push(`    <image:image>`);
+          parts.push(`      <image:loc>${escapeXml(loc)}</image:loc>`);
+          const title = typeof img === "object" ? img.title : "";
+          if (title) parts.push(`      <image:title>${escapeXml(title)}</image:title>`);
+          parts.push(`    </image:image>`);
+        }
+      }
       parts.push(`  </url>`);
       return parts.join("\n");
     })
     .join("\n");
 
+  const ns = hasImages
+    ? 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'
+    : 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
   return `${XML_DECL}
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset ${ns}>
 ${body}
 </urlset>`;
 }
