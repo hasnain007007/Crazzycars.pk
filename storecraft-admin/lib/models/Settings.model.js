@@ -279,6 +279,10 @@ const settingsSchema = new mongoose.Schema(
       },
     },
     homepageIntroHtml: { type: String, default: "" },
+    /** Editable COD landing SEO (storefront /cash-on-delivery). */
+    codPageTitle: { type: String, default: "" },
+    codPageMetaDescription: { type: String, default: "" },
+    codPageIntroHtml: { type: String, default: "" },
     seo: {
       defaultMetaTitle: { type: String, default: "" },
       defaultMetaDescription: { type: String, default: "" },

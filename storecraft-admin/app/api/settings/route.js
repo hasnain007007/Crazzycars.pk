@@ -208,6 +208,22 @@ export async function PUT(request) {
       doc.homepageSettings = body.homepageSettings;
       doc.markModified("homepageSettings");
     }
+    if (body.codPageTitle !== undefined) {
+      doc.codPageTitle = String(body.codPageTitle || "");
+      doc.markModified("codPageTitle");
+    }
+    if (body.codPageMetaDescription !== undefined) {
+      doc.codPageMetaDescription = String(body.codPageMetaDescription || "");
+      doc.markModified("codPageMetaDescription");
+    }
+    if (body.codPageIntroHtml !== undefined) {
+      doc.codPageIntroHtml = String(body.codPageIntroHtml || "");
+      doc.markModified("codPageIntroHtml");
+    }
+    if (body.homepageIntroHtml !== undefined) {
+      doc.homepageIntroHtml = String(body.homepageIntroHtml || "");
+      doc.markModified("homepageIntroHtml");
+    }
     doc.markModified("general");
     doc.markModified("notifications");
     doc.markModified("payment");

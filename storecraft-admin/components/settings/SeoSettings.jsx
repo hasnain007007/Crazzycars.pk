@@ -22,6 +22,9 @@ const DEFAULT_FORM = {
   metaCapiAccessTokenMasked: "",
   canonicalUrl: "",
   robotsTxt: "index, follow",
+  codPageTitle: "",
+  codPageMetaDescription: "",
+  codPageIntroHtml: "",
 };
 
 export default function SeoSettings() {
@@ -57,7 +60,8 @@ export default function SeoSettings() {
       try {
         const res = await fetch("/api/settings", { credentials: "include" });
         const data = await res.json();
-        const seo = data?.settings?.seo || data?.data?.seo || {};
+        const settings = data?.settings || data?.data || {};
+        const seo = settings?.seo || {};
         if (seo && typeof seo === "object") {
           setForm({
             ...DEFAULT_FORM,
@@ -69,6 +73,9 @@ export default function SeoSettings() {
             metaCapiAccessToken: "",
             metaCapiConfigured: Boolean(seo.metaCapiConfigured),
             metaCapiAccessTokenMasked: String(seo.metaCapiAccessTokenMasked || ""),
+            codPageTitle: String(settings.codPageTitle || ""),
+            codPageMetaDescription: String(settings.codPageMetaDescription || ""),
+            codPageIntroHtml: String(settings.codPageIntroHtml || ""),
           });
         }
       } catch {
@@ -108,11 +115,17 @@ export default function SeoSettings() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ seo: buildSeoPayload() }),
+        body: JSON.stringify({
+          seo: buildSeoPayload(),
+          codPageTitle: String(form.codPageTitle || "").trim(),
+          codPageMetaDescription: String(form.codPageMetaDescription || "").trim(),
+          codPageIntroHtml: String(form.codPageIntroHtml || "").trim(),
+        }),
       });
       const data = await res.json();
       if (data.success) {
-        const saved = data?.settings?.seo || data?.data?.seo;
+        const settings = data?.settings || data?.data || {};
+        const saved = settings?.seo;
         if (saved && typeof saved === "object") {
           setForm({
             ...DEFAULT_FORM,
@@ -127,6 +140,9 @@ export default function SeoSettings() {
               (form.metaCapiAccessToken
                 ? `••••${String(form.metaCapiAccessToken).slice(-4)}`
                 : ""),
+            codPageTitle: String(settings.codPageTitle || ""),
+            codPageMetaDescription: String(settings.codPageMetaDescription || ""),
+            codPageIntroHtml: String(settings.codPageIntroHtml || ""),
           });
         }
         toast.success("SEO settings saved!");
@@ -263,6 +279,70 @@ export default function SeoSettings() {
           <li>Country: Pakistan · Language: English · paste the feed URL</li>
           <li>Enable Free listings, then clear Diagnostics disapprovals</li>
         </ol>
+      </div>
+
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid #e5e7eb",
+          borderRadius: 12,
+          padding: 20,
+          marginBottom: 20,
+        }}
+      >
+        <h3
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: "#111827",
+            margin: "0 0 8px",
+            paddingBottom: 12,
+            borderBottom: "1px solid #f3f4f6",
+          }}
+        >
+          Cash on Delivery page SEO
+        </h3>
+        <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 16px" }}>
+          Overrides for /cash-on-delivery. Leave blank to use the storefront defaults.
+        </p>
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>
+            COD page title{" "}
+            <span style={{ fontWeight: 400, color: "#9ca3af" }}>
+              ({String(form.codPageTitle || "").length}/60)
+            </span>
+          </label>
+          <input
+            style={inputStyle}
+            value={form.codPageTitle}
+            maxLength={70}
+            onChange={(e) => setForm((f) => ({ ...f, codPageTitle: e.target.value }))}
+            placeholder="Cash on Delivery (COD) in Pakistan"
+          />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>
+            COD meta description{" "}
+            <span style={{ fontWeight: 400, color: "#9ca3af" }}>
+              ({String(form.codPageMetaDescription || "").length}/160)
+            </span>
+          </label>
+          <textarea
+            style={{ ...inputStyle, minHeight: 72, resize: "vertical" }}
+            value={form.codPageMetaDescription}
+            maxLength={180}
+            onChange={(e) => setForm((f) => ({ ...f, codPageMetaDescription: e.target.value }))}
+          />
+        </div>
+        <div style={{ marginBottom: 8 }}>
+          <label style={labelStyle}>COD intro HTML (optional)</label>
+          <textarea
+            style={{ ...inputStyle, minHeight: 96, resize: "vertical", fontFamily: "ui-monospace, monospace" }}
+            value={form.codPageIntroHtml}
+            onChange={(e) => setForm((f) => ({ ...f, codPageIntroHtml: e.target.value }))}
+            placeholder="<p>…</p>"
+          />
+        </div>
       </div>
 
       <div
