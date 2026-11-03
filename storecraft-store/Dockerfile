@@ -78,10 +78,12 @@ COPY --chown=nextjs:nodejs scripts/assert-preview-mongo.mjs ./assert-preview-mon
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# server-timeouts.mjs must sit next to standalone server.js
+COPY --chown=nextjs:nodejs server-timeouts.mjs ./server-timeouts.mjs
 USER nextjs
 EXPOSE 3000
 VOLUME ["/app/media"]
-HEALTHCHECK --interval=30s --timeout=8s --start-period=60s --retries=5 \
+HEALTHCHECK --interval=30s --timeout=8s --start-period=40s --retries=5 \
   CMD node /app/healthcheck.js
 ENTRYPOINT ["/bin/sh", "/app/docker-entrypoint.sh"]
-CMD ["node", "server.js"]
+CMD ["node", "server-timeouts.mjs"]

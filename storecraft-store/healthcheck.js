@@ -3,7 +3,8 @@
  * Prints the /api/health body so deploy logs show a real response.
  */
 const port = process.env.PORT || "3000";
-const url = `http://127.0.0.1:${port}/api/health`;
+/** Prefer lightweight /api/healthz; fall back to /api/health if healthz is missing. */
+const url = `http://127.0.0.1:${port}/api/healthz`;
 
 async function main() {
   const ctrl = new AbortController();

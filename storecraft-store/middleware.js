@@ -89,11 +89,37 @@ function withPaidCookie(request, response) {
   return response;
 }
 
-function wwwToApexRedirect(request) {
-  const raw = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "")
+function requestHost(request) {
+  return (request.headers.get("x-forwarded-host") || request.headers.get("host") || "")
     .split(",")[0]
     .trim()
     .toLowerCase();
+}
+
+/** Honour x-forwarded-proto from Cloudflare/Traefik — never loop on local/dev. */
+function forceHttpsRedirect(request) {
+  const proto = (
+    request.headers.get("x-forwarded-proto") ||
+    request.nextUrl.protocol.replace(":", "") ||
+    ""
+  )
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (proto !== "http") return null;
+  const host = requestHost(request).split(":")[0];
+  if (!host || host.startsWith("localhost") || host.startsWith("127.")) return null;
+  // Collapse www in the same hop when possible.
+  const apex = host.startsWith("www.") ? host.slice(4) : host;
+  if (!apex) return null;
+  const dest = new URL(
+    `https://${apex}${request.nextUrl.pathname}${request.nextUrl.search}`
+  );
+  return withPaidCookie(request, NextResponse.redirect(dest, 308));
+}
+
+function wwwToApexRedirect(request) {
+  const raw = requestHost(request);
   if (!raw.startsWith("www.")) return null;
   const apex = raw.slice(4).split(":")[0];
   if (!apex || apex.startsWith("localhost") || apex.startsWith("127.")) return null;
@@ -105,6 +131,9 @@ const CITY_LANDING_RE =
   /^\/car-accessories-(gujranwala|lahore|karachi|islamabad|rawalpindi|faisalabad)\/?$/i;
 
 export async function middleware(request) {
+  const httpsRedirect = forceHttpsRedirect(request);
+  if (httpsRedirect) return httpsRedirect;
+
   const wwwRedirect = wwwToApexRedirect(request);
   if (wwwRedirect) return wwwRedirect;
 
