@@ -18,11 +18,11 @@
 
 ## Key pages
 
-- /shop
-- /cars
-- /categories
-- /cash-on-delivery
-- /faq
-- /contact
-- /returns-policy
-- /shipping-policy
+- [Shop all]({{SITE}}/shop)
+- [Shop by vehicle]({{SITE}}/cars)
+- [Categories]({{SITE}}/categories)
+- [Cash on Delivery]({{SITE}}/cash-on-delivery)
+- [FAQ]({{SITE}}/faq)
+- [Contact]({{SITE}}/contact)
+- [Returns]({{SITE}}/returns-policy)
+- [Shipping]({{SITE}}/shipping-policy)
