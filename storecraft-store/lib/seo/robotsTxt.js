@@ -14,7 +14,7 @@ export const ROBOTS_PRIVATE_PATHS = [
 
 /**
  * Listing facet query params — Google-supported wildcard Disallow patterns.
- * Pagination (`page=`) is intentionally allowed: page-only listings are indexable.
+ * Pagination (`page=`) is crawlable; listingMetadata sets noindex,follow on page≥2.
  * Does not block CSS/JS (path-based, not extension-based).
  */
 /**
