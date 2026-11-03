@@ -45,9 +45,10 @@ export default async function ContactPage() {
     addressRegion: general.addressRegion || "Punjab",
     postalCode: general.postalCode || "",
     addressCountry: general.addressCountry || "PK",
-    latitude: general.latitude,
-    longitude: general.longitude,
-    mapUrl: general.mapUrl || "",
+    latitude: general.latitude ?? general.geoLat,
+    longitude: general.longitude ?? general.geoLng,
+    mapUrl: general.mapUrl || general.googleMapsUrl || "",
+    googleReviewUrl: general.googleReviewUrl || "",
     whatsapp: general.whatsapp || "",
     priceRange: general.priceRange || "",
     sameAs: Array.isArray(general.sameAs) ? general.sameAs : [],
@@ -77,6 +78,7 @@ export default async function ContactPage() {
         general={{
           email: settings?.email || general.email,
           phone: settings?.phone || general.phone,
+          googleReviewUrl: general.googleReviewUrl || "",
         }}
         localBusiness={localBusiness}
       />
