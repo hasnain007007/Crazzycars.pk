@@ -2,13 +2,10 @@
  * Exact-path legacy Shopify redirect map (SEO Task 2).
  * Source of truth: data/seo/legacy-redirects.json
  * Review-only rows (enabled:false): data/seo/legacy-redirects-review.json
+ *
+ * Edge-safe: static JSON import only (no node:module / createRequire).
  */
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
-
-/** @type {{ from: string, to: string, confidence?: string, note?: string }[]} */
-const ROWS = require("../data/seo/legacy-redirects.json");
+import ROWS from "../data/seo/legacy-redirects.json" with { type: "json" };
 
 /** @type {Map<string, string>} */
 const BY_FROM = new Map();

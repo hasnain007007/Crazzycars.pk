@@ -1,10 +1,8 @@
 /**
  * HTTP 410 Gone for junk Shopify kitchen/beauty leftovers (SEO Task 3).
+ * Edge-safe: static JSON import only (no node:module / createRequire).
  */
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
-const DATA = require("../data/seo/legacy-gone.json");
+import DATA from "../data/seo/legacy-gone.json" with { type: "json" };
 
 const EXACT = new Set(
   (DATA.exact || []).map((p) =>
