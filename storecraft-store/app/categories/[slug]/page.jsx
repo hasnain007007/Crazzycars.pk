@@ -35,6 +35,7 @@ import {
   faqPageJsonLd,
   isKeywordStrategyCategory,
 } from "@/lib/seo/keywordStrategyFaqs";
+import { parseCcFaqFromHtml } from "@/lib/seo/parseCcFaq.mjs";
 import { CATEGORY_KEYWORD_META, CATEGORY_SEO_OWNER_LOCKED } from "@/lib/seo/generationAliases";
 import {
   CATEGORY_DESCRIPTION_HTML,
@@ -425,7 +426,10 @@ export default async function CategoryPage({ params, searchParams }) {
     }
     const { faqPairs, remainderHtml, summaryHtml } = splitCategoryDescriptionHtml(resolvedDescHtml);
     const introRestHtml = splitLeadParagraph(summaryHtml).restHtml;
-    if (!visibleFaqs.length && faqPairs.length) visibleFaqs = faqPairs;
+    // Task 9: data-cc-faq / description FAQ pairs win over keyword auto questions.
+    const fromDesc = parseCcFaqFromHtml(resolvedDescHtml);
+    const preferredFaqs = fromDesc.length ? fromDesc : faqPairs;
+    if (preferredFaqs.length) visibleFaqs = preferredFaqs;
     else if (faqPairs.length) {
       const seenQ = new Set(visibleFaqs.map((f) => String(f.question || "").toLowerCase()));
       for (const f of faqPairs) {

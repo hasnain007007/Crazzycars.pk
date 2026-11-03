@@ -73,6 +73,19 @@ export function productHasRealImage(product) {
   return urls.some((u) => !PLACEHOLDER_IMAGE_RE.test(u));
 }
 
+/**
+ * Shared gate for robots meta, sitemap, and Product schema (SEO Tasks 6–7).
+ * Active + ≥1 real (non-placeholder) image.
+ */
+export function isIndexableProduct(product) {
+  if (!product) return false;
+  const status = String(product.status || product.visibility || "active").toLowerCase();
+  if (status && status !== "active" && status !== "published") return false;
+  if (product.active === false || product.isActive === false) return false;
+  if (productHasExternalCanonical(product)) return false;
+  return productHasRealImage(product);
+}
+
 /** True when seo.canonical points at a different host than this storefront. */
 export function productHasExternalCanonical(product, siteUrl = siteOrigin()) {
   const raw = String(product?.seo?.canonical || product?.canonical || "").trim();

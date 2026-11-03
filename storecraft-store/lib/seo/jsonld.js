@@ -423,8 +423,18 @@ export function productJsonLd(p) {
   };
 
   // Google Product / Merchant need a real photo — omit placeholder images from JSON-LD.
+  // Task 15/16: ImageObject[] with caption; never emit placeholder strings.
   const realImages = images.filter((u) => !placeholderUrl(u));
-  if (realImages.length && !omitSchemaImage) ld.image = realImages;
+  if (realImages.length && !omitSchemaImage) {
+    const altBase = displayProductName(p.name);
+    ld.image = realImages.map((url, i) => ({
+      "@type": "ImageObject",
+      contentUrl: url,
+      url,
+      caption: altBase,
+      representativeOfPage: i === 0 ? true : undefined,
+    }));
+  }
 
   if (price != null) {
     ld.offers = buildMerchantOffer({
