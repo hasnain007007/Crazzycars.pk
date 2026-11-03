@@ -20,9 +20,8 @@ export function buildOrganizationReturnPolicy(siteUrl) {
     merchantReturnDays: days,
     itemCondition: "https://schema.org/DamagedCondition",
     returnMethod: "https://schema.org/ReturnByMail",
-    // GSC "returnFees missing" — buyer pays return shipping on eligible returns.
-    // Defective/wrong-item remains FreeReturn via itemDefectReturnFees.
-    returnFees: "https://schema.org/ReturnShippingFees",
+    // Approved defective/wrong-item returns: full refund, free return (no change-of-mind).
+    returnFees: "https://schema.org/FreeReturn",
     itemDefectReturnFees: "https://schema.org/FreeReturn",
     refundType: "https://schema.org/FullRefund",
     merchantReturnLink: site ? `${site}/returns-policy` : undefined,
