@@ -516,7 +516,55 @@ export function productJsonLd(p) {
     ld.review = reviewLd;
   }
 
+  // Task 16: VideoObject when the product has a YouTube / video URL.
+  const videoLd = buildProductVideoObject(p, url);
+  if (videoLd) ld.video = videoLd;
+
   return ld;
+}
+
+function extractYouTubeId(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  const m = s.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/i
+  );
+  return m ? m[1] : "";
+}
+
+function buildProductVideoObject(p, productUrl) {
+  const candidates = [
+    p?.youtubeUrl,
+    p?.videoUrl,
+    p?.media?.videoUrl,
+    ...(Array.isArray(p?.media?.videos) ? p.media.videos.map((v) => v?.url || v?.youtubeUrl) : []),
+    p?.video?.url,
+  ];
+  let ytId = "";
+  let rawUrl = "";
+  for (const c of candidates) {
+    ytId = extractYouTubeId(c);
+    if (ytId) {
+      rawUrl = String(c || "").trim();
+      break;
+    }
+  }
+  if (!ytId) return null;
+  const name = displayProductName(p?.name) || "Product video";
+  return {
+    "@type": "VideoObject",
+    name,
+    description: String(p?.shortDescription || p?.description || name)
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 300),
+    thumbnailUrl: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+    uploadDate: p?.updatedAt || p?.createdAt || new Date().toISOString(),
+    embedUrl: `https://www.youtube-nocookie.com/embed/${ytId}`,
+    contentUrl: rawUrl || `https://www.youtube.com/watch?v=${ytId}`,
+    ...(productUrl ? { url: productUrl } : {}),
+  };
 }
 
 /** BreadcrumbList — items: [{ name, url }] where url is path starting with / */

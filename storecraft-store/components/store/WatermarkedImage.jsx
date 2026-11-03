@@ -78,12 +78,10 @@ export function WatermarkedImage({
   }
 
   const srcSetWidths = widths || [Math.round(width * 0.75), width, Math.round(width * 1.5)];
+  // Task 16: emit srcset for Cloudinary and local /media derivative chains.
   const srcSet =
-    optimize &&
-    responsive &&
-    !/res\.cloudinary\.com/i.test(String(src)) &&
-    !/crazzycars\.pk\/media\/|^\/media\//i.test(String(resolved))
-      ? cloudinarySrcSet(src, srcSetWidths, { crop })
+    optimize && responsive && !/res\.cloudinary\.com/i.test(String(src))
+      ? cloudinarySrcSet(src, srcSetWidths, { crop }) || undefined
       : undefined;
 
   const showWatermark = Boolean(watermark?.enabled && watermark?.text && loaded);

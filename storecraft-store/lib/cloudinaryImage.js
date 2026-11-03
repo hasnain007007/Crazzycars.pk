@@ -134,10 +134,27 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   return `${prefix}${transform}/${remainder}`;
 }
 
-/** Responsive srcset — Cloudinary only. Local media uses a single pre-sized file. */
+/**
+ * Local /media srcset from on-disk derivatives (-400 ≈ 400w, -sm ≈ 720w, master ≈ 1600w).
+ * Browser will 404-skip missing candidates only if they are not listed; callers should
+ * prefer SSR existence checks when available. WatermarkedImage still falls back on error.
+ */
+export function localMediaSrcSet(src) {
+  const master = localMediaDerivative(src, "original") || localMediaPath(src);
+  if (!master) return "";
+  const as400 = localMediaDerivative(master, "400");
+  const asSm = localMediaDerivative(master, "sm");
+  const parts = [];
+  if (as400) parts.push(`${as400} 400w`);
+  if (asSm) parts.push(`${asSm} 720w`);
+  parts.push(`${master} 1600w`);
+  return parts.join(", ");
+}
+
+/** Responsive srcset — Cloudinary, or local /media derivative chain. */
 export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill" } = {}) {
   if (isLocalMedia(src) || unwrapNextImageUrl(src).includes("/media/")) {
-    return "";
+    return localMediaSrcSet(src);
   }
   const unique = [...new Set(widths.map((w) => Math.round(w)).filter((w) => w > 0))].sort((a, b) => a - b);
   return unique
