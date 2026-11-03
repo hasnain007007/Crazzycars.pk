@@ -22,3 +22,11 @@
 ## Related scan
 
 See `docs/seo/fitment-mismatch-2026-11-04.csv` for other products where schema years are wider than the name range.
+
+## Applied 4 Nov 2026 (owner approved)
+
+- Script: `storecraft-store/scripts/seo/apply-fitment-grille-2008-2010.mjs --apply`
+- Before: Corolla 2002–2008 + 2009–2014
+- After: single row Toyota Corolla 2008–2010
+- Verified unchanged: slug, status=active, regularPrice=8000, salePrice=5999, quantity=25
+- Global `SEO_CLAMP_FITMENT_TO_NAME_YEARS` was **not** enabled
