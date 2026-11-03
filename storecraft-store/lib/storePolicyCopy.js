@@ -61,7 +61,7 @@ export function deliveryEtaSummary() {
 export function deliveryFeeOnlyStatement() {
   const regular = Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK");
   const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR || 500).toLocaleString("en-PK");
-  return `Rs ${regular} regular, Rs ${bulky} if the order has bulky items.`;
+  return `Delivery is Rs ${regular}, or Rs ${bulky} if the order has bulky items.`;
 }
 
 /** "Rs 300 / 600 / 1,000" — the COD booking advance amounts from COD_ADVANCE_TIERS. */

@@ -202,6 +202,10 @@ const settingsSchema = new mongoose.Schema(
       },
     },
     homepageIntroHtml: { type: String, default: "" },
+    /** Editable COD landing SEO (Task 11). Empty → code fallbacks. */
+    codPageTitle: { type: String, default: "" },
+    codPageMetaDescription: { type: String, default: "" },
+    codPageIntroHtml: { type: String, default: "" },
     seo: {
       defaultMetaTitle: { type: String, default: "" },
       defaultMetaDescription: { type: String, default: "" },
@@ -725,7 +729,7 @@ Shukriya — CrazzyCars.pk ✨`,
       },
     },
     footer: {
-      tagline: { type: String, default: "The original performance-parts shop in Gujranwala" },
+      tagline: { type: String, default: "Car accessories shop in Gujranwala since 2023" },
       social: {
         facebook: { type: String, default: "" },
         instagram: { type: String, default: "" },
