@@ -11,7 +11,7 @@ const DEFAULT_STATS = [];
 const DEFAULT_VALUES = [
   {
     icon: "🚗",
-    title: "Premium Quality",
+    title: "Checked for Fit and Finish",
     description:
       "Every product is selected for durability, fit, and finish. We only stock accessories we would install on our own cars.",
   },

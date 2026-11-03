@@ -1,0 +1,32 @@
+{
+  "exact": [
+    "/wooden-serving-tray",
+    "/silicone-kitchen-utensil-set",
+    "/glass-spice-jars-rack",
+    "/quilted-makeup-pouch-rose",
+    "/categories/fancy-air-fresheners",
+    "/categories/kitchen-accessories",
+    "/categories/cookware",
+    "/categories/storage-containers",
+    "/categories/cutlery-gadgets",
+    "/categories/dining-serveware",
+    "/categories/beauty-bags",
+    "/categories/makeup-pouches",
+    "/categories/travel-toiletry-bags",
+    "/categories/vanity-organizer-bags",
+    "/categories/mini-handbags"
+  ],
+  "patterns": [
+    "kitchen",
+    "utensil",
+    "spice",
+    "serving-tray",
+    "cutlery",
+    "makeup",
+    "toiletry",
+    "pouch",
+    "cosmetic",
+    "beauty"
+  ],
+  "notes": "Checked only after legacy redirect map. Patterns apply to path segments of unknown flat product/category URLs when no active match. x-perfume-card-pack redirects to live perfume product (not 410)."
+}

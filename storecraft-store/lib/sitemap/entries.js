@@ -15,8 +15,10 @@ import {
 import { CITY_LANDING_SLUGS, cityPath } from "@/lib/cityLandingPages";
 import { DELETED_URL_REDIRECTS } from "@/lib/deletedUrlRedirects.mjs";
 import {
+  isIndexableProduct,
   productHasExternalCanonical,
   productHasRealImage,
+  resolveProductImageUrls,
 } from "@/lib/productImages";
 
 /** Paths that permanently redirect — never emit in sitemaps (F3). */
@@ -41,8 +43,7 @@ const SITEMAP_PRODUCT_FILTER = {
 
 function isSitemapEligibleProduct(p) {
   if (!p?.slug || isRedirectSourcePath(`/${p.slug}`)) return false;
-  if (!productHasRealImage(p)) return false;
-  if (productHasExternalCanonical(p)) return false;
+  if (!isIndexableProduct(p)) return false;
   if (p?.seo?.excludeFromSitemap === true) return false;
   return true;
 }
@@ -346,6 +347,25 @@ export async function getProductSitemapEntries(headers, _siteId, chunkIndex = 0)
   return paginateEntries(ctx.entries.products, chunkIndex);
 }
 
+/** Image sitemap: one <url> per indexable product with gallery image:loc entries. */
+export async function getImageSitemapEntries(headers) {
+  const ctx = await fetchSitemapContext(headers);
+  await dbConnect();
+  const products = await Product.find(SITEMAP_PRODUCT_FILTER)
+    .select("slug name updatedAt createdAt media images image seo")
+    .lean();
+  return products.filter(isSitemapEligibleProduct).map((p) => {
+    const images = resolveProductImageUrls(p)
+      .filter((u) => !/-placeholder(\.|\-sm\.|\-md\.|\-lg\.)/i.test(u))
+      .map((loc) => ({ loc, title: String(p.name || p.slug) }));
+    return {
+      loc: absoluteUrl(`/${p.slug}`, { headers }),
+      lastmod: safeLastModDate(p.updatedAt, p.createdAt),
+      images,
+    };
+  }).filter((e) => e.images.length > 0);
+}
+
 export async function getCategorySitemapEntries(headers, _siteId, chunkIndex = 0) {
   const ctx = await fetchSitemapContext(headers);
   return paginateEntries(ctx.entries.categories, chunkIndex);
@@ -370,12 +390,15 @@ export async function getSitemapIndexEntries(headers) {
   const ctx = await fetchSitemapContext(headers);
   const { siteUrl, entries } = ctx;
 
+  const imageEntries = await getImageSitemapEntries(headers).catch(() => []);
+
   const childSpecs = [
     { id: "products", entries: entries.products },
     { id: "categories", entries: entries.categories },
     { id: "cars", entries: entries.cars },
     { id: "pages", entries: entries.pages },
     { id: "blog", entries: entries.blog },
+    { id: "images", entries: imageEntries },
   ];
 
   return childSpecs

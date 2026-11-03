@@ -1,5 +1,7 @@
 "use client";
 
+import { localMediaSrcSet } from "@/lib/cloudinaryImage";
+
 /**
  * Local /media thumb with automatic fallback to the master when *-400.webp / *-800.webp is missing.
  * Prefer explicit width/height + sizes for CLS; keep plain <img> for /media (avoids /_next/image 400s).
@@ -30,15 +32,18 @@ export default function LocalMediaImg({
   height,
   draggable,
   onLoad,
+  srcSet,
 }) {
   const masterUrl = String(master || src || "")
     .trim()
     .split("?")[0];
+  const resolvedSrcSet = srcSet || localMediaSrcSet(masterUrl || src) || undefined;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
+      srcSet={resolvedSrcSet}
       alt={alt}
       title={title}
       className={className}

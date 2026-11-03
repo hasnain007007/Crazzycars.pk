@@ -139,7 +139,7 @@ const PAGES = [
 </ul>
 
 <h3>Delivery charges</h3>
-<p>Standard delivery is a flat Rs. ${STANDARD_DELIVERY_RS} on every order. There is no order-value waiver for delivery. Exact charges are always shown before you place the order.</p>
+<p>Delivery is Rs ${STANDARD_DELIVERY_RS}, or Rs 500 if the order has bulky items. Exact charges are always shown before you place the order. Body kits are prepaid only.</p>
 
 <h3>Cash on Delivery</h3>
 <p>For COD orders, we may ask you to pay the delivery charge in advance (via JazzCash / bank transfer) to confirm the order. Product payment remains cash on delivery unless you choose an advance payment method.</p>
@@ -267,7 +267,7 @@ async function main() {
           "footer.customerCareLinks": customerCareLinks,
           "announcementBar.items": nextItems,
           "announcementBar.enabled": bar.enabled !== false,
-          "checkoutMessages.shippingNote": `Standard delivery is a flat Rs. ${STANDARD_DELIVERY_RS} on every order. There is no order-value waiver for delivery.`,
+          "checkoutMessages.shippingNote": `Delivery is Rs ${STANDARD_DELIVERY_RS}, or Rs 500 if the order has bulky items. COD on eligible items with a Rs 300 / 600 / 1,000 booking advance (by order value), deducted from your total. Body kits are prepaid only.`,
           updatedAt: new Date(),
         },
       }

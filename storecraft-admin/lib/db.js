@@ -5,17 +5,17 @@ import mongoose from "mongoose";
 import "./registerModels";
 
 const globalWithMongoose = globalThis;
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI is not defined");
-}
 
 if (!globalWithMongoose.__mongooseConnection) {
   globalWithMongoose.__mongooseConnection = { conn: null, promise: null };
 }
 
 export async function dbConnect() {
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI is not defined");
+  }
+
   const cached = globalWithMongoose.__mongooseConnection;
 
   if (cached.conn) {

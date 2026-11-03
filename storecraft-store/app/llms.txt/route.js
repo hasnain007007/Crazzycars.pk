@@ -10,11 +10,32 @@ import { COD_LINE, PREPAID_LINE, TRUST_LINE } from "@/lib/paymentCopy";
 import { loadShopByCarIndex } from "@/lib/vehiclePageData";
 import { GENERATION_BY_SLUG, aliasesForSlug } from "@/lib/seo/generationAliases";
 import { getServerStoreSettings } from "@/lib/serverSettings";
+import { buildLlmsStaticMd } from "@/lib/seo/llmsStaticContent.mjs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 const MAX_BYTES = 30 * 1024;
+
+function loadStaticPreamble(site) {
+  const withSite = String(buildLlmsStaticMd() || "").replaceAll("{{SITE}}", site);
+  if (!withSite.trim()) return null;
+  return `${withSite.trim()}
+
+## Machine-readable data
+
+- Product catalogue (JSON, fitment per product): ${site}/feed/ai-catalog.json
+- Product feed (XML): ${site}/feed/products.xml
+- AI discovery: ${site}/.well-known/ai.json
+- Sitemap: ${site}/sitemap.xml
+- This file: ${site}/llms.txt
+- Full product list: ${site}/llms-full.txt
+- Contact: WhatsApp ${STORE_CONTACT.whatsapp} · ${STORE_CONTACT.email}
+- ${TRUST_LINE}
+- Payment detail: ${COD_LINE}; body kits — ${PREPAID_LINE}. Returns window ${STORE_POLICY.returns.windowDays} days (defective/wrong item only).
+
+`;
+}
 
 /**
  * Descriptive llms.txt for AI crawlers — factual only, no ranking directives.
@@ -87,17 +108,13 @@ export async function GET() {
       .filter((p) => p.slug)
       .slice(0, 20)
       .map((p) => {
-        const sale = Number(p.pricing?.salePrice);
-        const regular = Number(p.pricing?.regularPrice);
-        const price =
-          Number.isFinite(sale) && sale > 0 && (!Number.isFinite(regular) || sale < regular)
-            ? sale
-            : Number.isFinite(regular)
-              ? regular
-              : null;
-        const priceBit = price != null ? ` — PKR ${Math.round(price).toLocaleString("en-PK")}` : "";
+        // Task 14: no prices; strip claim words from link text only (URLs unchanged).
+        const label = String(p.name || p.slug)
+          .replace(/\b(best|#1|oem|genuine|original|perfect|premium|100%)\b/gi, "")
+          .replace(/\s{2,}/g, " ")
+          .trim();
         const cod = productAllowsCod(p) ? "COD eligible" : "prepaid";
-        return `- [${p.name}](${site}/${p.slug})${priceBit} · ${cod}`;
+        return `- [${label || p.slug}](${site}/${p.slug}) · ${cod}`;
       });
 
     const prioritySlugs = Object.keys(GENERATION_BY_SLUG);
@@ -125,33 +142,26 @@ export async function GET() {
     vehicleLinks = [];
   }
 
-  const preamble = `# CrazzyCars.pk
+  // Task 14: prefer content/llms-static.md; fall back to inline generator.
+  const preamble =
+    loadStaticPreamble(site) ||
+    `# CrazzyCars.pk
 
-> Online car accessories store based in Gujranwala, Pakistan. Sells exterior styling (body kits, spoilers, splitters, mirror covers), interior trims, floor mats, LED lighting and accessories for Pakistani-market cars (Toyota, Honda, Suzuki, Hyundai, KIA, Changan, Haval, MG and more). Prices in PKR.
+> Online car accessories store based in Gujranwala, Pakistan. Sells exterior styling (body kits, spoilers, splitters, mirror covers), interior trims, floor mats, LED lighting and accessories for Pakistani-market cars. Prices in PKR.
 
 ## Store facts
 
 - Founded: 2023
 - Shop: Gujranwala, Punjab (${shopAddress})
 - ${TRUST_LINE}
-- Delivery: nationwide via courier. Rs ${shipStd} regular, Rs ${shipBulky} if the order has bulky items (splitters, side skirts, spoilers, floor mats, body kits). Delivery fee paid in advance where required.
+- Delivery: nationwide via courier. Rs ${shipStd} regular, Rs ${shipBulky} if the order has bulky items.
 - Payment: ${COD_LINE}; body kits — ${PREPAID_LINE}.
-- Returns: within ${STORE_POLICY.returns.windowDays} days only if the item is defective or the wrong item was shipped (full refund). No change-of-mind returns.
+- Returns: within ${STORE_POLICY.returns.windowDays} days only if the item is defective or the wrong item was shipped (full refund).
 - Contact: WhatsApp ${wa} (E.164 ${waE164}) · ${STORE_CONTACT.email} · ${shopAddress}
-- Fitment: each product lists vehicle compatibility (make/model/years). Do not invent fitment beyond that table. Generation nicknames (Civic Reborn, Rebirth, Civic X, Corolla E140, etc.) are search aliases only.
 
 ## Key pages
 
-- [Shop all](${site}/shop) · [Shop by vehicle](${site}/cars) · [Categories](${site}/categories) · [Cash on Delivery](${site}/cash-on-delivery) · [Shipping](${site}/shipping-policy) · [Returns](${site}/returns-policy) · [FAQ](${site}/faq) · [Contact](${site}/contact)
-
-## Machine-readable data
-
-- Product catalogue (JSON, fitment per product): ${site}/feed/ai-catalog.json
-- Product feed (XML): ${site}/feed/products.xml
-- AI discovery: ${site}/.well-known/ai.json
-- Sitemap: ${site}/sitemap.xml
-- This file: ${site}/llms.txt
-- Full product list: ${site}/llms-full.txt
+- [Shop all](${site}/shop) · [Shop by vehicle](${site}/cars) · [Categories](${site}/categories) · [Cash on Delivery](${site}/cash-on-delivery)
 
 `;
 

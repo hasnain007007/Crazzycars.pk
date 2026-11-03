@@ -10,9 +10,11 @@ import {
 } from "@/lib/storePolicyCopy";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { ROBOTS_INDEX_FOLLOW } from "@/lib/seo/robotsMeta";
-import { sanitizeMetadata } from "@/lib/safeMetadata";
+import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
+import { getServerStoreSettings } from "@/lib/serverSettings";
+import { resolveSeo } from "@/lib/seo/resolveSeo.mjs";
 
 const BRAND =
   process.env.NEXT_PUBLIC_STORE_NAME ||
@@ -22,26 +24,33 @@ const BRAND =
 const META_BASE = "Cash on Delivery (COD) in Pakistan";
 const META_DESCRIPTION = `COD on eligible items: ${codAdvanceAmountsLabel()} booking advance by order value, deducted from your total. Body kits are prepaid (JazzCash, Meezan, bank).`;
 
-const titleMeta = buildBrandedAbsoluteTitle(META_BASE, { brand: BRAND });
-
-export const metadata = sanitizeMetadata({
-  title: titleMeta,
-  description: META_DESCRIPTION,
-  alternates: { canonical: absoluteUrl("/cash-on-delivery") },
-  robots: ROBOTS_INDEX_FOLLOW,
-  openGraph: {
-    title: titleMeta.absolute,
-    description: META_DESCRIPTION,
-    url: absoluteUrl("/cash-on-delivery"),
-    type: "website",
-    images: [{ url: absoluteUrl("/og/default-1200x630.jpg"), width: 1200, height: 630, alt: BRAND }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: titleMeta.absolute,
-    description: META_DESCRIPTION,
-    images: [absoluteUrl("/og/default-1200x630.jpg")],
-  },
+export const generateMetadata = withSafeMetadata(async function codMetadata() {
+  const settings = await getServerStoreSettings().catch(() => null);
+  const titleRaw = resolveSeo({ db: settings?.codPageTitle, fallback: META_BASE });
+  const description = resolveSeo({
+    db: settings?.codPageMetaDescription,
+    fallback: META_DESCRIPTION,
+  });
+  const titleMeta = buildBrandedAbsoluteTitle(titleRaw, { brand: BRAND });
+  return {
+    title: titleMeta,
+    description,
+    alternates: { canonical: absoluteUrl("/cash-on-delivery") },
+    robots: ROBOTS_INDEX_FOLLOW,
+    openGraph: {
+      title: titleMeta.absolute,
+      description,
+      url: absoluteUrl("/cash-on-delivery"),
+      type: "website",
+      images: [{ url: absoluteUrl("/og/default-1200x630.jpg"), width: 1200, height: 630, alt: BRAND }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titleMeta.absolute,
+      description,
+      images: [absoluteUrl("/og/default-1200x630.jpg")],
+    },
+  };
 });
 
 function codLandingFaqs() {

@@ -93,7 +93,7 @@ function saveCompare(items) {
 const RETURNS_BADGE = returnsTrustBadge();
 const DEFAULT_PRODUCT_PAGE_TRUST_BADGES = [
   { icon: "↩️", text: RETURNS_BADGE.text, subtext: RETURNS_BADGE.subtext, enabled: true },
-  { icon: "🔒", text: "Secure Payment", subtext: "100% Secure Checkout", enabled: true },
+  { icon: "🔒", text: "Secure Payment", subtext: "Secure Checkout", enabled: true },
   { icon: "🚚", text: "Fast Dispatch", subtext: "Quick Delivery", enabled: true },
 ];
 

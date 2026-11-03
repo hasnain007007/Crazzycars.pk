@@ -16,6 +16,7 @@ import { blogContentModifiedAt } from "@/lib/blogContentDate";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
 import { relatedGuidesForBlog } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbRelatedGuidesForBlog } from "@/lib/seo/blogLinksFromDb";
+import { resolveBlogSeo } from "@/lib/seo/blogTitleOverrides.mjs";
 import { BRAND } from "@/lib/brand";
 
 /** ISR — view counter runs in after() so HTML can be cached (S7c). */
@@ -100,13 +101,13 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
   const post = await loadBlogPostForMeta(slug);
   if (!post) return { title: "Blog Not Found" };
   const modified = blogContentModifiedAt(post);
-  const metaTitle =
-    post.seo?.metaTitle ||
-    `${post.title} | ${BRAND} Blog`;
+  const resolved = resolveBlogSeo(slug, post);
+  const metaTitle = resolved.title || `${post.title} | ${BRAND} Blog`;
+  const metaDescription = resolved.description;
   return {
     // Absolute so the root layout does not append the store name a second time.
     title: { absolute: metaTitle },
-    description: post.seo?.metaDescription || post.excerpt || post.title,
+    description: metaDescription,
     authors: [{ name: post.author?.name || BRAND }],
     publishedTime: post.publishedAt || post.createdAt,
     modifiedTime: modified,

@@ -66,14 +66,14 @@ export const BLOG_LINK_CATALOG = [
   },
   {
     slug: "best-body-kit-styles-toyota-corolla-pakistan",
-    title: "Best Body Kit Styles for Toyota Corolla",
+    title: "Body Kit Styles for Toyota Corolla in Pakistan",
     keywords: ["corolla", "e140", "e170", "body kit"],
     categories: ["body-kits-extensions", "exterior"],
     cars: ["toyota-corolla-e170-2014-2026", "toyota-corolla-e140-2009-2014"],
   },
   {
     slug: "toyota-yaris-vs-honda-city-best-accessories",
-    title: "Toyota Yaris vs Honda City — Best Accessories",
+    title: "Yaris vs City Accessories in Pakistan",
     keywords: ["yaris", "honda city", "city"],
     categories: ["exterior", "floor-mats"],
     cars: ["toyota-yaris-2020-present", "honda-city-2021-present", "honda-city-classic-2009-2020"],
@@ -108,7 +108,7 @@ export const BLOG_LINK_CATALOG = [
   },
   {
     slug: "best-floor-mats-pakistani-weather-guide",
-    title: "Best Floor Mats for Pakistani Weather",
+    title: "Floor Mats for Pakistan Weather: Rubber vs TPE",
     keywords: ["floor mat", "weather", "mud", "rain"],
     categories: ["floor-mats", "interior"],
     cars: [],

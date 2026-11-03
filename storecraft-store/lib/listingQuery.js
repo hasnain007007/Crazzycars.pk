@@ -106,7 +106,10 @@ export function listingCanonicalPath(pathname, listing) {
 }
 
 export function listingRobots(listing, { thin = false } = {}) {
-  if (thin || listingHasFacets(listing)) return ROBOTS_NOINDEX_FOLLOW;
+  // Task 4: ?page≥2 is crawlable but noindex; facets also noindex with clean canonical.
+  if (thin || listingHasFacets(listing) || (listing?.page || 1) > 1) {
+    return ROBOTS_NOINDEX_FOLLOW;
+  }
   return ROBOTS_INDEX_FOLLOW;
 }
 

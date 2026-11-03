@@ -20,6 +20,8 @@ export function buildOrganizationReturnPolicy(siteUrl) {
     merchantReturnDays: days,
     itemCondition: "https://schema.org/DamagedCondition",
     returnMethod: "https://schema.org/ReturnByMail",
+    // Approved defective/wrong-item returns: full refund, free return (no change-of-mind).
+    returnFees: "https://schema.org/FreeReturn",
     itemDefectReturnFees: "https://schema.org/FreeReturn",
     refundType: "https://schema.org/FullRefund",
     merchantReturnLink: site ? `${site}/returns-policy` : undefined,

@@ -17,6 +17,8 @@ const carModelSchema = new mongoose.Schema(
     },
     image: { type: String, default: "" },
     description: { type: String, default: "" },
+    metaTitle: { type: String, default: "" },
+    metaDescription: { type: String, default: "" },
     popularAccessories: [{ type: String }],
     generation: { type: String, default: "" },
     nickname: { type: String, default: "" },

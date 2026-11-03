@@ -6,8 +6,8 @@ import toast from "react-hot-toast";
 const DEFAULT_TRUST_BADGES = [
   {
     icon: "🛡️",
-    text: "Premium Quality",
-    subtext: "Exceptional Standards",
+    text: "Checked for Fit and Finish",
+    subtext: "Inspected before dispatch",
     enabled: true,
   },
   {
@@ -19,7 +19,7 @@ const DEFAULT_TRUST_BADGES = [
   {
     icon: "🔒",
     text: "Secure Payment",
-    subtext: "100% Secure Checkout",
+    subtext: "Secure Checkout",
     enabled: true,
   },
   {
@@ -48,7 +48,7 @@ function normalizeLoadedTrustBadges(arr) {
 }
 
 const DEFAULT_QUALITY_BADGES = [
-  { text: "Premium Quality", enabled: true },
+  { text: "Checked for Fit and Finish", enabled: true },
   { text: "Fitment Checked", enabled: true },
   { text: "COD Available", enabled: true },
 ];

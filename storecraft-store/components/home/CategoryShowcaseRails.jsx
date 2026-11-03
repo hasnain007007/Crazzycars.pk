@@ -224,7 +224,7 @@ function CategoryRail({ config, root }) {
           >
             <div className="cat-showcase__promo-top">
               <span className="cat-showcase__promo-brand">CrazzyCars.pk</span>
-              <p className="cat-showcase__promo-tag">The original performance-parts shop in Gujranwala</p>
+              <p className="cat-showcase__promo-tag">Car accessories shop in Gujranwala since 2023</p>
               <p className="cat-showcase__promo-title">{config.title}</p>
               <p className="cat-showcase__promo-sub">{config.tagline}</p>
             </div>

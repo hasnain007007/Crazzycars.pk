@@ -28,15 +28,15 @@ ENV NEXT_PUBLIC_STORE_NAME=$NEXT_PUBLIC_STORE_NAME \
     NEXT_PUBLIC_STORE_URL=$NEXT_PUBLIC_STORE_URL \
     NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
-# Some routes touch DB during `next build` page collection
-ARG MONGODB_URI
-ENV MONGODB_URI=$MONGODB_URI
+# Build-time DB URI via BuildKit secret (deploy-vps-test.sh --secret id=mongodb_uri).
 # Own cache id so the admin build never shares this Next cache (see storecraft-admin/Dockerfile).
 # Turbopack's persistent cache can hand back a stale CSS chunk (new globals.css rules
 # missing on the live site), so drop it every build; the rest of .next/cache stays.
 RUN --mount=type=cache,id=crazzycars-store-next-cache,target=/app/.next/cache \
     --mount=type=cache,target=/root/.npm \
+    --mount=type=secret,id=mongodb_uri \
     rm -rf /app/.next/cache/turbopack \
+ && export MONGODB_URI="$(cat /run/secrets/mongodb_uri 2>/dev/null || true)" \
  && npm run build \
  && node -e "\
 const fs=require('fs');const path=require('path');\
@@ -78,10 +78,12 @@ COPY --chown=nextjs:nodejs scripts/assert-preview-mongo.mjs ./assert-preview-mon
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# server-timeouts.mjs must sit next to standalone server.js
+COPY --chown=nextjs:nodejs server-timeouts.mjs ./server-timeouts.mjs
 USER nextjs
 EXPOSE 3000
 VOLUME ["/app/media"]
-HEALTHCHECK --interval=30s --timeout=8s --start-period=60s --retries=5 \
+HEALTHCHECK --interval=30s --timeout=8s --start-period=40s --retries=5 \
   CMD node /app/healthcheck.js
 ENTRYPOINT ["/bin/sh", "/app/docker-entrypoint.sh"]
-CMD ["node", "server.js"]
+CMD ["node", "server-timeouts.mjs"]

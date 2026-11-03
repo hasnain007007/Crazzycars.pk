@@ -99,6 +99,8 @@ function emptyModel() {
     bodyStyle: "Sedan",
     image: "",
     description: "",
+    metaTitle: "",
+    metaDescription: "",
     popularAccessories: [],
     popularAccessoriesText: "",
     generation: "",
@@ -182,6 +184,8 @@ function modelToForm(m) {
     bodyStyle: MODEL_BODY_STYLES.includes(m.bodyStyle) ? m.bodyStyle : "Sedan",
     image: m.image || "",
     description: m.description || "",
+    metaTitle: m.metaTitle || "",
+    metaDescription: m.metaDescription || "",
     popularAccessories: Array.isArray(m.popularAccessories) ? m.popularAccessories : [],
     popularAccessoriesText: Array.isArray(m.popularAccessories) ? m.popularAccessories.join(", ") : "",
     generation: m.generation || "",
@@ -319,6 +323,29 @@ function ModelModal({ draft, setDraft, onClose, onSave, saving }) {
               value={draft.description}
               onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
             />
+          </label>
+          <label className="block text-sm">
+            <span className="font-medium">Meta title</span>
+            <input
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              value={draft.metaTitle || ""}
+              maxLength={70}
+              onChange={(e) => setDraft((d) => ({ ...d, metaTitle: e.target.value }))}
+            />
+            <span className="text-xs text-slate-500">{String(draft.metaTitle || "").length}/60 recommended</span>
+          </label>
+          <label className="block text-sm">
+            <span className="font-medium">Meta description</span>
+            <textarea
+              rows={2}
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              value={draft.metaDescription || ""}
+              maxLength={180}
+              onChange={(e) => setDraft((d) => ({ ...d, metaDescription: e.target.value }))}
+            />
+            <span className="text-xs text-slate-500">
+              {String(draft.metaDescription || "").length}/160 (aim 120–160)
+            </span>
           </label>
           <label className="block text-sm">
             <span className="font-medium">Popular accessories</span>
@@ -564,6 +591,8 @@ export default function CarCatalogManager() {
             .filter((v) => v.name),
           years: yearsFromRange(m.yearFrom, m.yearTo),
           description: m.description || "",
+          metaTitle: m.metaTitle || "",
+          metaDescription: m.metaDescription || "",
           popularAccessories: m.popularAccessoriesText
             .split(",")
             .map((s) => s.trim())

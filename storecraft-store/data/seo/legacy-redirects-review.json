@@ -1,0 +1,501 @@
+[
+  {
+    "from": "/blogs/batman-style-side-mirror-covers-pakistan-fitment-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false,
+    "note": "Live blog 200 — leave as is until owner confirms."
+  },
+  {
+    "from": "/blogs/toyota-yaris-vs-honda-city-best-accessories",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false,
+    "note": "Live blog 200 — leave as is."
+  },
+  {
+    "from": "/blogs/honda-civic-11th-gen-carbon-fiber-interior-kit-pakistan-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false,
+    "note": "404 blog — 301 to closest or 410 after owner."
+  },
+  {
+    "from": "/blogs/how-to-choose-right-front-grille",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/collections/toyota-corolla-2009-2014-accessories",
+    "suggested": "/cars/toyota-corolla-e140-2009-2014",
+    "confidence": "review",
+    "live": "308 /cars/toyota-corolla-e140-2009-2014",
+    "enabled": false,
+    "note": "Already live-mapped; keep until confirmed."
+  },
+  {
+    "from": "/blogs/quarter-window-louvers-civic-corolla-fitment-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/collections/toyota-corolla-e170-2014-2020-accessories",
+    "suggested": "/cars/toyota-corolla-e170-2014-2026",
+    "confidence": "review",
+    "live": "308 /cars/toyota-corolla-e170-2014-2026",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/best-car-accessories-for-toyota-corolla-e140-2009-2013-in-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "308 /cars/toyota-corolla-e140-2009-2014",
+    "enabled": false
+  },
+  {
+    "from": "/collections/honda-civic-rebirth-2012-2016-accessories-body-kits",
+    "suggested": "/cars/honda-civic-rebirth-2012-2016",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/collections/toyota-vitz-accessories-shop-online-crazzycars-pk",
+    "suggested": "/cars/toyota-vitz-2012-present",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/collections/toyota-aqua-accessories-shop-online-crazzycars-pk",
+    "suggested": "/cars/toyota-aqua-2012-present",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/collections/suzuki-swift-2025-present-accessories",
+    "suggested": "/cars/suzuki-swift-2025-present",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/products",
+    "suggested": null,
+    "confidence": "none",
+    "live": "308 /shop",
+    "enabled": false,
+    "note": "Index already 308→/shop via middleware."
+  },
+  {
+    "from": "/blogs/dash-cameras-pakistan-why-every-driver-needs-one",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/collections/carbon-fiber-side-mirror-covers",
+    "suggested": "/categories/side-mirror-covers",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/best-floor-mats-pakistani-weather-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/exhaust-tips-systems-sound-performance",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/honda-civic-reborn-vs-rebirth-which-accessories-fit-which-model",
+    "suggested": null,
+    "confidence": "review",
+    "live": "308 /blogs/honda-civic-accessories-guide-every-generation",
+    "enabled": false
+  },
+  {
+    "from": "/blogs",
+    "suggested": null,
+    "confidence": "none",
+    "live": "200",
+    "enabled": false,
+    "note": "Live index — do not 410."
+  },
+  {
+    "from": "/blogs/honda-city-2021-2026-carbon-interior-upgrades-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/best-body-kit-styles-toyota-corolla-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/car-air-press-window-visors-fitment-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/honda-city-2021-modification-cost-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/toyota-corolla-rgb-bumper-neon-mirror-lights-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/crazzycars-delivery-charges-regular-vs-bulky-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/best-car-accessories-for-honda-city-in-pakistan-2024",
+    "suggested": null,
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/top-10-car-accessories-for-toyota-corolla-in-pakistan-2024",
+    "suggested": null,
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/honda-civic-accessories-guide-every-generation",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/led-ambient-lighting-car-buyer-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/dashboard-mats-pakistan-sun-glare-buying-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/side-mirror-covers-carbon-fiber-accents-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/collections/all",
+    "suggested": "/categories/utility",
+    "confidence": "review",
+    "live": "308 /shop",
+    "enabled": false,
+    "note": "Live → /shop; CSV utility differs."
+  },
+  {
+    "from": "/collections",
+    "suggested": null,
+    "confidence": "none",
+    "live": "308 /shop",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/car-door-welcome-logo-lights-pakistan-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/body-kit-price-in-pakistan-2026",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/suzuki-swift-carbon-door-handle-covers-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/are-aftermarket-car-accessories-safe",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/top-5-car-modifications-under-pkr-5000-in-pakistan-2024",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/best-car-accessories-online-pakistan-2026-complete-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "308 /shop",
+    "enabled": false
+  },
+  {
+    "from": "/collections/toyota-yaris-accessories-shop-online-crazzycars-pk",
+    "suggested": "/cars/toyota-yaris-2020-present",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/collections/honda-civic-x-2016-2021-accessories-body-kits",
+    "suggested": "/cars/honda-civic-x-2016-2021",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/cabin-mood-lighting-usb-atmosphere-digital-eyes-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news",
+    "suggested": null,
+    "confidence": "review",
+    "live": "308 /blogs",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/body-kit-price-pakistan-2026-honda-civic-toyota-corolla",
+    "suggested": null,
+    "confidence": "review",
+    "live": "308 /blogs/body-kit-price-in-pakistan-2026",
+    "enabled": false
+  },
+  {
+    "from": "/collections/honda-accessories-shop-by-model-crazzycars-pk",
+    "suggested": "/cars/honda-vezel-2020-2026",
+    "confidence": "review",
+    "live": "308 /cars",
+    "enabled": false,
+    "note": "Live → /cars; CSV vezel differs."
+  },
+  {
+    "from": "/collections/hyundai-sonata-2020-2024-accessories",
+    "suggested": "/cars/hyundai-sonata-2020-2024",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/collections/honda-civic-reborn-2006-2012-accessories",
+    "suggested": "/cars/honda-civic-reborn-2006-2012",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/7d-vs-9d-vs-tpe-floor-mats-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false
+  },
+  {
+    "from": "/products/batman-style-side-mirror-cover-toyota-corolla-e170-yaris-aqua-vitz-crazzycars-pk",
+    "suggested": "/batman-style-side-mirror-cover-toyota-yaris-2020-2026",
+    "confidence": "review",
+    "live": "308 /batman-style-side-mirror-cover-toyota-corolla-e170-yaris-aqua-vitz",
+    "enabled": false,
+    "note": "Live target kept until owner confirms Yaris-only."
+  },
+  {
+    "from": "/blogs/seat-covers-buying-guide-pakistan-climate",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/collections/haval-h6-accessories-crazzycars-pk",
+    "suggested": "/cars/haval-h6-2021-present",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/collections/suzuki-alto-2020-accessories",
+    "suggested": "/cars/suzuki-alto-2020-present",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/car-perfume-air-freshener-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/collections/car-emergency-safety-products",
+    "suggested": "/categories/emergency-safety",
+    "confidence": "review",
+    "live": "308 /categories/car-care-safety",
+    "enabled": false
+  },
+  {
+    "from": "/collections/honda-city",
+    "suggested": "/cars/honda-city-2021-present",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/collections/hyundai-elantra-2020-2024-accessories",
+    "suggested": "/cars/hyundai-elantra-2020-2024",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/protect-car-interior-from-pakistan-heat",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/front-splitters-side-skirts-buying-guide-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/key-covers-key-chains-match-buttons-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/carbon-fiber-car-accessories-in-pakistan-complete-buyers-guide",
+    "suggested": null,
+    "confidence": "review",
+    "live": "308 /categories/carbon-fiber",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/follow-crazzycars-pk-on-tiktok-instagram-and-facebook",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/cod-vs-online-payment-car-accessories-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/trunk-lip-spoiler-buying-guide-pakistan-alsvin-city-corolla",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/match-year-variant-order-car-accessories-online-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/door-handle-covers-buying-guide-pakistan-city-civic-corolla",
+    "suggested": null,
+    "confidence": "review",
+    "live": "200",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/news/honda-civic-accessories-price-pakistan-2024",
+    "suggested": null,
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  },
+  {
+    "from": "/blogs/push-start-cover-carbon-key-fob-accessories-pakistan",
+    "suggested": null,
+    "confidence": "review",
+    "live": "404",
+    "enabled": false
+  },
+  {
+    "from": "/collections/honda-civic-accessories",
+    "suggested": "/cars/honda-civic-x-2016-2021",
+    "confidence": "review",
+    "live": "308 /cars",
+    "enabled": false
+  },
+  {
+    "from": "/collections/honda-city-2016-accessories-body-kits",
+    "suggested": "/cars/honda-city-2021-present",
+    "confidence": "review",
+    "live": "308 /cars/honda-city-classic-2009-2020",
+    "enabled": false
+  },
+  {
+    "from": "/collections/honda-civic-11th-gen-2022-present-accessories",
+    "suggested": "/cars/honda-civic-11th-gen-2022-present",
+    "confidence": "review",
+    "live": "308",
+    "enabled": false
+  }
+]

@@ -30,6 +30,7 @@ import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
 import { BRAND_NAME, stripLegacyBrand, withBrandTitleSuffix } from "@/lib/brand";
 import { getCarPageMeta } from "@/lib/seo/carPageMeta2026-10.mjs";
+import { resolveSeo, stripClaimWordsFromMeta } from "@/lib/seo/resolveSeo.mjs";
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
 import { blogsForCar } from "@/lib/seo/blogInternalLinks.mjs";
 
@@ -80,18 +81,24 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
       permanentRedirect(listingHref(`/cars/${vehicle.slug}`, listing));
     }
     const assigned = await Product.countDocuments(buildVehiclePageProductFilter(vehicle));
-    if (assigned === 0) notFound();
-    const totalPages = Math.max(1, Math.ceil(assigned / listing.pageSize) || 1);
-    if (listing.page > totalPages) notFound();
+    // Task 5: real car with 0 products → noindex empty hub (not soft-404 / notFound).
+    const totalPages = Math.max(1, Math.ceil(Math.max(assigned, 1) / listing.pageSize) || 1);
+    if (assigned > 0 && listing.page > totalPages) notFound();
+    if (assigned === 0 && listing.page > 1) notFound();
 
     const carMeta = getCarPageMeta(vehicle.slug);
     const seoOverride = getPageSeoOverride(`/cars/${vehicle.slug}`);
-    // S6: PAGE_SEO_OVERRIDES titles win (≤60, keyword-mapped). Else DB, then carPageMeta.
+    // Task 11: admin/DB > PAGE_SEO_OVERRIDES > generated fallback.
     const dbTitle = stripLegacyBrand(vehicle.metaTitle);
-    const titleMeta = seoOverride?.title
-      ? { absolute: String(seoOverride.title).trim() }
-      : dbTitle
-        ? buildBrandedAbsoluteTitle(dbTitle, { brand: BRAND, max: 60 })
+    const resolvedTitle = resolveSeo({
+      db: dbTitle,
+      override: seoOverride?.title,
+      fallback: carMeta?.title || `${vehicle.displayName} Accessories`,
+    });
+    const titleMeta = dbTitle
+      ? buildBrandedAbsoluteTitle(resolvedTitle, { brand: BRAND, max: 60 })
+      : seoOverride?.title
+        ? { absolute: String(seoOverride.title).trim() }
         : carMeta?.title
           ? { absolute: withBrandTitleSuffix(carMeta.title) }
           : buildBrandedAbsoluteTitle(`${vehicle.displayName} Accessories`, {
@@ -99,16 +106,27 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
               max: 60,
             });
     const title = titleMeta.absolute;
-    // Prefer Car Catalog Description (merged in loadVehicleBySlug) over legacy Vehicle.metaDescription.
     const catalogDesc = stripLegacyBrand(
-      String(vehicle.description || "").trim() || String(vehicle.metaDescription || "").trim(),
+      String(vehicle.metaDescription || "").trim(),
       { replacement: BRAND }
     );
-    const description = fitMetaDescription(
-      [seoOverride?.meta, catalogDesc, carMeta?.description, vehicleMetaDescription(vehicle, catalogDesc)],
-      `${vehicle.displayName} accessories with prices in Pakistan and delivery across Pakistan.`
+    const description = stripClaimWordsFromMeta(
+      fitMetaDescription(
+        [
+          catalogDesc,
+          seoOverride?.meta,
+          carMeta?.description,
+          vehicleMetaDescription(
+            vehicle,
+            stripLegacyBrand(String(vehicle.description || "").trim(), { replacement: BRAND })
+          ),
+        ],
+        `${vehicle.displayName} accessories with prices in Pakistan and delivery across Pakistan.`
+      )
     );
-    const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);
+    const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing, {
+      thin: assigned === 0,
+    });
     const canonical =
       listing.page <= 1
         ? `${SITE}/cars/${vehicle.slug}`
@@ -192,7 +210,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const page = listing.page;
   const products = sorted.slice((page - 1) * listing.pageSize, page * listing.pageSize);
   const listingForUi = { ...listing, page };
-  if (total === 0) notFound();
+  // Empty real car hub: keep intro + related links (noindex via generateMetadata thin).
 
   const yearLabel =
     vehicle.yearTo == null || Number(vehicle.yearTo) >= new Date().getFullYear()

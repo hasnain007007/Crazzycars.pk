@@ -27,6 +27,7 @@ import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
 import { pdpImageUrlExisting } from "@/lib/resolveLocalMedia";
 import {
   productHasExternalCanonical,
+  isIndexableProduct,
   productHasRealImage,
   resolveProductImageUrls,
   resolvePrimaryProductImageUrl,
@@ -46,6 +47,7 @@ import {
   buildProductKeywordFaqs,
   faqPageJsonLd,
 } from "@/lib/seo/keywordStrategyFaqs";
+import { resolveProductFaqItems } from "@/lib/seo/parseCcFaq.mjs";
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
 import { productSeoDescription, productSeoTitle } from "@/lib/seo/productSeoMeta";
 import { displayProductName } from "@/lib/displayProductName";
@@ -380,12 +382,12 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     const ogAlt = contentOverride?.imageAlt || displayName;
 
     const robotsRaw = String(p.seo?.robots || "").toLowerCase();
-    const noPhoto = !productHasRealImage(p);
     const externalCanon = productHasExternalCanonical(p);
+    // Task 6: robots/sitemap share isIndexableProduct (real images, not stale flags).
     const noindex =
       robotsRaw.includes("noindex") ||
       p.seo?.excludeFromSitemap === true ||
-      noPhoto ||
+      !isIndexableProduct(p) ||
       externalCanon;
     return {
       title: { absolute: title },
@@ -622,10 +624,14 @@ export default async function ProductPage({ params, searchParams }) {
           try {
             const faqExtras =
               PRODUCT_FAQ_OVERRIDES[String(content.data?.slug || "").trim()] || [];
-            const faqLd = faqPageJsonLd([
+            const fallbackFaqs = [
               ...buildProductKeywordFaqs(content.data),
               ...faqExtras,
-            ]);
+            ];
+            // Task 9: prefer visible data-cc-faq block over auto Payment?/Delivery? questions.
+            const faqLd = faqPageJsonLd(
+              resolveProductFaqItems(content.data, fallbackFaqs)
+            );
             if (!faqLd) return null;
             return (
               <script

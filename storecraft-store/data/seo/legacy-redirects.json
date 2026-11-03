@@ -1,0 +1,623 @@
+[
+  {
+    "from": "/products/toyota-yaris-2020-2026-trunk-lip-spoiler-abs-plastic-crazzycars-pk",
+    "to": "/toyota-yaris-2020-2026-trunk-lip-spoiler-abs-plastic",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-grande-steering-wheel-trim-in-carbon-fiber-multimedia",
+    "to": "/toyota-corolla-grande-steering-wheel-trim-in-carbon-fiber-multimedia",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/car-quarter-window-louvers",
+    "to": "/categories/quarter-window-louvers",
+    "confidence": "high"
+  },
+  {
+    "from": "/products/toyota-corolla-2012-top-ac-panel",
+    "to": "/toyota-corolla-2012-top-ac-panel",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/car-steering-wheel-covers",
+    "to": "/categories/steering-wheel-covers",
+    "confidence": "high"
+  },
+  {
+    "from": "/products/hyundai-elantra-2023-2026-sporty-style-body-kit-fibreglass-crazzycars-pk",
+    "to": "/hyundai-elantra-2023-2026-sporty-style-body-kit-fibreglass",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler",
+    "to": "/toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/carbon-fiber-car-accessories-shop-online-crazzycars-pk",
+    "to": "/categories/carbon-fiber",
+    "confidence": "high",
+    "note": "Kept LIVE target /categories/carbon-fiber (CSV had carbon-fiber-accessories); both 200. Owner-confirmed 4 Nov 2026.",
+    "enabled": true
+  },
+  {
+    "from": "/collections/hyundai-elantra-hybrid-2025-present-accessories",
+    "to": "/cars/hyundai-elantra-hybrid-2025-present",
+    "confidence": "high"
+  },
+  {
+    "from": "/products/toyota-corolla-2014-2026-sequential-side-mirror-indicators",
+    "to": "/toyota-corolla-2014-2026-side-mirror-led-indicators",
+    "confidence": "high",
+    "note": "Kept LIVE year-accurate target (CSV pointed at 2008-2013 sequential). Owner-confirmed 4 Nov 2026.",
+    "enabled": true
+  },
+  {
+    "from": "/products/car-side-splitter-abs-plastic-4pcs",
+    "to": "/car-side-splitter-abs-plastic-4pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2009-2026-carbon-steering-monogram-abs",
+    "to": "/toyota-corolla-2009-2026-carbon-steering-monogram-abs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/car-spoilers-diffusers",
+    "to": "/categories/spoilers-diffusers",
+    "confidence": "high"
+  },
+  {
+    "from": "/products/honda-civic-reborn-2006-2011-body-kit-d3-crazzycars-pk",
+    "to": "/honda-civic-reborn-2006-2011-body-kit-d3",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-2022-2024-yofer-style-body-kit-4pcs-fibreglass-crazzycars-pk",
+    "to": "/honda-civic-2022-2024-yofer-style-body-kit-4pcs-fibreglass",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-city-2020-2026-carbon-door-handle-cover-abs",
+    "to": "/honda-city-2020-2026-carbon-door-handle-cover-abs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-city-2020-2026-carbon-window-quarter-covers-abs",
+    "to": "/honda-city-2020-2026-carbon-window-quarter-covers-abs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2009-2014-rgb-side-mirror-indicator-dragon-style-crazzycars-pk",
+    "to": "/toyota-corolla-2009-2014-rgb-side-mirror-indicator-dragon-style",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-2022-batman-style-side-mirror-covers",
+    "to": "/honda-civic-2022-batman-style-side-mirror-covers",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2012-2014-body-kit-d4-crazzycars-pk",
+    "to": "/toyota-corolla-2012-2014-body-kit-d4",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/car-front-bumper-splitter-abs-plastic-3pcs",
+    "to": "/car-front-bumper-splitter-abs-plastic-3pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/led-indicator-lights",
+    "to": "/categories/led-indicator-lights",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-reborn-2006-2012-multimedia-steering-wheel-audio-control-buttons-crazzycars-pk",
+    "to": "/honda-civic-reborn-2006-2012-multimedia-steering-wheel-audio-control-buttons",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-x-shark-fin-style-lower-panel-diffuser",
+    "to": "/toyota-corolla-x-shark-fin-style-lower-panel-diffuser",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/sos-flasher-led-lights",
+    "to": "/categories/sos-flasher-led-lights",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/car-splitters-side-skirts",
+    "to": "/categories/splitters-side-skirts",
+    "confidence": "high"
+  },
+  {
+    "from": "/products/honda-civic-2022-2024-front-spike-style-splitter-abs-crazzycars-pk",
+    "to": "/honda-civic-2022-2024-front-spike-style-splitter-abs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/corolla-e140-led-rear-reflector",
+    "to": "/corolla-e140-led-rear-reflector",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-aqua-2016-2019-front-body-kit-fibreglass-crazzycars-pk",
+    "to": "/toyota-aqua-2016-2019-front-body-kit-fibreglass",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-city-new-model-trunk-lip-spoiler-2021-2026",
+    "to": "/honda-city-new-model-trunk-lip-spoiler-2021-2026",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/car-brembo-style-brake-caliper-covers-universal-fit",
+    "to": "/car-brembo-style-brake-caliper-covers-universal-fit",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-gli-xli-2009-2014-multimedia-steering-wheel-audio-control-buttons-crazzycars-pk",
+    "to": "/toyota-corolla-gli-xli-2009-2014-multimedia-steering-wheel-audio-control-buttons",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-aqua-2012-2015-complete-body-kit-crazzycars-pk",
+    "to": "/toyota-aqua-2012-2015-complete-body-kit",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/universal-car-accessories",
+    "to": "/categories/universal-accessories",
+    "confidence": "high"
+  },
+  {
+    "from": "/products/toyota-corolla-2015-2022-batman-style-side-mirror-cover",
+    "to": "/toyota-corolla-2015-2022-batman-style-side-mirror-cover",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-11th-gen-2022-2026-carbon-fiber-steering-wheel-paddle-shifters-pair-crazzycars-pk",
+    "to": "/honda-civic-11th-gen-2022-2026-carbon-fiber-steering-wheel-paddle-shifters-pair",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-city-2008-2014-complete-body-kit-crazzycars-pk",
+    "to": "/honda-city-2008-2014-complete-body-kit",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-city-2021-2025-modulo-style-body-kit-fibreglass-crazzycars-pk",
+    "to": "/honda-city-2021-2025-modulo-style-body-kit-fibreglass",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-11th-gen-rs-style-trunk-spoiler-2022-present",
+    "to": "/honda-civic-11th-gen-rs-style-trunk-spoiler-2022-present",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-yaris-2020-2026-roof-spoiler-abs-plastic-crazzycars-pk",
+    "to": "/toyota-yaris-2020-2026-roof-spoiler-abs-plastic",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2015-2024-carbon-fiber-gear-shifter-trim-crazzycars-pk",
+    "to": "/toyota-corolla-2015-2024-carbon-fiber-gear-shifter-trim",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/universal-rear-bumper-diffuser-carbon-fiber-d2-style-2pcs-crazzycars-pk",
+    "to": "/universal-rear-bumper-diffuser-carbon-fiber-d2-style-2pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-grande-2014-2018-carbon-fiber-steering-wheel-paddle-shifters-pair-crazzycars-pk",
+    "to": "/toyota-corolla-grande-2014-2018-carbon-fiber-steering-wheel-paddle-shifters-pair",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/batman-style-side-mirror-cover-toyota-aqua-2012-present-crazzycars-pk",
+    "to": "/batman-style-side-mirror-cover-toyota-aqua-2012-present",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+    "to": "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/devil-eye-led-rear-windshield-light",
+    "to": "/devil-eye-led-rear-windshield-light",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/carbon-fiber-steering-wheel-trim-for-honda-civic-11th-gen-2022-2026",
+    "to": "/carbon-fiber-steering-wheel-trim-for-honda-civic-11th-gen-2022-2026",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/universal-3-piece-front-bumper-splitter-ground-style-abs-crazzycars-pk",
+    "to": "/universal-3-piece-front-bumper-splitter-ground-style-abs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/car-bonnet-hood-spacer-aluminum-2-pcs",
+    "to": "/car-bonnet-hood-spacer-aluminum-2-pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/grill-led-police-light-red-blue",
+    "to": "/grill-led-police-light-red-blue",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-rebirth-ducktail-spoiler",
+    "to": "/honda-civic-rebirth-ducktail-spoiler",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-city-2015-2020-carbon-fiber-gear-lever-knob-cover-crazzycars-pk",
+    "to": "/honda-city-2015-2020-carbon-fiber-gear-lever-knob-cover",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/body-kits-extensions",
+    "to": "/categories/body-kits-extensions",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2018-2021-body-kit-d2-crazzycars-pk",
+    "to": "/toyota-corolla-2018-2021-body-kit-d2",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/interior-light",
+    "to": "/categories/interior-lights",
+    "confidence": "high"
+  },
+  {
+    "from": "/collections/car-exhaust-systems-tips",
+    "to": "/categories/exhaust-systems-tips",
+    "confidence": "high"
+  },
+  {
+    "from": "/products/suzuki-alto-multimedia-steering-control-buttons-with-spiral-cable-glossy-black-crazzycars-pk",
+    "to": "/suzuki-alto-multimedia-steering-control-buttons-with-spiral-cable-glossy-black",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/civic-x-carbon-complete-deal",
+    "to": "/civic-x-carbon-complete-deal",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/led-headlights-bulbs",
+    "to": "/categories/led-headlights-bulbs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2008-2014-canadian-style-trunk-spoiler-with-led-light-abs-crazzycars-pk",
+    "to": "/toyota-corolla-2008-2014-canadian-style-trunk-spoiler-with-led-light-abs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/deal-4-toyota-corolla-15-26",
+    "to": "/deal-4-toyota-corolla-15-26",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/deal-5-complete-body-kit-deal-front-splitter-side-skirts-back-bumper-lip",
+    "to": "/deal-5-complete-body-kit-deal-front-splitter-side-skirts-back-bumper-lip",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-city-2015-2021-sports-body-kit-d2-crazzycars-pk",
+    "to": "/honda-city-2015-2021-sports-body-kit-d2",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-e140-2009-2012-carbon-side-mirror-cover",
+    "to": "/toyota-corolla-e140-2009-2012-carbon-side-mirror-cover",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/car-front-bumper-splitter-abs-plastic-4pcs",
+    "to": "/car-front-bumper-splitter-abs-plastic-4pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/sos-police-strip-light-red-blue",
+    "to": "/sos-police-strip-light-red-blue",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-2022-2024-yofer-style-body-kit-4pcs-abs-crazzycars-pk",
+    "to": "/honda-civic-2022-2024-yofer-style-body-kit-4pcs-abs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/car-rgb-atmosphere-light-interior-footwell-led-lights-4-pcs",
+    "to": "/car-rgb-atmosphere-light-interior-footwell-led-lights-4-pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-x-2017-2020-front-bumper-replacement-crazzycars-pk",
+    "to": "/toyota-corolla-x-2017-2020-front-bumper-replacement",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/corolla-e210-grande-led-rear-reflector",
+    "to": "/corolla-e210-grande-led-rear-reflector",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/batman-style-side-mirror-cover-toyota-vitz-2010-present-crazzycars-pk",
+    "to": "/batman-style-side-mirror-cover-toyota-vitz-2010-present",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/reverse-bright-light-bulb-24-smd-led-w16w-t15-crazzycars-pk",
+    "to": "/reverse-bright-light-bulb-24-smd-led-w16w-t15-4-pack",
+    "confidence": "high",
+    "note": "CSV 4-pack (200). Live intermediate /…-t15 308s to same 4-pack. Owner-confirmed 4 Nov 2026.",
+    "enabled": true
+  },
+  {
+    "from": "/products/honda-city-2009-2020-sequential-side-mirror-indicators",
+    "to": "/honda-city-2009-2020-sequential-side-mirror-indicators",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-x-2016-2021-rear-canard-2pcs-crazzycars-pk",
+    "to": "/honda-civic-x-2016-2021-rear-canard-2pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/funny-window-hand-gesture-led-light",
+    "to": "/funny-window-hand-gesture-led-light",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-aqua-2020-2022-rear-body-kit-fibreglass-crazzycars-pk",
+    "to": "/toyota-aqua-2020-2022-rear-body-kit-fibreglass",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/side-skirts-red-lip-abs-plastic-side-skirt-kit-4-pcs-copy",
+    "to": "/side-skirts-red-lip-abs-plastic-side-skirt-kit-4-pcs-copy",
+    "confidence": "exact"
+  },
+  {
+    "from": "/collections/air-freshner-and-decoration",
+    "to": "/categories/air-freshener-decoration",
+    "confidence": "high"
+  },
+  {
+    "from": "/products/honda-civic-11th-gen-2022-2024-carbon-fiber-rear-armrest-air-vent-outlet-cover-trim-crazzycars-pk",
+    "to": "/honda-civic-11th-gen-2022-2024-carbon-fiber-rear-armrest-air-vent-outlet-cover-trim",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2009-2013-ducktail-trunk-spoiler",
+    "to": "/toyota-corolla-2009-2013-ducktail-trunk-spoiler",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2018-2021-trd-style-body-kit-d7-4pcs-crazzycars-pk",
+    "to": "/toyota-corolla-2018-2021-trd-style-body-kit-d7-4pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-trd-style-front-grille-gloss-black-abs-crazzycars-pk",
+    "to": "/toyota-corolla-trd-style-front-grille-gloss-black-abs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/universal-amber-grill-lights-4pcs",
+    "to": "/universal-amber-grill-lights-4pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/suzuki-alto-2018-2023-multimedia-steering-wheel-audio-control-buttons-panel-crazzycars-pk",
+    "to": "/suzuki-alto-2018-2023-multimedia-steering-wheel-audio-control-buttons-panel",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/carbon-fiber-hand-stitched-steering-wheel-cover",
+    "to": "/carbon-fiber-hand-stitched-steering-wheel-cover",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/x-card-car-hanging-air-freshener-perfume-crazzycars-pk",
+    "to": "/x-card-car-hanging-air-freshener-perfume",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color",
+    "to": "/2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-x-2016-2021-carbon-fiber-interior-door-window-switch-covers-crazzycars-pk",
+    "to": "/honda-civic-x-2016-2021-carbon-fiber-interior-door-window-switch-covers",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2017-2020-led-side-mirror-sequential-indicator-pair-crazzycars-pk",
+    "to": "/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair",
+    "confidence": "high",
+    "note": "CSV neon-pair (200). Live neon-style-indicator was 404. Owner-confirmed 4 Nov 2026.",
+    "enabled": true
+  },
+  {
+    "from": "/products/honda-civic-x-2016-2021-back-mirror-rack-louver-fibreglass-crazzycars-pk",
+    "to": "/honda-civic-x-2016-2021-back-mirror-rack-louver-fibreglass",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-aqua-2022-2024-sportline-front-splitter-canards-red-black-crazzycars-pk",
+    "to": "/toyota-aqua-2022-2024-sportline-front-splitter-canards-red-black",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/universal-front-splitter-style-4-gloss-black-canard-3pcs-crazzycars-pk",
+    "to": "/universal-front-splitter-style-4-gloss-black-canard-3pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/2pcs-front-bumper-lip-splitter-chin-spoiler-for-honda-civic-11th-gen-2022-2026-gloss-black",
+    "to": "/2pcs-front-bumper-lip-splitter-chin-spoiler-for-honda-civic-11th-gen-2022-2026-gloss-black",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-2022-2025-mugen-style-body-kit-fibreglass-crazzycars-pk",
+    "to": "/honda-civic-2022-2025-mugen-style-body-kit-fibreglass",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-x-side-window-quarter-louver-covers-black",
+    "to": "/honda-civic-x-side-window-quarter-louver-covers-black",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2008-2013-sequential-side-mirror-indicators",
+    "to": "/toyota-corolla-2008-2013-sequential-side-mirror-indicators",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2015-2026-rgb-side-mirror-indicator-dragon-style-crazzycars-pk",
+    "to": "/toyota-corolla-2014-2026-side-mirror-led-indicators",
+    "confidence": "high",
+    "note": "CSV dragon 2009-2014 (200). Live flat slug 308s to LED indicators (wrong family). Owner-confirmed 4 Nov 2026.",
+    "enabled": true
+  },
+  {
+    "from": "/products/3-color-switchback-fog-led-light-with-flasher-h11-white-yellow-blue-2-pcs",
+    "to": "/3-color-switchback-fog-led-light-with-flasher-h11-white-yellow-blue-2-pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/dynamic-car-underglow-lights",
+    "to": "/dynamic-car-underglow-lights",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/suzuki-alto-rs-rear-roof-spoiler-2019-2026",
+    "to": "/suzuki-alto-rs-rear-roof-spoiler-2019-2026",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/car-rear-bumper-splitter-cut-style-universal",
+    "to": "/car-rear-bumper-splitter-cut-style-universal",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-reborn-2006-2012-carbon-door-handle-cover-set",
+    "to": "/honda-civic-reborn-2006-2012-carbon-door-handle-cover-set",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/products-honda-civic-x-carbon-fiber-interior-trim-kit-2016-2021",
+    "to": "/products-honda-civic-x-carbon-fiber-interior-trim-kit-2016-2021",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2015-2017-front-splitter-gloss-black-canard-3pcs-crazzycars-pk",
+    "to": "/toyota-corolla-2015-2017-front-splitter-gloss-black-canard-3pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-rebirth-2012-2016-front-spike-splitter-canard-3pcs-crazzycars-pk",
+    "to": "/honda-civic-rebirth-2012-2016-front-spike-splitter-canard-3pcs",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-reborn-2006-2012-abs-plastic-roof-spoiler",
+    "to": "/honda-civic-reborn-2006-2012-abs-plastic-roof-spoiler",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-x-2016-2021-carbon-fiber-gear-knob-cover-crazzycars-pk",
+    "to": "/honda-civic-x-2016-2021-carbon-fiber-gear-knob-cover",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/carbon-fiber-dashboard-trim-for-honda-civic-11th-gen-2022-2026",
+    "to": "/carbon-fiber-dashboard-trim-for-honda-civic-11th-gen-2022-2026",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/golden-lion-car-dashboard-decoration-sculpture-crazzycars-pk",
+    "to": "/golden-lion-car-dashboard-decoration-sculpture",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-x-2016-2021-sports-body-kit-complete-crazzycars-pk",
+    "to": "/honda-civic-x-2016-2021-sports-body-kit-complete",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2009-2011-body-kit-d1-crazzycars-pk",
+    "to": "/toyota-corolla-2009-2011-body-kit-d1",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-city-2021-2025-drive-68-style-body-kit-fibreglass-crazzycars-pk",
+    "to": "/honda-city-2021-2025-drive-68-style-body-kit-fibreglass",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2018-2021-body-kit-d1-crazzycars-pk",
+    "to": "/toyota-corolla-2018-2021-body-kit-d1",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-civic-reborn-2007-2012-forged-carbon-hand-brake-cover-crazzycars-pk",
+    "to": "/honda-civic-reborn-2007-2012-forged-carbon-hand-brake-cover",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-yaris-2020-2023-carbon-fiber-door-handle-cover",
+    "to": "/toyota-yaris-2020-2023-carbon-fiber-door-handle-cover",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2012-2014-body-kit-d7-crazzycars-pk",
+    "to": "/toyota-corolla-2012-2014-body-kit-d7",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2012-2014-complete-body-kit-d1-crazzycars-pk",
+    "to": "/toyota-corolla-2012-2014-complete-body-kit-d1",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/car-heads-up-display-hud",
+    "to": "/car-heads-up-display-hud",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/suzuki-alto-660cc-lava-style-smoke-tail-lights-rear-lamps-pair-crazzycars-pk",
+    "to": "/suzuki-alto-660cc-lava-style-smoke-tail-lights-rear-lamps-pair",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/toyota-corolla-2022-2024-sports-body-kit-crazzycars-pk",
+    "to": "/toyota-corolla-2022-2024-sports-body-kit",
+    "confidence": "exact"
+  },
+  {
+    "from": "/products/honda-city-2009-2021-multimedia-steering-wheel-buttons-crazzycars-pk",
+    "to": "/honda-city-2009-2021-multimedia-steering-wheel-buttons",
+    "confidence": "exact"
+  },
+  {
+    "from": "/x-perfume-card-pack-car-interior-hanging-fragrance",
+    "to": "/x-card-car-hanging-air-freshener-perfume",
+    "confidence": "high",
+    "note": "Task 3: live perfume product match — 308 not 410"
+  }
+]
