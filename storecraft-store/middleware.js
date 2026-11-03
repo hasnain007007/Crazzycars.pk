@@ -23,6 +23,7 @@ import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveOldBlogNewsPath } from "@/lib/oldBlogNewsRedirects.mjs";
 import { resolveCollectionRedirect } from "@/lib/collectionRedirectMap.mjs";
 import { isGoneNonCarCategoryPath } from "@/lib/goneCategoryPaths.mjs";
+import { resolveLegacyRedirect } from "@/lib/legacyRedirects.mjs";
 import { STRIP_QUERY_KEYS } from "@/lib/stripQueryKeys.mjs";
 
 function redirectPath(request, pathname, status = 308) {
@@ -211,6 +212,14 @@ export async function middleware(request) {
         request,
         redirectPath(request, `/car-accessories-${internalCity[1]}`, 308)
       );
+    }
+  }
+
+  // Task 2: exact legacy Shopify map (one hop) — before pattern /products and /collections.
+  {
+    const legacyDest = resolveLegacyRedirect(lower);
+    if (legacyDest && legacyDest !== (lower.replace(/\/+$/, "") || "/")) {
+      return withPaidCookie(request, redirectPath(request, legacyDest, 308));
     }
   }
 
