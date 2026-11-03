@@ -24,7 +24,8 @@ import { resolveOldBlogNewsPath } from "@/lib/oldBlogNewsRedirects.mjs";
 import { resolveCollectionRedirect } from "@/lib/collectionRedirectMap.mjs";
 import { isGoneNonCarCategoryPath } from "@/lib/goneCategoryPaths.mjs";
 import { resolveLegacyRedirect } from "@/lib/legacyRedirects.mjs";
-import { STRIP_QUERY_KEYS } from "@/lib/stripQueryKeys.mjs";
+import { isLegacyGonePath, goneHtmlBody } from "@/lib/legacyGone.mjs";
+import { shouldStripQueryKey } from "@/lib/stripQueryKeys.mjs";
 
 function redirectPath(request, pathname, status = 308) {
   // Prefer `new URL` over NextURL.clone() so Location never inherits stale search.
@@ -32,8 +33,13 @@ function redirectPath(request, pathname, status = 308) {
   const kept = new URLSearchParams();
   for (const [key, value] of request.nextUrl.searchParams.entries()) {
     const lower = String(key).toLowerCase();
-    // Keep ?page=N — pagination is self-canonical; only page=1 is cleaned in metadata.
-    if (STRIP_QUERY_KEYS.has(lower) || lower.startsWith("utm_")) continue;
+    // Keep ?page=N — pagination is self-canonical; only page=1 is cleaned below.
+    if (lower === "page") {
+      if (String(value) === "1") continue;
+      kept.append(key, value);
+      continue;
+    }
+    if (shouldStripQueryKey(lower)) continue;
     kept.append(key, value);
   }
   const qs = kept.toString();
@@ -159,25 +165,25 @@ export async function middleware(request) {
     });
   }
 
-  // S3: dead non-car legacy categories (zero clicks) → 410. Redirecting fragrance paths stay 308.
-  if (isGoneNonCarCategoryPath(lower)) {
-    return new NextResponse("Gone", {
-      status: 410,
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "public, max-age=86400",
-      },
-    });
-  }
+  // S3 + Task 3: dead kitchen/beauty / non-car legacy URLs → 410 (after redirect map below for perfume).
+  // Exact map runs next; pattern/exact gone is applied after redirects.
 
-  // S10: ?page=1 duplicates the base listing URL — 308 to the clean path (keep other params).
-  if (lower === "/blogs" || lower === "/shop" || lower === "/cars") {
-    if (request.nextUrl.searchParams.get("page") === "1") {
-      const dest = new URL(lower, request.nextUrl.origin);
+  // S10 + Task 4: ?page=1 on listings → clean path; also categories/cars hubs.
+  {
+    const pageOne =
+      request.nextUrl.searchParams.get("page") === "1" &&
+      (lower === "/blogs" ||
+        lower === "/shop" ||
+        lower === "/cars" ||
+        lower.startsWith("/categories/") ||
+        lower.startsWith("/cars/") ||
+        lower.startsWith("/blogs/"));
+    if (pageOne) {
+      const dest = new URL(lower.replace(/\/+$/, "") || "/", request.nextUrl.origin);
       for (const [key, value] of request.nextUrl.searchParams.entries()) {
         const k = String(key).toLowerCase();
         if (k === "page") continue;
-        if (STRIP_QUERY_KEYS.has(k) || k.startsWith("utm_")) continue;
+        if (shouldStripQueryKey(k)) continue;
         dest.searchParams.append(key, value);
       }
       return withPaidCookie(request, NextResponse.redirect(dest, 308));
@@ -221,6 +227,18 @@ export async function middleware(request) {
     if (legacyDest && legacyDest !== (lower.replace(/\/+$/, "") || "/")) {
       return withPaidCookie(request, redirectPath(request, legacyDest, 308));
     }
+  }
+
+  // Task 3: 410 Gone for junk kitchen/beauty (after redirects; never catch-all to /).
+  if (isLegacyGonePath(lower) || isGoneNonCarCategoryPath(lower)) {
+    return new NextResponse(goneHtmlBody(), {
+      status: 410,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=86400",
+        "X-Robots-Tag": "noindex",
+      },
+    });
   }
 
   // Explicit deleted catalogue / car URLs (also in next.config; middleware covers edge cases).
@@ -360,13 +378,13 @@ export async function middleware(request) {
     }
   }
 
-  // Self-canonicalizing: strip leftover Shopify/tracking params on any other URL.
+  // Self-canonicalizing: strip leftover Shopify/tracking/jdgm params on any other URL.
   {
     const kept = new URLSearchParams();
     let changed = false;
     for (const [key, value] of request.nextUrl.searchParams.entries()) {
       const k = String(key).toLowerCase();
-      if (STRIP_QUERY_KEYS.has(k) || k.startsWith("utm_")) {
+      if (shouldStripQueryKey(k)) {
         changed = true;
         continue;
       }

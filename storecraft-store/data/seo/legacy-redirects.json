@@ -608,5 +608,11 @@
     "from": "/products/honda-city-2009-2021-multimedia-steering-wheel-buttons-crazzycars-pk",
     "to": "/honda-city-2009-2021-multimedia-steering-wheel-buttons",
     "confidence": "exact"
+  },
+  {
+    "from": "/x-perfume-card-pack-car-interior-hanging-fragrance",
+    "to": "/x-card-car-hanging-air-freshener-perfume",
+    "confidence": "high",
+    "note": "Task 3: live perfume product match — 308 not 410"
   }
 ]
