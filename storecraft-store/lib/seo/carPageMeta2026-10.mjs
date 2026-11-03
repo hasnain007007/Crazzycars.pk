@@ -58,7 +58,7 @@ export const CAR_PAGE_META = {
   "haval-h6-2021-present": {
     title: "Haval H6 Accessories Price in Pakistan 2021-Present",
     description:
-      "Shop Haval H6 2021-Present accessories in Pakistan: Floor Mats, Carbon Trims, Mirror Covers. Prices from Rs 1,399. Cash on Delivery across Pakistan.",
+      "Haval H6 2021+ accessories in Pakistan: floor mats, carbon trims and mirror covers with model-year fitment. Prices in PKR, Cash on Delivery on eligible items.",
   },
   "honda-brv-2017-present": {
     title: "Honda BR-V Accessories Price in Pakistan 2017-Present",
@@ -118,7 +118,7 @@ export const CAR_PAGE_META = {
   "hyundai-elantra-hybrid-2025-present": {
     title: "Hyundai Elantra Hybrid Accessories Pakistan 2025-Present",
     description:
-      "Shop Hyundai Elantra Hybrid 2025-Present accessories in Pakistan: Spoilers, Carbon Trims. Model prices from Rs 2,999. Cash on Delivery across Pakistan.",
+      "Hyundai Elantra Hybrid 2025+ accessories in Pakistan: interior trims and exterior styling, with model-year fitment. COD on eligible items.",
   },
   "hyundai-sonata-2020-2024": {
     title: "Hyundai Sonata Accessories Price in Pakistan 2020-2024",
@@ -268,12 +268,12 @@ export const CAR_PAGE_META = {
   "toyota-prius-2004-2009": {
     title: "Toyota Prius XW20 Accessories Price in Pakistan 2004-2009",
     description:
-      "Shop Toyota Prius XW20 2004-2009 accessories in Pakistan: Dashboard Mats. Prices from Rs 1,799. Cash on Delivery across Pakistan.",
+      "Toyota Prius XW20 (2004–2009) accessories in Pakistan: fitment by model year, prices in PKR, Cash on Delivery on eligible items.",
   },
   "toyota-prius-2009-2015": {
     title: "Toyota Prius XW30 Accessories Price in Pakistan 2009-2015",
     description:
-      "Shop Toyota Prius XW30 2009-2015 accessories in Pakistan: Carbon Trims, Dashboard Mats, Louvers. Prices from Rs 1,399. Cash on Delivery across Pakistan.",
+      "Toyota Prius XW30 (2009–2015) accessories in Pakistan: fitment by model year, prices in PKR, Cash on Delivery on eligible items.",
   },
   "toyota-prius-2016-2022": {
     title: "Toyota Prius Accessories Price in Pakistan 2016-2022",
@@ -309,5 +309,16 @@ export const CAR_PAGE_META = {
 export function getCarPageMeta(slug) {
   const key = String(slug || "").trim();
   if (!key) return null;
-  return CAR_PAGE_META[key] || null;
+  const row = CAR_PAGE_META[key] || null;
+  if (!row) return null;
+  // Task 12: never emit claim words in car metas.
+  const strip = (s) =>
+    String(s || "")
+      .replace(/\b(best|#1|oem|genuine|original|perfect|premium|100%)\b/gi, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  return {
+    title: strip(row.title),
+    description: strip(row.description),
+  };
 }

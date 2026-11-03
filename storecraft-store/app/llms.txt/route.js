@@ -87,17 +87,13 @@ export async function GET() {
       .filter((p) => p.slug)
       .slice(0, 20)
       .map((p) => {
-        const sale = Number(p.pricing?.salePrice);
-        const regular = Number(p.pricing?.regularPrice);
-        const price =
-          Number.isFinite(sale) && sale > 0 && (!Number.isFinite(regular) || sale < regular)
-            ? sale
-            : Number.isFinite(regular)
-              ? regular
-              : null;
-        const priceBit = price != null ? ` — PKR ${Math.round(price).toLocaleString("en-PK")}` : "";
+        // Task 14: no prices; strip claim words from link text only (URLs unchanged).
+        const label = String(p.name || p.slug)
+          .replace(/\b(best|#1|oem|genuine|original|perfect|premium|100%)\b/gi, "")
+          .replace(/\s{2,}/g, " ")
+          .trim();
         const cod = productAllowsCod(p) ? "COD eligible" : "prepaid";
-        return `- [${p.name}](${site}/${p.slug})${priceBit} · ${cod}`;
+        return `- [${label || p.slug}](${site}/${p.slug}) · ${cod}`;
       });
 
     const prioritySlugs = Object.keys(GENERATION_BY_SLUG);
