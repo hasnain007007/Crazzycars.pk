@@ -26,16 +26,17 @@ ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME \
     NEXT_PUBLIC_STORE_URL=$NEXT_PUBLIC_STORE_URL \
     NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
-# Some routes may touch DB during `next build` page collection
-ARG MONGODB_URI
-ENV MONGODB_URI=$MONGODB_URI
+# Build-time DB URI via BuildKit secret (deploy-vps-test.sh --secret id=mongodb_uri).
+# Never bake MONGODB_URI into image layers via ARG/ENV.
 # Own cache id: without it BuildKit keys the cache by path, so admin and store shared one
 # Next cache and the admin shipped the storefront's CSS.
 # Turbopack's persistent cache can hand back a stale CSS chunk (new globals.css rules
 # missing on the live site), so drop it every build; the rest of .next/cache stays.
 RUN --mount=type=cache,id=crazzycars-admin-next-cache,target=/app/.next/cache \
     --mount=type=cache,target=/root/.npm \
+    --mount=type=secret,id=mongodb_uri \
     rm -rf /app/.next/cache/turbopack \
+ && export MONGODB_URI="$(cat /run/secrets/mongodb_uri 2>/dev/null || true)" \
  && npm run build \
  && node scripts/check-admin-css.mjs
 
