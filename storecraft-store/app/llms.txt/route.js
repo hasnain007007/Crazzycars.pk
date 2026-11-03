@@ -10,7 +10,7 @@ import { COD_LINE, PREPAID_LINE, TRUST_LINE } from "@/lib/paymentCopy";
 import { loadShopByCarIndex } from "@/lib/vehiclePageData";
 import { GENERATION_BY_SLUG, aliasesForSlug } from "@/lib/seo/generationAliases";
 import { getServerStoreSettings } from "@/lib/serverSettings";
-import { LLMS_STATIC_MD } from "@/lib/seo/llmsStaticContent.mjs";
+import { buildLlmsStaticMd } from "@/lib/seo/llmsStaticContent.mjs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -18,7 +18,7 @@ export const revalidate = 3600;
 const MAX_BYTES = 30 * 1024;
 
 function loadStaticPreamble(site) {
-  const withSite = String(LLMS_STATIC_MD || "").replaceAll("{{SITE}}", site);
+  const withSite = String(buildLlmsStaticMd() || "").replaceAll("{{SITE}}", site);
   if (!withSite.trim()) return null;
   return `${withSite.trim()}
 
