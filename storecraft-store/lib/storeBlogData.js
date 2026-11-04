@@ -1,6 +1,10 @@
 import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
 import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
+import {
+  scrubPolicyConflictPlain,
+  policyBlogCanonicalMeta,
+} from "@/lib/scrubPolicyConflictCopy";
 
 function mapListPost(p) {
   return {
@@ -88,11 +92,14 @@ export async function loadBlogPostPageData(slugStr) {
 
   if (!post) return null;
 
+  const policyMeta = policyBlogCanonicalMeta(String(post.slug || ""));
   const mappedPost = {
     id: post._id.toString(),
-    title: post.title,
+    title: policyMeta?.title || post.title,
     slug: post.slug,
-    excerpt: post.excerpt || "",
+    excerpt:
+      policyMeta?.excerpt ||
+      scrubPolicyConflictPlain(post.excerpt || ""),
     content: sanitizeBlogHtml(post.content),
     featuredImage: post.featuredImage || { url: "", altText: "" },
     publishedAt: post.publishedAt || post.createdAt,
@@ -102,7 +109,19 @@ export async function loadBlogPostPageData(slugStr) {
     views: post.views || 0,
     author: post.author || { name: "" },
     relatedProducts: post.relatedProducts || [],
-    seo: post.seo || {},
+    seo: {
+      ...(post.seo || {}),
+      ...(policyMeta
+        ? {
+            metaTitle: policyMeta.title,
+            metaDescription: policyMeta.metaDescription,
+          }
+        : {
+            metaDescription: scrubPolicyConflictPlain(
+              post.seo?.metaDescription || post.excerpt || ""
+            ),
+          }),
+    },
   };
 
   const relatedPosts = relatedRows

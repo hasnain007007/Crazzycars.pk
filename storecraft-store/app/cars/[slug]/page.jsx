@@ -234,11 +234,14 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     { name: vehicle.displayName, url: `/cars/${vehicle.slug}` },
   ];
   const breadcrumbLd = breadcrumbJsonLd(crumbs);
-  const catalogDesc = stripLegacyBrand(
+  const rawCatalogDesc = stripLegacyBrand(
     String(vehicle.description || "").trim() || String(vehicle.metaDescription || "").trim(),
     { replacement: BRAND_NAME }
   );
-  const pageDescription = vehicleMetaDescription(vehicle, catalogDesc);
+  const catalogDesc = isGenericVehicleMeta(rawCatalogDesc, vehicle) ? "" : rawCatalogDesc;
+  const carMetaBody = getCarPageMeta(vehicle.slug);
+  const pageDescription =
+    carMetaBody?.description || vehicleMetaDescription(vehicle, catalogDesc);
 
   const priceExtent = await getProductPriceExtent(buildVehiclePageProductFilter(vehicle));
   const priceLine = priceRangeSentence(`${vehicle.displayName} accessories`, priceExtent);

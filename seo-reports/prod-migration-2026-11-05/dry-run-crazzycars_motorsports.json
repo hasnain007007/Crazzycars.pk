@@ -1,0 +1,102 @@
+{
+  "db": "crazzycars_motorsports",
+  "prius": [
+    {
+      "slug": "toyota-prius-2004-2009",
+      "displayName": "Toyota Prius XW20 (2004–2009)",
+      "change": true,
+      "before": "Shop Toyota Prius accessories in Pakistan at Sialkot Motorsports — Cash on Delivery nationwide.",
+      "after": "Shop Toyota Prius XW20 2004-2009 accessories in Pakistan: Dashboard Mats. Prices from Rs 1,799. Cash on Delivery across Pakistan.",
+      "descriptionEmpty": true
+    },
+    {
+      "slug": "toyota-prius-2009-2015",
+      "displayName": "Toyota Prius XW30 (2009–2015)",
+      "change": true,
+      "before": "Shop Toyota Prius accessories in Pakistan at Sialkot Motorsports — Cash on Delivery nationwide.",
+      "after": "Shop Toyota Prius XW30 2009-2015 accessories in Pakistan: Carbon Trims, Dashboard Mats, Louvers. Prices from Rs 1,399. Cash on Delivery across Pakistan.",
+      "descriptionEmpty": true
+    },
+    {
+      "slug": "toyota-prius-2016-2022",
+      "displayName": "Toyota Prius (2016–2022)",
+      "change": true,
+      "before": "Shop Toyota Prius accessories in Pakistan. Cash on Delivery.",
+      "after": "Shop Toyota Prius 2016-2022 accessories in Pakistan: Carbon Trims, Mirror Covers. Prices from Rs 4,090. Cash on Delivery across Pakistan.",
+      "descriptionEmpty": true
+    }
+  ],
+  "categories": [
+    {
+      "slug": "toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026",
+      "name": "Toyota Corolla X Carbon Fiber Interior Door Handle Panels 2014–2026 (Set of 4)",
+      "status": "active",
+      "currentCategorySlugs": [
+        "interior",
+        "carbon-fiber",
+        "carbon-fiber-accessories",
+        "door-handle-covers"
+      ],
+      "hasDoorHandleCovers": true,
+      "change": true,
+      "wouldRemove": "door-handle-covers",
+      "beforeCount": 4,
+      "afterCount": 3
+    },
+    {
+      "slug": "toyota-corolla-carbon-fiber-interior-door-panels-4pcs-2014-2026",
+      "name": "Toyota Corolla Carbon Fiber Interior Door Panels 4PCS 2014–2026",
+      "status": "active",
+      "currentCategorySlugs": [
+        "interior",
+        "carbon-fiber",
+        "carbon-fiber-accessories",
+        "door-handle-covers"
+      ],
+      "hasDoorHandleCovers": true,
+      "change": true,
+      "wouldRemove": "door-handle-covers",
+      "beforeCount": 4,
+      "afterCount": 3
+    }
+  ],
+  "settings": {
+    "change": true,
+    "before": "Important: You must pay the delivery charges of {amount} in advance to confirm your Cash on Delivery order.\n\nAfter paying, send the payment screenshot on WhatsApp: {whatsapp}\n\nProduct payment will be collected on delivery. Without the delivery-charge payment + screenshot, we cannot process your order.",
+    "after": "A Rs. {amount} booking amount is required to confirm your COD order. It is deducted from your total. Send the screenshot on WhatsApp: {whatsapp}"
+  },
+  "blogs": [
+    {
+      "slug": "delivery-charges-regular-vs-bulky-pakistan",
+      "title": "Delivery Charges Explained | CrazzyCars",
+      "status": "published",
+      "excerpt": "Standard delivery is a flat Rs. 250 on every order. There is no order-value waiver. Delivery is paid in advance; the product amount is Cash on Delivery where the item is COD-eligible.",
+      "metaDescription": "CrazzyCars delivery: flat Rs. 250 on every order, paid in advance. COD available on eligible items with advance Rs. 300–1,000. Body kits are prepaid only.",
+      "contentLength": 2469,
+      "conflictFlags": {
+        "flat250EveryOrder": true,
+        "deliveryPaidInAdvance": true,
+        "wrongTierBoundary": true,
+        "changeOfMindExchange": false
+      },
+      "change": true
+    },
+    {
+      "slug": "car-accessories-returns-wrong-item-pakistan",
+      "title": "Returns & Wrong Item Policy | CrazzyCars",
+      "status": "published",
+      "excerpt": "Before you open a dispute in your head: here’s exactly when we refund, when we only exchange, and how to start a claim within 7 days.",
+      "metaDescription": "CrazzyCars returns: 7-day full refund for defective or wrong items. Change-of-mind = exchange only. Read the plain-language guide before ordering.",
+      "contentLength": 2840,
+      "conflictFlags": {
+        "flat250EveryOrder": false,
+        "deliveryPaidInAdvance": false,
+        "wrongTierBoundary": false,
+        "changeOfMindExchange": true
+      },
+      "change": true
+    }
+  ],
+  "unexpected": [],
+  "skipped": []
+}

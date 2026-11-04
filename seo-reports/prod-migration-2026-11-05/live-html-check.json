@@ -1,0 +1,188 @@
+{
+  "/": {
+    "status": 200,
+    "title": "Car Accessories in Pakistan | Kits, LEDs &amp; Mats",
+    "desc": "Buy car accessories online in Pakistan: splitters, body kits, LED lights, carbon fiber and interior accessories. COD on eligible items, nationwide delivery.",
+    "h1": "Car Accessories in Pakistan \u2013 CrazzyCars.pk Gujranwala",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": true,
+      "h1_color_f8": true,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  },
+  "/cars": {
+    "status": 200,
+    "title": "Shop Car Accessories by Make &amp; Model",
+    "desc": "Browse car accessories by make and model \u2014 Honda Civic, Toyota Corolla, Suzuki Alto and more. Generation-matched parts with Cash on Delivery across Pakistan.",
+    "h1": "Shop by Car",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": [
+      "A4",
+      "A5",
+      "BJ40",
+      "Atto 3",
+      "Alsvin",
+      "Oshan X7",
+      "Tiggo 4 Pro",
+      "Tiggo 8 Pro",
+      "Glory 580",
+      "S05",
+      "H6",
+      "BR-V",
+      "City Classic",
+      "City",
+      "Civic",
+      "Civic Reborn",
+      "Civic Rebirth",
+      "Civic X",
+      "Civic 11th Gen",
+      "Vezel 1st Gen"
+    ]
+  },
+  "/cars/toyota-prius-2004-2009": {
+    "status": 200,
+    "title": "Toyota Prius XW20 2004\u20132009 Accessories | CrazzyCars.pk",
+    "desc": "Shop Toyota Prius XW20 2004-2009 accessories in Pakistan: Dashboard Mats. Prices from Rs 1,799. Cash on Delivery across Pakistan.",
+    "h1": "Toyota Prius XW20 (2004\u20132009)",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  },
+  "/cars/toyota-prius-2009-2015": {
+    "status": 200,
+    "title": "Toyota Prius XW30 2009\u20132015 Accessories | CrazzyCars.pk",
+    "desc": "Shop Toyota Prius XW30 2009-2015 accessories in Pakistan: Carbon Trims, Dashboard Mats, Louvers. Prices from Rs 1,399. Cash on Delivery across Pakistan.",
+    "h1": "Toyota Prius XW30 (2009\u20132015)",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  },
+  "/shipping-policy": {
+    "status": 200,
+    "title": "Shipping Policy",
+    "desc": "Delivery charges, timelines, and courier options for CrazzyCars.pk orders across Pakistan.",
+    "h1": "Shipping Policy",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  },
+  "/returns-policy": {
+    "status": 200,
+    "title": "Returns Policy",
+    "desc": "Within 7 days: full refund for defective or wrong-item orders only. No returns for change of mind at CrazzyCars.pk.",
+    "h1": "Returns Policy",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  },
+  "/advance-payment": {
+    "status": 200,
+    "title": "Advance Payment: How to Pay",
+    "desc": "COD booking advance at CrazzyCars.pk: amounts by order total, JazzCash, Raast QR and bank details, plus how to send your payment screenshot.",
+    "h1": "Advance payment",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  },
+  "/blogs/delivery-charges-regular-vs-bulky-pakistan": {
+    "status": 200,
+    "title": "Delivery Charges: Regular vs Bulky | CrazzyCars",
+    "desc": "CrazzyCars delivery: Rs. 250 regular, Rs. 500 with bulky items. COD booking Rs. 300 (under Rs. 5,000) \u00b7 Rs. 600 (Rs. 5,000 \u2013 Rs. 9,999) \u00b7 Rs. 1,000 (Rs. 10,000 ",
+    "h1": "Delivery Charges Explained | CrazzyCars",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  },
+  "/blogs/car-accessories-returns-wrong-item-pakistan": {
+    "status": 200,
+    "title": "Returns &amp; Wrong Item Policy | CrazzyCars",
+    "desc": "CrazzyCars returns: 7-day full refund for defective or wrong items only. Change of mind is not eligible. Read the plain-language guide.",
+    "h1": "Returns &amp; Wrong Item Policy | CrazzyCars",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": true,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  },
+  "/premium-dynamic-ambient-interior-lights": {
+    "status": 200,
+    "title": "Dynamic Ambient Lights Multi-Point Price in Pakistan",
+    "desc": "Dynamic Ambient Interior Lights Multi-Point price in Pakistan. Cash on Delivery, delivery Rs 250. Shop in Gujranwala, WhatsApp 03284010007.",
+    "h1": "Dynamic Ambient Interior Lights Multi-Point",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  },
+  "/categories/exterior": {
+    "status": 200,
+    "title": "Car Exterior Accessories Pakistan | CrazzyCars.pk",
+    "desc": "Car exterior accessories in Pakistan: car spoilers, splitter kits and universal car accessories. Spoiler price in Pakistan on every listing. COD eligible.",
+    "h1": "Car Exterior Accessories in Pakistan",
+    "flags": {
+      "flat250_every": true,
+      "change_mind_exchange": false,
+      "doesnt_fit_refund": false,
+      "h1_color_111": false,
+      "h1_color_f8": false,
+      "sialkot_brand": false
+    },
+    "labels_sample": []
+  }
+}
