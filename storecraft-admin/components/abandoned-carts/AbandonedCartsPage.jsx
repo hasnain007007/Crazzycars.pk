@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { formatAdminPrice } from "@/lib/currency";
-import { getAbandonedCartWhatsAppMessage } from "@/lib/abandonedCart";
+import { abandonedCartDisplayName, getAbandonedCartWhatsAppMessage } from "@/lib/abandonedCart";
 import { openWhatsApp } from "@/components/orders/OrderWhatsAppButton";
 import { getAdminSettings } from "@/lib/adminSettingsCache";
 import { AbandonedCartDetailModal } from "@/components/abandoned-carts/AbandonedCartDetailModal";
@@ -199,7 +199,7 @@ export function AbandonedCartsPage() {
       toast.error("Customer phone is required to create an order");
       return;
     }
-    const name = cart.customer?.name || "Guest";
+    const name = abandonedCartDisplayName(cart);
     const ok = window.confirm(
       `Create a confirmed COD order for ${name} (${cart.customer.phone}) with ${(cart.items || []).length} item(s) totaling ${formatAdminPrice(cart.subtotal || 0)}?`
     );
@@ -266,8 +266,8 @@ export function AbandonedCartsPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Abandoned carts</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Recover shoppers who added items but did not finish checkout. Emails run hourly via cron;
-          WhatsApp opens a ready message for you to send.
+          Recover shoppers who added items but did not finish checkout. Idle carts are marked abandoned
+          when you open this page (and via hourly cron). WhatsApp opens a ready message for you to send.
         </p>
       </div>
 
@@ -427,7 +427,7 @@ export function AbandonedCartsPage() {
                         onClick={() => setViewCart(cart)}
                         className="text-left font-semibold text-slate-900 hover:text-[#1d6fb8] hover:underline dark:text-white"
                       >
-                        {cart.customer?.name || "Guest"}
+                        {abandonedCartDisplayName(cart)}
                       </button>
                       <div className="text-xs text-slate-500">{cart.customer?.phone || "—"}</div>
                       <div className="text-xs text-slate-500">{cart.customer?.email || "—"}</div>

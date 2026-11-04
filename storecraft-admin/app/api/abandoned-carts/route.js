@@ -7,7 +7,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import CartSession from "@/lib/models/CartSession.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
-import { serializeCartSession } from "@/lib/abandonedCart";
+import { markIdleCartsAbandoned, serializeCartSession } from "@/lib/abandonedCart";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +25,21 @@ export async function GET(request) {
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20", 10) || 20));
     const skip = (page - 1) * limit;
 
+    // Promote idle active carts so the Abandoned tab works without relying on Coolify cron alone.
+    const settingsForMark =
+      (await Settings.findOne({ singletonKey: SETTINGS_SINGLETON_KEY })
+        .select("abandonedCart")
+        .lean()) || null;
+    if (settingsForMark?.abandonedCart?.enabled !== false) {
+      await markIdleCartsAbandoned(CartSession, {
+        abandonAfterMinutes: settingsForMark?.abandonedCart?.abandonAfterMinutes,
+      }).catch((err) => console.error("[abandoned-carts] markIdle:", err?.message || err));
+    }
+
     const filter = {};
     if (status && status !== "all") filter.status = status;
-    // Active metric/tab: only carts with ≥1 item (empty sync rows are not active carts).
-    if (status === "active") filter.itemCount = { $gt: 0 };
+    // Active / Abandoned: only carts with ≥1 item (empty sync rows are noise).
+    if (status === "active" || status === "abandoned") filter.itemCount = { $gt: 0 };
     if (q) {
       const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
       filter.$or = [

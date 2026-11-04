@@ -11,6 +11,32 @@ export const DEFAULT_ABANDONED_CART_SETTINGS = {
   reminderIntervalHours: 24,
 };
 
+/**
+ * Mark idle active carts (with items) as abandoned.
+ * Contact is NOT required — ops needs to see guest carts too.
+ * Email reminders still only go to carts with a real email.
+ *
+ * @param {import("mongoose").Model} CartSession
+ * @param {{ abandonAfterMinutes?: number }} [opts]
+ * @returns {Promise<{ modifiedCount: number, cutoff: Date }>}
+ */
+export async function markIdleCartsAbandoned(CartSession, opts = {}) {
+  const abandonMs = Math.max(15, Number(opts.abandonAfterMinutes) || 60) * 60 * 1000;
+  const cutoff = new Date(Date.now() - abandonMs);
+  const now = new Date();
+  const result = await CartSession.updateMany(
+    {
+      status: "active",
+      itemCount: { $gt: 0 },
+      lastActivityAt: { $lte: cutoff },
+    },
+    {
+      $set: { status: "abandoned", abandonedAt: now },
+    }
+  );
+  return { modifiedCount: result.modifiedCount || 0, cutoff };
+}
+
 export function normalizeCartItems(rawItems) {
   if (!Array.isArray(rawItems)) return [];
   return rawItems

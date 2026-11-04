@@ -10,6 +10,7 @@ import { sendEmail } from "@/lib/email";
 import {
   buildAbandonedCartEmail,
   hasContact,
+  markIdleCartsAbandoned,
   resolveAbandonedCartSettings,
 } from "@/lib/abandonedCart";
 
@@ -39,27 +40,13 @@ export async function GET(request) {
       return NextResponse.json({ success: true, skipped: true, reason: "disabled" });
     }
 
-    const abandonMs = Math.max(15, Number(cfg.abandonAfterMinutes) || 60) * 60 * 1000;
     const reminderMs = Math.max(1, Number(cfg.reminderIntervalHours) || 24) * 60 * 60 * 1000;
     const maxReminders = Math.max(0, Math.min(5, Number(cfg.maxEmailReminders) ?? 2));
-    const cutoff = new Date(Date.now() - abandonMs);
-    const now = new Date();
 
-    // 1) Mark idle carts with contact info as abandoned
-    const markResult = await CartSession.updateMany(
-      {
-        status: "active",
-        itemCount: { $gt: 0 },
-        lastActivityAt: { $lte: cutoff },
-        $or: [
-          { "customer.email": { $regex: /.+@.+/ } },
-          { "customer.phone": { $regex: /\d{10,}/ } },
-        ],
-      },
-      {
-        $set: { status: "abandoned", abandonedAt: now },
-      }
-    );
+    // 1) Mark idle carts with items as abandoned (guest carts included)
+    const markResult = await markIdleCartsAbandoned(CartSession, {
+      abandonAfterMinutes: cfg.abandonAfterMinutes,
+    });
 
     // 2) Send email reminders
     let emailsSent = 0;

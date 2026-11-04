@@ -5,6 +5,40 @@ import { formatAdminPrice } from "@/lib/currency";
 import { getStorefrontBaseUrl } from "@/lib/storefrontUrl";
 import { buildWhatsAppMessage } from "@/lib/whatsappTemplates";
 
+/**
+ * Mark idle active carts (with items) as abandoned.
+ * Same rules as storecraft-store markIdleCartsAbandoned — contact not required.
+ */
+export async function markIdleCartsAbandoned(CartSession, opts = {}) {
+  const abandonMs = Math.max(15, Number(opts.abandonAfterMinutes) || 60) * 60 * 1000;
+  const cutoff = new Date(Date.now() - abandonMs);
+  const now = new Date();
+  const result = await CartSession.updateMany(
+    {
+      status: "active",
+      itemCount: { $gt: 0 },
+      lastActivityAt: { $lte: cutoff },
+    },
+    {
+      $set: { status: "abandoned", abandonedAt: now },
+    }
+  );
+  return { modifiedCount: result.modifiedCount || 0, cutoff };
+}
+
+/** Human label when checkout never captured a name. */
+export function abandonedCartDisplayName(cart) {
+  const name = String(cart?.customer?.name || "").trim();
+  if (name) return name;
+  const phone = String(cart?.customer?.phone || "").trim();
+  if (phone) return phone;
+  const email = String(cart?.customer?.email || "").trim();
+  if (email) return email;
+  const first = cart?.items?.[0]?.name;
+  if (first) return `Guest · ${first}`;
+  return "Guest cart";
+}
+
 export const DEFAULT_ABANDONED_CART_WHATSAPP = {
   enabled: true,
   template: `Assalam o Alaikum {customerName}! 🚗

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatAdminPrice } from "@/lib/currency";
+import { abandonedCartDisplayName } from "@/lib/abandonedCart";
 
 function formatWhen(d) {
   if (!d) return "—";
@@ -90,7 +91,7 @@ export function AbandonedCartDetailModal({
               Cart details
             </h2>
             <p className="mt-0.5 text-xs text-slate-500">
-              {cart.customer?.name || "Guest"} ·{" "}
+              {abandonedCartDisplayName(cart)} ·{" "}
               <span className="capitalize">{cart.status}</span>
               {cart.convertedOrderNumber ? ` · Order ${cart.convertedOrderNumber}` : ""}
             </p>
@@ -110,7 +111,7 @@ export function AbandonedCartDetailModal({
               Customer
             </h3>
             <dl className="rounded-xl border border-slate-200 px-3 dark:border-slate-700">
-              <Row label="Name">{cart.customer?.name || "Guest"}</Row>
+              <Row label="Name">{abandonedCartDisplayName(cart)}</Row>
               <Row label="Phone">{cart.customer?.phone || "—"}</Row>
               <Row label="Email">{cart.customer?.email || "—"}</Row>
             </dl>
