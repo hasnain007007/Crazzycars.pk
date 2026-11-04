@@ -60,6 +60,8 @@ export function AbandonedCartDetailModal({
   onConvert,
   onDismiss,
   onReopen,
+  cartList = null,
+  onSelectCart = null,
 }) {
   if (!cart) return null;
 
@@ -67,6 +69,11 @@ export function AbandonedCartDetailModal({
   const reminders = Array.isArray(cart.reminders) ? cart.reminders : [];
   const canConvert =
     !cart.convertedOrderNumber && items.length > 0 && Boolean(cart.customer?.phone);
+  const list = Array.isArray(cartList) ? cartList : [];
+  const idx = list.findIndex((c) => c?.id === cart.id);
+  const prevCart = idx > 0 ? list[idx - 1] : null;
+  const nextCart = idx >= 0 && idx < list.length - 1 ? list[idx + 1] : null;
+  const canStep = typeof onSelectCart === "function" && list.length > 1;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
@@ -96,13 +103,37 @@ export function AbandonedCartDetailModal({
               {cart.convertedOrderNumber ? ` · Order ${cart.convertedOrderNumber}` : ""}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-slate-200 px-2.5 py-1 text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300"
-          >
-            Close
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {canStep ? (
+              <div className="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-500">
+                <button
+                  type="button"
+                  disabled={!prevCart}
+                  title={prevCart ? abandonedCartDisplayName(prevCart) : "No previous"}
+                  onClick={() => prevCart && onSelectCart(prevCart)}
+                  className="px-2.5 py-1 text-xs font-bold disabled:opacity-40"
+                >
+                  Prev
+                </button>
+                <button
+                  type="button"
+                  disabled={!nextCart}
+                  title={nextCart ? abandonedCartDisplayName(nextCart) : "No next"}
+                  onClick={() => nextCart && onSelectCart(nextCart)}
+                  className="border-l border-slate-300 px-2.5 py-1 text-xs font-bold disabled:opacity-40 dark:border-slate-500"
+                >
+                  Next
+                </button>
+              </div>
+            ) : null}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-slate-200 px-2.5 py-1 text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300"
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">

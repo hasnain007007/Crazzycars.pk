@@ -4,5 +4,5 @@ export const metadata = { title: "Settlement" };
 
 export default async function Page({ params }) {
   const { id } = await params;
-  return <SettlementDetail batchId={id} />;
+  return <SettlementDetail key={id} batchId={id} />;
 }

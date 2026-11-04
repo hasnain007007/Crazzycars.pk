@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { roleBadgeClass } from "@/lib/userUi";
+import { NeighborNav } from "@/components/layout/NeighborNav";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 const ROLES = [
   {
@@ -33,6 +35,7 @@ function strength(pw) {
 export function UserForm({ userId }) {
   const router = useRouter();
   const isEdit = Boolean(userId);
+  const neighbors = useEntityNeighbors(isEdit ? userId : null, "/api/users");
   const [me, setMe] = useState(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -110,10 +113,19 @@ export function UserForm({ userId }) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <Link href="/users" className="text-sm text-[#1d6fb8] hover:underline">
-        ← Team
-      </Link>
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{isEdit ? "Edit user" : "New user"}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link href="/users" className="text-sm text-[#1d6fb8] hover:underline">
+            ← Team
+          </Link>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+            {isEdit ? "Edit user" : "New user"}
+          </h1>
+        </div>
+        {isEdit ? (
+          <NeighborNav prev={neighbors.prev} next={neighbors.next} hrefForId={(id) => `/users/${id}`} />
+        ) : null}
+      </div>
       <form onSubmit={save} className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
         <div>
           <label className="text-xs font-medium text-slate-600">Name</label>

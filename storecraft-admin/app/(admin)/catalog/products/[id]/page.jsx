@@ -18,5 +18,5 @@ export default function EditProductPage() {
     );
   }
 
-  return <ProductEditor mode="edit" productId={id} />;
+  return <ProductEditor key={id} mode="edit" productId={id} />;
 }

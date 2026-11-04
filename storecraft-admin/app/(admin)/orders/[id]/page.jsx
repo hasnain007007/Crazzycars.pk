@@ -18,5 +18,5 @@ export default function OrderDetailPage() {
     );
   }
 
-  return <OrderDetail orderId={id} />;
+  return <OrderDetail key={id} orderId={id} />;
 }

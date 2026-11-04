@@ -9,7 +9,7 @@ export default function Page() {
   if (!/^[a-f\d]{24}$/i.test(id)) return <p className="text-sm text-red-600">Invalid id</p>;
   return (
     <div className="p-0" style={{ maxWidth: "none", padding: 0 }}>
-      <BannerForm bannerId={id} />
+      <BannerForm key={id} bannerId={id} />
     </div>
   );
 }

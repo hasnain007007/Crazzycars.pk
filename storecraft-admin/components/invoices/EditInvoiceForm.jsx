@@ -12,6 +12,8 @@ import { getInvoiceStoreMeta } from "@/lib/invoiceStoreMeta";
 import { downloadInvoicePdf, printInvoice } from "@/lib/downloadInvoicePdf";
 import { InvoicePreviewFrame } from "@/components/invoices/InvoicePreviewFrame";
 import { useInvoiceProductCatalog } from "@/components/invoices/useInvoiceProductCatalog";
+import { NeighborNav } from "@/components/layout/NeighborNav";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 function lineTotal(qty, unitPrice) {
   return roundRupees(
@@ -51,6 +53,7 @@ const PAYMENT_METHOD_OPTIONS = [
 export function EditInvoiceForm() {
   const { id } = useParams();
   const router = useRouter();
+  const neighbors = useEntityNeighbors(id ? String(id) : null, "/api/invoices");
   const [loading, setLoading] = useState(true);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [customer, setCustomer] = useState({
@@ -416,7 +419,12 @@ export function EditInvoiceForm() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit invoice</h1>
           <p className="mt-1 font-mono text-sm text-slate-500">{invoiceNumber}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <NeighborNav
+            prev={neighbors.prev}
+            next={neighbors.next}
+            hrefForId={(nid) => `/invoices/${nid}`}
+          />
           <button
             type="button"
             onClick={() => {

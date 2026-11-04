@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { NeighborNav } from "@/components/layout/NeighborNav";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 function formatMoney(n) {
   const num = Number(n) || 0;
@@ -106,6 +108,7 @@ function ReturnConfirmBox({ line, onSet, busy }) {
 }
 
 export function SettlementDetail({ batchId }) {
+  const neighbors = useEntityNeighbors(batchId || null, "/api/finance/settlements");
   const [batch, setBatch] = useState(null);
   const [lines, setLines] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -367,7 +370,12 @@ export function SettlementDetail({ batchId }) {
             {batch.courier} · {batch.status} · {batch.filename}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <NeighborNav
+            prev={neighbors.prev}
+            next={neighbors.next}
+            hrefForId={(id) => `/finance/settlements/${id}`}
+          />
           {batch.status === "draft" ? (
             <button
               type="button"

@@ -12,12 +12,14 @@ import {
 import { breadcrumbJsonLd, organizationJsonLd } from "@/lib/seo/jsonld";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
 import { FaqSection } from "@/components/store/FaqSection";
+import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
+import { loadCityNeighbors } from "@/lib/storeNeighborLoaders";
 
 export const revalidate = 3600;
 
@@ -283,6 +285,8 @@ export default async function CityAccessoriesPage({ params }) {
       ) : null}
 
       <FaqSection title={`FAQs — car accessories in ${city.name}`} items={city.faq} />
+
+      <DetailNeighborNav {...loadCityNeighbors(city.slug)} />
 
       <p className="store-container" style={{ padding: "0 16px 40px", fontSize: 14, color: "#555" }}>
         Also shopping from another city? See{" "}

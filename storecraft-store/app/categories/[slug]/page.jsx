@@ -14,6 +14,8 @@ import {
 } from "@/components/store/CategoryPageChrome";
 import { FaqSection } from "@/components/store/FaqSection";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
+import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
+import { loadCategoryNeighbors } from "@/lib/storeNeighborLoaders";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getCollectionByHandle, isShopifyEnabled } from "@/lib/shopify";
 import { getServerStoreSettings } from "@/lib/serverSettings";
@@ -507,6 +509,7 @@ export default async function CategoryPage({ params, searchParams }) {
           />
         ) : null}
         <FaqSection title={`${data.category?.name || "Category"} FAQs`} items={visibleFaqs} />
+        <DetailNeighborNav {...(await loadCategoryNeighbors(data.category))} />
         <InternalBlogLinks title="From the blog" links={fromBlogLinks} />
       </div>
     );

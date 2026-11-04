@@ -11,7 +11,7 @@ export default function Page() {
   }
   return (
     <div className="mx-auto max-w-6xl">
-      <CustomerDetailPage customerId={id} />
+      <CustomerDetailPage key={id} customerId={id} />
     </div>
   );
 }

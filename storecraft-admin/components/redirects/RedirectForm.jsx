@@ -4,9 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { NeighborNav } from "@/components/layout/NeighborNav";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 export function RedirectForm({ redirectId }) {
   const router = useRouter();
+  const neighbors = useEntityNeighbors(redirectId || null, "/api/redirects");
   const [fromPath, setFromPath] = useState("");
   const [toPath, setToPath] = useState("");
   const [type, setType] = useState(301);
@@ -56,10 +59,19 @@ export function RedirectForm({ redirectId }) {
 
   return (
     <div className="space-y-6">
-      <Link href="/redirects" className="text-sm text-[#1d6fb8] hover:underline">
-        ← Redirects
-      </Link>
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit redirect</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link href="/redirects" className="text-sm text-[#1d6fb8] hover:underline">
+            ← Redirects
+          </Link>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">Edit redirect</h1>
+        </div>
+        <NeighborNav
+          prev={neighbors.prev}
+          next={neighbors.next}
+          hrefForId={(id) => `/redirects/${id}`}
+        />
+      </div>
       <form onSubmit={save} className="mx-auto max-w-xl space-y-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
         <div>
           <label className="text-xs font-medium text-slate-600 dark:text-slate-400">From path</label>

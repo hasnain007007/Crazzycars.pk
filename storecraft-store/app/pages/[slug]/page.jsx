@@ -2,9 +2,11 @@ import { notFound } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import Page from "@/lib/models/Page.model";
 import PageView from "@/components/store/PageView";
+import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { withSafeMetadata } from "@/lib/safeMetadata";
+import { loadCmsPageNeighbors } from "@/lib/storeNeighborLoaders";
 
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
 
@@ -55,5 +57,11 @@ export default async function PageSlugPage({ params }) {
   const { slug } = await params;
   const page = await loadPage(slug);
   if (!page) notFound();
-  return <PageView page={page} />;
+  const neighbors = await loadCmsPageNeighbors(page, { hrefPrefix: "/pages" });
+  return (
+    <>
+      <PageView page={page} />
+      <DetailNeighborNav {...neighbors} />
+    </>
+  );
 }

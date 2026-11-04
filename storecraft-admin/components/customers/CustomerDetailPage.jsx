@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { NeighborNav } from "@/components/layout/NeighborNav";
 import { orderStatusBadgeClass, paymentStatusBadgeClass } from "@/lib/orderUi";
 import { printHtmlWithIframe } from "../orders/printOrderDocuments";
 import { formatAdminPrice } from "@/lib/currency";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 function formatMoney(n) {
   return formatAdminPrice(n);
@@ -152,6 +154,7 @@ function buildCustomerStatementHtml(customer, orders, options = {}) {
 
 export function CustomerDetailPage({ customerId }) {
   const router = useRouter();
+  const neighbors = useEntityNeighbors(customerId || null, "/api/customers");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -302,9 +305,16 @@ export function CustomerDetailPage({ customerId }) {
 
   return (
     <div className="space-y-6">
-      <Link href="/customers" className="text-sm font-medium text-[#1d6fb8] hover:underline">
-        ← Customers
-      </Link>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <Link href="/customers" className="text-sm font-medium text-[#1d6fb8] hover:underline">
+          ← Customers
+        </Link>
+        <NeighborNav
+          prev={neighbors.prev}
+          next={neighbors.next}
+          hrefForId={(id) => `/customers/${id}`}
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[13fr_7fr]">
         <div className="space-y-6">

@@ -9,7 +9,7 @@ export default function Page() {
   if (!/^[a-f\d]{24}$/i.test(id)) return <p className="text-sm text-red-600">Invalid id</p>;
   return (
     <div className="mx-auto max-w-3xl py-2">
-      <CouponForm couponId={id} />
+      <CouponForm key={id} couponId={id} />
     </div>
   );
 }

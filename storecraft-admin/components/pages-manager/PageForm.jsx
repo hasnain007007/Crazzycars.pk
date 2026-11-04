@@ -7,8 +7,10 @@ import toast from "react-hot-toast";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { SeoField } from "@/components/ui/SeoField";
 import { SeoPreview } from "@/components/ui/SeoPreview";
+import { NeighborNav } from "@/components/layout/NeighborNav";
 import { getStorefrontPageUrl } from "@/lib/storefrontUrl";
 import { slugify } from "@/lib/slugify";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 const EMPTY_FORM = {
   title: "",
@@ -22,6 +24,7 @@ const EMPTY_FORM = {
 export function PageForm({ pageId }) {
   const router = useRouter();
   const isEdit = Boolean(pageId);
+  const neighbors = useEntityNeighbors(isEdit ? pageId : null, "/api/pages-manager");
   const [form, setForm] = useState(EMPTY_FORM);
   const [slugManual, setSlugManual] = useState(false);
   const [seoOpen, setSeoOpen] = useState(false);
@@ -105,10 +108,23 @@ export function PageForm({ pageId }) {
 
   return (
     <div className="space-y-6">
-      <Link href="/pages-manager" className="text-sm text-[#1d6fb8] hover:underline">
-        ← Pages
-      </Link>
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{isEdit ? "Edit page" : "New page"}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link href="/pages-manager" className="text-sm text-[#1d6fb8] hover:underline">
+            ← Pages
+          </Link>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+            {isEdit ? "Edit page" : "New page"}
+          </h1>
+        </div>
+        {isEdit ? (
+          <NeighborNav
+            prev={neighbors.prev}
+            next={neighbors.next}
+            hrefForId={(id) => `/pages-manager/${id}`}
+          />
+        ) : null}
+      </div>
       <form onSubmit={save} className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
           <div>

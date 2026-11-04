@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { NeighborNav } from "@/components/layout/NeighborNav";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 export default function EditProductOptionPage() {
   const { id } = useParams();
   const router = useRouter();
+  const neighbors = useEntityNeighbors(id ? String(id) : null, "/api/product-options");
   const [form, setForm] = useState({
     name: "",
     trackInventory: true,
@@ -113,13 +116,15 @@ export default function EditProductOptionPage() {
   if (error) return <div style={{ padding: 40, color: "#ef4444" }}>{error}</div>;
 
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: 24 }} key={String(id)}>
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 24,
+          flexWrap: "wrap",
+          gap: 12,
         }}
       >
         <div style={{ fontSize: 14, color: "#6b7280" }}>
@@ -128,6 +133,12 @@ export default function EditProductOptionPage() {
           </Link>
           {" >> Edit Option"}
         </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <NeighborNav
+            prev={neighbors.prev}
+            next={neighbors.next}
+            hrefForId={(nid) => `/product-options/${nid}/edit`}
+          />
         <Link href="/product-options">
           <button
             style={{
@@ -144,6 +155,7 @@ export default function EditProductOptionPage() {
             View All Options
           </button>
         </Link>
+        </div>
       </div>
 
       <div

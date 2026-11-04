@@ -9,6 +9,8 @@ import { ImageUploader } from "@/components/ui/ImageUploader";
 import { SeoField } from "@/components/ui/SeoField";
 import { SeoPreview } from "@/components/ui/SeoPreview";
 import { CategoryProductsTab } from "@/components/categories/CategoryProductsTab";
+import { NeighborNav } from "@/components/layout/NeighborNav";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 const TinyEditor = dynamic(() => import("@/components/ui/TinyEditor"), {
   ssr: false,
@@ -43,6 +45,7 @@ function slugify(value) {
 export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
   const router = useRouter();
   const isEdit = Boolean(categoryId);
+  const neighbors = useEntityNeighbors(isEdit ? categoryId : null, "/api/categories");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -293,6 +296,18 @@ export function CategoryEditor({ categoryId = null, initialParentId = "" }) {
   return (
     <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 320px", gap: 18 }}>
       <div style={{ display: "grid", gap: 14 }}>
+        {isEdit ? (
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <Link href="/catalog/categories" style={{ fontSize: 13, color: "#1d6fb8", fontWeight: 600, textDecoration: "none" }}>
+              ← Categories
+            </Link>
+            <NeighborNav
+              prev={neighbors.prev}
+              next={neighbors.next}
+              hrefForId={(id) => `/catalog/categories/${id}/edit`}
+            />
+          </div>
+        ) : null}
         <div style={{ ...cardStyle, display: "flex", gap: 8 }}>
           {[
             { id: "basic", label: "Basic Info" },

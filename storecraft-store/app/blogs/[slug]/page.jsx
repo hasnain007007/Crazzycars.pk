@@ -7,6 +7,8 @@ import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
 import BlogPostView from "@/components/store/BlogPostView";
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
+import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
+import { loadBlogNeighbors } from "@/lib/storeNeighborLoaders";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { withSafeMetadata, isNextNavigationError } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
@@ -217,6 +219,7 @@ export default async function BlogPostPage({ params }) {
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }} />
         ) : null}
         <BlogPostView initialPost={post} initialRecent={recentPosts} />
+        <DetailNeighborNav {...(await loadBlogNeighbors(post))} />
         <InternalBlogLinks title="Related guides" links={relatedGuides} />
       </div>
     );

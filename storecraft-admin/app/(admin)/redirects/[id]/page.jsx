@@ -6,7 +6,7 @@ export default async function Page({ params }) {
   const { id } = await params;
   return (
     <div className="mx-auto max-w-6xl">
-      <RedirectForm redirectId={id} />
+      <RedirectForm key={id} redirectId={id} />
     </div>
   );
 }

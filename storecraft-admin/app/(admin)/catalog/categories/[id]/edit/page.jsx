@@ -15,7 +15,7 @@ export default function EditCategoryPage() {
           ← Back
         </Link>
       </div>
-      <CategoryEditor categoryId={id} />
+      <CategoryEditor key={id} categoryId={id} />
     </div>
   );
 }

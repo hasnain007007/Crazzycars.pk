@@ -6,6 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { BannerFormLivePreview } from "@/components/banners/BannerFormLivePreview";
+import { NeighborNav } from "@/components/layout/NeighborNav";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 const PLACEMENTS = [
   ["hero_slider", "Hero Slider — Main homepage carousel"],
@@ -146,6 +148,7 @@ const pickBtn = (on) =>
 export function BannerForm({ bannerId }) {
   const router = useRouter();
   const isEdit = Boolean(bannerId);
+  const neighbors = useEntityNeighbors(isEdit ? bannerId : null, "/api/banners");
   const [name, setName] = useState("");
   const [placement, setPlacement] = useState("hero_slider");
   const [segment, setSegment] = useState("car");
@@ -350,6 +353,18 @@ export function BannerForm({ bannerId }) {
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <Link href="/banners" style={{ fontSize: 13, color: "#1d6fb8", textDecoration: "none", fontWeight: 600 }}>
+            ← Banners
+          </Link>
+          {isEdit ? (
+            <NeighborNav
+              prev={neighbors.prev}
+              next={neighbors.next}
+              hrefForId={(id) => `/banners/${id}`}
+            />
+          ) : null}
+        </div>
         <div style={cardStyle}>
           <h3 style={cardTitleStyle}>Basic Information</h3>
           <label style={labelStyle}>Banner Name *</label>

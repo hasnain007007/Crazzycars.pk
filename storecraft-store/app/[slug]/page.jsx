@@ -3,6 +3,8 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { ProductDetailMedico } from "@/components/store/ProductDetailMedico";
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
 import PageView from "@/components/store/PageView";
+import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
+import { loadCmsPageNeighbors, loadProductNeighbors } from "@/lib/storeNeighborLoaders";
 import { blogsForProduct } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
@@ -657,6 +659,7 @@ export default async function ProductPage({ params, searchParams }) {
           carLinks={content.carLinks || []}
           soldRecently={soldRecently}
         />
+        <DetailNeighborNav {...(await loadProductNeighbors(content.data))} />
         <ProductRelatedLinks {...(content.relatedLinks || {})} />
         <InternalBlogLinks
           title="From the blog"
@@ -677,7 +680,13 @@ export default async function ProductPage({ params, searchParams }) {
   if (content.type === "page") {
     const raw = String(content.data?.content || "");
     if (!raw.trim() || /placeholder\s+copy/i.test(raw)) notFound();
-    return <PageView page={content.data} slug={slugStr} />;
+    const pageNeighbors = await loadCmsPageNeighbors(content.data, { hrefPrefix: "" });
+    return (
+      <>
+        <PageView page={content.data} slug={slugStr} />
+        <DetailNeighborNav {...pageNeighbors} />
+      </>
+    );
   }
 
   notFound();

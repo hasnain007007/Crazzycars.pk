@@ -4,10 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { NeighborNav } from "@/components/layout/NeighborNav";
+import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
 export function CouponForm({ couponId }) {
   const router = useRouter();
   const isEdit = Boolean(couponId);
+  const neighbors = useEntityNeighbors(isEdit ? couponId : null, "/api/coupons");
   const [categories, setCategories] = useState([]);
   const [code, setCode] = useState("");
   const [discountType, setDiscountType] = useState("percentage");
@@ -104,10 +107,23 @@ export function CouponForm({ couponId }) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <Link href="/coupons" className="text-sm text-[#1d6fb8] hover:underline">
-        ← Coupons
-      </Link>
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{isEdit ? "Edit coupon" : "New coupon"}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link href="/coupons" className="text-sm text-[#1d6fb8] hover:underline">
+            ← Coupons
+          </Link>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+            {isEdit ? "Edit coupon" : "New coupon"}
+          </h1>
+        </div>
+        {isEdit ? (
+          <NeighborNav
+            prev={neighbors.prev}
+            next={neighbors.next}
+            hrefForId={(id) => `/coupons/${id}`}
+          />
+        ) : null}
+      </div>
       <form onSubmit={save} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <div>
           <label className="text-xs font-medium text-slate-600">Coupon code</label>

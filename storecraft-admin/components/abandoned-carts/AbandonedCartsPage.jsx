@@ -565,7 +565,10 @@ export function AbandonedCartsPage() {
 
       {viewCart ? (
         <AbandonedCartDetailModal
+          key={viewCart.id}
           cart={viewCart}
+          cartList={rows}
+          onSelectCart={setViewCart}
           converting={convertingId === viewCart.id}
           onClose={() => setViewCart(null)}
           onWhatsApp={sendWhatsApp}

@@ -14,6 +14,8 @@ import {
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/jsonld";
 import { buildBrandedAbsoluteTitle } from "@/lib/seo/brandedTitle";
 import { ProductListingSection } from "@/components/store/ProductListingSection";
+import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
+import { loadVehicleNeighbors } from "@/lib/storeNeighborLoaders";
 import { listingHref, listingMetadata, parseListingSearchParams } from "@/lib/listingQuery";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
@@ -518,6 +520,7 @@ export default async function VehicleSlugPage({ params, searchParams }) {
           emptyMessage="Products for this car will show once you assign them in admin (compatible vehicles / car catalog). Universal products are not listed here unless you add them to this car."
         />
       </section>
+      <DetailNeighborNav {...(await loadVehicleNeighbors(vehicle))} />
       <InternalBlogLinks
         title="From the blog"
         links={blogsForCar(vehicle.slug, vehicle.displayName)}
