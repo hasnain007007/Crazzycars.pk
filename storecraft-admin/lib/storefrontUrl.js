@@ -63,3 +63,38 @@ export function getStoreUrl() {
     getStorefrontBaseUrl()
   );
 }
+
+/**
+ * Logo URLs for admin chrome (Sidebar / Topbar).
+ * Settings often store storefront-relative paths like `/brand/logo-header.webp`
+ * which 404 on admin.crazzycars.pk — rewrite those to the storefront origin.
+ * Absolute /media URLs on our hosts stay as storefront absolute (img loads cross-origin fine).
+ */
+export function resolveAdminChromeLogoUrl(logoUrl) {
+  const raw = String(logoUrl || "").trim();
+  if (!raw) return "";
+  const store = getStorefrontBaseUrl();
+  try {
+    if (raw.startsWith("/") && !raw.startsWith("//")) {
+      return `${store}${raw}`;
+    }
+    const u = new URL(raw, store);
+    const host = u.hostname.toLowerCase();
+    const isOurs =
+      host === "crazzycars.pk" ||
+      host === "www.crazzycars.pk" ||
+      host === "admin.crazzycars.pk" ||
+      host.endsWith(".crazzycars.pk") ||
+      host === "localhost" ||
+      host === "127.0.0.1";
+    if (isOurs && (u.pathname.startsWith("/brand/") || u.pathname.startsWith("/media/"))) {
+      // Prefer storefront for brand static + shared media so admin chrome never 404s.
+      if (host === "admin.crazzycars.pk" || host.includes("localhost:3001")) {
+        return `${store}${u.pathname}${u.search || ""}`;
+      }
+    }
+    return u.href;
+  } catch {
+    return raw;
+  }
+}

@@ -2,6 +2,8 @@
  * Fetches /api/settings for admin chrome (Sidebar, Topbar).
  * In-memory dedupe only — no localStorage (avoids stale logo/name after saves).
  */
+import { resolveAdminChromeLogoUrl } from "@/lib/storefrontUrl";
+
 const TTL_MS = 30 * 1000;
 
 let memory = null;
@@ -32,13 +34,14 @@ export async function getAdminSettings() {
       const data = json.settings || json.data || {};
       const rawName = data.general?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || "Crazzycars.pk";
       const storeName = /homefy/i.test(String(rawName)) ? "Crazzycars.pk" : rawName;
+      const rawLogo =
+        (typeof data.general?.logoUrl === "string" && data.general.logoUrl) ||
+        (typeof data.general?.logo === "string" && data.general.logo) ||
+        data.general?.logo?.url ||
+        "";
       const next = {
         storeName,
-        logoUrl:
-          (typeof data.general?.logoUrl === "string" && data.general.logoUrl) ||
-          (typeof data.general?.logo === "string" && data.general.logo) ||
-          data.general?.logo?.url ||
-          "",
+        logoUrl: resolveAdminChromeLogoUrl(rawLogo),
       };
       memory = next;
       memoryTs = Date.now();
