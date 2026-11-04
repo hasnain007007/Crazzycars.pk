@@ -241,7 +241,16 @@ function CategoryRail({ config, root }) {
               />
             ) : (
               <div className="cat-showcase__promo-fallback" aria-hidden>
-                🚗
+                <span
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    height: "100%",
+                    minHeight: 120,
+                    background:
+                      "linear-gradient(160deg, #F3F4F6 0%, #E5E7EB 55%, #D1D5DB 100%)",
+                  }}
+                />
               </div>
             )}
             <span className="cat-showcase__promo-cta">Shop collection →</span>

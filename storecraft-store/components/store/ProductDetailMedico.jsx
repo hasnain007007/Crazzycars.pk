@@ -1313,6 +1313,46 @@ export function ProductDetailMedico({
               basePrice={basePrice}
               onVariationChange={handleVariationChange}
             />
+            {(() => {
+              const pcsRaw =
+                selectedOptions?.Pcs ||
+                selectedOptions?.pcs ||
+                selectedOptions?.Pieces ||
+                selectedOptions?.pieces;
+              const pcs = Number(String(pcsRaw || "").replace(/[^\d]/g, ""));
+              if (!Number.isFinite(pcs) || pcs < 1) return null;
+              const missingSpecs =
+                !Array.isArray(product?.specifications) || product.specifications.length === 0;
+              return (
+                <div
+                  className="mb-3 rounded-lg border border-[#E8E8E8] bg-[#FAFAFA] px-3 py-2.5 text-[13px] leading-snug text-[#374151]"
+                  data-variant-pack-note
+                >
+                  <p style={{ margin: 0 }}>
+                    <strong>Selected pack:</strong> {pcs} piece{pcs === 1 ? "" : "s"}
+                    {matchedCombo?.price != null
+                      ? ` · ${formatPrice(matchedCombo.price)}`
+                      : ""}
+                    {usesCombinationStock && matchedCombo
+                      ? ` · ${Number(matchedCombo.stock) > 0 ? "In stock" : "Out of stock"}`
+                      : ""}
+                  </p>
+                  <p style={{ margin: "6px 0 0" }}>
+                    Package contents for this option are the {pcs} light module
+                    {pcs === 1 ? "" : "s"} shown in the Pcs selector
+                    {product?.isUniversal || product?.vehicleCompatibility?.fitmentType === "universal"
+                      ? ". Listed as universal-fit — confirm space and power on your car before ordering."
+                      : ". Confirm vehicle fitment on this page before ordering."}
+                  </p>
+                  {missingSpecs ? (
+                    <p style={{ margin: "6px 0 0", color: "#6B7280" }}>
+                      Connection type, exact dimensions, and wiring details are not listed yet —
+                      WhatsApp us with your car model if you need them before you buy.
+                    </p>
+                  ) : null}
+                </div>
+              );
+            })()}
 
             {(product?.addOns || []).length ? (
               <div>

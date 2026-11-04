@@ -1,6 +1,7 @@
 import { displayProductName } from "@/lib/displayProductName";
 import { productAllowsCod } from "@/lib/codEligibility";
 import { scrubPaymentClaims } from "@/lib/paymentCopy";
+import { scrubStaleProductBoilerplate } from "@/lib/scrubPolicyConflictCopy";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 import { serializeStoreOption } from "@/lib/variationOptions";
 import { combinationSignature } from "@/lib/variantMatrix";
@@ -44,6 +45,10 @@ function productDocId(p) {
 /** Truncated typo on Corolla AC panel ranking page — keep RSC/HTML free of "Butto". */
 function fixTruncatedButto(value) {
   return String(value ?? "").replace(/\bButto\b/g, "Button");
+}
+
+function scrubProductHtml(value, allowsCod) {
+  return scrubPaymentClaims(scrubStaleProductBoilerplate(fixTruncatedButto(value || "")), allowsCod);
 }
 
 const DEFAULT_IMAGE_VIEWS = ["front", "side", "installed", "pack contents", "detail"];
@@ -281,18 +286,10 @@ export function serializeStoreProductDetail(p) {
     partNumber: p.partNumber || "",
     condition: p.condition || "new",
     vendor: p.vendor || "",
-    shortDescription: scrubPaymentClaims(
-      fixTruncatedButto(toPlainText(p.shortDescription || "")),
-      productAllowsCod(p)
-    ),
-    longDescription: sanitizeProductHtml(
-      scrubPaymentClaims(fixTruncatedButto(p.longDescription || ""), productAllowsCod(p))
-    ),
+    shortDescription: scrubProductHtml(toPlainText(p.shortDescription || ""), productAllowsCod(p)),
+    longDescription: sanitizeProductHtml(scrubProductHtml(p.longDescription || "", productAllowsCod(p))),
     descriptionHtml: sanitizeProductHtml(
-      scrubPaymentClaims(
-        fixTruncatedButto(p.longDescription || p.descriptionHtml || ""),
-        productAllowsCod(p)
-      )
+      scrubProductHtml(p.longDescription || p.descriptionHtml || "", productAllowsCod(p))
     ),
     price,
     regularPrice,

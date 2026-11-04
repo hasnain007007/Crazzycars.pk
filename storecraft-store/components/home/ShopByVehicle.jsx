@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCarCatalogClient, seedCarCatalogClient } from "@/lib/fetchCarCatalogClient";
-import { stripBrandPrefix } from "@/lib/carCatalogDisplay";
+import { stripBrandPrefix, vehicleCardModelLabel } from "@/lib/carCatalogDisplay";
 import { mediaImageUrl } from "@/lib/carCatalogCopy";
+import { VehicleImageFallback } from "@/components/store/VehicleImageFallback";
 
 function yearLabel(v) {
   const from = v.yearFrom;
@@ -70,7 +71,8 @@ function VehicleCard({ v }) {
     tapRef.current = null;
   }
 
-  const label = `${v.make} ${v.model}${yearLabel(v) ? ` ${yearLabel(v)}` : ""}`;
+  const modelLabel = vehicleCardModelLabel(v) || v.model;
+  const label = `${v.make} ${modelLabel}${yearLabel(v) ? ` ${yearLabel(v)}` : ""}`;
 
   return (
     <Link
@@ -90,7 +92,7 @@ function VehicleCard({ v }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={v.image}
-            alt={`${[v.make, v.model].filter(Boolean).join(" ").trim() || "Vehicle"} accessories`}
+            alt={`${[v.make, modelLabel].filter(Boolean).join(" ").trim() || "Vehicle"} accessories`}
             width={148}
             height={148}
             sizes="(max-width: 768px) 118px, 148px"
@@ -101,16 +103,14 @@ function VehicleCard({ v }) {
             draggable={false}
           />
         ) : (
-          <span className="sbv-fallback text-[26px] leading-none" aria-hidden>
-            🚗
-          </span>
+          <VehicleImageFallback className="h-full w-full" />
         )}
       </span>
       <span className="sbv-make max-w-full truncate text-center text-[10px] font-extrabold tracking-wider text-[#C41E1E] uppercase md:text-[11px]">
         {v.make}
       </span>
       <span className="sbv-model font-heading max-w-full truncate text-center text-[12px] font-bold leading-tight text-[#111111] md:text-sm">
-        {v.model}
+        {modelLabel}
       </span>
       {yearLabel(v) ? (
         <span className="sbv-years max-w-full truncate text-center text-[10px] text-[#4B5563] md:text-[11px]">
@@ -128,10 +128,12 @@ function mapCatalogToItems(data) {
   const source = vehicles.length ? vehicles : popular;
   if (source.length) {
     return source.map((p, idx) => {
-      const raw = p.nickname || p.generation || p.model;
       return {
         make: p.make,
-        model: stripBrandPrefix(p.make, raw),
+        model: vehicleCardModelLabel(p) || stripBrandPrefix(p.make, p.model || p.nickname || p.generation),
+        generation: p.generation,
+        nickname: p.nickname,
+        displayName: p.displayName,
         slug: p.slug,
         yearFrom: p.yearFrom,
         yearTo: p.yearTo,
@@ -147,10 +149,15 @@ function mapCatalogToItems(data) {
   const flat = [];
   for (const [make, models] of Object.entries(carData)) {
     for (const m of models || []) {
-      const raw = m.nickname || m.generation || m.model;
+      const entry = { ...m, make };
       flat.push({
         make,
-        model: stripBrandPrefix(make, raw),
+        model:
+          vehicleCardModelLabel(entry) ||
+          stripBrandPrefix(make, m.model || m.nickname || m.generation),
+        generation: m.generation,
+        nickname: m.nickname,
+        displayName: m.displayName,
         slug: m.slug,
         yearFrom: m.yearFrom,
         yearTo: m.yearTo,

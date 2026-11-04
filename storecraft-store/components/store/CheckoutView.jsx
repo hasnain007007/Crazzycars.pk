@@ -26,6 +26,7 @@ import {
 import { productAllowsCod } from "@/lib/codEligibility";
 import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import { PREPAID_DISCOUNT_PERCENT, codBookingAmountForTotal } from "@/config/checkout-money";
+import { STORE_POLICY } from "@/config/store-policy";
 import {
   getEnabledPakistaniMethods,
   isAdvancePaymentMethod,
@@ -672,7 +673,7 @@ export function CheckoutView() {
     showProductAdvanceBox
       ? `To confirm after placing your order, please pay at least {amount} in advance (${productAdvanceDue.maxPercent}% of eligible items).\n\nSend payment screenshot on WhatsApp: {whatsapp}`
       : showBookingAdvanceBox && productAdvanceDue.maxPercent > 0
-        ? `A booking amount of {amount} is required (higher of the booking advance for your order total or your product advance %). It is deducted from your total and refunded if the item doesn't fit.\n\nSend payment screenshot on WhatsApp: {whatsapp}`
+        ? `A booking amount of {amount} is required (higher of the booking advance for your order total or your product advance %). It is deducted from your total.\n\nSend payment screenshot on WhatsApp: {whatsapp}`
         : shippingRules.advancePaymentMessage,
     effectiveAdvanceAmount,
     whatsappDisplay
@@ -1490,7 +1491,7 @@ export function CheckoutView() {
             {advanceDiscount > 0 ? (
               <p style={{ fontSize: 12, color: "#16A34A", margin: "4px 0 0", fontWeight: 500 }}>
                 {advanceDiscountInfo.percent}% off for advance payment — delivery Rs.{" "}
-                {shippingRules.flatDeliveryCharge || 250}
+                {shippingRules.flatDeliveryCharge || STORE_POLICY.shipping.standardFeePKR}
               </p>
             ) : null}
 

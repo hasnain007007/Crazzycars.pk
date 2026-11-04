@@ -1,4 +1,5 @@
 import { looksLikeFreeDeliveryCopy, announcementAdvanceDeliveryText } from "./storePolicyCopy.js";
+import { scrubPolicyConflictPlain } from "./scrubPolicyConflictCopy.js";
 import { neutralizeClaimText } from "./displayProductName.js";
 import { STORE_POLICY } from "../config/store-policy.js";
 import { COD_ADVANCE_TIERS } from "../config/checkout-money.js";
@@ -119,7 +120,9 @@ export function normalizeHomepageSettings(raw, opts = {}) {
     heroHeadline: neutralizeClaimText(raw.heroHeadline || d.heroHeadline),
     heroSubtext: neutralizeClaimText(raw.heroSubtext || d.heroSubtext),
     heroCtaText: raw.heroCtaText || d.heroCtaText,
-    homeIntro: neutralizeClaimText(String(raw.homeIntro || "").trim()) || DEFAULT_HOME_INTRO,
+    homeIntro:
+      scrubPolicyConflictPlain(neutralizeClaimText(String(raw.homeIntro || "").trim())) ||
+      DEFAULT_HOME_INTRO,
     heroCtaUrl: raw.heroCtaUrl || d.heroCtaUrl,
     whyChooseUs:
       Array.isArray(raw.whyChooseUs) && raw.whyChooseUs.length

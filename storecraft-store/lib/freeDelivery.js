@@ -10,13 +10,16 @@ import {
 import { isAdvancePaymentMethod } from "@/lib/pakistaniPaymentMethods";
 import { STORE_POLICY } from "@/config/store-policy";
 import { PREPAID_DISCOUNT_PERCENT, COD_ADVANCE_AMOUNT } from "@/config/checkout-money";
-import { standardDeliveryFeeShort } from "@/lib/storePolicyCopy";
+import {
+  standardDeliveryFeeShort,
+  defaultAdvancePaymentMessage,
+  sanitizeAdvancePaymentMessage,
+} from "@/lib/storePolicyCopy";
 import { shippingFloorPKR } from "@/lib/shippingTier";
 
 export { collapseRepeatedCurrencyPrefix, fillAmountPlaceholder };
 
-const DEFAULT_ADVANCE_MESSAGE =
-  "A Rs. {amount} booking amount is required to confirm your COD order. It is deducted from your total and fully refunded if the item doesn't fit or doesn't match your confirmed order.\n\nSend the payment screenshot on WhatsApp: {whatsapp}\n\nBalance is collected on delivery.";
+const DEFAULT_ADVANCE_MESSAGE = `${defaultAdvancePaymentMessage()}\n\nBalance is collected on delivery.`;
 
 export const DEFAULT_FREE_SHIPPING_THRESHOLD = 0;
 
@@ -51,8 +54,9 @@ export function normalizeShippingRules(storePayment) {
     advancePaymentMessageTitle:
       String(p.advancePaymentMessageTitle || "").trim() ||
       DEFAULT_SHIPPING_RULES.advancePaymentMessageTitle,
-    advancePaymentMessage:
-      String(p.advancePaymentMessage || "").trim() || DEFAULT_ADVANCE_MESSAGE,
+    advancePaymentMessage: sanitizeAdvancePaymentMessage(
+      String(p.advancePaymentMessage || "").trim() || DEFAULT_ADVANCE_MESSAGE
+    ),
     advancePaymentDiscountEnabled:
       p.advancePaymentDiscountEnabled !== undefined
         ? Boolean(p.advancePaymentDiscountEnabled)

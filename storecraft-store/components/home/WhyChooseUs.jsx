@@ -67,9 +67,8 @@ export default function WhyChooseUs({ story = null, heroImage = "" }) {
         <p className="shop-band__lead shop-band__lead--offer">
           After you order on COD, send the booking amount (from {formatPkrAmount(COD_ADVANCE_AMOUNT)},
           by order total) on WhatsApp. That small payment confirms your order is real so we
-          can pack and dispatch quickly — it is deducted from your total and refunded if the item
-          doesn&apos;t fit. Prefer full payment? Get {prepaidPercent}% off with JazzCash
-          or bank transfer.
+          can pack and dispatch quickly — it is deducted from your total; pay the balance on
+          delivery. Prefer full payment? Get {prepaidPercent}% off with JazzCash or bank transfer.
         </p>
         <div className="shop-band__actions">
           <Link href="/shop" className="shop-band__btn shop-band__btn--primary">

@@ -67,7 +67,7 @@ function codLandingFaqs() {
     return [
       {
         question: "Do you offer Cash on Delivery (COD) in Pakistan?",
-        answer: `Yes. Cash on Delivery is available nationwide. For COD orders, pay a ${codAdvanceAmountsLabel()} booking advance by order value (or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total and refunded if the item doesn't fit. The balance is collected on delivery.`,
+        answer: `Yes. Cash on Delivery is available nationwide on eligible products. For COD orders, pay a ${codAdvanceAmountsLabel()} booking advance by order value (or more if the product requires a % advance) after placing your order and send the screenshot on WhatsApp. It is deducted from your total; you pay the balance on delivery. Body kits are prepaid only.`,
       },
       {
         question: "How much are delivery charges?",
@@ -112,11 +112,14 @@ export default function CashOnDeliveryPage() {
 
       <h1 className="text-2xl font-bold md:text-3xl text-zinc-900">Cash on Delivery across Pakistan</h1>
       <p className="mt-3 text-gray-700 leading-relaxed">
-        Yes — Cash on Delivery is available nationwide on eligible products. For COD orders, pay a
-        {codAdvanceAmountsLabel()} booking advance depending on your order total,
-        or more if the product requires a % advance; see <Link href="/advance-payment" className="text-red-700 underline">how to pay</Link>) after placing your order and send the screenshot on WhatsApp. It is
-        deducted from your total and refunded if the item doesn&apos;t fit. The balance is collected
-        when your order arrives.
+        Yes — Cash on Delivery is available nationwide on eligible products. For COD orders, pay a{" "}
+        {codAdvanceAmountsLabel()} booking advance depending on your order total, or more if the
+        product requires a % advance (see{" "}
+        <Link href="/advance-payment" className="text-red-700 underline">
+          how to pay
+        </Link>
+        ) after placing your order and send the screenshot on WhatsApp. It is deducted from your
+        total; you pay the balance when your order arrives. Body kits are prepaid only.
       </p>
 
       <h2 className="mt-10 text-xl font-semibold text-zinc-900">How COD works on CrazzyCars.pk</h2>

@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
-import { standardDeliveryFeeStatement } from "../storePolicyCopy.js";
+import { standardDeliveryFeeStatement, defaultAdvancePaymentMessage } from "../storePolicyCopy.js";
+import { COD_ADVANCE_AMOUNT } from "../../config/checkout-money.js";
+import { STORE_POLICY } from "../../config/store-policy.js";
 
 const imageSchema = new mongoose.Schema(
   {
@@ -102,15 +104,14 @@ const settingsSchema = new mongoose.Schema(
       freeShippingOnOrderAboveEnabled: { type: Boolean, default: false },
       advancePaymentMessage: {
         type: String,
-        default:
-          "A Rs. {amount} booking amount is required to confirm your COD order. It is deducted from your total and fully refunded if the item doesn't fit or doesn't match your confirmed order.\n\nSend payment screenshot on WhatsApp: {whatsapp}",
+        default: defaultAdvancePaymentMessage,
       },
-      advancePaymentAmount: { type: Number, default: 250 },
+      advancePaymentAmount: { type: Number, default: COD_ADVANCE_AMOUNT },
       advancePaymentMessageEnabled: { type: Boolean, default: true },
       advancePaymentMessageTitle: { type: String, default: "Pay booking amount to confirm COD" },
       advancePaymentDiscountEnabled: { type: Boolean, default: true },
       advancePaymentDiscountPercent: { type: Number, default: 4 },
-      flatDeliveryCharge: { type: Number, default: 250 },
+      flatDeliveryCharge: { type: Number, default: STORE_POLICY.shipping.standardFeePKR },
     },
     finance: {
       codTaxRate: { type: Number, default: 0.04, min: 0, max: 1 },

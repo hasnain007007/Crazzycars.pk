@@ -138,7 +138,7 @@ export function shippingAdvanceBannerEn() {
 /** Cart / checkout / PDP banner — Urdu. */
 export function shippingAdvanceBannerUr() {
   const [a, b, c] = codAdvanceTierList();
-  return `COD آرڈر پر بکنگ ایڈوانس: ${a.range.replace("Under ", "")} سے کم پر ${a.amount}، ${b.range} پر ${b.amount}، ${c.range.replace(" and above", "")} یا زیادہ پر ${c.amount} — کل سے کٹے گی، فٹ نہ ہونے پر واپس۔ باقی ڈیلیوری پر۔`;
+  return `COD آرڈر پر بکنگ ایڈوانس: ${a.range.replace("Under ", "")} سے کم پر ${a.amount}، ${b.range} پر ${b.amount}، ${c.range.replace(" and above", "")} یا زیادہ پر ${c.amount} — کل سے کٹے گی۔ باقی ڈیلیوری پر۔ خراب/غلط آئٹم کی واپسی پالیسی کے مطابق۔`;
 }
 
 /** Site-wide top announcement bar — COD booking vs prepaid discount. */
@@ -474,9 +474,9 @@ export function advancePaymentCopy(opts = {}) {
       value: `${pct}% OFF`,
       note: "Pay the whole order by JazzCash or bank transfer and get the prepaid discount at checkout.",
     },
-    higherAdvanceNote: "Some items (like body kits) need a higher advance; the exact amount is always shown at checkout.",
-    deductedNote:
-      "Your advance is deducted from your total bill and refunded if the item doesn't fit. You pay only the balance on delivery.",
+    higherAdvanceNote:
+      "Body kits cannot use Cash on Delivery — pay the full order (JazzCash, Meezan, or bank transfer) before we ship. Checkout always shows the exact amount due now.",
+    deductedNote: advanceDeductionStatement(),
     steps: [
       "Place your order on CrazzyCars.pk and note your order number.",
       hasAccounts
@@ -498,7 +498,7 @@ export function advancePaymentCopy(opts = {}) {
       },
       {
         q: "What if the item doesn't fit my car?",
-        a: "Your advance is refunded if the item doesn't fit. Check fitment with us on WhatsApp before ordering if you are unsure.",
+        a: advanceFitmentFaqAnswer(),
       },
       {
         q: "How do I get the prepaid discount?",
@@ -506,4 +506,54 @@ export function advancePaymentCopy(opts = {}) {
       },
     ],
   };
+}
+
+/** Booking advance is deducted from the total; balance is due on delivery. */
+export function advanceDeductionStatement() {
+  return "Your booking advance is deducted from the order total. You pay only the remaining balance on delivery.";
+}
+
+/**
+ * Fitment / advance FAQ — aligned with returns policy (no unconditional fitment refund).
+ */
+export function advanceFitmentFaqAnswer() {
+  const days = STORE_POLICY.returns.windowDays;
+  return `Check the vehicle fitment table (or WhatsApp us) before you order. Buyer-selected wrong model, year, or size is not refundable. If we listed the wrong compatibility, shipped the wrong item, or the item arrives defective, contact us within ${days} days — approved claims receive a full refund (including the booking advance). Change of mind is not eligible for return, refund, or exchange.`;
+}
+
+/** Canonical COD booking message body (Settings / checkout). Uses {amount} and {whatsapp}. */
+export function defaultAdvancePaymentMessage() {
+  return `A Rs. {amount} booking amount is required to confirm your COD order. It is deducted from your total. Send the screenshot on WhatsApp: {whatsapp}`;
+}
+
+/**
+ * Rewrite stored CMS advance messages that still promise unconditional fitment refunds.
+ * Keeps custom WhatsApp / amount wording when present.
+ */
+export function sanitizeAdvancePaymentMessage(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return defaultAdvancePaymentMessage();
+  // Legacy "pay delivery charges in advance" CMS copy → booking-advance template.
+  if (
+    /pay the delivery charges of\s*\{amount\}/i.test(raw) ||
+    /delivery charges.*in advance to confirm/i.test(raw)
+  ) {
+    return defaultAdvancePaymentMessage();
+  }
+  let out = raw;
+  // Drop "fully refunded if the item doesn't fit…" style clauses.
+  out = out.replace(
+    /\s*(?:and\s+)?(?:fully\s+)?refunded if the item doesn['’]?t fit(?:\s+or\s+doesn['’]?t match your confirmed order)?\.?/gi,
+    "."
+  );
+  out = out.replace(
+    /\s*(?:and\s+)?(?:fully\s+)?refunded if (?:it|the (?:part|product|item)) does not fit\.?/gi,
+    "."
+  );
+  out = out.replace(/\.\s*\./g, ".");
+  out = out.replace(/\s{2,}/g, " ").trim();
+  if (/doesn['’]?t fit|does not fit/i.test(out) && /refund/i.test(out)) {
+    return defaultAdvancePaymentMessage();
+  }
+  return out || defaultAdvancePaymentMessage();
 }

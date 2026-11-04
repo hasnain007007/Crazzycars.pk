@@ -1,11 +1,13 @@
 /**
- * Admin mirror of storecraft-store/config/store-policy.js.
+ * Admin mirror of storecraft-store/config/store-policy.js + checkout-money.js.
  * Keep values aligned; UI copy must import from here instead of literals.
  */
 export const STORE_POLICY_DEFAULTS = {
   standardFeePKR: 250,
   bulkyFeePKR: 500,
   returnsWindowDays: 7,
+  /** Smallest COD booking tier — matches storecraft-store/config/checkout-money.js */
+  codAdvanceFromPKR: 300,
 };
 
 export function formatPkrAmount(n) {
@@ -21,7 +23,8 @@ export function bulkyFeePkr() {
 }
 
 export function standardDeliveryFeeStatement() {
-  return `Delivery is ${formatPkrAmount(STORE_POLICY_DEFAULTS.standardFeePKR)} for regular items, or ${formatPkrAmount(STORE_POLICY_DEFAULTS.bulkyFeePKR)} when the order includes bulky items. COD orders require a booking advance (from Rs. 250) before processing; the balance is Cash on Delivery.`;
+  const from = formatPkrAmount(STORE_POLICY_DEFAULTS.codAdvanceFromPKR);
+  return `Delivery is ${formatPkrAmount(STORE_POLICY_DEFAULTS.standardFeePKR)} for regular items, or ${formatPkrAmount(STORE_POLICY_DEFAULTS.bulkyFeePKR)} when the order includes bulky items. COD orders require a booking advance (from ${from}) before processing; the balance is Cash on Delivery.`;
 }
 
 export function standardDeliveryFeeShort() {
@@ -39,5 +42,6 @@ export function bulkyItemHelpText() {
 }
 
 export function advancePercentHelpText() {
-  return `Customer must pay at least this % of the item total before dispatch (e.g. 50%). New COD orders use booking advance: MAX(Rs. 250 flat booking, this %), capped at order total. Example: 40% of a Rs. 5,000 line = Rs. 2,000 → booking advance is Rs. 2,000 (higher than Rs. 250).`;
+  const floor = formatPkrAmount(STORE_POLICY_DEFAULTS.codAdvanceFromPKR);
+  return `Customer must pay at least this % of the item total before dispatch (e.g. 50%). New COD orders use booking advance: MAX(${floor} tier floor or higher by order total, this %), capped at order total. Example: 40% of a Rs. 5,000 line = Rs. 2,000 → booking advance is Rs. 2,000 (higher than the Rs. 600 tier for that total).`;
 }

@@ -19,6 +19,10 @@ import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
 import { relatedGuidesForBlog } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbRelatedGuidesForBlog } from "@/lib/seo/blogLinksFromDb";
 import { BRAND } from "@/lib/brand";
+import {
+  policyBlogCanonicalMeta,
+  scrubPolicyConflictPlain,
+} from "@/lib/scrubPolicyConflictCopy";
 
 /** ISR — view counter runs in after() so HTML can be cached (S7c). */
 export const revalidate = 600;
@@ -102,13 +106,18 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
   const post = await loadBlogPostForMeta(slug);
   if (!post) return { title: "Blog Not Found" };
   const modified = blogContentModifiedAt(post);
+  const policyMeta = policyBlogCanonicalMeta(String(slug || ""));
   const metaTitle =
+    policyMeta?.title ||
     post.seo?.metaTitle ||
     `${post.title} | ${BRAND} Blog`;
+  const metaDescription =
+    policyMeta?.metaDescription ||
+    scrubPolicyConflictPlain(post.seo?.metaDescription || post.excerpt || post.title);
   return {
     // Absolute so the root layout does not append the store name a second time.
     title: { absolute: metaTitle },
-    description: post.seo?.metaDescription || post.excerpt || post.title,
+    description: metaDescription,
     authors: [{ name: post.author?.name || BRAND }],
     publishedTime: post.publishedAt || post.createdAt,
     modifiedTime: modified,
@@ -116,8 +125,8 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
       canonical: `${BASE_URL}/blogs/${slug}`,
     },
     openGraph: {
-      title: post.seo?.metaTitle || post.title,
-      description: post.seo?.metaDescription || post.excerpt || post.title,
+      title: metaTitle,
+      description: metaDescription,
       type: "article",
       publishedTime: post.publishedAt || post.createdAt,
       modifiedTime: modified,
@@ -127,8 +136,8 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
     },
     twitter: {
       card: "summary_large_image",
-      title: post.seo?.metaTitle || post.title,
-      description: post.seo?.metaDescription || post.excerpt || post.title,
+      title: metaTitle,
+      description: metaDescription,
       images: post.featuredImage?.url ? [post.featuredImage.url] : [],
     },
   };

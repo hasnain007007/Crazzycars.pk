@@ -41,6 +41,31 @@ const BRAND = BRAND_NAME;
 const SITE = "https://crazzycars.pk";
 const HERO_DESC_MAX = 320;
 
+/**
+ * Generic / shared Vehicle.metaDescription blurbs that collide across generations
+ * (e.g. both Prius XW20 and XW30 used the same COD one-liner).
+ */
+function isGenericVehicleMeta(text, vehicle) {
+  const t = String(text || "").replace(/\s+/g, " ").trim();
+  if (!t) return true;
+  const model = String(vehicle?.model || "").trim();
+  // One-liners that omit generation / years and only name the model + COD.
+  if (
+    /^shop\s+.+\s+accessories in pakistan(?:\s+at\s+crazzycars\.pk)?\s*[—–-]?\s*cash on delivery/i.test(
+      t
+    )
+  ) {
+    const hasYears = /\b(19|20)\d{2}\b/.test(t);
+    const hasGen = /\b(xw\d+|e\d+|j\d+|reborn|rebirth|civic x|\d+(st|nd|rd|th)\s*gen)\b/i.test(t);
+    if (!hasYears && !hasGen) return true;
+  }
+  // Exact short COD stubs reused across siblings.
+  if (model && new RegExp(`^shop\\s+toyota\\s+${model}\\s+accessories`, "i").test(t) && t.length < 120) {
+    if (!/\b(19|20)\d{2}\b/.test(t) && !/\bxw\d+\b/i.test(t)) return true;
+  }
+  return false;
+}
+
 /** First paragraph only, capped — drops price lists / FAQ blocks from the hero. */
 function shortenVehicleHeroHtml(html) {
   const safe = String(html || "").trim();
@@ -102,12 +127,14 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
             });
     const title = titleMeta.absolute;
     // Prefer Car Catalog Description (merged in loadVehicleBySlug) over legacy Vehicle.metaDescription.
-    const catalogDesc = stripLegacyBrand(
+    // Skip generic/shared DB blurbs (e.g. identical Prius metas) so locked carPageMeta wins.
+    const rawCatalogDesc = stripLegacyBrand(
       String(vehicle.description || "").trim() || String(vehicle.metaDescription || "").trim(),
       { replacement: BRAND }
     );
+    const catalogDesc = isGenericVehicleMeta(rawCatalogDesc, vehicle) ? "" : rawCatalogDesc;
     const description = fitMetaDescription(
-      [seoOverride?.meta, catalogDesc, carMeta?.description, vehicleMetaDescription(vehicle, catalogDesc)],
+      [seoOverride?.meta, carMeta?.description, catalogDesc, vehicleMetaDescription(vehicle, catalogDesc)],
       `${vehicle.displayName} accessories with prices in Pakistan and delivery across Pakistan.`
     );
     const listingSeo = listingMetadata(`/cars/${vehicle.slug}`, listing);

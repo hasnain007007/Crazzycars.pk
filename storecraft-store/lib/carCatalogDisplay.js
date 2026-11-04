@@ -9,6 +9,55 @@ export function stripBrandPrefix(make, label) {
   return text.replace(re, "").trim() || text;
 }
 
+/**
+ * True when a nickname/generation alone is ambiguous without the model
+ * (e.g. "Classic", "7th Gen", "E140", "XW20", "3rd Gen").
+ */
+export function isAmbiguousVehicleQualifier(label) {
+  const t = String(label || "").trim();
+  if (!t) return true;
+  if (/^(classic|\d+(st|nd|rd|th)\s*gen(eration)?|e\d+|xw\d+|x\d+|j\d+|nx\d+)$/i.test(t)) {
+    return true;
+  }
+  // Qualifier-only phrases without a recognizable model noun
+  if (/^(1st|2nd|3rd|4th|5th|6th|7th|8th|9th|10th|11th)\s+gen/i.test(t) && !/\b(civic|city|corolla|swift|prius|alto|vezel)\b/i.test(t)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Card / filter label: Model + Generation (when useful). Never show gen-only nicknames alone.
+ * Make is rendered separately in most card UIs.
+ */
+export function vehicleCardModelLabel(vehicle) {
+  if (!vehicle) return "";
+  const model = String(vehicle.model || "").trim();
+  const gen = String(vehicle.generation || "").trim();
+  const nick = String(vehicle.nickname || "").trim();
+  const display = String(vehicle.displayName || "").trim();
+
+  // Prefer stripping make from displayName when it already includes model+gen+years.
+  if (display) {
+    const withoutMake = stripBrandPrefix(vehicle.make, display);
+    // Drop trailing year range — cards usually show years on a second line.
+    const noYears = withoutMake.replace(/\s*\(\s*\d{4}\s*[–—-]\s*(?:\d{4}|Present|present)\s*\)\s*$/i, "").trim();
+    if (noYears) return noYears;
+  }
+
+  const qualifier = nick && !isAmbiguousVehicleQualifier(nick) ? nick : gen;
+  if (model && qualifier && !model.toLowerCase().includes(qualifier.toLowerCase())) {
+    // Ambiguous qualifiers still useful when paired with model: "City Classic", "Civic 11th Gen"
+    if (isAmbiguousVehicleQualifier(qualifier) || nick === qualifier) {
+      return `${model} ${qualifier}`.trim();
+    }
+    return `${model} ${qualifier}`.trim();
+  }
+  if (model) return model;
+  if (qualifier && !isAmbiguousVehicleQualifier(qualifier)) return qualifier;
+  return model || qualifier || nick || "";
+}
+
 export function formatModelLabel(entry) {
   if (!entry) return "";
   const nick = String(entry.nickname || "").trim();

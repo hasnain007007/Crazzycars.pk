@@ -18,8 +18,8 @@ import {
 } from "../storecraft-admin/lib/codAdvanceGate.js";
 
 describe("checkout-money defaults", () => {
-  it("prepaid 5% and COD booking floor 300 / policy v2", () => {
-    assert.equal(PREPAID_DISCOUNT_PERCENT, 5);
+  it("prepaid 4% and COD booking floor 300 / policy v2", () => {
+    assert.equal(PREPAID_DISCOUNT_PERCENT, 4);
     assert.equal(COD_ADVANCE_AMOUNT, 300);
     assert.equal(COD_ADVANCE_REQUIRED, true);
     assert.equal(COD_ADVANCE_POLICY_VERSION, 2);

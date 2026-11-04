@@ -19,7 +19,17 @@ export default function BrandHero() {
       <div className="brand-hero__inner">
         <div className="brand-hero__copy">
           <p className="brand-hero__kicker">Body kits · LED lighting · Carbon accessories</p>
-          <h1 className="brand-hero__seo-h1" style={{ fontSize: "clamp(1.1rem, 2.6vw, 1.45rem)", fontWeight: 700, margin: "0 0 8px", color: "#111" }}>
+          <h1
+            className="brand-hero__seo-h1"
+            style={{
+              fontSize: "clamp(1.1rem, 2.6vw, 1.45rem)",
+              fontWeight: 700,
+              margin: "0 0 8px",
+              color: "#F8FAFC",
+              textShadow: "0 1px 2px rgba(0,0,0,0.55), 0 0 18px rgba(0,0,0,0.35)",
+              letterSpacing: "0.01em",
+            }}
+          >
             Car Accessories in Pakistan – CrazzyCars.pk Gujranwala
           </h1>
           <p className="tagline brand-hero__title">

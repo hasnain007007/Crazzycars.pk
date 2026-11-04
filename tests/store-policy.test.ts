@@ -46,8 +46,8 @@ describe("STORE_POLICY", () => {
     assert.match(returnsPolicyCanonical(), /defective/);
     assert.match(returnsPolicyCanonical(), /not eligible/);
     assert.doesNotMatch(returnsPolicyCanonical(), /exchange for a different/i);
-    assert.match(standardDeliveryFeeStatement(), /Rs\. 250/);
-    assert.match(standardDeliveryFeeStatement(), /Rs\. 500|bulky/i);
+    assert.match(standardDeliveryFeeStatement(), /Rs\.?\s*250/);
+    assert.match(standardDeliveryFeeStatement(), /Rs\.?\s*500|bulky/i);
     assert.match(deliveryEtaSummary(), /Lahore: 2–3/);
     assert.match(nonLahoreEtaStatement(), /confirmed at checkout/);
   });

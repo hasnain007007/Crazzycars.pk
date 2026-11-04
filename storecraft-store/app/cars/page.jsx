@@ -8,6 +8,8 @@ import { safeJsonLd } from "@/lib/safeJsonLd";
 import { listingHasFacets, parseListingSearchParams } from "@/lib/listingQuery";
 import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW } from "@/lib/seo/robotsMeta";
 import { withSafeMetadata } from "@/lib/safeMetadata";
+import { vehicleCardModelLabel } from "@/lib/carCatalogDisplay";
+import { VehicleImageFallback } from "@/components/store/VehicleImageFallback";
 
 export const revalidate = 300;
 
@@ -133,7 +135,7 @@ export default async function CarsIndexPage() {
                           decoding="async"
                         />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-2xl text-[#9CA3AF]">🚗</div>
+                        <VehicleImageFallback className="h-full w-full" />
                       )}
                     </div>
                     <div className="px-2 py-2 md:px-2.5">
@@ -141,7 +143,7 @@ export default async function CarsIndexPage() {
                         {v.make}
                       </p>
                       <p className="font-heading truncate text-[13px] font-bold leading-tight text-[#111111]">
-                        {v.nickname || v.generation || v.model}
+                        {vehicleCardModelLabel(v)}
                       </p>
                       {yearLabel(v) ? (
                         <p className="mt-0.5 truncate text-[10px] text-[#6B7280]">{yearLabel(v)}</p>

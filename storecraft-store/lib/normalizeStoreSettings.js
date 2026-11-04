@@ -8,8 +8,10 @@ import { rewriteStorePath } from "@/lib/categoryHandleAliases";
 import {
   sanitizeAnnouncementItems,
   sanitizeCustomerShippingNote,
+  sanitizeAdvancePaymentMessage,
   standardDeliveryFeeStatement,
   announcementAdvanceDeliveryText,
+  defaultAdvancePaymentMessage,
 } from "@/lib/storePolicyCopy";
 import { asOptionalSettingsString, asSettingsString } from "@/lib/settingsString";
 
@@ -109,8 +111,7 @@ export const DEFAULT_STORE_PAYMENT = {
   freeShippingOnAdvancePayment: false,
   freeShippingOnOrderAbove: 0,
   freeShippingOnOrderAboveEnabled: false,
-  advancePaymentMessage:
-    "A Rs. {amount} booking amount is required to confirm your COD order. It is deducted from your total and fully refunded if the item doesn't fit or doesn't match your confirmed order. Send the screenshot on WhatsApp: {whatsapp}",
+  advancePaymentMessage: defaultAdvancePaymentMessage(),
   advancePaymentAmount: COD_ADVANCE_AMOUNT,
   advancePaymentMessageEnabled: true,
   advancePaymentMessageTitle: "Pay booking amount to confirm COD",
@@ -268,8 +269,9 @@ export function normalizeStorePayment(raw) {
     advancePaymentMessageTitle:
       asSettingsString(p.advancePaymentMessageTitle) ||
       DEFAULT_STORE_PAYMENT.advancePaymentMessageTitle,
-    advancePaymentMessage:
-      asSettingsString(p.advancePaymentMessage) || DEFAULT_STORE_PAYMENT.advancePaymentMessage,
+    advancePaymentMessage: sanitizeAdvancePaymentMessage(
+      asSettingsString(p.advancePaymentMessage) || DEFAULT_STORE_PAYMENT.advancePaymentMessage
+    ),
     advancePaymentDiscountEnabled:
       p.advancePaymentDiscountEnabled !== undefined
         ? Boolean(p.advancePaymentDiscountEnabled)

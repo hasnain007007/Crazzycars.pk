@@ -3,6 +3,7 @@
  * Allows only safe structural tags — strips scripts, styles, event handlers.
  */
 import sanitizeHtml from "sanitize-html";
+import { scrubPolicyConflictHtml } from "./scrubPolicyConflictCopy.js";
 
 const ALLOWED_TAGS = [
   "h1",
@@ -169,7 +170,7 @@ export function sanitizePageHtml(dirty) {
   });
 }
 
-/** Blog posts — same allowlist as CMS pages. */
+/** Blog posts — same allowlist as CMS pages, plus policy-conflict scrub. */
 export function sanitizeBlogHtml(dirty) {
-  return sanitizePageHtml(dirty);
+  return scrubPolicyConflictHtml(sanitizePageHtml(dirty));
 }
