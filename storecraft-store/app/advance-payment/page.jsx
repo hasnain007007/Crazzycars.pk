@@ -12,13 +12,19 @@ import { advancePaymentCopy } from "@/lib/storePolicyCopy";
 
 export const revalidate = 60;
 
-export const metadata = buildPageMetadata({
-  title: "Advance Payment: How to Pay",
-  // Keep 140–158 chars for SERP snippets (F5).
-  description:
-    "COD booking advance at CrazzyCars.pk: amounts by order total, JazzCash, Raast QR and bank details, plus how to send your payment screenshot.",
-  path: "/advance-payment",
-});
+export const metadata = {
+  ...buildPageMetadata({
+    title: "Advance Payment: How to Pay | CrazzyCars.pk",
+    // Keep 140–158 chars for SERP snippets (F5).
+    description:
+      "COD booking advance at CrazzyCars.pk: amounts by order total, JazzCash, Raast QR and bank details, plus how to send your payment screenshot.",
+    path: "/advance-payment",
+    absoluteTitle: true,
+  }),
+  authors: [{ name: "CrazzyCars.pk" }],
+  creator: "CrazzyCars.pk",
+  publisher: "CrazzyCars.pk",
+};
 
 const METHOD_NAMES = {
   jazzcash: "JazzCash",
@@ -99,10 +105,37 @@ export default async function AdvancePaymentPage() {
       acceptedAnswer: { "@type": "Answer", text: f.a },
     })),
   };
+  const howToLd = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: c.pageTitle || "Advance Payment: How to Pay",
+    description:
+      c.pageIntro ||
+      "COD booking advance at CrazzyCars.pk: amounts by order total, JazzCash, Raast QR and bank details.",
+    author: { "@type": "Organization", name: "CrazzyCars.pk", url: "https://crazzycars.pk" },
+    step: [
+      {
+        "@type": "HowToStep",
+        name: "Check your booking advance",
+        text: "Use the order-total table on this page to see how much COD booking advance to send.",
+      },
+      {
+        "@type": "HowToStep",
+        name: "Pay via JazzCash, Raast QR or bank transfer",
+        text: "Send the advance to an official CrazzyCars.pk account listed on this page.",
+      },
+      {
+        "@type": "HowToStep",
+        name: "Send your payment screenshot",
+        text: "WhatsApp the screenshot with your order number so we can confirm and dispatch.",
+      },
+    ],
+  };
 
   return (
     <div className="adv-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToLd) }} />
       <nav className="adv-crumbs" aria-label="Breadcrumb">
         <Link href="/">Home</Link> / <span>{c.pageTitle}</span>
       </nav>

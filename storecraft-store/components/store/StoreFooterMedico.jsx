@@ -10,9 +10,11 @@ import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
 const DEFAULT_SHOP_LINKS = [
   { label: "Home", href: "/" },
   { label: "Shop All", href: "/shop" },
+  { label: "Hot Deals", href: "/sale" },
   { label: "Shop by Car", href: "/cars" },
   { label: "Categories", href: "/categories" },
   { label: "Blog", href: "/blogs" },
+  { label: "About", href: "/about" },
 ]
 const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "My Account", href: "/account" },
@@ -20,6 +22,7 @@ const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "FAQ", href: "/faq" },
   { label: "Cash on Delivery", href: "/cash-on-delivery" },
   { label: "Contact", href: "/contact" },
+  { label: "About CrazzyCars", href: "/about" },
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Terms & Conditions", href: "/terms-conditions" },
   { label: "Shipping Policy", href: "/shipping-policy" },

@@ -106,7 +106,11 @@ export function listingCanonicalPath(pathname, listing) {
 }
 
 export function listingRobots(listing, { thin = false } = {}) {
-  if (thin || listingHasFacets(listing)) return ROBOTS_NOINDEX_FOLLOW;
+  // page>1 stays crawlable via rel=next/prev but is noindex so Ahrefs/GSC
+  // don't treat paginated clones as indexable orphans outside the sitemap.
+  if (thin || listingHasFacets(listing) || (listing?.page || 1) > 1) {
+    return ROBOTS_NOINDEX_FOLLOW;
+  }
   return ROBOTS_INDEX_FOLLOW;
 }
 

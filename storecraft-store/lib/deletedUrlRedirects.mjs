@@ -60,6 +60,12 @@ export const DELETED_URL_REDIRECTS = [
   },
   // No Fronx car page in the live catalogue — closest Suzuki generation page.
   { source: "/cars/suzuki-fronx-2025-present", destination: "/cars/suzuki-swift-2025-present", permanent: true },
+  // Empty vehicle hubs (0 assigned products → hard 404). Send equity to /cars.
+  { source: "/cars/honda-hrv-2022-present", destination: "/cars", permanent: true },
+  { source: "/cars/audi-a5-2014", destination: "/cars", permanent: true },
+  { source: "/cars/audi-a5-2008-present", destination: "/cars", permanent: true },
+  { source: "/cars/byd-shark6-2025-present", destination: "/cars", permanent: true },
+  { source: "/cars/suzuki-mehran-1989-2019", destination: "/cars", permanent: true },
 ];
 
 /** Flat product rows (not /cars/ or /categories/) that permanently redirect. */

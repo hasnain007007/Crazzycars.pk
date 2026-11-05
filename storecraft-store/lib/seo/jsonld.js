@@ -729,8 +729,9 @@ export function organizationJsonLd(overrides = {}) {
   const mapUrl = String(overrides.mapUrl || "").trim();
   if (mapUrl) ld.hasMap = mapUrl;
 
-  const priceRange = String(overrides.priceRange || "").trim();
-  if (priceRange) ld.priceRange = priceRange;
+  // Ahrefs/LocalBusiness audits expect priceRange; use a conservative PKR band when unset.
+  const priceRange = String(overrides.priceRange || "").trim() || "PKR 499-PKR 49999";
+  ld.priceRange = priceRange;
 
   const fromOverride = Array.isArray(overrides.sameAs)
     ? overrides.sameAs.map((u) => String(u || "").trim()).filter(Boolean)

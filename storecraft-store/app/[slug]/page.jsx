@@ -420,22 +420,32 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     { brand: BRAND }
   );
   const pageTitle = pageTitleMeta.absolute;
+  const pageDesc = page.seo?.metaDescription || "";
+  const pageOg =
+    page.seo?.ogImage ||
+    page.featuredImage?.url ||
+    page.image?.url ||
+    `${BASE_URL}/og/default-1200x630.jpg`;
+  const pageOgAbs = /^https?:\/\//i.test(pageOg) ? pageOg : `${BASE_URL}${pageOg.startsWith("/") ? "" : "/"}${pageOg}`;
   return {
     title: pageTitleMeta,
-    description: page.seo?.metaDescription || "",
+    description: pageDesc,
     alternates: {
       canonical: page.seo?.canonical || `${BASE_URL}/${slugStr}`,
     },
     openGraph: {
       title: pageTitle,
-      description: page.seo?.metaDescription || "",
+      description: pageDesc,
       type: "website",
       url: `${BASE_URL}/${slugStr}`,
+      siteName: BRAND,
+      images: [{ url: pageOgAbs, width: 1200, height: 630, alt: pageTitle }],
     },
     twitter: {
       card: "summary_large_image",
       title: pageTitle,
-      description: page.seo?.metaDescription || "",
+      description: pageDesc,
+      images: [pageOgAbs],
     },
   };
 });

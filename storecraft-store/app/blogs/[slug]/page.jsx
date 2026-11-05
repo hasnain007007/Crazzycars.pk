@@ -114,6 +114,10 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
   const metaDescription =
     policyMeta?.metaDescription ||
     scrubPolicyConflictPlain(post.seo?.metaDescription || post.excerpt || post.title);
+  const rawImg = post.featuredImage?.url || `${BASE_URL}/og/default-1200x630.jpg`;
+  const ogImage = /^https?:\/\//i.test(rawImg)
+    ? rawImg
+    : `${BASE_URL}${rawImg.startsWith("/") ? "" : "/"}${rawImg}`;
   return {
     // Absolute so the root layout does not append the store name a second time.
     title: { absolute: metaTitle },
@@ -131,14 +135,14 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
       publishedTime: post.publishedAt || post.createdAt,
       modifiedTime: modified,
       authors: [post.author?.name || BRAND],
-      images: post.featuredImage?.url ? [{ url: post.featuredImage.url }] : [],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: metaTitle }],
       url: `${BASE_URL}/blogs/${slug}`,
     },
     twitter: {
       card: "summary_large_image",
       title: metaTitle,
       description: metaDescription,
-      images: post.featuredImage?.url ? [post.featuredImage.url] : [],
+      images: [ogImage],
     },
   };
 });
