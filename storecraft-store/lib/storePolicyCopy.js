@@ -368,7 +368,7 @@ export const FAQ_ITEMS = getFaqItems();
 export function getReturnsPage() {
   const days = STORE_POLICY.returns.windowDays;
   return {
-    title: "Returns Policy",
+    title: "Returns & Refunds Policy",
     description: returnsPolicyMetaDescription(),
     intro: returnsPolicyCanonical(),
     sections: [

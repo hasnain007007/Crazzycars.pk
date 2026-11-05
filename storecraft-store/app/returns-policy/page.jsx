@@ -3,16 +3,17 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { getReturnsPage } from "@/lib/storePolicyCopy";
 
 export const metadata = buildPageMetadata({
-  title: "Returns Policy",
+  title: "Returns & Refunds Policy | CrazzyCars.pk",
   description: getReturnsPage().description,
   path: "/returns-policy",
+  absoluteTitle: true,
 });
 
 export default function ReturnsPolicyPage() {
   const page = getReturnsPage();
   return (
     <LegalPolicyPage
-      title={page.title}
+      title="Returns & Refunds Policy"
       path="/returns-policy"
       intro={page.intro}
       sections={page.sections}

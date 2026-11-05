@@ -6,10 +6,11 @@ import {
 } from "@/lib/storePolicyCopy";
 
 export const metadata = buildPageMetadata({
-  title: "Shipping Policy",
+  title: "Shipping Policy | Delivery Charges Pakistan | CrazzyCars.pk",
   description:
-    "Delivery charges, timelines, and courier options for CrazzyCars.pk orders across Pakistan.",
+    "CrazzyCars.pk shipping across Pakistan: delivery charges, bulky vs regular items, COD notes, and how long orders take from Gujranwala to your city.",
   path: "/shipping-policy",
+  absoluteTitle: true,
 });
 
 export default function ShippingPolicyPage() {
