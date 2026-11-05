@@ -33,7 +33,7 @@ export const DELETED_URL_REDIRECTS = [
   { source: "/honda-civic-x-2016-2021-rear-window-back-screen-louver", destination: "/cars/honda-civic-x-2016-2021", permanent: true },
   { source: "/honda-civic-x-2016-2021-type-r-front-bumper-mesh-inserts", destination: "/cars/honda-civic-x-2016-2021", permanent: true },
   { source: "/honda-civic-x-2016-2021-type-r-rear-bumper-reflector-led", destination: "/cars/honda-civic-x-2016-2021", permanent: true },
-  { source: "/hyundai-carbon-fiber-steering-wheel-monogram", destination: "/categories/stickers-monograms-emblems", permanent: true },
+  { source: "/hyundai-carbon-fiber-steering-wheel-monogram", destination: "/categories/exterior", permanent: true },
   { source: "/hyundai-elantra-2020-2024-rear-window-roof-spoiler", destination: "/cars/hyundai-elantra-2020-2024", permanent: true },
   { source: "/hyundai-elantra-2020-2024-trunk-lip-spoiler", destination: "/cars/hyundai-elantra-2020-2024", permanent: true },
   { source: "/jasma-style-dual-burnt-stainless-exhaust-muffler-tip", destination: "/categories/exhaust-systems-tips", permanent: true },
@@ -66,6 +66,19 @@ export const DELETED_URL_REDIRECTS = [
   { source: "/cars/audi-a5-2008-present", destination: "/cars", permanent: true },
   { source: "/cars/byd-shark6-2025-present", destination: "/cars", permanent: true },
   { source: "/cars/suzuki-mehran-1989-2019", destination: "/cars", permanent: true },
+  // Empty root categories (0 products) — stop soft-200 "coming soon" crawl waste.
+  { source: "/categories/car-curtains", destination: "/categories/interior", permanent: true },
+  { source: "/categories/polisher-machines-buffers", destination: "/categories/car-care-cleaning", permanent: true },
+  { source: "/categories/mirror-hangings", destination: "/categories/air-freshener-decoration", permanent: true },
+  { source: "/categories/shampoo-foam", destination: "/categories/car-care-cleaning", permanent: true },
+  { source: "/categories/trunk-mats", destination: "/categories/floor-mats", permanent: true },
+  { source: "/categories/seat-belt-accessories", destination: "/categories/interior", permanent: true },
+  { source: "/categories/led-sill-plates", destination: "/categories/led-lighting", permanent: true },
+  { source: "/categories/jump-starters-booster-cables", destination: "/categories/emergency-safety", permanent: true },
+  { source: "/categories/door-guards", destination: "/categories/exterior", permanent: true },
+  { source: "/categories/car-organizers", destination: "/categories/interior", permanent: true },
+  { source: "/categories/luxury-7d-9d-floor-mats", destination: "/categories/floor-mats", permanent: true },
+  { source: "/categories/stickers-monograms-emblems", destination: "/categories/exterior", permanent: true },
 ];
 
 /** Flat product rows (not /cars/ or /categories/) that permanently redirect. */

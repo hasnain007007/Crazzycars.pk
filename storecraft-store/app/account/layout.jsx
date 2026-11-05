@@ -1,6 +1,11 @@
-import { ROBOTS_NOINDEX_NOFOLLOW } from "@/lib/seo/robotsMeta";
+import { ROBOTS_NOINDEX_FOLLOW } from "@/lib/seo/robotsMeta";
 
-export const metadata = { robots: ROBOTS_NOINDEX_NOFOLLOW };
+/** Private customer area — never index; allow link equity to pass. */
+export const metadata = {
+  title: "My Account | CrazzyCars.pk",
+  description: "Sign in to manage your CrazzyCars.pk orders, addresses and profile.",
+  robots: ROBOTS_NOINDEX_FOLLOW,
+};
 
 export default function AccountLayout({ children }) {
   return children;

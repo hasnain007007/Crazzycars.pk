@@ -15,16 +15,33 @@ export default function AccountPage() {
     }
   }, [customer, loading, router]);
 
-  if (loading) {
+  if (loading || !customer) {
     return (
       <main
         style={{
           minHeight: "60vh",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          gap: 16,
+          padding: "40px 24px",
         }}
       >
+        <h1
+          style={{
+            fontFamily: "var(--font-heading)",
+            fontSize: 28,
+            fontWeight: 700,
+            color: "#111111",
+            margin: 0,
+          }}
+        >
+          My Account
+        </h1>
+        <p style={{ margin: 0, color: "#555555", fontSize: 14 }}>
+          {loading ? "Loading your account…" : "Redirecting to sign in…"}
+        </p>
         <div
           style={{
             width: 40,
@@ -34,12 +51,11 @@ export default function AccountPage() {
             borderRadius: "50%",
             animation: "spin 0.8s linear infinite",
           }}
+          aria-hidden="true"
         />
       </main>
     );
   }
-
-  if (!customer) return null;
 
   const menuItems = [
     {

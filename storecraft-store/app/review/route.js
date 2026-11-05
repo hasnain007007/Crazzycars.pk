@@ -4,7 +4,7 @@ import { getServerStoreSettings } from "@/lib/serverSettings";
 export const dynamic = "force-dynamic";
 
 /**
- * /review → 302 to settings.general.googleReviewUrl when set; otherwise 404.
+ * /review → permanent redirect to Google review URL when set; otherwise 404.
  */
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
       settings?.general?.googleReviewUrl || settings?.googleReviewUrl || ""
     ).trim();
     if (url && /^https?:\/\//i.test(url)) {
-      return NextResponse.redirect(url, 302);
+      return NextResponse.redirect(url, 301);
     }
   } catch (e) {
     console.error("[/review]", e?.message || e);
