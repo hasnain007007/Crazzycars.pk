@@ -136,8 +136,12 @@ export default function AnalyticsScripts({ settings }) {
   const gaId = String(settings?.seo?.googleAnalyticsId || "").trim();
   const fbPixelId = String(settings?.seo?.facebookPixelId || "").trim();
   const snapPixelId = String(settings?.seo?.snapchatPixelId || "").trim();
-  const deferMeta = useDeferredThirdParty(8000);
-  const deferSnap = useDeferredThirdParty(8000);
+  const pathname = usePathname();
+  // Thank-you page: load the Pixel at once so a buyer who closes the page quickly still
+  // sends Purchase (speed there does not matter for search; elsewhere it stays deferred).
+  const urgent = String(pathname || "").startsWith("/checkout/success");
+  const deferMeta = useDeferredThirdParty(8000) || urgent;
+  const deferSnap = useDeferredThirdParty(8000) || urgent;
 
   if (!gaId && !fbPixelId && !snapPixelId) return null;
 

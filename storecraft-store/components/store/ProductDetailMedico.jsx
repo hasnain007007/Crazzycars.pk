@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { MyCarFitTag } from "@/components/store/MyCar";
 import { OnCarPreviewButton, TryOnButton } from "@/components/store/OnCarPreview";
@@ -726,17 +726,28 @@ export function ProductDetailMedico({
     : baseStock;
   const quantityForDisplay = usesCombinationStock ? availableStock : baseStock;
 
-  /** Meta Pixel ViewContent + GA4 view_item — product identity + current display price. */
+  /**
+   * Meta Pixel ViewContent + GA4 view_item — once per product view. The default option is
+   * auto-selected right after mount and changes displayPrice, so wait for the price to settle
+   * instead of sending one event per price (that double-counted every view).
+   */
+  const viewTrackedRef = useRef("");
   useEffect(() => {
-    if (!product) return;
+    if (!product) return undefined;
     const contentId = resolveProductContentId(product);
-    if (contentId) {
-      trackViewContent({
-        contentIds: [contentId],
-        value: displayPrice,
-      });
-    }
-    ga4ViewItem(product, displayPrice);
+    const key = String(product._id || product.id || contentId || "");
+    if (!key || viewTrackedRef.current === key) return undefined;
+    const timer = window.setTimeout(() => {
+      viewTrackedRef.current = key;
+      if (contentId) {
+        trackViewContent({
+          contentIds: [contentId],
+          value: displayPrice,
+        });
+      }
+      ga4ViewItem(product, displayPrice);
+    }, 600);
+    return () => window.clearTimeout(timer);
   }, [
     product?._id,
     product?.id,
