@@ -65,30 +65,46 @@ export function localMediaPath(src) {
 }
 
 /**
- * Local /media derivatives (masters kept on disk):
- *  - `{stem}-400.webp` — cards / thumbs (≤480 CSS px @2×); nearly always present
- *  - `{stem}-sm.webp`  — PDP / banners (S7 compressed; never multi-MB masters)
- * Missing derivatives: <img onError> falls back -400 → master (see WatermarkedImage).
+ * Local /media derivatives (masters kept on disk).
  *
- * Client-side we cannot stat the disk. Prefer -400 for mid sizes when a caller
- * has not already resolved an existing path via resolveExistingLocalMedia (SSR).
- * Large PDP slots still request -sm; onError + SSR preload use existence checks.
+ * IMPORTANT: suffix size is NOT reliable across folders.
+ * Product gallery handoffs often ship `-sm.webp` at 200×200 and `-400.webp` at
+ * 400×400 while the master is 1200×1200. Some legacy `-sm` files are full-res.
+ * Always inspect pixels when diagnosing; never assume `-sm` means "PDP large".
+ *
+ * Slot mapping for products / cars / brand:
+ *  - thumb strip (≤160 CSS px request width) → `-sm.webp`
+ *  - cards / mid (≤480) → `-400.webp`
+ *  - PDP main / lightbox / large → master (original)
+ *
+ * Categories / banners may still prefer `-sm` via categoryBannerUrl().
+ * Missing derivatives: <img onError> falls back -sm → -400 → master.
  */
+function localMediaMasterPath(path) {
+  return String(path || "").replace(/-(400|sm|800)\.(webp|jpe?g|png|gif|avif)$/i, ".$2");
+}
+
 function localMediaForWidth(src, width) {
   const path = localMediaPath(src) || "";
   const fallback = path || unwrapNextImageUrl(src) || String(src || "").trim();
   if (!path) return fallback;
+  // Already a concrete derivative or master path — keep as requested.
   if (/-(400|sm|800)\.(webp|jpe?g|png)$/i.test(path)) return path;
   if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
     return fallback;
   }
+  const master = localMediaMasterPath(path);
   const w = Number(width) || 0;
-  // Small / mid cards → -400 (high hit rate).
-  if (w > 0 && w <= 480) {
-    return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
+  // Thumbnail controls only.
+  if (w > 0 && w <= 160) {
+    return master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-sm.webp");
   }
-  // PDP-sized: ask for -sm; WatermarkedImage onError falls back to -400 then master.
-  return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-sm.webp");
+  // Product cards / mid slots.
+  if (w > 0 && w <= 480) {
+    return master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
+  }
+  // PDP gallery + lightbox: full-resolution original.
+  return master;
 }
 
 /** Build sibling derivative path from any /media URL. */
@@ -134,10 +150,27 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
   return `${prefix}${transform}/${remainder}`;
 }
 
-/** Responsive srcset — Cloudinary only. Local media uses a single pre-sized file. */
+/**
+ * Responsive srcset for local /media: expose real on-disk derivatives with
+ * honest width descriptors (400w / master). Browsers pick by `sizes` + DPR.
+ */
+export function localMediaSrcSet(src) {
+  const path = localMediaPath(src) || "";
+  if (!path) return "";
+  if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
+    return "";
+  }
+  const master = localMediaMasterPath(path);
+  const stem = master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "");
+  const as400 = `${stem}-400.webp`;
+  // Do not advertise -sm here — many product -sm files are 200² thumbs.
+  return `${as400} 400w, ${master} 1200w`;
+}
+
+/** Responsive srcset — Cloudinary widths, or local derivative pair. */
 export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill" } = {}) {
   if (isLocalMedia(src) || unwrapNextImageUrl(src).includes("/media/")) {
-    return "";
+    return localMediaSrcSet(src);
   }
   const unique = [...new Set(widths.map((w) => Math.round(w)).filter((w) => w > 0))].sort((a, b) => a - b);
   return unique
@@ -163,8 +196,11 @@ export function heroImageUrlMobile(src) {
   return cloudinaryUrl(src, { width: 828, crop: "limit", quality: "auto:good", format: "auto" });
 }
 
-/** PDP main viewer — contain-fit, no square crop. 720 is 2× a ~360px mobile column. */
-export function pdpImageUrl(src, width = 720) {
+/**
+ * PDP main viewer — full local master (or Cloudinary limit-fit).
+ * Pass width ≥ 481 so localMediaForWidth does not pick a thumb derivative.
+ */
+export function pdpImageUrl(src, width = 1200) {
   return cloudinaryUrl(src, { width, crop: "limit" });
 }
 

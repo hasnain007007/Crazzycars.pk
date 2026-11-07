@@ -1,6 +1,8 @@
 /**
  * Server-only: pick a /media derivative that actually exists on disk.
- * Prefer -sm → -400 → original.
+ *
+ * PDP / OG / LCP should prefer the master. Product `-sm.webp` is often a 200×200
+ * thumbnail from the gallery pipeline — never assume it is display-sized.
  *
  * Avoid path.join(dynamic) — Turbopack treats it as whole-project tracing and
  * fails the production build. Use string paths + turbopackIgnore on fs calls.
@@ -67,7 +69,13 @@ export function resolveExistingLocalMedia(src, opts = {}) {
   return master || pathOnly;
 }
 
+/** PDP gallery / OG / LCP — prefer full original, then mid, then thumb. */
 export function pdpImageUrlExisting(src) {
+  return resolveExistingLocalMedia(src, { prefer: ["original", "400", "sm"] });
+}
+
+/** Thumbnail strip / tiny cards — prefer small derivatives. */
+export function thumbImageUrlExisting(src) {
   return resolveExistingLocalMedia(src, { prefer: ["sm", "400", "original"] });
 }
 

@@ -377,7 +377,7 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
       resolvePrimaryProductImageUrl(p) ||
       p.media?.images?.find((i) => i?.isMain)?.url ||
       p.media?.images?.[0]?.url;
-    // OG/Twitter: only a derivative that exists on disk (-sm → -400 → original). Never preload a 404.
+    // OG/Twitter: prefer master on disk (original → -400 → -sm). Never point at a 404.
     const mainImg = mainImgRaw ? pdpImageUrlExisting(mainImgRaw) : "";
     const ogAlt = contentOverride?.imageAlt || displayName;
 
@@ -575,8 +575,8 @@ export default async function ProductPage({ params, searchParams }) {
         return null;
       }
     })();
-    // LCP: rewrite gallery URLs to an on-disk derivative (-sm → -400 → original)
-    // so the eager main <img> / browser preload never hits a missing -sm.webp.
+    // LCP: resolve each gallery URL to an on-disk file. Prefer the master
+    // (original → -400 → -sm). Product -sm is often a 200² thumb — do not preload it.
     const productForView = (() => {
       const p = content.data;
       const images = Array.isArray(p?.media?.images) ? p.media.images : [];

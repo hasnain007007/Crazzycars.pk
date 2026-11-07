@@ -442,6 +442,8 @@ export function ProductDetailMedico({
     )
       .map((im) => {
         const url = typeof im === "string" ? im : im?.url || "";
+        const masterUrl =
+          typeof im === "string" ? "" : String(im?._masterUrl || im?.masterUrl || "").trim();
         const rawAlt = typeof im === "string" ? "" : String(im?.altText || im?.alt || "").trim();
         const fixedRaw = altOverride
           ? altOverride
@@ -452,7 +454,7 @@ export function ProductDetailMedico({
           fixedRaw && altBelongsToProduct(fixedRaw, { ...product, name: nameForAlt })
             ? fixedRaw
             : nameForAlt;
-        return { url, altText };
+        return { url, masterUrl, altText };
       })
       .filter((im) => Boolean(im.url));
     const owned = mapped.filter((im) => imageBelongsToProduct(im, product));
@@ -488,10 +490,12 @@ export function ProductDetailMedico({
   const galleryItems = useMemo(() => {
     const items = [];
     images.forEach((img) => {
+      // Prefer master for the large stage; keep any SSR derivative for thumbs.
+      const displayUrl = img.masterUrl || img.url;
       items.push({
         type: "image",
-        url: img.url,
-        thumbnail: img.url,
+        url: displayUrl,
+        thumbnail: img.url || displayUrl,
         altText: img.altText || "",
       });
     });
@@ -1060,19 +1064,21 @@ export function ProductDetailMedico({
                   alt={selectedItem.altText || product.name}
                   watermark={productImageWatermark}
                   className="h-full w-full"
-                  // 720 → local -sm.webp (not the multi-MB master). Matches preload in [slug]/page.
-                  width={720}
+                  // Large stage: local master (1200² typical) + srcset (-400 / master).
+                  // Do NOT request -sm here — many product -sm files are 200×200 thumbs.
+                  width={1200}
                   crop="limit"
-                  widths={[480, 720]}
-                  sizes="(max-width: 768px) 100vw, 420px"
+                  widths={[400, 800, 1200]}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
                   loading={selectedIndex === 0 ? "eager" : "lazy"}
                   fetchPriority={selectedIndex === 0 ? "high" : "low"}
                   imgStyle={{
                     width: "100%",
                     height: "100%",
                     aspectRatio: "1 / 1",
-                    objectFit: "cover",
+                    objectFit: "contain",
                     objectPosition: "center",
+                    background: "#FFFFFF",
                   }}
                 />
               )}
@@ -1101,7 +1107,7 @@ export function ProductDetailMedico({
                 >
                   {item.type === "image" ? (
                     <WatermarkedImage
-                      src={item.url}
+                      src={item.thumbnail || item.url}
                       alt={item.altText || `${product.name} ${index + 1}`}
                       watermark={null}
                       optimize

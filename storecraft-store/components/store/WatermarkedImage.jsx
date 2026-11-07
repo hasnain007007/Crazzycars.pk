@@ -78,12 +78,14 @@ export function WatermarkedImage({
   }
 
   const srcSetWidths = widths || [Math.round(width * 0.75), width, Math.round(width * 1.5)];
+  // Local /media gets an honest -400/master srcset; Cloudinary gets width list.
+  // Skip srcset for tiny thumb slots (request width ≤160) so controls stay on -sm.
   const srcSet =
     optimize &&
     responsive &&
-    !/res\.cloudinary\.com/i.test(String(src)) &&
-    !/crazzycars\.pk\/media\/|^\/media\//i.test(String(resolved))
-      ? cloudinarySrcSet(src, srcSetWidths, { crop })
+    Number(width) > 160 &&
+    !/res\.cloudinary\.com/i.test(String(src))
+      ? cloudinarySrcSet(src, srcSetWidths, { crop }) || undefined
       : undefined;
 
   const showWatermark = Boolean(watermark?.enabled && watermark?.text && loaded);
@@ -102,7 +104,7 @@ export function WatermarkedImage({
     ...(itemProp ? { itemProp } : {}),
     onLoad: () => setLoaded(true),
     onError: () => {
-      // Derivative chain for local /media: -sm → -400 → master → give up.
+      // Derivative chain for local /media: requested → -400 → master → give up.
       // Never leave a visitor on a broken <img>.
       const master = String(src || "").trim().split("?")[0];
       if (isLocalMedia(master) || master.startsWith("/media/")) {
@@ -110,6 +112,16 @@ export function WatermarkedImage({
         const asOrig = localMediaDerivative(master, "original");
         if (!retrySrc && /-(sm|800)\./i.test(resolved) && as400 && as400 !== resolved) {
           setRetrySrc(as400);
+          setLoaded(false);
+          return;
+        }
+        if (
+          !retrySrc &&
+          /-400\./i.test(resolved) &&
+          asOrig &&
+          asOrig !== resolved
+        ) {
+          setRetrySrc(asOrig);
           setLoaded(false);
           return;
         }
