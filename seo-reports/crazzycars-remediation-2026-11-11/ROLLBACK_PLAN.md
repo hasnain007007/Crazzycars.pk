@@ -1,19 +1,36 @@
 # ROLLBACK_PLAN
 
-## Application-only rollback
+## Application-only (code deploy of `f3e050c`)
 
-1. Redeploy previous known-good storefront image/commit (e.g. `0df2d2f` / `67bef50` era) via Coolify previous deployment.
-2. Do not touch Mongo if only code filters were deployed.
-3. Verify Swift hub, Splitters hub, PDP, health.
+1. In Coolify / deploy pipeline, redeploy previous storefront revision for **crazzycars-store only**.  
+2. Target git SHA: **`0df2d2f`** (`origin/vps-test` tip before this RC).  
+3. Do not restart Mongo, OPA, or other merchant apps.  
+4. Verify `/api/health`, homepage, Swift hub, Splitters, checkout.  
 
-## If DB migration was applied (future)
+### Git-level (if branch was merged to `vps-test`)
 
-1. Restore `vehicleCompatibility` / `compatibleVehicles` / `categories` from pre-apply JSON backup for touched slugs.
-2. Revalidate Next.js cache / wait ISR (600s) or call revalidate webhook.
-3. Confirm Alto returns on Swift **only if** intentionally rolled back (normally keep data fix).
+```bash
+# On deploy machine / via PR revert — do NOT force-push main
+git revert --no-edit f3e050c d853595 27898ca 77b2d96
+# or redeploy 0df2d2f image tag
+```
+
+Prefer Coolify previous-deployment button over history rewrite.
+
+## If Mongo M1–M4 were applied
+
+1. Load `before-*.json` backups written during dry-run/apply.  
+2. Restore `vehicleCompatibility.vehicles`, `compatibleVehicles`, and `categories` for:
+   - `6a5d226489c0c8d16c691fb8` (Alto)
+   - `6a5d227089c0c8d16c692045` (steering trim)
+   - `6a5d227089c0c8d16c69204a` (ducktail)
+   - `6a5d227089c0c8d16c692044` (monogram)
+3. Revalidate / wait ISR.  
+4. Confirm wrong hubs again show old relationships only if intentionally rolling back data (normally keep data fix even if code rolls back).
 
 ## Do not
 
 - Drop collections  
-- Restore entire DB from unrelated merchant dumps  
-- Force-push git history  
+- Restore unrelated merchant DBs  
+- Force-push shared branches  
+- Change firewall / DNS during rollback  

@@ -1,46 +1,42 @@
 # OWNER_APPROVAL_REQUIRED
 
-Nothing below has been applied to production Mongo or deployed from this remediation branch.
+**Do not deploy or write production MongoDB until you reply with explicit approval of the items below.**
 
-## A. Production deploy of code fixes
+## Decision requested
 
-Branch: `fix/crazzycars-seo-aeo-geo-2026-11-11`
+**Recommendation: CONDITIONAL GO** for code release of SHA `f3e050c2ce4cd1d55ae494e4d9e313d57c888672` after you confirm:
 
-Includes (local):
+1. **Release SHA** — Approve deploy of exactly `f3e050c` (or state a different SHA).  
+2. **Target** — Confirm live storefront is still CrazzyCars / Coolify `crazzycars-store` / DB `crazzycars_motorsports` with fingerprint **`187aad8c44fe3a84`** (re-check at deploy time).  
+3. **Migrations** — Approve or defer M1–M4 in `MIGRATION_REVIEW.md` as a **separate** step (recommended after code is live).  
+4. **GA4** — Acknowledge measurement ID is **present but unverified** (settings `G-…`, no GTM); no new tags without a further ask.  
+5. **Known test debt** — Accept 3 pre-existing unit failures (returnPolicy JSON-LD, `/collections/home` redirect, HUD product redirect null) unrelated to this RC.
 
-1. Vehicle hub title-model conflict filter (hides Alto-on-Swift class errors).
-2. Splitters category Mongo name-guard (hides steering trim / ducktail class misfits).
-3. Removal of fabricated `FakePurchaseToast` social proof on PDPs.
-4. Reports + audit tooling under `seo-reports/crazzycars-remediation-2026-11-11/`.
+## What is already done (no approval needed)
 
-**Ask:** Approve merge/deploy to the authorised storefront pipeline (historically `vps-test` → Coolify)?
+- Fitment model-conflict + Splitters name-guard in code  
+- Fake purchase toast removed  
+- HUD category URL redirects  
+- Dry-run documentation and regression report  
+- Local fingerprint gate refuses non-prod DB
 
-## B. Database migrations (separate)
+## What approval unlocks
 
-See `MIGRATION_DRY_RUN.md` rows 1–3 (high confidence):
+| Approval text (example) | Effect |
+| --- | --- |
+| `GO deploy f3e050c only` | Merge/push to deploy branch; Coolify storefront rebuild; **no Mongo writes** |
+| `GO deploy f3e050c + migrate M1-M4` | Deploy then apply four product updates with abort-on-mismatch |
+| `NO GO` | Hold; branch remains off production |
 
-1. Remove Swift VC from Alto fender SKU.  
-2. Remove Splitters category from Corolla steering trim.  
-3. Reclassify Corolla E140 ducktail to spoilers (not splitters).
+## Immediate rollback trigger list
 
-Requires live FP `187aad8c44fe3a84` session + backup.
+See `ROLLBACK_PLAN.md` — empty Swift/Splitters shelves, health fail, checkout 5xx, or collateral on other VPS apps.
 
-## C. Ambiguous fitment holds
+## Contact package
 
-- Swift multi-gen mats/door handles (2022–2026 titles with 2025 VC).  
-- Swift RS body kit title 2022–2024 vs VC 2025–2026.
-
-## D. Compare-at / pricing audit
-
-Read-only on live FP only — blocked without live URI.
-
-## E. T12 blog Mongo expansions
-
-Still blocked from prior SEO work — separate scoped GO.
-
-## Explicit non-requests
-
-- No price/inventory changes.  
-- No OPA / other merchant changes.  
-- No DNS / firewall changes.  
-- No image asset overwrites.
+- `RELEASE_PREFLIGHT.md`  
+- `REGRESSION_RESULTS.md`  
+- `MIGRATION_REVIEW.md`  
+- `DEPLOYMENT_PLAN.md`  
+- `ROLLBACK_PLAN.md`  
+- This file  
