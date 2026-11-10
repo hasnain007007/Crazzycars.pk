@@ -1,0 +1,50 @@
+[
+  {
+    "template": "home",
+    "url": "https://crazzycars.pk/",
+    "perfScore": 81,
+    "LCP_ms": 1998,
+    "CLS": 0.019,
+    "INP_ms": null,
+    "TBT_ms": 623,
+    "requests": 84,
+    "transferKB": 1858,
+    "topRenderBlocking": []
+  },
+  {
+    "template": "category",
+    "url": "https://crazzycars.pk/categories/interior",
+    "perfScore": 91,
+    "LCP_ms": 2957,
+    "CLS": 0.019,
+    "INP_ms": null,
+    "TBT_ms": 50,
+    "requests": 86,
+    "transferKB": 1793,
+    "topRenderBlocking": []
+  },
+  {
+    "template": "product",
+    "url": "https://crazzycars.pk/byd-atto-3-2025-2026-tpe-floor-mats-premium",
+    "perfScore": 92,
+    "LCP_ms": 1835,
+    "CLS": 0.02,
+    "INP_ms": null,
+    "TBT_ms": 115,
+    "requests": 63,
+    "transferKB": 1273,
+    "topRenderBlocking": []
+  },
+  {
+    "template": "vehicle",
+    "url": "https://crazzycars.pk/cars/toyota-corolla-e170-2014-2026",
+    "perfScore": 91,
+    "LCP_ms": 3046,
+    "CLS": 0.019,
+    "INP_ms": null,
+    "TBT_ms": 144,
+    "requests": 73,
+    "transferKB": 1541,
+    "topRenderBlocking": []
+  }
+]
