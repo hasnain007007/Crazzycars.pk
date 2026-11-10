@@ -6,13 +6,20 @@ import { shippingFeePkr } from "../shippingFee.js";
 
 /**
  * Organization-level return policy (defective / wrong-item only).
- * Do NOT put generic returnFees: FreeReturn — Google reads that as any-reason free returns.
- * Prefer configuring Search Console / Merchant Center as the authoritative policy UI.
+ * STORE_POLICY.returns.returnShippingPaidBy === "store" → FreeReturn for eligible
+ * returns. itemCondition DamagedCondition + published /returns-policy constrain
+ * eligibility (change-of-mind is not eligible). GSC Merchant listings require
+ * returnFees (not only itemDefectReturnFees).
  * @param {string} siteUrl
  */
 export function buildOrganizationReturnPolicy(siteUrl) {
   const site = String(siteUrl || "").replace(/\/+$/, "");
   const days = STORE_POLICY.returns.windowDays;
+  const storePaysReturnShip =
+    String(STORE_POLICY.returns.returnShippingPaidBy || "").toLowerCase() === "store";
+  const returnFees = storePaysReturnShip
+    ? "https://schema.org/FreeReturn"
+    : "https://schema.org/ReturnShippingFees";
   return {
     "@type": "MerchantReturnPolicy",
     applicableCountry: "PK",
@@ -20,7 +27,8 @@ export function buildOrganizationReturnPolicy(siteUrl) {
     merchantReturnDays: days,
     itemCondition: "https://schema.org/DamagedCondition",
     returnMethod: "https://schema.org/ReturnByMail",
-    itemDefectReturnFees: "https://schema.org/FreeReturn",
+    returnFees,
+    itemDefectReturnFees: returnFees,
     refundType: "https://schema.org/FullRefund",
     merchantReturnLink: site ? `${site}/returns-policy` : undefined,
   };
