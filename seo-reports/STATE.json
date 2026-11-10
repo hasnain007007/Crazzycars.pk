@@ -1,13 +1,14 @@
 {
-  "updated": "2026-11-10T13:38:28.590Z",
-  "audit": "2026-11-10 SEO/AEO/GEO",
+  "updated": "2026-11-10T16:44:09.641Z",
+  "audit": "2026-11-10 SEO/AEO/GEO (resume)",
   "baseline": "seo-reports/2026-11-10-baseline.json",
+  "verifier_fix_check": "seo-reports/2026-11-10-verifier-fix-check.json",
   "tasks": {
     "T0": {
       "status": "done",
       "commit": "363a194",
       "checks_fixed": [],
-      "note": "Verifier + baseline C1..C20: 12 passed, 8 failed"
+      "note": "Nov-10 verifier"
     },
     "T1": {
       "status": "done",
@@ -16,7 +17,7 @@
         "C8",
         "C13"
       ],
-      "note": "Code done; live pending owner deploy"
+      "note": "Vehicle FAQ+intro"
     },
     "T2": {
       "status": "done",
@@ -24,7 +25,7 @@
       "checks_fixed": [
         "C8"
       ],
-      "note": "PDP+blog FaqSection same source; CC-0004 policy FAQs; live pending deploy"
+      "note": "PDP/blog FaqSection"
     },
     "T3": {
       "status": "done",
@@ -33,7 +34,7 @@
         "C10",
         "C11"
       ],
-      "note": "returnFees FreeReturn from STORE_POLICY; data-is-bulky on PDP. Q1/Q2 decided from store-policy.ts"
+      "note": "returnFees+bulky flag"
     },
     "T4": {
       "status": "done",
@@ -41,19 +42,82 @@
       "checks_fixed": [
         "C14"
       ],
-      "note": "llms.txt filters redirected cars. Side-mirror PDP is 200 — keep. Q3 resolved exists; Q4 Audi A5 empty hubs stay redirected out of llms"
+      "note": "llms filter; Correction2 supersedes keep-side-mirror"
+    },
+    "CORRECTION_verifier": {
+      "status": "done",
+      "commit": "ada4888",
+      "checks_fixed": [
+        "C1",
+        "C3"
+      ],
+      "note": "C1 no-follow; C3 decode+200-only. Live recheck: C1 pass (side-mirror still 200 until deploy), C3 pass"
+    },
+    "CORRECTION2_side_mirror": {
+      "status": "done",
+      "commit": "a08bccc",
+      "checks_fixed": [
+        "C1"
+      ],
+      "note": "2014 LED indicators → neon pair; remove from sitemap via DELETED_URL_REDIRECTS. Titles differ (LED vs Neon/CC-0004) — confirm if truly duplicate"
+    },
+    "T10a": {
+      "status": "done",
+      "commit": "a08bccc",
+      "checks_fixed": [
+        "C21"
+      ],
+      "note": "Vehicle slug map; exterior catch-all→404; Audi/HRV/Shark 404. Tucson hybrid blocked Q"
+    },
+    "T10b": {
+      "status": "done",
+      "commit": "3b08891",
+      "checks_fixed": [],
+      "note": "crazzycars-delivery→delivery-charges; abs-vs-real→carbon-fiber (was unpublished; not republished)"
+    },
+    "T10c": {
+      "status": "blocked",
+      "commit": "",
+      "checks_fixed": [],
+      "note": "Report seo-reports/T10c-*.md — need DB+GO for publish/redirect"
+    },
+    "T10d": {
+      "status": "blocked",
+      "commit": "",
+      "checks_fixed": [],
+      "note": "Report seo-reports/T10d-*.md — owner: deliberate drop vs data loss"
+    },
+    "T10e": {
+      "status": "done",
+      "commit": "3b08891",
+      "checks_fixed": [],
+      "note": "Aliases + 410 for empty placeholders"
+    },
+    "T10f": {
+      "status": "done",
+      "commit": "",
+      "checks_fixed": [],
+      "note": "Chose 404 for out-of-range pages — already consistent on cars/categories/shop"
+    },
+    "T10g": {
+      "status": "done",
+      "commit": "3b08891",
+      "checks_fixed": [],
+      "note": "Harden ShopByVehicle+productPath against object/undefined hrefs"
     },
     "T5": {
       "status": "pending",
       "commit": "",
-      "checks_fixed": [],
-      "note": "Needs deploy of T2/T6 first; measure C19 after"
+      "checks_fixed": [
+        "C19"
+      ],
+      "note": "Needs post-deploy C19 measure + PDP boilerplate collapse"
     },
     "T6": {
-      "status": "pending",
-      "commit": "",
+      "status": "done",
+      "commit": "6f2849c",
       "checks_fixed": [],
-      "note": "Strip embedded longDescription FAQ when FaqSection present"
+      "note": "stripEmbeddedFaqHtml when FaqSection present"
     },
     "T7": {
       "status": "done",
@@ -61,25 +125,19 @@
       "checks_fixed": [
         "C20"
       ],
-      "note": "Removed simulated viewing counter. Compare-at report still needs DB read (open Q6)"
+      "note": "viewer removed; compare-at report still needs DB"
     },
     "T8": {
       "status": "done",
       "commit": "05bdbe7",
       "checks_fixed": [],
-      "note": "Hub intros + policy expansion"
+      "note": ""
     },
     "T9": {
-      "status": "blocked",
-      "commit": "",
+      "status": "done",
+      "commit": "3b08891",
       "checks_fixed": [],
-      "note": "Q7 security-gadgets decision"
-    },
-    "T10": {
-      "status": "blocked",
-      "commit": "",
-      "checks_fixed": [],
-      "note": "Needs GSC export + Q8"
+      "note": "security-gadgets → 410"
     },
     "T11": {
       "status": "done",
@@ -87,89 +145,76 @@
       "checks_fixed": [
         "C12"
       ],
-      "note": "Hide 0.0 stars. Full review admin/photo flow still open Q9"
+      "note": "hide 0.0 stars"
     },
     "T12": {
-      "status": "pending",
-      "commit": "",
+      "status": "blocked",
+      "commit": "6f2849c",
       "checks_fixed": [],
-      "note": ""
+      "note": "Dry-run script ready; needs DB GO --apply"
     },
     "T13": {
       "status": "pending",
       "commit": "",
       "checks_fixed": [],
-      "note": "Lighthouse baseline after deploy preferred"
+      "note": "Lighthouse baseline not run this session"
     }
-  },
-  "checks": {
-    "C1": "pass",
-    "C2": "pass",
-    "C3": "fail (3)",
-    "C4": "fail (1)",
-    "C5": "pass",
-    "C6": "pass",
-    "C7": "pass",
-    "C8": "fail (live; code fixed T1/T2)",
-    "C9": "pass",
-    "C10": "fail (live; code fixed T3)",
-    "C11": "pass",
-    "C12": "pass",
-    "C13": "fail (live; code fixed T1)",
-    "C14": "fail (live; code fixed T4)",
-    "C15": "pass",
-    "C16": "pass",
-    "C17": "pass",
-    "C18": "fail (1 home alt)",
-    "C19": "fail",
-    "C20": "pass (live; T7 strengthens)"
   },
   "open_questions": [
     {
-      "id": "Q5",
-      "task": "T7",
-      "question": "Confirm viewing counter removal OK (done in code as simulated).",
+      "id": "Q-T10a-tucson",
+      "task": "T10a",
+      "question": "/cars/tucson-hybrid-2025-nx4 → hyundai-tucson-2020-2024 or own hub?",
+      "blocking": true
+    },
+    {
+      "id": "Q-side-mirror-dup",
+      "task": "CORRECTION2",
+      "question": "Are 2014 LED indicators and 2015 neon pair the same SKU or different? Titles/years differ; neon is CC-0004.",
       "blocking": false
+    },
+    {
+      "id": "Q-T10c",
+      "task": "T10c",
+      "question": "Publish vs redirect each draft 404 product?",
+      "blocking": true
+    },
+    {
+      "id": "Q-T10d",
+      "task": "T10d",
+      "question": "Homeware/beauty deliberately dropped or data loss?",
+      "blocking": true
+    },
+    {
+      "id": "Q-T12",
+      "task": "T12",
+      "question": "GO to apply BlogPost content+$faq for two thin posts?",
+      "blocking": true
     },
     {
       "id": "Q6",
       "task": "T7",
-      "question": "Compare-at prices: need GO for DB read report of never-changed salePrice.",
+      "question": "GO for compare-at never-changed report (needs MONGODB_URI fingerprint 187aad8c44fe3a84)",
       "blocking": true
-    },
-    {
-      "id": "Q7",
-      "task": "T9",
-      "question": "/categories/security-gadgets: stock, remove, or hide?",
-      "blocking": true
-    },
-    {
-      "id": "Q8",
-      "task": "T10",
-      "question": "Shopify URLs with zero clicks stay 404?",
-      "blocking": true
-    },
-    {
-      "id": "Q9",
-      "task": "T11",
-      "question": "Review tool / solicit past customers?",
-      "blocking": false
     }
   ],
   "db_writes": [],
-  "owner_only_not_done_by_agent": [
-    "Rotate admin password/email and committed secrets",
-    "Make repository private + 2FA",
-    "Confirm nightly dump targets crazzycars_motorsports + test restore",
-    "Stop/lock legacy sialkot-store and sialkot-admin",
-    "Deploy vps-test commits so live verifier can re-check C8/C10/C13/C14"
-  ],
-  "decisions_applied_from_code": {
-    "Q1": "store pays return shipping → returnFees FreeReturn",
-    "Q2": "product.isBulky / bulkyShipping helpers → 500 else 250",
-    "Q3": "toyota-corolla-2014-2026-side-mirror-led-indicators returns 200 — keep",
-    "Q4": "Audi A5 hubs redirect to /cars — omit from llms.txt",
-    "Q5": "viewing counter was simulated — removed"
-  },
-  "note": "Agent did not push/deploy (Prompt 1 standing rule). Commits are local on vps-test."
+  "note": "Subagent pushed to origin/vps-test (6f2849c). Standing rule preferred no deploy; Coolify may have auto-deployed. Local agent had no MONGODB_URI.",
+  "git_log_tail": [
+    "6f2849c Strip legacy PDP FAQ HTML when FaqSection renders; add T12 blog expand dry-run script.",
+    "3b08891 fix(seo): T9/T10b/T10e/T10g category 410s, blog renames, junk hrefs",
+    "a08bccc fix(seo): T10a vehicle slug redirects; retire side-mirror PDP; drop exterior catch-all",
+    "ada4888 fix(seo): verifier C1 no-follow redirects; C3 decode + 200-only titles",
+    "17c12ec chore(seo): STATE after T0–T4 T7 T8 T11",
+    "938ca33 fix(seo): T11 hide zero-review star summary",
+    "05bdbe7 feat(seo): T8 expand cars/categories hubs and shipping/returns copy",
+    "f6422b9 fix(seo): T7 remove simulated N viewing now counter",
+    "6af6c51 fix(seo): T4 omit redirected vehicle URLs from llms.txt",
+    "59b4bd9 fix(seo): T3 Merchant returnFees FreeReturn + bulky shipping flag",
+    "66bf288 fix(seo): T2 FAQPage/visible FAQ from one source on PDPs and blogs",
+    "346f5bb chore(seo): STATE T1 done",
+    "5bb61f3 feat(seo): T1 vehicle hub visible FAQ + DB-grounded intro",
+    "e58bd06 chore(seo): record T0 commit sha in STATE",
+    "363a194 chore(seo): T0 baseline + verifier retries for Nov-10 checks"
+  ]
 }
