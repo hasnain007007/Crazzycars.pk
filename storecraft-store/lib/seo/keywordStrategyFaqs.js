@@ -1878,30 +1878,73 @@ export function buildGatedFitmentFaq(product) {
  */
 export function buildVehicleKeywordFaqs(vehicle, { hasSplitterProducts = false } = {}) {
   if (!vehicle) return [];
-  const shared = sharedPolicyFaqs({
-    includeFitment: false,
-    includeDeliveryTime: true,
-    includeTrusted: true,
-  });
-  const items = shared.length ? [...shared] : [...fallbackShared(), trustedStoreFaq()];
+  const fees = feeAmounts();
   const name = String(vehicle.displayName || "this car").trim();
+  const from = vehicle.yearFrom;
+  const to = vehicle.yearTo;
+  const years =
+    from && to && from !== to
+      ? `${from}–${to}`
+      : from && to
+        ? String(from)
+        : from
+          ? `${from}–present`
+          : "";
+  const generation = String(vehicle.generation || vehicle.nickname || "").trim();
+  const genBit = generation ? ` (${generation})` : "";
+  const yearBit = years ? ` for ${years}` : "";
   const entry = aliasesForVehicle(vehicle) || aliasesForSlug(vehicle.slug);
   const aka = entry?.aliases?.slice(0, 4).join(", ") || "";
 
-  items.push({
-    question: `What is ${name} also called when shopping parts in Pakistan?`,
-    answer: aka
-      ? `${name} is commonly searched as ${aka}. Use those nicknames in site search or Shop by Car — each product still only fits when its vehicle compatibility table lists this generation.`
-      : `${name} accessories are listed on this car hub. Confirm make, model, and years on each product page before ordering.`,
-  });
+  /** Vehicle-specific first — same array feeds visible FaqSection + FAQPage JSON-LD. */
+  const items = [
+    {
+      question: `Which parts fit the ${name}${yearBit}?`,
+      answer: years
+        ? `Only products listed on this ${name} hub that name this generation${genBit} in their vehicle compatibility table. Years covered here are ${years}. Universal accessories are not listed unless they are explicitly assigned to this car.`
+        : `Only products listed on this ${name} hub that include this generation${genBit} in their vehicle compatibility table. Confirm make, model, and years on each product page before ordering.`,
+    },
+    {
+      question: `How do I confirm fitment for my ${name}?`,
+      answer: `Open the product page and check the vehicle compatibility table for make, model, and years${
+        generation ? ` (look for ${generation})` : ""
+      }. You can also use Shop by Vehicle. If your year is unclear, WhatsApp us with the chassis year and we will check the listing — we do not invent fitment from the product title alone.`,
+    },
+    {
+      question: `How much is delivery to my city for ${name} parts?`,
+      answer: `Standard delivery is ${fees.regular}; carts with bulky items (for example many floor mats or spoilers) are ${fees.bulky}. ${deliveryEtaSummary()} Exact courier options and any Express (Daewoo) rate appear at checkout for your city.`,
+    },
+    {
+      question: `Do you offer COD when ordering ${name} accessories?`,
+      answer: `${CATEGORY_COD_FAQ_ANSWER} The booking advance is ${fees.booking} and is deducted from your total. Body kits remain prepaid only.`,
+    },
+    {
+      question: `Do ${name} accessories need professional installation?`,
+      answer: `It depends on the part. Plug-and-play lights and covers often follow the listing install notes; wiring, spoilers, and body kits may need a trusted installer. Read the product page notes, or WhatsApp us with your year${
+        generation ? ` and ${generation}` : ""
+      } before you buy.`,
+    },
+    {
+      question: `What is the return policy for ${name} parts?`,
+      answer: returnsFaqAnswer(),
+    },
+  ];
+
+  if (aka) {
+    items.push({
+      question: `What is ${name} also called when shopping parts in Pakistan?`,
+      answer: `${name} is commonly searched as ${aka}. Use those nicknames in site search or Shop by Car — each product still only fits when its vehicle compatibility table lists this generation.`,
+    });
+  }
 
   if (hasSplitterProducts) {
     items.push({
       question: `Do you have front splitters or side skirts for ${name}?`,
-      answer: `Compatible splitters and side skirts for this car appear in the product list on this page when in stock. You can also browse the Splitters & Side Skirts category and confirm this generation on the product fitment table. Cash on Delivery is available on eligible items.`,
+      answer: `Compatible splitters and side skirts for this car appear in the product list on this page when in stock. Confirm this generation on the product fitment table before ordering. Cash on Delivery is available on eligible items.`,
     });
   }
 
+  // Keep a single trusted-store answer if not already covered by policy FAQ elsewhere.
   if (!items.some((f) => /trusted store/i.test(f.question))) {
     items.push(trustedStoreFaq());
   }

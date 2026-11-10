@@ -23,6 +23,7 @@ import { sortProductsClient } from "@/lib/productListing";
 import { mediaImageUrl } from "@/lib/carCatalogCopy";
 import { alsoKnownAsLine, vehicleMetaDescription } from "@/lib/seo/generationAliases";
 import { buildVehicleKeywordFaqs, faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
+import { buildVehicleIntro } from "@/lib/seo/buildVehicleIntro";
 import {
   getPageSeoOverride,
   VEHICLE_DESCRIPTION_HTML,
@@ -34,6 +35,7 @@ import { BRAND_NAME, stripLegacyBrand, withBrandTitleSuffix } from "@/lib/brand"
 import { getCarPageMeta } from "@/lib/seo/carPageMeta2026-10.mjs";
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
 import { blogsForCar } from "@/lib/seo/blogInternalLinks.mjs";
+import { FaqSection } from "@/components/store/FaqSection";
 
 export const revalidate = 600;
 
@@ -266,6 +268,11 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     ...faqExtras,
   ];
   const faqLd = faqPageJsonLd(faqItems);
+  const introText = buildVehicleIntro(vehicle, {
+    products: allProducts,
+    productCount: total,
+    priceLine,
+  });
   const akaLine = alsoKnownAsLine(vehicle, { max: 4 });
 
   const auditHtml = VEHICLE_DESCRIPTION_HTML[vehicle.slug] || "";
@@ -537,6 +544,26 @@ export default async function VehicleSlugPage({ params, searchParams }) {
         ) : null}
       </div>
 
+      {introText ? (
+        <section
+          className="store-container"
+          aria-label={`${vehicle.displayName} overview`}
+          style={{ padding: "28px 16px 8px" }}
+        >
+          <p
+            style={{
+              margin: 0,
+              maxWidth: 720,
+              fontSize: 15,
+              lineHeight: 1.7,
+              color: "#374151",
+            }}
+          >
+            {introText}
+          </p>
+        </section>
+      ) : null}
+
       <section id="compatible-products" className="store-container py-8 md:py-10">
         <ProductListingSection
           layout="embedded"
@@ -550,6 +577,12 @@ export default async function VehicleSlugPage({ params, searchParams }) {
           emptyMessage="Products for this car will show once you assign them in admin (compatible vehicles / car catalog). Universal products are not listed here unless you add them to this car."
         />
       </section>
+
+      <FaqSection
+        title={`Frequently asked questions about ${vehicle.displayName}`}
+        items={faqItems}
+      />
+
       <DetailNeighborNav {...(await loadVehicleNeighbors(vehicle))} />
       <InternalBlogLinks
         title="From the blog"
