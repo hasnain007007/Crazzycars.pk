@@ -10,6 +10,7 @@ import { COD_LINE, PREPAID_LINE, TRUST_LINE } from "@/lib/paymentCopy";
 import { loadShopByCarIndex } from "@/lib/vehiclePageData";
 import { GENERATION_BY_SLUG, aliasesForSlug } from "@/lib/seo/generationAliases";
 import { getServerStoreSettings } from "@/lib/serverSettings";
+import { DELETED_URL_REDIRECTS } from "@/lib/deletedUrlRedirects.mjs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -110,14 +111,24 @@ export async function GET() {
       if (!v?.slug || prioritySlugs.includes(v.slug)) continue;
       ordered.push(v);
     }
+    // Drop vehicles whose /cars/:slug is permanently redirected (empty hubs, etc.)
+    // so llms.txt never lists URLs that 3xx (C14).
+    const redirectedCarSlugs = new Set(
+      (DELETED_URL_REDIRECTS || [])
+        .map((r) => String(r?.source || ""))
+        .filter((s) => s.startsWith("/cars/"))
+        .map((s) => s.replace(/^\/cars\//, "").replace(/\/+$/, ""))
+    );
     // loadShopByCarIndex already drops cars with 0 active products.
-    vehicleLinks = ordered.map((v) => {
-      const label = v.displayName || `${v.make || ""} ${v.model || ""}`.trim() || v.slug;
-      const entry = aliasesForSlug(v.slug) || null;
-      const also = Array.isArray(entry?.aliases) ? entry.aliases.filter(Boolean).slice(0, 4) : [];
-      const alsoBit = also.length ? ` (also: ${also.join(", ")})` : "";
-      return `- [${label}](${site}/cars/${v.slug})${alsoBit}`;
-    });
+    vehicleLinks = ordered
+      .filter((v) => v?.slug && !redirectedCarSlugs.has(String(v.slug)))
+      .map((v) => {
+        const label = v.displayName || `${v.make || ""} ${v.model || ""}`.trim() || v.slug;
+        const entry = aliasesForSlug(v.slug) || null;
+        const also = Array.isArray(entry?.aliases) ? entry.aliases.filter(Boolean).slice(0, 4) : [];
+        const alsoBit = also.length ? ` (also: ${also.join(", ")})` : "";
+        return `- [${label}](${site}/cars/${v.slug})${alsoBit}`;
+      });
   } catch (err) {
     console.error("[llms.txt] catalogue query failed:", err?.message || err);
     categoryLinks = [];
