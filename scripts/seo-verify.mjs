@@ -192,15 +192,30 @@ function visibleWordCount(html) {
   return wordCount(stripTags(stripChrome(html)));
 }
 
+function decodeEntities(s) {
+  return String(s || "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
+}
 function extractTitle(html) {
   const m = html.match(/<title>([^<]*)<\/title>/i);
-  return m ? m[1].replace(/\s+/g, " ").trim() : "";
+  return decodeEntities(m ? m[1].replace(/\s+/g, " ").trim() : "");
 }
 function extractMetaDesc(html) {
   const m =
     html.match(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["']/i) ||
     html.match(/<meta[^>]+content=["']([^"']*)["'][^>]*name=["']description["']/i);
-  return m ? m[1].replace(/\s+/g, " ").trim() : "";
+  return decodeEntities(m ? m[1].replace(/\s+/g, " ").trim() : "");
+}
+/** Character count for SEO title/description limits (codepoints, after entity decode). */
+function charLen(s) {
+  return [...String(s || "")].length;
 }
 function extractCanonical(html) {
   const m =
@@ -407,7 +422,7 @@ async function main() {
 
   /** @type {Record<string, CheckResult>} */
   const results = {};
-  for (let i = 1; i <= 20; i++) results[`C${i}`] = emptyCheck();
+  for (let i = 1; i <= 21; i++) results[`C${i}`] = emptyCheck();
 
   const redirectSources = await loadRedirectSources();
   let sitemapUrls = await collectSitemapUrls(BASE);
@@ -485,25 +500,17 @@ async function main() {
   }
 
   // ---- Crawl sitemap pages ----
+  // C1: redirect:'manual' only — never follow. Any 3xx is a failure.
+  // Content checks (C2+) run ONLY on exact status 200 bodies so redirected
+  // destinations cannot pollute title uniqueness / length for the source URL.
   const pages = await mapPool(sitemapUrls, CONCURRENCY, async (url) => {
     const head = await fetchOnce(url, { redirect: "manual" });
-    let body = "";
-    let followStatus = head.status;
-    if (head.status >= 300 && head.status < 400) {
-      // C1 cares about redirect; still fetch final for soft content checks when following
-      const followed = await fetchOnce(url, { redirect: "follow" });
-      body = followed.body;
-      followStatus = followed.status;
-    } else if (head.status === 200) {
-      body = head.body;
-    }
     return {
       url,
       pathname: pathOf(url),
       status: head.status,
       location: head.location,
-      followStatus,
-      html: body,
+      html: head.status === 200 ? head.body : "",
     };
   });
 
@@ -513,11 +520,14 @@ async function main() {
   for (const p of pages) {
     const { pathname, html, status, location } = p;
 
-    // C1
+    // C1 — sitemap URL must be 200 with no redirect
     if (want("C1")) {
       results.C1.count++;
       if (status !== 200) {
-        failCheck(results.C1, `${pathname} → ${status}${location ? ` ${location}` : ""}`);
+        failCheck(
+          results.C1,
+          `${pathname} → ${status}${location ? ` ${location}` : ""}${status >= 300 && status < 400 ? " (redirect)" : ""}`
+        );
       }
     }
 
@@ -529,10 +539,8 @@ async function main() {
       }
     }
 
-    if (status !== 200 && !(status >= 300 && status < 400 && html)) {
-      continue; // no useful HTML
-    }
-    if (!html) continue;
+    // Content checks only for true 200 responses (no followed redirects)
+    if (status !== 200 || !html) continue;
 
     const title = extractTitle(html);
     const desc = extractMetaDesc(html);
@@ -548,12 +556,13 @@ async function main() {
       if (h1n !== 1) failCheck(results.C2, `${pathname} h1 count=${h1n}`);
     }
 
-    // C3
+    // C3 — title present, ≤60 characters (codepoints after entity decode), unique
     if (want("C3")) {
       results.C3.count++;
+      const len = charLen(title);
       if (!title) failCheck(results.C3, `${pathname} missing title`);
-      else if ([...title].length > 60) {
-        failCheck(results.C3, `${pathname} title len=${[...title].length} (>60)`);
+      else if (len > 60) {
+        failCheck(results.C3, `${pathname} title len=${len} (>60) "${title.slice(0, 70)}"`);
       }
       if (title) {
         if (!titleMap.has(title)) titleMap.set(title, []);
@@ -564,9 +573,10 @@ async function main() {
     // C4
     if (want("C4")) {
       results.C4.count++;
+      const dlen = charLen(desc);
       if (!desc) failCheck(results.C4, `${pathname} missing meta description`);
-      else if ([...desc].length > 160) {
-        failCheck(results.C4, `${pathname} meta description len=${[...desc].length} (>160)`);
+      else if (dlen > 160) {
+        failCheck(results.C4, `${pathname} meta description len=${dlen} (>160)`);
       }
     }
 
@@ -748,6 +758,53 @@ async function main() {
     }
   }
 
+  // C21 — every VEHICLE_SLUG_REDIRECTS entry must 3xx to a final 200
+  if (want("C21")) {
+    let map = [];
+    try {
+      const mod = await import(
+        pathToFileURL(path.join(ROOT, "storecraft-store/lib/vehicleSlugRedirects.mjs")).href
+      );
+      map = mod.VEHICLE_SLUG_REDIRECTS || [];
+    } catch (e) {
+      failCheck(results.C21, `cannot load vehicleSlugRedirects: ${e.message}`);
+    }
+    results.C21.count = map.length;
+    for (const row of map) {
+      const src = `${BASE}${row.source}`;
+      const head = await fetchOnce(src, { redirect: "manual" });
+      if (!(head.status >= 300 && head.status < 400)) {
+        failCheck(
+          results.C21,
+          `${row.source} expected 3xx, got ${head.status}`
+        );
+        continue;
+      }
+      const destPath = pathOf(
+        head.location.startsWith("http")
+          ? head.location
+          : `${BASE}${head.location.startsWith("/") ? "" : "/"}${head.location}`
+      );
+      const expected = pathOf(`${BASE}${row.destination}`);
+      if (destPath !== expected) {
+        failCheck(
+          results.C21,
+          `${row.source} → ${destPath} (expected ${expected})`
+        );
+      }
+      const finalUrl = head.location.startsWith("http")
+        ? head.location
+        : `${BASE}${head.location.startsWith("/") ? head.location : `/${head.location}`}`;
+      const dest = await fetchOnce(finalUrl, { redirect: "manual" });
+      if (dest.status !== 200) {
+        failCheck(
+          results.C21,
+          `${row.source} destination ${expected} → ${dest.status}`
+        );
+      }
+    }
+  }
+
   // C19 boilerplate ratio on up to 20 product pages
   if (want("C19")) {
     const sample = productSample.slice(0, 20);
@@ -795,7 +852,11 @@ async function main() {
     base: BASE,
     sitemapUrlCount: sitemapUrls.length,
     filter: { checks: [...CHECK_FILTER], path: PATH_FILTER || null },
-    summary: { passed, failed, line: `C1..C20: ${passed} passed, ${failed} failed` },
+    summary: {
+      passed,
+      failed,
+      line: `C1..C21: ${passed} passed, ${failed} failed`,
+    },
     checks: results,
   };
 
