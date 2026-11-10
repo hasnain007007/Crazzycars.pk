@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-10T13:33:55.201Z",
+  "updated": "2026-11-10T13:34:02.040Z",
   "audit": "2026-11-10 SEO/AEO/GEO",
   "baseline": "seo-reports/2026-11-10-baseline.json",
   "tasks": {
@@ -10,13 +10,16 @@
       "note": "C1..C20: 12 passed, 8 failed; Nov-10 C1-C20 verifier."
     },
     "T1": {
-      "status": "in_progress",
-      "commit": "",
-      "checks_fixed": [],
-      "note": "Vehicle FAQ visible + intro"
+      "status": "done",
+      "commit": "5bb61f3",
+      "checks_fixed": [
+        "C8",
+        "C13"
+      ],
+      "note": "Code complete; live C8/C13 pending owner deploy (standing rule: no agent deploy)."
     },
     "T2": {
-      "status": "pending",
+      "status": "in_progress",
       "commit": "",
       "checks_fixed": [],
       "note": ""
