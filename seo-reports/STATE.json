@@ -1,11 +1,11 @@
 {
-  "updated": "2026-11-10T13:33:46.886Z",
+  "updated": "2026-11-10T13:33:55.201Z",
   "audit": "2026-11-10 SEO/AEO/GEO",
   "baseline": "seo-reports/2026-11-10-baseline.json",
   "tasks": {
     "T0": {
       "status": "done",
-      "commit": "",
+      "commit": "363a194",
       "checks_fixed": [],
       "note": "C1..C20: 12 passed, 8 failed; Nov-10 C1-C20 verifier."
     },
