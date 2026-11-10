@@ -22,7 +22,7 @@
 | --- | --- |
 | Product metadata | Mongo `Product` (`storecraft-store/lib/models/Product.model.js`) |
 | Categories | Mongo `Category` + `product.categories[]` |
-| Vehicles / generations | Mongo `Vehicle` + Car Catalog |
+| Vehicles / generations | Mongo `Vehicle` + Car Catalog (`CarCatalog.models[]` nested `_id` = `generationId`) |
 | Fitment | Preferred: `compatibleVehicles` ObjectIds; also `vehicleCompatibility.vehicles[]`, legacy `compatibleCars` |
 | Redirects | `deletedUrlRedirects.mjs`, `vehicleSlugRedirects.mjs`, `oldBlogNewsRedirects.mjs`, `next.config.mjs`, middleware |
 | Canonical / metadata | Page `generateMetadata` + SEO libs under `lib/seo/` |
@@ -32,6 +32,21 @@
 | Policy / COD / shipping copy | `config/store-policy.js` + `lib/storePolicyCopy.js` |
 | Images | Local `/media` (+ Cloudinary env present in local `.env.local` — do not treat as live proof) |
 
+## Fitment architecture (verified)
+
+Three layers: **Product** fitment fields → **Vehicle** (`/cars/[slug]`) → **CarCatalog** generations.
+
+| Rule | Implementation |
+| --- | --- |
+| Car hub query | `buildVehiclePageProductFilter` / `loadProductsForVehicle` in `productVehicleQuery.js` + `vehiclePageData.js` |
+| Prefer ObjectId links | `compatibleVehicles: vehicle._id` first; then `generationId`; legacy make+model only if ObjectIds empty |
+| Exclusive year overlap | `exclusiveYearOverlapElemMatch` — no boundary-year-only matches; no substring siblings (Corolla ⊄ Corolla Cross) |
+| Universals on car hubs | **Not** auto-included (`isUniversal` / `fitmentType: "universal"` must be explicitly linked) |
+| Category shelves | `loadStoreCategoryDetail` on `categories` (+ descendants); optional `?car=` ANDs fitment filter |
+| Admin save mirror | `vehicleCompatibility.vehicles[]` → `compatibleCars` + `isUniversal`; `compatibleVehicles` resolved via `syncCompatibleVehicles` |
+| Remediation safety net (this branch) | `lib/fitment/modelConflict.js` post-filters clear title/model conflicts after the Mongo query |
+
+**Note:** Category listing historically uses `status: "active"` more loosely than full `STOREFRONT_PRODUCT_FILTER` (securityHold / redirected-slug exclusions) — watch for visibility mismatches vs car hubs.
 ## Live application (read-only probes)
 
 - Store health: `https://crazzycars.pk/api/health` → `ok`, catalog products **430**, blogs **38**
