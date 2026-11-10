@@ -19,25 +19,21 @@ import { altBelongsToProduct, imageBelongsToProduct } from "@/lib/productCardSha
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
+import { ProductSpecificsPanel } from "./ProductSpecificsPanel";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { productAllowsCod } from "@/lib/codEligibility";
-import { paymentLineForProduct, scrubPaymentClaims } from "@/lib/paymentCopy";
+import { scrubPaymentClaims } from "@/lib/paymentCopy";
 import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { getShippingRate } from "@/lib/shippingFee";
 import {
   codAdvanceAmountsLabel,
-  codBookingAdvanceStatement,
-  deliveryFeeOnlyStatement,
   lahoreEtaStatement,
   nonLahoreEtaStatement,
   prepaidDeliveryBoxLine,
-  returnsExchangePathStatement,
-  returnsRefundPathStatement,
   returnsTrustBadge,
   returnsWindowDays,
   standardDeliveryFeeShort,
 } from "@/lib/storePolicyCopy";
-import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
 /* ProductLiveView removed: simulated "N viewing now" fails C20 / trust audit. */
 import { FakePurchaseToast } from "@/components/store/FakePurchaseToast";
 import {
@@ -1601,21 +1597,20 @@ export function ProductDetailMedico({
 
             </div>
 
-            {/* Trust strip under the buy buttons — only facts from STORE_POLICY. */}
+            {/* Compact trust strip — single short panel (C19: avoid repeating full policy copy). */}
             <ul className="pdp-trust-strip" aria-label="Payment, delivery and returns">
               <li>
                 {productAllowsCod(product)
-                  ? `COD on eligible items (${codAdvanceAmountsLabel()} advance, deducted from your total)`
-                  : "Prepaid only — JazzCash, Meezan or bank transfer"}
+                  ? `COD (${codAdvanceAmountsLabel()} advance)`
+                  : "Prepaid — JazzCash / Meezan / bank"}
               </li>
               <li>{standardDeliveryFeeShort()}</li>
-              <li>{returnsWindowDays()}-day returns for defective or wrong items</li>
+              <li>{returnsWindowDays()}-day returns (defect/wrong item)</li>
               <li>
                 <a href="https://wa.me/923284010007" target="_blank" rel="noopener noreferrer">
                   WhatsApp 03284010007
                 </a>
               </li>
-              <li>Shop in Gujranwala</li>
             </ul>
 
             <div className="pdp-car-tools flex flex-col gap-2 sm:flex-row sm:items-stretch">
@@ -1626,85 +1621,37 @@ export function ProductDetailMedico({
             {/* Upsells after the buy buttons so buyers reach Add to cart without scrolling past them. */}
             <RecommendedProductsQuickAdd products={product?.recommendedProducts || []} />
 
+            {/* One compact delivery note — full policy lives on /shipping-policy (C19). */}
             <div
               style={{
                 marginTop: 16,
-                padding: "14px 16px",
+                padding: "12px 14px",
                 background: "#F9FAFB",
                 border: "1px solid #E5E7EB",
                 borderRadius: 8,
+                fontSize: 13,
+                color: "#374151",
+                lineHeight: 1.55,
               }}
             >
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#111", marginBottom: 4 }}>
-                  🚚 Estimated Delivery
-                </p>
-                <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
-                  {lahoreEtaLine}
-                </p>
-                <p style={{ fontSize: 13, color: "#6B7280", margin: "4px 0 0" }}>
-                  {otherCitiesEtaLine}
-                </p>
-                <p style={{ fontSize: 13, color: "#16A34A", fontWeight: 600, margin: "4px 0 0" }}>
-                  ✓ {deliveryFeeText}
-                </p>
-              </div>
-              {productAllowsCod(product) ? (
-                <ShippingAdvanceBanner
-                  hasBulky={productIsBulkyForShipping(product) ? true : null}
-                  className="mt-3"
-                />
-              ) : (
-                <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] font-medium text-amber-950 sm:text-sm">
-                  {prepaidDeliveryBoxLine()}
-                </p>
-              )}
+              <p style={{ margin: 0, fontWeight: 700, color: "#111" }}>Delivery</p>
+              <p style={{ margin: "4px 0 0" }}>
+                {lahoreEtaLine} · {otherCitiesEtaLine}. {deliveryFeeText}.{" "}
+                {productAllowsCod(product)
+                  ? `COD booking advance ${codAdvanceAmountsLabel()} (deducted from total).`
+                  : prepaidDeliveryBoxLine()}{" "}
+                <Link href="/shipping-policy" className="font-semibold underline underline-offset-2">
+                  Shipping policy
+                </Link>
+                {" · "}
+                <Link href="/returns-policy" className="font-semibold underline underline-offset-2">
+                  Returns
+                </Link>
+              </p>
             </div>
 
-            {(!productBadges || productBadges?.discreteShipping?.enabled !== false) && (
-              <div
-                style={{
-                  background: "#F8F8F8",
-                  border: "1px solid #E5E5E5",
-                  borderRadius: 6,
-                  padding: "12px 14px",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 10,
-                  marginTop: 12,
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555555" strokeWidth="1.5" aria-hidden>
-                  <rect x="1" y="3" width="15" height="13" />
-                  <path d="M16 8h4l3 3v5h-7V8z" />
-                  <circle cx="5.5" cy="18.5" r="2.5" />
-                  <circle cx="18.5" cy="18.5" r="2.5" />
-                </svg>
-                <div>
-                  <p
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "#111111",
-                      margin: "0 0 2px",
-                    }}
-                  >
-                    {productBadges?.discreteShipping?.title || "Fast Nationwide Delivery"}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: 11,
-                      color: "#888888",
-                      margin: 0,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {productBadges?.discreteShipping?.description ||
-                      "All orders are shipped in plain, unmarked packaging to protect your privacy."}
-                  </p>
-                </div>
-              </div>
-            )}
+            {/* Discrete “Fast Nationwide Delivery” band removed from PDP (T5/C19) —
+                same facts already appear once in the compact Delivery note + /shipping-policy. */}
 
             {(!productBadges || productBadges.enabled !== false) &&
               (() => {
@@ -1843,6 +1790,10 @@ export function ProductDetailMedico({
             )}
 
             <div className="mt-6">
+              <ProductSpecificsPanel product={product} carLinks={carLinks || []} />
+            </div>
+
+            <div className="mt-4">
               <VehicleCompatibilitySection product={product} carLinks={carLinks || []} />
             </div>
 
@@ -1900,51 +1851,17 @@ export function ProductDetailMedico({
                 isOpen={openSection === "delivery"}
                 onToggle={(sid) => setOpenSection(openSection === sid ? null : sid)}
               >
-                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                  <div>
-                    <h4 style={{ fontSize: 14, fontWeight: 700, color: "#111111", margin: "0 0 10px" }}>
-                      🚚 Pakistan Nationwide Delivery
-                    </h4>
-                    <ul
-                      style={{
-                        margin: 0,
-                        paddingLeft: 18,
-                        fontSize: 13,
-                        color: "#555555",
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      <li>{lahoreEtaLine}</li>
-                      <li>{otherCitiesEtaLine}</li>
-                      <li>{deliveryFeeOnlyStatement()}</li>
-                      {productAllowsCod(product) ? (
-                        <li>{codBookingAdvanceStatement()}</li>
-                      ) : (
-                        <li>{prepaidDeliveryBoxLine()}</li>
-                      )}
-                      <li>{paymentLineForProduct(productAllowsCod(product))}</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 style={{ fontSize: 14, fontWeight: 700, color: "#111111", margin: "0 0 10px" }}>
-                      🔄 Returns &amp; exchanges
-                    </h4>
-                    <ul
-                      style={{
-                        margin: 0,
-                        paddingLeft: 18,
-                        fontSize: 13,
-                        color: "#555555",
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      <li>{returnsRefundPathStatement()}</li>
-                      <li>{returnsExchangePathStatement()}</li>
-                      <li>Contact us on WhatsApp or email to start a claim</li>
-                    </ul>
-                  </div>
-                </div>
+                <p style={{ margin: 0, fontSize: 13, color: "#555555", lineHeight: 1.7 }}>
+                  Summary is above the description. Full rules:{" "}
+                  <Link href="/shipping-policy" className="font-semibold underline underline-offset-2">
+                    shipping policy
+                  </Link>
+                  {" · "}
+                  <Link href="/returns-policy" className="font-semibold underline underline-offset-2">
+                    returns policy
+                  </Link>
+                  . WhatsApp 03284010007 for order help.
+                </p>
               </AccordionSection>
 
               <AccordionSection

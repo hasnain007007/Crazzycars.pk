@@ -62,8 +62,7 @@ export default function BrandHero() {
             <source media="(min-width: 768px)" srcSet="/hero/civic-night-1205.webp" />
             <img
               src="/hero/civic-night-760.webp"
-              alt=""
-              aria-hidden="true"
+              alt="Honda Civic at night — car accessories from CrazzyCars.pk"
               width={1205}
               height={576}
               fetchPriority="high"

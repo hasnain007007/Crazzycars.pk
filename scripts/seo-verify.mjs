@@ -805,9 +805,30 @@ async function main() {
     }
   }
 
-  // C19 boilerplate ratio on up to 20 product pages
+  // C19 boilerplate ratio on up to 20 product pages (prefer the Nov-10 crawled-not-indexed set)
   if (want("C19")) {
-    const sample = productSample.slice(0, 20);
+    const PRIORITY_C19 = [
+      "/hyundai-tucson-premium-metal-key-cover",
+      "/toyota-aqua-2012-2021-velvet-dashboard-mat",
+      "/toyota-passo-2016-22-velvet-dashboard-mat",
+      "/suzuki-cultus-2017-2026-velvet-dashboard-mat",
+      "/honda-civic-front-bumper-mustang-drl-2018-2020",
+      "/kia-sportage-batman-style-side-mirror-covers",
+      "/byd-atto-3-2025-2026-tpe-floor-mats-premium",
+      "/haval-h6-2021-present-carbon-door-handle-cover-abs",
+      "/toyota-hilux-revo-2016-2021-tpe-floor-mats-premium",
+      "/toyota-mark-x-abs-roof-spoiler-2020-2022",
+    ];
+    const byPath = new Map(productSample.map((p) => [p.pathname, p]));
+    const prioritized = [];
+    for (const p of PRIORITY_C19) {
+      if (byPath.has(p)) prioritized.push(byPath.get(p));
+    }
+    for (const p of productSample) {
+      if (prioritized.length >= 20) break;
+      if (!PRIORITY_C19.includes(p.pathname)) prioritized.push(p);
+    }
+    const sample = prioritized.slice(0, 20);
     results.C19.count = sample.length;
     if (sample.length >= 5) {
       const freq = new Map();

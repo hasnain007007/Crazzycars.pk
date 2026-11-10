@@ -112,9 +112,14 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
     policyMeta?.title ||
     post.seo?.metaTitle ||
     `${post.title} | ${BRAND} Blog`;
-  const metaDescription =
+  const metaDescriptionRaw =
     policyMeta?.metaDescription ||
     scrubPolicyConflictPlain(post.seo?.metaDescription || post.excerpt || post.title);
+  // Hard cap for C4 (≤160 characters) even if a DB excerpt is longer.
+  const metaDescription =
+    [...String(metaDescriptionRaw || "")].length > 160
+      ? `${[...String(metaDescriptionRaw)].slice(0, 157).join("")}…`
+      : String(metaDescriptionRaw || "");
   const rawImg = post.featuredImage?.url || `${BASE_URL}/og/default-1200x630.jpg`;
   const ogImage = /^https?:\/\//i.test(rawImg)
     ? rawImg

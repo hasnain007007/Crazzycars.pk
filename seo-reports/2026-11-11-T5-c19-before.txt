@@ -1,0 +1,16 @@
+seo-verify BASE=https://crazzycars.pk concurrency=4
+sitemap URLs: 545
+C1..C21: 0 passed, 1 failed
+C19 FAIL count=20 failures=11 (sample=20 sharedBlocks=19)
+  - /2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color shared-boilerplate=57% (>=25%)
+  - /2pcs-front-bumper-lip-splitter-chin-spoiler-for-honda-civic-11th-gen-2022-2026-gloss-black shared-boilerplate=26% (>=25%)
+  - /3-color-switchback-fog-led-light-with-flasher-h11-white-yellow-blue-2-pcs shared-boilerplate=51% (>=25%)
+  - /4-in-1-45w-fast-car-charger-usb-type-c-built-in-ios-android-cable shared-boilerplate=63% (>=25%)
+  - /air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump shared-boilerplate=59% (>=25%)
+  - /audi-a4-premium-metal-key-cover shared-boilerplate=50% (>=25%)
+  - /audi-a5-premium-metal-key-cover shared-boilerplate=50% (>=25%)
+  - /baic-bj40-premium-metal-key-cover shared-boilerplate=50% (>=25%)
+  - /batman-style-side-mirror-cover-toyota-aqua-2012-present shared-boilerplate=55% (>=25%)
+  - /batman-style-side-mirror-cover-toyota-vitz-2010-present shared-boilerplate=55% (>=25%)
+  - …(+more; capped at 10)
+wrote seo-reports/2026-11-11-T5-c19-before.json

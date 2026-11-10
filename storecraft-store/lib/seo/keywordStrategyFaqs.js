@@ -1687,11 +1687,16 @@ export function buildAutoProductFaqs(product) {
   const included = String(
     product?.whatsIncluded ||
       product?.packageIncludes ||
-      product?.shortDescription ||
       ""
   ).trim();
+  const materialSpec = (Array.isArray(product?.specifications) ? product.specifications : []).find(
+    (row) => /material|finish|construction/i.test(String(row?.label || row?.key || ""))
+  );
+  const material = String(materialSpec?.value || "").trim();
   const bulky = Boolean(product?.isBulky);
+  const fees = feeAmounts();
   const items = [];
+  // Product-specific questions first (C19 / T5 / T6).
   if (fitment) {
     items.push(fitment);
   } else {
@@ -1701,26 +1706,27 @@ export function buildAutoProductFaqs(product) {
         "Check the vehicle compatibility table on this product page (make, model, and years). If nothing is listed, WhatsApp us your exact year and model before ordering.",
     });
   }
+  if (included) {
+    items.push({
+      question: "What's included?",
+      answer: included.slice(0, 400),
+    });
+  }
+  if (material) {
+    items.push({
+      question: "What material is it?",
+      answer: material.slice(0, 300),
+    });
+  }
+  // One compact policy FAQ — do not repeat long COD/delivery/returns copy already on the page.
   items.push({
-    question: "What's included?",
-    answer: included
-      ? included.slice(0, 500)
-      : "See the product description and photos on this page for what ships in the box.",
-  });
-  items.push({
-    question: "Payment?",
-    answer: paymentLineForProduct(allowsCod),
-  });
-  const fees = feeAmounts(); // standardFeePKR / bulkyFeePKR from STORE_POLICY
-  items.push({
-    question: "Delivery charge?",
-    answer: bulky
-      ? `${fees.bulky} for bulky items (this product is bulky).`
-      : `${fees.regular}, or ${fees.bulky} for bulky items`,
-  });
-  items.push({
-    question: "Returns?",
-    answer: `${STORE_POLICY.returns.windowDays} days, defective or wrong item only.`,
+    question: "Payment, delivery and returns?",
+    answer: [
+      paymentLineForProduct(allowsCod),
+      bulky ? `Delivery ${fees.bulky} (bulky).` : `Delivery ${fees.regular} (or ${fees.bulky} if bulky).`,
+      `${STORE_POLICY.returns.windowDays}-day returns for defective or wrong items only.`,
+      "Details: /shipping-policy and /returns-policy.",
+    ].join(" "),
   });
   return items;
 }
@@ -1961,12 +1967,8 @@ export function buildProductKeywordFaqs(product) {
   // CC-0004: no SKU-specific claims, but still emit shared policy FAQs so
   // FAQPage JSON-LD and visible FaqSection stay consistent (no empty schema).
   if (sku === "CC-0004") {
-    const shared = sharedPolicyFaqs({
-      includeFitment: true,
-      includeDeliveryTime: true,
-      includeTrusted: true,
-    });
-    return shared.length ? shared : [...fallbackShared(), trustedStoreFaq()];
+    // Keep fitment/policy short — full COD/returns copy lives once on the PDP panel.
+    return defaultProductFaqs(product);
   }
   const builder = sku ? PRODUCT_FAQ_BY_SKU[sku] : null;
 
@@ -1974,26 +1976,20 @@ export function buildProductKeywordFaqs(product) {
   if (!builder) {
     items = defaultProductFaqs(product);
   } else {
-    const payLine = paymentLineForProduct(productAllowsCod(product));
-    const shared = sharedPolicyFaqs({
-      includeFitment: false,
-      includeDeliveryTime: false,
-      includeTrusted: true,
-    });
-    const base = (shared.length
-      ? shared.filter((f) => /cash on delivery|return or exchange|trusted store/i.test(f.question))
-      : [
-          ...fallbackShared().filter((f) => /cash on delivery|return or exchange/i.test(f.question)),
-          trustedStoreFaq(),
-        ]
-    ).map((f) =>
-      /cash on delivery|cod|payment/i.test(String(f.question || ""))
-        ? { question: "Payment?", answer: payLine }
-        : f
-    );
-
     const priceLabel = formatPkr(liveProductPrice(product));
-    items = [...base, ...builder({ priceLabel, product })];
+    const specific = builder({ priceLabel, product });
+    const fees = feeAmounts();
+    const allowsCod = productAllowsCod(product);
+    const policyOnce = {
+      question: "Payment, delivery and returns?",
+      answer: [
+        paymentLineForProduct(allowsCod),
+        `Delivery ${fees.regular} (or ${fees.bulky} if bulky).`,
+        `${STORE_POLICY.returns.windowDays}-day returns for defective or wrong items only.`,
+      ].join(" "),
+    };
+    // SKU-specific first, then one compact policy FAQ (T5/T6).
+    items = [...specific, policyOnce];
   }
 
   if (!items.some((f) => FITMENT_Q_RE.test(f.question))) {
