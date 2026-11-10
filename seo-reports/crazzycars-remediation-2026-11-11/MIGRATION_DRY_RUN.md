@@ -64,3 +64,19 @@
 6. Record POST_DEPLOY_VERIFICATION.md  
 
 **Script status:** not yet generated as executable apply script — create only after owner selects rows 1–3 vs 4–5.
+
+## Additional high-confidence rows from live catalogue audit (399 products)
+
+### 5. Corolla steering monogram — remove Aqua / Vitz / Yaris VC rows
+
+| Slug | `toyota-corolla-2009-2026-carbon-steering-monogram-abs` |
+| --- | --- |
+| Evidence | Title is Corolla; VC incorrectly lists Aqua, Vitz, Yaris |
+| Action | `$pull` those vehicleCompatibility rows (+ compatibleVehicles ObjectIds) |
+| Keep | Corolla fitment rows only |
+
+### 6. Confirm Alto→Swift removal (already §1)
+
+Audit reconfirmed `title_names_alto_on_swift_hub`.
+
+Catalogue audit summary: 13 fitment flags (mix high/medium), 2 category VERIFIED_INCORRECT (steering trim, ducktail). See FITMENT_AUDIT.csv / CATEGORY_AUDIT.csv.

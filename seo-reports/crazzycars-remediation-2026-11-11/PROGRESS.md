@@ -4,8 +4,8 @@
 | --- | --- | --- |
 | A Environment | DONE | ENVIRONMENT.md, branch created |
 | B Inventory | IN_PROGRESS | Route list started; full crawl pending |
-| C Fitment/category | IN_PROGRESS | P0 verified; code safety nets + tests; live audit running |
-| D Technical SEO | PENDING | Prior release already fixed many; re-verify |
+| C Fitment/category | DONE | Live audit 399 products; 13 fitment / 2 category flags; code filters + tests |
+| D Technical SEO | PARTIAL | www→apex OK; HUD aliases; soft-404 gone cats 410; more deep audits pending |
 | E On-page | PENDING | |
 | F AEO/GEO | PENDING | |
 | G Structured data | PENDING | |
@@ -23,7 +23,7 @@
 - [x] Unit tests `tests/fitment-model-conflict.test.mjs` (9/9)
 - [x] Live audit script `scripts/seo/audit-fitment-category-live.mjs`
 - [ ] Commit local code fixes (no deploy)
-- [ ] Finish URL inventory crawl
-- [ ] Dry-run migration pack for VC/category data
+- [x] Sitemap URL list (547) + sample audits
+- [x] Dry-run migration pack (Alto, Splitters, Corolla monogram)
 - [ ] GA4 verification
 - [ ] FINAL_REPORT

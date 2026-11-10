@@ -1,2 +1,3 @@
-status,note
-IN_PROGRESS,Live audit script running — refresh after completion
+productId,title,url,categorySlug,categoryName,status,reason,proposedCorrection,approvalRequired
+6a5d227089c0c8d16c692045,Toyota Corolla 2015–2026 Carbon Steering Trim,https://crazzycars.pk/toyota-corolla-2015-2026-carbon-steering-trim,splitters-side-skirts,Splitters & Side Skirts,VERIFIED_INCORRECT,forbidden_token:steering trim,Remove category splitters-side-skirts; assign correct primary category,yes
+6a5d227089c0c8d16c69204a,Toyota Corolla E140 2009–2013 Ducktail Trunk Spoiler,https://crazzycars.pk/toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler,splitters-side-skirts,Splitters & Side Skirts,VERIFIED_INCORRECT,forbidden_token:ducktail,Remove category splitters-side-skirts; assign correct primary category,yes

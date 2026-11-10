@@ -80,6 +80,32 @@ export function exclusiveTokensForMake(make) {
  * @param {string} make
  * @param {string} model
  */
+/** Tokens that refer to the same commercial model family (not conflicts). */
+const MODEL_ALIASES = {
+  toyota: {
+    hilux: ["hilux", "revo", "hilux revo"],
+    revo: ["hilux", "revo", "hilux revo"],
+    "yaris cross": ["yaris cross", "yaris"],
+    "corolla cross": ["corolla cross", "corolla"],
+    mark: ["mark", "mark x"],
+    "mark x": ["mark", "mark x"],
+  },
+  honda: {
+    "br-v": ["brv", "br-v"],
+    brv: ["brv", "br-v"],
+    "hr-v": ["hrv", "hr-v", "vezel"],
+    hrv: ["hrv", "hr-v", "vezel"],
+  },
+};
+
+function aliasSet(make, token) {
+  const mk = norm(make).split(" ")[0];
+  const map = MODEL_ALIASES[mk] || {};
+  const t = norm(token);
+  const group = map[t];
+  return new Set(group || [t]);
+}
+
 export function canonicalModelToken(make, model) {
   let m = norm(model);
   const mk = norm(make);
@@ -93,7 +119,6 @@ export function canonicalModelToken(make, model) {
   }
   return m.split(" ")[0] || m;
 }
-
 /**
  * @param {{ name?: string, slug?: string, title?: string }} product
  * @param {{ make?: string, model?: string, slug?: string, displayName?: string }} vehicle
@@ -116,16 +141,19 @@ export function detectTitleModelConflict(product, vehicle) {
   const hitTokens = tokens.filter((t) => tokenHits(hay, t));
   if (!hitTokens.length) return { conflict: false };
 
-  // Allow if the vehicle's own model token is among hits (possibly with siblings — ambiguous).
-  const vehicleHit = hitTokens.some(
-    (t) => t === vehicleToken || vehicleToken.includes(t) || t.includes(vehicleToken)
-  );
-  if (vehicleHit && hitTokens.length === 1) return { conflict: false };
+  const vehicleAliases = aliasSet(make, vehicleToken);
+  // Also expand aliases for multi-word vehicle models (e.g. "hilux revo").
+  for (const part of norm(vehicle?.model || "").split(" ")) {
+    for (const a of aliasSet(make, part)) vehicleAliases.add(a);
+  }
+
+  const vehicleHit = hitTokens.some((t) => vehicleAliases.has(t));
+  if (vehicleHit && hitTokens.every((t) => vehicleAliases.has(t))) {
+    return { conflict: false };
+  }
 
   // Conflict when a sibling model is named and the vehicle model is NOT named.
-  const foreign = hitTokens.filter(
-    (t) => !(t === vehicleToken || vehicleToken.includes(t) || t.includes(vehicleToken))
-  );
+  const foreign = hitTokens.filter((t) => !vehicleAliases.has(t));
   if (!foreign.length) return { conflict: false };
 
   if (vehicleHit) {
@@ -137,7 +165,6 @@ export function detectTitleModelConflict(product, vehicle) {
       vehicleToken,
     };
   }
-
   return {
     conflict: true,
     reason: `title_names_${foreign[0]}_on_${vehicleToken}_hub`,

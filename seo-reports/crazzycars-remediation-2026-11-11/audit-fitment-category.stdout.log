@@ -5,4 +5,5 @@ To eliminate this warning, add "type": "module" to /Users/mac/Desktop/CCSMS/stor
 catalogue total=399 pages=4
 list page 1/4list page 2/4list page 3/4list page 4/4
 summaries=399
-detail 25/399detail 50/399detail 75/399detail 100/399detail 125/399detail 150/399detail 175/399detail 200/399detail 225/399detail 250/399
+detail 25/399detail 50/399detail 75/399detail 100/399detail 125/399detail 150/399detail 175/399detail 200/399detail 225/399detail 250/399detail 275/399detail 300/399detail 325/399detail 350/399detail 375/399
+wrote FITMENT_AUDIT.csv (13) CATEGORY_AUDIT.csv (2)

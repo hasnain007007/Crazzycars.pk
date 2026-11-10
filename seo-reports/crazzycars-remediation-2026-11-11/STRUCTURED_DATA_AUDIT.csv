@@ -1,2 +1,6 @@
-status,note
-PENDING,Full pass scheduled; prior controlled release covered many technical SEO checks — see seo-reports/2026-11-11-controlled-release-report.md
+url,types_found,notes,status
+/,AutoPartsStore|WebSite|CollectionPage,Organization-like AutoPartsStore present,SPOT_VERIFIED
+/toyota-corolla-2014-2026-side-mirror-led-indicators,AutoPartsStore|WebSite|Product|BreadcrumbList|FAQPage,Product+Offer present in prior probe,SPOT_VERIFIED
+/categories/splitters-side-skirts,AutoPartsStore|WebSite|BreadcrumbList|CollectionPage|FAQPage,ok,SPOT_VERIFIED
+/cars/suzuki-swift-2025-present,AutoPartsStore|WebSite|BreadcrumbList|CollectionPage|FAQPage,ok,SPOT_VERIFIED
+/blogs/delivery-charges-regular-vs-bulky-pakistan,AutoPartsStore|WebSite|Article|BlogPosting|FAQPage,ok,SPOT_VERIFIED

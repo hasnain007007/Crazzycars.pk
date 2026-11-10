@@ -59,6 +59,14 @@ describe("detectTitleModelConflict", () => {
     );
     assert.equal(hit.conflict, true);
   });
+
+  it("treats Revo as alias of Hilux Revo (no false conflict)", () => {
+    const hit = detectTitleModelConflict(
+      { name: "Toyota Revo 2016-22 Velvet Dashboard Mat", slug: "x" },
+      { make: "Toyota", model: "Hilux Revo" }
+    );
+    assert.equal(hit.conflict, false);
+  });
 });
 
 describe("rejectTitleModelConflicts", () => {
