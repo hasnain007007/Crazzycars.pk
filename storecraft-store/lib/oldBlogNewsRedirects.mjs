@@ -103,6 +103,19 @@ export const OLD_BLOG_NEWS_REDIRECTS = [
     destination: "/toyota-corolla-2009-2026-carbon-steering-monogram-abs",
     permanent: true,
   },
+  // T10b (2026-11-10): renamed / unpublished blog slugs → live destinations
+  {
+    source: "/blogs/crazzycars-delivery-charges-regular-vs-bulky-pakistan",
+    destination: "/blogs/delivery-charges-regular-vs-bulky-pakistan",
+    permanent: true,
+  },
+  {
+    // Was live through ~29 Oct (seo-verify still listed it); removed from sitemap-blog.
+    // Do not republish without owner GO — send equity to carbon-fiber hub.
+    source: "/blogs/abs-vs-real-carbon-fiber-car-accessories-pakistan",
+    destination: "/categories/carbon-fiber",
+    permanent: true,
+  },
 ];
 
 const PATH_MAP = new Map(

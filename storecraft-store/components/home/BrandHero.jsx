@@ -63,6 +63,7 @@ export default function BrandHero() {
             <img
               src="/hero/civic-night-760.webp"
               alt=""
+              aria-hidden="true"
               width={1205}
               height={576}
               fetchPriority="high"

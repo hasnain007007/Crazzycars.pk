@@ -127,23 +127,30 @@ function mapCatalogToItems(data) {
   const popular = Array.isArray(data?.popular) ? data.popular : [];
   const source = vehicles.length ? vehicles : popular;
   if (source.length) {
-    return source.map((p, idx) => {
-      return {
-        make: p.make,
-        model: vehicleCardModelLabel(p) || stripBrandPrefix(p.make, p.model || p.nickname || p.generation),
-        generation: p.generation,
-        nickname: p.nickname,
-        displayName: p.displayName,
-        slug: p.slug,
-        yearFrom: p.yearFrom,
-        yearTo: p.yearTo,
-        image: mediaImageUrl(p.image),
-        href: `/cars/${p.slug}`,
-        sortIndex: idx,
-        isPopular: Boolean(p.isPopular),
-        popularOrder: Number(p.popularOrder) || 9999,
-      };
-    });
+    return source
+      .map((p, idx) => {
+        const slug = String(p.slug || "")
+          .trim()
+          .replace(/^\/+|\/+$/g, "");
+        // Never emit /cars/[object Object], /cars/undefined, or empty slugs (T10g).
+        if (!slug || slug === "[object Object]" || slug === "undefined") return null;
+        return {
+          make: p.make,
+          model: vehicleCardModelLabel(p) || stripBrandPrefix(p.make, p.model || p.nickname || p.generation),
+          generation: p.generation,
+          nickname: p.nickname,
+          displayName: p.displayName,
+          slug,
+          yearFrom: p.yearFrom,
+          yearTo: p.yearTo,
+          image: mediaImageUrl(p.image),
+          href: `/cars/${slug}`,
+          sortIndex: idx,
+          isPopular: Boolean(p.isPopular),
+          popularOrder: Number(p.popularOrder) || 9999,
+        };
+      })
+      .filter(Boolean);
   }
   const carData = data?.carData || {};
   const flat = [];

@@ -192,7 +192,8 @@ export function policyBlogCanonicalMeta(slug) {
   if (slug === "delivery-charges-regular-vs-bulky-pakistan") {
     return {
       title: "Delivery Charges: Regular vs Bulky | CrazzyCars",
-      metaDescription: `CrazzyCars delivery: ${pkr(REGULAR)} regular, ${pkr(BULKY)} with bulky items. COD booking ${codAdvanceTierSummary()}. Body kits prepaid.`,
+      // Keep ≤160 characters (C4). Tier detail lives in the article body.
+      metaDescription: `CrazzyCars delivery: ${pkr(REGULAR)} regular or ${pkr(BULKY)} with bulky items. COD booking advance by order total; body kits prepaid.`,
       excerpt: `Delivery is ${pkr(REGULAR)} for regular carts and ${pkr(BULKY)} when any bulky item is in the order. COD booking advances follow order total; body kits are prepaid only.`,
     };
   }

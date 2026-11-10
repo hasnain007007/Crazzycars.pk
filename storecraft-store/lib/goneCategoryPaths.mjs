@@ -17,6 +17,11 @@ export const GONE_NON_CAR_CATEGORY_PATHS = [
   "/categories/travel-toiletry-bags",
   "/categories/vanity-organizer-bags",
   "/categories/mini-handbags",
+  // Empty placeholders with no close live equivalent → 410 (T9 / T10e).
+  // Shelves that have a live parent are aliased in legacyHandleMaps instead.
+  "/categories/security-gadgets",
+  "/categories/back-neck-care",
+  "/categories/roof-racks-rails",
 ];
 
 const GONE = new Set(
