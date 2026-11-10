@@ -1,29 +1,115 @@
 {
-  "updated": "2026-11-10T13:05:00.000Z",
+  "updated": "2026-11-10T13:33:46.886Z",
   "audit": "2026-11-10 SEO/AEO/GEO",
-  "baseline": null,
+  "baseline": "seo-reports/2026-11-10-baseline.json",
   "tasks": {
     "T0": {
+      "status": "done",
+      "commit": "",
+      "checks_fixed": [],
+      "note": "C1..C20: 12 passed, 8 failed; Nov-10 C1-C20 verifier."
+    },
+    "T1": {
       "status": "in_progress",
       "commit": "",
       "checks_fixed": [],
-      "note": "Rewriting seo-verify.mjs to Nov-10 C1–C20 definitions; running live baseline."
+      "note": "Vehicle FAQ visible + intro"
     },
-    "T1": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T2": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T3": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T4": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T5": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T6": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T7": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T8": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T9": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T10": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T11": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T12": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" },
-    "T13": { "status": "pending", "commit": "", "checks_fixed": [], "note": "" }
+    "T2": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T3": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T4": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T5": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T6": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T7": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T8": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T9": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T10": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T11": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T12": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    },
+    "T13": {
+      "status": "pending",
+      "commit": "",
+      "checks_fixed": [],
+      "note": ""
+    }
   },
-  "checks": {},
+  "checks": {
+    "C1": "pass",
+    "C2": "pass",
+    "C3": "fail (3 urls)",
+    "C4": "fail (1 urls)",
+    "C5": "pass",
+    "C6": "pass",
+    "C7": "pass",
+    "C8": "fail (10 urls)",
+    "C9": "pass",
+    "C10": "fail (10 urls)",
+    "C11": "pass",
+    "C12": "pass",
+    "C13": "fail (10 urls)",
+    "C14": "fail (2 urls)",
+    "C15": "pass",
+    "C16": "pass",
+    "C17": "pass",
+    "C18": "fail (1 urls)",
+    "C19": "fail (10 urls)",
+    "C20": "pass"
+  },
   "open_questions": [
     {
       "id": "Q1",
@@ -96,5 +182,6 @@
   "decisions_noted": {
     "returnFees_from_code": "store-policy returnShippingPaidBy=store → FreeReturn (pending owner confirm Q1)",
     "bulky_from_code": "product.isBulky → 500 PKR else 250 (pending owner confirm Q2)"
-  }
+  },
+  "note": "Standing rule: no production deploy by agent. Live C8/C13 will stay fail until owner deploys."
 }

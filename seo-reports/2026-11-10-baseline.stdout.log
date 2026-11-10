@@ -1,0 +1,72 @@
+C1..C20: 12 passed, 8 failed
+C1 PASS count=545 failures=0
+C2 PASS count=545 failures=0
+C3 FAIL count=545 failures=3
+  - /categories/arm-rests-console-boxes title len=63 (>60)
+  - /categories/backlights-tail-lamps title len=61 (>60)
+  - /categories/spoilers-diffusers title len=62 (>60)
+C4 FAIL count=545 failures=1
+  - /blogs/delivery-charges-regular-vs-bulky-pakistan meta description len=190 (>160)
+C5 PASS count=545 failures=0
+C6 PASS count=545 failures=0
+C7 PASS count=545 failures=0
+C8 FAIL count=530 failures=11
+  - /advance-payment FAQPage without visible FAQ heading
+  - /blogs/7d-vs-9d-vs-tpe-floor-mats-pakistan visible FAQ qs=3 < mainEntity=5
+  - /blogs/batman-style-side-mirror-covers-pakistan-fitment-guide visible FAQ qs=3 < mainEntity=4
+  - /blogs/body-kit-price-in-pakistan-2026 visible FAQ qs=3 < mainEntity=5
+  - /blogs/car-accessories-returns-wrong-item-pakistan visible FAQ qs=3 < mainEntity=4
+  - /blogs/honda-city-2021-modification-cost-pakistan visible FAQ qs=3 < mainEntity=5
+  - /blogs/toyota-corolla-rgb-bumper-neon-mirror-lights-pakistan visible FAQ qs=3 < mainEntity=4
+  - /blogs/trunk-lip-spoiler-buying-guide-pakistan-alsvin-city-corolla visible FAQ qs=3 < mainEntity=4
+  - /cars/audi-a4-2008-present FAQPage without visible FAQ heading
+  - /cars/baic-bj40-2020-present FAQPage without visible FAQ heading
+  - …(+more; capped at 10)
+C9 PASS count=399 failures=0
+C10 FAIL count=399 failures=11
+  - /2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color hasMerchantReturnPolicy.returnFees missing
+  - /2pcs-front-bumper-lip-splitter-chin-spoiler-for-honda-civic-11th-gen-2022-2026-gloss-black hasMerchantReturnPolicy.returnFees missing
+  - /3-color-switchback-fog-led-light-with-flasher-h11-white-yellow-blue-2-pcs hasMerchantReturnPolicy.returnFees missing
+  - /4-in-1-45w-fast-car-charger-usb-type-c-built-in-ios-android-cable hasMerchantReturnPolicy.returnFees missing
+  - /air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump hasMerchantReturnPolicy.returnFees missing
+  - /audi-a4-premium-metal-key-cover hasMerchantReturnPolicy.returnFees missing
+  - /audi-a5-premium-metal-key-cover hasMerchantReturnPolicy.returnFees missing
+  - /baic-bj40-premium-metal-key-cover hasMerchantReturnPolicy.returnFees missing
+  - /batman-style-side-mirror-cover-toyota-aqua-2012-present hasMerchantReturnPolicy.returnFees missing
+  - /batman-style-side-mirror-cover-toyota-vitz-2010-present hasMerchantReturnPolicy.returnFees missing
+  - …(+more; capped at 10)
+C11 PASS count=399 failures=0
+C12 PASS count=545 failures=0
+C13 FAIL count=58 failures=11
+  - /cars/audi-a4-2008-present words=155 (<300)
+  - /cars/baic-bj40-2020-present words=154 (<300)
+  - /cars/byd-atto3-2025-present words=177 (<300)
+  - /cars/changan-alsvin-2021-present words=206 (<300)
+  - /cars/changan-oshanx7-2022-present words=233 (<300)
+  - /cars/chery-tiggo4pro-2022-present words=168 (<300)
+  - /cars/chery-tiggo8pro-2022-present words=183 (<300)
+  - /cars/deepal-s05-2024-present words=171 (<300)
+  - /cars/dfsk-glory-580-2018-present words=162 (<300)
+  - /cars/haval-h6-2021-present words=221 (<300)
+  - …(+more; capped at 10)
+C14 FAIL count=129 failures=2
+  - /cars/audi-a5-2008-present → 308 /cars
+  - /cars/audi-a5-2014 → 308 /cars
+C15 PASS count=1 failures=0
+C16 PASS count=5 failures=0
+C17 PASS count=545 failures=0
+C18 FAIL count=545 failures=1
+  - / img missing alt (/hero/civic-night-760.webp)
+C19 FAIL count=20 failures=11 (sample=20 sharedBlocks=19)
+  - /2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color shared-boilerplate=57% (>=25%)
+  - /2pcs-front-bumper-lip-splitter-chin-spoiler-for-honda-civic-11th-gen-2022-2026-gloss-black shared-boilerplate=26% (>=25%)
+  - /3-color-switchback-fog-led-light-with-flasher-h11-white-yellow-blue-2-pcs shared-boilerplate=51% (>=25%)
+  - /4-in-1-45w-fast-car-charger-usb-type-c-built-in-ios-android-cable shared-boilerplate=63% (>=25%)
+  - /air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump shared-boilerplate=59% (>=25%)
+  - /audi-a4-premium-metal-key-cover shared-boilerplate=50% (>=25%)
+  - /audi-a5-premium-metal-key-cover shared-boilerplate=50% (>=25%)
+  - /baic-bj40-premium-metal-key-cover shared-boilerplate=50% (>=25%)
+  - /batman-style-side-mirror-cover-toyota-aqua-2012-present shared-boilerplate=55% (>=25%)
+  - /batman-style-side-mirror-cover-toyota-vitz-2010-present shared-boilerplate=55% (>=25%)
+  - …(+more; capped at 10)
+C20 PASS count=545 failures=0

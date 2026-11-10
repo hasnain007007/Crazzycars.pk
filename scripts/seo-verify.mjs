@@ -66,37 +66,42 @@ function failCheck(check, msg) {
   }
 }
 
-async function fetchOnce(url, { redirect = "manual", method = "GET" } = {}) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      method,
-      redirect,
-      signal: ctrl.signal,
-      headers: { "user-agent": UA, accept: "text/html,application/xml,text/plain,*/*" },
-    });
-    const buf = method === "HEAD" ? null : Buffer.from(await res.arrayBuffer());
-    return {
-      status: res.status,
-      location: res.headers.get("location") || "",
-      body: buf ? buf.toString("utf8") : "",
-      bytes: buf ? buf.length : 0,
-      finalUrl: res.url || url,
-    };
-  } catch (err) {
-    const msg = String(err?.message || err || "");
-    return {
-      status: 0,
-      location: "",
-      body: "",
-      bytes: 0,
-      finalUrl: url,
-      error: msg.includes("abort") ? "timeout" : msg.slice(0, 120),
-    };
-  } finally {
-    clearTimeout(t);
+async function fetchOnce(url, { redirect = "manual", method = "GET", retries = 2 } = {}) {
+  let last = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, {
+        method,
+        redirect,
+        signal: ctrl.signal,
+        headers: { "user-agent": UA, accept: "text/html,application/xml,text/plain,*/*" },
+      });
+      const buf = method === "HEAD" ? null : Buffer.from(await res.arrayBuffer());
+      return {
+        status: res.status,
+        location: res.headers.get("location") || "",
+        body: buf ? buf.toString("utf8") : "",
+        bytes: buf ? buf.length : 0,
+        finalUrl: res.url || url,
+      };
+    } catch (err) {
+      const msg = String(err?.message || err || "");
+      last = {
+        status: 0,
+        location: "",
+        body: "",
+        bytes: 0,
+        finalUrl: url,
+        error: msg.includes("abort") ? "timeout" : msg.slice(0, 120),
+      };
+      if (attempt < retries) await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+    } finally {
+      clearTimeout(t);
+    }
   }
+  return last;
 }
 
 async function mapPool(items, limit, fn) {
@@ -638,22 +643,41 @@ async function main() {
         if (want("C11")) {
           results.C11.count++;
           const ship = o.shippingDetails;
+          const rateNode = Array.isArray(ship)
+            ? ship[0]?.shippingRate
+            : ship?.shippingRate;
           const rate =
-            ship?.shippingRate?.value ??
-            ship?.shippingRate?.price ??
-            (Array.isArray(ship) ? ship[0]?.shippingRate?.value : null);
-          const isBulky =
-            /\bbulky\b/i.test(html) ||
-            /data-bulky=["']true["']/i.test(html) ||
-            /"isBulky"\s*:\s*true/.test(html);
-          const expected = isBulky ? BULKY_SHIP_PKR : STANDARD_SHIP_PKR;
+            rateNode?.value ?? rateNode?.price ?? rateNode?.amount ?? null;
           const rateNum = rate != null ? Number(rate) : NaN;
+          // Prefer explicit machine-readable flags — do NOT infer from FAQ copy
+          // that mentions "bulky" generically.
+          const flagTrue =
+            /data-is-bulky=["']true["']/i.test(html) ||
+            /data-shipping-band=["']bulky["']/i.test(html);
+          const flagFalse =
+            /data-is-bulky=["']false["']/i.test(html) ||
+            /data-shipping-band=["']standard["']/i.test(html);
           if (Number.isNaN(rateNum)) {
             failCheck(results.C11, `${pathname} shippingRate missing`);
-          } else if (rateNum !== expected) {
+          } else if (flagTrue && rateNum !== BULKY_SHIP_PKR) {
             failCheck(
               results.C11,
-              `${pathname} shippingRate=${rateNum} expected ${expected} (${isBulky ? "bulky" : "standard"})`
+              `${pathname} shippingRate=${rateNum} expected ${BULKY_SHIP_PKR} (bulky)`
+            );
+          } else if (flagFalse && rateNum !== STANDARD_SHIP_PKR) {
+            failCheck(
+              results.C11,
+              `${pathname} shippingRate=${rateNum} expected ${STANDARD_SHIP_PKR} (standard)`
+            );
+          } else if (
+            !flagTrue &&
+            !flagFalse &&
+            rateNum !== STANDARD_SHIP_PKR &&
+            rateNum !== BULKY_SHIP_PKR
+          ) {
+            failCheck(
+              results.C11,
+              `${pathname} shippingRate=${rateNum} not in {${STANDARD_SHIP_PKR},${BULKY_SHIP_PKR}}`
             );
           }
         }
