@@ -169,7 +169,7 @@ export default function ProductReviews({ productId, productSlug, onReviewCountCh
       <div className={`flex flex-wrap items-start justify-between gap-4 ${embedded ? "mb-6" : "mb-8"}`}>
         <div>
           {!embedded ? <h2 className="mb-1 text-2xl font-extrabold tracking-tight text-zinc-900">Customer Reviews</h2> : null}
-          {stats ? (
+          {stats && totalReviews > 0 ? (
             <div className="flex flex-wrap items-center gap-2">
               <StarDisplay rating={avg} size={20} />
               <span className="text-lg font-bold text-zinc-900">{avg.toFixed(1)}</span>
