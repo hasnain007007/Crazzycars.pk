@@ -64,6 +64,7 @@ import {
   PRODUCT_FAQ_OVERRIDES,
   PRODUCT_H1_OVERRIDES,
 } from "@/lib/seo/gscAudit2026-10.mjs";
+import { stripEmbeddedFaqHtml } from "@/lib/seo/stripEmbeddedFaqHtml";
 
 const BRAND = BRAND_NAME;
 
@@ -579,8 +580,24 @@ export default async function ProductPage({ params, searchParams }) {
     })();
     // LCP: resolve each gallery URL to an on-disk file. Prefer the master
     // (original → -400 → -sm). Product -sm is often a 200² thumb — do not preload it.
+    const productFaqExtras =
+      PRODUCT_FAQ_OVERRIDES[String(content.data?.slug || "").trim()] || [];
+    const productFaqItems = [
+      ...buildProductKeywordFaqs(content.data),
+      ...productFaqExtras,
+    ];
+    const stripLegacyFaqHtml = productFaqItems.length > 0;
     const productForView = (() => {
-      const p = content.data;
+      let p = content.data;
+      if (stripLegacyFaqHtml) {
+        const strip = (v) => stripEmbeddedFaqHtml(v);
+        p = {
+          ...p,
+          longDescription: strip(p.longDescription),
+          descriptionHtml: strip(p.descriptionHtml),
+          shortDescription: strip(p.shortDescription),
+        };
+      }
       const images = Array.isArray(p?.media?.images) ? p.media.images : [];
       if (!images.length) return p;
       return {
@@ -603,12 +620,6 @@ export default async function ProductPage({ params, searchParams }) {
       return main ? String(main).split("?")[0] : "";
     })();
     const ssrReviews = approvedReviews.slice(0, 5);
-    const productFaqExtras =
-      PRODUCT_FAQ_OVERRIDES[String(content.data?.slug || "").trim()] || [];
-    const productFaqItems = [
-      ...buildProductKeywordFaqs(content.data),
-      ...productFaqExtras,
-    ];
     const productFaqLd = faqPageJsonLd(productFaqItems);
     const productIsBulky =
       productIsBulkyForShipping(content.data) || isBodyKitProduct(content.data);
