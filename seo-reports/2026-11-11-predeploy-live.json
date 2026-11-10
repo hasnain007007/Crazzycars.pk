@@ -1,0 +1,158 @@
+{
+  "audit": "2026-11-10",
+  "generatedAt": "2026-11-10T21:47:08.262Z",
+  "base": "https://crazzycars.pk",
+  "sitemapUrlCount": 545,
+  "filter": {
+    "checks": [
+      "C1",
+      "C3",
+      "C4",
+      "C18",
+      "C19",
+      "C21"
+    ],
+    "path": null
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 4,
+    "line": "C1..C21: 2 passed, 4 failed"
+  },
+  "checks": {
+    "C1": {
+      "pass": true,
+      "count": 545,
+      "failures": []
+    },
+    "C2": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C3": {
+      "pass": true,
+      "count": 545,
+      "failures": []
+    },
+    "C4": {
+      "pass": false,
+      "count": 545,
+      "failures": [
+        "/blogs/delivery-charges-regular-vs-bulky-pakistan meta description len=190 (>160)"
+      ]
+    },
+    "C5": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C6": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C7": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C8": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C9": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C10": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C11": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C12": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C13": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C14": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C15": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C16": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C17": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C18": {
+      "pass": false,
+      "count": 545,
+      "failures": [
+        "/ img missing alt (/hero/civic-night-760.webp)"
+      ]
+    },
+    "C19": {
+      "pass": false,
+      "count": 20,
+      "failures": [
+        "/hyundai-tucson-premium-metal-key-cover shared-boilerplate=49% (>=25%)",
+        "/toyota-aqua-2012-2021-velvet-dashboard-mat shared-boilerplate=48% (>=25%)",
+        "/toyota-passo-2016-22-velvet-dashboard-mat shared-boilerplate=48% (>=25%)",
+        "/suzuki-cultus-2017-2026-velvet-dashboard-mat shared-boilerplate=48% (>=25%)",
+        "/honda-civic-front-bumper-mustang-drl-2018-2020 shared-boilerplate=42% (>=25%)",
+        "/kia-sportage-batman-style-side-mirror-covers shared-boilerplate=55% (>=25%)",
+        "/byd-atto-3-2025-2026-tpe-floor-mats-premium shared-boilerplate=32% (>=25%)",
+        "/haval-h6-2021-present-carbon-door-handle-cover-abs shared-boilerplate=50% (>=25%)",
+        "/toyota-hilux-revo-2016-2021-tpe-floor-mats-premium shared-boilerplate=35% (>=25%)",
+        "/toyota-mark-x-abs-roof-spoiler-2020-2022 shared-boilerplate=34% (>=25%)",
+        "…(+more; capped at 10)"
+      ],
+      "note": "sample=20 sharedBlocks=18"
+    },
+    "C20": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C21": {
+      "pass": false,
+      "count": 13,
+      "failures": [
+        "/cars/changan-oshan-x7-2022-present → /categories/exterior (expected /cars/changan-oshanx7-2022-present)",
+        "/cars/byd-atto-3-2025-present → /categories/exterior (expected /cars/byd-atto3-2025-present)",
+        "/cars/toyota-prado-j150-2009-2023 → /categories/exterior (expected /cars/toyota-prado-2009-2023)",
+        "/cars/suzuki-wagon-r-2014-present → /categories/exterior (expected /cars/suzuki-wagonr-2014-present)",
+        "/cars/honda-br-v-2017-present → /categories/exterior (expected /cars/honda-brv-2017-present)",
+        "/cars/chery-tiggo-8-pro-2022-present → /categories/exterior (expected /cars/chery-tiggo8pro-2022-present)",
+        "/cars/toyota-prius-xw30-2009-2015 → /categories/exterior (expected /cars/toyota-prius-2009-2015)",
+        "/cars/toyota-prius-xw20-2004-2009 → /categories/exterior (expected /cars/toyota-prius-2004-2009)",
+        "/cars/sonata-2020-2024-dn8 → /categories/exterior (expected /cars/hyundai-sonata-2020-2024)",
+        "/cars/elantra-2020-2024-cn7 → /categories/exterior (expected /cars/hyundai-elantra-2020-2024)",
+        "…(+more; capped at 10)"
+      ]
+    }
+  }
+}

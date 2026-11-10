@@ -1,0 +1,34 @@
+seo-verify BASE=https://crazzycars.pk concurrency=4
+sitemap URLs: 545
+C1..C21: 2 passed, 4 failed
+C1 PASS count=545 failures=0
+C3 PASS count=545 failures=0
+C4 FAIL count=545 failures=1
+  - /blogs/delivery-charges-regular-vs-bulky-pakistan meta description len=190 (>160)
+C18 FAIL count=545 failures=1
+  - / img missing alt (/hero/civic-night-760.webp)
+C19 FAIL count=20 failures=11 (sample=20 sharedBlocks=18)
+  - /hyundai-tucson-premium-metal-key-cover shared-boilerplate=49% (>=25%)
+  - /toyota-aqua-2012-2021-velvet-dashboard-mat shared-boilerplate=48% (>=25%)
+  - /toyota-passo-2016-22-velvet-dashboard-mat shared-boilerplate=48% (>=25%)
+  - /suzuki-cultus-2017-2026-velvet-dashboard-mat shared-boilerplate=48% (>=25%)
+  - /honda-civic-front-bumper-mustang-drl-2018-2020 shared-boilerplate=42% (>=25%)
+  - /kia-sportage-batman-style-side-mirror-covers shared-boilerplate=55% (>=25%)
+  - /byd-atto-3-2025-2026-tpe-floor-mats-premium shared-boilerplate=32% (>=25%)
+  - /haval-h6-2021-present-carbon-door-handle-cover-abs shared-boilerplate=50% (>=25%)
+  - /toyota-hilux-revo-2016-2021-tpe-floor-mats-premium shared-boilerplate=35% (>=25%)
+  - /toyota-mark-x-abs-roof-spoiler-2020-2022 shared-boilerplate=34% (>=25%)
+  - …(+more; capped at 10)
+C21 FAIL count=13 failures=11
+  - /cars/changan-oshan-x7-2022-present → /categories/exterior (expected /cars/changan-oshanx7-2022-present)
+  - /cars/byd-atto-3-2025-present → /categories/exterior (expected /cars/byd-atto3-2025-present)
+  - /cars/toyota-prado-j150-2009-2023 → /categories/exterior (expected /cars/toyota-prado-2009-2023)
+  - /cars/suzuki-wagon-r-2014-present → /categories/exterior (expected /cars/suzuki-wagonr-2014-present)
+  - /cars/honda-br-v-2017-present → /categories/exterior (expected /cars/honda-brv-2017-present)
+  - /cars/chery-tiggo-8-pro-2022-present → /categories/exterior (expected /cars/chery-tiggo8pro-2022-present)
+  - /cars/toyota-prius-xw30-2009-2015 → /categories/exterior (expected /cars/toyota-prius-2009-2015)
+  - /cars/toyota-prius-xw20-2004-2009 → /categories/exterior (expected /cars/toyota-prius-2004-2009)
+  - /cars/sonata-2020-2024-dn8 → /categories/exterior (expected /cars/hyundai-sonata-2020-2024)
+  - /cars/elantra-2020-2024-cn7 → /categories/exterior (expected /cars/hyundai-elantra-2020-2024)
+  - …(+more; capped at 10)
+wrote seo-reports/2026-11-11-predeploy-live.json

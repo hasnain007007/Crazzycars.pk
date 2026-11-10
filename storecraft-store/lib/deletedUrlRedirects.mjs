@@ -63,12 +63,10 @@ export const DELETED_URL_REDIRECTS = [
   // Empty vehicle hubs with no live equivalent — return 404 (do not redirect to /cars).
   // Removed: audi-a5-*, honda-hrv / honda-hr-v, byd-shark6 (T10a).
   { source: "/cars/suzuki-mehran-1989-2019", destination: "/cars", permanent: true },
-  // Retired near-duplicate PDP → live neon indicator pair (Correction 2 / T4).
-  {
-    source: "/toyota-corolla-2014-2026-side-mirror-led-indicators",
-    destination: "/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair",
-    permanent: true,
-  },
+  // HOLD (founder 2026-11-11): do NOT 301
+  // /toyota-corolla-2014-2026-side-mirror-led-indicators → neon pair.
+  // Live evidence: distinct SKUs CC-COR-MIRROR-3 (Rs 8500, Neon/Sequential/RGB variants)
+  // vs CC-0004 (Rs 6500, neon-only). Retain both canonical PDPs until proven identical.
   // Empty root categories (0 products) — stop soft-200 "coming soon" crawl waste.
   { source: "/categories/car-curtains", destination: "/categories/interior", permanent: true },
   { source: "/categories/polisher-machines-buffers", destination: "/categories/car-care-cleaning", permanent: true },

@@ -71,7 +71,9 @@ export const VEHICLE_SLUG_REDIRECTS = [
     destination: "/cars/hyundai-sonata-2020-2024",
     permanent: true,
   },
-  // tucson-hybrid-2025-nx4 → OWNER DECISION (Q-T10a-tucson); no redirect until answered
+  // HOLD (founder 2026-11-11): /cars/tucson-hybrid-2025-nx4 must NOT redirect to
+  // /cars/hyundai-tucson-2020-2024. Keep 404 (or future dedicated 2025 Hybrid hub)
+  // until generation/fitment evidence is verified. Do not alias accessories across gens.
 ];
 
 /**

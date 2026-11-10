@@ -1,11 +1,16 @@
+import { STORE_POLICY } from "@/config/store-policy";
+import { formatPkrAmount } from "@/lib/storePolicyCopy";
+
 /**
  * Server-rendered categories index chrome — always emits one H1 for crawlers.
  * @param {{ intro?: string }} [props]
  */
 export function CategoriesIndexChrome({ intro = "" } = {}) {
+  const std = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
+  const bulky = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
   const blurb =
     String(intro || "").trim() ||
-    "Browse car accessory categories for exterior styling, interior upgrades, LED lighting, floor mats, and more. Open a category to see live stock, then confirm vehicle fitment on each product page. Cash on Delivery is available on eligible items; delivery is Rs 250 standard or Rs 500 when the cart includes bulky lines.";
+    `Browse car accessory categories for exterior styling, interior upgrades, LED lighting, floor mats, and more. Open a category to see live stock, then confirm vehicle fitment on each product page. Cash on Delivery is available on eligible items; delivery is ${std} standard or ${bulky} when the cart includes bulky lines.`;
 
   return (
     <div
