@@ -13,6 +13,10 @@ export const DELETED_URL_REDIRECTS = [
   { source: "/gold-lion-dashboard-ornament-sculpture", destination: "/categories/air-freshener-decoration", permanent: true },
   // Empty shelves (0 live products) — 404 via isEmptyCategoryTree; keep slugs discoverable.
   { source: "/categories/fragrances", destination: "/categories/air-freshener-decoration", permanent: true },
+  // Historical "Car HUD" demand is a product PDP, not a category shelf.
+  { source: "/categories/car-hud", destination: "/car-heads-up-display-hud", permanent: true },
+  { source: "/categories/hud", destination: "/car-heads-up-display-hud", permanent: true },
+  { source: "/categories/heads-up-display", destination: "/car-heads-up-display-hud", permanent: true },
   { source: "/categories/hanging-perfumes", destination: "/categories/air-freshener-decoration", permanent: true },
   { source: "/haval-h6-rubber-infotainment-screen-protector", destination: "/cars/haval-h6-2021-present", permanent: true },
   { source: "/hks-style-chameleon-exhaust-muffler-tip-universal", destination: "/categories/exhaust-systems-tips", permanent: true },

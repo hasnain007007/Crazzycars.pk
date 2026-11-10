@@ -8,3 +8,4 @@ CC-P1-006,seo,P1,Historical soft 404 / redirect exclusions,GSC historical,Mixed 
 CC-P2-007,analytics,P2,GA4 ecommerce completeness,Code present unverified end-to-end,Unknown gaps,Phase I read-only verification,AnalyticsScripts.jsx,no,low,,INVESTIGATING,,if new property
 CC-ALREADY-008,seo,P1,/products→/shop,/collections→/shop,308 confirmed,Intentional alias,none,n/a,n/a,n/a,ALREADY_FIXED,live,no
 CC-P1-009,trust-aeo,P1,PDP FakePurchaseToast,Component imports fakeSocialProof,Fabricated purchase notifications,Removed from ProductDetailMedico,ProductDetailMedico.jsx,no,low,manual,IMPLEMENTED_LOCALLY,TESTED code-level; LIVE_VERIFIED pending deploy,no
+CC-P1-010,seo-redirect,P1,/categories/car-hud 404,Historical high-impression Car HUD; live product is /car-heads-up-display-hud,Missing category alias,301 aliases to product PDP,deletedUrlRedirects.mjs,no,low,manual HEAD,IMPLEMENTED_LOCALLY,pending deploy,no

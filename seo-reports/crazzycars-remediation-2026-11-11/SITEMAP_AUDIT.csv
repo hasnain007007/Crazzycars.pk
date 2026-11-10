@@ -1,2 +1,2 @@
-status,note
-PENDING,Full pass scheduled; prior controlled release covered many technical SEO checks — see seo-reports/2026-11-11-controlled-release-report.md
+sitemap,url_count_note,status
+index+children,547 URLs in SITEMAP_URLS.txt,VERIFIED_LIST

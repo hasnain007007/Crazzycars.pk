@@ -1,2 +1,6 @@
-status,note
-PENDING,Full pass scheduled; prior controlled release covered many technical SEO checks — see seo-reports/2026-11-11-controlled-release-report.md
+url,status,expected,notes
+https://www.crazzycars.pk/,308→https://crazzycars.pk/,canonical host OK,verified 2026-11-11
+https://crazzycars.pk/products,308→/shop,intentional,verified
+https://crazzycars.pk/collections,308→/shop,intentional,verified
+https://crazzycars.pk/categories/car-hud,404→planned 301 to /car-heads-up-display-hud,high-impression historical Car HUD is product,code added locally
+https://crazzycars.pk/categories/security-gadgets,410,goneCategoryPaths,verified

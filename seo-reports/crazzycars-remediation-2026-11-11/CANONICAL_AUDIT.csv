@@ -1,2 +1,2 @@
-status,note
-PENDING,Full pass scheduled; prior controlled release covered many technical SEO checks — see seo-reports/2026-11-11-controlled-release-report.md
+host,canonical_preference,www_behavior,status
+crazzycars.pk,https://crazzycars.pk,www 308→apex,VERIFIED
