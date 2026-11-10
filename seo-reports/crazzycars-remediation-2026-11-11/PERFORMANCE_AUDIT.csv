@@ -1,0 +1,5 @@
+template,url,perf,lcp,cls,source,status
+home,/,81,2.0s,0.019,seo-reports/lighthouse/SUMMARY.md,BASELINE_ONLY
+category,/categories/interior,91,3.0s,0.019,lighthouse,BASELINE_ONLY
+product,/byd-atto-3-2025-2026-tpe-floor-mats-premium,92,1.8s,0.020,lighthouse,BASELINE_ONLY
+vehicle,/cars/toyota-corolla-e170-2014-2026,91,3.0s,0.019,lighthouse,BASELINE_ONLY

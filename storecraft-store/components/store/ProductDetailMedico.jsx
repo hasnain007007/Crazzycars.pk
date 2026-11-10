@@ -35,7 +35,7 @@ import {
   standardDeliveryFeeShort,
 } from "@/lib/storePolicyCopy";
 /* ProductLiveView removed: simulated "N viewing now" fails C20 / trust audit. */
-import { FakePurchaseToast } from "@/components/store/FakePurchaseToast";
+/* FakePurchaseToast removed 2026-11-11: fabricated "someone purchased" social proof. */
 import {
   PRODUCT_CONTENT_OVERRIDES,
   PRODUCT_H1_OVERRIDES,
@@ -1984,15 +1984,6 @@ export function ProductDetailMedico({
       )}
 
     </div>
-
-    <FakePurchaseToast
-      productName={displayName}
-      productImage={
-        (selectedItem?.type === "image" && selectedItem.url) ||
-        images?.[0]?.url ||
-        ""
-      }
-    />
 
     </>
   );

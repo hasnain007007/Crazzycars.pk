@@ -8,6 +8,7 @@ import Review from "@/lib/models/Review.model";
 import { listingMongoSortSpec } from "@/lib/productListing";
 import { pruneCategoryTreeWithoutProducts } from "@/lib/emptyLeafCategory";
 import { serializeStoreProductSummary } from "@/lib/storeSerialize";
+import { categoryMembershipMongoGuard } from "@/lib/fitment/categoryMembership";
 
 export { pruneCategoryTreeWithoutProducts };
 
@@ -336,7 +337,11 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
     $or: [{ categories: { $in: allCategoryIds } }, { category: { $in: allCategoryIds } }],
   };
   // opts.extraFilter: e.g. the "Shop by your car" fitment filter (?car=).
-  const productQuery = opts.extraFilter ? { $and: [categoryQuery, opts.extraFilter] } : categoryQuery;
+  const membershipGuard = categoryMembershipMongoGuard(slugStr);
+  const baseQuery = membershipGuard
+    ? { $and: [categoryQuery, membershipGuard] }
+    : categoryQuery;
+  const productQuery = opts.extraFilter ? { $and: [baseQuery, opts.extraFilter] } : baseQuery;
 
   const sortSpec = listingMongoSortSpec(opts.sort);
 

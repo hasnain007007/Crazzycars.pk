@@ -1,0 +1,8 @@
+(node:78769) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mac/Desktop/CCSMS/storecraft-store/lib/fitment/modelConflict.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mac/Desktop/CCSMS/storecraft-store/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+catalogue total=399 pages=4
+list page 1/4list page 2/4list page 3/4list page 4/4
+summaries=399
+detail 25/399detail 50/399detail 75/399detail 100/399detail 125/399detail 150/399detail 175/399detail 200/399detail 225/399detail 250/399

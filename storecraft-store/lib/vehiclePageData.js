@@ -17,6 +17,7 @@ import {
 } from "@/lib/productVehicleQuery";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
 import { STOREFRONT_PRODUCT_FILTER } from "@/lib/productVisibility";
+import { rejectTitleModelConflicts } from "@/lib/fitment/modelConflict";
 
 export {
   findCatalogModelByExactId,
@@ -282,7 +283,16 @@ export async function loadProductsForVehicle(vehicleOrId, { limit = 200 } = {}) 
     .sort({ featured: -1, createdAt: -1 })
     .limit(limit)
     .lean();
-  return products;
+  // Safety net: hide SKUs whose title clearly names a sibling model (e.g. Alto on Swift).
+  // Data corrections still require a dry-run migration — this only protects the hub UI/SEO.
+  const { kept, rejected } = rejectTitleModelConflicts(products, vehicle);
+  if (rejected.length && process.env.NODE_ENV !== "production") {
+    console.warn(
+      `[fitment] title-model conflicts on /cars/${vehicle.slug}:`,
+      rejected.map((r) => `${r.product?.slug}:${r.reason}`).join(", ")
+    );
+  }
+  return kept;
 }
 
 export function serializeVehicleProduct(p) {
