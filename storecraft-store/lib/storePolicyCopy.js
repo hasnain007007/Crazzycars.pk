@@ -398,7 +398,15 @@ export function getReturnsPage() {
       {
         heading: "How to start a return",
         paragraphs: [
-          `Message WhatsApp or email ${STORE_POLICY.contact.email} with your order number, reason, and clear photos (defective or wrong-item claims only).`,
+          `Message WhatsApp or email ${STORE_POLICY.contact.email} within ${days} days of delivery with your order number, reason, and clear photos (defective or wrong-item claims only).`,
+        ],
+      },
+      {
+        heading: "Who pays return shipping",
+        paragraphs: [
+          STORE_POLICY.returns.returnShippingPaidBy === "store"
+            ? "For approved eligible returns (defective or wrong item shipped), CrazzyCars.pk pays the return shipping. Change-of-mind returns are not eligible, so return shipping does not apply in those cases."
+            : "Return shipping fees are shown when a return is approved.",
         ],
       },
       {
@@ -414,10 +422,15 @@ export function getReturnsPage() {
 export const RETURNS_PAGE = getReturnsPage();
 
 export function getShippingPolicySections() {
+  const std = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
+  const bulky = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
+  const tiers = codAdvanceTierList();
   return [
     {
-      heading: "Standard delivery",
-      paragraphs: [`${standardDeliveryFeeStatement()} ${deliveryEtaSummary()}`],
+      heading: "Delivery bands (regular vs bulky)",
+      paragraphs: [
+        `Regular carts: ${std}. Carts that include any bulky line (many floor mats, spoilers, splitters, side skirts, or body-kit pieces): ${bulky}. The higher band applies to the whole order when mixed. ${deliveryEtaSummary()}`,
+      ],
     },
     {
       heading: "Spoilers and body kits",
@@ -432,16 +445,21 @@ export function getShippingPolicySections() {
       ],
     },
     {
-      heading: "Cash on Delivery",
+      heading: "Cash on Delivery and booking advance",
       paragraphs: [
         `COD is available on eligible products. Body kits cannot be ordered on Cash on Delivery — use JazzCash, Meezan, or bank transfer. ${codBookingAdvanceStatement()} Send your payment screenshot on WhatsApp; the balance is collected on delivery.`,
       ],
+      list: tiers.map((t) => `${t.range}: booking advance ${t.amount}`),
     },
   ];
 }
 
-export const SHIPPING_POLICY_INTRO =
-  "We deliver car accessories nationwide from Gujranwala (CrazzyCars.pk). Checkout shows the delivery option and fee before you place the order.";
+export const SHIPPING_POLICY_INTRO = (() => {
+  const std = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
+  const bulky = formatPkrAmount(STORE_POLICY.shipping.bulkyFeePKR || 500);
+  const booking = formatPkrAmount(COD_ADVANCE_AMOUNT);
+  return `We deliver car accessories nationwide from Gujranwala (CrazzyCars.pk). Regular delivery is ${std}; when the cart includes bulky items (for example many floor mats, spoilers, or body-kit lines) delivery is ${bulky}. Cash on Delivery on eligible items needs a ${booking} booking advance deducted from your total — the rest is paid on delivery. Checkout always shows the option and fee for your city before you place the order. ${deliveryEtaSummary()}`;
+})();
 
 export const SHIPPING_POLICY_SECTIONS = getShippingPolicySections();
 

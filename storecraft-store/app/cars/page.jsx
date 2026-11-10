@@ -102,6 +102,20 @@ export default async function CarsIndexPage() {
           <p className="mt-1 text-sm text-[#555555]">
             Home / Shop by Car · {vehicles.length} models
           </p>
+          <p
+            className="mt-3 max-w-3xl text-sm leading-relaxed text-[#374151] md:text-[15px]"
+            style={{ marginBottom: 0 }}
+          >
+            Use Shop by Car to open a generation hub for Pakistani-market makes such as{" "}
+            {groups
+              .slice(0, 6)
+              .map(([make]) => make)
+              .join(", ") || "Toyota, Honda, and Suzuki"}
+            . Each hub lists only products assigned to that make, model, and year range —
+            confirm fitment on the product page before you order. Cash on Delivery is available
+            on eligible accessories; body kits stay prepaid. Start with the largest families
+            below, or jump straight to your car.
+          </p>
         </div>
       </div>
 

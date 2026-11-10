@@ -90,7 +90,16 @@ export default async function CategoriesPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(collectionLd) }}
       />
-      <CategoriesIndexChrome />
+      <CategoriesIndexChrome
+        intro={
+          serialized.length
+            ? `Browse ${serialized.length} live accessory families on CrazzyCars.pk — including ${serialized
+                .slice(0, 5)
+                .map((c) => c.name)
+                .join(", ")}. Each category shows in-stock products for Pakistani-market cars. Confirm make, model, and years on the product fitment table before ordering. Cash on Delivery is available on eligible items; bulky lines such as mats and spoilers use the higher delivery band at checkout.`
+            : ""
+        }
+      />
       <Suspense
         fallback={
           <div className="mx-auto max-w-7xl px-4 py-12 text-zinc-500">Loading categories…</div>
