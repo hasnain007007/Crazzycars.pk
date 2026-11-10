@@ -1,0 +1,131 @@
+{
+  "audit": "2026-11-10",
+  "generatedAt": "2026-11-10T16:40:17.850Z",
+  "base": "https://crazzycars.pk",
+  "sitemapUrlCount": 545,
+  "filter": {
+    "checks": [
+      "C1",
+      "C3",
+      "C4",
+      "C18"
+    ],
+    "path": null
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 2,
+    "line": "C1..C21: 2 passed, 2 failed"
+  },
+  "checks": {
+    "C1": {
+      "pass": true,
+      "count": 545,
+      "failures": []
+    },
+    "C2": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C3": {
+      "pass": true,
+      "count": 545,
+      "failures": []
+    },
+    "C4": {
+      "pass": false,
+      "count": 545,
+      "failures": [
+        "/blogs/delivery-charges-regular-vs-bulky-pakistan meta description len=190 (>160)"
+      ]
+    },
+    "C5": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C6": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C7": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C8": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C9": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C10": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C11": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C12": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C13": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C14": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C15": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C16": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C17": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C18": {
+      "pass": false,
+      "count": 545,
+      "failures": [
+        "/ img missing alt (/hero/civic-night-760.webp)"
+      ]
+    },
+    "C19": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C20": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    },
+    "C21": {
+      "pass": true,
+      "count": 0,
+      "failures": []
+    }
+  }
+}

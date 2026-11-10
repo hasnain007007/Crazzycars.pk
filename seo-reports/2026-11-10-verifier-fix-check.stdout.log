@@ -1,0 +1,7 @@
+C1..C21: 2 passed, 2 failed
+C1 PASS count=545 failures=0
+C3 PASS count=545 failures=0
+C4 FAIL count=545 failures=1
+  - /blogs/delivery-charges-regular-vs-bulky-pakistan meta description len=190 (>160)
+C18 FAIL count=545 failures=1
+  - / img missing alt (/hero/civic-night-760.webp)

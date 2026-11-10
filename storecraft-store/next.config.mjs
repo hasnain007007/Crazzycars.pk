@@ -2,12 +2,15 @@
 import { buildLegacyRedirects } from "./lib/legacyHandleMaps.mjs";
 import { DELETED_URL_REDIRECTS } from "./lib/deletedUrlRedirects.mjs";
 import { OLD_BLOG_NEWS_REDIRECTS } from "./lib/oldBlogNewsRedirects.mjs";
+import { VEHICLE_SLUG_REDIRECTS } from "./lib/vehicleSlugRedirects.mjs";
 
 const nextConfig = {
   async redirects() {
     return [
       // Deleted catalogue / car URLs → live parents (SEO audit 16 Oct 2026).
       ...DELETED_URL_REDIRECTS,
+      // Explicit /cars slug variants → live hubs (T10a, 2026-11-10).
+      ...VEHICLE_SLUG_REDIRECTS,
       // Shopify /blogs/news/<handle> → closest live page (S2a, no 410s).
       ...OLD_BLOG_NEWS_REDIRECTS,
       {

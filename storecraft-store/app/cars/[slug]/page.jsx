@@ -31,6 +31,7 @@ import {
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
+import { resolveVehicleSlugRedirect } from "@/lib/vehicleSlugRedirects.mjs";
 import { BRAND_NAME, stripLegacyBrand, withBrandTitleSuffix } from "@/lib/brand";
 import { getCarPageMeta } from "@/lib/seo/carPageMeta2026-10.mjs";
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
@@ -183,6 +184,10 @@ export default async function VehicleSlugPage({ params, searchParams }) {
   const deletedCar = resolveDeletedPath(`/cars/${slugStr}`);
   if (deletedCar) permanentRedirect(listingHref(deletedCar, listing));
 
+  // Explicit slug-variant map (T10a) — before DB lookup / catch-all.
+  const variantDest = resolveVehicleSlugRedirect(`/cars/${slugStr}`);
+  if (variantDest) permanentRedirect(listingHref(variantDest, listing));
+
   let vehicle = null;
   try {
     await dbConnect();
@@ -192,8 +197,8 @@ export default async function VehicleSlugPage({ params, searchParams }) {
     throw err;
   }
   if (!vehicle) {
-    // Inactive / removed generation — closest brand page or exterior hub.
-    permanentRedirect("/categories/exterior");
+    // Unknown /cars/* must 404 — never catch-all to /categories/exterior (T10a).
+    notFound();
   }
   if (vehicle.slug && String(vehicle.slug) !== slugStr) {
     permanentRedirect(listingHref(`/cars/${vehicle.slug}`, listing));

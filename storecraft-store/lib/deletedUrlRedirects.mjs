@@ -60,12 +60,15 @@ export const DELETED_URL_REDIRECTS = [
   },
   // No Fronx car page in the live catalogue — closest Suzuki generation page.
   { source: "/cars/suzuki-fronx-2025-present", destination: "/cars/suzuki-swift-2025-present", permanent: true },
-  // Empty vehicle hubs (0 assigned products → hard 404). Send equity to /cars.
-  { source: "/cars/honda-hrv-2022-present", destination: "/cars", permanent: true },
-  { source: "/cars/audi-a5-2014", destination: "/cars", permanent: true },
-  { source: "/cars/audi-a5-2008-present", destination: "/cars", permanent: true },
-  { source: "/cars/byd-shark6-2025-present", destination: "/cars", permanent: true },
+  // Empty vehicle hubs with no live equivalent — return 404 (do not redirect to /cars).
+  // Removed: audi-a5-*, honda-hrv / honda-hr-v, byd-shark6 (T10a).
   { source: "/cars/suzuki-mehran-1989-2019", destination: "/cars", permanent: true },
+  // Retired near-duplicate PDP → live neon indicator pair (Correction 2 / T4).
+  {
+    source: "/toyota-corolla-2014-2026-side-mirror-led-indicators",
+    destination: "/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair",
+    permanent: true,
+  },
   // Empty root categories (0 products) — stop soft-200 "coming soon" crawl waste.
   { source: "/categories/car-curtains", destination: "/categories/interior", permanent: true },
   { source: "/categories/polisher-machines-buffers", destination: "/categories/car-care-cleaning", permanent: true },
