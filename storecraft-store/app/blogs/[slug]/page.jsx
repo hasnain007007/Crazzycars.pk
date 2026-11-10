@@ -16,6 +16,7 @@ import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
 import { recordBlogPostPageView } from "@/lib/blogEngagement";
 import { blogContentModifiedAt } from "@/lib/blogContentDate";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
+import { FaqSection } from "@/components/store/FaqSection";
 import { relatedGuidesForBlog } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbRelatedGuidesForBlog } from "@/lib/seo/blogLinksFromDb";
 import { BRAND } from "@/lib/brand";
@@ -232,6 +233,7 @@ export default async function BlogPostPage({ params }) {
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }} />
         ) : null}
         <BlogPostView initialPost={post} initialRecent={recentPosts} />
+        <FaqSection title="Frequently asked questions" items={faqItems} />
         <DetailNeighborNav {...(await loadBlogNeighbors(post))} />
         <InternalBlogLinks title="Related guides" links={relatedGuides} />
       </div>

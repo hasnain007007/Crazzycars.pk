@@ -48,14 +48,16 @@ import {
   buildProductKeywordFaqs,
   faqPageJsonLd,
 } from "@/lib/seo/keywordStrategyFaqs";
+import { FaqSection } from "@/components/store/FaqSection";
 import { resolveProductCarLinks } from "@/lib/seo/resolveProductCarLinks";
 import { productSeoDescription, productSeoTitle } from "@/lib/seo/productSeoMeta";
 import { displayProductName } from "@/lib/displayProductName";
-import { productAllowsCod } from "@/lib/codEligibility";
+import { isBodyKitProduct, productAllowsCod } from "@/lib/codEligibility";
 import { scrubPaymentClaims } from "@/lib/paymentCopy";
 import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 import { unitsSoldRecently } from "@/lib/productSalesCount";
 import { toPlainText } from "@/lib/sanitizeHtml";
+import { productIsBulkyForShipping } from "@/lib/bulkyShipping.js";
 import {
   getPageSeoOverride,
   PRODUCT_CONTENT_OVERRIDES,
@@ -601,6 +603,15 @@ export default async function ProductPage({ params, searchParams }) {
       return main ? String(main).split("?")[0] : "";
     })();
     const ssrReviews = approvedReviews.slice(0, 5);
+    const productFaqExtras =
+      PRODUCT_FAQ_OVERRIDES[String(content.data?.slug || "").trim()] || [];
+    const productFaqItems = [
+      ...buildProductKeywordFaqs(content.data),
+      ...productFaqExtras,
+    ];
+    const productFaqLd = faqPageJsonLd(productFaqItems);
+    const productIsBulky =
+      productIsBulkyForShipping(content.data) || isBodyKitProduct(content.data);
 
     return (
       <>
@@ -630,26 +641,12 @@ export default async function ProductPage({ params, searchParams }) {
             })(),
           }}
         />
-        {(() => {
-          try {
-            const faqExtras =
-              PRODUCT_FAQ_OVERRIDES[String(content.data?.slug || "").trim()] || [];
-            const faqLd = faqPageJsonLd([
-              ...buildProductKeywordFaqs(content.data),
-              ...faqExtras,
-            ]);
-            if (!faqLd) return null;
-            return (
-              <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }}
-              />
-            );
-          } catch (e) {
-            console.error("product faq json-ld:", e);
-            return null;
-          }
-        })()}
+        {productFaqLd ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: safeJsonLd(productFaqLd) }}
+          />
+        ) : null}
         {ssrReviews.length ? (
           <section id="customer-reviews-ssr" className="sr-only" aria-label="Customer reviews">
             {ssrReviews.map((r, i) => (
@@ -663,11 +660,20 @@ export default async function ProductPage({ params, searchParams }) {
             ))}
           </section>
         ) : null}
-        <ProductDetailMedico
-          product={productForView}
-          relatedProducts={content.relatedProducts || []}
-          carLinks={content.carLinks || []}
-          soldRecently={soldRecently}
+        <div
+          data-is-bulky={productIsBulky ? "true" : "false"}
+          data-shipping-band={productIsBulky ? "bulky" : "standard"}
+        >
+          <ProductDetailMedico
+            product={productForView}
+            relatedProducts={content.relatedProducts || []}
+            carLinks={content.carLinks || []}
+            soldRecently={soldRecently}
+          />
+        </div>
+        <FaqSection
+          title="Frequently asked questions"
+          items={productFaqItems}
         />
         <DetailNeighborNav {...(await loadProductNeighbors(content.data))} />
         <ProductRelatedLinks {...(content.relatedLinks || {})} />

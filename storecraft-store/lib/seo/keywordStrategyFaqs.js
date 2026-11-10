@@ -1958,7 +1958,16 @@ export function buildVehicleKeywordFaqs(vehicle, { hasSplitterProducts = false }
  */
 export function buildProductKeywordFaqs(product) {
   const sku = String(product?.articleNo || "").trim();
-  if (sku === "CC-0004") return [];
+  // CC-0004: no SKU-specific claims, but still emit shared policy FAQs so
+  // FAQPage JSON-LD and visible FaqSection stay consistent (no empty schema).
+  if (sku === "CC-0004") {
+    const shared = sharedPolicyFaqs({
+      includeFitment: true,
+      includeDeliveryTime: true,
+      includeTrusted: true,
+    });
+    return shared.length ? shared : [...fallbackShared(), trustedStoreFaq()];
+  }
   const builder = sku ? PRODUCT_FAQ_BY_SKU[sku] : null;
 
   let items;
@@ -2000,6 +2009,6 @@ export function buildProductKeywordFaqs(product) {
 
 export function hasProductKeywordFaqs(articleNo) {
   const sku = String(articleNo || "").trim();
-  // Defaults cover the catalog; SKU builders still override when present.
-  return Boolean(sku && sku !== "CC-0004");
+  // Defaults (and policy-only CC-0004) cover the catalog; SKU builders override when present.
+  return Boolean(sku);
 }
