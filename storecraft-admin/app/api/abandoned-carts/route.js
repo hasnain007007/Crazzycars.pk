@@ -160,6 +160,23 @@ export async function PATCH(request) {
         note: "Opened WhatsApp from admin",
       });
       await doc.save();
+    } else if (action === "set-contact") {
+      // Allow staff to attach phone/email for guest carts so WhatsApp / email recover works.
+      doc.customer = doc.customer || {};
+      if (body.phone != null) {
+        const phone = String(body.phone || "").replace(/[^\d+]/g, "").trim();
+        if (phone) doc.customer.phone = phone;
+      }
+      if (body.email != null) {
+        const email = String(body.email || "").trim().toLowerCase();
+        if (email && email.includes("@")) doc.customer.email = email;
+      }
+      if (body.name != null) {
+        const name = String(body.name || "").trim();
+        if (name) doc.customer.name = name;
+      }
+      doc.markModified("customer");
+      await doc.save();
     } else {
       return NextResponse.json({ success: false, error: "Unknown action" }, { status: 400 });
     }

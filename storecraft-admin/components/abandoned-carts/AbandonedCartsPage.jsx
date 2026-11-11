@@ -115,18 +115,25 @@ export function AbandonedCartsPage() {
     );
   }
 
-  async function patchAction(id, action, { silent = false } = {}) {
+  async function patchAction(id, action, opts = {}) {
+    const { silent = false, phone, email, name } = opts;
     try {
       const res = await fetch("/api/abandoned-carts", {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, action }),
+        body: JSON.stringify({
+          id,
+          action,
+          ...(phone != null ? { phone } : {}),
+          ...(email != null ? { email } : {}),
+          ...(name != null ? { name } : {}),
+        }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
         toast.error(json.error || "Action failed");
-        return false;
+        return null;
       }
       if (json.cart) mergeCartIntoUi(json.cart);
       if (action === "dismiss" || action === "reopen") {
@@ -137,26 +144,82 @@ export function AbandonedCartsPage() {
       } else if (action === "log-whatsapp") {
         // Do not full-reload: Loading… replaces the table and jumps scroll to top.
         toast.success("WhatsApp opened");
+      } else if (action === "set-contact") {
+        if (!silent) toast.success("Contact saved");
       } else if (!silent) {
         await load({ silent: true });
         toast.success("Updated");
       }
-      return true;
+      return json.cart || true;
     } catch {
       toast.error("Network error");
-      return false;
+      return null;
     }
   }
 
-  async function sendEmail(id) {
+  async function ensureCartPhone(cart) {
+    const existing = String(cart?.customer?.phone || "").trim();
+    if (existing) return existing;
+    const entered = window.prompt(
+      "This guest cart has no phone. Enter a WhatsApp number (e.g. 03XXXXXXXXX):",
+      ""
+    );
+    const phone = String(entered || "").replace(/[^\d+]/g, "").trim();
+    if (!phone) {
+      toast.error("Phone number required for WhatsApp");
+      return "";
+    }
+    const updated = await patchAction(cart.id, "set-contact", { silent: true, phone });
+    return String(updated?.customer?.phone || phone).trim();
+  }
+
+  async function sendWhatsApp(cart, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const phone = await ensureCartPhone(cart);
+    if (!phone) return;
+    const cartForMsg = {
+      ...cart,
+      customer: { ...(cart.customer || {}), phone },
+    };
+    const message = getAbandonedCartWhatsAppMessage(cartForMsg, waSettings || {});
+    const ok = openWhatsApp(phone, message);
+    if (!ok) {
+      toast.error("Could not open WhatsApp");
+      return;
+    }
+    // Log in the background without collapsing the table / resetting scroll.
+    void patchAction(cart.id, "log-whatsapp", { silent: true });
+  }
+
+  async function sendEmail(cartOrId) {
+    const cart =
+      typeof cartOrId === "object" && cartOrId
+        ? cartOrId
+        : rows.find((r) => r.id === cartOrId) || viewCart;
+    const id = typeof cartOrId === "string" ? cartOrId : cart?.id;
+    if (!id) return;
+    let email = String(cart?.customer?.email || "").trim();
+    if (!email) {
+      const entered = window.prompt(
+        "This guest cart has no email. Enter an email to send the recovery message:",
+        ""
+      );
+      email = String(entered || "").trim().toLowerCase();
+      if (!email || !email.includes("@")) {
+        toast.error("Valid email required");
+        return;
+      }
+      await patchAction(id, "set-contact", { silent: true, email });
+    }
     try {
       const res = await fetch(`/api/abandoned-carts/${id}/remind`, {
         method: "POST",
         credentials: "include",
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.success) {
-        toast.error(json.error || "Email failed");
+        toast.error(json.error || "Failed to send email");
         return;
       }
       toast.success("Recovery email sent");
@@ -165,24 +228,6 @@ export function AbandonedCartsPage() {
     } catch {
       toast.error("Network error");
     }
-  }
-
-  async function sendWhatsApp(cart, event) {
-    event?.preventDefault?.();
-    event?.stopPropagation?.();
-    const phone = cart?.customer?.phone;
-    if (!phone) {
-      toast.error("No phone number on this cart");
-      return;
-    }
-    const message = getAbandonedCartWhatsAppMessage(cart, waSettings || {});
-    const ok = openWhatsApp(phone, message);
-    if (!ok) {
-      toast.error("Could not open WhatsApp");
-      return;
-    }
-    // Log in the background without collapsing the table / resetting scroll.
-    void patchAction(cart.id, "log-whatsapp", { silent: true });
   }
 
   async function convertToOrder(cart) {
@@ -487,24 +532,30 @@ export function AbandonedCartsPage() {
                             {convertingId === cart.id ? "Converting…" : "Convert to order"}
                           </button>
                         ) : null}
-                        {cart.customer?.phone ? (
-                          <button
-                            type="button"
-                            onClick={(e) => sendWhatsApp(cart, e)}
-                            className="rounded-md bg-[#25D366] px-2 py-1 text-[11px] font-semibold text-white"
-                          >
-                            WhatsApp
-                          </button>
-                        ) : null}
-                        {cart.customer?.email ? (
-                          <button
-                            type="button"
-                            onClick={() => sendEmail(cart.id)}
-                            className="rounded-md bg-[#1d6fb8] px-2 py-1 text-[11px] font-semibold text-white"
-                          >
-                            Send email
-                          </button>
-                        ) : null}
+                        <button
+                          type="button"
+                          onClick={(e) => sendWhatsApp(cart, e)}
+                          className="rounded-md bg-[#25D366] px-2 py-1 text-[11px] font-semibold text-white"
+                          title={
+                            cart.customer?.phone
+                              ? "Open WhatsApp recovery message"
+                              : "Enter a phone number, then open WhatsApp"
+                          }
+                        >
+                          WhatsApp
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => sendEmail(cart)}
+                          className="rounded-md bg-[#1d6fb8] px-2 py-1 text-[11px] font-semibold text-white"
+                          title={
+                            cart.customer?.email
+                              ? "Send recovery email"
+                              : "Enter an email, then send recovery message"
+                          }
+                        >
+                          Send email
+                        </button>
                         <a
                           href={cart.recoverUrl}
                           target="_blank"

@@ -336,24 +336,30 @@ export function AbandonedCartDetailModal({
               {converting ? "Converting…" : "Convert to order"}
             </button>
           ) : null}
-          {cart.customer?.phone ? (
-            <button
-              type="button"
-              onClick={(e) => onWhatsApp?.(cart, e)}
-              className="rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white"
-            >
-              WhatsApp
-            </button>
-          ) : null}
-          {cart.customer?.email ? (
-            <button
-              type="button"
-              onClick={() => onEmail?.(cart.id)}
-              className="rounded-lg bg-[#1d6fb8] px-3 py-1.5 text-xs font-semibold text-white"
-            >
-              Send email
-            </button>
-          ) : null}
+          <button
+            type="button"
+            onClick={(e) => onWhatsApp?.(cart, e)}
+            className="rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white"
+            title={
+              cart.customer?.phone
+                ? "Open WhatsApp recovery message"
+                : "Enter a phone number, then open WhatsApp"
+            }
+          >
+            WhatsApp
+          </button>
+          <button
+            type="button"
+            onClick={() => onEmail?.(cart)}
+            className="rounded-lg bg-[#1d6fb8] px-3 py-1.5 text-xs font-semibold text-white"
+            title={
+              cart.customer?.email
+                ? "Send recovery email"
+                : "Enter an email, then send recovery message"
+            }
+          >
+            Send email
+          </button>
           {cart.recoverUrl ? (
             <a
               href={cart.recoverUrl}
