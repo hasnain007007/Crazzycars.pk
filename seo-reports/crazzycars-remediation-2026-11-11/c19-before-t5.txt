@@ -1,0 +1,20 @@
+seo-verify BASE=https://crazzycars.pk concurrency=4
+(node:55997) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mac/Desktop/CCSMS/storecraft-store/config/store-nap.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mac/Desktop/CCSMS/storecraft-store/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+sitemap URLs: 547
+C1..C23: 0 passed, 1 failed
+C19 FAIL count=20 failures=11 (sample=20 sharedBlocks=13)
+  - /hyundai-tucson-premium-metal-key-cover shared-boilerplate=39% (>=25%)
+  - /toyota-aqua-2012-2021-velvet-dashboard-mat shared-boilerplate=46% (>=25%)
+  - /toyota-passo-2016-22-velvet-dashboard-mat shared-boilerplate=46% (>=25%)
+  - /suzuki-cultus-2017-2026-velvet-dashboard-mat shared-boilerplate=46% (>=25%)
+  - /honda-civic-front-bumper-mustang-drl-2018-2020 shared-boilerplate=34% (>=25%)
+  - /kia-sportage-batman-style-side-mirror-covers shared-boilerplate=39% (>=25%)
+  - /byd-atto-3-2025-2026-tpe-floor-mats-premium shared-boilerplate=37% (>=25%)
+  - /haval-h6-2021-present-carbon-door-handle-cover-abs shared-boilerplate=43% (>=25%)
+  - /toyota-hilux-revo-2016-2021-tpe-floor-mats-premium shared-boilerplate=36% (>=25%)
+  - /toyota-mark-x-abs-roof-spoiler-2020-2022 shared-boilerplate=36% (>=25%)
+  - …(+more; capped at 10)
+wrote seo-reports/crazzycars-remediation-2026-11-11/c19-before-t5.json

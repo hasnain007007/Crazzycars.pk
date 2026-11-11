@@ -34,7 +34,10 @@
       "commit": null,
       "note": "Intros from buildVehicleIntro (live catalogue fields + policy template). No invented fitment in 10/10 sample. See T4-vehicle-intros-audit.md"
     },
-    "T5_boilerplate_c19": { "status": "pending" },
+    "T5_boilerplate_c19": {
+      "status": "measuring",
+      "c19_before_path": "seo-reports/crazzycars-remediation-2026-11-11/c19-before-t5.json"
+    },
     "T6_google_reviews": { "status": "pending" },
     "T7_thin_pages": { "status": "pending" },
     "T8_lighthouse": { "status": "pending" },
