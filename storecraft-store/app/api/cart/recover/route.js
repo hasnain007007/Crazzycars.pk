@@ -32,6 +32,7 @@ export async function GET(request) {
       status: doc.status,
       items: doc.items,
       customer: doc.customer || {},
+      shippingAddress: doc.shippingAddress || {},
       subtotal: doc.subtotal || 0,
       itemCount: doc.itemCount || 0,
     });

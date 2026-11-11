@@ -1,6 +1,6 @@
 /**
  * POST /api/cart/sync — upsert browser cart into CartSession.
- * Body: { sessionId, items, customer?, path? }
+ * Body: { sessionId, items, customer?, shippingAddress?, path? }
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -15,6 +15,14 @@ import {
 export const dynamic = "force-dynamic";
 
 const SESSION_RE = /^[a-zA-Z0-9_-]{8,80}$/;
+
+function pickStr(obj, keys, max) {
+  for (const key of keys) {
+    const v = String(obj?.[key] || "").trim();
+    if (v) return v.slice(0, max);
+  }
+  return "";
+}
 
 export async function POST(request) {
   try {
@@ -31,9 +39,22 @@ export async function POST(request) {
     const ua = String(request.headers.get("user-agent") || "").slice(0, 300);
 
     const incomingCustomer = body.customer && typeof body.customer === "object" ? body.customer : {};
-    const name = String(incomingCustomer.name || "").trim().slice(0, 120);
-    const email = String(incomingCustomer.email || "").trim().toLowerCase().slice(0, 160);
-    const phone = String(incomingCustomer.phone || "").trim().slice(0, 40);
+    const incomingShip =
+      body.shippingAddress && typeof body.shippingAddress === "object" ? body.shippingAddress : {};
+
+    const name = pickStr(incomingCustomer, ["name"], 120) || pickStr(incomingShip, ["name"], 120);
+    const email =
+      pickStr(incomingCustomer, ["email"], 160).toLowerCase() ||
+      pickStr(incomingShip, ["email"], 160).toLowerCase();
+    const phone = pickStr(incomingCustomer, ["phone"], 40) || pickStr(incomingShip, ["phone"], 40);
+
+    const street = pickStr(incomingShip, ["street", "address", "line1"], 200);
+    const street2 = pickStr(incomingShip, ["street2", "line2"], 200);
+    const area = pickStr(incomingShip, ["area"], 120);
+    const city = pickStr(incomingShip, ["city"], 80);
+    const state = pickStr(incomingShip, ["state", "province"], 80);
+    const zip = pickStr(incomingShip, ["zip", "postcode"], 20);
+    const country = pickStr(incomingShip, ["country"], 60) || "Pakistan";
 
     await dbConnect();
     let doc = await CartSession.findOne({ sessionId });
@@ -80,11 +101,28 @@ export async function POST(request) {
     if (path) doc.lastPath = path;
     if (ua) doc.userAgent = ua;
 
+    doc.customer = doc.customer || {};
     if (name) doc.customer.name = name;
     if (email && email.includes("@") && !email.startsWith("guest+")) {
       doc.customer.email = email;
     }
     if (phone) doc.customer.phone = phone;
+
+    doc.shippingAddress = doc.shippingAddress || {};
+    if (name) doc.shippingAddress.name = name;
+    if (email && email.includes("@") && !email.startsWith("guest+")) {
+      doc.shippingAddress.email = email;
+    }
+    if (phone) doc.shippingAddress.phone = phone;
+    if (street) doc.shippingAddress.street = street;
+    if (street2) doc.shippingAddress.street2 = street2;
+    if (area) doc.shippingAddress.area = area;
+    if (city) doc.shippingAddress.city = city;
+    if (state) doc.shippingAddress.state = state;
+    if (zip) doc.shippingAddress.zip = zip;
+    if (country) doc.shippingAddress.country = country;
+    doc.markModified("customer");
+    doc.markModified("shippingAddress");
 
     if (items.length === 0) {
       // Empty cart — keep record but stay active (will age out via TTL / cron).

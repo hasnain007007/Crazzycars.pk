@@ -3,6 +3,12 @@
  */
 "use client";
 
+import {
+  draftHasContact,
+  draftToSyncPayload,
+  readCheckoutDraft,
+} from "@/lib/checkoutDraft";
+
 const PRESENCE_KEY = "cc_presence_sid";
 const RECOVERY_TOKEN_KEY = "cc_cart_recovery_token";
 
@@ -63,18 +69,40 @@ function serializeItems(items) {
 
 /**
  * Fire-and-forget sync. Safe to call often — caller should debounce.
+ * Merges local checkout draft so name/phone/address survive item-only syncs.
  */
-export async function syncCartToServer({ items, customer, path } = {}) {
+export async function syncCartToServer({
+  items,
+  customer,
+  shippingAddress,
+  path,
+  includeDraft = true,
+} = {}) {
   const sessionId = getCartSessionId();
   if (!sessionId) return null;
   try {
+    const draft = includeDraft ? readCheckoutDraft() : null;
+    const fromDraft =
+      draft && draftHasContact(draft) ? draftToSyncPayload(draft) : { customer: {}, shippingAddress: {} };
+    const mergedCustomer = {
+      ...(fromDraft.customer || {}),
+      ...(customer && typeof customer === "object" ? customer : {}),
+    };
+    const mergedAddress = {
+      ...(fromDraft.shippingAddress || {}),
+      ...(shippingAddress && typeof shippingAddress === "object" ? shippingAddress : {}),
+    };
+    const hasCustomer = Object.values(mergedCustomer).some((v) => String(v || "").trim());
+    const hasAddress = Object.values(mergedAddress).some((v) => String(v || "").trim());
+
     const res = await fetch("/api/cart/sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionId,
         items: serializeItems(items),
-        customer: customer || undefined,
+        customer: hasCustomer ? mergedCustomer : undefined,
+        shippingAddress: hasAddress ? mergedAddress : undefined,
         path: path || (typeof window !== "undefined" ? window.location.pathname : ""),
       }),
       keepalive: true,

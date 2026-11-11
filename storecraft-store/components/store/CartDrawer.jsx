@@ -12,6 +12,8 @@ import {
   shippingAdvanceCollapsedEn,
 } from "@/lib/storePolicyCopy";
 import { cartHasBulkyItem, shippingFloorPKR } from "@/lib/shippingTier";
+import { readCheckoutDraft, writeCheckoutDraft } from "@/lib/checkoutDraft";
+import { syncCartToServer } from "@/lib/cartSyncClient";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -45,9 +47,43 @@ export function CartDrawer() {
   const [openMeasurements, setOpenMeasurements] = useState({});
   const [codOpen, setCodOpen] = useState(false);
   const [promoOpen, setPromoOpen] = useState(false);
+  const [leadName, setLeadName] = useState("");
+  const [leadPhone, setLeadPhone] = useState("");
   const codPanelId = useId();
   const hasBulky = cartHasBulkyItem(items);
   const estimatedShipping = items.length > 0 ? shippingFloorPKR(hasBulky) : 0;
+
+  useEffect(() => {
+    if (!open) return;
+    const draft = readCheckoutDraft();
+    if (draft.name) setLeadName((prev) => prev || draft.name);
+    if (draft.phone) setLeadPhone((prev) => prev || draft.phone);
+  }, [open]);
+
+  useEffect(() => {
+    if (!items.length) return;
+    const name = String(leadName || "").trim();
+    const phone = String(leadPhone || "").trim();
+    if (!name && !phone) return;
+    const t = setTimeout(() => {
+      const draft = writeCheckoutDraft({ name, phone });
+      syncCartToServer({
+        items,
+        customer: { name: draft.name, phone: draft.phone, email: draft.email },
+        shippingAddress: {
+          name: draft.name,
+          phone: draft.phone,
+          street: draft.street,
+          city: draft.city,
+          state: draft.state,
+          country: draft.country,
+        },
+        path: typeof window !== "undefined" ? window.location.pathname : "/cart",
+        includeDraft: false,
+      });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [leadName, leadPhone, items]);
   const estimatedTotal =
     Math.round((Number(subtotal) + Number(estimatedShipping || 0)) * 100) / 100;
 
@@ -346,6 +382,28 @@ export function CartDrawer() {
                     Final delivery confirmed at checkout.
                   </p>
                 ) : null}
+              </div>
+              <div className="mb-2 space-y-1.5">
+                <p className="m-0 text-[11px] font-medium text-zinc-500">
+                  Save your details so we can help if you leave
+                </p>
+                <input
+                  type="text"
+                  value={leadName}
+                  onChange={(e) => setLeadName(e.target.value)}
+                  placeholder="Your name"
+                  autoComplete="name"
+                  className="h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm"
+                />
+                <input
+                  type="tel"
+                  value={leadPhone}
+                  onChange={(e) => setLeadPhone(e.target.value)}
+                  placeholder="WhatsApp / phone (03XX…)"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  className="h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm"
+                />
               </div>
               {checkoutUrl ? (
                 <a

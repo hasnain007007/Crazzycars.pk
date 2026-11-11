@@ -83,12 +83,20 @@ export async function POST(request, context) {
       );
     }
 
+    const cartShip =
+      cart.shippingAddress && typeof cart.shippingAddress === "object" ? cart.shippingAddress : {};
     const shipIn =
       body.shippingAddress && typeof body.shippingAddress === "object" ? body.shippingAddress : {};
     const name =
-      String(body.name || cart.customer?.name || shipIn.name || "").trim() || "Guest";
-    const phone = String(body.phone || cart.customer?.phone || shipIn.phone || "").trim();
-    const email = String(body.email || cart.customer?.email || shipIn.email || "")
+      String(
+        body.name || cart.customer?.name || shipIn.name || cartShip.name || ""
+      ).trim() || "Guest";
+    const phone = String(
+      body.phone || cart.customer?.phone || shipIn.phone || cartShip.phone || ""
+    ).trim();
+    const email = String(
+      body.email || cart.customer?.email || shipIn.email || cartShip.email || ""
+    )
       .trim()
       .toLowerCase();
 
@@ -97,6 +105,22 @@ export async function POST(request, context) {
         { success: false, error: "Customer phone is required to create an order." },
         { status: 400 }
       );
+    }
+
+    // Persist any contact staff typed at convert-time onto the cart session.
+    cart.customer = cart.customer || {};
+    cart.shippingAddress = cart.shippingAddress || {};
+    if (name && name !== "Guest") {
+      cart.customer.name = name;
+      cart.shippingAddress.name = name;
+    }
+    if (phone) {
+      cart.customer.phone = phone;
+      cart.shippingAddress.phone = phone;
+    }
+    if (email && email.includes("@")) {
+      cart.customer.email = email;
+      cart.shippingAddress.email = email;
     }
 
     const productIds = [
@@ -155,9 +179,25 @@ export async function POST(request, context) {
     const total = Math.max(0, roundRupees(subtotal - discount + shippingCost));
 
     const street = String(
-      shipIn.street || shipIn.address || shipIn.line1 || body.address || ""
+      shipIn.street ||
+        shipIn.address ||
+        shipIn.line1 ||
+        body.address ||
+        body.street ||
+        cartShip.street ||
+        cartShip.address ||
+        cartShip.line1 ||
+        ""
     ).trim();
-    const city = String(shipIn.city || body.city || "").trim();
+    const city = String(shipIn.city || body.city || cartShip.city || "").trim();
+    const state = String(
+      shipIn.state || shipIn.province || body.state || body.province || cartShip.state || ""
+    ).trim();
+    if (street) cart.shippingAddress.street = street;
+    if (city) cart.shippingAddress.city = city;
+    if (state) cart.shippingAddress.state = state;
+    cart.markModified("customer");
+    cart.markModified("shippingAddress");
 
     const orderNumber = await allocateOrderNumber();
     const adminLabel = user.name || user.email || "Admin";
@@ -217,7 +257,9 @@ export async function POST(request, context) {
         address: street,
         line1: street,
         city,
-        country: String(shipIn.country || "Pakistan").trim() || "Pakistan",
+        state,
+        province: state,
+        country: String(shipIn.country || cartShip.country || "Pakistan").trim() || "Pakistan",
       },
       attribution,
       statusHistory: [

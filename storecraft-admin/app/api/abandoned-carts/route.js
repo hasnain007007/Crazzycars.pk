@@ -161,21 +161,48 @@ export async function PATCH(request) {
       });
       await doc.save();
     } else if (action === "set-contact") {
-      // Allow staff to attach phone/email for guest carts so WhatsApp / email recover works.
+      // Allow staff to attach phone/email/address for guest carts so recover + convert work.
       doc.customer = doc.customer || {};
+      doc.shippingAddress = doc.shippingAddress || {};
       if (body.phone != null) {
         const phone = String(body.phone || "").replace(/[^\d+]/g, "").trim();
-        if (phone) doc.customer.phone = phone;
+        if (phone) {
+          doc.customer.phone = phone;
+          doc.shippingAddress.phone = phone;
+        }
       }
       if (body.email != null) {
         const email = String(body.email || "").trim().toLowerCase();
-        if (email && email.includes("@")) doc.customer.email = email;
+        if (email && email.includes("@")) {
+          doc.customer.email = email;
+          doc.shippingAddress.email = email;
+        }
       }
       if (body.name != null) {
         const name = String(body.name || "").trim();
-        if (name) doc.customer.name = name;
+        if (name) {
+          doc.customer.name = name;
+          doc.shippingAddress.name = name;
+        }
+      }
+      if (body.street != null || body.address != null) {
+        const street = String(body.street || body.address || "").trim();
+        if (street) doc.shippingAddress.street = street;
+      }
+      if (body.city != null) {
+        const city = String(body.city || "").trim();
+        if (city) doc.shippingAddress.city = city;
+      }
+      if (body.state != null || body.province != null) {
+        const state = String(body.state || body.province || "").trim();
+        if (state) doc.shippingAddress.state = state;
+      }
+      if (body.zip != null) {
+        const zip = String(body.zip || "").trim();
+        if (zip) doc.shippingAddress.zip = zip;
       }
       doc.markModified("customer");
+      doc.markModified("shippingAddress");
       await doc.save();
     } else {
       return NextResponse.json({ success: false, error: "Unknown action" }, { status: 400 });

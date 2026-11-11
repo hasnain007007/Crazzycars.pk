@@ -116,7 +116,7 @@ export function AbandonedCartsPage() {
   }
 
   async function patchAction(id, action, opts = {}) {
-    const { silent = false, phone, email, name } = opts;
+    const { silent = false, phone, email, name, street, city, state } = opts;
     try {
       const res = await fetch("/api/abandoned-carts", {
         method: "PATCH",
@@ -128,6 +128,9 @@ export function AbandonedCartsPage() {
           ...(phone != null ? { phone } : {}),
           ...(email != null ? { email } : {}),
           ...(name != null ? { name } : {}),
+          ...(street != null ? { street } : {}),
+          ...(city != null ? { city } : {}),
+          ...(state != null ? { state } : {}),
         }),
       });
       const json = await res.json();
@@ -240,13 +243,56 @@ export function AbandonedCartsPage() {
       toast.error("This cart has no items");
       return;
     }
-    if (!cart.customer?.phone) {
-      toast.error("Customer phone is required to create an order");
-      return;
+
+    let name = String(cart.customer?.name || "").trim();
+    let phone = String(cart.customer?.phone || cart.shippingAddress?.phone || "").trim();
+    let email = String(cart.customer?.email || "").trim();
+    let street = String(cart.shippingAddress?.street || "").trim();
+    let city = String(cart.shippingAddress?.city || "").trim();
+    let state = String(cart.shippingAddress?.state || "").trim();
+
+    if (!name) {
+      name = String(
+        window.prompt("Customer name (required for the order):", "") || ""
+      ).trim();
+      if (!name) {
+        toast.error("Name required to create an order");
+        return;
+      }
     }
-    const name = abandonedCartDisplayName(cart);
+    if (!phone) {
+      phone = String(
+        window.prompt("Customer phone / WhatsApp (required):", "") || ""
+      )
+        .replace(/[^\d+]/g, "")
+        .trim();
+      if (!phone) {
+        toast.error("Phone required to create an order");
+        return;
+      }
+    }
+    if (!street) {
+      street = String(window.prompt("Delivery street address:", "") || "").trim();
+    }
+    if (!city) {
+      city = String(window.prompt("City:", "") || "").trim();
+    }
+    if (!state && (street || city)) {
+      state = String(window.prompt("Province (optional):", "") || "").trim();
+    }
+
+    await patchAction(cart.id, "set-contact", {
+      silent: true,
+      name,
+      phone,
+      email: email || undefined,
+      street: street || undefined,
+      city: city || undefined,
+      state: state || undefined,
+    });
+
     const ok = window.confirm(
-      `Create a confirmed COD order for ${name} (${cart.customer.phone}) with ${(cart.items || []).length} item(s) totaling ${formatAdminPrice(cart.subtotal || 0)}?`
+      `Create a confirmed COD order for ${name} (${phone}) with ${(cart.items || []).length} item(s) totaling ${formatAdminPrice(cart.subtotal || 0)}?`
     );
     if (!ok) return;
 
@@ -256,7 +302,15 @@ export function AbandonedCartsPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          name,
+          phone,
+          email,
+          street,
+          city,
+          state,
+          shippingAddress: { name, phone, email, street, city, state, country: "Pakistan" },
+        }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
@@ -522,12 +576,17 @@ export function AbandonedCartsPage() {
                           >
                             View order
                           </a>
-                        ) : (cart.items || []).length > 0 && cart.customer?.phone ? (
+                        ) : (cart.items || []).length > 0 ? (
                           <button
                             type="button"
                             disabled={convertingId === cart.id}
                             onClick={() => convertToOrder(cart)}
                             className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
+                            title={
+                              cart.customer?.phone
+                                ? "Create COD order from this cart"
+                                : "Enter phone/name/address, then create order"
+                            }
                           >
                             {convertingId === cart.id ? "Converting…" : "Convert to order"}
                           </button>

@@ -68,7 +68,7 @@ export function AbandonedCartDetailModal({
   const items = Array.isArray(cart.items) ? cart.items : [];
   const reminders = Array.isArray(cart.reminders) ? cart.reminders : [];
   const canConvert =
-    !cart.convertedOrderNumber && items.length > 0 && Boolean(cart.customer?.phone);
+    !cart.convertedOrderNumber && items.length > 0;
   const list = Array.isArray(cartList) ? cartList : [];
   const idx = list.findIndex((c) => c?.id === cart.id);
   const prevCart = idx > 0 ? list[idx - 1] : null;
@@ -143,8 +143,18 @@ export function AbandonedCartDetailModal({
             </h3>
             <dl className="rounded-xl border border-slate-200 px-3 dark:border-slate-700">
               <Row label="Name">{abandonedCartDisplayName(cart)}</Row>
-              <Row label="Phone">{cart.customer?.phone || "—"}</Row>
-              <Row label="Email">{cart.customer?.email || "—"}</Row>
+              <Row label="Phone">{cart.customer?.phone || cart.shippingAddress?.phone || "—"}</Row>
+              <Row label="Email">{cart.customer?.email || cart.shippingAddress?.email || "—"}</Row>
+              <Row label="Address">
+                {[
+                  cart.shippingAddress?.street,
+                  cart.shippingAddress?.area,
+                  cart.shippingAddress?.city,
+                  cart.shippingAddress?.state,
+                ]
+                  .filter(Boolean)
+                  .join(", ") || "—"}
+              </Row>
             </dl>
           </section>
 

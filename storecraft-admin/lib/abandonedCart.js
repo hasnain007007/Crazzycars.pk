@@ -28,11 +28,11 @@ export async function markIdleCartsAbandoned(CartSession, opts = {}) {
 
 /** Human label when checkout never captured a name. */
 export function abandonedCartDisplayName(cart) {
-  const name = String(cart?.customer?.name || "").trim();
+  const name = String(cart?.customer?.name || cart?.shippingAddress?.name || "").trim();
   if (name) return name;
-  const phone = String(cart?.customer?.phone || "").trim();
+  const phone = String(cart?.customer?.phone || cart?.shippingAddress?.phone || "").trim();
   if (phone) return phone;
-  const email = String(cart?.customer?.email || "").trim();
+  const email = String(cart?.customer?.email || cart?.shippingAddress?.email || "").trim();
   if (email) return email;
   const first = cart?.items?.[0]?.name;
   if (first) return `Guest · ${first}`;
@@ -102,6 +102,7 @@ export function serializeCartSession(doc) {
     itemCount: o.itemCount || 0,
     subtotal: o.subtotal || 0,
     customer: o.customer || {},
+    shippingAddress: o.shippingAddress || {},
     status: o.status,
     lastActivityAt: o.lastActivityAt,
     abandonedAt: o.abandonedAt,

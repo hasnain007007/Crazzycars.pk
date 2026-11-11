@@ -47,6 +47,12 @@ import {
   getStoredRecoveryToken,
   syncCartToServer,
 } from "@/lib/cartSyncClient";
+import {
+  clearCheckoutDraft,
+  draftToSyncPayload,
+  readCheckoutDraft,
+  writeCheckoutDraft,
+} from "@/lib/checkoutDraft";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -366,6 +372,35 @@ export function CheckoutView() {
             setNameDraft((prev) => prev || restoredName);
           }
         }
+        const ship = data.shippingAddress || {};
+        if (ship.street || ship.city || ship.state || ship.phone) {
+          setAddr((prev) => ({
+            ...prev,
+            street: prev.street || ship.street || "",
+            street2: prev.street2 || ship.street2 || "",
+            area: prev.area || ship.area || "",
+            city: prev.city || ship.city || "",
+            state: prev.state || ship.state || "",
+            zip: prev.zip || ship.zip || "",
+            country: prev.country || ship.country || STORE_COUNTRY,
+          }));
+          if (ship.street2) setShowStreet2(true);
+          if (ship.phone) {
+            setCustomer((f) => ({ ...f, phone: f.phone || ship.phone }));
+          }
+        }
+        writeCheckoutDraft({
+          name: data.customer?.name || "",
+          email: data.customer?.email || "",
+          phone: data.customer?.phone || ship.phone || "",
+          street: ship.street || "",
+          street2: ship.street2 || "",
+          area: ship.area || "",
+          city: ship.city || "",
+          state: ship.state || "",
+          zip: ship.zip || "",
+          country: ship.country || STORE_COUNTRY,
+        });
         toast.success("Your cart was restored — complete checkout below.");
         params.delete("recover");
         const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
@@ -379,23 +414,98 @@ export function CheckoutView() {
     };
   }, [replaceItems]);
 
-  // Keep abandoned-cart contact fields in sync while filling checkout
+  // Restore any previous checkout draft (name/phone/address) for guests
   useEffect(() => {
-    const t = setTimeout(() => {
-      const name = `${String(customer.firstName || "").trim()} ${String(customer.lastName || "").trim()}`.trim();
-      if (!name && !customer.email && !customer.phone && !items.length) return;
+    const draft = readCheckoutDraft();
+    if (!draft) return;
+    setCustomer((f) => ({
+      firstName: f.firstName || draft.firstName || "",
+      lastName: f.lastName || draft.lastName || "",
+      email: f.email || draft.email || "",
+      phone: f.phone || draft.phone || "",
+    }));
+    if (draft.name) setNameDraft((prev) => prev || draft.name);
+    setAddr((prev) => ({
+      ...prev,
+      street: prev.street || draft.street || "",
+      street2: prev.street2 || draft.street2 || "",
+      area: prev.area || draft.area || "",
+      city: prev.city || draft.city || "",
+      state: prev.state || draft.state || "",
+      zip: prev.zip || draft.zip || "",
+      country: prev.country || draft.country || STORE_COUNTRY,
+    }));
+    if (draft.street2) setShowStreet2(true);
+  }, []);
+
+  // Keep abandoned-cart contact + address in sync while filling checkout
+  useEffect(() => {
+    const name =
+      String(nameDraft || "").trim() ||
+      `${String(customer.firstName || "").trim()} ${String(customer.lastName || "").trim()}`.trim();
+    const draft = writeCheckoutDraft({
+      name,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      email: customer.email,
+      phone: customer.phone,
+      street: addr.street,
+      street2: addr.street2,
+      area: addr.area,
+      city: addr.city,
+      state: addr.state,
+      zip: addr.zip,
+      country: addr.country || STORE_COUNTRY,
+    });
+
+    const flush = () => {
+      const payload = draftToSyncPayload(draft);
+      if (
+        !payload.customer.name &&
+        !payload.customer.email &&
+        !payload.customer.phone &&
+        !payload.shippingAddress.street &&
+        !payload.shippingAddress.city &&
+        !items.length
+      ) {
+        return;
+      }
       syncCartToServer({
         items,
-        customer: {
-          name,
-          email: customer.email,
-          phone: customer.phone,
-        },
+        customer: payload.customer,
+        shippingAddress: payload.shippingAddress,
         path: "/checkout",
+        includeDraft: false,
       });
-    }, 1500);
-    return () => clearTimeout(t);
-  }, [customer.firstName, customer.lastName, customer.email, customer.phone, items]);
+    };
+
+    const t = setTimeout(flush, 700);
+    const onHide = () => flush();
+    const onVis = () => {
+      if (document.visibilityState === "hidden") onHide();
+    };
+    window.addEventListener("pagehide", onHide);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("pagehide", onHide);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [
+    customer.firstName,
+    customer.lastName,
+    customer.email,
+    customer.phone,
+    nameDraft,
+    addr.street,
+    addr.street2,
+    addr.area,
+    addr.city,
+    addr.state,
+    addr.zip,
+    addr.country,
+    items,
+  ]);
 
   const freeThreshold = useMemo(
     () => getEffectiveFreeDeliveryThreshold(settings?.storePayment || storePayment),
@@ -869,6 +979,7 @@ export function CheckoutView() {
           /* ignore */
         }
       }
+      clearCheckoutDraft();
       const qs = new URLSearchParams({ order_id: String(nextOrderId) });
       if (accessToken) qs.set("t", accessToken);
       window.location.href = `/checkout/success?${qs.toString()}`;

@@ -54,6 +54,18 @@ const cartSessionSchema = new mongoose.Schema(
       email: { type: String, default: "", trim: true, lowercase: true },
       phone: { type: String, default: "", trim: true },
     },
+    shippingAddress: {
+      name: { type: String, default: "", trim: true },
+      email: { type: String, default: "", trim: true, lowercase: true },
+      phone: { type: String, default: "", trim: true },
+      street: { type: String, default: "", trim: true },
+      street2: { type: String, default: "", trim: true },
+      area: { type: String, default: "", trim: true },
+      city: { type: String, default: "", trim: true },
+      state: { type: String, default: "", trim: true },
+      zip: { type: String, default: "", trim: true },
+      country: { type: String, default: "Pakistan", trim: true },
+    },
     status: {
       type: String,
       enum: ["active", "abandoned", "recovered", "dismissed"],
