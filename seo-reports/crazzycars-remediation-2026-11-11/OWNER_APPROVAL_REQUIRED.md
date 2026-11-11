@@ -1,15 +1,31 @@
-# OWNER_APPROVAL_REQUIRED — Stage 2 Mongo M1–M4
+# OWNER_APPROVAL_REQUIRED — Stage 3 Indexing SEO
 
-**Code deploy `c98e0ad`:** complete.  
-**Owner GO:** `GO migrate M1-M4` — **applied SUCCESS** (see `MIGRATE_APPLY_REPORT.md`).
+## Recommendation
 
-## Applied
+# **CONDITIONAL GO**
 
-| Item | Value |
+Code-only deploy of branch `fix/crazzycars-indexing-seo-2026-11-11` (exact tip SHA in agent message / `git rev-parse`) after you name it.
+
+### Included if you say `GO deploy <sha>`
+
+1. Expand `?page=1` → 308 for `/categories/*`, `/cars/*`, `/sale` (plus existing shop/blogs/cars index).  
+2. Broader **410** for dead `.atom` / `/atom` / `.rss` (keeps `/feed/*` live).
+
+### Not included (separate GO)
+
+| Item | Phrase when ready |
 | --- | --- |
-| Backup | `/data/crazzycars/mongo/m1-m4-backup-20261111T003552Z/` |
-| FP | `aef1004e2d04d2fc` |
-| DB | `crazzycars_motorsports` |
-| Status | **SUCCESS** — M1–M4 + live verification |
+| S5 blog rewrites | `GO S5` |
+| Tucson hybrid 2025 hub | Evidence + explicit redirect/create GO |
+| Swift body-kit year / multi-gen mats | Fitment evidence + migrate GO |
+| GSC API export analysis | Provide GSC access or CSV |
 
-No further Mongo write authorisation outstanding for this pack. Ambiguous holds (Yaris Cross, Swift body-kit years, multi-gen mats) remain untouched.  
+### Forbidden without ask
+
+- Mongo writes beyond already-applied M1–M4  
+- Price/image/inventory/checkout changes  
+- Force 404 on live Audi A5 hub  
+
+## Deploy constraint
+
+Do **not** merge to `vps-test` / Coolify until you approve the exact SHA. Autodeploy would ship storefront middleware changes.

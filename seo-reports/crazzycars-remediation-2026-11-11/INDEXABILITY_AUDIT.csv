@@ -1,2 +1,16 @@
-status,note
-PENDING,Full pass scheduled; prior controlled release covered many technical SEO checks — see seo-reports/2026-11-11-controlled-release-report.md
+url,http_status,robots,canonical,sitemap,issue,severity,action,status
+https://crazzycars.pk/,200,"index, follow",https://crazzycars.pk,yes (pages),none,P3,none,OK
+https://crazzycars.pk/shop,200,"index, follow",https://crazzycars.pk/shop,yes,none,P3,none,OK
+https://crazzycars.pk/shop?page=1,308→/shop,n/a,n/a,n/a,page=1 duplicate prevented,P2,already live,OK
+https://crazzycars.pk/shop?page=2,200,"noindex, follow",https://crazzycars.pk/shop?page=2,no,paginated noindex intentional,P3,preserve,OK
+https://crazzycars.pk/categories/exterior?page=1,200 (pre-fix),"index, follow",https://crazzycars.pk/categories/exterior,no,page=1 should 308,P1,middleware expand page=1 strip,FIXED_LOCAL
+https://crazzycars.pk/cars/suzuki-swift-2025-present?page=1,200 (pre-fix),,self-canonical clean,no,page=1 should 308,P1,middleware expand,FIXED_LOCAL
+https://crazzycars.pk/categories/car-hud,308→HUD PDP,,,historical GSC URL,P1,already live c98e0ad,OK
+https://crazzycars.pk/cars/tucson-hybrid-2025-nx4,404,,,,intentional hold no cross-gen alias,P1,preserve 404,HOLD
+https://crazzycars.pk/blogs.atom,404→410 local,,,,dead feed soft 404,P2,410 gone atom paths,FIXED_LOCAL
+https://crazzycars.pk/categories/exterior.atom,404→410 local,,,,dead feed,P2,410,FIXED_LOCAL
+https://crazzycars.pk/feed/products.xml,200,,,,live merchant feed,P3,preserve,OK
+https://crazzycars.pk/checkout,200,"noindex, nofollow",,,,intentional,P3,preserve,OK
+https://crazzycars.pk/blogs/body-kit-price-in-pakistan-2026,200,"index, follow",self,yes,thin/crawled-not-indexed historical,P1,S5 content GO required,HOLD_CONTENT
+https://crazzycars.pk/categories/security-gadgets,410,,,,gone category intentional,P2,preserve,OK
+https://crazzycars.pk/cars/audi-a5-2008-present,200,"index, follow",self,yes in sitemap-cars,MUST_404 list stale — hub has products,P2,do not force 404,OK_LEAVE

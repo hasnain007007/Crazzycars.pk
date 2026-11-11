@@ -23,6 +23,10 @@ import { resolveDeletedPath } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveOldBlogNewsPath } from "@/lib/oldBlogNewsRedirects.mjs";
 import { resolveCollectionRedirect } from "@/lib/collectionRedirectMap.mjs";
 import { isGoneNonCarCategoryPath } from "@/lib/goneCategoryPaths.mjs";
+import {
+  isGoneAtomFeedPath,
+  isListingPathEligibleForPageOneStrip,
+} from "@/lib/listingPageOneRedirect.mjs";
 import { STRIP_QUERY_KEYS } from "@/lib/stripQueryKeys.mjs";
 
 function redirectPath(request, pathname, status = 308) {
@@ -115,11 +119,8 @@ export async function middleware(request) {
 
   const lower = pathname.toLowerCase();
 
-  // S10: Shopify Atom feeds are gone — do not 308 into live HTML (soft-404 / duplicate).
-  if (
-    lower.endsWith(".atom") &&
-    (lower.startsWith("/collections/") || lower === "/blogs/news.atom")
-  ) {
+  // S10: Shopify/WordPress Atom+RSS leftovers — 410 (not soft HTML 404). Keep /feed/* live.
+  if (isGoneAtomFeedPath(lower)) {
     return new NextResponse("Gone", {
       status: 410,
       headers: {
@@ -141,17 +142,19 @@ export async function middleware(request) {
   }
 
   // S10: ?page=1 duplicates the base listing URL — 308 to the clean path (keep other params).
-  if (lower === "/blogs" || lower === "/shop" || lower === "/cars") {
-    if (request.nextUrl.searchParams.get("page") === "1") {
-      const dest = new URL(lower, request.nextUrl.origin);
-      for (const [key, value] of request.nextUrl.searchParams.entries()) {
-        const k = String(key).toLowerCase();
-        if (k === "page") continue;
-        if (STRIP_QUERY_KEYS.has(k) || k.startsWith("utm_")) continue;
-        dest.searchParams.append(key, value);
-      }
-      return withPaidCookie(request, NextResponse.redirect(dest, 308));
+  // Covers /shop|/blogs|/cars|/sale plus /categories/* and /cars/* hubs (was index-only).
+  if (
+    isListingPathEligibleForPageOneStrip(lower) &&
+    request.nextUrl.searchParams.get("page") === "1"
+  ) {
+    const dest = new URL(lower, request.nextUrl.origin);
+    for (const [key, value] of request.nextUrl.searchParams.entries()) {
+      const k = String(key).toLowerCase();
+      if (k === "page") continue;
+      if (STRIP_QUERY_KEYS.has(k) || k.startsWith("utm_")) continue;
+      dest.searchParams.append(key, value);
     }
+    return withPaidCookie(request, NextResponse.redirect(dest, 308));
   }
 
   // Public SEO URLs are /car-accessories-{city}; App Router needs /city/[city].

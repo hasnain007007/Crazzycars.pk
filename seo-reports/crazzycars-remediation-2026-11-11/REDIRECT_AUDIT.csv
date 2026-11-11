@@ -1,6 +1,22 @@
-url,status,expected,notes
-https://www.crazzycars.pk/,308→https://crazzycars.pk/,canonical host OK,verified 2026-11-11
-https://crazzycars.pk/products,308→/shop,intentional,verified
-https://crazzycars.pk/collections,308→/shop,intentional,verified
-https://crazzycars.pk/categories/car-hud,404→planned 301 to /car-heads-up-display-hud,high-impression historical Car HUD is product,code added locally
-https://crazzycars.pk/categories/security-gadgets,410,goneCategoryPaths,verified
+url,live_status,expected,notes,status
+https://www.crazzycars.pk/,301→https://crazzycars.pk/,apex host,OK (301 acceptable),OK
+http://crazzycars.pk/,301→https://crazzycars.pk/,https,OK,OK
+https://crazzycars.pk/products,308→/shop,intentional,verified,OK
+https://crazzycars.pk/collections,308→/shop,intentional,verified,OK
+https://crazzycars.pk/collections/home,308→/,intentional Shopify home,OK,OK
+https://crazzycars.pk/collections/all,308→/shop,intentional,OK,OK
+https://crazzycars.pk/categories/car-hud,308→/car-heads-up-display-hud,HUD product alias,live c98e0ad,OK
+https://crazzycars.pk/categories/hud,308→HUD PDP,alias,OK,OK
+https://crazzycars.pk/categories/fragrances,308→air-freshener,empty shelf,OK,OK
+https://crazzycars.pk/shop?page=1,308→/shop,S10,OK,OK
+https://crazzycars.pk/blogs?page=1,308→/blogs,S10,OK,OK
+https://crazzycars.pk/cars?page=1,308→/cars,S10,OK,OK
+https://crazzycars.pk/categories/exterior?page=1,200 pre-fix→308 local,S10 expand,FIXED_LOCAL,PENDING_DEPLOY
+https://crazzycars.pk/cars/suzuki-swift-2025-present?page=1,200 pre-fix→308 local,S10 expand,FIXED_LOCAL,PENDING_DEPLOY
+https://crazzycars.pk/shop?deals=1,308→/sale,intentional,OK,OK
+https://crazzycars.pk/shop/,308→/shop,trailing slash,OK,OK
+https://crazzycars.pk/pages/about,308→/about,legacy pages,OK,OK
+https://crazzycars.pk/search?q=swift,308→/shop?q=swift,intentional,OK,OK
+https://crazzycars.pk/cart,308→/shop,intentional,OK,OK
+https://crazzycars.pk/cars/tucson-hybrid-2025-nx4,404,must NOT redirect to 2020-2024 Tucson,founder hold,HOLD
+https://crazzycars.pk/blogs.atom,404→410 local,gone feed,FIXED_LOCAL,PENDING_DEPLOY

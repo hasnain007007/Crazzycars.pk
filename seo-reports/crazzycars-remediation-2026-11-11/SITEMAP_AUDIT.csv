@@ -1,2 +1,10 @@
-sitemap,url_count_note,status
-index+children,547 URLs in SITEMAP_URLS.txt,VERIFIED_LIST
+sitemap,http_status,loc_count,lastmod_sample,notes,status
+https://crazzycars.pk/sitemap.xml,200,5 child sitemaps,2026-11-11 products,index OK,OK
+https://crazzycars.pk/sitemap-products.xml,200,399,2026-11-11,active products only,OK
+https://crazzycars.pk/sitemap-categories.xml,200,36,2026-11-05,non-empty shelves,OK
+https://crazzycars.pk/sitemap-cars.xml,200,60,2026-10-31,includes audi-a5 (has products); excludes tucson-hybrid-2025,OK
+https://crazzycars.pk/sitemap-pages.xml,200,21,,static/CMS pages,OK
+https://crazzycars.pk/sitemap-blog.xml,200,31,,published blogs,OK
+TOTAL,,547 URLs,,matches prior inventory order of magnitude,OK
+tucson-hybrid-2025 in sitemap-cars,n/a,0,,correctly absent while 404 hold,OK
+HUD category in sitemap,n/a,0,,category gone; PDP should be in products sitemap,OK
