@@ -2,6 +2,8 @@
 
 **Generated:** 2026-11-11T15:04:31.824Z  
 **Branch:** `fix/crazzycars-master-remediation-2026-11-11` (from indexing SEO branch tip)  
+**Release candidate SHA (code):** `e583a2e309996630b78bf607e17eb46c0715efce`  
+**Branch tip (includes this report pin):** see `git rev-parse HEAD` on `fix/crazzycars-master-remediation-2026-11-11`  
 **Scope:** Local code remediation only — **no production deploy**, **no live Mongo writes**.
 
 ## Summary
