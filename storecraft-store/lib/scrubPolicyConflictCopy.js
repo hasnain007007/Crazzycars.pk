@@ -168,6 +168,22 @@ export function scrubStaleProductBoilerplate(html) {
     /<div[^>]*data-cc-unique[^>]*>[\s\S]*?<\/div>/gi,
     ""
   );
+  // Embedded FAQ markup (also stripped by stripEmbeddedFaqHtml) — remove early for C19.
+  out = out.replace(/<div[^>]*data-cc-faq[^>]*>[\s\S]*?<\/div>\s*(?:<!--\s*\/cc-faq\s*-->)?/gi, "");
+  // data-cc-aeo blocks often append shared COD/WhatsApp sentences after a unique lead.
+  // Keep the first sentence (product-named); drop the policy tail (C19 / T5).
+  out = out.replace(
+    /<p([^>]*data-cc-aeo[^>]*)>([\s\S]*?)<\/p>/gi,
+    (_m, attrs, inner) => {
+      const plain = String(inner)
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const first = plain.split(/(?<=[.!?])\s+/)[0] || "";
+      if (!first || first.length < 24) return "";
+      return `<p${attrs}>${first}</p>`;
+    }
+  );
   out = out.replace(
     /<p>\s*CrazzyCars listing\s*[—–-]\s*[^<]+<\/p>/gi,
     ""
@@ -179,6 +195,37 @@ export function scrubStaleProductBoilerplate(html) {
   out = out.replace(
     /Use the fitment fields on this page to match your car\.+/gi,
     "Use the vehicle compatibility table on this page to match your car."
+  );
+  // Shared catalogue template (identical across velvet/TPE/key-cover families).
+  out = out.replace(
+    /\s*Designed for a precise fit and finished to a (?:quality|premium) standard, it installs easily and holds up to daily use in Pakistani conditions\./gi,
+    ""
+  );
+  out = out.replace(
+    /<h3>\s*Key Features\s*<\/h3>\s*<ul>\s*(?:<li>\s*(?:<p>)?\s*Quality materials with listed fitment for your model\s*(?:<\/p>)?\s*<\/li>\s*)?(?:<li>\s*(?:<p>)?\s*Easy installation with no cutting or drilling\s*(?:<\/p>)?\s*<\/li>\s*)?(?:<li>\s*(?:<p>)?\s*Durable, easy to clean and built for daily use\s*(?:<\/p>)?\s*<\/li>\s*)?(?:<li>\s*(?:<p>)?\s*Backed by CrazzyCars nationwide Cash on Delivery\s*(?:<\/p>)?\s*<\/li>\s*)*<\/ul>/gi,
+    ""
+  );
+  // Specs tables embed identical Payment/Delivery/Returns/Help rows on every PDP (C19).
+  out = out.replace(
+    /<tr>\s*<th>\s*(?:Payment|Delivery charge|Delivery time|Returns|Help)\s*<\/th>\s*<td>[\s\S]*?<\/td>\s*<\/tr>/gi,
+    ""
+  );
+  // Duplicate policy blurbs inside descriptions (UI already shows COD/delivery once).
+  out = out.replace(
+    /Cash on Delivery across Pakistan[:.]?[^.]*\./gi,
+    ""
+  );
+  out = out.replace(
+    /Confirm fitment on WhatsApp\s*0?3[\d\s-]+[.]?/gi,
+    ""
+  );
+  out = out.replace(
+    /Confirm your (?:exact )?year against the vehicle compatibility table before ordering\.?/gi,
+    ""
+  );
+  out = out.replace(
+    /Confirm your variant on WhatsApp before ordering\.?/gi,
+    ""
   );
   // Abrupt truncated booking-advance teaser sentences
   out = out.replace(

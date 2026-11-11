@@ -109,7 +109,9 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
     if (vehicle.slug && String(vehicle.slug) !== slugStr) {
       permanentRedirect(listingHref(`/cars/${vehicle.slug}`, listing));
     }
-    const assigned = await Product.countDocuments(buildVehiclePageProductFilter(vehicle));
+    // Match page body: countDocuments ignores title-model rejects that can empty the hub.
+    const keptForMeta = await loadProductsForVehicle(vehicle, { limit: 500 });
+    const assigned = keptForMeta.length;
     if (assigned === 0) notFound();
     const totalPages = Math.max(1, Math.ceil(assigned / listing.pageSize) || 1);
     if (listing.page > totalPages) notFound();

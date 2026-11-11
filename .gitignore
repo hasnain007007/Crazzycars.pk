@@ -15,3 +15,9 @@ node_modules/
 storecraft-store/media/
 storecraft-admin/media/
 /data/
+
+# Local image handoff packages (do not commit binary drafts)
+CrazzyCars-Cursor-Image-Handoff/
+
+# OPA Mode B synthetic export output (never commit real catalogue exports)
+scripts/opa-mode-b-export/fixtures/out/

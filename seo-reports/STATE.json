@@ -1,18 +1,21 @@
 {
-  "updated": "2026-11-11T01:50:00.000Z",
-  "audit": "2026-11-11 SEO remediation continue (post independent crawl)",
+  "updated": "2026-11-11T15:04:38.925Z",
+  "audit": "2026-11-11 master remediation (local RC)",
   "baseline": "seo-reports/2026-11-10-baseline.json",
   "predeploy_live": "seo-reports/2026-11-11-predeploy-live.json",
   "postdeploy_live": "seo-reports/2026-11-11-postdeploy-live.json",
-  "branch": "fix/crazzycars-indexing-seo-2026-11-11",
+  "branch": "fix/crazzycars-master-remediation-2026-11-11",
   "deployed_commit": "67bef500e5ffcae20fa57ae9781820c4453039fa",
-  "note": "Independent no-cache crawl confirmed prior deploy wins. New loop starts at T1 double-FAQ. No deploy without owner GO.",
+  "note": "Local remediation complete. No deploy / no live Mongo writes. Owner GO required.",
   "tasks": {
     "T1_double_faq": {
       "status": "code_ready",
       "commit": "896639f",
       "c23_before": 88,
-      "c23_before_detail": { "product": 62, "blog": 26 },
+      "c23_before_detail": {
+        "product": 62,
+        "blog": 26
+      },
       "c23_after_live": "pending_deploy",
       "unit_after": "API longDescription 2 FAQ h2 → 0 after stripEmbeddedFaqHtml",
       "root_cause": "stripEmbeddedFaqHtml only removed the first FAQ h2; many longDescriptions embed two FAQ blocks — second survived beside FaqSection",
@@ -35,37 +38,100 @@
       "note": "Intros from buildVehicleIntro (live catalogue fields + policy template). No invented fitment in 10/10 sample. See T4-vehicle-intros-audit.md"
     },
     "T5_boilerplate_c19": {
-      "status": "measuring",
-      "c19_before_path": "seo-reports/crazzycars-remediation-2026-11-11/c19-before-t5.json"
+      "status": "code_ready",
+      "note": "scrubStaleProductBoilerplate expanded; trust/delivery/FAQ shortened; offline C19 sim 0/20 fails; pending deploy"
     },
-    "T6_google_reviews": { "status": "pending" },
-    "T7_thin_pages": { "status": "pending" },
-    "T8_lighthouse": { "status": "pending" },
-    "T9_compare_at": { "status": "pending" },
+    "T6_google_reviews": {
+      "status": "code_ready",
+      "note": "Editorial GoogleReviewsNote on home+about; no Product LD"
+    },
+    "T7_thin_pages": {
+      "status": "pending"
+    },
+    "T8_lighthouse": {
+      "status": "pending"
+    },
+    "T9_compare_at": {
+      "status": "pending"
+    },
     "NAP": {
       "status": "code_ready_not_deployed",
       "commit": "32487c1",
       "db": "dry_run_only — seo-reports/.../nap-settings-dryrun.json"
     },
-    "T10c": { "status": "blocked", "note": "draft-product decisions" },
-    "T10d": { "status": "blocked", "note": "homeware/beauty deliberate vs data loss" },
-    "T12": { "status": "blocked", "note": "blog expansions need scoped GO" },
-    "Q_tucson_hub": { "status": "blocked" },
-    "Q_side_mirror_dup": { "status": "blocked", "note": "both PDPs live; owner must say if duplicates" },
+    "T10c": {
+      "status": "blocked",
+      "note": "draft-product decisions"
+    },
+    "T10d": {
+      "status": "blocked",
+      "note": "homeware/beauty deliberate vs data loss"
+    },
+    "T12": {
+      "status": "blocked",
+      "note": "blog expansions need scoped GO"
+    },
+    "Q_tucson_hub": {
+      "status": "blocked"
+    },
+    "Q_side_mirror_dup": {
+      "status": "blocked",
+      "note": "both PDPs live; owner must say if duplicates"
+    },
     "Q_abs_blog_301": {
       "status": "blocked",
       "note": "/blogs/abs-vs-real-carbon-fiber-car-accessories-pakistan → 301 /categories/carbon-fiber — ask before leaving"
+    },
+    "BRV_hub": {
+      "status": "code_ready",
+      "note": "sitemap loadProductsForVehicle filter; br-v→/cars"
+    },
+    "C8_faq": {
+      "status": "code_ready",
+      "note": "/faq h3 + advance-payment FAQ heading"
     }
   },
   "open_questions": [
-    { "id": "Q-T12", "question": "Scoped GO to apply two blog expansions via Mongo?", "blocking": true },
-    { "id": "Q-T10c", "question": "Per-SKU PUBLISH/301/410 from T10c matrix?", "blocking": true },
-    { "id": "Q-T10d", "question": "Homeware/beauty deliberate drop vs data loss?", "blocking": true },
-    { "id": "Q-tucson-hub", "question": "Build verified 2025 Tucson Hybrid hub?", "blocking": false },
-    { "id": "Q-side-mirror", "question": "Are CC-COR-MIRROR-3 and neon pair duplicates?", "blocking": true },
-    { "id": "Q-abs-blog", "question": "Restore abs-vs-real-carbon blog if still in DB?", "blocking": true },
-    { "id": "Q-NAP-db", "question": "GO on nap-settings-dryrun.json + deploy NAP/T1?", "blocking": true },
-    { "id": "Q-NAP-phone", "question": "CALL vs WHATSAPP number split?", "blocking": true }
+    {
+      "id": "Q-T12",
+      "question": "Scoped GO to apply two blog expansions via Mongo?",
+      "blocking": true
+    },
+    {
+      "id": "Q-T10c",
+      "question": "Per-SKU PUBLISH/301/410 from T10c matrix?",
+      "blocking": true
+    },
+    {
+      "id": "Q-T10d",
+      "question": "Homeware/beauty deliberate drop vs data loss?",
+      "blocking": true
+    },
+    {
+      "id": "Q-tucson-hub",
+      "question": "Build verified 2025 Tucson Hybrid hub?",
+      "blocking": false
+    },
+    {
+      "id": "Q-side-mirror",
+      "question": "Are CC-COR-MIRROR-3 and neon pair duplicates?",
+      "blocking": true
+    },
+    {
+      "id": "Q-abs-blog",
+      "question": "Restore abs-vs-real-carbon blog if still in DB?",
+      "blocking": true
+    },
+    {
+      "id": "Q-NAP-db",
+      "question": "GO on nap-settings-dryrun.json + deploy NAP/T1?",
+      "blocking": true
+    },
+    {
+      "id": "Q-NAP-phone",
+      "question": "CALL vs WHATSAPP number split?",
+      "blocking": true
+    }
   ],
   "db_writes": []
 }

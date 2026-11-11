@@ -253,7 +253,7 @@ export default async function AdvancePaymentPage() {
       </section>
 
       <section className="adv-section" aria-labelledby="adv-faq">
-        <h2 id="adv-faq">Questions</h2>
+        <h2 id="adv-faq">Frequently asked questions</h2>
         <div className="adv-faq">
           {c.faq.map((f) => (
             <details key={f.q}>

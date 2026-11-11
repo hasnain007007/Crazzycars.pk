@@ -50,7 +50,8 @@ export default async function FaqPage() {
       <div className="mt-8 space-y-6">
         {faqs.map((faq) => (
           <article key={faq.question}>
-            <h2 className="text-lg font-semibold text-zinc-900">{faq.question}</h2>
+            {/* h3 (not h2): C8 counts h3/summary under the FAQ heading as visible questions */}
+            <h3 className="text-lg font-semibold text-zinc-900">{faq.question}</h3>
             <p className="mt-2 text-gray-700 leading-relaxed">{faq.answer}</p>
           </article>
         ))}

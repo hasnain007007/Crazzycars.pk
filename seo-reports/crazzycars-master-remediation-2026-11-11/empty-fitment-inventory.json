@@ -1,0 +1,475 @@
+{
+  "generatedAt": "2026-11-11T15:02:33.756Z",
+  "count": 52,
+  "note": "From exports/crazzycars-products-raw.json — NOT live FP. Dry-run inventory only.",
+  "products": [
+    {
+      "id": "6a5d224889c0c8d16c691fb0",
+      "slug": "hand-sewing-top-alcantara-suede-with-glossy-carbon-fiber-steering-wheel-cover",
+      "articleNo": "CC-0020",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d224889c0c8d16c691fb1",
+      "slug": "universal-hand-sewing-top-alcantara-steering-wheel-cover-1-pc-black",
+      "articleNo": "CC-0021",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d226489c0c8d16c691fbb",
+      "slug": "universal-carbon-fiber-steering-wheel-cover-trims-anti-slip-2pcs",
+      "articleNo": "CC-0026",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d226589c0c8d16c691fbf",
+      "slug": "universal-front-splitter-style-4-gloss-black-canard-3pcs",
+      "articleNo": "CC-0030",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d226589c0c8d16c691fc0",
+      "slug": "universal-front-splitter-spike-d5-carbon-fiber-canard-3pcs",
+      "articleNo": "CC-0031",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d226589c0c8d16c691fc2",
+      "slug": "universal-rear-bumper-diffuser-carbon-fiber-d2-style-2pcs",
+      "articleNo": "CC-0033",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d226589c0c8d16c691fc3",
+      "slug": "universal-3-piece-front-bumper-splitter-ground-style-abs",
+      "articleNo": "CC-0034",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d226d89c0c8d16c692020",
+      "slug": "carbon-fiber-side-air-flow-vents-fender-trim",
+      "articleNo": "CC-0123",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d226f89c0c8d16c692036",
+      "slug": "car-heads-up-display-hud",
+      "articleNo": "CC-0144",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d226f89c0c8d16c69203d",
+      "slug": "universal-angel-wings-led-car-light",
+      "articleNo": "CC-0150",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227289c0c8d16c69205f",
+      "slug": "devil-eye-led-rear-windshield-light",
+      "articleNo": "CC-0180",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227289c0c8d16c692060",
+      "slug": "4-in-1-45w-fast-car-charger-usb-type-c-built-in-ios-android-cable",
+      "articleNo": "CC-0181",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227389c0c8d16c692063",
+      "slug": "deal-5-complete-body-kit-deal-front-splitter-side-skirts-back-bumper-lip",
+      "articleNo": "CC-UNI-EXT-BKT-BTM-GB-BTM",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227389c0c8d16c692065",
+      "slug": "side-skirts-red-lip-abs-plastic-side-skirt-kit-4-pcs-copy",
+      "articleNo": "CC-0184",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227389c0c8d16c69206b",
+      "slug": "reverse-bright-light-bulb-24-smd-led-w16w-t15-4-pack",
+      "articleNo": "CC-UNI-LGT-REV-T15",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c69206c",
+      "slug": "bright-led-indicator-bulbs-2-pcs",
+      "articleNo": "CC-UNI-LGT-IND-W40",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c69206d",
+      "slug": "x-card-car-hanging-air-freshener-perfume",
+      "articleNo": "CC-0190",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c69206e",
+      "slug": "golden-lion-car-dashboard-decoration-sculpture",
+      "articleNo": "CC-0191",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c69206f",
+      "slug": "lion-car-dashboard-perfume-air-freshener-crazzycars",
+      "articleNo": "CC-0192",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c692070",
+      "slug": "car-modified-stainless-steel-exhaust-tip",
+      "articleNo": "CC-UNI-EXT-EXT-A1",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c692071",
+      "slug": "car-decoration-solar-powered-aeroplane",
+      "articleNo": "CC-0193",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c692072",
+      "slug": "car-brembo-style-brake-caliper-covers-universal-fit",
+      "articleNo": "CC-UNI-EXT-BCC-RD",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c692073",
+      "slug": "funny-window-hand-gesture-led-light",
+      "articleNo": "CC-0194",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c692074",
+      "slug": "universal-amber-grill-lights-4pcs",
+      "articleNo": "CC-UNI-LGT-AGL-YL",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227489c0c8d16c692075",
+      "slug": "car-bonnet-hood-spacer-aluminum-2-pcs",
+      "articleNo": "CC-0195",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227589c0c8d16c692077",
+      "slug": "universal-led-matrix-panel",
+      "articleNo": "CC-0197",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227589c0c8d16c69207a",
+      "slug": "carbon-fiber-hand-stitched-steering-wheel-cover",
+      "articleNo": "CC-0200",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227589c0c8d16c69207f",
+      "slug": "car-front-bumper-splitter-abs-plastic-3pcs",
+      "articleNo": "CC-0203",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227589c0c8d16c692080",
+      "slug": "car-rear-bumper-splitter-cut-style-universal",
+      "articleNo": "CC-0204",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227589c0c8d16c692081",
+      "slug": "car-side-splitter-abs-plastic-4pcs",
+      "articleNo": "CC-0205",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c692082",
+      "slug": "car-rear-bumper-splitter-simple-universal",
+      "articleNo": "CC-0206",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c692083",
+      "slug": "car-front-bumper-splitter-abs-plastic-4pcs",
+      "articleNo": "CC-UNI-EXT-FBL-4PC-BK",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c692084",
+      "slug": "grill-led-police-light-red-blue",
+      "articleNo": "CC-UNI-LGT-POL-4X4R",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c692085",
+      "slug": "sos-police-strip-light-red-blue",
+      "articleNo": "CC-0207",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c692086",
+      "slug": "car-grill-white-flashers-strobe-led-4pcs",
+      "articleNo": "CC-0208",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c692087",
+      "slug": "dynamic-car-underglow-lights",
+      "articleNo": "CC-0209",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c692088",
+      "slug": "car-interior-ambient-lights-5-point-dashboard-doors",
+      "articleNo": "CC-0210",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c692089",
+      "slug": "premium-dynamic-ambient-interior-lights",
+      "articleNo": "CC-UNI-AMB-DYN-10",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c69208a",
+      "slug": "car-dashboard-ambient-light-strip-premium-2pcs",
+      "articleNo": "CC-0211",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c69208b",
+      "slug": "car-rgb-atmosphere-light-interior-footwell-led-lights-4-pcs",
+      "articleNo": "CC-UNI-LGT-RGB-APP",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5d227689c0c8d16c69208c",
+      "slug": "3-color-switchback-fog-led-light-with-flasher-h11-white-yellow-blue-2-pcs",
+      "articleNo": "CC-FG-3CLR-H11",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a5ea46e086726a54a151369",
+      "slug": "universal-premium-exhaust-cut-off-kit",
+      "articleNo": "CC-EXT-101",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a6265080786ea8adbf05b24",
+      "slug": "universal-led-flash-lights-cd-076",
+      "articleNo": "CC-LGT-104",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a6265220786ea8adbf05b3f",
+      "slug": "universal-car-umbrella-windshield-protector-sun-shade",
+      "articleNo": "CC-UNI-141",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a6265230786ea8adbf05b40",
+      "slug": "air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump",
+      "articleNo": "CC-UNI-142",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a6265240786ea8adbf05b41",
+      "slug": "double-cylinder-air-compressor-pump",
+      "articleNo": "CC-UNI-143",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a633a60d40b29d18ad3ce66",
+      "slug": "universal-car-eyes-spoiler-with-running-brake-led-lights-3pcs",
+      "articleNo": "CC-EXT-201",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a71072d3261f3cfd4c75538",
+      "slug": "universal-front-bumper-splitter-canard-1pcs-matt-black-abs",
+      "articleNo": "CC-UNI-CANARD-1",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a71072e3261f3cfd4c75539",
+      "slug": "universal-car-led-reflector-bumper-side-marker-light",
+      "articleNo": "CC-UNI-LED-REFL",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a7392ecdd9af3883c942add",
+      "slug": "universal-car-digital-eyes-led-panel-lights",
+      "articleNo": "CC-UNI-LED-DEYE",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a82154482bfd0d683c3ce8e",
+      "slug": "universal-usb-car-humidifier-atmosphere-light-laser-roof-light",
+      "articleNo": "CC-UNI-HUM-LSR-001",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    },
+    {
+      "id": "6a9c51661531ae6a3f8e9c0d",
+      "slug": "car-door-welcome-logo-lights",
+      "articleNo": "11",
+      "fitmentType": "universal",
+      "universalNote": "Fits all car makes and models",
+      "compatibleVehiclesCount": 0,
+      "proposed": "KEEP_UNIVERSAL_ENSURE_NOTE"
+    }
+  ]
+}

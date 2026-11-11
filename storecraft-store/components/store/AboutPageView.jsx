@@ -214,12 +214,8 @@ export default function AboutPageView({ aboutPage }) {
           </div>
         ) : null}
 
-        <p className="mt-10 text-sm text-[#6B7280]">
-          Questions?{" "}
-          <Link href="/contact" className="font-semibold text-[#C41E1E] underline">
-            Contact us
-          </Link>{" "}
-          or WhatsApp 03284010007.
+        <p className="mt-10 text-sm text-[#444444]">
+          What customers say on Google: <strong>4.9★ from 7 Google reviews</strong>
           {String(about?.googleReviewUrl || "").trim() ? (
             <>
               {" · "}
@@ -228,10 +224,18 @@ export default function AboutPageView({ aboutPage }) {
                 className="font-semibold text-[#C41E1E] underline"
                 rel="noopener noreferrer"
               >
-                Review us on Google
+                Leave a Google review
               </a>
             </>
           ) : null}
+          .
+        </p>
+        <p className="mt-4 text-sm text-[#6B7280]">
+          Questions?{" "}
+          <Link href="/contact" className="font-semibold text-[#C41E1E] underline">
+            Contact us
+          </Link>{" "}
+          or WhatsApp 03284010007.
         </p>
       </section>
     </div>

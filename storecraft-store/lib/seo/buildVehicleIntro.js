@@ -121,9 +121,8 @@ export function buildVehicleIntro(vehicle, opts = {}) {
     bodyBits.push(priceLine.replace(/\s+/g, " ").trim());
   }
 
-  bodyBits.push(
-    `Cash on Delivery is available on eligible items with a small booking advance; bulky lines such as mats or spoilers use the higher delivery band shown at checkout. Returns follow our published 7-day policy for defective or wrong items only.`
-  );
+  // Short policy pointer — avoid identical long COD/returns sentences on every hub (AEO).
+  bodyBits.push(`COD and delivery bands are confirmed at checkout for this order.`);
 
   let text = bodyBits.join(" ");
   if (wordCount(text) < 120 && popular.length > 3) {

@@ -27,8 +27,12 @@ export const VEHICLE_SLUG_REDIRECTS = [
     permanent: true,
   },
   {
+    // Hub /cars/honda-brv-2017-present currently renders 0 products after
+    // title-model conflict filtering (soft-404). Do not 308 into an empty hub.
+    // When verified BR-V SKUs survive loadProductsForVehicle, restore destination
+    // to /cars/honda-brv-2017-present and it will re-enter sitemap-cars automatically.
     source: "/cars/honda-br-v-2017-present",
-    destination: "/cars/honda-brv-2017-present",
+    destination: "/cars",
     permanent: true,
   },
   {

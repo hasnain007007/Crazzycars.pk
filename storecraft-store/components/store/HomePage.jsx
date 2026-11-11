@@ -31,6 +31,9 @@ const BestSellers = dynamic(() => import("@/components/home/BestSellers"), {
 const ReviewsCarousel = dynamic(() => import("@/components/home/ReviewsCarousel"), {
   loading: () => <SectionSkeleton height={320} />,
 });
+const GoogleReviewsNote = dynamic(() => import("@/components/home/GoogleReviewsNote"), {
+  loading: () => null,
+});
 const WhyChooseUs = dynamic(() => import("@/components/home/WhyChooseUs"), {
   loading: () => <SectionSkeleton height={380} />,
 });
@@ -115,6 +118,7 @@ export function HomePage({
       {sectionEnabled("reviews") && homepageSettings.sections?.showReviews !== false ? (
         <ReviewsCarousel />
       ) : null}
+      <GoogleReviewsNote />
       {sectionEnabled("whyChooseUs") && homepageSettings.sections?.showWhyChooseUs !== false ? (
         <WhyChooseUs
           story={brandStory}

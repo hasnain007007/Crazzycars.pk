@@ -18,6 +18,7 @@ import {
   productHasExternalCanonical,
   productHasRealImage,
 } from "@/lib/productImages";
+import { loadProductsForVehicle } from "@/lib/vehiclePageData";
 
 /** Paths that permanently redirect — never emit in sitemaps (F3). */
 const REDIRECT_SOURCE_PATHS = new Set(
@@ -281,8 +282,27 @@ export async function fetchSitemapContext(headers) {
       )
     );
 
-  const carEntries = vehicles
-    .filter((v) => v.slug && vehiclesWithProducts.has(String(v._id)) && !isRedirectSourcePath(`/cars/${v.slug}`))
+  // Mirror /cars/[slug] render rules: ObjectId assignment alone is not enough —
+  // title-model conflict filtering can empty a hub (BR-V soft-404). Only emit
+  // hubs that loadProductsForVehicle would actually keep (≥1 product).
+  const carCandidates = vehicles.filter(
+    (v) =>
+      v.slug &&
+      vehiclesWithProducts.has(String(v._id)) &&
+      !isRedirectSourcePath(`/cars/${v.slug}`)
+  );
+  const carLiveFlags = await Promise.all(
+    carCandidates.map(async (v) => {
+      try {
+        const kept = await loadProductsForVehicle(v, { limit: 1 });
+        return kept.length > 0;
+      } catch {
+        return false;
+      }
+    })
+  );
+  const carEntries = carCandidates
+    .filter((_, i) => carLiveFlags[i])
     .map((v) => {
       // Car hub lastmod = vehicle document only (contentUpdatedAt → updatedAt).
       // Do not blend in product freshness — that made every lastmod look like

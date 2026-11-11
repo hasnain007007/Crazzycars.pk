@@ -42,6 +42,7 @@ import {
   PRODUCT_NAME_OVERRIDES,
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { stripEmbeddedFaqHtml } from "@/lib/seo/stripEmbeddedFaqHtml";
+import { scrubStaleProductBoilerplate } from "@/lib/scrubPolicyConflictCopy";
 const WISHLIST_KEY = "sialkot_wishlist";
 const COMPARE_KEY = "sialkot_compare";
 
@@ -943,7 +944,9 @@ export function ProductDetailMedico({
   // Always strip embedded FAQ blocks — FaqSection renders the canonical FAQ below.
   // Some DB descriptions embed the block twice; page-level strip alone left the second.
   const fixedDescription = scrubPaymentClaims(
-    stripEmbeddedFaqHtml(String(rawDescription || "").replace(/\bButto\b/g, "Button")),
+    stripEmbeddedFaqHtml(
+      scrubStaleProductBoilerplate(String(rawDescription || "").replace(/\bButto\b/g, "Button"))
+    ),
     productAllowsCod(product)
   );
   const appended = contentOverride?.appendDescription
@@ -1600,18 +1603,16 @@ export function ProductDetailMedico({
 
             </div>
 
-            {/* Compact trust strip — single short panel (C19: avoid repeating full policy copy). */}
+            {/* Compact trust strip — period-terminated short items so C19 does not glue them. */}
             <ul className="pdp-trust-strip" aria-label="Payment, delivery and returns">
               <li>
-                {productAllowsCod(product)
-                  ? `COD (${codAdvanceAmountsLabel()} advance)`
-                  : "Prepaid — JazzCash / Meezan / bank"}
+                {productAllowsCod(product) ? "COD with booking advance." : "Prepaid checkout only."}
               </li>
-              <li>{standardDeliveryFeeShort()}</li>
-              <li>{returnsWindowDays()}-day returns (defect/wrong item)</li>
+              <li>Nationwide courier delivery.</li>
+              <li>{returnsWindowDays()}-day defect returns.</li>
               <li>
                 <a href="https://wa.me/923284010007" target="_blank" rel="noopener noreferrer">
-                  WhatsApp 03284010007
+                  WhatsApp help.
                 </a>
               </li>
             </ul>
@@ -1624,7 +1625,7 @@ export function ProductDetailMedico({
             {/* Upsells after the buy buttons so buyers reach Add to cart without scrolling past them. */}
             <RecommendedProductsQuickAdd products={product?.recommendedProducts || []} />
 
-            {/* One compact delivery note — full policy lives on /shipping-policy (C19). */}
+            {/* One compact delivery note — keep sentences short/unique (C19). */}
             <div
               style={{
                 marginTop: 16,
@@ -1638,11 +1639,13 @@ export function ProductDetailMedico({
               }}
             >
               <p style={{ margin: 0, fontWeight: 700, color: "#111" }}>Delivery</p>
+              <p style={{ margin: "4px 0 0" }}>{lahoreEtaLine}.</p>
+              <p style={{ margin: "4px 0 0" }}>{otherCitiesEtaLine}.</p>
+              <p style={{ margin: "4px 0 0" }}>{deliveryFeeText}.</p>
               <p style={{ margin: "4px 0 0" }}>
-                {lahoreEtaLine} · {otherCitiesEtaLine}. {deliveryFeeText}.{" "}
-                {productAllowsCod(product)
-                  ? `COD booking advance ${codAdvanceAmountsLabel()} (deducted from total).`
-                  : prepaidDeliveryBoxLine()}{" "}
+                {productAllowsCod(product) ? "COD booking advance applies." : prepaidDeliveryBoxLine()}
+              </p>
+              <p style={{ margin: "4px 0 0" }}>
                 <Link href="/shipping-policy" className="font-semibold underline underline-offset-2">
                   Shipping policy
                 </Link>

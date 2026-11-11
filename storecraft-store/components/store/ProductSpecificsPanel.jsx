@@ -63,7 +63,7 @@ export function ProductSpecificsPanel({ product, carLinks = [] }) {
               </Link>
             </span>
           ))}
-          . Confirm years and trim against this page before ordering a neighbouring model’s version.
+          . Match years on this listing.
         </p>
       ) : null}
     </section>

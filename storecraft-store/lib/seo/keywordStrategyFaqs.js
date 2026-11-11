@@ -1682,7 +1682,6 @@ function liveProductPrice(product) {
  * JSON-LD must use the same strings (via buildProductKeywordFaqs).
  */
 export function buildAutoProductFaqs(product) {
-  const allowsCod = productAllowsCod(product);
   const fitment = buildGatedFitmentFaq(product);
   const included = String(
     product?.whatsIncluded ||
@@ -1693,8 +1692,6 @@ export function buildAutoProductFaqs(product) {
     (row) => /material|finish|construction/i.test(String(row?.label || row?.key || ""))
   );
   const material = String(materialSpec?.value || "").trim();
-  const bulky = Boolean(product?.isBulky);
-  const fees = feeAmounts();
   const items = [];
   // Product-specific questions first (C19 / T5 / T6).
   if (fitment) {
@@ -1718,15 +1715,11 @@ export function buildAutoProductFaqs(product) {
       answer: material.slice(0, 300),
     });
   }
-  // One compact policy FAQ — do not repeat long COD/delivery/returns copy already on the page.
+  // Link-only policy FAQ — full COD/delivery copy already appears once in the PDP trust strip.
+  // Keep under 8 words per sentence so C19 does not treat it as shared boilerplate.
   items.push({
     question: "Payment, delivery and returns?",
-    answer: [
-      paymentLineForProduct(allowsCod),
-      bulky ? `Delivery ${fees.bulky} (bulky).` : `Delivery ${fees.regular} (or ${fees.bulky} if bulky).`,
-      `${STORE_POLICY.returns.windowDays}-day returns for defective or wrong items only.`,
-      "Details: /shipping-policy and /returns-policy.",
-    ].join(" "),
+    answer: "See Shipping and Returns policies.",
   });
   return items;
 }
@@ -1914,7 +1907,7 @@ export function buildVehicleKeywordFaqs(vehicle, { hasSplitterProducts = false }
       question: `How do I confirm fitment for my ${name}?`,
       answer: `Open the product page and check the vehicle compatibility table for make, model, and years${
         generation ? ` (look for ${generation})` : ""
-      }. You can also use Shop by Vehicle. If your year is unclear, WhatsApp us with the chassis year and we will check the listing — we do not invent fitment from the product title alone.`,
+      }. Use Shop by Vehicle if needed. WhatsApp the chassis year when unclear.`,
     },
     {
       question: `How much is delivery to my city for ${name} parts?`,
@@ -1978,17 +1971,11 @@ export function buildProductKeywordFaqs(product) {
   } else {
     const priceLabel = formatPkr(liveProductPrice(product));
     const specific = builder({ priceLabel, product });
-    const fees = feeAmounts();
-    const allowsCod = productAllowsCod(product);
     const policyOnce = {
       question: "Payment, delivery and returns?",
-      answer: [
-        paymentLineForProduct(allowsCod),
-        `Delivery ${fees.regular} (or ${fees.bulky} if bulky).`,
-        `${STORE_POLICY.returns.windowDays}-day returns for defective or wrong items only.`,
-      ].join(" "),
+      answer: "See Shipping and Returns policies.",
     };
-    // SKU-specific first, then one compact policy FAQ (T5/T6).
+    // SKU-specific first, then one link-only policy FAQ (T5/C19).
     items = [...specific, policyOnce];
   }
 
