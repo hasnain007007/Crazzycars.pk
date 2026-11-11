@@ -2,7 +2,8 @@
 
 **Date:** 2026-11-11  
 **Branch:** `fix/crazzycars-seo-aeo-geo-2026-11-11`  
-**Previous RC:** `f3e050c` (superseded by this gate commit)  
+**Release SHA:** `824799ff9989486082c03b71005e8cb3bfc3a5c7`  
+**Previous RC:** `f3e050c` (superseded)  
 **Rollback:** `0df2d2f`
 
 ## Test fixes (three prior failures)

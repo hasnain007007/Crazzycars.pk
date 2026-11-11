@@ -5,7 +5,7 @@
 | Item | Value |
 | --- | --- |
 | Branch | `fix/crazzycars-seo-aeo-geo-2026-11-11` |
-| **Candidate release SHA** | **See tip after release-gate commit** (supersedes `f3e050c`) |
+| **Candidate release SHA** | **`824799ff9989486082c03b71005e8cb3bfc3a5c7`** |
 | Prior RC `f3e050c` | Superseded after test-gate fixes |
 | Reported `d853595` | Exists — ancestor of HEAD |
 | Tracks | `origin/fix/crazzycars-seo-aeo-geo-2026-11-11` |

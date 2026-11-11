@@ -6,8 +6,8 @@
 
 ## 1. Exact candidate commit
 
-Recorded after this gate commit lands on the fix branch (see `RELEASE_GATE.md`).  
-Previous RC `f3e050c` is **superseded** by the new tip once tests/docs are committed.
+**Candidate:** `824799ff9989486082c03b71005e8cb3bfc3a5c7`  
+Previous RC `f3e050c` is **superseded**.
 
 **Rollback baseline:** `0df2d2f` (`origin/vps-test`).
 
