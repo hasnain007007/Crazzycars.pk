@@ -1,9 +1,9 @@
 # MIGRATION_REVIEW — Stage 2 dry-run (DO NOT APPLY)
 
-**Status:** READY FOR OWNER APPROVAL  
-**Code deploy:** `c98e0ad` live — frontend filters already hide these misfits  
-**Mongo writes:** **none yet**  
-**Fresh evidence:** VPS read-only via `crazzycars-store` → `crazzycars_motorsports` + public API (2026-11-11)
+**Status:** **APPLIED SUCCESS** (2026-11-11) — see `MIGRATE_APPLY_REPORT.md`  
+**Code deploy:** `c98e0ad` (unchanged during migrate)  
+**Backup:** `/data/crazzycars/mongo/m1-m4-backup-20261111T003552Z/`  
+**Fresh evidence pre-apply:** VPS read-only + `dry-run-2026-11-11/before-m1-m4.json`
 
 ## Target gate (apply-time abort if any fail)
 
