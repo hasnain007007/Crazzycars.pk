@@ -1,82 +1,118 @@
-# MIGRATION DRY-RUN — Fitment & category data corrections
+# MIGRATION_DRY_RUN — Stage 2 (post-deploy `c98e0ad`)
 
-**Status:** READY FOR OWNER REVIEW — **NOT APPLIED**  
-**Target DB (when approved):** must fingerprint `187aad8c44fe3a84` / `crazzycars_motorsports` only  
-**Refuse:** Atlas `317ae4de8eb24f84`, legacy `84143ac0cb2c3085`
+**Status:** READ-ONLY COMPLETE — **NOT APPLIED**  
+**Captured:** 2026-11-11 via `docker exec crazzycars-store`  
+**Artifact:** `dry-run-2026-11-11/before-m1-m4.json`
 
-## Safety
+## Identity
 
-- Dry-run only in this package.
-- Backup: `mongodump` filtered by product `_id` / slug before apply.
-- Rollback: restore previous `categories` / `vehicleCompatibility` / `compatibleVehicles` from backup JSON.
-- No price, inventory, image, or order fields touched.
-
-## Proposed operations (high confidence)
-
-### 1. Alto fender — remove Swift fitment (CC-P0-001)
-
-| Field | Value |
+| Item | Value |
 | --- | --- |
-| Slug | `2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color` |
-| Evidence | Title = Alto 660cc; VC currently has Alto 2020–2026 **and** Swift 2025–2026 |
-| `$pull` | `vehicleCompatibility.vehicles` where `model` ~ `/^Swift$/i` |
-| Also | Remove any `compatibleVehicles` ObjectId for Swift 2025–present Vehicle doc |
-| Keep | Alto VC row |
-| After | Must not appear on `/cars/suzuki-swift-2025-present` even without code filter |
+| Host | `sialkot-mongo` |
+| DB | `crazzycars_motorsports` |
+| Products | 430 |
+| Store URI FP | `aef1004e2d04d2fc` |
+| Canonical short URI FP | `187aad8c44fe3a84` |
 
-### 2. Steering trim — remove Splitters category (CC-P0-002a)
+## Proposed ops summary
 
-| Slug | `toyota-corolla-2015-2026-carbon-steering-trim` |
-| --- | --- |
-| Remove category | `splitters-side-skirts` |
-| Keep | `carbon-fiber-accessories` (and any interior carbon category if present) |
-| Suggested primary | carbon / interior trim — **not** splitters |
+| ID | Product | Change | Expected matchedCount |
+| --- | --- | --- | --- |
+| M1 | CC-0023 Alto fender | Pull Swift VC + Swift vehicle id | 1 |
+| M2 | CC-0157 Steering trim | Pull Splitters category | 1 |
+| M3 | CC-0162 Ducktail | Splitters → Spoilers | 1 |
+| M4 | CC-0156 Monogram | Pull Aqua/Vitz/Yaris VC + 3 vehicle ids | 1 |
 
-### 3. Ducktail spoiler — reclassify (CC-P0-002b)
+Total documents touched: **4**. No prices, stock, images, or orders.
 
-| Slug | `toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler` |
-| --- | --- |
-| Remove | `splitters-side-skirts` |
-| Add (if exists) | `spoilers-diffusers` (verify Category slug active before apply) |
-| Evidence | Title = ducktail trunk spoiler |
+## Field-level after projections (expected)
 
-## Medium confidence (hold unless owner confirms)
+### M1 after
 
-### 4. Swift RS body kit title vs VC years (CC-P1-003)
+```json
+{
+  "vehicleCompatibility.vehicles": [{ "make": "Suzuki", "model": "Alto", "yearFrom": 2020, "yearTo": 2026 }],
+  "compatibleVehicles": ["6a5cd43eeb06d36eb2ac1ce6"]
+}
+```
 
-- Title: 2022–2024  
-- VC: 2025–2026 only  
-- Options: (A) move VC to 2018–2024 / 2022–2024 Swift hub; (B) retitle if part truly fits 2025; (C) leave + document  
-- **Default hold:** no auto-write
+### M2 after
 
-### 5. Multi-gen Swift mats / door handles (CC-P1-004)
+```json
+{
+  "categories": ["6a5ccf35eb06d36eb2ac1afc"]
+}
+```
 
-- VC lists both prior and 2025 gens — may be correct physical fitment  
-- **Default:** UNIVERSAL/multi-gen review — no auto-write
+### M3 after
 
-## Apply gate checklist
+```json
+{
+  "categories": ["6a5ccf34eb06d36eb2ac1af1"]
+}
+```
 
-1. Owner approval on this file  
-2. Confirm live FP `187aad8c44fe3a84`  
-3. Write before-values JSON  
-4. Apply with `--dry-run` then `--apply`  
-5. Re-crawl Swift + Splitters pages  
-6. Record POST_DEPLOY_VERIFICATION.md  
+### M4 after
 
-**Script status:** not yet generated as executable apply script — create only after owner selects rows 1–3 vs 4–5.
+```json
+{
+  "vehicleCompatibility.vehicles": [
+    { "make": "Toyota", "model": "Corolla", "yearFrom": 2009, "yearTo": 2014 },
+    { "make": "Toyota", "model": "Corolla", "yearFrom": 2014, "yearTo": 2026 }
+  ],
+  "compatibleVehicles": [
+    "6a5cd43ceb06d36eb2ac1cd7",
+    "6a5ea45789c0c8d16c696450",
+    "6a5cd43deb06d36eb2ac1cd8",
+    "6a71072b3261f3cfd4c7551c"
+  ]
+}
+```
 
-## Additional high-confidence rows from live catalogue audit (399 products)
+(Yaris Cross retained as **ambiguous hold**.)
 
-### 5. Corolla steering monogram — remove Aqua / Vitz / Yaris VC rows
+## Backup procedure (before any apply)
 
-| Slug | `toyota-corolla-2009-2026-carbon-steering-monogram-abs` |
-| --- | --- |
-| Evidence | Title is Corolla; VC incorrectly lists Aqua, Vitz, Yaris |
-| Action | `$pull` those vehicleCompatibility rows (+ compatibleVehicles ObjectIds) |
-| Keep | Corolla fitment rows only |
+On VPS, read-only dump of the four docs + categories referenced:
 
-### 6. Confirm Alto→Swift removal (already §1)
+```bash
+# Example — run only on owner GO, before writes
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUT=/data/crazzycars/mongo/m1-m4-backup-$STAMP
+mkdir -p "$OUT"
+docker exec crazzycars-store node -e '
+  // export the four product docs + referenced categories/vehicles to stdout JSON
+' > "$OUT/before.json"
+# Optional mongodump query (auth via store URI inside container networking):
+# mongodump --uri="$MONGODB_URI" --db=crazzycars_motorsports \
+#   --collection=products --query='"{\"_id\":{\"$in\":[…]}}"' --out="$OUT/dump"
+chmod -R go-rwx "$OUT"
+```
 
-Audit reconfirmed `title_names_alto_on_swift_hub`.
+Independent copy: also keep `seo-reports/.../dry-run-2026-11-11/before-m1-m4.json` in git.
 
-Catalogue audit summary: 13 fitment flags (mix high/medium), 2 category VERIFIED_INCORRECT (steering trim, ducktail). See FITMENT_AUDIT.csv / CATEGORY_AUDIT.csv.
+## Rollback procedure (independent of git)
+
+1. Load `$OUT/before.json` (or mongodump restore of the four `_id`s only).  
+2. For each product, `$set` prior `vehicleCompatibility`, `compatibleVehicles`, `categories`.  
+3. Do **not** restore unrelated collections.  
+4. Revalidate Swift hub, Splitters shelf, Aqua/Yaris hubs, Spoilers PDP membership.  
+5. Frontend filters still hide misfits even if rollback restores bad edges.
+
+## Apply abort conditions
+
+- Store URI FP ≠ `aef1004e2d04d2fc` (or recomputed store env at apply time)  
+- DB name ≠ `crazzycars_motorsports`  
+- Any precondition `matchedCount !== 1`  
+- Spoilers category missing/inactive (M3)  
+- Corolla VC rows missing on monogram (M4)
+
+## Frontend coexistence
+
+Post-`c98e0ad` filters already exclude these listings. Data corrections align Mongo/API/admin/feeds; filters stay.
+
+## Ambiguous (unchanged)
+
+- Yaris Cross on monogram `compatibleVehicles`  
+- Swift body-kit year title vs VC  
+- Multi-gen Swift mats / handles  

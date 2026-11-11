@@ -1,0 +1,87 @@
+{
+  "capturedAt": "2026-11-11T00:35:00Z",
+  "source": "docker exec crazzycars-store → crazzycars_motorsports (read-only)",
+  "dbName": "crazzycars_motorsports",
+  "host": "sialkot-mongo",
+  "storeUriFingerprint": "aef1004e2d04d2fc",
+  "canonicalShortUriFingerprint": "187aad8c44fe3a84",
+  "productCount": 430,
+  "documents": [
+    {
+      "_id": "6a5d226489c0c8d16c691fb8",
+      "slug": "2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color",
+      "articleNo": "CC-0023",
+      "name": "2 Pcs Set Alto 660cc Audi Style Side Fender Indicator in Smoke Color",
+      "categories": [
+        { "id": "6a5ccf35eb06d36eb2ac1afb", "slug": "led-indicator-lights" },
+        { "id": "6a5ccf35eb06d36eb2ac1af9", "slug": "sos-flasher-led-lights" }
+      ],
+      "vehicleCompatibility.vehicles": [
+        { "make": "Suzuki", "model": "Alto", "yearFrom": 2020, "yearTo": 2026, "_id": "6ae8b5defc12692230a39b31" },
+        { "make": "Suzuki", "model": "Swift", "yearFrom": 2025, "yearTo": 2026, "_id": "6ae8b5defc12692230a39b32" }
+      ],
+      "compatibleVehicles": [
+        { "id": "6a5cd43eeb06d36eb2ac1ce6", "slug": "suzuki-alto-2020-present" },
+        { "id": "6a5cd43eeb06d36eb2ac1ce7", "slug": "suzuki-swift-2025-present" }
+      ]
+    },
+    {
+      "_id": "6a5d227089c0c8d16c692045",
+      "slug": "toyota-corolla-2015-2026-carbon-steering-trim",
+      "articleNo": "CC-0157",
+      "name": "Toyota Corolla 2015–2026 Carbon Steering Trim",
+      "categories": [
+        { "id": "6a5ccf35eb06d36eb2ac1afc", "slug": "carbon-fiber-accessories" },
+        { "id": "6a5ccf34eb06d36eb2ac1af0", "slug": "splitters-side-skirts" }
+      ],
+      "vehicleCompatibility.vehicles": [
+        { "make": "Toyota", "model": "Corolla", "yearFrom": 2014, "yearTo": 2026, "_id": "6af0d7f8c1fbdb899ee93cfb" }
+      ],
+      "compatibleVehicles": [
+        { "id": "6a5ea45789c0c8d16c696450", "slug": "toyota-axio-2014-2022" },
+        { "id": "6a5cd43deb06d36eb2ac1cd8", "slug": "toyota-corolla-e170-2014-2026" }
+      ]
+    },
+    {
+      "_id": "6a5d227089c0c8d16c69204a",
+      "slug": "toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler",
+      "articleNo": "CC-0162",
+      "name": "Toyota Corolla E140 2009–2013 Ducktail Trunk Spoiler",
+      "categories": [
+        { "id": "6a5ccf34eb06d36eb2ac1af0", "slug": "splitters-side-skirts" }
+      ],
+      "vehicleCompatibility.vehicles": [
+        { "make": "Toyota", "model": "Corolla", "yearFrom": 2009, "yearTo": 2014, "_id": "6ae9276bfc12692230a3b038" }
+      ],
+      "compatibleVehicles": [
+        { "id": "6a5cd43ceb06d36eb2ac1cd7", "slug": "toyota-corolla-e140-2009-2014" }
+      ]
+    },
+    {
+      "_id": "6a5d227089c0c8d16c692044",
+      "slug": "toyota-corolla-2009-2026-carbon-steering-monogram-abs",
+      "articleNo": "CC-0156",
+      "name": "Toyota Corolla Carbon Fiber Style Steering Monogram 2009–2026",
+      "categories": [
+        { "id": "6a5ccf35eb06d36eb2ac1afc", "slug": "carbon-fiber-accessories" },
+        { "id": "6a5ccf34eb06d36eb2ac1af5", "slug": "steering-wheel-covers" }
+      ],
+      "vehicleCompatibility.vehicles": [
+        { "make": "Toyota", "model": "Aqua", "yearFrom": 2012, "yearTo": 2026, "_id": "6aec73e979b577212f0c4974" },
+        { "make": "Toyota", "model": "Corolla", "yearFrom": 2009, "yearTo": 2014, "_id": "6aec73e979b577212f0c4975" },
+        { "make": "Toyota", "model": "Corolla", "yearFrom": 2014, "yearTo": 2026, "_id": "6aec73e979b577212f0c4976" },
+        { "make": "Toyota", "model": "Vitz", "yearFrom": 2012, "yearTo": 2026, "_id": "6aec73e979b577212f0c4977" },
+        { "make": "Toyota", "model": "Yaris", "yearFrom": 2020, "yearTo": 2026, "_id": "6aec73e979b577212f0c4978" }
+      ],
+      "compatibleVehicles": [
+        { "id": "6a5cd43deb06d36eb2ac1cda", "slug": "toyota-aqua-2012-present" },
+        { "id": "6a5cd43ceb06d36eb2ac1cd7", "slug": "toyota-corolla-e140-2009-2014" },
+        { "id": "6a5ea45789c0c8d16c696450", "slug": "toyota-axio-2014-2022" },
+        { "id": "6a5cd43deb06d36eb2ac1cd8", "slug": "toyota-corolla-e170-2014-2026" },
+        { "id": "6a5cd43deb06d36eb2ac1cdb", "slug": "toyota-vitz-2012-present" },
+        { "id": "6a71072b3261f3cfd4c7551c", "slug": "toyota-yaris-cross-2020-present" },
+        { "id": "6a5cd43deb06d36eb2ac1cd9", "slug": "toyota-yaris-2020-present" }
+      ]
+    }
+  ]
+}

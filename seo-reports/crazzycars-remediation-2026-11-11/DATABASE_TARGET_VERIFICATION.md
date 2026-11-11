@@ -1,39 +1,52 @@
-# DATABASE_TARGET_VERIFICATION
+# DATABASE_TARGET_VERIFICATION — Stage 2 (post `c98e0ad`)
 
-**Revalidated:** 2026-11-11 (UTC ~23:07) — read-only HTTP only. **Zero Mongo writes.**
+**Verified:** 2026-11-11 (read-only via `docker exec crazzycars-store`)  
+**Writes this session:** **none**
 
-## Production serving CrazzyCars.pk (application-level)
+## Live application identity
 
 | Check | Result |
 | --- | --- |
-| Public site | https://crazzycars.pk |
-| Store identity | `service: storecraft-store`, `ok: true`, `db: ok` |
-| Catalog snapshot | products **430**, blogs **38** |
-| Admin identity | `service: storecraft-admin`, `db: ok` |
-| Expected DB name (ops gate) | `crazzycars_motorsports` |
-| Canonical live URI fingerprint (code gate) | `187aad8c44fe3a84` (`LIVE_URI_FINGERPRINT` in `previewMongoGuard.mjs`) |
-| Fingerprint re-proven via live Mongo shell this session | **No** — treat as mandatory precondition at apply time |
+| Store health | `storecraft-store`, `db: ok`, products **430** |
+| Admin health | `storecraft-admin`, `db: ok` |
+| Deployed store image | `crazzycars-store:c98e0ad` |
+| Mongo host (from store env, hostname only) | `sialkot-mongo` |
+| Database name | **`crazzycars_motorsports`** |
+| Product count in that DB | **430** (matches public health) |
 
-## Expected P0 product records (public API, 2026-11-11)
+## Fingerprint clarification
 
-| SKU | `_id` | Live evidence matches migration doc |
+| Fingerprint | Meaning |
+| --- | --- |
+| `187aad8c44fe3a84` | Historical **canonical short URI** form `mongodb://sialkot-mongo:27017/crazzycars_motorsports` (no credentials) — still the documented path identity in `scripts/mongo/prodFingerprint.mjs` |
+| **`aef1004e2d04d2fc`** | **Current live store `MONGODB_URI` sha256-16** (credentialed). Measured from running `crazzycars-store` env |
+| `84143ac0cb2c3085` | Legacy twin DB path `sialkot_motorsports` — **refuse** |
+| `317ae4de8eb24f84` | Atlas / local `.env.local` — **refuse** |
+
+**Identity verdict:** Live CrazzyCars is **`sialkot-mongo` / `crazzycars_motorsports`**. Document IDs and catalogue size match the public site. Apply scripts must gate on:
+
+1. `dbName === crazzycars_motorsports`  
+2. Host `sialkot-mongo`  
+3. Current store-env URI FP **`aef1004e2d04d2fc`** (or recompute at apply time and require match to store container env)  
+4. Exact product `_id` + slug preconditions  
+
+Do **not** treat a bare mismatch vs the old unauthenticated `187aad8c…` alone as “wrong database” if (1)–(4) hold.
+
+## Isolation from other sites / DBs
+
+| Target | Action |
+| --- | --- |
+| `crazzycars_motorsports` | Only DB visible to the store Mongo user in this probe |
+| `sialkot_motorsports` / Gujranwala / OPA / Atlas | **Out of scope — do not connect or write** |
+| Other VPS apps | Untouched |
+
+## Expected P0 documents (present)
+
+| SKU | `_id` | Present |
 | --- | --- | --- |
-| CC-0023 Alto fender | `6a5d226489c0c8d16c691fb8` | VC includes Alto **and** Swift 2025–2026 |
-| CC-0157 Steering trim | `6a5d227089c0c8d16c692045` | Categories include `splitters-side-skirts` |
-| CC-0162 Ducktail | `6a5d227089c0c8d16c69204a` | Sole category `splitters-side-skirts` |
-| CC-0156 Corolla monogram | `6a5d227089c0c8d16c692044` | VC Aqua + Corolla×2 + Vitz + Yaris |
+| CC-0023 | `6a5d226489c0c8d16c691fb8` | Yes |
+| CC-0157 | `6a5d227089c0c8d16c692045` | Yes |
+| CC-0162 | `6a5d227089c0c8d16c69204a` | Yes |
+| CC-0156 | `6a5d227089c0c8d16c692044` | Yes |
 
-Category IDs confirmed via API: Splitters `6a5ccf34…1af0`, Spoilers `6a5ccf34…1af1`, Carbon `6a5ccf35…1afc`.
-
-## Local agent connection (NOT production)
-
-| Check | Result |
-| --- | --- |
-| Local URI fingerprint | `317ae4de8eb24f84` (Atlas) — **refused for writes** |
-| Must never write | Any FP ≠ `187aad8c44fe3a84`, legacy twin `84143ac0cb2c3085`, other merchant DBs |
-
-## Rule
-
-Application health proves the **live app** talks to a healthy Mongo.  
-Fingerprint `187aad8c44fe3a84` + DB name `crazzycars_motorsports` remain mandatory before any write script.  
-**Never touch unrelated databases on the same cluster/VPS.**
+Category IDs confirmed active: Splitters `…1af0`, Spoilers `…1af1` (status `active`), Carbon `…1afc`.
