@@ -13,6 +13,7 @@ import {
   resolveFlatProductFallback,
   resolveProductRedirectPath,
 } from "../storecraft-store/lib/productFallbackRedirects.mjs";
+import { resolveDeletedPath } from "../storecraft-store/lib/deletedUrlRedirects.mjs";
 import { buildLegacyRedirects, resolveLegacyDestination } from "../storecraft-store/lib/legacyHandleMaps.mjs";
 import {
   listingCanonicalPath,
@@ -73,12 +74,21 @@ describe("collections redirect map (Pages.csv + brief)", () => {
     const collectionSources = redirects.filter((r) => r.source.startsWith("/collections/"));
     assert.ok(collectionSources.length >= Object.keys(COLLECTIONS_REDIRECT_MAP).length);
     const seen = new Set<string>();
+    // Shopify "home" page/collection intentionally lands on site root.
+    const homepageOk = new Set(["/collections/home", "/pages/home", "/home"]);
     for (const r of collectionSources) {
       assert.equal(seen.has(r.source), false, `duplicate ${r.source}`);
       seen.add(r.source);
       assert.equal(r.permanent, true);
-      assert.notEqual(r.destination, "/");
+      if (r.destination === "/") {
+        assert.ok(homepageOk.has(r.source), `unexpected homepage dest from ${r.source}`);
+      } else {
+        assert.match(r.destination, /^\//, r.source);
+      }
     }
+    const home = redirects.find((r) => r.source === "/collections/home");
+    assert.ok(home, "expected /collections/home redirect");
+    assert.equal(home.destination, "/");
   });
 
   test("legacy destination prefers collection map", () => {
@@ -88,12 +98,21 @@ describe("collections redirect map (Pages.csv + brief)", () => {
 });
 
 describe("product /products/ → flat (and fallbacks)", () => {
-  test("existing catalogue handles strip to flat slug in one hop", () => {
-    assert.equal(resolveProductRedirectPath("car-heads-up-display-hud"), "/car-heads-up-display-hud");
+  test("brand-suffix handles strip; exact live slugs defer to DB page redirect", () => {
+    // Sync helper only strips brand suffix / known fallbacks. Exact live slugs
+    // return null so /products/[handle] can DB-resolve (previousSlugs) instead of
+    // middleware 308→404. The page then permanentRedirects to the flat canonical.
+    assert.equal(resolveProductRedirectPath("car-heads-up-display-hud"), null);
     assert.equal(
       resolveProductRedirectPath("car-heads-up-display-hud-crazzycars-pk"),
       "/car-heads-up-display-hud"
     );
+  });
+
+  test("HUD category paths map to the live HUD product (RC redirect)", () => {
+    assert.equal(resolveDeletedPath("/categories/car-hud"), "/car-heads-up-display-hud");
+    assert.equal(resolveDeletedPath("/categories/hud"), "/car-heads-up-display-hud");
+    assert.equal(resolveDeletedPath("/categories/heads-up-display"), "/car-heads-up-display-hud");
   });
 
   test("missing flat twins use closest live PDP (never /)", () => {

@@ -76,7 +76,7 @@ describe("checkout characterization — COD body-kit message", () => {
     ]);
     assert.equal(
       msg,
-      "Cash on Delivery is not available for: Honda Civic X 2016-2021 Body Kit D1. Choose advance payment instead."
+      "Prepaid order, delivery across Pakistan. Cash on Delivery is not available for: Honda Civic X 2016-2021 Body Kit D1. Choose JazzCash or bank transfer instead."
     );
   });
 
@@ -89,7 +89,7 @@ describe("checkout characterization — COD body-kit message", () => {
     ]);
     assert.equal(
       msg,
-      "Cash on Delivery is not available for: Kit A Body Kit, Kit B Body Kit, Kit C Body Kit (+1 more). Choose advance payment instead."
+      "Prepaid order, delivery across Pakistan. Cash on Delivery is not available for: Kit A Body Kit, Kit B Body Kit, Kit C Body Kit (+1 more). Choose JazzCash or bank transfer instead."
     );
   });
 

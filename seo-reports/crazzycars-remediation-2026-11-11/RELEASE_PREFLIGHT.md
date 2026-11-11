@@ -5,9 +5,9 @@
 | Item | Value |
 | --- | --- |
 | Branch | `fix/crazzycars-seo-aeo-geo-2026-11-11` |
-| **Candidate release SHA** | **`f3e050c2ce4cd1d55ae494e4d9e313d57c888672`** |
+| **Candidate release SHA** | **See tip after release-gate commit** (supersedes `f3e050c`) |
+| Prior RC `f3e050c` | Superseded after test-gate fixes |
 | Reported `d853595` | Exists — ancestor of HEAD |
-| Reported `f3e050c` | Exists — **is descendant of `d853595`** |
 | Tracks | `origin/fix/crazzycars-seo-aeo-geo-2026-11-11` |
 | Diff base (current prod deploy tip) | `origin/vps-test` = `0df2d2f` |
 | Commits in RC vs `vps-test` | 4: `77b2d96`, `27898ca`, `d853595`, `f3e050c` |
@@ -52,9 +52,10 @@ RC only touches fitment filters, deleted redirects (HUD), PDP toast removal, tes
 See `REGRESSION_RESULTS.md` (re-run 2026-11-11).
 
 - Fitment suite: **10/10 PASS**
-- Broader unit: **69/72 PASS**, **3 FAIL** (pre-existing — not introduced by RC)
+- Expanded gate suite: **146/146 PASS** (prior 3 failures resolved)
+- Commerce / mobile fixtures: **PASS**
 - Live smoke: homepage/shop/splitters/swift/checkout/sitemap/health **200**; cart→shop 308; HUD category **404** until RC deploy; HUD product **200**
-- Storefront build: **PASS** (prior session on RC)
+- Storefront build: **PASS** (re-run this gate)
 
 ---
 
@@ -91,8 +92,7 @@ Settings expose `seo.googleAnalyticsId` (`G-…`); **no GTM**. Ecommerce helpers
 
 ## 7. Recommendation
 
-# **CONDITIONAL GO**
+# **GO — READY FOR OWNER DEPLOYMENT APPROVAL**
 
-**GO for code deploy** of `f3e050c` after owner names this SHA.  
-**Separate GO required** for Mongo migrations in `MIGRATION_REVIEW.md`.  
-Do not deploy or write production Mongo until explicit owner approval.
+**Code-only** of the gate tip SHA after owner names it.  
+**Mongo M1–M4 still NOT authorised.** See `RELEASE_GATE.md`.

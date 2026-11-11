@@ -1,78 +1,52 @@
-# DEPLOYMENT_PLAN
+# DEPLOYMENT_PLAN — code-only (awaiting owner SHA approval)
 
-**Status:** AWAITING OWNER APPROVAL — do not deploy yet.  
-**Candidate SHA:** `f3e050c2ce4cd1d55ae494e4d9e313d57c888672`  
+**Status:** READY FOR OWNER DEPLOY APPROVAL — do **not** deploy until owner names the exact SHA below.  
+**Migrations M1–M4:** **NOT authorised** — do not touch MongoDB.  
 **Branch:** `fix/crazzycars-seo-aeo-geo-2026-11-11`
 
 ## 1. Exact candidate commit
 
-`f3e050c` (includes `77b2d96` fitment/toast, `27898ca` HUD redirects, `d853595` audit, `f3e050c` docs).
+Recorded after this gate commit lands on the fix branch (see `RELEASE_GATE.md`).  
+Previous RC `f3e050c` is **superseded** by the new tip once tests/docs are committed.
 
-## 2. Deployment method
+**Rollback baseline:** `0df2d2f` (`origin/vps-test`).
 
-1. Owner approves this SHA by name.  
-2. Merge or fast-forward into authorised deploy branch (`vps-test` historically).  
-3. Push to `origin` so Coolify / storefront webhook builds **crazzycars-store** only.  
-4. Do **not** push unrelated branches; do **not** force-push.  
-5. Exclude uncommitted `AnalyticsScripts.jsx` / `.gitignore`.
+## 2. Coolify deployment steps (storefront only)
 
-Alternative: cherry-pick the 4 commits onto a clean `vps-test` checkout if merge noise appears.
+1. Owner replies: `GO deploy <exact-sha>` (code only).  
+2. On a clean checkout of the approved SHA, merge or fast-forward into the Coolify deploy branch (`vps-test` historically).  
+3. `git push origin vps-test` (no force-push).  
+4. Confirm Coolify rebuild starts for **`crazzycars-store` only**.  
+5. If webhook does not fire within ~2 minutes, trigger redeploy for that application only.  
+6. Do **not** restart Mongo, OPA, admin (unless shared build requires it), or other merchant apps.  
+7. Do **not** change DNS, payment Settings, Meta Ads, or GA4 tags.
+
+### Explicit exclusions from the release artifact
+
+- Uncommitted `AnalyticsScripts.jsx` / `.gitignore`  
+- Mongo migrations M1–M4  
+- Any `.env` / credentials  
 
 ## 3. Services affected
 
 | Service | Action |
 | --- | --- |
-| `crazzycars-store` (storefront) | Rebuild / redeploy |
-| `crazzycars-admin` | **No change required** (optional noop) |
-| MongoDB | **No write** in code-only deploy |
-| OPA / other merchants | **Do not restart** |
-| Shared reverse proxy | No config change |
+| `crazzycars-store` | Rebuild / redeploy |
+| `crazzycars-admin` | No change required |
+| MongoDB | **No writes** |
+| Other VPS apps | Do not restart |
 
 ## 4. Expected downtime
 
-Typically **< 2 minutes** rolling container replace (historical Coolify behaviour). Soft ISR pages refresh within `revalidate` windows (vehicle/category ~600s).
+Typically **&lt; 2 minutes** rolling container replace.
 
-## 5. Health checks (post-deploy)
+## 5. Health checks
 
 ```text
 GET https://crazzycars.pk/api/health          → ok, db ok
-GET https://admin.crazzycars.pk/api/health   → ok
-GET https://crazzycars.pk/                   → 200
+GET https://admin.crazzycars.pk/api/health   → ok (unchanged)
 ```
 
-## 6. Rollback
+## 6–10. Rollback / smoke / monitoring
 
-See `ROLLBACK_PLAN.md` — redeploy previous tip `0df2d2f` (or prior Coolify image).
-
-## 7. Previous healthy commit
-
-`0df2d2f` on `origin/vps-test` (controlled SEO release docs tip; includes `67bef50` storefront behaviour).
-
-## 8. Post-deploy smoke tests
-
-1. `/cars/suzuki-swift-2025-present` — Alto SKU **absent**; Swift key cover / mirrors **present**  
-2. `/categories/splitters-side-skirts` — steering trim + ducktail **absent**; genuine splitters **present**  
-3. Any PDP — no fake purchase toast  
-4. `/cars/toyota-aqua-2012-present` (if listed) — Corolla monogram **absent**  
-5. `/categories/car-hud` — **308/301** → `/car-heads-up-display-hud` **200**  
-6. Cart drawer / checkout page load  
-7. `seo-verify` sample C1/C21 if time permits  
-
-## 9. Monitoring
-
-- Coolify / container logs for Next build errors  
-- `/api/health` for 5–10 minutes  
-- No spike in 5xx on storefront  
-
-## 10. Immediate rollback conditions
-
-- Health `db` not ok  
-- Checkout page 5xx  
-- Swift hub empty (filter too aggressive)  
-- Splitters shelf empty  
-- Unrelated merchant apps impacted  
-
-## Sequencing vs Mongo
-
-**Recommended:** Deploy code first → verify hub filters → then separate GO for `MIGRATION_REVIEW.md` M1–M4.  
-Code filters remain as defence-in-depth after data cleanup.
+See `ROLLBACK_PLAN.md` and `POST_DEPLOY_VERIFICATION.md`.

@@ -60,7 +60,15 @@ describe("product JSON-LD", () => {
     assert.equal(ld.offers.shippingDetails["@type"], "OfferShippingDetails");
     assert.equal(ld.offers.shippingDetails.shippingRate.value, "250.00");
     assert.equal(ld.offers.acceptedPaymentMethod, undefined);
-    assert.equal(ld.offers.hasMerchantReturnPolicy, undefined);
+    // S8 / C11: PDP Offer must carry MerchantReturnPolicy (FreeReturn for defective/wrong).
+    const policy = ld.offers.hasMerchantReturnPolicy;
+    assert.equal(policy["@type"], "MerchantReturnPolicy");
+    assert.equal(policy.applicableCountry, "PK");
+    assert.equal(policy.merchantReturnDays, 7);
+    assert.equal(policy.returnFees, "https://schema.org/FreeReturn");
+    assert.equal(policy.itemDefectReturnFees, "https://schema.org/FreeReturn");
+    assert.equal(policy.refundType, "https://schema.org/FullRefund");
+    assert.equal(policy.merchantReturnLink, "https://crazzycars.pk/returns-policy");
   });
 
   test("bulky products emit Rs 500 shipping in Offer", () => {
