@@ -18,9 +18,18 @@
       "root_cause": "stripEmbeddedFaqHtml only removed the first FAQ h2; many longDescriptions embed two FAQ blocks — second survived beside FaqSection",
       "note": "Strip all FAQ sections; apply in ProductDetailMedico + blogs; C23 added. Live C23 after requires owner deploy GO."
     },
-    "T2_audi_a5_llms": { "status": "in_progress" },
-    "T3_side_mirror_redirect": { "status": "pending" },
-    "T4_vehicle_intros": { "status": "pending" },
+    "T2_audi_a5_llms": {
+      "status": "code_ready",
+      "commit": "696666f",
+      "c14_before": "FAIL — /cars/honda-brv-2017-present → 404 (Audi A5 already in live llms)",
+      "c14_after_live": "pending_deploy",
+      "note": "llms cars from getCarSitemapEntries; drop hubs with 0 loadProductsForVehicle; A5 removed from MUST_404"
+    },
+    "T3_side_mirror_redirect": {
+      "status": "done_no_code",
+      "note": "No retire redirect in map (HOLD comment only). Both PDPs 200. Report: T3-side-mirror-comparison.json"
+    },
+    "T4_vehicle_intros": { "status": "in_progress" },
     "T5_boilerplate_c19": { "status": "pending" },
     "T6_google_reviews": { "status": "pending" },
     "T7_thin_pages": { "status": "pending" },

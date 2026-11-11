@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-11-11T01:50:00.000Z",
+  "redirectStatus": {
+    "retireRedirectInMap": false,
+    "note": "Only a HOLD comment in deletedUrlRedirects.mjs — no active 301. Live LED indicators PDP returns 200.",
+    "action": "none — do not add a retire redirect"
+  },
+  "products": [
+    {
+      "slug": "toyota-corolla-2014-2026-side-mirror-led-indicators",
+      "url": "https://crazzycars.pk/toyota-corolla-2014-2026-side-mirror-led-indicators",
+      "liveStatus": 200,
+      "sku": "CC-COR-MIRROR-3",
+      "title": "Toyota Corolla 2014-2026 Side Mirror LED Indicators",
+      "pricePkr": 8500,
+      "compareAtPkr": 11000,
+      "images": 2,
+      "imageUrls": [
+        "https://crazzycars.pk/media/products/toyota-corolla-2014-2026-side-mirror-led-indicators-main-52753b5167.webp",
+        "https://crazzycars.pk/media/products/toyota-corolla-2014-2026-side-mirror-led-indicators-2-1793403560818-b1f1e005.webp"
+      ],
+      "fitment": "Spec row: Toyota Corolla 2014–2026; variants Neon LED / Sequential LED / RGB Dragon (from specifications + simpleVariations)",
+      "compatibleVehiclesArray": []
+    },
+    {
+      "slug": "toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair",
+      "url": "https://crazzycars.pk/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair",
+      "liveStatus": 200,
+      "sku": "CC-0004",
+      "title": "Toyota Corolla 2015-2026 LED Side Mirror Neon Indicator Pair",
+      "pricePkr": 6500,
+      "compareAtPkr": 8000,
+      "images": 4,
+      "imageUrls": [
+        "https://crazzycars.pk/media/products/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair-1-21fb988ce1.webp",
+        "https://crazzycars.pk/media/products/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair-gallery-handoff-dfedd42be3c2.webp",
+        "https://crazzycars.pk/media/products/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair-2-6c612f6e26.webp",
+        "https://crazzycars.pk/media/products/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair-3-ea19f4d913.webp"
+      ],
+      "fitment": "vehicleCompatibility.vehicles[0]: Toyota Corolla E170–E210, yearFrom 2014, yearTo 2026, Sedan"
+    }
+  ],
+  "ownerQuestion": "Are CC-COR-MIRROR-3 (Rs 8500, multi-variant) and CC-0004 (Rs 6500, neon pair) duplicates, or two distinct SKUs to keep?"
+}
