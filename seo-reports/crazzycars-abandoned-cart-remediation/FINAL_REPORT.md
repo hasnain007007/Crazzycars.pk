@@ -1,7 +1,7 @@
 # Abandoned Cart Remediation — Final Report
 
 **RC branch:** `fix/abandoned-cart-remediation-2026-11-12`  
-**RC SHA:** `8cee209737903b6a0d9909943b7ef3255df7acc3`
+**RC SHA:** `d521fed2845f70631b2abfe42d3eec6f0c6e97f3` (full code remediation; branch tip includes docs pins)
 **Baseline production:** `f6cd49c`  
 **Mission constraints honored:** no production Mongo writes, no deploy, no customer contact, no live orders.
 
