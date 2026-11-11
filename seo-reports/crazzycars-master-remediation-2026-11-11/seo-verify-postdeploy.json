@@ -1,0 +1,146 @@
+{
+  "audit": "2026-11-10",
+  "generatedAt": "2026-11-11T15:36:54.098Z",
+  "base": "https://crazzycars.pk",
+  "sitemapUrlCount": 546,
+  "filter": {
+    "checks": [],
+    "path": null
+  },
+  "summary": {
+    "passed": 21,
+    "failed": 2,
+    "line": "C1..C23: 21 passed, 2 failed"
+  },
+  "checks": {
+    "C1": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C2": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C3": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C4": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C5": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C6": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C7": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C8": {
+      "pass": false,
+      "count": 532,
+      "failures": [
+        "/faq visible FAQ qs=0 < mainEntity=9"
+      ]
+    },
+    "C9": {
+      "pass": true,
+      "count": 399,
+      "failures": []
+    },
+    "C10": {
+      "pass": true,
+      "count": 399,
+      "failures": []
+    },
+    "C11": {
+      "pass": true,
+      "count": 399,
+      "failures": []
+    },
+    "C12": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C13": {
+      "pass": true,
+      "count": 59,
+      "failures": []
+    },
+    "C14": {
+      "pass": true,
+      "count": 128,
+      "failures": []
+    },
+    "C15": {
+      "pass": true,
+      "count": 1,
+      "failures": []
+    },
+    "C16": {
+      "pass": true,
+      "count": 5,
+      "failures": []
+    },
+    "C17": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C18": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C19": {
+      "pass": false,
+      "count": 20,
+      "failures": [
+        "/toyota-aqua-2012-2021-velvet-dashboard-mat shared-boilerplate=29% (>=25%)",
+        "/toyota-passo-2016-22-velvet-dashboard-mat shared-boilerplate=29% (>=25%)",
+        "/suzuki-cultus-2017-2026-velvet-dashboard-mat shared-boilerplate=29% (>=25%)",
+        "/honda-civic-front-bumper-mustang-drl-2018-2020 shared-boilerplate=25% (>=25%)",
+        "/byd-atto-3-2025-2026-tpe-floor-mats-premium shared-boilerplate=31% (>=25%)",
+        "/toyota-hilux-revo-2016-2021-tpe-floor-mats-premium shared-boilerplate=28% (>=25%)",
+        "/toyota-mark-x-abs-roof-spoiler-2020-2022 shared-boilerplate=26% (>=25%)",
+        "/2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color shared-boilerplate=31% (>=25%)",
+        "/batman-style-side-mirror-cover-toyota-aqua-2012-present shared-boilerplate=29% (>=25%)",
+        "/batman-style-side-mirror-cover-toyota-vitz-2010-present shared-boilerplate=29% (>=25%)"
+      ],
+      "note": "sample=20 sharedBlocks=5"
+    },
+    "C20": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    },
+    "C21": {
+      "pass": true,
+      "count": 13,
+      "failures": []
+    },
+    "C22": {
+      "pass": true,
+      "count": 549,
+      "failures": []
+    },
+    "C23": {
+      "pass": true,
+      "count": 546,
+      "failures": []
+    }
+  }
+}

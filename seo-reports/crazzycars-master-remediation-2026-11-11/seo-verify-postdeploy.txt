@@ -1,0 +1,42 @@
+seo-verify BASE=https://crazzycars.pk concurrency=4
+(node:86651) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mac/Desktop/CCSMS/storecraft-store/config/store-nap.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mac/Desktop/CCSMS/storecraft-store/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+sitemap URLs: 546
+C1..C23: 21 passed, 2 failed
+C1 PASS count=546 failures=0
+C2 PASS count=546 failures=0
+C3 PASS count=546 failures=0
+C4 PASS count=546 failures=0
+C5 PASS count=546 failures=0
+C6 PASS count=546 failures=0
+C7 PASS count=546 failures=0
+C8 FAIL count=532 failures=1
+  - /faq visible FAQ qs=0 < mainEntity=9
+C9 PASS count=399 failures=0
+C10 PASS count=399 failures=0
+C11 PASS count=399 failures=0
+C12 PASS count=546 failures=0
+C13 PASS count=59 failures=0
+C14 PASS count=128 failures=0
+C15 PASS count=1 failures=0
+C16 PASS count=5 failures=0
+C17 PASS count=546 failures=0
+C18 PASS count=546 failures=0
+C19 FAIL count=20 failures=10 (sample=20 sharedBlocks=5)
+  - /toyota-aqua-2012-2021-velvet-dashboard-mat shared-boilerplate=29% (>=25%)
+  - /toyota-passo-2016-22-velvet-dashboard-mat shared-boilerplate=29% (>=25%)
+  - /suzuki-cultus-2017-2026-velvet-dashboard-mat shared-boilerplate=29% (>=25%)
+  - /honda-civic-front-bumper-mustang-drl-2018-2020 shared-boilerplate=25% (>=25%)
+  - /byd-atto-3-2025-2026-tpe-floor-mats-premium shared-boilerplate=31% (>=25%)
+  - /toyota-hilux-revo-2016-2021-tpe-floor-mats-premium shared-boilerplate=28% (>=25%)
+  - /toyota-mark-x-abs-roof-spoiler-2020-2022 shared-boilerplate=26% (>=25%)
+  - /2-pcs-set-alto-660cc-audi-style-side-fender-indicator-in-smoke-color shared-boilerplate=31% (>=25%)
+  - /batman-style-side-mirror-cover-toyota-aqua-2012-present shared-boilerplate=29% (>=25%)
+  - /batman-style-side-mirror-cover-toyota-vitz-2010-present shared-boilerplate=29% (>=25%)
+C20 PASS count=546 failures=0
+C21 PASS count=13 failures=0
+C22 PASS count=549 failures=0
+C23 PASS count=546 failures=0
+wrote /Users/mac/Desktop/CCSMS/seo-reports/2026-11-11T15-35-40-135Z.json

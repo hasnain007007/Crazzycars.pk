@@ -1,12 +1,12 @@
 {
-  "updated": "2026-11-11T15:04:38.925Z",
+  "updated": "2026-11-11T15:38:48.857Z",
   "audit": "2026-11-11 master remediation (local RC)",
   "baseline": "seo-reports/2026-11-10-baseline.json",
   "predeploy_live": "seo-reports/2026-11-11-predeploy-live.json",
   "postdeploy_live": "seo-reports/2026-11-11-postdeploy-live.json",
   "branch": "fix/crazzycars-master-remediation-2026-11-11",
-  "deployed_commit": "67bef500e5ffcae20fa57ae9781820c4453039fa",
-  "note": "Local remediation complete. No deploy / no live Mongo writes. Owner GO required.",
+  "deployed_commit": "0b99dc3381a1e2011075b064cc622cf23f388a40",
+  "note": "RC 0b99dc3 deployed to crazzycars-store (and admin retag). Live C1–C23: 21 pass / 2 fail (C8 faq H1 residual, C19 residual). No Mongo writes.",
   "tasks": {
     "T1_double_faq": {
       "status": "code_ready",
@@ -89,6 +89,12 @@
     "C8_faq": {
       "status": "code_ready",
       "note": "/faq h3 + advance-payment FAQ heading"
+    },
+    "master_remediation_deploy": {
+      "status": "deployed_verified",
+      "sha": "0b99dc3381a1e2011075b064cc622cf23f388a40",
+      "post_deploy": "seo-reports/crazzycars-master-remediation-2026-11-11/POST_DEPLOY_VERIFICATION.md",
+      "verifier": "21 pass / 2 fail (C8, C19)"
     }
   },
   "open_questions": [
