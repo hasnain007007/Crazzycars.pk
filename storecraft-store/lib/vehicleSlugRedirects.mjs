@@ -81,8 +81,7 @@ export const VEHICLE_SLUG_REDIRECTS = [
  * Remove any prior catch-all redirects for these.
  */
 export const VEHICLE_SLUGS_MUST_404 = [
-  "/cars/audi-a5-2008-present",
-  "/cars/audi-a5-2014",
+  // Audi A5 hubs are live in sitemap-cars (200) — do not list them here.
   "/cars/honda-hrv-2022-present",
   "/cars/honda-hr-v-2022-present",
   "/cars/byd-shark6-2025-present",

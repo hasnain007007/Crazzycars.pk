@@ -10,14 +10,15 @@
   "tasks": {
     "T1_double_faq": {
       "status": "code_ready",
-      "commit": null,
+      "commit": "896639f",
       "c23_before": 88,
       "c23_before_detail": { "product": 62, "blog": 26 },
       "c23_after_live": "pending_deploy",
+      "unit_after": "API longDescription 2 FAQ h2 → 0 after stripEmbeddedFaqHtml",
       "root_cause": "stripEmbeddedFaqHtml only removed the first FAQ h2; many longDescriptions embed two FAQ blocks — second survived beside FaqSection",
-      "note": "Strip all FAQ sections; apply in ProductDetailMedico + blogs; C23 added"
+      "note": "Strip all FAQ sections; apply in ProductDetailMedico + blogs; C23 added. Live C23 after requires owner deploy GO."
     },
-    "T2_audi_a5_llms": { "status": "pending" },
+    "T2_audi_a5_llms": { "status": "in_progress" },
     "T3_side_mirror_redirect": { "status": "pending" },
     "T4_vehicle_intros": { "status": "pending" },
     "T5_boilerplate_c19": { "status": "pending" },

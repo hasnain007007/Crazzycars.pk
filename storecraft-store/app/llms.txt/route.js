@@ -2,15 +2,17 @@ import { headers } from "next/headers";
 import { dbConnect } from "@/lib/db";
 import Category from "@/lib/models/Category.model";
 import Product from "@/lib/models/Product.model";
+import Vehicle from "@/lib/models/Vehicle.model";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
 import { STORE_NAP } from "@/config/store-nap";
 import { productAllowsCod } from "@/lib/codEligibility";
 import { COD_LINE, PREPAID_LINE, TRUST_LINE } from "@/lib/paymentCopy";
-import { loadShopByCarIndex } from "@/lib/vehiclePageData";
-import { GENERATION_BY_SLUG, aliasesForSlug } from "@/lib/seo/generationAliases";
-import { DELETED_URL_REDIRECTS } from "@/lib/deletedUrlRedirects.mjs";
+import { loadProductsForVehicle } from "@/lib/vehiclePageData";
+import { aliasesForSlug } from "@/lib/seo/generationAliases";
+import { getCarSitemapEntries } from "@/lib/sitemap/entries";
+import { VEHICLE_SLUGS_MUST_404 } from "@/lib/vehicleSlugRedirects.mjs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -43,7 +45,7 @@ export async function GET() {
   try {
     await dbConnect();
 
-    const [cats, products, vehicles, catCounts] = await Promise.all([
+    const [cats, products, carSitemapEntries, catCounts] = await Promise.all([
       Category.find({ status: "active" })
         .select("name slug")
         .sort({ sortOrder: 1, name: 1 })
@@ -55,7 +57,8 @@ export async function GET() {
         .sort({ featured: -1, isDeal: -1, updatedAt: -1 })
         .limit(24)
         .lean(),
-      loadShopByCarIndex(),
+      // Same source as /sitemap-cars.xml — llms vehicle list cannot drift from the cars sitemap.
+      getCarSitemapEntries(h),
       // Must use WEBSITE_PRODUCT_FILTER (not an undefined STOREFRONT_* alias) —
       // a ReferenceError here previously emptied all three lists (F2 regression).
       Product.aggregate([
@@ -102,34 +105,60 @@ export async function GET() {
         return `- [${p.name}](${site}/${p.slug})${priceBit} · ${cod}`;
       });
 
-    const prioritySlugs = Object.keys(GENERATION_BY_SLUG);
-    const bySlug = new Map((vehicles || []).filter((v) => v?.slug).map((v) => [v.slug, v]));
-    const ordered = [];
-    for (const slug of prioritySlugs) {
-      if (bySlug.has(slug)) ordered.push(bySlug.get(slug));
-    }
-    for (const v of vehicles || []) {
-      if (!v?.slug || prioritySlugs.includes(v.slug)) continue;
-      ordered.push(v);
-    }
-    // Drop vehicles whose /cars/:slug is permanently redirected (empty hubs, etc.)
-    // so llms.txt never lists URLs that 3xx (C14).
-    const redirectedCarSlugs = new Set(
-      (DELETED_URL_REDIRECTS || [])
-        .map((r) => String(r?.source || ""))
-        .filter((s) => s.startsWith("/cars/"))
-        .map((s) => s.replace(/^\/cars\//, "").replace(/\/+$/, ""))
+    const must404 = new Set(
+      (VEHICLE_SLUGS_MUST_404 || []).map((p) =>
+        String(p || "")
+          .replace(/^\/cars\//, "")
+          .replace(/\/+$/, "")
+      )
     );
-    // loadShopByCarIndex already drops cars with 0 active products.
-    vehicleLinks = ordered
-      .filter((v) => v?.slug && !redirectedCarSlugs.has(String(v.slug)))
-      .map((v) => {
-        const label = v.displayName || `${v.make || ""} ${v.model || ""}`.trim() || v.slug;
-        const entry = aliasesForSlug(v.slug) || null;
-        const also = Array.isArray(entry?.aliases) ? entry.aliases.filter(Boolean).slice(0, 4) : [];
-        const alsoBit = also.length ? ` (also: ${also.join(", ")})` : "";
-        return `- [${label}](${site}/cars/${v.slug})${alsoBit}`;
-      });
+    const carSlugs = (carSitemapEntries || [])
+      .map((e) => {
+        try {
+          const path = new URL(String(e.loc || ""), site).pathname;
+          if (!path.startsWith("/cars/")) return "";
+          return path.replace(/^\/cars\//, "").replace(/\/+$/, "");
+        } catch {
+          return "";
+        }
+      })
+      .filter((slug) => slug && !must404.has(slug));
+
+    const vehicleDocs = carSlugs.length
+      ? await Vehicle.find({ slug: { $in: carSlugs }, isActive: { $ne: false } })
+          .select("slug make model displayName yearFrom yearTo _id")
+          .lean()
+      : [];
+    const docBySlug = new Map(
+      (vehicleDocs || []).filter((v) => v?.slug).map((v) => [String(v.slug), v])
+    );
+
+    // Only list hubs that the /cars/[slug] page would actually render (C14: 200, no redirect).
+    // Sitemap can still list a hub that title-model filtering empties — keep llms honest.
+    const liveVehicles = [];
+    for (const slug of carSlugs) {
+      const doc = docBySlug.get(slug);
+      if (!doc) continue;
+      let productsForHub = [];
+      try {
+        productsForHub = await loadProductsForVehicle(doc, { limit: 1 });
+      } catch {
+        productsForHub = [];
+      }
+      if (!productsForHub.length) continue;
+      liveVehicles.push(doc);
+    }
+
+    vehicleLinks = liveVehicles.map((v) => {
+      const label =
+        v.displayName || `${v.make || ""} ${v.model || ""}`.trim() || v.slug;
+      const entry = aliasesForSlug(v.slug) || null;
+      const also = Array.isArray(entry?.aliases)
+        ? entry.aliases.filter(Boolean).slice(0, 4)
+        : [];
+      const alsoBit = also.length ? ` (also: ${also.join(", ")})` : "";
+      return `- [${label}](${site}/cars/${v.slug})${alsoBit}`;
+    });
   } catch (err) {
     console.error("[llms.txt] catalogue query failed:", err?.message || err);
     categoryLinks = [];
