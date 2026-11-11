@@ -11,6 +11,14 @@ node_modules/
 # Local scratch / image staging
 .tmp/
 
+# Never commit customer PII exports / abandoned-cart dumps
+exports/abandoned-carts*.csv
+exports/abandoned-carts*.xlsx
+exports/abandoned-carts*.json
+exports/**/*whatsapp*
+**/abandoned-carts-export.json
+**/CCSMS-private-exports/
+
 # VPS / local media volume (do not commit binaries)
 storecraft-store/media/
 storecraft-admin/media/

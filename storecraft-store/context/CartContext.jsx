@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { cartLinesAdd, cartLinesRemove, cartLinesUpdate, getCart } from "@/lib/shopifyCartClient";
 import { productAllowsCod } from "@/lib/codEligibility";
 import { resolveProductContentId, trackAddToCart } from "@/lib/metaPixel";
-import { syncCartToServer } from "@/lib/cartSyncClient";
+import { flushCartSyncOnUnload, syncCartToServer } from "@/lib/cartSyncClient";
 
 const STORAGE_KEY = "cart_items";
 const LEGACY_STORAGE_KEY = "sialkot_store_cart_v1";
@@ -105,16 +105,33 @@ export function CartProvider({ children, shopifyEnabled = false }) {
     saveCart(items);
   }, [items]);
 
-  // Debounced server sync for abandoned-cart recovery
+  // Debounced server sync for abandoned-cart recovery (+ unload flush)
   const syncTimer = useRef(null);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
   useEffect(() => {
     if (!cartReady) return;
     if (syncTimer.current) clearTimeout(syncTimer.current);
     syncTimer.current = setTimeout(() => {
-      syncCartToServer({ items });
+      const stage = items.length > 0 ? "cart" : "browsing";
+      syncCartToServer({ items, checkoutStage: stage });
     }, 1200);
+    const onHide = () => {
+      const list = itemsRef.current || [];
+      flushCartSyncOnUnload({
+        items: list,
+        checkoutStage: list.length > 0 ? "cart" : "browsing",
+      });
+    };
+    const onVis = () => {
+      if (document.visibilityState === "hidden") onHide();
+    };
+    window.addEventListener("pagehide", onHide);
+    document.addEventListener("visibilitychange", onVis);
     return () => {
       if (syncTimer.current) clearTimeout(syncTimer.current);
+      window.removeEventListener("pagehide", onHide);
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, [items, cartReady]);
 

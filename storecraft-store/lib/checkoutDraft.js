@@ -19,6 +19,7 @@ const EMPTY = {
   state: "",
   zip: "",
   country: "Pakistan",
+  updatedAt: 0,
 };
 
 function clean(value, max = 200) {
@@ -28,8 +29,7 @@ function clean(value, max = 200) {
 export function normalizeCheckoutDraft(raw = {}) {
   const firstName = clean(raw.firstName, 60);
   const lastName = clean(raw.lastName, 60);
-  const name =
-    clean(raw.name, 120) || `${firstName} ${lastName}`.trim();
+  const name = clean(raw.name, 120) || `${firstName} ${lastName}`.trim();
   return {
     name,
     firstName,
@@ -43,6 +43,7 @@ export function normalizeCheckoutDraft(raw = {}) {
     state: clean(raw.state || raw.province, 80),
     zip: clean(raw.zip || raw.postcode, 20),
     country: clean(raw.country, 60) || "Pakistan",
+    updatedAt: Number(raw.updatedAt) || 0,
   };
 }
 
@@ -57,15 +58,33 @@ export function readCheckoutDraft() {
   }
 }
 
-export function writeCheckoutDraft( partial = {}) {
+/**
+ * Merge partial into draft. Non-empty incoming fields win; empty incoming does not wipe existing
+ * unless `allowClear` is true for that write.
+ */
+export function writeCheckoutDraft(partial = {}, { allowClear = false } = {}) {
   if (typeof window === "undefined") return readCheckoutDraft();
-  const next = normalizeCheckoutDraft({ ...readCheckoutDraft(), ...partial });
+  const prev = readCheckoutDraft();
+  const merged = { ...prev };
+  for (const [key, value] of Object.entries(partial || {})) {
+    if (key === "updatedAt") continue;
+    const next = value == null ? "" : String(value);
+    if (allowClear) {
+      merged[key] = next;
+    } else if (String(next).trim()) {
+      merged[key] = next;
+    }
+  }
+  const normalized = normalizeCheckoutDraft({
+    ...merged,
+    updatedAt: Date.now(),
+  });
   try {
-    localStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(next));
+    localStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(normalized));
   } catch {
     /* ignore quota */
   }
-  return next;
+  return normalized;
 }
 
 export function clearCheckoutDraft() {

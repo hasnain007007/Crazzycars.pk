@@ -53,7 +53,10 @@ const cartSessionSchema = new mongoose.Schema(
       name: { type: String, default: "", trim: true },
       email: { type: String, default: "", trim: true, lowercase: true },
       phone: { type: String, default: "", trim: true },
+      phoneValid: { type: Boolean, default: false },
+      phoneRaw: { type: String, default: "", trim: true },
     },
+    customerId: { type: String, default: "", trim: true, index: true },
     shippingAddress: {
       name: { type: String, default: "", trim: true },
       email: { type: String, default: "", trim: true, lowercase: true },
@@ -65,6 +68,12 @@ const cartSessionSchema = new mongoose.Schema(
       state: { type: String, default: "", trim: true },
       zip: { type: String, default: "", trim: true },
       country: { type: String, default: "Pakistan", trim: true },
+    },
+    checkoutStage: {
+      type: String,
+      enum: ["", "browsing", "cart", "checkout_details", "checkout_payment", "checkout_confirm"],
+      default: "",
+      index: true,
     },
     status: {
       type: String,

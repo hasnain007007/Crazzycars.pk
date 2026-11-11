@@ -1,0 +1,16 @@
+issue_id,status,resolution_type,summary,verification
+AC-01,Partial,Forward-fix only,Cannot backfill 139 historical dark carts; kept optional drawer capture + stronger sync for new carts,Unit tests + build; soak post-deploy
+AC-02,Resolved,Code,Address sync hardened (never blank-out; merge helpers; stage+fields); ready for post-deploy capture,mergeContactPayload + isCompleteAddress tests; store/admin build
+AC-03,Resolved,Code,CartDrawer pagehide/visibilitychange flush via sendBeacon path,Code review + build
+AC-04,Resolved,Code,cartSyncClient unload uses navigator.sendBeacon with keepalive fetch fallback,Code review + build
+AC-05,Resolved,Code,CartSession.checkoutStage + sync payload + admin detail display,Schema + serialize + build
+AC-06,Resolved,Code,CartSession.customerId synced from authenticated customer on drawer/checkout,Schema + CheckoutView/CartDrawer + build
+AC-07,Resolved,Code,PK phone normalize/validate on sync + admin set-contact; phoneValid badge,node:test pkPhone + build
+AC-08,Resolved,Code,Admin abandoned-cart search includes shippingAddress.* and customerId,route.js filter + build
+AC-09,Resolved,Code,AbandonedCartContactModal replaces window.prompt for WA/email/convert,Component + AbandonedCartsPage wiring + build
+AC-10,Resolved,Code,gitignore blocks abandoned-cart PII exports; prior dumps outside repo,gitignore entries
+AC-11,Accepted,Documentation,WhatsApp continues to use phone; documented equivalence (no new field),Privacy/owner docs
+AC-12,Resolved,Code,Cron prunes empty active carts idle >48h,cron route prunedEmptyActive
+AC-13,Blocked,Needs soak,Zero post-f6cd49c carts at audit; not a code defect,Re-measure after deploy+traffic
+AC-14,Blocked,Owner GO,Soft-require phone before checkout deferred per mission (must not force optional fields),OWNER_APPROVAL_REQUIRED.md
+AC-15,Accepted,By design,guest+ / missing emails blocked for remind; focus WhatsApp capture,Remind route unchanged intentionally

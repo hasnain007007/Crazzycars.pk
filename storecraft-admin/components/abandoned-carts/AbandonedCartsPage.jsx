@@ -7,6 +7,8 @@ import { abandonedCartDisplayName, getAbandonedCartWhatsAppMessage } from "@/lib
 import { openWhatsApp } from "@/components/orders/OrderWhatsAppButton";
 import { getAdminSettings } from "@/lib/adminSettingsCache";
 import { AbandonedCartDetailModal } from "@/components/abandoned-carts/AbandonedCartDetailModal";
+import { AbandonedCartContactModal } from "@/components/abandoned-carts/AbandonedCartContactModal";
+import { normalizePkMobile } from "@/lib/pkPhone";
 
 function formatWhen(d) {
   if (!d) return "—";
@@ -41,6 +43,7 @@ export function AbandonedCartsPage() {
     dismissed: 0,
     abandonedValue: 0,
   });
+  const [contactModal, setContactModal] = useState(null); // { mode, cart }
   const [settings, setSettings] = useState({
     enabled: true,
     abandonAfterMinutes: 60,
@@ -160,27 +163,7 @@ export function AbandonedCartsPage() {
     }
   }
 
-  async function ensureCartPhone(cart) {
-    const existing = String(cart?.customer?.phone || "").trim();
-    if (existing) return existing;
-    const entered = window.prompt(
-      "This guest cart has no phone. Enter a WhatsApp number (e.g. 03XXXXXXXXX):",
-      ""
-    );
-    const phone = String(entered || "").replace(/[^\d+]/g, "").trim();
-    if (!phone) {
-      toast.error("Phone number required for WhatsApp");
-      return "";
-    }
-    const updated = await patchAction(cart.id, "set-contact", { silent: true, phone });
-    return String(updated?.customer?.phone || phone).trim();
-  }
-
-  async function sendWhatsApp(cart, event) {
-    event?.preventDefault?.();
-    event?.stopPropagation?.();
-    const phone = await ensureCartPhone(cart);
-    if (!phone) return;
+  function openWhatsAppWithPhone(cart, phone) {
     const cartForMsg = {
       ...cart,
       customer: { ...(cart.customer || {}), phone },
@@ -191,30 +174,22 @@ export function AbandonedCartsPage() {
       toast.error("Could not open WhatsApp");
       return;
     }
-    // Log in the background without collapsing the table / resetting scroll.
     void patchAction(cart.id, "log-whatsapp", { silent: true });
   }
 
-  async function sendEmail(cartOrId) {
-    const cart =
-      typeof cartOrId === "object" && cartOrId
-        ? cartOrId
-        : rows.find((r) => r.id === cartOrId) || viewCart;
-    const id = typeof cartOrId === "string" ? cartOrId : cart?.id;
-    if (!id) return;
-    let email = String(cart?.customer?.email || "").trim();
-    if (!email) {
-      const entered = window.prompt(
-        "This guest cart has no email. Enter an email to send the recovery message:",
-        ""
-      );
-      email = String(entered || "").trim().toLowerCase();
-      if (!email || !email.includes("@")) {
-        toast.error("Valid email required");
-        return;
-      }
-      await patchAction(id, "set-contact", { silent: true, email });
+  async function sendWhatsApp(cart, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const existing = String(cart?.customer?.phone || cart?.shippingAddress?.phone || "").trim();
+    const pk = normalizePkMobile(existing);
+    if (pk.ok) {
+      openWhatsAppWithPhone(cart, pk.normalized);
+      return;
     }
+    setContactModal({ mode: "whatsapp", cart });
+  }
+
+  async function postRecoveryEmail(id) {
     try {
       const res = await fetch(`/api/abandoned-carts/${id}/remind`, {
         method: "POST",
@@ -233,53 +208,28 @@ export function AbandonedCartsPage() {
     }
   }
 
-  async function convertToOrder(cart) {
-    if (!cart?.id) return;
-    if (cart.convertedOrderNumber) {
-      window.location.href = `/orders?q=${encodeURIComponent(cart.convertedOrderNumber)}`;
+  async function sendEmail(cartOrId) {
+    const cart =
+      typeof cartOrId === "object" && cartOrId
+        ? cartOrId
+        : rows.find((r) => r.id === cartOrId) || viewCart;
+    const id = typeof cartOrId === "string" ? cartOrId : cart?.id;
+    if (!id || !cart) return;
+    const email = String(cart?.customer?.email || "").trim();
+    if (!email || !email.includes("@") || email.startsWith("guest+")) {
+      setContactModal({ mode: "email", cart });
       return;
     }
-    if (!(cart.items || []).length) {
-      toast.error("This cart has no items");
-      return;
-    }
+    await postRecoveryEmail(id);
+  }
 
-    let name = String(cart.customer?.name || "").trim();
-    let phone = String(cart.customer?.phone || cart.shippingAddress?.phone || "").trim();
-    let email = String(cart.customer?.email || "").trim();
-    let street = String(cart.shippingAddress?.street || "").trim();
-    let city = String(cart.shippingAddress?.city || "").trim();
-    let state = String(cart.shippingAddress?.state || "").trim();
-
-    if (!name) {
-      name = String(
-        window.prompt("Customer name (required for the order):", "") || ""
-      ).trim();
-      if (!name) {
-        toast.error("Name required to create an order");
-        return;
-      }
-    }
-    if (!phone) {
-      phone = String(
-        window.prompt("Customer phone / WhatsApp (required):", "") || ""
-      )
-        .replace(/[^\d+]/g, "")
-        .trim();
-      if (!phone) {
-        toast.error("Phone required to create an order");
-        return;
-      }
-    }
-    if (!street) {
-      street = String(window.prompt("Delivery street address:", "") || "").trim();
-    }
-    if (!city) {
-      city = String(window.prompt("City:", "") || "").trim();
-    }
-    if (!state && (street || city)) {
-      state = String(window.prompt("Province (optional):", "") || "").trim();
-    }
+  async function executeConvert(cart, details) {
+    const name = String(details.name || "").trim();
+    const phone = String(details.phone || "").trim();
+    const email = String(details.email || "").trim();
+    const street = String(details.street || "").trim();
+    const city = String(details.city || "").trim();
+    const state = String(details.state || "").trim();
 
     await patchAction(cart.id, "set-contact", {
       silent: true,
@@ -335,6 +285,60 @@ export function AbandonedCartsPage() {
       toast.error("Network error");
     } finally {
       setConvertingId(null);
+    }
+  }
+
+  async function convertToOrder(cart) {
+    if (!cart?.id) return;
+    if (cart.convertedOrderNumber) {
+      window.location.href = `/orders?q=${encodeURIComponent(cart.convertedOrderNumber)}`;
+      return;
+    }
+    if (!(cart.items || []).length) {
+      toast.error("This cart has no items");
+      return;
+    }
+
+    const name = String(cart.customer?.name || "").trim();
+    const phone = String(cart.customer?.phone || cart.shippingAddress?.phone || "").trim();
+    const pk = normalizePkMobile(phone);
+    if (!name || !pk.ok) {
+      setContactModal({ mode: "convert", cart });
+      return;
+    }
+    await executeConvert(cart, {
+      name,
+      phone: pk.normalized,
+      email: String(cart.customer?.email || "").trim(),
+      street: String(cart.shippingAddress?.street || "").trim(),
+      city: String(cart.shippingAddress?.city || "").trim(),
+      state: String(cart.shippingAddress?.state || "").trim(),
+    });
+  }
+
+  async function onContactModalSubmit(details) {
+    const { mode, cart } = contactModal || {};
+    if (!cart?.id) return;
+    if (mode === "whatsapp") {
+      const pk = normalizePkMobile(details.phone);
+      await patchAction(cart.id, "set-contact", {
+        silent: true,
+        name: details.name || undefined,
+        phone: details.phone,
+      });
+      setContactModal(null);
+      openWhatsAppWithPhone(cart, pk.normalized || details.phone);
+      return;
+    }
+    if (mode === "email") {
+      await patchAction(cart.id, "set-contact", { silent: true, email: details.email });
+      setContactModal(null);
+      await postRecoveryEmail(cart.id);
+      return;
+    }
+    if (mode === "convert") {
+      setContactModal(null);
+      await executeConvert(cart, details);
     }
   }
 
@@ -688,6 +692,14 @@ export function AbandonedCartsPage() {
           onReopen={(id) => patchAction(id, "reopen")}
         />
       ) : null}
+
+      <AbandonedCartContactModal
+        open={Boolean(contactModal)}
+        mode={contactModal?.mode || "contact"}
+        cart={contactModal?.cart || null}
+        onClose={() => setContactModal(null)}
+        onSubmit={onContactModalSubmit}
+      />
     </div>
   );
 }

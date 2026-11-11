@@ -13,7 +13,8 @@ import {
 } from "@/lib/storePolicyCopy";
 import { cartHasBulkyItem, shippingFloorPKR } from "@/lib/shippingTier";
 import { readCheckoutDraft, writeCheckoutDraft } from "@/lib/checkoutDraft";
-import { syncCartToServer } from "@/lib/cartSyncClient";
+import { flushCartSyncOnUnload, syncCartToServer } from "@/lib/cartSyncClient";
+import { useCustomer } from "@/lib/customerAuth";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -42,6 +43,7 @@ const qtyBtnStyle = {
 
 export function CartDrawer() {
   const { items, open, setOpen, subtotal, removeItem, updateQuantity, checkoutUrl } = useCart();
+  const { customer: authCustomer } = useCustomer();
   const checkoutMessages = useCheckoutMessages();
   const emptyMsg = checkoutMessages.cartEmptyMessage || "Your cart is empty";
   const [openMeasurements, setOpenMeasurements] = useState({});
@@ -52,22 +54,26 @@ export function CartDrawer() {
   const codPanelId = useId();
   const hasBulky = cartHasBulkyItem(items);
   const estimatedShipping = items.length > 0 ? shippingFloorPKR(hasBulky) : 0;
+  const authCustomerId = String(authCustomer?._id || authCustomer?.id || "").trim();
 
   useEffect(() => {
     if (!open) return;
     const draft = readCheckoutDraft();
     if (draft.name) setLeadName((prev) => prev || draft.name);
     if (draft.phone) setLeadPhone((prev) => prev || draft.phone);
-  }, [open]);
+    if (authCustomer?.name) setLeadName((prev) => prev || String(authCustomer.name));
+    if (authCustomer?.phone) setLeadPhone((prev) => prev || String(authCustomer.phone));
+  }, [open, authCustomer]);
 
   useEffect(() => {
     if (!items.length) return;
     const name = String(leadName || "").trim();
     const phone = String(leadPhone || "").trim();
-    if (!name && !phone) return;
-    const t = setTimeout(() => {
+
+    const flush = (unload = false) => {
+      if (!name && !phone && !unload) return;
       const draft = writeCheckoutDraft({ name, phone });
-      syncCartToServer({
+      const payload = {
         items,
         customer: { name: draft.name, phone: draft.phone, email: draft.email },
         shippingAddress: {
@@ -80,10 +86,26 @@ export function CartDrawer() {
         },
         path: typeof window !== "undefined" ? window.location.pathname : "/cart",
         includeDraft: false,
-      });
-    }, 600);
-    return () => clearTimeout(t);
-  }, [leadName, leadPhone, items]);
+        checkoutStage: "cart",
+        customerId: authCustomerId || undefined,
+      };
+      if (unload) flushCartSyncOnUnload(payload);
+      else syncCartToServer(payload);
+    };
+
+    const t = setTimeout(() => flush(false), 600);
+    const onHide = () => flush(true);
+    const onVis = () => {
+      if (document.visibilityState === "hidden") onHide();
+    };
+    window.addEventListener("pagehide", onHide);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("pagehide", onHide);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [leadName, leadPhone, items, authCustomerId]);
   const estimatedTotal =
     Math.round((Number(subtotal) + Number(estimatedShipping || 0)) * 100) / 100;
 
@@ -385,13 +407,13 @@ export function CartDrawer() {
               </div>
               <div className="mb-2 space-y-1.5">
                 <p className="m-0 text-[11px] font-medium text-zinc-500">
-                  Save your details so we can help if you leave
+                  Optional — save name & WhatsApp so we can help if you leave (checkout still works without this)
                 </p>
                 <input
                   type="text"
                   value={leadName}
                   onChange={(e) => setLeadName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder="Your name (optional)"
                   autoComplete="name"
                   className="h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm"
                 />
@@ -399,7 +421,7 @@ export function CartDrawer() {
                   type="tel"
                   value={leadPhone}
                   onChange={(e) => setLeadPhone(e.target.value)}
-                  placeholder="WhatsApp / phone (03XX…)"
+                  placeholder="WhatsApp / phone optional (03XX…)"
                   autoComplete="tel"
                   inputMode="tel"
                   className="h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm"

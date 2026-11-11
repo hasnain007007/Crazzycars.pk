@@ -143,8 +143,22 @@ export function AbandonedCartDetailModal({
             </h3>
             <dl className="rounded-xl border border-slate-200 px-3 dark:border-slate-700">
               <Row label="Name">{abandonedCartDisplayName(cart)}</Row>
-              <Row label="Phone">{cart.customer?.phone || cart.shippingAddress?.phone || "—"}</Row>
+              <Row label="Phone">
+                {cart.customer?.phone || cart.shippingAddress?.phone || "—"}
+                {cart.customer?.phone ? (
+                  <span
+                    className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                      cart.customer?.phoneValid === false
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-emerald-100 text-emerald-800"
+                    }`}
+                  >
+                    {cart.customer?.phoneValid === false ? "Check format" : "PK OK"}
+                  </span>
+                ) : null}
+              </Row>
               <Row label="Email">{cart.customer?.email || cart.shippingAddress?.email || "—"}</Row>
+              <Row label="Stage">{cart.checkoutStage || "—"}</Row>
               <Row label="Address">
                 {[
                   cart.shippingAddress?.street,

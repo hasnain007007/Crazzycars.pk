@@ -1,6 +1,6 @@
 /**
  * POST /api/cart/sync — upsert browser cart into CartSession.
- * Body: { sessionId, items, customer?, shippingAddress?, path? }
+ * Body: { sessionId, items, customer?, shippingAddress?, path?, checkoutStage?, customerId? }
  */
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
@@ -11,6 +11,8 @@ import {
   hasContact,
   normalizeCartItems,
 } from "@/lib/abandonedCart";
+import { normalizeCheckoutStage } from "@/lib/cartSyncNormalize";
+import { phoneForStorage } from "@/lib/pkPhone";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,8 @@ export async function POST(request) {
     const now = new Date();
     const path = String(body.path || "").trim().slice(0, 200);
     const ua = String(request.headers.get("user-agent") || "").slice(0, 300);
+    const checkoutStage = normalizeCheckoutStage(body.checkoutStage);
+    const customerId = String(body.customerId || "").trim().slice(0, 64);
 
     const incomingCustomer = body.customer && typeof body.customer === "object" ? body.customer : {};
     const incomingShip =
@@ -46,7 +50,9 @@ export async function POST(request) {
     const email =
       pickStr(incomingCustomer, ["email"], 160).toLowerCase() ||
       pickStr(incomingShip, ["email"], 160).toLowerCase();
-    const phone = pickStr(incomingCustomer, ["phone"], 40) || pickStr(incomingShip, ["phone"], 40);
+    const phoneIncoming =
+      pickStr(incomingCustomer, ["phone"], 40) || pickStr(incomingShip, ["phone"], 40);
+    const phoneStored = phoneIncoming ? phoneForStorage(phoneIncoming) : null;
 
     const street = pickStr(incomingShip, ["street", "address", "line1"], 200);
     const street2 = pickStr(incomingShip, ["street2", "line2"], 200);
@@ -59,8 +65,6 @@ export async function POST(request) {
     await dbConnect();
     let doc = await CartSession.findOne({ sessionId });
     if (!doc) {
-      // Do not create empty sessions — every page load used to insert an "active"
-      // row with 0 items and inflate the Active Carts metric.
       if (items.length === 0) {
         return NextResponse.json({
           success: true,
@@ -74,7 +78,6 @@ export async function POST(request) {
 
     ensureRecoveryToken(doc);
 
-    // Don't resurrect recovered/dismissed carts unless they add items again.
     if (doc.status === "recovered" || doc.status === "dismissed") {
       if (items.length === 0) {
         return NextResponse.json({
@@ -100,20 +103,27 @@ export async function POST(request) {
     doc.expiresAt = new Date(now.getTime() + 45 * 24 * 60 * 60 * 1000);
     if (path) doc.lastPath = path;
     if (ua) doc.userAgent = ua;
+    if (checkoutStage) doc.checkoutStage = checkoutStage;
+    if (customerId) doc.customerId = customerId;
 
     doc.customer = doc.customer || {};
+    // Never blank-out existing contact with empty incoming.
     if (name) doc.customer.name = name;
     if (email && email.includes("@") && !email.startsWith("guest+")) {
       doc.customer.email = email;
     }
-    if (phone) doc.customer.phone = phone;
+    if (phoneStored?.phone) {
+      doc.customer.phone = phoneStored.phone;
+      doc.customer.phoneValid = Boolean(phoneStored.phoneValid);
+      doc.customer.phoneRaw = phoneStored.phoneRaw || "";
+    }
 
     doc.shippingAddress = doc.shippingAddress || {};
     if (name) doc.shippingAddress.name = name;
     if (email && email.includes("@") && !email.startsWith("guest+")) {
       doc.shippingAddress.email = email;
     }
-    if (phone) doc.shippingAddress.phone = phone;
+    if (phoneStored?.phone) doc.shippingAddress.phone = phoneStored.phone;
     if (street) doc.shippingAddress.street = street;
     if (street2) doc.shippingAddress.street2 = street2;
     if (area) doc.shippingAddress.area = area;
@@ -125,14 +135,11 @@ export async function POST(request) {
     doc.markModified("shippingAddress");
 
     if (items.length === 0) {
-      // Empty cart — keep record but stay active (will age out via TTL / cron).
       if (doc.status === "abandoned") {
         doc.status = "active";
         doc.abandonedAt = null;
       }
     } else if (doc.status === "abandoned" && hasContact(doc.customer)) {
-      // Customer came back and is shopping again — re-activate and start a fresh
-      // reminder cycle (otherwise emailReminderCount stays at the old cap).
       doc.status = "active";
       doc.abandonedAt = null;
       doc.emailReminderCount = 0;
@@ -148,6 +155,8 @@ export async function POST(request) {
       recoveryToken: doc.recoveryToken,
       itemCount: doc.itemCount,
       subtotal: doc.subtotal,
+      checkoutStage: doc.checkoutStage || "",
+      phoneValid: Boolean(doc.customer?.phoneValid),
     });
   } catch (e) {
     return NextResponse.json(

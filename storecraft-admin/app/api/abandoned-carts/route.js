@@ -8,6 +8,7 @@ import { denyUnlessCapability } from "@/lib/denyCapability";
 import CartSession from "@/lib/models/CartSession.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
 import { markIdleCartsAbandoned, serializeCartSession } from "@/lib/abandonedCart";
+import { phoneForStorage } from "@/lib/pkPhone";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,12 @@ export async function GET(request) {
         { "customer.name": rx },
         { "customer.email": rx },
         { "customer.phone": rx },
+        { "shippingAddress.street": rx },
+        { "shippingAddress.city": rx },
+        { "shippingAddress.state": rx },
+        { "shippingAddress.phone": rx },
+        { "shippingAddress.name": rx },
+        { customerId: rx },
         { sessionId: rx },
       ];
     }
@@ -165,10 +172,12 @@ export async function PATCH(request) {
       doc.customer = doc.customer || {};
       doc.shippingAddress = doc.shippingAddress || {};
       if (body.phone != null) {
-        const phone = String(body.phone || "").replace(/[^\d+]/g, "").trim();
-        if (phone) {
-          doc.customer.phone = phone;
-          doc.shippingAddress.phone = phone;
+        const stored = phoneForStorage(body.phone);
+        if (stored.phone) {
+          doc.customer.phone = stored.phone;
+          doc.customer.phoneValid = Boolean(stored.phoneValid);
+          doc.customer.phoneRaw = stored.phoneRaw || "";
+          doc.shippingAddress.phone = stored.phone;
         }
       }
       if (body.email != null) {

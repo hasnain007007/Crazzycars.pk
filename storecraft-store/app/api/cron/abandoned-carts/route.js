@@ -48,6 +48,14 @@ export async function GET(request) {
       abandonAfterMinutes: cfg.abandonAfterMinutes,
     });
 
+    // 1b) Prune empty active noise (itemCount=0) idle > 48h — keeps admin metrics clean
+    const emptyCutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const pruneResult = await CartSession.deleteMany({
+      status: "active",
+      itemCount: 0,
+      lastActivityAt: { $lte: emptyCutoff },
+    });
+
     // 2) Send email reminders
     let emailsSent = 0;
     let emailsFailed = 0;
@@ -111,6 +119,7 @@ export async function GET(request) {
     return NextResponse.json({
       success: true,
       markedAbandoned: markResult.modifiedCount || 0,
+      prunedEmptyActive: pruneResult.deletedCount || 0,
       emailsSent,
       emailsFailed,
       emailsSkipped,

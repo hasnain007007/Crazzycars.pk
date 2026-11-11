@@ -43,6 +43,7 @@ import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner"
 import { cartHasBulkyItem } from "@/lib/shippingTier";
 import {
   fetchRecoverCart,
+  flushCartSyncOnUnload,
   getCartSessionId,
   getStoredRecoveryToken,
   syncCartToServer,
@@ -53,6 +54,7 @@ import {
   readCheckoutDraft,
   writeCheckoutDraft,
 } from "@/lib/checkoutDraft";
+import { stageFromCheckoutStep } from "@/lib/cartSyncNormalize";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -458,7 +460,17 @@ export function CheckoutView() {
       country: addr.country || STORE_COUNTRY,
     });
 
-    const flush = () => {
+    const detailsCompleteNow = Boolean(
+      name &&
+        String(customer.phone || "").trim() &&
+        String(addr.street || "").trim() &&
+        String(addr.city || "").trim() &&
+        String(addr.state || "").trim()
+    );
+    const stage = stageFromCheckoutStep(submitting ? 3 : detailsCompleteNow ? 2 : 1);
+    const authId = String(authCustomer?._id || authCustomer?.id || "").trim();
+
+    const flush = (unload = false) => {
       const payload = draftToSyncPayload(draft);
       if (
         !payload.customer.name &&
@@ -470,17 +482,21 @@ export function CheckoutView() {
       ) {
         return;
       }
-      syncCartToServer({
+      const opts = {
         items,
         customer: payload.customer,
         shippingAddress: payload.shippingAddress,
         path: "/checkout",
         includeDraft: false,
-      });
+        checkoutStage: stage,
+        customerId: authId || undefined,
+      };
+      if (unload) flushCartSyncOnUnload(opts);
+      else syncCartToServer(opts);
     };
 
-    const t = setTimeout(flush, 700);
-    const onHide = () => flush();
+    const t = setTimeout(() => flush(false), 700);
+    const onHide = () => flush(true);
     const onVis = () => {
       if (document.visibilityState === "hidden") onHide();
     };
@@ -505,6 +521,8 @@ export function CheckoutView() {
     addr.zip,
     addr.country,
     items,
+    submitting,
+    authCustomer,
   ]);
 
   const freeThreshold = useMemo(

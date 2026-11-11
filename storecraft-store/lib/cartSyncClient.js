@@ -1,5 +1,6 @@
 /**
  * Client helpers: session id + debounced cart sync to the server.
+ * Unload path prefers sendBeacon; interactive path uses fetch.
  */
 "use client";
 
@@ -8,6 +9,7 @@ import {
   draftToSyncPayload,
   readCheckoutDraft,
 } from "@/lib/checkoutDraft";
+import { mergeContactPayload } from "@/lib/cartSyncNormalize";
 
 const PRESENCE_KEY = "cc_presence_sid";
 const RECOVERY_TOKEN_KEY = "cc_cart_recovery_token";
@@ -67,9 +69,51 @@ function serializeItems(items) {
   }));
 }
 
+function buildSyncBody({
+  items,
+  customer,
+  shippingAddress,
+  path,
+  includeDraft = true,
+  checkoutStage,
+  customerId,
+}) {
+  const sessionId = getCartSessionId();
+  if (!sessionId) return null;
+
+  const draft = includeDraft ? readCheckoutDraft() : null;
+  const fromDraft =
+    draft && draftHasContact(draft) ? draftToSyncPayload(draft) : { customer: {}, shippingAddress: {} };
+  const merged = mergeContactPayload(fromDraft, {
+    customer: customer && typeof customer === "object" ? customer : {},
+    shippingAddress: shippingAddress && typeof shippingAddress === "object" ? shippingAddress : {},
+  });
+
+  return {
+    sessionId,
+    items: serializeItems(items),
+    customer: merged.hasCustomer ? merged.customer : undefined,
+    shippingAddress: merged.hasAddress || merged.hasCustomer ? merged.shippingAddress : undefined,
+    path: path || (typeof window !== "undefined" ? window.location.pathname : ""),
+    checkoutStage: checkoutStage || undefined,
+    customerId: customerId || undefined,
+  };
+}
+
+function postViaBeacon(body) {
+  if (typeof navigator === "undefined" || typeof navigator.sendBeacon !== "function") return false;
+  try {
+    const blob = new Blob([JSON.stringify(body)], { type: "application/json" });
+    return navigator.sendBeacon("/api/cart/sync", blob);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Fire-and-forget sync. Safe to call often — caller should debounce.
  * Merges local checkout draft so name/phone/address survive item-only syncs.
+ * @param {{ unload?: boolean }} [opts] — unload=true prefers sendBeacon
  */
 export async function syncCartToServer({
   items,
@@ -77,34 +121,42 @@ export async function syncCartToServer({
   shippingAddress,
   path,
   includeDraft = true,
+  checkoutStage,
+  customerId,
+  unload = false,
 } = {}) {
-  const sessionId = getCartSessionId();
-  if (!sessionId) return null;
-  try {
-    const draft = includeDraft ? readCheckoutDraft() : null;
-    const fromDraft =
-      draft && draftHasContact(draft) ? draftToSyncPayload(draft) : { customer: {}, shippingAddress: {} };
-    const mergedCustomer = {
-      ...(fromDraft.customer || {}),
-      ...(customer && typeof customer === "object" ? customer : {}),
-    };
-    const mergedAddress = {
-      ...(fromDraft.shippingAddress || {}),
-      ...(shippingAddress && typeof shippingAddress === "object" ? shippingAddress : {}),
-    };
-    const hasCustomer = Object.values(mergedCustomer).some((v) => String(v || "").trim());
-    const hasAddress = Object.values(mergedAddress).some((v) => String(v || "").trim());
+  const body = buildSyncBody({
+    items,
+    customer,
+    shippingAddress,
+    path,
+    includeDraft,
+    checkoutStage,
+    customerId,
+  });
+  if (!body) return null;
 
+  if (unload) {
+    if (postViaBeacon(body)) return { success: true, via: "beacon" };
+    // Fallback keepalive fetch when beacon unavailable/rejected
+    try {
+      await fetch("/api/cart/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        keepalive: true,
+      });
+      return { success: true, via: "keepalive" };
+    } catch {
+      return null;
+    }
+  }
+
+  try {
     const res = await fetch("/api/cart/sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId,
-        items: serializeItems(items),
-        customer: hasCustomer ? mergedCustomer : undefined,
-        shippingAddress: hasAddress ? mergedAddress : undefined,
-        path: path || (typeof window !== "undefined" ? window.location.pathname : ""),
-      }),
+      body: JSON.stringify(body),
       keepalive: true,
     });
     const json = await res.json().catch(() => ({}));
@@ -113,6 +165,11 @@ export async function syncCartToServer({
   } catch {
     return null;
   }
+}
+
+/** Immediate unload-safe flush (drawer/checkout pagehide). */
+export function flushCartSyncOnUnload(opts = {}) {
+  return syncCartToServer({ ...opts, unload: true });
 }
 
 export async function fetchRecoverCart(token) {
