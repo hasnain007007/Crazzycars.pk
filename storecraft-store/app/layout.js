@@ -23,7 +23,8 @@ import { safeJsonLd } from "@/lib/safeJsonLd";
 import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { BRAND_NAME, TITLE_SUFFIX, withBrandTitleSuffix } from "@/lib/brand";
-import { contactHoursToOpeningHoursSpec } from "@/lib/contactHours";
+import { STORE_NAP } from "@/config/store-nap";
+import { STORE_CONTACT } from "@/config/store-policy";
 import "./globals.css";
 
 const MobileBottomNav = dynamic(() => import("@/components/store/MobileBottomNav"));
@@ -247,34 +248,23 @@ export default async function RootLayout({ children }) {
     seo.ogImage?.trim() ||
     `${baseUrl}/og/default-1200x630.jpg`;
 
+  // NAP (address/geo/hours/shop phone/sameAs) is forced from STORE_NAP inside buildOrgLd.
   const organizationJsonLd = buildOrgLd({
     name: BRAND_NAME,
     logo: logoUrl,
     image: orgImage,
     ogImage: orgImage,
-    email: general.email || undefined,
-    telephone: general.telephone || general.phone || undefined,
-    whatsapp: general.whatsapp || undefined,
-    streetAddress: general.streetAddress || undefined,
-    addressLocality: general.addressLocality || undefined,
-    addressRegion: general.addressRegion || undefined,
-    postalCode: general.postalCode || undefined,
-    addressCountry: general.addressCountry || undefined,
-    latitude: general.latitude ?? general.geoLat ?? undefined,
-    longitude: general.longitude ?? general.geoLng ?? undefined,
-    geoLat: general.geoLat ?? general.latitude ?? undefined,
-    geoLng: general.geoLng ?? general.longitude ?? undefined,
-    mapUrl: general.mapUrl || general.googleMapsUrl || undefined,
-    googleMapsUrl: general.googleMapsUrl || general.mapUrl || undefined,
+    email: general.email || STORE_CONTACT.email || undefined,
+    whatsapp: general.whatsapp || STORE_CONTACT.whatsapp || STORE_CONTACT.phoneE164,
+    mapUrl: general.mapUrl || general.googleMapsUrl || STORE_NAP.mapUrl || undefined,
+    googleMapsUrl: general.googleMapsUrl || general.mapUrl || STORE_NAP.mapUrl || undefined,
     foundingDate: general.foundingDate || "2023",
     priceRange: general.priceRange || undefined,
-    sameAs: Array.isArray(general.sameAs) ? general.sameAs : undefined,
-    openingHours: contactHoursToOpeningHoursSpec(settings?.contactPage?.hours),
   });
 
   const websiteJsonLd = buildWebsiteLd({
     name: BRAND_NAME,
-    sameAs: Array.isArray(general.sameAs) ? general.sameAs : undefined,
+    sameAs: STORE_NAP.sameAs,
   });
 
   const bodyFont = appearance.fontFamily || undefined;

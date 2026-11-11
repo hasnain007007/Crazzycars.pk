@@ -8,7 +8,8 @@ import { organizationJsonLd as buildOrgLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { getSiteUrl, absoluteUrl } from "@/lib/siteUrl";
-import { contactHoursToOpeningHoursSpec } from "@/lib/contactHours";
+import { STORE_NAP } from "@/config/store-nap";
+import { STORE_CONTACT } from "@/config/store-policy";
 
 export const generateMetadata = withSafeMetadata(async function contactMetadata() {
   const settings = await getServerStoreSettings();
@@ -39,21 +40,22 @@ export const revalidate = 300;
 export default async function ContactPage() {
   const settings = await getServerStoreSettings();
   const general = settings?.general || {};
+  // Display + LocalBusiness fields from STORE_NAP (GBP), not stale Mongo Settings.
   const localBusiness = {
-    streetAddress: general.streetAddress || "",
-    addressLocality: general.addressLocality || "Gujranwala",
-    addressRegion: general.addressRegion || "Punjab",
-    postalCode: general.postalCode || "",
-    addressCountry: general.addressCountry || "PK",
-    latitude: general.latitude ?? general.geoLat,
-    longitude: general.longitude ?? general.geoLng,
-    mapUrl: general.mapUrl || general.googleMapsUrl || "",
+    streetAddress: STORE_NAP.streetAddress,
+    addressLocality: STORE_NAP.addressLocality,
+    addressRegion: STORE_NAP.addressRegion,
+    postalCode: STORE_NAP.postalCode,
+    addressCountry: STORE_NAP.addressCountry,
+    latitude: STORE_NAP.latitude,
+    longitude: STORE_NAP.longitude,
+    mapUrl: general.mapUrl || general.googleMapsUrl || STORE_NAP.mapUrl || "",
     googleReviewUrl: general.googleReviewUrl || "",
-    whatsapp: general.whatsapp || "",
+    whatsapp: STORE_CONTACT.whatsapp || STORE_CONTACT.phoneE164,
     priceRange: general.priceRange || "",
-    sameAs: Array.isArray(general.sameAs) ? general.sameAs : [],
-    // Prefer admin contactPage.hours; do not use seeded general.openingHours.
-    openingHours: contactHoursToOpeningHoursSpec(settings?.contactPage?.hours),
+    sameAs: STORE_NAP.sameAs,
+    openingHours: STORE_NAP.openingHoursSpec,
+    hoursDisplay: STORE_NAP.hoursDisplay,
   };
 
   const baseUrl = getSiteUrl();
@@ -62,9 +64,9 @@ export default async function ContactPage() {
     name: BRAND_NAME,
     logo: logoUrl,
     image: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
-    email: general.email || settings?.email,
-    telephone: general.telephone || general.phone || settings?.phone,
-    ...localBusiness,
+    email: general.email || settings?.email || STORE_CONTACT.email,
+    whatsapp: STORE_CONTACT.whatsapp || STORE_CONTACT.phoneE164,
+    mapUrl: localBusiness.mapUrl,
   });
 
   return (
@@ -76,8 +78,8 @@ export default async function ContactPage() {
       <ContactPageView
         contactPage={settings?.contactPage}
         general={{
-          email: settings?.email || general.email,
-          phone: settings?.phone || general.phone,
+          email: settings?.email || general.email || STORE_CONTACT.email,
+          phone: STORE_NAP.shopPhoneDisplay,
           googleReviewUrl: general.googleReviewUrl || "",
         }}
         localBusiness={localBusiness}

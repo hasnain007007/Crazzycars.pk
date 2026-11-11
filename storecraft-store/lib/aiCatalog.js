@@ -5,6 +5,7 @@
  */
 import { productAllowsCod, isBodyKitProduct } from "@/lib/codEligibility";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
+import { STORE_NAP } from "@/config/store-nap";
 import { returnsRefundRules } from "@/lib/storePolicyCopy";
 
 /** Known AI utm_source values that stamp first-touch attribution cookies. */
@@ -183,14 +184,22 @@ export function aiStoreManifest(siteUrl) {
     currency: "PKR",
     market: "PK",
     contact: {
+      /** WhatsApp ordering line — see STORE_NAP for Google Business Profile CALL number. */
       phone: STORE_CONTACT.phone,
       phone_e164: STORE_CONTACT.phoneE164,
       whatsapp: STORE_CONTACT.whatsapp,
       whatsapp_link: `https://wa.me/${STORE_CONTACT.phoneE164.replace(/\D/g, "")}`,
+      shop_phone: STORE_NAP.shopPhoneDisplay,
+      shop_phone_e164: STORE_NAP.shopPhoneE164,
       email: STORE_CONTACT.email,
-      city: STORE_CONTACT.address.city,
-      region: STORE_CONTACT.address.region,
-      country: STORE_CONTACT.address.country,
+      street: STORE_NAP.streetAddress,
+      city: STORE_NAP.addressLocality,
+      region: STORE_NAP.addressRegion,
+      postal_code: STORE_NAP.postalCode,
+      country: STORE_NAP.addressCountry,
+      latitude: STORE_NAP.latitude,
+      longitude: STORE_NAP.longitude,
+      hours: STORE_NAP.hoursDisplay,
     },
     shipping: {
       standard_fee_pkr: STORE_POLICY.shipping.standardFeePKR,

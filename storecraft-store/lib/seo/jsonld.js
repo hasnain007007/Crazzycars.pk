@@ -16,6 +16,8 @@ import {
   specAdditionalProperties,
   specsFromProduct,
 } from "../product-specs.mjs";
+import { STORE_NAP } from "../../config/store-nap.js";
+import { STORE_CONTACT } from "../../config/store-policy.js";
 
 function site() {
   return getSiteUrl();
@@ -599,51 +601,44 @@ export function collectionPageJsonLd({
   return ld;
 }
 
-const DEFAULT_SAME_AS = [
-  "https://www.facebook.com/crazzycars.pk",
-  "https://www.instagram.com/crazzycars.pk",
-  "https://www.tiktok.com/@crazzycars.pk",
-];
+const DEFAULT_SAME_AS = [...STORE_NAP.sameAs];
 
 /**
  * AutoPartsStore — root layout once.
- * Optional LocalBusiness fields (streetAddress, geo, hours, map, priceRange, sameAs)
- * are emitted only when filled — never placeholders.
+ * Google Business Profile NAP (STORE_NAP) always wins for address/geo/hours/
+ * shop telephone/sameAs — Mongo Settings may still hold stale values until an
+ * owner-approved Settings $set (see nap-settings dry-run).
+ * Overrides may still supply logo, email, map, foundingDate, priceRange, WhatsApp digits.
  */
 export function organizationJsonLd(overrides = {}) {
   const SITE = site();
   const orgId = `${SITE}/#org`;
-  const telephone = String(overrides.telephone || "").trim() || "+92-328-4010007";
-  const email = String(overrides.email || "").trim() || "info@crazzycars.pk";
-  const whatsapp = String(overrides.whatsapp || "").replace(/\D/g, "");
-
-  const locality = String(overrides.addressLocality || "Gujranwala").trim() || "Gujranwala";
-  const region = String(overrides.addressRegion || "Punjab").trim() || "Punjab";
-  const country = String(overrides.addressCountry || "PK").trim() || "PK";
-  const street = String(overrides.streetAddress || "").trim();
-  const postal = String(overrides.postalCode || "").trim();
-
-  // Avoid stuffing the whole "Gujranwala, Punjab, Pakistan" blob into streetAddress.
-  const streetLooksLikeCityOnly =
-    street &&
-    !/\d/.test(street) &&
-    /gujranwala/i.test(street) &&
-    street.length < 48;
+  // GBP shop line (CALL) — not the WhatsApp ordering number.
+  const telephone = STORE_NAP.shopPhoneE164;
+  const email = String(overrides.email || "").trim() || STORE_CONTACT.email;
+  const whatsappDigits = String(
+    overrides.whatsapp || STORE_CONTACT.phoneE164 || ""
+  ).replace(/\D/g, "");
+  // Normalise local 03… → 923… for E.164 + wa.me
+  let waCore = whatsappDigits.replace(/^\+/, "");
+  if (waCore.startsWith("0")) waCore = `92${waCore.slice(1)}`;
+  if (!waCore.startsWith("92") && waCore.length === 10) waCore = `92${waCore}`;
+  const whatsappE164 = waCore ? `+${waCore}` : STORE_CONTACT.phoneE164;
 
   const address = {
     "@type": "PostalAddress",
-    addressLocality: locality,
-    addressRegion: region,
-    addressCountry: country,
+    streetAddress: STORE_NAP.streetAddress,
+    addressLocality: STORE_NAP.addressLocality,
+    addressRegion: STORE_NAP.addressRegion,
+    postalCode: STORE_NAP.postalCode,
+    addressCountry: STORE_NAP.addressCountry,
   };
-  if (street && !streetLooksLikeCityOnly) address.streetAddress = street;
-  if (postal) address.postalCode = postal;
 
   const ld = {
     "@context": "https://schema.org",
     "@type": "AutoPartsStore",
     "@id": orgId,
-    name: overrides.name || "CrazzyCars.pk",
+    name: overrides.name || STORE_NAP.businessName,
     alternateName: Array.isArray(overrides.alternateName)
       ? overrides.alternateName.map((n) => String(n || "").trim()).filter(Boolean)
       : ["Crazy Cars", "CrazyCars.pk"],
@@ -667,13 +662,25 @@ export function organizationJsonLd(overrides = {}) {
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        telephone: whatsapp ? `+${whatsapp.replace(/^\+/, "")}` : telephone,
-        url: whatsapp ? `https://wa.me/${whatsapp}` : "https://wa.me/923284010007",
-        availableLanguage: ["en", "ur"],
+        telephone: whatsappE164,
+        url: `https://wa.me/${whatsappE164.replace(/\D/g, "")}`,
+        availableLanguage: ["ur", "en"],
         areaServed: "PK",
       },
     ],
     address,
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: STORE_NAP.latitude,
+      longitude: STORE_NAP.longitude,
+    },
+    openingHoursSpecification: STORE_NAP.openingHoursSpec.map((h) => ({
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: h.dayOfWeek,
+      opens: h.opens,
+      closes: h.closes,
+    })),
+    sameAs: DEFAULT_SAME_AS,
     areaServed: "PK",
     paymentAccepted: "Cash, JazzCash, Bank transfer",
   };
@@ -681,62 +688,14 @@ export function organizationJsonLd(overrides = {}) {
   const founding = String(overrides.foundingDate || "").trim();
   if (founding) ld.foundingDate = founding;
 
-  const hasMap = String(overrides.mapUrl || overrides.googleMapsUrl || "").trim();
-  if (hasMap) ld.hasMap = hasMap;
-
-  // Number(null) === 0 — never treat missing coords as 0,0 (Gulf of Guinea).
-  const latRaw = overrides.latitude ?? overrides.geoLat;
-  const lngRaw = overrides.longitude ?? overrides.geoLng;
-  const lat =
-    latRaw === null || latRaw === undefined || latRaw === ""
-      ? NaN
-      : Number(latRaw);
-  const lng =
-    lngRaw === null || lngRaw === undefined || lngRaw === ""
-      ? NaN
-      : Number(lngRaw);
-  if (
-    Number.isFinite(lat) &&
-    Number.isFinite(lng) &&
-    !(lat === 0 && lng === 0)
-  ) {
-    ld.geo = {
-      "@type": "GeoCoordinates",
-      latitude: lat,
-      longitude: lng,
-    };
-  }
-
-  const hours = Array.isArray(overrides.openingHours) ? overrides.openingHours : [];
-  const hourNodes = hours
-    .map((h) => {
-      const days = Array.isArray(h?.dayOfWeek)
-        ? h.dayOfWeek.map((d) => String(d || "").trim()).filter(Boolean)
-        : [];
-      const opens = String(h?.opens || "").trim();
-      const closes = String(h?.closes || "").trim();
-      if (!days.length || !opens || !closes) return null;
-      return {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: days,
-        opens,
-        closes,
-      };
-    })
-    .filter(Boolean);
-  if (hourNodes.length) ld.openingHoursSpecification = hourNodes;
-
-  const mapUrl = String(overrides.mapUrl || "").trim();
+  const mapUrl = String(
+    overrides.mapUrl || overrides.googleMapsUrl || STORE_NAP.mapUrl || ""
+  ).trim();
   if (mapUrl) ld.hasMap = mapUrl;
 
   // Ahrefs/LocalBusiness audits expect priceRange; use a conservative PKR band when unset.
   const priceRange = String(overrides.priceRange || "").trim() || "PKR 499-PKR 49999";
   ld.priceRange = priceRange;
-
-  const fromOverride = Array.isArray(overrides.sameAs)
-    ? overrides.sameAs.map((u) => String(u || "").trim()).filter(Boolean)
-    : [];
-  ld.sameAs = fromOverride.length ? fromOverride : DEFAULT_SAME_AS;
 
   return ld;
 }

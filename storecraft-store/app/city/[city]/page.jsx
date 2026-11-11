@@ -116,22 +116,13 @@ export default async function CityAccessoriesPage({ params }) {
   let localBusinessLd = null;
   if (city.emitLocalBusiness) {
     const g = settings?.general || {};
+    // NAP forced from STORE_NAP inside organizationJsonLd.
     localBusinessLd = organizationJsonLd({
       name: BRAND_NAME,
-      telephone: g.phone || g.whatsapp,
       email: g.email,
       whatsapp: g.whatsapp || g.phone,
-      streetAddress: g.streetAddress || g.address,
-      addressLocality: g.addressLocality || "Gujranwala",
-      addressRegion: g.addressRegion || "Punjab",
-      postalCode: g.postalCode,
-      addressCountry: g.addressCountry || "PK",
-      latitude: g.latitude,
-      longitude: g.longitude,
       mapUrl: g.mapUrl,
       priceRange: g.priceRange,
-      sameAs: g.sameAs,
-      openingHours: g.openingHours,
     });
     // Gujranwala landing only — sitewide AutoPartsStore stays in root layout.
     if (localBusinessLd) {

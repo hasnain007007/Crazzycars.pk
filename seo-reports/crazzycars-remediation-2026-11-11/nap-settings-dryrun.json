@@ -1,0 +1,53 @@
+{
+  "status": "DRY_RUN_ONLY — awaiting owner GO; fingerprint must be 187aad8c44fe3a84",
+  "fingerprintRequired": "187aad8c44fe3a84",
+  "collection": "settings",
+  "filter": {},
+  "note": "NAP currently lives in Mongo Settings.general + contactPage.hours + footer.phone/social. Code now forces STORE_NAP for public Organization JSON-LD / footer CALL / contact display without this write. Apply only after owner GO to keep admin CMS in sync.",
+  "before_live": {
+    "streetAddress": "G.T. Road",
+    "postalCode": "52250",
+    "latitude": 32.1877,
+    "longitude": 74.1945,
+    "telephone": "03284010007",
+    "contactHours": {
+      "weekdays": "Monday - Saturday: 9am - 9pm PKT",
+      "weekend": "Sunday: 10am - 6pm PKT",
+      "closed": "Sunday: Closed"
+    },
+    "footerPhone": "03284010007",
+    "footerFacebook": "https://www.facebook.com/share/1A7ik4iFMc/?mibextid=wwXIfr"
+  },
+  "proposed_set": {
+    "general.streetAddress": "Block A6, Phase 1, Citi Housing",
+    "general.addressLocality": "Gujranwala",
+    "general.addressRegion": "Punjab",
+    "general.postalCode": "52203",
+    "general.addressCountry": "PK",
+    "general.latitude": 32.0729838,
+    "general.longitude": 74.1939213,
+    "general.geoLat": 32.0729838,
+    "general.geoLng": 74.1939213,
+    "general.telephone": "+923307767799",
+    "general.phone": "+92 330 7767799",
+    "general.whatsapp": "03284010007",
+    "general.sameAs": [
+      "https://www.facebook.com/crazzycars.pk",
+      "https://www.instagram.com/crazzycars.pk",
+      "https://www.tiktok.com/@crazzycars.pk"
+    ],
+    "general.mapUrl": "https://g.page/r/CYWo8sid7vn5EBM",
+    "contactPage.phone": "+92 330 7767799",
+    "contactPage.whatsapp": "03284010007",
+    "contactPage.hours": {
+      "weekdays": "Open 24 hours, 7 days",
+      "weekend": "Open 24 hours, 7 days",
+      "closed": ""
+    },
+    "contactPage.socialLinks.facebook": "https://www.facebook.com/crazzycars.pk",
+    "footer.phone": "+92 330 7767799",
+    "footer.social.facebook": "https://www.facebook.com/crazzycars.pk",
+    "footer.social.whatsapp": "https://wa.me/923284010007"
+  },
+  "NOT_APPLIED": true
+}

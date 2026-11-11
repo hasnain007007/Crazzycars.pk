@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
+import { whatsappWaMeDigits } from "@/lib/freeDelivery";
+import { STORE_CONTACT } from "@/config/store-policy";
 
 const ENV_WA = process.env.NEXT_PUBLIC_WHATSAPP?.replace(/[^0-9]/g, "") || "";
 
@@ -11,7 +13,11 @@ export default function WhatsAppButton() {
 
   useEffect(() => {
     const apply = (wa) => {
-      const num = String(wa?.number || ENV_WA).replace(/[^0-9]/g, "");
+      const raw = String(wa?.number || ENV_WA || STORE_CONTACT.phoneE164 || "").replace(
+        /[^0-9]/g,
+        ""
+      );
+      const num = whatsappWaMeDigits(raw || STORE_CONTACT.whatsapp);
       setConfig({
         enabled: wa?.enabled === true && !!num && wa?.showFloating !== false,
         number: num,

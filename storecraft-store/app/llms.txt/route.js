@@ -5,11 +5,11 @@ import Product from "@/lib/models/Product.model";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
+import { STORE_NAP } from "@/config/store-nap";
 import { productAllowsCod } from "@/lib/codEligibility";
 import { COD_LINE, PREPAID_LINE, TRUST_LINE } from "@/lib/paymentCopy";
 import { loadShopByCarIndex } from "@/lib/vehiclePageData";
 import { GENERATION_BY_SLUG, aliasesForSlug } from "@/lib/seo/generationAliases";
-import { getServerStoreSettings } from "@/lib/serverSettings";
 import { DELETED_URL_REDIRECTS } from "@/lib/deletedUrlRedirects.mjs";
 
 export const dynamic = "force-dynamic";
@@ -32,15 +32,16 @@ export async function GET() {
   let categoryLinks = [];
   let productLinks = [];
   let vehicleLinks = [];
-  let shopAddress = `${STORE_CONTACT.address.city}, ${STORE_CONTACT.address.region}`;
+  const shopAddress = [
+    STORE_NAP.streetAddress,
+    STORE_NAP.addressLocality,
+    STORE_NAP.addressRegion,
+    STORE_NAP.postalCode,
+  ]
+    .filter(Boolean)
+    .join(", ");
   try {
     await dbConnect();
-    const settings = await getServerStoreSettings().catch(() => null);
-    const g = settings?.general || {};
-    const street = String(g.streetAddress || "").trim();
-    const city = String(g.addressLocality || STORE_CONTACT.address.city || "Gujranwala").trim();
-    const region = String(g.addressRegion || STORE_CONTACT.address.region || "Punjab").trim();
-    shopAddress = [street, city, region].filter(Boolean).join(", ");
 
     const [cats, products, vehicles, catCounts] = await Promise.all([
       Category.find({ status: "active" })
@@ -148,6 +149,8 @@ export async function GET() {
 - Delivery: nationwide via courier. Rs ${shipStd} regular, Rs ${shipBulky} if the order has bulky items (splitters, side skirts, spoilers, floor mats, body kits). Delivery fee paid in advance where required.
 - Payment: ${COD_LINE}; body kits — ${PREPAID_LINE}.
 - Returns: within ${STORE_POLICY.returns.windowDays} days only if the item is defective or the wrong item was shipped (full refund). No change-of-mind returns.
+- Hours: ${STORE_NAP.hoursDisplay}
+- Call: ${STORE_NAP.shopPhoneDisplay} (E.164 ${STORE_NAP.shopPhoneE164})
 - Contact: WhatsApp ${wa} (E.164 ${waE164}) · ${STORE_CONTACT.email} · ${shopAddress}
 - Fitment: each product lists vehicle compatibility (make/model/years). Do not invent fitment beyond that table. Generation nicknames (Civic Reborn, Rebirth, Civic X, Corolla E140, etc.) are search aliases only.
 

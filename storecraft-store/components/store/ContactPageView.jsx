@@ -1,7 +1,9 @@
 import Link from "next/link";
 import ContactForm from "@/components/store/ContactForm";
 import { BRAND_NAME } from "@/lib/brand";
-import { resolveContactHourLines } from "@/lib/contactHours";
+import { STORE_NAP } from "@/config/store-nap";
+import { STORE_CONTACT } from "@/config/store-policy";
+import { whatsappWaMeDigits, formatWhatsAppDisplay } from "@/lib/freeDelivery";
 
 const DEFAULT_HERO = {
   badge: "Get In Touch",
@@ -39,50 +41,40 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
     hero.subtitle = DEFAULT_HERO.subtitle;
   }
 
-  const email = String(contact.email || general.email || "").trim();
-  const phone = String(contact.phone || general.phone || "").trim();
-  const whatsapp = digitsOnly(contact.whatsapp || localBusiness.whatsapp || phone);
+  const email = String(contact.email || general.email || STORE_CONTACT.email || "").trim();
+  // CALL number = GBP shop line (display). WhatsApp stays on STORE_CONTACT.
+  const phone = String(
+    general.phone || STORE_NAP.shopPhoneDisplay || ""
+  ).trim();
+  const whatsappDisplay = formatWhatsAppDisplay(
+    contact.whatsapp || localBusiness.whatsapp || STORE_CONTACT.whatsapp
+  );
+  const whatsappMe = whatsappWaMeDigits(
+    contact.whatsapp || localBusiness.whatsapp || STORE_CONTACT.whatsapp
+  );
   const responseTime = String(contact.responseTime || "We reply to all emails within 24 hours").trim();
 
-  const street =
-    String(localBusiness.streetAddress || "").trim() ||
-    String(contact.address?.line1 || "").trim();
-  const line2 = String(contact.address?.line2 || "").trim();
-  const city =
-    String(localBusiness.addressLocality || "").trim() ||
-    String(contact.address?.city || "Gujranwala").trim() ||
-    "Gujranwala";
-  const region = String(localBusiness.addressRegion || "Punjab").trim() || "Punjab";
-  const country =
-    String(localBusiness.addressCountry || "").trim() ||
-    String(contact.address?.country || "Pakistan").trim() ||
-    "Pakistan";
-  const postal = String(localBusiness.postalCode || "").trim();
-  const mapUrl = String(localBusiness.mapUrl || "").trim();
+  const street = STORE_NAP.streetAddress;
+  const city = STORE_NAP.addressLocality;
+  const region = STORE_NAP.addressRegion;
+  const country = "Pakistan";
+  const postal = STORE_NAP.postalCode;
+  const mapUrl = String(localBusiness.mapUrl || STORE_NAP.mapUrl || "").trim();
 
-  // Avoid "Gujranwala Gujranwala" when street already names the city.
-  const streetClean =
-    street && city && new RegExp(`\\b${city}\\b`, "i").test(street) && !/\d/.test(street)
-      ? ""
-      : street;
   const cityLine = [city, region, postal].filter(Boolean).join(", ");
-  const addressLines = [
-    streetClean,
-    line2,
-    cityLine,
-    country && country !== "PK" ? country : country === "PK" ? "Pakistan" : "",
-  ]
+  const addressLines = [street, cityLine, country]
     .map((l) => String(l || "").trim())
     .filter(Boolean);
 
-  // Admin Settings → contactPage.hours only (never invent Mon–Sat 10–18).
-  const hourLines = resolveContactHourLines(contact.hours);
+  const hourLines = [
+    String(localBusiness.hoursDisplay || STORE_NAP.hoursDisplay || "").trim(),
+  ].filter(Boolean);
 
   const social = contact.socialLinks && typeof contact.socialLinks === "object" ? contact.socialLinks : {};
   const socialEntries = [
-    ["Instagram", social.instagram],
-    ["Facebook", social.facebook],
-    ["TikTok", social.tiktok],
+    ["Instagram", social.instagram || STORE_NAP.sameAs[1]],
+    ["Facebook", STORE_NAP.facebookUrl],
+    ["TikTok", social.tiktok || STORE_NAP.sameAs[2]],
     ["Twitter / X", social.twitter],
   ].filter(([, url]) => String(url || "").trim());
 
@@ -173,23 +165,26 @@ export default function ContactPageView({ contactPage, general = {}, localBusine
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
                     Phone
                   </p>
-                  <a href={`tel:${digitsOnly(phone)}`} style={{ color: "#111", fontSize: 15, textDecoration: "none" }}>
+                  <a
+                    href={`tel:${digitsOnly(STORE_NAP.shopPhoneE164)}`}
+                    style={{ color: "#111", fontSize: 15, textDecoration: "none" }}
+                  >
                     {phone}
                   </a>
                 </div>
               ) : null}
-              {whatsapp ? (
+              {whatsappMe ? (
                 <div>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" }}>
                     WhatsApp
                   </p>
                   <a
-                    href={`https://wa.me/${whatsapp}`}
+                    href={`https://wa.me/${whatsappMe}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: "#16A34A", fontSize: 15, textDecoration: "none" }}
                   >
-                    {whatsapp}
+                    {whatsappDisplay}
                   </a>
                 </div>
               ) : null}

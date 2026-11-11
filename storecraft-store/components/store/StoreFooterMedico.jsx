@@ -5,7 +5,21 @@ import { usePathname } from 'next/navigation'
 import { normalizeStoreEmail } from '@/lib/storeContact'
 import { resolveStoreLogoUrl, trimmedLogoUrl } from '@/lib/storeLogo'
 import { rewriteStorePath } from '@/lib/categoryHandleAliases'
+import { STORE_NAP, storeNapTelHref } from '@/config/store-nap'
 import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
+
+/** Remap opaque Facebook share URLs to the canonical page URL. */
+function normalizeFooterSocialUrl(platform, url) {
+  const raw = String(url || "").trim()
+  const key = String(platform || "").toLowerCase()
+  if (key.includes("facebook") || /facebook\.com/i.test(raw)) {
+    return STORE_NAP.facebookUrl
+  }
+  if (/wa\.me\/0/.test(raw)) {
+    return raw.replace(/wa\.me\/0/, "wa.me/92")
+  }
+  return raw
+}
 
 const DEFAULT_SHOP_LINKS = [
   { label: "Home", href: "/" },
@@ -263,8 +277,9 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   const footerEmail = normalizeStoreEmail(
     footer.contactEmail || footer.email || footer.contact?.email || settings?.general?.email || settings?.email
   )
-  const footerPhone = footer.phone || footer.contact?.phone || settings?.phone
-  const socialLinks = Array.isArray(footer.socialLinks) && footer.socialLinks.length > 0
+  // CALL number = GBP shop line (not WhatsApp 0328…).
+  const footerPhone = STORE_NAP.shopPhoneDisplay
+  const socialLinksRaw = Array.isArray(footer.socialLinks) && footer.socialLinks.length > 0
     ? footer.socialLinks.filter((s) => s?.url)
     : Object.entries(footer.social || {})
         .filter(([, url]) => url)
@@ -272,6 +287,10 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
           platform,
           url,
         }))
+  const socialLinks = socialLinksRaw.map((s) => ({
+    ...s,
+    url: normalizeFooterSocialUrl(s.platform || s.icon, s.url),
+  }))
 
   const paymentMethods = (
     footer.showPaymentIcons === false ? [] : footer.paymentMethods || []
@@ -342,7 +361,9 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
             <p className="footer-brand-tag">{tagline}</p>
             <div className="footer-contact">
               {footerEmail ? <a href={`mailto:${footerEmail}`}>✉ {footerEmail}</a> : null}
-              {footerPhone ? <a href={`tel:${footerPhone}`}>☎ {footerPhone}</a> : null}
+              {footerPhone ? (
+                <a href={`tel:${storeNapTelHref()}`}>☎ {footerPhone}</a>
+              ) : null}
               {String(settings?.general?.googleReviewUrl || "").trim() ? (
                 <a
                   href="/review"

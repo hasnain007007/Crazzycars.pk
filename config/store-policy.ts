@@ -5,15 +5,19 @@
  * Keep both files aligned when values change.
  */
 
-/** CONFIRMED by business owner 2026-08-21 — do not hardcode elsewhere. */
+/**
+ * WhatsApp / messaging contact — shop NAP (GBP) is in storecraft-store/config/store-nap.js.
+ */
 export const STORE_CONTACT = {
   phone: "03284010007",
   phoneE164: "+923284010007",
   whatsapp: "03284010007",
   email: "info@crazzycars.pk",
   address: {
+    street: "Block A6, Phase 1, Citi Housing",
     city: "Gujranwala",
     region: "Punjab",
+    postalCode: "52203",
     country: "PK",
   },
 } as const;

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * SEO / AEO / GEO verifier — audit 2026-11-10 (C1–C20).
+ * SEO / AEO / GEO verifier — audit 2026-11-10 (C1–C22).
  *
  *   node scripts/seo-verify.mjs
  *   node scripts/seo-verify.mjs --base https://crazzycars.pk
@@ -8,7 +8,7 @@
  *   node scripts/seo-verify.mjs --checks C8,C13 --filter /cars/
  *
  * Writes JSON to seo-reports/<ISO-date>.json (or --out).
- * Prints: C1..C20: n passed, m failed
+ * Prints: C1..C22: n passed, m failed
  * Never prints secrets. Concurrency capped at 4.
  */
 import fs from "node:fs";
@@ -422,7 +422,20 @@ async function main() {
 
   /** @type {Record<string, CheckResult>} */
   const results = {};
-  for (let i = 1; i <= 21; i++) results[`C${i}`] = emptyCheck();
+  for (let i = 1; i <= 22; i++) results[`C${i}`] = emptyCheck();
+
+  /** Authoritative GBP NAP — C22. */
+  let STORE_NAP = null;
+  try {
+    const napMod = await import(
+      pathToFileURL(path.join(ROOT, "storecraft-store/config/store-nap.js")).href
+    );
+    STORE_NAP = napMod.STORE_NAP;
+  } catch (e) {
+    if (want("C22")) {
+      failCheck(results.C22, `cannot load store-nap.js: ${e.message}`);
+    }
+  }
 
   const redirectSources = await loadRedirectSources();
   let sitemapUrls = await collectSitemapUrls(BASE);
@@ -735,6 +748,92 @@ async function main() {
       }
     }
 
+    // C22 — Organization / AutoPartsStore NAP must match Google Business Profile
+    if (want("C22") && STORE_NAP) {
+      results.C22.count++;
+      const orgNodes = [];
+      for (const root of ld) {
+        for (const node of walkLd(root)) {
+          const types = [].concat(node["@type"] || []).map(String);
+          if (
+            types.includes("AutoPartsStore") ||
+            types.includes("Organization") ||
+            types.includes("LocalBusiness")
+          ) {
+            orgNodes.push(node);
+          }
+        }
+      }
+      const org =
+        orgNodes.find((n) => String(n["@id"] || "").endsWith("#org")) ||
+        orgNodes[0];
+      if (!org) {
+        failCheck(
+          results.C22,
+          `${pathname} missing Organization/AutoPartsStore JSON-LD`
+        );
+      } else {
+        const addr = org.address || {};
+        const geo = org.geo || {};
+        const tel = String(org.telephone || "").replace(/\s+/g, "");
+        const expectedTel = String(STORE_NAP.shopPhoneE164).replace(/\s+/g, "");
+        if (String(addr.streetAddress || "").trim() !== STORE_NAP.streetAddress) {
+          failCheck(
+            results.C22,
+            `${pathname} streetAddress="${addr.streetAddress}" expected "${STORE_NAP.streetAddress}"`
+          );
+        }
+        if (String(addr.postalCode || "").trim() !== STORE_NAP.postalCode) {
+          failCheck(
+            results.C22,
+            `${pathname} postalCode="${addr.postalCode}" expected "${STORE_NAP.postalCode}"`
+          );
+        }
+        if (Number(geo.latitude) !== Number(STORE_NAP.latitude)) {
+          failCheck(
+            results.C22,
+            `${pathname} geo.latitude=${geo.latitude} expected ${STORE_NAP.latitude}`
+          );
+        }
+        if (Number(geo.longitude) !== Number(STORE_NAP.longitude)) {
+          failCheck(
+            results.C22,
+            `${pathname} geo.longitude=${geo.longitude} expected ${STORE_NAP.longitude}`
+          );
+        }
+        if (tel !== expectedTel) {
+          failCheck(
+            results.C22,
+            `${pathname} telephone="${org.telephone}" expected "${STORE_NAP.shopPhoneE164}"`
+          );
+        }
+        const hours = [].concat(org.openingHoursSpecification || []);
+        const flatDays = new Set();
+        let hoursOk = hours.length > 0;
+        for (const h of hours) {
+          const opens = String(h?.opens || "").trim();
+          const closes = String(h?.closes || "").trim();
+          if (opens !== "00:00" || closes !== "23:59") hoursOk = false;
+          for (const d of [].concat(h?.dayOfWeek || [])) flatDays.add(String(d));
+        }
+        const need = [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ];
+        if (!hoursOk || need.some((d) => !flatDays.has(d))) {
+          failCheck(
+            results.C22,
+            `${pathname} openingHoursSpecification not 00:00–23:59 all 7 days`
+          );
+        }
+      }
+    }
+
     // Collect product pages for C19
     if (
       pathname !== "/" &&
@@ -754,6 +853,21 @@ async function main() {
     for (const [title, paths] of titleMap) {
       if (paths.length > 1) {
         failCheck(results.C3, `duplicate title "${title.slice(0, 50)}" on ${paths.slice(0, 3).join(", ")}`);
+      }
+    }
+  }
+
+  // C22 sameAs — each URL must return 200 with no redirect (once)
+  if (want("C22") && STORE_NAP) {
+    const sameAs = Array.isArray(STORE_NAP.sameAs) ? STORE_NAP.sameAs : [];
+    for (const url of sameAs) {
+      results.C22.count++;
+      const head = await fetchOnce(url, { redirect: "manual" });
+      if (head.status !== 200) {
+        failCheck(
+          results.C22,
+          `sameAs ${url} → ${head.status}${head.location ? ` → ${head.location}` : ""} (need 200, no redirect)`
+        );
       }
     }
   }
@@ -876,7 +990,7 @@ async function main() {
     summary: {
       passed,
       failed,
-      line: `C1..C21: ${passed} passed, ${failed} failed`,
+      line: `C1..C22: ${passed} passed, ${failed} failed`,
     },
     checks: results,
   };

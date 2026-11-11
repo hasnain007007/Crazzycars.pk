@@ -6,17 +6,20 @@
  */
 
 /**
- * Store contact — CONFIRMED by business owner 2026-08-21.
- * Single source for WhatsApp / phone; do not hardcode 03284010007 elsewhere.
+ * WhatsApp / messaging contact — keep separate from Google Business Profile CALL number.
+ * Shop NAP (address, geo, hours, GBP phone) lives in `config/store-nap.js`.
  */
 export const STORE_CONTACT = {
+  /** WhatsApp ordering line (not the GBP shop line). */
   phone: "03284010007",
   phoneE164: "+923284010007",
   whatsapp: "03284010007",
   email: "info@crazzycars.pk",
   address: {
+    street: "Block A6, Phase 1, Citi Housing",
     city: "Gujranwala",
     region: "Punjab",
+    postalCode: "52203",
     country: "PK",
   },
 };
