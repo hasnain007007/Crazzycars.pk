@@ -1,93 +1,54 @@
 {
-  "updated": "2026-11-11T02:00:00.000Z",
-  "audit": "2026-11-11 controlled safe SEO release",
+  "updated": "2026-11-11T01:50:00.000Z",
+  "audit": "2026-11-11 SEO remediation continue (post independent crawl)",
   "baseline": "seo-reports/2026-11-10-baseline.json",
   "predeploy_live": "seo-reports/2026-11-11-predeploy-live.json",
   "postdeploy_live": "seo-reports/2026-11-11-postdeploy-live.json",
-  "controlled_release_report": "seo-reports/2026-11-11-controlled-release-report.md",
-  "lighthouse": "seo-reports/lighthouse/SUMMARY.md",
-  "branch": "vps-test",
+  "branch": "fix/crazzycars-indexing-seo-2026-11-11",
   "deployed_commit": "67bef500e5ffcae20fa57ae9781820c4453039fa",
-  "named_candidate": "654ad69",
-  "verdict": "DEPLOYED — VERIFIED",
-  "live_note": "Production live on 67bef50. Oshan alias 308→oshanx7; Tucson hybrid 404 (held); side-mirror both 200; C4/C18/C21 pass; C19 still 11/20 fail (sharedBlocks 18→13).",
+  "note": "Independent no-cache crawl confirmed prior deploy wins. New loop starts at T1 double-FAQ. No deploy without owner GO.",
   "tasks": {
-    "T0": { "status": "done", "commit": "363a194" },
-    "T1": { "status": "done", "commit": "5bb61f3" },
-    "T2": { "status": "done", "commit": "66bf288" },
-    "T3": { "status": "done", "commit": "59b4bd9" },
-    "T4": { "status": "done", "commit": "6af6c51" },
-    "CORRECTION_verifier": { "status": "done", "commit": "ada4888" },
-    "CORRECTION2_side_mirror": {
-      "status": "blocked_held",
-      "commit": "67bef50",
-      "note": "Distinct SKUs CC-COR-MIRROR-3 vs CC-0004; redirect removed; both PDPs live 200"
+    "T1_double_faq": {
+      "status": "code_ready",
+      "commit": null,
+      "c23_before": 88,
+      "c23_before_detail": { "product": 62, "blog": 26 },
+      "c23_after_live": "pending_deploy",
+      "root_cause": "stripEmbeddedFaqHtml only removed the first FAQ h2; many longDescriptions embed two FAQ blocks — second survived beside FaqSection",
+      "note": "Strip all FAQ sections; apply in ProductDetailMedico + blogs; C23 added"
     },
-    "T10a": {
-      "status": "done_live",
-      "commit": "a08bccc",
-      "note": "Vehicle map live; Tucson hybrid held at 404"
+    "T2_audi_a5_llms": { "status": "pending" },
+    "T3_side_mirror_redirect": { "status": "pending" },
+    "T4_vehicle_intros": { "status": "pending" },
+    "T5_boilerplate_c19": { "status": "pending" },
+    "T6_google_reviews": { "status": "pending" },
+    "T7_thin_pages": { "status": "pending" },
+    "T8_lighthouse": { "status": "pending" },
+    "T9_compare_at": { "status": "pending" },
+    "NAP": {
+      "status": "code_ready_not_deployed",
+      "commit": "32487c1",
+      "db": "dry_run_only — seo-reports/.../nap-settings-dryrun.json"
     },
-    "T10b": { "status": "done_live", "commit": "3b08891" },
-    "T10c": {
+    "T10c": { "status": "blocked", "note": "draft-product decisions" },
+    "T10d": { "status": "blocked", "note": "homeware/beauty deliberate vs data loss" },
+    "T12": { "status": "blocked", "note": "blog expansions need scoped GO" },
+    "Q_tucson_hub": { "status": "blocked" },
+    "Q_side_mirror_dup": { "status": "blocked", "note": "both PDPs live; owner must say if duplicates" },
+    "Q_abs_blog_301": {
       "status": "blocked",
-      "note": "seo-reports/T10c-decision-matrix-2026-11-11.md — founder decisions"
-    },
-    "T10d": {
-      "status": "blocked",
-      "note": "Homeware cats 410; product PDPs 404 — deliberate drop vs data loss?"
-    },
-    "T10e": { "status": "done_live", "commit": "3b08891" },
-    "T10f": { "status": "done" },
-    "T10g": { "status": "done_live", "commit": "3b08891" },
-    "T5": {
-      "status": "done_live",
-      "commit": "0f9c471",
-      "note": "C19 still 11 fails; sharedBlocks 18→13 — improved not fixed"
-    },
-    "T6": { "status": "done_live", "commit": "6f2849c" },
-    "T7": { "status": "done_live", "commit": "f6422b9" },
-    "T8": { "status": "done_live", "commit": "05bdbe7" },
-    "T9": { "status": "done_live", "commit": "3b08891" },
-    "T11": { "status": "done_live", "commit": "938ca33" },
-    "T12": {
-      "status": "blocked",
-      "commit": "6f2849c",
-      "note": "Dry-run ready; Mongo --apply needs scoped GO"
-    },
-    "T13": {
-      "status": "done",
-      "note": "Baseline only — no optimisation claim"
-    },
-    "C4_C18_code": { "status": "done_live", "commit": "0f9c471" }
+      "note": "/blogs/abs-vs-real-carbon-fiber-car-accessories-pakistan → 301 /categories/carbon-fiber — ask before leaving"
+    }
   },
   "open_questions": [
-    {
-      "id": "Q-T12",
-      "question": "Scoped GO to apply two blog expansions via Mongo?",
-      "blocking": true
-    },
-    {
-      "id": "Q-T10c",
-      "question": "Per-SKU PUBLISH/301/410 from T10c matrix?",
-      "blocking": true
-    },
-    {
-      "id": "Q-T10d",
-      "question": "Homeware/beauty deliberate drop vs data loss?",
-      "blocking": true
-    },
-    {
-      "id": "Q6",
-      "question": "Live FP 187aad8c44fe3a84 session for compare-at read-only?",
-      "blocking": true
-    },
-    {
-      "id": "Q-tucson-hub",
-      "question": "Build verified 2025 Tucson Hybrid hub (optional)?",
-      "blocking": false
-    }
+    { "id": "Q-T12", "question": "Scoped GO to apply two blog expansions via Mongo?", "blocking": true },
+    { "id": "Q-T10c", "question": "Per-SKU PUBLISH/301/410 from T10c matrix?", "blocking": true },
+    { "id": "Q-T10d", "question": "Homeware/beauty deliberate drop vs data loss?", "blocking": true },
+    { "id": "Q-tucson-hub", "question": "Build verified 2025 Tucson Hybrid hub?", "blocking": false },
+    { "id": "Q-side-mirror", "question": "Are CC-COR-MIRROR-3 and neon pair duplicates?", "blocking": true },
+    { "id": "Q-abs-blog", "question": "Restore abs-vs-real-carbon blog if still in DB?", "blocking": true },
+    { "id": "Q-NAP-db", "question": "GO on nap-settings-dryrun.json + deploy NAP/T1?", "blocking": true },
+    { "id": "Q-NAP-phone", "question": "CALL vs WHATSAPP number split?", "blocking": true }
   ],
-  "db_writes": [],
-  "note": "Deployed via git push origin/vps-test → Coolify. No DB writes. Local .env.local is Atlas FP — not live."
+  "db_writes": []
 }

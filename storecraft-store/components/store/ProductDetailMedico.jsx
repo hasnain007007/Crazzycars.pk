@@ -41,6 +41,7 @@ import {
   PRODUCT_H1_OVERRIDES,
   PRODUCT_NAME_OVERRIDES,
 } from "@/lib/seo/gscAudit2026-10.mjs";
+import { stripEmbeddedFaqHtml } from "@/lib/seo/stripEmbeddedFaqHtml";
 const WISHLIST_KEY = "sialkot_wishlist";
 const COMPARE_KEY = "sialkot_compare";
 
@@ -939,8 +940,10 @@ export function ProductDetailMedico({
   const rawDescription = contentOverride?.descriptionHtml
     ? contentOverride.descriptionHtml
     : product.descriptionHtml || product.longDescription || product.description || "";
+  // Always strip embedded FAQ blocks — FaqSection renders the canonical FAQ below.
+  // Some DB descriptions embed the block twice; page-level strip alone left the second.
   const fixedDescription = scrubPaymentClaims(
-    String(rawDescription || "").replace(/\bButto\b/g, "Button"),
+    stripEmbeddedFaqHtml(String(rawDescription || "").replace(/\bButto\b/g, "Button")),
     productAllowsCod(product)
   );
   const appended = contentOverride?.appendDescription
@@ -949,7 +952,7 @@ export function ProductDetailMedico({
   const withCare = contentOverride?.careHtml
     ? `${appended}${contentOverride.careHtml}`
     : appended;
-  const descriptionHtml = sanitizeClientHtml(withCare);
+  const descriptionHtml = sanitizeClientHtml(stripEmbeddedFaqHtml(withCare));
   const descriptionPlain = toPlain(
     contentOverride?.shortDescription || product.shortDescription
   );

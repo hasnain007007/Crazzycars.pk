@@ -1,0 +1,363 @@
+{
+  "generatedAt": "2026-11-11T01:44:26.541Z",
+  "doubleFaqPages": 88,
+  "byType": {
+    "product": 62,
+    "blog": 26,
+    "other": 0
+  },
+  "doubles": [
+    {
+      "p": "/honda-civic-x-2016-2021-carbon-fiber-gear-panel-trim",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-airflow-ambient-led-ac-vent-trims-plug-and-play",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2015-2023-power-window-carbon-fiber-trims-4pcs",
+      "n": 2
+    },
+    {
+      "p": "/suzuki-alto-multimedia-steering-control-buttons-with-spiral-cable-glossy-black",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-x-2016-2021-carbon-fiber-front-dashboard-trims-3pcs",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-carbon-fiber-gear-knob-cover-2014-2026",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2015-2024-carbon-fiber-gear-shifter-trim",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair",
+      "n": 2
+    },
+    {
+      "p": "/suzuki-alto-2018-2023-multimedia-steering-wheel-audio-control-buttons-panel",
+      "n": 2
+    },
+    {
+      "p": "/honda-city-2009-2021-multimedia-steering-wheel-buttons",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-11th-gen-2022-2026-carbon-fiber-steering-wheel-paddle-shifters-pair",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-reborn-2006-2012-multimedia-steering-wheel-audio-control-buttons",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-gli-xli-2009-2014-multimedia-steering-wheel-audio-control-buttons",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2015-2026-rgb-side-style",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2009-2014-rgb-side-mirror-indicator-dragon-style",
+      "n": 2
+    },
+    {
+      "p": "/honda-city-2021-2026-carbon-fiber-steering-wheel-paddle-shifters-pair",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-grande-2014-2018-carbon-fiber-steering-wheel-paddle-shifters-pair",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-x-2016-2021-carbon-fiber-steering-wheel-paddle-shifters-pair",
+      "n": 2
+    },
+    {
+      "p": "/suzuki-alto-660cc-lava-style-smoke-tail-lights-rear-lamps-pair",
+      "n": 2
+    },
+    {
+      "p": "/universal-carbon-fiber-steering-wheel-cover-trims-anti-slip-2pcs",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2015-2023-ducktail-trunk-spoiler-abs-unpainted",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2008-2014-canadian-style-trunk-spoiler-with-led-light-abs",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-trd-style-front-grille-gloss-black-abs",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2008-2010-complete-body-kit",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2022-2024-sports-body-kit",
+      "n": 2
+    },
+    {
+      "p": "/toyota-aqua-2016-2019-front-body-kit-fibreglass",
+      "n": 2
+    },
+    {
+      "p": "/toyota-aqua-2012-2015-complete-body-kit",
+      "n": 2
+    },
+    {
+      "p": "/suzuki-swift-2022-2024-rs-style-body-kit-fibreglass",
+      "n": 2
+    },
+    {
+      "p": "/toyota-aqua-2020-2022-rear-body-kit-fibreglass",
+      "n": 2
+    },
+    {
+      "p": "/hyundai-elantra-2023-2026-sporty-style-body-kit-fibreglass",
+      "n": 2
+    },
+    {
+      "p": "/honda-vezel-2013-2018-complete-body-kit",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-2022-2024-yofer-style-body-kit-4pcs-abs",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-x-2016-2021-sports-body-kit-complete",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-reborn-2006-2011-body-kit-d3",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-rebirth-2012-2015-complete-body-kit",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-reborn-2007-front-rear-body-kit-with-side-skirts",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-2022-2025-mugen-style-body-kit-fibreglass",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-reborn-2014-2015-modulo-style-body-kit",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-x-2016-2021-body-kit-d2",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-2022-2024-front-spike-splitter-canard-3pcs-abs",
+      "n": 2
+    },
+    {
+      "p": "/honda-city-2021-2025-drive-68-style-body-kit-fibreglass",
+      "n": 2
+    },
+    {
+      "p": "/honda-city-2008-2014-complete-body-kit",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-reborn-2007-2013-gr-style-front-grille-black",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2012-2014-black-canadian-style-front-grille",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-reborn-2007-2012-forged-carbon-hand-brake-cover",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-x-2016-2021-alien-style-front-grille-gloss-black",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-reborn-2007-2011-forged-carbon-gear-knob-cover",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-reborn-2006-2011-carbon-gear-shift-panel-cover",
+      "n": 2
+    },
+    {
+      "p": "/honda-city-2015-2020-carbon-fiber-gear-lever-knob-cover",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2015-2026-roof-spoiler-abs-plastic",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-11th-gen-2022-present-carbon-and-glossy-door-handle-cover-set",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-11th-gen-rs-style-trunk-spoiler-2022-present",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-x-2016-2021-carbon-door-handle-cover-full-set",
+      "n": 2
+    },
+    {
+      "p": "/universal-crystal-led-gear-knob-touch-activated-premium-car-shifter",
+      "n": 2
+    },
+    {
+      "p": "/car-brembo-style-brake-caliper-covers-universal-fit",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-x-side-window-quarter-louver-covers-black",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2015-2026-side-window-louver-covers-black",
+      "n": 2
+    },
+    {
+      "p": "/honda-civic-2022-batman-style-side-mirror-covers",
+      "n": 2
+    },
+    {
+      "p": "/toyota-corolla-2015-2022-batman-style-side-mirror-cover",
+      "n": 2
+    },
+    {
+      "p": "/car-rgb-atmosphere-light-interior-footwell-led-lights-4-pcs",
+      "n": 2
+    },
+    {
+      "p": "/universal-usb-car-humidifier-atmosphere-light-laser-roof-light",
+      "n": 2
+    },
+    {
+      "p": "/blogs/honda-civic-accessories-guide-every-generation",
+      "n": 2
+    },
+    {
+      "p": "/blogs/cod-vs-online-payment-car-accessories-pakistan",
+      "n": 2
+    },
+    {
+      "p": "/blogs/how-to-choose-right-front-grille",
+      "n": 2
+    },
+    {
+      "p": "/blogs/are-aftermarket-car-accessories-safe",
+      "n": 2
+    },
+    {
+      "p": "/blogs/led-ambient-lighting-car-buyer-guide",
+      "n": 2
+    },
+    {
+      "p": "/blogs/seat-covers-buying-guide-pakistan-climate",
+      "n": 2
+    },
+    {
+      "p": "/blogs/best-floor-mats-pakistani-weather-guide",
+      "n": 2
+    },
+    {
+      "p": "/blogs/car-perfume-air-freshener-guide",
+      "n": 2
+    },
+    {
+      "p": "/blogs/car-care-101-essential-products-pakistan",
+      "n": 2
+    },
+    {
+      "p": "/blogs/dash-cameras-pakistan-why-every-driver-needs-one",
+      "n": 2
+    },
+    {
+      "p": "/blogs/exhaust-tips-systems-sound-performance",
+      "n": 2
+    },
+    {
+      "p": "/blogs/toyota-yaris-vs-honda-city-best-accessories",
+      "n": 2
+    },
+    {
+      "p": "/blogs/protect-car-interior-from-pakistan-heat",
+      "n": 2
+    },
+    {
+      "p": "/blogs/toyota-corolla-rgb-bumper-neon-mirror-lights-pakistan",
+      "n": 2
+    },
+    {
+      "p": "/blogs/car-door-welcome-logo-lights-pakistan-guide",
+      "n": 2
+    },
+    {
+      "p": "/blogs/trunk-lip-spoiler-buying-guide-pakistan-alsvin-city-corolla",
+      "n": 2
+    },
+    {
+      "p": "/blogs/batman-style-side-mirror-covers-pakistan-fitment-guide",
+      "n": 2
+    },
+    {
+      "p": "/blogs/suzuki-swift-carbon-door-handle-covers-pakistan",
+      "n": 2
+    },
+    {
+      "p": "/blogs/delivery-charges-regular-vs-bulky-pakistan",
+      "n": 2
+    },
+    {
+      "p": "/blogs/front-splitters-side-skirts-buying-guide-pakistan",
+      "n": 2
+    },
+    {
+      "p": "/blogs/car-accessories-returns-wrong-item-pakistan",
+      "n": 2
+    },
+    {
+      "p": "/blogs/quarter-window-louvers-civic-corolla-fitment-pakistan",
+      "n": 2
+    },
+    {
+      "p": "/blogs/dashboard-mats-pakistan-sun-glare-buying-guide",
+      "n": 2
+    },
+    {
+      "p": "/blogs/car-air-press-window-visors-fitment-pakistan",
+      "n": 2
+    },
+    {
+      "p": "/blogs/door-handle-covers-buying-guide-pakistan-city-civic-corolla",
+      "n": 2
+    },
+    {
+      "p": "/blogs/car-chargers-air-compressors-roadside-pakistan",
+      "n": 2
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * SEO / AEO / GEO verifier — audit 2026-11-10 (C1–C22).
+ * SEO / AEO / GEO verifier — audit 2026-11-10 (C1–C23).
  *
  *   node scripts/seo-verify.mjs
  *   node scripts/seo-verify.mjs --base https://crazzycars.pk
@@ -8,7 +8,7 @@
  *   node scripts/seo-verify.mjs --checks C8,C13 --filter /cars/
  *
  * Writes JSON to seo-reports/<ISO-date>.json (or --out).
- * Prints: C1..C22: n passed, m failed
+ * Prints: C1..C23: n passed, m failed
  * Never prints secrets. Concurrency capped at 4.
  */
 import fs from "node:fs";
@@ -422,7 +422,7 @@ async function main() {
 
   /** @type {Record<string, CheckResult>} */
   const results = {};
-  for (let i = 1; i <= 22; i++) results[`C${i}`] = emptyCheck();
+  for (let i = 1; i <= 23; i++) results[`C${i}`] = emptyCheck();
 
   /** Authoritative GBP NAP — C22. */
   let STORE_NAP = null;
@@ -748,6 +748,27 @@ async function main() {
       }
     }
 
+    // C23 — at most one visible "Frequently asked questions" heading per page
+    if (want("C23")) {
+      results.C23.count++;
+      const headingRe = /<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi;
+      let faqHeadings = 0;
+      let hm;
+      while ((hm = headingRe.exec(html))) {
+        const text = String(hm[2] || "")
+          .replace(/<[^>]*>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (/frequently\s+asked\s+questions/i.test(text)) faqHeadings++;
+      }
+      if (faqHeadings > 1) {
+        failCheck(
+          results.C23,
+          `${pathname} FAQ headings=${faqHeadings} (max 1)`
+        );
+      }
+    }
+
     // C22 — Organization / AutoPartsStore NAP must match Google Business Profile
     if (want("C22") && STORE_NAP) {
       results.C22.count++;
@@ -990,7 +1011,7 @@ async function main() {
     summary: {
       passed,
       failed,
-      line: `C1..C22: ${passed} passed, ${failed} failed`,
+      line: `C1..C23: ${passed} passed, ${failed} failed`,
     },
     checks: results,
   };

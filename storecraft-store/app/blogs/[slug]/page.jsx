@@ -17,6 +17,7 @@ import { recordBlogPostPageView } from "@/lib/blogEngagement";
 import { blogContentModifiedAt } from "@/lib/blogContentDate";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
 import { FaqSection } from "@/components/store/FaqSection";
+import { stripEmbeddedFaqHtml } from "@/lib/seo/stripEmbeddedFaqHtml";
 import { relatedGuidesForBlog } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbRelatedGuidesForBlog } from "@/lib/seo/blogLinksFromDb";
 import { BRAND } from "@/lib/brand";
@@ -230,6 +231,15 @@ export default async function BlogPostPage({ params }) {
       }))
       .filter((f) => f.question && f.answer);
     const faqLd = faqPageJsonLd(faqItems);
+    // When FaqSection renders, strip any embedded FAQ heading block from body HTML
+    // (case/spacing variants; some posts embed the block more than once).
+    const postForView =
+      faqItems.length > 0
+        ? {
+            ...post,
+            content: stripEmbeddedFaqHtml(String(post.content || "")),
+          }
+        : post;
 
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
@@ -237,7 +247,7 @@ export default async function BlogPostPage({ params }) {
         {faqLd ? (
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }} />
         ) : null}
-        <BlogPostView initialPost={post} initialRecent={recentPosts} />
+        <BlogPostView initialPost={postForView} initialRecent={recentPosts} />
         <FaqSection title="Frequently asked questions" items={faqItems} />
         <DetailNeighborNav {...(await loadBlogNeighbors(post))} />
         <InternalBlogLinks title="Related guides" links={relatedGuides} />
