@@ -22,7 +22,9 @@ import {
 } from "@/lib/metaCapi";
 import { requestIp } from "@/lib/requestIp";
 
-const RATE = { maxAttempts: 60, windowMs: 10 * 60 * 1000 };
+// Each page view sends 1–3 events, and mobile carriers put many shoppers behind one IP,
+// so the old 60 / 10 min cut real visitors off after ~20 pages.
+const RATE = { maxAttempts: 600, windowMs: 10 * 60 * 1000 };
 
 const SAFE_CUSTOM_KEYS = new Set([
   "content_ids",
@@ -61,6 +63,11 @@ function sanitizeCustomData(raw, eventName) {
 export async function POST(request) {
   const ip = requestIp(request);
   await dbConnect();
+  // Not configured (no access token): nothing to send, so skip the rate-limit DB writes too.
+  const config = await resolveMetaCapiConfig();
+  if (!config.enabled) {
+    return NextResponse.json({ success: true, skipped: true, reason: "not_configured" });
+  }
   const rlKey = actionRateLimitKey("meta-capi", "anon", ip || "unknown");
   const limited = await checkActionRateLimit(rlKey, RATE);
   if (limited?.limited) return rateLimitResponse(limited.remainingMs);
@@ -85,11 +92,6 @@ export async function POST(request) {
   }
 
   await recordActionAttempt(rlKey, RATE);
-
-  const config = await resolveMetaCapiConfig();
-  if (!config.enabled) {
-    return NextResponse.json({ success: true, skipped: true, reason: "not_configured" });
-  }
 
   const cookies = readMetaCookiesFromRequest(request);
   const fbp = String(body?.fbp || cookies.fbp || "").trim();

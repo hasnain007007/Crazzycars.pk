@@ -18,6 +18,13 @@ const nextConfig = {
         destination: "/blogs",
         permanent: true,
       },
+      // Common account URLs people type or old links use (were 404).
+      { source: "/login", destination: "/account/login", permanent: true },
+      { source: "/signin", destination: "/account/login", permanent: true },
+      { source: "/register", destination: "/account/register", permanent: true },
+      { source: "/signup", destination: "/account/register", permanent: true },
+      { source: "/my-account", destination: "/account", permanent: true },
+      { source: "/track", destination: "/track-order", permanent: true },
       {
         source: "/posts/:slug",
         destination: "/blogs/:slug",
