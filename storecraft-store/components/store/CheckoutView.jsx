@@ -24,6 +24,7 @@ import {
   whatsappWaMeDigits,
 } from "@/lib/freeDelivery";
 import { productAllowsCod } from "@/lib/codEligibility";
+import { readPendingCoupon, writePendingCoupon } from "@/lib/pendingCoupon";
 import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import { PREPAID_DISCOUNT_PERCENT, codBookingAmountForTotal } from "@/config/checkout-money";
 import { STORE_POLICY } from "@/config/store-policy";
@@ -264,6 +265,11 @@ export function CheckoutView() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [couponCode, setCouponCode] = useState("");
+  // Code applied in the cart drawer earlier in this tab.
+  useEffect(() => {
+    const pending = readPendingCoupon();
+    if (pending) setCouponCode((c) => c || pending);
+  }, []);
   const [couponHint, setCouponHint] = useState("");
   const [discountPreview, setDiscountPreview] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -987,6 +993,7 @@ export function CheckoutView() {
         toast.error("Order created but missing order id.");
         return;
       }
+      writePendingCoupon("");
       try {
         if (typeof clearCart === "function") clearCart();
       } catch {

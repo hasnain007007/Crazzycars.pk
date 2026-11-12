@@ -15,6 +15,7 @@ import { cartHasBulkyItem, shippingFloorPKR } from "@/lib/shippingTier";
 import { readCheckoutDraft, writeCheckoutDraft } from "@/lib/checkoutDraft";
 import { flushCartSyncOnUnload, syncCartToServer } from "@/lib/cartSyncClient";
 import { useCustomer } from "@/lib/customerAuth";
+import { readPendingCoupon, validateCoupon, writePendingCoupon } from "@/lib/pendingCoupon";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -49,6 +50,9 @@ export function CartDrawer() {
   const [openMeasurements, setOpenMeasurements] = useState({});
   const [codOpen, setCodOpen] = useState(false);
   const [promoOpen, setPromoOpen] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promo, setPromo] = useState({ valid: false, discount: 0, message: "" });
+  const [promoBusy, setPromoBusy] = useState(false);
   const [leadName, setLeadName] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
   const codPanelId = useId();
@@ -106,8 +110,46 @@ export function CartDrawer() {
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [leadName, leadPhone, items, authCustomerId]);
+  const promoDiscount = promo.valid ? Math.min(Number(promo.discount) || 0, Number(subtotal) || 0) : 0;
   const estimatedTotal =
-    Math.round((Number(subtotal) + Number(estimatedShipping || 0)) * 100) / 100;
+    Math.round((Number(subtotal) - promoDiscount + Number(estimatedShipping || 0)) * 100) / 100;
+
+  async function applyPromo(code = promoCode) {
+    const c = String(code || "").trim().toUpperCase();
+    if (!c) {
+      setPromo({ valid: false, discount: 0, message: "Enter a promo code." });
+      return;
+    }
+    setPromoBusy(true);
+    const r = await validateCoupon(c, { orderAmount: subtotal, items });
+    setPromoBusy(false);
+    setPromo(r);
+    writePendingCoupon(r.valid ? c : "");
+  }
+
+  function removePromo() {
+    setPromoCode("");
+    setPromo({ valid: false, discount: 0, message: "" });
+    writePendingCoupon("");
+  }
+
+  // Code saved earlier in this tab: show it applied again, and re-check when the cart changes.
+  useEffect(() => {
+    if (!open) return;
+    const saved = readPendingCoupon();
+    if (!saved) return;
+    setPromoCode(saved);
+    setPromoOpen(true);
+    let cancelled = false;
+    validateCoupon(saved, { orderAmount: subtotal, items }).then((r) => {
+      if (cancelled) return;
+      setPromo(r);
+      if (!r.valid) writePendingCoupon("");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, subtotal, items]);
 
   useEffect(() => {
     if (!open) return;
@@ -364,18 +406,53 @@ export function CartDrawer() {
                   Have a promo code?
                 </button>
               ) : (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter promo code"
-                    className="h-10 min-h-10 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm"
-                  />
-                  <button
-                    type="button"
-                    className="h-10 min-h-10 rounded-lg border border-[var(--border)] px-3 text-sm font-medium"
+                <div>
+                  <form
+                    className="flex gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      applyPromo();
+                    }}
                   >
-                    Apply
-                  </button>
+                    <input
+                      type="text"
+                      value={promoCode}
+                      onChange={(e) => {
+                        setPromoCode(e.target.value.toUpperCase());
+                        if (promo.message) setPromo({ valid: false, discount: 0, message: "" });
+                      }}
+                      placeholder="Enter promo code"
+                      autoCapitalize="characters"
+                      autoComplete="off"
+                      aria-label="Promo code"
+                      className="h-10 min-h-10 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm uppercase"
+                    />
+                    {promo.valid ? (
+                      <button
+                        type="button"
+                        onClick={removePromo}
+                        className="h-10 min-h-10 rounded-lg border border-[var(--border)] px-3 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={promoBusy}
+                        className="h-10 min-h-10 rounded-lg border border-[var(--border)] px-3 text-sm font-medium disabled:opacity-60"
+                      >
+                        {promoBusy ? "…" : "Apply"}
+                      </button>
+                    )}
+                  </form>
+                  {promo.message ? (
+                    <p
+                      role="status"
+                      className={`m-0 mt-1 text-xs font-medium ${promo.valid ? "text-green-700" : "text-[#C41E1E]"}`}
+                    >
+                      {promo.message}
+                    </p>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -387,6 +464,12 @@ export function CartDrawer() {
                   <span className="text-zinc-600">Subtotal ({items.length} items)</span>
                   <span className="price font-semibold text-zinc-900">{formatPrice(subtotal)}</span>
                 </div>
+                {promoDiscount > 0 ? (
+                  <div className="flex justify-between">
+                    <span className="text-zinc-600">Promo ({promoCode})</span>
+                    <span className="price font-semibold text-green-700">−{formatPrice(promoDiscount)}</span>
+                  </div>
+                ) : null}
                 {estimatedShipping > 0 ? (
                   <div className="flex justify-between">
                     <span className="text-zinc-600">Delivery (est.)</span>
