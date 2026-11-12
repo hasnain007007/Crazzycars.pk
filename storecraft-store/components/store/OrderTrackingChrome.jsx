@@ -10,7 +10,7 @@ export function OrderTrackingChrome() {
       </p>
       <h1 className="cc-track__title">Track your order</h1>
       <p className="cc-track__lede" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: "#6B7280" }}>
-        Enter your PostEx or Run Courier tracking number below. Need help? WhatsApp{" "}
+        Enter your order number (e.g. ORD-2026-00577) or your PostEx / Run Courier tracking number. Need help? WhatsApp{" "}
         <a href="https://wa.me/923284010007" style={{ color: "#C41E1E", fontWeight: 600 }}>
           03284010007
         </a>

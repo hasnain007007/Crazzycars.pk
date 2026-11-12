@@ -123,8 +123,8 @@ export default function OrderTrackingView() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Tracking number"
-            aria-label="Tracking number"
+            placeholder="Order number or tracking number"
+            aria-label="Order number or tracking number"
             autoComplete="off"
           />
           <button className="cc-track__submit" type="submit" disabled={loading}>
