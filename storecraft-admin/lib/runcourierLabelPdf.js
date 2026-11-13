@@ -6,8 +6,6 @@
  * the courier portal HTML (e.g. a previous shipper account still on the invoice).
  */
 
-import { readFile } from "fs/promises";
-import path from "path";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { prepareRunCourierInvoiceHtml } from "./runcourierInvoice.js";
 
@@ -22,8 +20,8 @@ const CRAZZYCARS_SHIPPER = {
   pickup:
     "Block A6, Phase 1, Citi Housing, Gujranwala 52203, Punjab, Pakistan",
   originCity: "Gujranwala",
+  /** Live storefront logo — avoids bundling public/ via fs in the serverless trace. */
   logoUrl: "https://crazzycars.pk/logo.png",
-  logoPublicPath: path.join(process.cwd(), "public", "brand", "crazzycars-logo.png"),
 };
 
 /** Strip other-merchant marks that sometimes leak from courier invoice HTML. */
@@ -278,19 +276,13 @@ function extractDataImages(html) {
   return out;
 }
 
-/** Load CrazzyCars.pk logo bytes (local public file, then live site). */
+/** Load CrazzyCars.pk logo bytes from the live storefront. */
 async function loadCrazzyCarsLogoBytes() {
-  try {
-    const buf = await readFile(CRAZZYCARS_SHIPPER.logoPublicPath);
-    if (buf?.length) return buf;
-  } catch {
-    /* fall through */
-  }
   try {
     const res = await fetch(CRAZZYCARS_SHIPPER.logoUrl, {
       method: "GET",
       headers: { Accept: "image/*", "User-Agent": "CrazzycarsLabel/1.0" },
-      cache: "no-store",
+      cache: "force-cache",
     });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
