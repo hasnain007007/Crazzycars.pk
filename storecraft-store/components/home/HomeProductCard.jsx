@@ -73,7 +73,7 @@ export function HomeProductCard({ product }) {
               src={imageUrl}
               master={images[0] || imageUrl}
               alt={product.name || "Product"}
-              className={`absolute inset-0 h-full w-full object-cover transition duration-300 ${
+              className={`absolute inset-0 h-full w-full object-contain transition duration-300 ${
                 hoverImageUrl ? "group-hover:opacity-0" : "group-hover:scale-[1.03]"
               }`}
               loading="lazy"
@@ -83,7 +83,7 @@ export function HomeProductCard({ product }) {
               <img
                 src={hoverImageUrl}
                 alt=""
-                className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                className="absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 loading="lazy"
                 decoding="async"
               />

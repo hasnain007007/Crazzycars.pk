@@ -28,7 +28,7 @@ function CardImage({ src, master, alt, priority, sizes, className }) {
         src={src}
         alt={alt}
         fill
-        className={className || "object-cover"}
+        className={className || "object-contain"}
         sizes={sizes}
         priority={priority}
         loading={priority ? "eager" : "lazy"}
@@ -40,7 +40,7 @@ function CardImage({ src, master, alt, priority, sizes, className }) {
       src={src || master}
       master={master || src}
       alt={alt}
-      className={`h-full w-full object-cover ${className || ""}`}
+      className={`h-full w-full object-contain ${className || ""}`}
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : undefined}
       sizes={sizes}
@@ -103,7 +103,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
                 alt={alt}
                 priority={priority}
                 sizes="120px"
-                className="object-cover"
+                className="object-contain"
               />
             </span>
           </div>

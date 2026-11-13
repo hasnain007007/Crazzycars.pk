@@ -191,10 +191,10 @@ export function ProductCard({ product }) {
                 }
                 watermark={productImageWatermark}
                 className="h-full w-full"
-                imgClassName={`h-full w-full object-cover transition-transform duration-300 ${
+                imgClassName={`h-full w-full object-contain transition-transform duration-300 ${
                   hoverImageUrl ? "" : "group-hover:scale-[1.02]"
                 }`}
-                imgStyle={{ height: "100%", width: "100%", objectFit: "cover" }}
+                imgStyle={{ height: "100%", width: "100%", objectFit: "contain" }}
                 width={400}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
               />
@@ -206,8 +206,8 @@ export function ProductCard({ product }) {
                   alt=""
                   watermark={productImageWatermark}
                   className="h-full w-full"
-                  imgClassName="h-full w-full object-cover"
-                  imgStyle={{ height: "100%", width: "100%", objectFit: "cover" }}
+                  imgClassName="h-full w-full object-contain"
+                  imgStyle={{ height: "100%", width: "100%", objectFit: "contain" }}
                   width={400}
                   loading="eager"
                 />
