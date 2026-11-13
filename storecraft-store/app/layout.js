@@ -324,7 +324,8 @@ export default async function RootLayout({ children }) {
             </Suspense>
             <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">{children}</main>
             <Suspense fallback={null}>
-              <StoreFooter settings={settings} initialCategoryTree={categoryTree} />
+              {/* Footer fetches the tree client-side (header already seeds the shared cache). */}
+              <StoreFooter settings={settings} />
             </Suspense>
             <Suspense fallback={null}>
               <ClientOnlyWidgets />

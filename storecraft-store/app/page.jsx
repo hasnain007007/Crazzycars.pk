@@ -16,6 +16,9 @@ import { homeHubCollectionJsonLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { getPageSeoOverride } from "@/lib/seo/gscAudit2026-10.mjs";
 
+/** First paint: one desktop grid row (5) + a few extras — rest via Show more. */
+const HOME_GRID_LIMIT = 10;
+
 export const revalidate = 600;
 
 const homeSeo = getPageSeoOverride("/") || {};
@@ -42,23 +45,23 @@ export default async function Page() {
   let carCatalog = null;
   let activeProductCount = null;
   let homepageCategories = [];
-  let categoryTree = [];
 
   // Never let a single Mongo/Shopify failure 500 the document — degrade to empty SSR props
   // (client components can still fall back to their own fetches if needed).
   try {
-    let tree = [];
     // Best sellers skip anything already in Hot Deals, so the two rows show different products.
+    // Category tree stays in layout (header) only — do not re-embed it in homepage RSC props.
     const dealsThenBest = shopify
-      ? Promise.all([getHotDealProducts(24), getBestSellingProducts(24)])
-      : fetchHotDealsServer({ filter: "all", limit: 24 }).then(async (deals) => [
+      ? Promise.all([getHotDealProducts(HOME_GRID_LIMIT), getBestSellingProducts(HOME_GRID_LIMIT)])
+      : fetchHotDealsServer({ filter: "all", limit: HOME_GRID_LIMIT }).then(async (deals) => [
           deals,
           await fetchBestSellersServer({
-            limit: 24,
+            limit: HOME_GRID_LIMIT,
             excludeIds: (deals || []).map((d) => d.id || d._id).filter(Boolean),
           }),
         ]);
     let pair;
+    let tree = [];
     [pair, heroSlides, carCatalog, activeProductCount, tree] = await Promise.all([
       dealsThenBest,
       getHeroSlides(),
@@ -74,8 +77,7 @@ export default async function Page() {
       fetchCategoryTreeServer(),
     ]);
     [hotDeals, bestSellers] = pair;
-    categoryTree = Array.isArray(tree) ? tree : [];
-    homepageCategories = pickHomepageCategories(categoryTree)
+    homepageCategories = pickHomepageCategories(Array.isArray(tree) ? tree : [])
       .map(serializeHomepageCategory)
       .filter(Boolean);
   } catch (err) {
@@ -124,7 +126,6 @@ export default async function Page() {
         initialHeroSlides={heroSlides}
         initialCarCatalog={carCatalog}
         initialCategories={homepageCategories}
-        initialCategoryTree={categoryTree}
         activeProductCount={activeProductCount}
       />
     </>

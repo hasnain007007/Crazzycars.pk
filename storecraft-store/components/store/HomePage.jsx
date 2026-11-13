@@ -68,7 +68,6 @@ export function HomePage({
   initialHeroSlides = null,
   initialCarCatalog = null,
   initialCategories = null,
-  initialCategoryTree = null,
   activeProductCount = null,
 }) {
   const ctx = useStoreSettings();
@@ -108,7 +107,8 @@ export function HomePage({
           categories={initialCategories}
         />
       ) : null}
-      <CategoryShowcaseRails initialTree={initialCategoryTree} />
+      {/* Tree comes from header seed / client fetch — avoid a second full-tree RSC embed. */}
+      <CategoryShowcaseRails />
       {sectionEnabled("hotDeals") && homepageSettings.sections?.showHotDeals !== false ? (
         <HotDeals settings={homepageSettings} initialProducts={initialHotDeals} />
       ) : null}

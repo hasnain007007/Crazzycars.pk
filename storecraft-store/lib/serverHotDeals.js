@@ -40,7 +40,9 @@ export async function fetchHotDealsServer({ filter = "all", limit = 500 } = {}) 
           .map((x) => x.row);
 
         return JSON.parse(
-          JSON.stringify(rows.map((row) => serializeStoreProductSummary(row, { maxImages: 1 })))
+          JSON.stringify(
+            rows.map((row) => serializeStoreProductSummary(row, { maxImages: 1, leanCard: true }))
+          )
         );
       } catch (err) {
         console.error("[fetchHotDealsServer]", err?.message || err);

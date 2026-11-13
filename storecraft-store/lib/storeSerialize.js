@@ -135,9 +135,10 @@ function serializeMediaVideos(videos) {
 }
 
 export function serializeStoreProductSummary(p, opts = {}) {
+  const leanCard = opts.leanCard === true;
   const regularPrice = Number(p.pricing?.regularPrice) || 0;
   const salePrice = Number(p.pricing?.salePrice) || 0;
-  const schedule = p.pricing?.saleSchedule || null;
+  const schedule = leanCard ? null : p.pricing?.saleSchedule || null;
   const isOnSale = salePrice > 0 && salePrice < regularPrice && isSaleCurrentlyActive(p.pricing);
   const price = isOnSale ? salePrice : effectiveUnitPrice(p) || regularPrice;
   const stock = getStock(p);
@@ -145,7 +146,9 @@ export function serializeStoreProductSummary(p, opts = {}) {
   const rawImgs = Array.isArray(p?.media?.images) ? p.media.images : [];
   const maxImages = Number.isFinite(Number(opts.maxImages))
     ? Math.max(1, Number(opts.maxImages))
-    : rawImgs.length;
+    : leanCard
+      ? 1
+      : rawImgs.length;
   const mainFirst = [
     rawImgs.find((i) => i?.isMain),
     ...rawImgs.filter((i) => !i?.isMain),
@@ -158,16 +161,16 @@ export function serializeStoreProductSummary(p, opts = {}) {
       rawImgs[0]?.url ||
       ""
   ) || null;
-  const summaryImages = mediaImages.map((i) => absoluteMediaUrl(i?.url)).filter(Boolean);
-  return {
+  const summaryImages = leanCard
+    ? summaryImage
+      ? [summaryImage]
+      : []
+    : mediaImages.map((i) => absoluteMediaUrl(i?.url)).filter(Boolean);
+  const sku = p.articleNo || p.inventory?.sku || "";
+  const base = {
     id: productDocId(p),
     name: displayProductName(p.name),
     slug: p.slug,
-    articleNo: p.articleNo || p.inventory?.sku || "",
-    shortDescription: scrubPaymentClaims(
-      fixTruncatedButto(toPlainText(p.shortDescription || "")),
-      productAllowsCod(p)
-    ),
     image: summaryImage,
     images: summaryImages,
     media: {
@@ -177,17 +180,12 @@ export function serializeStoreProductSummary(p, opts = {}) {
     regularPrice,
     salePrice,
     compareAt: regularPrice || price,
-    saleSchedule: schedule,
     isOnSale,
     featured: !!p.featured,
     newArrival: !!p.newArrival,
-    brand: p.brand || "CrazzyCars.pk",
-    sku: p.articleNo || p.inventory?.sku || "",
-    gtin: p.gtin || p.ean || "",
-    mpn: p.mpn || p.partNumber || "",
+    sku,
     codEnabled: productAllowsCod(p),
     isBulky: p.isBulky === true,
-    advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     createdAt: p.createdAt || null,
     categories: Array.isArray(p.categories)
       ? p.categories
@@ -198,24 +196,37 @@ export function serializeStoreProductSummary(p, opts = {}) {
           )
           .filter((c) => c?.name)
       : [],
-    tags: Array.isArray(p.tags) ? p.tags : [],
     inStock,
     stock,
     quantity: stock,
-    quantityAvailable: stock,
     inventory: {
-      ...(p.inventory || {}),
       quantity: Number(p?.inventory?.quantity) || 0,
       trackInventory: p?.inventory?.trackInventory ?? true,
       allowBackorder: p?.inventory?.allowBackorder === true,
-      sku: p?.inventory?.sku || p.articleNo || "",
+      sku,
     },
     requiresOptions: productRequiresOptions(p),
     // Public cards: hide stars until genuine aggregates are recomputed (seed hygiene).
     rating: 0,
+    reviewCount: 0,
+  };
+  if (leanCard) return base;
+  return {
+    ...base,
+    articleNo: sku,
+    shortDescription: scrubPaymentClaims(
+      fixTruncatedButto(toPlainText(p.shortDescription || "")),
+      productAllowsCod(p)
+    ),
+    saleSchedule: schedule,
+    brand: p.brand || "CrazzyCars.pk",
+    gtin: p.gtin || p.ean || "",
+    mpn: p.mpn || p.partNumber || "",
+    advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
+    tags: Array.isArray(p.tags) ? p.tags : [],
+    quantityAvailable: stock,
     averageRating: 0,
     ratingAverage: 0,
-    reviewCount: 0,
     totalReviews: 0,
     numReviews: 0,
   };

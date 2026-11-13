@@ -314,22 +314,27 @@ function CategoryRail({ config, root }) {
 }
 
 export default function CategoryShowcaseRails({ initialTree = null }) {
-  const [tree, setTree] = useState(() => (Array.isArray(initialTree) ? initialTree : []));
+  const hasInitial = Array.isArray(initialTree) && initialTree.length > 0;
+  const [tree, setTree] = useState(() => (hasInitial ? initialTree : []));
+  const [treeReady, setTreeReady] = useState(hasInitial);
 
   useEffect(() => {
-    if (Array.isArray(initialTree) && initialTree.length) {
+    if (hasInitial) {
       seedCategoryTree(initialTree);
       setTree(initialTree);
+      setTreeReady(true);
       return undefined;
     }
     let cancelled = false;
     fetchCategoryTree().then((t) => {
-      if (!cancelled) setTree(Array.isArray(t) ? t : []);
+      if (cancelled) return;
+      setTree(Array.isArray(t) ? t : []);
+      setTreeReady(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [initialTree]);
+  }, [hasInitial, initialTree]);
 
   const rails = useMemo(
     () =>
@@ -340,6 +345,15 @@ export default function CategoryShowcaseRails({ initialTree = null }) {
     [tree]
   );
 
+  if (!treeReady) {
+    return (
+      <div
+        className="mx-auto my-3 max-w-7xl animate-pulse rounded-2xl bg-[#f3f4f6] md:my-6"
+        style={{ height: 420 }}
+        aria-hidden
+      />
+    );
+  }
   if (!rails.length) return null;
 
   return (

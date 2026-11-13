@@ -28,14 +28,15 @@ export default function HotDeals({ settings, initialProducts = null }) {
   }, [defaultFilter]);
 
   const hasDeals = products.length > 0;
-  // Homepage SSR sends the first 24 deals of the default tab; "Show more" loads the rest here.
+  // Homepage SSR sends the first ~10 deals of the default tab; "Show more" loads the rest here.
   const [showAll, setShowAll] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const canShowMore = !showAll && ssrSeed != null && active === defaultFilter && products.length >= 24;
+  const canShowMore =
+    !showAll && ssrSeed != null && active === defaultFilter && products.length >= 8;
 
   const loadAll = () => {
     setLoadingMore(true);
-    fetch(`/api/products/deals?filter=${encodeURIComponent(defaultFilter)}&limit=500`)
+    fetch(`/api/products/deals?filter=${encodeURIComponent(defaultFilter)}&limit=48`)
       .then((r) => r.json())
       .then((data) => {
         const list = Array.isArray(data?.products) ? data.products : [];
@@ -59,7 +60,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
     }
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/products/deals?filter=${encodeURIComponent(active)}&limit=500`)
+    fetch(`/api/products/deals?filter=${encodeURIComponent(active)}&limit=48`)
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;

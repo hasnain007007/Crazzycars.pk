@@ -143,11 +143,13 @@ export async function fetchCarCatalogServer(opts = {}) {
         let popular = buildPopularList(activeMakes).filter(keepIfHasProducts);
         let slimCarData = carData;
         if (lean) {
+          // Homepage SSR: popular rail + Filter-By-Car dropdown only. Full vehicles list
+          // lives on /api/car-catalog for /cars — embedding it doubles RSC weight.
           const slimVehicle = (v) => ({
             make: v.make,
             model: v.model,
             slug: v.slug,
-            years: Array.isArray(v.years) ? v.years.slice(0, 12) : [],
+            years: Array.isArray(v.years) ? v.years.slice(0, 8) : [],
             yearFrom: v.yearFrom,
             yearTo: v.yearTo,
             bodyStyle: v.bodyStyle || "",
@@ -155,17 +157,16 @@ export async function fetchCarCatalogServer(opts = {}) {
             isPopular: Boolean(v.isPopular),
             popularOrder: Number(v.popularOrder) || 9999,
           });
-          vehicles = vehicles.map(slimVehicle);
-          popular = popular.map(slimVehicle);
+          popular = popular.map(slimVehicle).slice(0, 24);
+          vehicles = [];
           slimCarData = {};
           for (const [make, models] of Object.entries(carData || {})) {
             slimCarData[make] = (models || []).map((m) => ({
               model: m.model,
               slug: m.slug,
-              years: Array.isArray(m.years) ? m.years.slice(0, 12) : [],
+              years: Array.isArray(m.years) ? m.years.slice(0, 8) : [],
               yearFrom: m.yearFrom,
               yearTo: m.yearTo,
-              image: m.image || "",
               isPopular: Boolean(m.isPopular),
               popularOrder: Number(m.popularOrder) || 9999,
               bodyStyle: m.bodyStyle || "",

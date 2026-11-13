@@ -330,9 +330,14 @@ export function StoreHeader({ initialCategoryTree = null }) {
   const { brand, nav, megaCols, megaEnabled } = config;
 
   const [activeMegaItem, setActiveMegaItem] = useState(null);
-  const [treeCategories, setTreeCategories] = useState(() =>
-    Array.isArray(initialCategoryTree) ? initialCategoryTree : []
-  );
+  const [treeCategories, setTreeCategories] = useState(() => {
+    const tree = Array.isArray(initialCategoryTree) ? initialCategoryTree : [];
+    // Seed shared client cache during first client render so footer / rails skip a refetch.
+    if (typeof window !== "undefined" && tree.length) {
+      import("@/lib/fetchCategoryTree").then(({ seedCategoryTree }) => seedCategoryTree(tree));
+    }
+    return tree;
+  });
 
   useEffect(() => {
     setMounted(true);

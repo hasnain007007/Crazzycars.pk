@@ -77,7 +77,9 @@ export async function fetchBestSellersServer({ limit = 500, excludeIds = [] } = 
 
         const rows = [...sold, ...featured].slice(0, lim);
         return JSON.parse(
-          JSON.stringify(rows.map((row) => serializeStoreProductSummary(row, { maxImages: 1 })))
+          JSON.stringify(
+            rows.map((row) => serializeStoreProductSummary(row, { maxImages: 1, leanCard: true }))
+          )
         );
       } catch (err) {
         console.error("[fetchBestSellersServer]", err?.message || err);

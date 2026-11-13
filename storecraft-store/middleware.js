@@ -485,10 +485,12 @@ export async function middleware(request) {
       // _rsc hashes replays forever (ERR_TOO_MANY_REDIRECTS on the /sale prefetch).
       response.headers.set("Cache-Control", "private, no-store");
     } else if (!wroteCookie && isCatalog && !isRedirect) {
-      // max-age=0 + no stale-while-revalidate: browsers must re-check every time. With swr, Chrome
-      // replayed stale cached _rsc 307s between two hashes (prefetch redirect loop on /sale).
-      // s-maxage still lets a shared cache hold catalog HTML for 5 minutes.
-      response.headers.set("Cache-Control", "public, max-age=0, s-maxage=300");
+      // max-age=0: browsers revalidate. RSC/prefetch stay private no-store above, so SWR here
+      // only applies to document HTML (safe). Align s-maxage with homepage revalidate=600.
+      response.headers.set(
+        "Cache-Control",
+        "public, max-age=0, s-maxage=600, stale-while-revalidate=3600"
+      );
     }
   } catch {
     /* ignore */

@@ -36,7 +36,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
 
   useEffect(() => {
     if (hasInitial) return;
-    fetch("/api/products?featured=true&limit=500")
+    fetch("/api/products?featured=true&limit=48")
       .then((r) => r.json())
       .then((data) => {
         const list = data?.products || data?.data || [];
@@ -51,10 +51,10 @@ export default function BestSellers({ initialProducts = [], settings }) {
   }, [tabs]);
 
   const filtered = useMemo(() => products.filter((p) => matchesTab(p, tab)), [products, tab]);
-  // Homepage SSR sends the first 24; "Show more" loads the rest into this same grid.
+  // Homepage SSR sends the first ~10; "Show more" loads the rest into this same grid.
   const [showAll, setShowAll] = useState(!hasInitial);
   const [loadingMore, setLoadingMore] = useState(false);
-  const canShowMore = !showAll && products.length >= 24;
+  const canShowMore = !showAll && products.length >= 8;
 
   const loadAll = () => {
     setLoadingMore(true);
