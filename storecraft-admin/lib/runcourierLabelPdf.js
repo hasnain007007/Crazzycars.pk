@@ -1,14 +1,34 @@
 /**
  * Run Courier airbill PDF — PostEx-style layout, exactly 3 equal labels per A4.
  * Portal has no PDF API — we build from invoice HTML + order number from our DB.
+ *
+ * Branding is always CrazzyCars.pk — never reuse another merchant's logo/name from
+ * the courier portal HTML (e.g. a previous shipper account still on the invoice).
  */
 
-
+import { readFile } from "fs/promises";
+import path from "path";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { prepareRunCourierInvoiceHtml } from "./runcourierInvoice.js";
 
 const A4_W = 595.28;
 const A4_H = 841.89;
+
+/** Shipper identity printed on every airbill (never portal merchant branding). */
+const CRAZZYCARS_SHIPPER = {
+  company: "CrazzyCars.pk",
+  phone: "03307767799",
+  phoneDisplay: "+92 330 7767799",
+  pickup:
+    "Block A6, Phase 1, Citi Housing, Gujranwala 52203, Punjab, Pakistan",
+  originCity: "Gujranwala",
+  logoUrl: "https://crazzycars.pk/logo.png",
+  logoPublicPath: path.join(process.cwd(), "public", "brand", "crazzycars-logo.png"),
+};
+
+/** Strip other-merchant marks that sometimes leak from courier invoice HTML. */
+const FOREIGN_BRAND_RE =
+  /\b(vitality|zelvo|medico\s*pakistan|vit[-\s]?\d+)\b/gi;
 /** PostEx-style: exactly 3 equal airbills fill one A4 (no empty page footer). */
 const LABELS_PER_PAGE = 3;
 const PAGE_MARGIN = 10;
@@ -127,9 +147,10 @@ function parseAirbillFields(html) {
     destination = valueAfter(lines, "Destination");
   }
 
-  let company = "crazzycars.pk";
-  let shipperPhone = "";
-  let pickup = "";
+  // Always CrazzyCars — ignore portal company/pickup (may still show a prior merchant).
+  const company = CRAZZYCARS_SHIPPER.company;
+  const shipperPhone = CRAZZYCARS_SHIPPER.phoneDisplay;
+  const pickup = CRAZZYCARS_SHIPPER.pickup;
   let consigneeName = "";
   let consigneePhone = "";
   let consigneeAddress = "";
@@ -137,8 +158,6 @@ function parseAirbillFields(html) {
   const shipperIdx = lines.findIndex((l) => /^shipper$/i.test(l));
   if (shipperIdx >= 0) {
     const block = lines.slice(shipperIdx, shipperIdx + 45);
-    const companyIdx = block.findIndex((l) => /^company:?$/i.test(l));
-    if (companyIdx >= 0) company = block[companyIdx + 1] || company;
 
     // Portal HTML is a 2-col Shipper|Consignee table: first Name is consignee.
     // A later dedicated Consignee block also has Name — prefer the last Name label.
@@ -153,17 +172,16 @@ function parseAirbillFields(html) {
     const phoneIndexes = block
       .map((l, i) => (/^phone\s*no\s*:?$/i.test(l) ? i : -1))
       .filter((i) => i >= 0);
-    if (phoneIndexes[0] != null) shipperPhone = block[phoneIndexes[0] + 1] || "";
     if (phoneIndexes.length > 1) {
       consigneePhone = block[phoneIndexes[phoneIndexes.length - 1] + 1] || "";
+    } else if (phoneIndexes[0] != null) {
+      // Only one phone in the block — treat as consignee when shipper is forced.
+      consigneePhone = block[phoneIndexes[0] + 1] || "";
     }
 
-    const pickupIdx = block.findIndex((l) => /^pickup address:?$/i.test(l));
-    if (pickupIdx >= 0) pickup = block[pickupIdx + 1] || "";
     const addressIndexes = block
       .map((l, i) => (/^address:?$/i.test(l) ? i : -1))
       .filter((i) => i >= 0);
-    if (!pickup && addressIndexes[0] != null) pickup = block[addressIndexes[0] + 1] || "";
     if (addressIndexes.length) {
       // Last Address: in the block is the consignee delivery address.
       const consigneeAddrIdx = addressIndexes[addressIndexes.length - 1];
@@ -174,11 +192,11 @@ function parseAirbillFields(html) {
   if (!consigneeName) consigneeName = valueAfter(lines, "Name");
   // Never show the store/company as the consignee name.
   if (consigneeName && /^crazzycars/i.test(consigneeName)) consigneeName = "";
+  if (consigneeName && FOREIGN_BRAND_RE.test(consigneeName)) consigneeName = "";
+  FOREIGN_BRAND_RE.lastIndex = 0;
   const phones = lines.filter((l) => /^03\d{9}$/.test(l.replace(/\s/g, "")));
-  if (!shipperPhone) shipperPhone = phones[0] || "";
-  if (!consigneePhone) consigneePhone = phones[1] || phones[0] || "";
+  if (!consigneePhone) consigneePhone = phones[0] || "";
   if (!consigneeAddress) consigneeAddress = valueAfter(lines, "Address");
-  if (!pickup) pickup = valueAfter(lines, "Pickup Address");
 
   let cod = "";
   const codIdx = lines.findIndex((l) => /^cod amount$/i.test(l));
@@ -215,7 +233,8 @@ function parseAirbillFields(html) {
     tracking: tracking || "",
     date,
     services,
-    origin,
+    // Pickup city is always CrazzyCars Gujranwala — ignore portal origin (other merchants).
+    origin: CRAZZYCARS_SHIPPER.originCity,
     destination,
     weight,
     bookingType,
@@ -229,9 +248,17 @@ function parseAirbillFields(html) {
     orderId,
     cod,
     pieces: valueAfter(lines, "No. of Pieces") || "1",
-    product,
-    instructions: valueAfter(lines, "Special Instruction") || "",
+    product: scrubForeignBrand(product) || "Car accessories",
+    instructions: scrubForeignBrand(valueAfter(lines, "Special Instruction") || ""),
   };
+}
+
+function scrubForeignBrand(text) {
+  return String(text || "")
+    .replace(FOREIGN_BRAND_RE, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+,/g, ",")
+    .trim();
 }
 
 function extractDataImages(html) {
@@ -243,15 +270,34 @@ function extractDataImages(html) {
     imgs.push({ dataUri: m[2].replace(/\s+/g, "") });
   }
   const pngs = imgs.filter((i) => i.dataUri.startsWith("data:image/png"));
-  const jpgs = imgs.filter(
-    (i) =>
-      i.dataUri.startsWith("data:image/jpeg") || i.dataUri.startsWith("data:image/jpg")
-  );
-  // Portal only embeds tracking barcode (+ QR). Order Ref barcode is fetched separately.
+  // Portal only embeds tracking barcode (+ QR). Never use portal JPG logos —
+  // those are often another merchant's mark still sitting on the invoice HTML.
   out.trackingBarcode = pngs[0]?.dataUri || null;
-  out.logo = jpgs[0]?.dataUri || null;
+  out.logo = null;
   out.qr = pngs.length > 1 ? pngs[pngs.length - 1].dataUri : pngs[1]?.dataUri || null;
   return out;
+}
+
+/** Load CrazzyCars.pk logo bytes (local public file, then live site). */
+async function loadCrazzyCarsLogoBytes() {
+  try {
+    const buf = await readFile(CRAZZYCARS_SHIPPER.logoPublicPath);
+    if (buf?.length) return buf;
+  } catch {
+    /* fall through */
+  }
+  try {
+    const res = await fetch(CRAZZYCARS_SHIPPER.logoUrl, {
+      method: "GET",
+      headers: { Accept: "image/*", "User-Agent": "CrazzycarsLabel/1.0" },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    return buf.length ? buf : null;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchPortalBarcodeDataUri(code) {
@@ -373,9 +419,11 @@ async function embedImages(pdfDoc, images) {
     orderBarcodeImg = null;
   }
   try {
-    if (images.logo) {
+    if (images.logoBytes?.length) {
+      logoImg = await pdfDoc.embedPng(images.logoBytes);
+    } else if (images.logo) {
       const bytes = dataUriToBytes(images.logo);
-      logoImg = images.logo.includes("image/png")
+      logoImg = String(images.logo).includes("image/png")
         ? await pdfDoc.embedPng(bytes)
         : await pdfDoc.embedJpg(bytes);
     }
@@ -460,17 +508,17 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   const orderDisplay = orderNo || pdfSafe(fields.orderId) || "-";
   const tracking = pdfSafe(fields.tracking) || "-";
   const dest = pdfSafe(fields.destination) || "-";
-  const origin = pdfSafe(fields.origin) || "Gujranwala";
+  const origin = pdfSafe(fields.origin) || CRAZZYCARS_SHIPPER.originCity;
   const code = cityCode(dest);
 
   // --- HEADER: logo | order barcode | tracking barcode | city code ---
   const headerH = 48;
   let y = top;
 
-  // Logo / brand
+  // Logo / brand — CrazzyCars.pk only
   if (logoImg) {
-    const lw = 52;
-    const lh = Math.min(22, (logoImg.height / logoImg.width) * lw);
+    const lw = 64;
+    const lh = Math.min(26, (logoImg.height / logoImg.width) * lw);
     page.drawImage(logoImg, {
       x: innerX,
       y: y - lh - 2,
@@ -478,20 +526,20 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
       height: lh,
     });
   } else {
-    page.drawText("Run Courier", {
+    page.drawText("CrazzyCars.pk", {
       x: innerX,
       y: y - 14,
-      size: 10,
+      size: 11,
       font: bold,
-      color: rgb(0.1, 0.35, 0.2),
+      color: rgb(0.77, 0.12, 0.12),
     });
   }
   page.drawText("crazzycars.pk", {
     x: innerX,
-    y: y - 28,
-    size: 7,
+    y: y - 34,
+    size: 6.5,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: rgb(0.35, 0.35, 0.35),
   });
 
   // Order Ref barcode (distinct from tracking — never reuse tracking barcode)
@@ -626,7 +674,7 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   sectionHeader(page, fonts, c1x, cy + hdrH, col1W, hdrH, "Shipper Information");
   cy -= 8;
   page.drawText("Name:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
-  page.drawText(truncateToWidth(bold, fields.company || "CRAZZYCARS.PK", valSize, maxW1 - 28), {
+  page.drawText(truncateToWidth(bold, CRAZZYCARS_SHIPPER.company, valSize, maxW1 - 28), {
     x: c1x + leftPad + 28,
     y: cy,
     size: valSize,
@@ -634,7 +682,7 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   });
   cy -= 10;
   page.drawText("Contact:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
-  page.drawText(truncateToWidth(font, fields.shipperPhone || "-", valSize, maxW1 - 36), {
+  page.drawText(truncateToWidth(font, fields.shipperPhone || CRAZZYCARS_SHIPPER.phoneDisplay, valSize, maxW1 - 36), {
     x: c1x + leftPad + 36,
     y: cy,
     size: valSize,
@@ -649,7 +697,7 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
     color: rgb(0.35, 0.35, 0.35),
   });
   cy -= 9;
-  drawText(page, fields.pickup || origin, c1x + leftPad, cy, {
+  drawText(page, fields.pickup || CRAZZYCARS_SHIPPER.pickup, c1x + leftPad, cy, {
     size: 7,
     font,
     maxWidth: maxW1,
@@ -796,6 +844,7 @@ async function prepareAirbillAssets(pdfDoc, html, orderNo) {
   if (orderNo && orderNo !== "-") {
     images.orderBarcode = await fetchPortalBarcodeDataUri(orderNo);
   }
+  images.logoBytes = await loadCrazzyCarsLogoBytes();
   return embedImages(pdfDoc, images);
 }
 
