@@ -11,16 +11,24 @@ import { storefrontTrackingUrl } from "@/lib/postex";
 
 export { storefrontTrackingUrl };
 
-/** Default Select API when Settings / booking form has no override. */
+/** Default Select API when Settings / booking form has no override — always Leopards. */
 export const RUN_COURIER_DEFAULT_API = "Leopard2";
 
-/** Default Select API carriers shown in the portal dropdown. */
+/** Friendly label for Select API options (UI only; value stays Leopard2). */
+export function runCourierApiLabel(api) {
+  const v = String(api || "").trim();
+  if (/^leopard2$/i.test(v) || /^leopards$/i.test(v)) return "Leopards";
+  if (/^leopard$/i.test(v)) return "Leopard";
+  return v || "Leopards";
+}
+
+/** Default Select API carriers shown in the portal dropdown (Leopard2 first after Auto). */
 export const RUN_COURIER_APIS = [
   "Auto",
+  "Leopard2",
   "Trax",
   "M&P",
   "TCS",
-  "Leopard2",
   "Daewoo",
   "Dastaq Logistics",
   "AHL",
@@ -144,9 +152,53 @@ export function normalizeRunCourierApi(raw, fallback = "Auto") {
 }
 
 export function displayCourierName(selectedApi) {
-  const api = normalizeRunCourierApi(selectedApi, "Auto");
-  if (!api || api.toLowerCase() === "auto") return "Run Courier";
-  return `Run Courier (${api})`;
+  const api = normalizeRunCourierApi(selectedApi, RUN_COURIER_DEFAULT_API);
+  if (!api || api.toLowerCase() === "auto") return "Leopard";
+  if (/^leopard/i.test(api)) return "Leopard";
+  if (/^tcs/i.test(api)) return "TCS";
+  if (/^trax/i.test(api)) return "Trax";
+  if (/^(m&p|mnp)/i.test(api)) return "M&P";
+  if (/^daewoo/i.test(api)) return "Daewoo";
+  if (/^dastaq/i.test(api)) return "Dastaq";
+  if (/^ahl/i.test(api)) return "AHL";
+  return runCourierApiLabel(api);
+}
+
+/**
+ * Resolve the Select API for a booking.
+ * Never leave "Auto" — without api_vendor the portal defaults to Trax on this account.
+ * Prefers Leopard2 when empty / Auto / unknown.
+ */
+export function resolveBookingSelectApi(raw, settingsDefault = "") {
+  const fallback = normalizeRunCourierApi(
+    settingsDefault || RUN_COURIER_DEFAULT_API,
+    RUN_COURIER_DEFAULT_API
+  );
+  let api = normalizeRunCourierApi(raw || fallback, fallback);
+  if (!api || String(api).toLowerCase() === "auto") {
+    api = RUN_COURIER_DEFAULT_API;
+  }
+  return api;
+}
+
+/**
+ * Pick a Select API value that exists in the live carriers dropdown.
+ * Keeps Leopard2 preferred; maps aliases (Leopards / leopard) onto the list.
+ */
+export function pickRunCourierSelectApi(preferred, carriers = []) {
+  const want = resolveBookingSelectApi(preferred, RUN_COURIER_DEFAULT_API);
+  const list = Array.isArray(carriers) && carriers.length ? carriers : RUN_COURIER_APIS;
+  const lower = (s) => String(s || "").toLowerCase();
+  const exact = list.find((c) => lower(c) === lower(want));
+  if (exact) return exact;
+  if (/^leopard/i.test(want)) {
+    const l2 = list.find((c) => lower(c) === "leopard2");
+    if (l2) return l2;
+    const leopards = list.find((c) => lower(c) === "leopards");
+    if (leopards) return leopards;
+  }
+  // Keep canonical Leopard2 even if portal list is still loading.
+  return want;
 }
 
 /**
@@ -715,7 +767,8 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
   const courier = settingsCourier || {};
   const addr = order?.shippingAddress || {};
   const customer = order?.customer || {};
-  const selectedApi = normalizeRunCourierApi(
+  // Always resolve to a real carrier (default Leopard2) — never Auto/empty (Trax-first portal).
+  const selectedApi = resolveBookingSelectApi(
     opts.selectedApi || opts.api || courier.runCourierDefaultApi,
     courier.runCourierDefaultApi || RUN_COURIER_DEFAULT_API
   );

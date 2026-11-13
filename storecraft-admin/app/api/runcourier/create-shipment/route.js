@@ -13,6 +13,7 @@ import {
   createRunCourierShipment,
   displayCourierName,
   fetchRunCourierLabel,
+  resolveBookingSelectApi,
   RUN_COURIER_DEFAULT_API,
   storefrontTrackingUrl,
 } from "@/lib/runcourier";
@@ -170,7 +171,10 @@ export async function POST(request) {
       order.markModified("timeline");
     }
     const bookingOptions = {
-      selectedApi: body.selectedApi || body.api || body.courierApi,
+      selectedApi: resolveBookingSelectApi(
+        body.selectedApi || body.api || body.courierApi || settings?.courier?.runCourierDefaultApi,
+        settings?.courier?.runCourierDefaultApi || RUN_COURIER_DEFAULT_API
+      ),
       productType: body.productType,
       serviceType: body.serviceType,
       pieces: body.pieces,
@@ -310,6 +314,7 @@ export async function POST(request) {
       try {
         const built = await buildRunCourierAirbillPdf(invoiceUrl, {
           orderNumber: order.orderNumber,
+          runCourierApi: result.selectedApi || order.runCourierApi || RUN_COURIER_DEFAULT_API,
         });
         if (built.success && built.pdf?.length) {
           labelPdf = Buffer.from(built.pdf).toString("base64");

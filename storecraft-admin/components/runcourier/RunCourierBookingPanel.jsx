@@ -11,6 +11,8 @@ import {
   RUN_COURIER_DEFAULT_API,
   RUN_COURIER_PRODUCT_TYPES,
   RUN_COURIER_SERVICE_TYPES,
+  pickRunCourierSelectApi,
+  runCourierApiLabel,
 } from "@/lib/runcourier";
 import RunCourierCitySelect from "@/components/runcourier/RunCourierCitySelect";
 import { isCodAdvanceUnpaid } from "@/lib/codAdvanceGate";
@@ -39,8 +41,11 @@ export default function RunCourierBookingPanel({
   const [cityName, setCityName] = useState("");
   const [cityAudit, setCityAudit] = useState(null);
   const [citiesLoading, setCitiesLoading] = useState(false);
-  const [selectedApi, setSelectedApi] = useState(
-    courierSettings.runCourierDefaultApi || order?.runCourierApi || RUN_COURIER_DEFAULT_API
+  const [selectedApi, setSelectedApi] = useState(() =>
+    pickRunCourierSelectApi(
+      courierSettings.runCourierDefaultApi || order?.runCourierApi || RUN_COURIER_DEFAULT_API,
+      RUN_COURIER_APIS
+    )
   );
   const [productType, setProductType] = useState(
     courierSettings.runCourierProductType || "Overnight"
@@ -76,9 +81,22 @@ export default function RunCourierBookingPanel({
     fetch("/api/runcourier/carriers", { credentials: "include" })
       .then((r) => r.json())
       .then((json) => {
-        if (Array.isArray(json.carriers) && json.carriers.length) setCarriers(json.carriers);
+        if (Array.isArray(json.carriers) && json.carriers.length) {
+          setCarriers(json.carriers);
+          // Keep Leopards selected after portal list loads (avoid falling onto Trax/Auto).
+          setSelectedApi((prev) =>
+            pickRunCourierSelectApi(
+              prev ||
+                courierSettings.runCourierDefaultApi ||
+                order?.runCourierApi ||
+                RUN_COURIER_DEFAULT_API,
+              json.carriers
+            )
+          );
+        }
       })
       .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount; order sync is below
   }, []);
 
   useEffect(() => {
@@ -109,10 +127,13 @@ export default function RunCourierBookingPanel({
     const weightKg = grams > 0 ? Math.round((grams / 1000) * 100) / 100 : 0.5;
     setWeight(Math.max(0.5, weightKg));
     setSelectedApi(
-      courierSettings.runCourierDefaultApi || order?.runCourierApi || RUN_COURIER_DEFAULT_API
+      pickRunCourierSelectApi(
+        courierSettings.runCourierDefaultApi || order?.runCourierApi || RUN_COURIER_DEFAULT_API,
+        carriers
+      )
     );
     setCityName(String(order?.shippingAddress?.city || "").trim());
-  }, [order, orderTotal, courierSettings.runCourierDefaultApi, order?.runCourierApi]);
+  }, [order, orderTotal, courierSettings.runCourierDefaultApi, order?.runCourierApi, carriers]);
 
   // Live city audit against GetCitiesList whenever destination/origin changes.
   useEffect(() => {
@@ -184,7 +205,7 @@ export default function RunCourierBookingPanel({
         body: JSON.stringify({
           orderId: order.id || order._id,
           rebook,
-          selectedApi,
+          selectedApi: pickRunCourierSelectApi(selectedApi, carriers),
           productType,
           serviceType,
           codAmount: cod,
@@ -423,13 +444,13 @@ export default function RunCourierBookingPanel({
           <div style={{ gridColumn: "1 / -1" }}>
             <label style={labelStyle}>Select API (courier company) *</label>
             <select
-              value={selectedApi}
+              value={pickRunCourierSelectApi(selectedApi, carriers)}
               onChange={(e) => setSelectedApi(e.target.value)}
               style={inputStyle}
             >
               {carriers.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {runCourierApiLabel(c)}
                 </option>
               ))}
             </select>

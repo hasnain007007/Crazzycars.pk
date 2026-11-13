@@ -9,6 +9,8 @@ import {
   RUN_COURIER_PRODUCT_TYPES,
   RUN_COURIER_SERVICE_TYPES,
   auditRunCourierCity,
+  pickRunCourierSelectApi,
+  runCourierApiLabel,
 } from "@/lib/runcourier";
 import RunCourierCitySelect from "@/components/runcourier/RunCourierCitySelect";
 
@@ -102,13 +104,18 @@ function ApiSearchSelect({ carriers = RUN_COURIER_APIS, value, onChange, classNa
   const rootRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const resolved = pickRunCourierSelectApi(value || RUN_COURIER_DEFAULT_API, carriers);
   const list = useMemo(() => {
     const base = Array.isArray(carriers) && carriers.length ? carriers : RUN_COURIER_APIS;
     const q = String(query || "")
       .trim()
       .toLowerCase();
     if (!q) return base;
-    return base.filter((c) => String(c).toLowerCase().includes(q));
+    return base.filter(
+      (c) =>
+        String(c).toLowerCase().includes(q) ||
+        runCourierApiLabel(c).toLowerCase().includes(q)
+    );
   }, [carriers, query]);
 
   useEffect(() => {
@@ -125,8 +132,8 @@ function ApiSearchSelect({ carriers = RUN_COURIER_APIS, value, onChange, classNa
         type="text"
         autoComplete="off"
         className="h-8 w-full min-w-[8rem] rounded border border-slate-300 bg-white px-2 text-xs dark:border-slate-600 dark:bg-slate-900"
-        placeholder={value || "Select API…"}
-        value={open ? query : value || ""}
+        placeholder={runCourierApiLabel(resolved) || "Leopards"}
+        value={open ? query : runCourierApiLabel(resolved)}
         onFocus={() => {
           setOpen(true);
           setQuery("");
@@ -143,7 +150,7 @@ function ApiSearchSelect({ carriers = RUN_COURIER_APIS, value, onChange, classNa
               <button
                 type="button"
                 className={`block w-full px-2 py-1.5 text-left text-xs hover:bg-blue-50 dark:hover:bg-slate-800 ${
-                  c === value ? "bg-blue-100 font-semibold dark:bg-slate-700" : ""
+                  c === resolved ? "bg-blue-100 font-semibold dark:bg-slate-700" : ""
                 }`}
                 onClick={() => {
                   onChange(c);
@@ -571,7 +578,10 @@ export default function RunCourierApp() {
       0,
       Math.round(Number(row.cod != null && row.cod !== "" ? row.cod : base.codAmount) || 0)
     );
-    const api = selectedApi || rowApi[id] || base.suggestedApi || defaultApi || RUN_COURIER_DEFAULT_API;
+    const api = pickRunCourierSelectApi(
+      selectedApi || rowApi[id] || base.suggestedApi || defaultApi || RUN_COURIER_DEFAULT_API,
+      carriers
+    );
 
     if (!city) {
       return { ok: false, error: "Destination city required" };

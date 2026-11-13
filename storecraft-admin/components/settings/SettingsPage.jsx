@@ -1474,9 +1474,10 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
       <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
         <h3 className="text-base font-semibold text-slate-900 dark:text-white">Run Courier</h3>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          Aggregator for Trax, M&amp;P, TCS, Leopard2, Daewoo, and more. Separate from PostEx — book from
-          Order Detail or the Run Courier app. API key from{" "}
-          <code className="text-xs">RUN_COURIER_API_KEY</code> env overrides the field below.
+          Aggregator for Leopards, Trax, M&amp;P, TCS, Daewoo, and more. Default Select API is{" "}
+          <strong>Leopards</strong>. Separate from PostEx — book from Order Detail or the Run Courier
+          app. API key from <code className="text-xs">RUN_COURIER_API_KEY</code> env overrides the
+          field below.
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Toggle
@@ -1484,11 +1485,25 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
             checked={courier.runCourierEnabled !== false}
             onChange={(v) => onPatch({ runCourierEnabled: v })}
           />
-          <Field
-            label="Default Select API"
-            value={courier.runCourierDefaultApi || "Leopard2"}
-            onChange={(v) => onPatch({ runCourierDefaultApi: v })}
-          />
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-slate-700 dark:text-slate-200">
+              Default Select API
+            </span>
+            <select
+              className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-900"
+              value={courier.runCourierDefaultApi || "Leopard2"}
+              onChange={(e) => onPatch({ runCourierDefaultApi: e.target.value })}
+            >
+              <option value="Leopard2">Leopards</option>
+              <option value="Trax">Trax</option>
+              <option value="M&P">M&amp;P</option>
+              <option value="TCS">TCS</option>
+              <option value="Daewoo">Daewoo</option>
+              <option value="Dastaq Logistics">Dastaq Logistics</option>
+              <option value="AHL">AHL</option>
+              <option value="Auto">Auto (not recommended)</option>
+            </select>
+          </label>
           <Field
             label="Run Courier API Key"
             password
