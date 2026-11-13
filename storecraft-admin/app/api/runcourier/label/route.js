@@ -70,12 +70,12 @@ export async function GET(request) {
       (await Settings.findOne({}).lean()) ||
       {};
 
-    /** @type {Array<{ id: string, trackingNumber: string, orderNumber: string, invoiceLink: string }>} */
+    /** @type {Array<{ id: string, trackingNumber: string, orderNumber: string, invoiceLink: string, runCourierApi: string }>} */
     const labelJobs = [];
 
     if (orderIds.length) {
       const orders = await Order.find({ _id: { $in: orderIds } })
-        .select("trackingNumber tracking runCourierLabel orderNumber")
+        .select("trackingNumber tracking runCourierLabel orderNumber runCourierApi")
         .lean();
       for (const order of orders) {
         const tn = String(order.trackingNumber || order.tracking?.number || "").trim();
@@ -87,6 +87,7 @@ export async function GET(request) {
             trackingNumber: tn,
             orderNumber: String(order.orderNumber || "").trim(),
             invoiceLink: isHttpUrl(link) ? link : "",
+            runCourierApi: String(order.runCourierApi || "").trim(),
           });
         }
       }
@@ -106,13 +107,14 @@ export async function GET(request) {
         const order = await Order.findOne({
           $or: [{ trackingNumber: tn }, { "tracking.number": tn }],
         })
-          .select("trackingNumber tracking runCourierLabel orderNumber")
+          .select("trackingNumber tracking runCourierLabel orderNumber runCourierApi")
           .lean();
         labelJobs.push({
           id: order ? String(order._id) : "",
           trackingNumber: tn,
           orderNumber: String(order?.orderNumber || "").trim(),
           invoiceLink: isHttpUrl(order?.runCourierLabel) ? String(order.runCourierLabel) : "",
+          runCourierApi: String(order?.runCourierApi || "").trim(),
         });
       }
     }
@@ -164,11 +166,13 @@ export async function GET(request) {
         ready.length === 1
           ? await buildRunCourierAirbillPdf(ready[0].invoiceLink, {
               orderNumber: ready[0].orderNumber,
+              runCourierApi: ready[0].runCourierApi,
             })
           : await buildRunCourierAirbillsPdf(
               ready.map((j) => ({
                 invoiceLink: j.invoiceLink,
                 orderNumber: j.orderNumber,
+                runCourierApi: j.runCourierApi,
               }))
             );
       if (!built.success || !built.pdf?.length) {

@@ -35,30 +35,66 @@ const FOREIGN_BRAND_RE =
   /\b(vitality|zelvo|medico\s*pakistan|vit[-\s]?\d+)\b/gi;
 
 /**
+ * Pretty last-mile carrier name (Leopard / TCS / Trax…) — never "Run Courier".
+ * Run Courier is only the booking portal; riders need the actual Select API carrier.
+ */
+function prettyCarrierName(name) {
+  const s = String(name || "").trim();
+  if (!s) return "";
+  const lower = s.toLowerCase().replace(/\s+/g, "");
+  if (lower.includes("postex")) return "PostEx";
+  if (lower.includes("leopard")) return "Leopard";
+  if (lower.includes("trax")) return "Trax";
+  if (lower === "tcs" || lower.startsWith("tcs")) return "TCS";
+  if (lower.includes("m&p") || lower.includes("mnp") || lower === "mp") return "M&P";
+  if (lower.includes("daewoo")) return "Daewoo";
+  if (lower.includes("dastaq")) return "Dastaq";
+  if (lower.includes("ahl")) return "AHL";
+  if (lower.includes("bluex")) return "BlueEx";
+  // Booking portal only — not a last-mile name.
+  if (
+    lower.includes("runcourier") ||
+    lower.includes("run-courier") ||
+    lower === "run" ||
+    lower === "auto"
+  ) {
+    return "";
+  }
+  return s.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
  * Short courier label for the airbill (not a second logo — just who carries the parcel).
+ * Prefer Select API (Leopard2 / TCS / Trax) over the Run Courier portal name.
  * @param {string} raw
  * @param {{ tracking?: string, runCourierApi?: string }} [hints]
  */
 export function normalizeCourierLabel(raw, hints = {}) {
   const api = String(hints.runCourierApi || "").trim();
   const tracking = String(hints.tracking || "").trim().toUpperCase();
-  let s = String(raw || "").trim();
-  if (!s) {
-    if (/^GW\d+/i.test(tracking)) s = "Run Courier";
-    else if (/^DA\d+/i.test(tracking)) s = "Leopard";
-    else if (/^\d{10,}$/.test(tracking)) s = "PostEx";
+  const rawStr = String(raw || "").trim();
+
+  // 1) Select API from booking (Leopard2, TCS, Trax, M&P, …)
+  const fromApi = prettyCarrierName(api);
+  if (fromApi) return fromApi;
+
+  // 2) "Run Courier (Leopard2)" → Leopard
+  const paren = rawStr.match(/run\s*courier\s*\(([^)]+)\)/i);
+  if (paren) {
+    const fromParen = prettyCarrierName(paren[1]);
+    if (fromParen) return fromParen;
   }
-  const lower = s.toLowerCase().replace(/\s+/g, "");
-  if (lower.includes("postex") || lower === "postex") return "PostEx";
-  if (lower.includes("runcourier") || lower.includes("run-courier") || lower === "run") {
-    const via = api && !/^auto$/i.test(api) ? ` (${api})` : "";
-    return `Run Courier${via}`;
-  }
-  if (lower.includes("leopard")) return "Leopard";
-  if (lower.includes("trax")) return "Trax";
-  if (lower.includes("tcs")) return "TCS";
-  if (lower.includes("m&p") || lower.includes("mnp")) return "M&P";
-  if (s) return s.replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // 3) Direct carrier string on the order
+  const fromRaw = prettyCarrierName(rawStr);
+  if (fromRaw) return fromRaw;
+
+  // 4) Tracking heuristics when Select API was not stored
+  if (/^DA\d+/i.test(tracking)) return "Leopard";
+  if (/^\d{10,}$/.test(tracking)) return "PostEx";
+  // GW* is Run Courier CN format — default Select API on this account is Leopard2
+  if (/^GW\d+/i.test(tracking)) return "Leopard";
+
   return "Courier";
 }
 /** PostEx-style: exactly 3 equal airbills fill one A4 (no empty page footer). */
@@ -282,7 +318,7 @@ function parseAirbillFields(html) {
     pieces: valueAfter(lines, "No. of Pieces") || "1",
     product: scrubForeignBrand(product) || "Car accessories",
     instructions: scrubForeignBrand(valueAfter(lines, "Special Instruction") || ""),
-    courier: normalizeCourierLabel("Run Courier", { tracking: tracking || "" }),
+    courier: normalizeCourierLabel("", { tracking: tracking || "", runCourierApi: "Leopard2" }),
   };
 }
 
@@ -979,8 +1015,12 @@ export function airbillFieldsFromOrder(order, opts = {}) {
     String(order?.courierRemarks || "").trim() ||
     DEFAULT_POSTEX_REMARKS;
   const courier = normalizeCourierLabel(
-    opts.courier || order?.courier || order?.tracking?.carrier || "",
-    { tracking, runCourierApi: order?.runCourierApi || opts.runCourierApi || "" }
+    opts.courier || order?.runCourierApi || order?.courier || order?.tracking?.carrier || "",
+    {
+      tracking,
+      // Prefer the Select API (Leopard / TCS / Trax) over the portal brand.
+      runCourierApi: order?.runCourierApi || opts.runCourierApi || "",
+    }
   );
 
   return {
@@ -1081,13 +1121,17 @@ export async function buildStoreAirbillsPdf(items = []) {
  */
 export async function buildRunCourierAirbillPdf(invoiceLink, opts = {}) {
   return buildRunCourierAirbillsPdf([
-    { invoiceLink, orderNumber: opts.orderNumber },
+    {
+      invoiceLink,
+      orderNumber: opts.orderNumber,
+      runCourierApi: opts.runCourierApi,
+    },
   ]);
 }
 
 /**
  * Build A4 PDF(s) with exactly 3 PostEx-style airbills per page (equal slots, full page).
- * @param {Array<{ invoiceLink: string, orderNumber?: string }>} items
+ * @param {Array<{ invoiceLink: string, orderNumber?: string, runCourierApi?: string }>} items
  */
 export async function buildRunCourierAirbillsPdf(items = []) {
   const list = (Array.isArray(items) ? items : []).filter((i) => i?.invoiceLink);
@@ -1107,6 +1151,10 @@ export async function buildRunCourierAirbillsPdf(items = []) {
     const prepared = await prepareRunCourierInvoiceHtml(item.invoiceLink);
     if (!prepared.success || !prepared.html) continue;
     const fields = parseAirbillFields(prepared.html);
+    fields.courier = normalizeCourierLabel(fields.courier || "", {
+      tracking: fields.tracking || "",
+      runCourierApi: item.runCourierApi || "",
+    });
     const orderNo = resolveOrderNo(fields, item.orderNumber);
     const embedded = await prepareAirbillAssets(pdfDoc, prepared.html, orderNo);
     if (!trackingNumber) trackingNumber = fields.tracking || "";
