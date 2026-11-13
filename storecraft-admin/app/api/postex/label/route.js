@@ -3,7 +3,10 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
-import { fetchPostexLabel } from "@/lib/postex";
+import {
+  airbillFieldsFromOrder,
+  buildStoreAirbillsPdf,
+} from "@/lib/runcourierLabelPdf";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +28,10 @@ function parseListParam(searchParams, keys) {
   return [...new Set(out)];
 }
 
+/**
+ * CrazzyCars.pk branded airbill PDF for PostEx shipments.
+ * We no longer proxy PostEx's own label (PostEx logo + merchant pickup address).
+ */
 export async function GET(request) {
   try {
     if (!getRequestUser(request)) {
@@ -45,14 +52,19 @@ export async function GET(request) {
       (await Settings.findOne({}).lean()) ||
       {};
 
-    // Resolve tracking numbers from order ids when needed.
+    /** @type {Map<string, object>} */
+    const byTracking = new Map();
+    /** @type {object[]} */
+    let orders = [];
+
     if (orderIds.length) {
-      const orders = await Order.find({ _id: { $in: orderIds } })
-        .select("trackingNumber tracking")
-        .lean();
+      orders = await Order.find({ _id: { $in: orderIds } }).lean();
       for (const order of orders) {
         const tn = String(order.trackingNumber || order.tracking?.number || "").trim();
-        if (tn) trackingNumbers.push(tn);
+        if (tn) {
+          trackingNumbers.push(tn);
+          byTracking.set(tn, order);
+        }
       }
       trackingNumbers = [...new Set(trackingNumbers.filter(Boolean))];
     }
@@ -64,45 +76,58 @@ export async function GET(request) {
       );
     }
 
-    // Always fetch combined PDF from PostEx for 1+ labels (single file).
-    // Cached per-order base64 labels cannot be merged cleanly without a PDF library.
-    const fetched = await fetchPostexLabel(trackingNumbers, {
-      settingsCourier: settings.courier,
-    });
-
-    let labelBase64 = fetched.success ? fetched.label : "";
-
-    // Single-order fallback: use stored label if PostEx fetch failed.
-    if (!labelBase64 && trackingNumbers.length === 1 && orderIds.length === 1) {
-      const order = await Order.findById(orderIds[0]).select("postexLabel").lean();
-      labelBase64 = String(order?.postexLabel || "").trim();
+    // Load any orders missing from the map (label by tracking only).
+    const missing = trackingNumbers.filter((tn) => !byTracking.has(tn));
+    if (missing.length) {
+      const found = await Order.find({
+        $or: [
+          { trackingNumber: { $in: missing } },
+          { "tracking.number": { $in: missing } },
+        ],
+      }).lean();
+      for (const order of found) {
+        const tn = String(order.trackingNumber || order.tracking?.number || "").trim();
+        if (tn && !byTracking.has(tn)) byTracking.set(tn, order);
+      }
     }
 
-    if (!labelBase64) {
+    const items = [];
+    for (const tn of trackingNumbers) {
+      const order = byTracking.get(tn);
+      if (!order) continue;
+      const fields = airbillFieldsFromOrder(order, {
+        trackingNumber: tn,
+        settingsCourier: settings.courier || {},
+      });
+      items.push({ fields, orderNumber: order.orderNumber || fields.orderId });
+    }
+
+    if (!items.length) {
       return NextResponse.json(
         {
           success: false,
-          error: fetched.error || "Shipping label not available for this order.",
+          error:
+            "No matching store orders for these tracking numbers — cannot build a CrazzyCars airbill.",
         },
         { status: 404 }
       );
     }
 
-    const raw = labelBase64.replace(/^data:application\/pdf;base64,/, "");
-    let buffer;
-    try {
-      buffer = Buffer.from(raw, "base64");
-    } catch {
-      return NextResponse.json({ success: false, error: "Invalid label data." }, { status: 500 });
+    const built = await buildStoreAirbillsPdf(items);
+    if (!built.success || !built.pdf) {
+      return NextResponse.json(
+        { success: false, error: built.error || "Could not build airbill PDF." },
+        { status: 500 }
+      );
     }
 
     const download = searchParams.get("download") === "1" || searchParams.get("download") === "true";
     const filename =
       trackingNumbers.length > 1
-        ? `postex-labels-${trackingNumbers.length}.pdf`
-        : `postex-label-${trackingNumbers[0]}.pdf`;
+        ? `crazzycars-airbills-${trackingNumbers.length}.pdf`
+        : `crazzycars-airbill-${trackingNumbers[0]}.pdf`;
 
-    return new NextResponse(buffer, {
+    return new NextResponse(built.pdf, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

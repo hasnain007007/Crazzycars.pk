@@ -7,7 +7,13 @@
  */
 
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import QRCode from "qrcode";
 import { prepareRunCourierInvoiceHtml } from "./runcourierInvoice.js";
+import {
+  DEFAULT_POSTEX_REMARKS,
+  resolveOrderPhone,
+  resolvePostexCodAmount,
+} from "./postex.js";
 
 const A4_W = 595.28;
 const A4_H = 841.89;
@@ -838,6 +844,187 @@ async function prepareAirbillAssets(pdfDoc, html, orderNo) {
   }
   images.logoBytes = await loadCrazzyCarsLogoBytes();
   return embedImages(pdfDoc, images);
+}
+
+async function makeQrDataUri(text) {
+  const value = String(text || "").trim();
+  if (!value) return null;
+  try {
+    return await QRCode.toDataURL(value, {
+      type: "image/png",
+      margin: 1,
+      width: 256,
+      errorCorrectionLevel: "M",
+    });
+  } catch {
+    return null;
+  }
+}
+
+/** Assets for order-built airbills (no courier HTML / no courier logo). */
+async function prepareFieldAirbillAssets(pdfDoc, { tracking, orderNo, qrPayload }) {
+  const images = {
+    trackingBarcode: await fetchPortalBarcodeDataUri(tracking),
+    orderBarcode: await fetchPortalBarcodeDataUri(orderNo),
+    logo: null,
+    logoBytes: await loadCrazzyCarsLogoBytes(),
+    qr: await makeQrDataUri(qrPayload || tracking || orderNo),
+  };
+  return embedImages(pdfDoc, images);
+}
+
+function formatAirbillDate(d = new Date()) {
+  const dt = d instanceof Date ? d : new Date(d);
+  if (Number.isNaN(dt.getTime())) {
+    const now = new Date();
+    return `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
+  }
+  return `${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}/${dt.getFullYear()}`;
+}
+
+function formatCodAmount(n) {
+  const v = Math.max(0, Number(n) || 0);
+  return v.toLocaleString("en-PK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * Map a store Order (+ tracking) into airbill draw fields.
+ * Shipper is always CrazzyCars.pk NAP — never PostEx merchant profile address.
+ */
+export function airbillFieldsFromOrder(order, opts = {}) {
+  const addr = order?.shippingAddress || {};
+  const customer = order?.customer || {};
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const product =
+    items
+      .map((i) => `${Math.max(1, Number(i.quantity) || 1)}x ${String(i.name || "Item").trim()}`)
+      .filter(Boolean)
+      .join(", ")
+      .slice(0, 220) || "Car accessories";
+  const pieces =
+    Math.max(
+      1,
+      Math.round(
+        Number(opts.pieces) ||
+          items.reduce((s, i) => s + Math.max(1, Number(i.quantity) || 1), 0) ||
+          1
+      )
+    ) || 1;
+  const consigneeName =
+    String(addr.name || "").trim() ||
+    [customer.firstName, customer.lastName].filter(Boolean).join(" ").trim() ||
+    String(customer.name || "").trim() ||
+    "Customer";
+  const consigneePhone = String(resolveOrderPhone(order) || addr.phone || customer.phone || "").trim();
+  const consigneeAddress = [
+    addr.addressLine1 || addr.street || addr.address,
+    addr.addressLine2,
+    addr.area || addr.colony,
+    addr.city,
+  ]
+    .map((x) => String(x || "").trim())
+    .filter(Boolean)
+    .join(", ");
+  const destination = String(addr.city || addr.state || "").trim() || "Pakistan";
+  const tracking =
+    String(opts.trackingNumber || order?.trackingNumber || order?.tracking?.number || "").trim();
+  const orderId = String(order?.orderNumber || order?._id || "").trim();
+  const cod = resolvePostexCodAmount(order, opts.bookingOptions || {}, opts.settingsCourier || {});
+  const instructions =
+    String(opts.remarks || "").trim() ||
+    String(order?.courierRemarks || "").trim() ||
+    DEFAULT_POSTEX_REMARKS;
+
+  return {
+    tracking,
+    date: formatAirbillDate(opts.date || order?.shippedAt || order?.updatedAt || new Date()),
+    services: String(opts.orderType || "Normal").trim() || "Normal",
+    origin: CRAZZYCARS_SHIPPER.originCity,
+    destination,
+    weight: "",
+    bookingType: "Normal",
+    company: CRAZZYCARS_SHIPPER.company,
+    shipperPhone: CRAZZYCARS_SHIPPER.phoneDisplay,
+    pickup: CRAZZYCARS_SHIPPER.pickup,
+    consigneeName,
+    consigneePhone,
+    consigneeAddress,
+    reference: orderId,
+    orderId,
+    cod: formatCodAmount(cod),
+    pieces: String(pieces),
+    product: scrubForeignBrand(product) || "Car accessories",
+    instructions: scrubForeignBrand(instructions),
+  };
+}
+
+/**
+ * Build branded CrazzyCars.pk airbill PDF(s) from field objects (PostEx + Run Courier).
+ * @param {Array<{ fields: object, orderNumber?: string }>} items
+ */
+export async function buildStoreAirbillsPdf(items = []) {
+  const list = (Array.isArray(items) ? items : []).filter((i) => i?.fields?.tracking || i?.fields?.orderId);
+  if (!list.length) {
+    return { success: false, error: "No airbills to build." };
+  }
+
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const labelW = A4_W - SIDE_MARGIN * 2;
+  let trackingNumber = "";
+  let page = null;
+  let slot = 0;
+
+  for (const item of list) {
+    const fields = {
+      ...item.fields,
+      company: CRAZZYCARS_SHIPPER.company,
+      shipperPhone: CRAZZYCARS_SHIPPER.phoneDisplay,
+      pickup: CRAZZYCARS_SHIPPER.pickup,
+      origin: CRAZZYCARS_SHIPPER.originCity,
+    };
+    const orderNo = String(item.orderNumber || fields.orderId || fields.reference || "").trim() || "-";
+    const embedded = await prepareFieldAirbillAssets(pdfDoc, {
+      tracking: fields.tracking,
+      orderNo,
+      qrPayload: fields.tracking
+        ? `https://crazzycars.pk/track-order?q=${encodeURIComponent(fields.tracking)}`
+        : orderNo,
+    });
+    if (!trackingNumber) trackingNumber = fields.tracking || "";
+
+    if (!page || slot >= LABELS_PER_PAGE) {
+      page = pdfDoc.addPage([A4_W, A4_H]);
+      slot = 0;
+    }
+
+    const regionY = A4_H - PAGE_MARGIN - (slot + 1) * LABEL_H - slot * LABEL_GAP;
+    drawAirbillIntoPage(
+      page,
+      { font, bold },
+      embedded,
+      fields,
+      orderNo,
+      { x: SIDE_MARGIN, y: regionY, width: labelW, height: LABEL_H }
+    );
+    slot += 1;
+  }
+
+  if (!pdfDoc.getPageCount()) {
+    return { success: false, error: "Could not build any airbill pages." };
+  }
+
+  const bytes = await pdfDoc.save();
+  return {
+    success: true,
+    pdf: Buffer.from(bytes),
+    trackingNumber,
+    count: list.length,
+  };
 }
 
 /**
