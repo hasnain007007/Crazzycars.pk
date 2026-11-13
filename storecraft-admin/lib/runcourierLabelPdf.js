@@ -33,6 +33,34 @@ const CRAZZYCARS_SHIPPER = {
 /** Strip other-merchant marks that sometimes leak from courier invoice HTML. */
 const FOREIGN_BRAND_RE =
   /\b(vitality|zelvo|medico\s*pakistan|vit[-\s]?\d+)\b/gi;
+
+/**
+ * Short courier label for the airbill (not a second logo — just who carries the parcel).
+ * @param {string} raw
+ * @param {{ tracking?: string, runCourierApi?: string }} [hints]
+ */
+export function normalizeCourierLabel(raw, hints = {}) {
+  const api = String(hints.runCourierApi || "").trim();
+  const tracking = String(hints.tracking || "").trim().toUpperCase();
+  let s = String(raw || "").trim();
+  if (!s) {
+    if (/^GW\d+/i.test(tracking)) s = "Run Courier";
+    else if (/^DA\d+/i.test(tracking)) s = "Leopard";
+    else if (/^\d{10,}$/.test(tracking)) s = "PostEx";
+  }
+  const lower = s.toLowerCase().replace(/\s+/g, "");
+  if (lower.includes("postex") || lower === "postex") return "PostEx";
+  if (lower.includes("runcourier") || lower.includes("run-courier") || lower === "run") {
+    const via = api && !/^auto$/i.test(api) ? ` (${api})` : "";
+    return `Run Courier${via}`;
+  }
+  if (lower.includes("leopard")) return "Leopard";
+  if (lower.includes("trax")) return "Trax";
+  if (lower.includes("tcs")) return "TCS";
+  if (lower.includes("m&p") || lower.includes("mnp")) return "M&P";
+  if (s) return s.replace(/\b\w/g, (c) => c.toUpperCase());
+  return "Courier";
+}
 /** PostEx-style: exactly 3 equal airbills fill one A4 (no empty page footer). */
 const LABELS_PER_PAGE = 3;
 const PAGE_MARGIN = 10;
@@ -254,6 +282,7 @@ function parseAirbillFields(html) {
     pieces: valueAfter(lines, "No. of Pieces") || "1",
     product: scrubForeignBrand(product) || "Car accessories",
     instructions: scrubForeignBrand(valueAfter(lines, "Special Instruction") || ""),
+    courier: normalizeCourierLabel("Run Courier", { tracking: tracking || "" }),
   };
 }
 
@@ -534,11 +563,22 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   }
   page.drawText("crazzycars.pk", {
     x: innerX,
-    y: y - 34,
+    y: y - 30,
     size: 6.5,
     font,
     color: rgb(0.35, 0.35, 0.35),
   });
+  const courierLabel = pdfSafe(fields.courier) || "Courier";
+  page.drawText(
+    truncateToWidth(font, `Via ${courierLabel}`, 6.5, 66),
+    {
+      x: innerX,
+      y: y - 40,
+      size: 6.5,
+      font: bold,
+      color: rgb(0.25, 0.25, 0.25),
+    }
+  );
 
   // Order Ref barcode (distinct from tracking — never reuse tracking barcode)
   const orderBarX = innerX + 70;
@@ -707,6 +747,7 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   sectionHeader(page, fonts, c2x, bodyTop, col2W, hdrH, "Shipment Information");
   let my = bodyTop - hdrH - 8;
   const shipRows = [
+    ["Courier:", courierLabel],
     ["Pieces:", pdfSafe(fields.pieces) || "1"],
     ["Order Ref:", orderDisplay],
     ["Tracking No:", tracking],
@@ -937,6 +978,10 @@ export function airbillFieldsFromOrder(order, opts = {}) {
     String(opts.remarks || "").trim() ||
     String(order?.courierRemarks || "").trim() ||
     DEFAULT_POSTEX_REMARKS;
+  const courier = normalizeCourierLabel(
+    opts.courier || order?.courier || order?.tracking?.carrier || "",
+    { tracking, runCourierApi: order?.runCourierApi || opts.runCourierApi || "" }
+  );
 
   return {
     tracking,
@@ -958,6 +1003,7 @@ export function airbillFieldsFromOrder(order, opts = {}) {
     pieces: String(pieces),
     product: scrubForeignBrand(product) || "Car accessories",
     instructions: scrubForeignBrand(instructions),
+    courier,
   };
 }
 

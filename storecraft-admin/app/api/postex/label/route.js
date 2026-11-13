@@ -97,6 +97,7 @@ export async function GET(request) {
       if (!order) continue;
       const fields = airbillFieldsFromOrder(order, {
         trackingNumber: tn,
+        courier: order.courier || order.tracking?.carrier || "PostEx",
         settingsCourier: settings.courier || {},
       });
       items.push({ fields, orderNumber: order.orderNumber || fields.orderId });
