@@ -8,6 +8,7 @@ import {
   RUN_COURIER_SERVICE_TYPES,
   displayCourierName,
   isRunCourierOrder,
+  resolveBookingSelectApi,
   resolveRunCourierApiKey,
   resolveRunCourierClientCode,
 } from "@/lib/runcourier";
@@ -38,7 +39,7 @@ export const EXTRA_CARRIERS = [
     async book(req, input) {
       const body = {
         orderId: String(input.id || ""),
-        selectedApi: input.service || undefined,
+        selectedApi: resolveBookingSelectApi(input.service, RUN_COURIER_DEFAULT_API),
         weight: num(input.weightKg),
         pieces: num(input.pieces),
         remarks: input.remarks || undefined,
