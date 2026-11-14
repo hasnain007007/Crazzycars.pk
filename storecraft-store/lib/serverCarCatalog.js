@@ -6,7 +6,7 @@ import { dbConnect } from "@/lib/db";
 import { buildCatalogFromMakes } from "@/lib/carCatalogApi";
 import { CAR_MAKES, CAR_DATA, QUICK_CAR_PILLS } from "@/lib/carCatalog";
 import CarCatalog from "@/lib/models/CarCatalog.model";
-import { vehicleSlugsWithStorefrontProducts } from "@/lib/vehiclePageData";
+import { loadShopByCarIndex, vehicleSlugsWithStorefrontProducts } from "@/lib/vehiclePageData";
 
 function fallbackPayload() {
   const { makes, carData } = buildCatalogFromMakes(
@@ -141,6 +141,59 @@ export async function fetchCarCatalogServer(opts = {}) {
 
         let vehicles = buildAllModelsList(activeMakes).filter(keepIfHasProducts);
         let popular = buildPopularList(activeMakes).filter(keepIfHasProducts);
+
+        // Cars that have products but were never added to Admin › Car Catalog (e.g. every
+        // Audi / Mercedes-Benz) — the Shop "Shop by your car" list already shows them, so
+        // the homepage rail and Filter-By-Car box list them too.
+        const shopIndex = await loadShopByCarIndex().catch(() => []);
+        const listed = new Set(vehicles.map((v) => String(v.slug)));
+        const extras = shopIndex.filter((v) => v.slug && !listed.has(String(v.slug)));
+        if (extras.length) {
+          for (const v of extras) {
+            vehicles.push({
+              make: v.make,
+              model: v.model,
+              slug: v.slug,
+              years: [],
+              yearFrom: v.yearFrom ?? null,
+              yearTo: v.yearTo ?? null,
+              bodyStyle: "",
+              image: v.image || "",
+              description: "",
+              popularAccessories: [],
+              generation: v.generation || "",
+              nickname: v.nickname || "",
+              popularOrder: 9999,
+              isPopular: false,
+            });
+            if (!carData[v.make]) {
+              carData[v.make] = [];
+              makes.push(v.make);
+            }
+            if (!carData[v.make].some((m) => m.slug === v.slug)) {
+              carData[v.make].push({
+                model: v.model,
+                slug: v.slug,
+                years: [],
+                yearFrom: v.yearFrom ?? null,
+                yearTo: v.yearTo ?? null,
+                generation: v.generation || "",
+                nickname: v.nickname || "",
+                isPopular: false,
+                popularOrder: 9999,
+                bodyStyle: "",
+              });
+            }
+          }
+          vehicles.sort(
+            (a, b) =>
+              (a.isPopular === b.isPopular ? 0 : a.isPopular ? -1 : 1) ||
+              (a.isPopular ? a.popularOrder - b.popularOrder : 0) ||
+              String(a.make).localeCompare(String(b.make)) ||
+              String(a.model).localeCompare(String(b.model)) ||
+              (Number(a.yearFrom) || 0) - (Number(b.yearFrom) || 0)
+          );
+        }
         let slimCarData = carData;
         if (lean) {
           // Homepage SSR: slim fields only (no descriptions / accessories text). The

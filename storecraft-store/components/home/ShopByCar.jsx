@@ -7,6 +7,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchCarCatalogClient, seedCarCatalogClient } from "@/lib/fetchCarCatalogClient";
+import { carOptionLabel } from "@/lib/carSelector";
 
 const YEAR_END = new Date().getFullYear() + 1;
 
@@ -171,11 +172,16 @@ export default function ShopByCar({ title = "Filter By Car", initialCatalog = nu
               aria-label="Model"
             >
               <option value="">Model</option>
-              {models.map((m) => (
-                <option key={m.slug} value={m.slug}>
-                  {m.nickname || m.generation || m.model || ""}
-                </option>
-              ))}
+              {models.map((m) => {
+                const short = m.nickname || m.generation || m.model || "";
+                // Two cars with the same short name (Audi A5 2008 / A5 2014) → add the years.
+                const dup = models.some((o) => o !== m && (o.nickname || o.generation || o.model || "") === short);
+                return (
+                  <option key={m.slug} value={m.slug}>
+                    {dup ? carOptionLabel(m) : short}
+                  </option>
+                );
+              })}
             </select>
 
             <select
