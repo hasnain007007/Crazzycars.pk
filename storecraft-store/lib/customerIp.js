@@ -56,33 +56,86 @@ function isPublicIp(ip) {
   return /[:.]/.test(s);
 }
 
-/**
- * Best-effort geo via ip-api.com (no key, HTTP). Never throws; skips private IPs.
- */
-export async function lookupIpGeo(ip, { timeoutMs = 1500 } = {}) {
-  const clean = String(ip || "").trim();
-  if (!isPublicIp(clean)) return null;
+async function fetchJson(url, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const url = `http://ip-api.com/json/${encodeURIComponent(clean)}?fields=status,country,countryCode,regionName,city,isp,query`;
-    const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
+    const res = await fetch(url, {
+      signal: controller.signal,
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    });
     if (!res.ok) return null;
-    const data = await res.json().catch(() => null);
-    if (!data || data.status !== "success") return null;
-    return {
-      ip: String(data.query || clean).slice(0, 64),
-      city: String(data.city || "").slice(0, 80),
-      region: String(data.regionName || "").slice(0, 80),
-      country: String(data.country || "").slice(0, 80),
-      countryCode: String(data.countryCode || "").slice(0, 8),
-      isp: String(data.isp || "").slice(0, 120),
-    };
+    return await res.json().catch(() => null);
   } catch {
     return null;
   } finally {
     clearTimeout(timer);
   }
+}
+
+const clip = (v, n) => String(v || "").trim().slice(0, n);
+
+/** GeoJS (HTTPS, no key, no published limit). */
+async function geoFromGeoJs(ip, timeoutMs) {
+  const d = await fetchJson(`https://get.geojs.io/v1/ip/geo/${encodeURIComponent(ip)}.json`, timeoutMs);
+  if (!d || (!d.country_code && !d.city)) return null;
+  return {
+    ip: clip(d.ip || ip, 64),
+    city: clip(d.city, 80),
+    region: clip(d.region, 80),
+    country: clip(d.country, 80),
+    countryCode: clip(d.country_code, 8).toUpperCase(),
+    isp: clip(d.organization_name, 120),
+  };
+}
+
+/** ip-api.com (HTTP, 45 requests/minute) — fallback. */
+async function geoFromIpApi(ip, timeoutMs) {
+  const d = await fetchJson(
+    `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,country,countryCode,regionName,city,isp,query`,
+    timeoutMs
+  );
+  if (!d || d.status !== "success") return null;
+  return {
+    ip: clip(d.query || ip, 64),
+    city: clip(d.city, 80),
+    region: clip(d.regionName, 80),
+    country: clip(d.country, 80),
+    countryCode: clip(d.countryCode, 8).toUpperCase(),
+    isp: clip(d.isp, 120),
+  };
+}
+
+/**
+ * Best-effort city / country / network for a public IP. Never throws; skips private IPs.
+ * Tries GeoJS, then ip-api.com.
+ */
+export async function lookupIpGeo(ip, { timeoutMs = 1500 } = {}) {
+  const clean = String(ip || "").trim();
+  if (!isPublicIp(clean)) return null;
+  return (await geoFromGeoJs(clean, timeoutMs)) || (await geoFromIpApi(clean, timeoutMs));
+}
+
+const GEO_CACHE = new Map();
+const GEO_CACHE_MAX = 5000;
+const GEO_HIT_MS = 24 * 60 * 60 * 1000;
+const GEO_MISS_MS = 5 * 60 * 1000;
+
+/**
+ * lookupIpGeo with an in-memory cache (a day for hits, 5 min for misses) so live-visitor
+ * heartbeats do not repeat the lookup.
+ */
+export async function cachedIpGeo(ip, opts) {
+  const key = String(ip || "").trim();
+  if (!isPublicIp(key)) return null;
+  const now = Date.now();
+  const hit = GEO_CACHE.get(key);
+  if (hit && hit.expires > now) return hit.geo;
+  const geo = await lookupIpGeo(key, opts);
+  if (GEO_CACHE.size >= GEO_CACHE_MAX) GEO_CACHE.delete(GEO_CACHE.keys().next().value);
+  GEO_CACHE.set(key, { geo, expires: now + (geo ? GEO_HIT_MS : GEO_MISS_MS) });
+  return geo;
 }
 
 /**
@@ -92,7 +145,8 @@ export async function customerNetworkFromRequest(request) {
   const ip = clientIpFromHeaders(request);
   const userAgent = clientUserAgent(request);
   const device = deviceLabelFromUserAgent(userAgent);
-  const geo = ip ? await lookupIpGeo(ip) : null;
+  // Usually cached from the visitor's live-presence heartbeats, so checkout does not wait.
+  const geo = ip ? await cachedIpGeo(ip, { timeoutMs: 1200 }) : null;
   return {
     customerIp: ip,
     customerUserAgent: userAgent,

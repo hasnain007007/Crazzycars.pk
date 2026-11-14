@@ -11,7 +11,7 @@ import { CourierCard } from "./CourierCard";
 import { DashboardDateRange } from "./DashboardDateRange";
 import { InventoryAlertsCard } from "./InventoryAlertsCard";
 import { KpiCards } from "./KpiCards";
-import { LiveUsersCard } from "./LiveUsersCard";
+import { LiveUsersCard, LiveVisitorsPanel } from "./LiveUsersCard";
 import { OrdersByOriginCard } from "./OrdersByOriginCard";
 import { PaymentMethodsCard } from "./PaymentMethodsCard";
 import { QuickActions } from "./QuickActions";
@@ -168,7 +168,7 @@ export function DashboardView() {
           <p className="text-xs text-[var(--text-muted)]">CrazzyCars ops overview · {rangeLabel}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <LiveUsersCard variant="badge" />
+          <LiveUsersCard />
           <DashboardDateRange
             rangeId={rangeId}
             from={customFrom}
@@ -189,6 +189,10 @@ export function DashboardView() {
 
       <div className={loading ? "pointer-events-none opacity-60 transition" : "transition"}>
         <KpiCards data={data} />
+
+        <div className="mt-5">
+          <LiveVisitorsPanel />
+        </div>
 
         <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">

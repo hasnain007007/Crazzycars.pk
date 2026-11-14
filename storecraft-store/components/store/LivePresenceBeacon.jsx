@@ -6,6 +6,9 @@ import { usePathname } from "next/navigation";
 const STORAGE_KEY = "cc_presence_sid";
 const HEARTBEAT_MS = 60_000;
 
+/** Referrer + query string go with the first ping of a page load only (landing source). */
+let firstPingSent = false;
+
 function getOrCreateSessionId() {
   try {
     let id = localStorage.getItem(STORAGE_KEY);
@@ -21,13 +24,18 @@ function getOrCreateSessionId() {
   }
 }
 
-async function ping(path) {
+async function ping(path, nav) {
   try {
-    const sessionId = getOrCreateSessionId();
+    const payload = { sessionId: getOrCreateSessionId(), path: path || "/", nav: Boolean(nav) };
+    if (!firstPingSent) {
+      firstPingSent = true;
+      payload.ref = String(document.referrer || "").slice(0, 500);
+      payload.q = String(window.location.search || "").slice(0, 500);
+    }
     await fetch("/api/presence", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, path: path || "/" }),
+      body: JSON.stringify(payload),
       keepalive: true,
     });
   } catch {
@@ -47,6 +55,7 @@ function whenIdle(fn) {
 
 /**
  * Invisible beacon: deferred so it does not compete with LCP / first paint.
+ * The first ping on each page counts as a page view; later ones are heartbeats.
  */
 export function LivePresenceBeacon() {
   const pathname = usePathname();
@@ -54,10 +63,13 @@ export function LivePresenceBeacon() {
   useEffect(() => {
     let cancelled = false;
     let interval = null;
+    let viewSent = false;
 
     const send = () => {
       if (cancelled || document.visibilityState === "hidden") return;
-      ping(pathname || window.location.pathname || "/");
+      const nav = !viewSent;
+      viewSent = true;
+      ping(pathname || window.location.pathname || "/", nav);
     };
 
     const cancelIdle = whenIdle(() => {
