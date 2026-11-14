@@ -345,9 +345,12 @@ export default function CategoryShowcaseRails({ initialTree = null }) {
     [tree]
   );
 
+  // Distinct keys: React must NOT reuse the pulsing placeholder <div> for the rails.
+  // Reusing it made Chrome report one 0.51 layout shift (home Lighthouse perf 53).
   if (!treeReady) {
     return (
       <div
+        key="cat-showcase-placeholder"
         className="mx-auto my-3 max-w-7xl animate-pulse rounded-2xl bg-[#f3f4f6] md:my-6"
         style={{ height: 420 }}
         aria-hidden
@@ -357,7 +360,7 @@ export default function CategoryShowcaseRails({ initialTree = null }) {
   if (!rails.length) return null;
 
   return (
-    <div className="cat-showcase-stack">
+    <div key="cat-showcase-rails" className="cat-showcase-stack">
       {rails.map(({ config, root }) => (
         <CategoryRail key={config.slug} config={config} root={root} />
       ))}

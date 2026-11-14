@@ -14,6 +14,7 @@ import {
   sitemapUrls,
   storeBaseUrl,
 } from "@/lib/siteCheck";
+import { optimiseProductPhoto } from "@/lib/mediaStorage";
 
 /**
  * Admin › Website Check. Read-only. The page calls it part by part:
@@ -22,6 +23,8 @@ import {
  *   POST { part: "images", images } → ≤ 150 photos
  *   POST { part: "catalog" }      → product data
  *   POST { part: "functions" }    → coupon, delivery, tracking, product APIs, tracking setup
+ *   POST { part: "optimise", urls } → ≤ 20 product photos: build missing smaller copies
+ *                                      (the only part that writes; originals are never touched)
  */
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -168,6 +171,12 @@ export async function POST(request) {
         .select("name articleNo status media.images.url pricing categories inventory")
         .lean();
       return json({ success: true, total: products.length, issues: analyseProducts(products) });
+    }
+    if (part === "optimise") {
+      const urls = (Array.isArray(body.urls) ? body.urls : []).slice(0, 20).map(String);
+      // sharp is CPU-heavy: 2 at a time keeps the shop responsive while this runs.
+      const results = await mapLimit(urls, 2, (u) => optimiseProductPhoto(u));
+      return json({ success: true, results });
     }
     if (part === "functions") {
       return json({ success: true, results: await functionChecks() });

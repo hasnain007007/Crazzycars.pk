@@ -4,7 +4,7 @@
  * Coolify: mount the same persistent volume on store + admin at MEDIA_ROOT
  * (default /app/media). Public URLs are {STORE_URL}/media/...
  */
-import { mkdir, writeFile, access } from "fs/promises";
+import { mkdir, writeFile, access, stat, unlink } from "fs/promises";
 import { constants as fsConstants } from "fs";
 import path from "path";
 import { randomBytes } from "crypto";
@@ -139,6 +139,69 @@ async function writePdpSizeBeside(absMasterPath, folder) {
   }
 }
 
+/** Above this a product master is too heavy for the product page — build a -800 copy. */
+export const HEAVY_MASTER_BYTES = 200 * 1024;
+
+/**
+ * Product page size: ≤1000 px webp. Only written for heavy masters (PNG/JPEG or > 200 KB);
+ * the store's PDP prefers `-800.webp` when it exists and keeps the master for zoom.
+ */
+async function writePdpMidBeside(absMasterPath, folder) {
+  if (folder !== "products") return null;
+  if (!/\.(webp|jpe?g|png|gif|avif)$/i.test(absMasterPath) || /-(400|800|sm)\./i.test(absMasterPath)) return null;
+  try {
+    const st = await stat(absMasterPath);
+    if (st.size <= HEAVY_MASTER_BYTES && /\.webp$/i.test(absMasterPath)) return null;
+    const outAbs = absMasterPath.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-800.webp");
+    const sharp = (await import("sharp")).default;
+    await sharp(absMasterPath)
+      .rotate()
+      .resize(1000, 1000, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 78, effort: 4 })
+      .toFile(outAbs);
+    // Never serve a "lighter" copy that is not clearly lighter (e.g. flat PNG artwork).
+    if ((await stat(outAbs)).size > st.size * 0.8) {
+      await unlink(outAbs).catch(() => {});
+      return null;
+    }
+    return outAbs;
+  } catch (err) {
+    console.warn("[mediaStorage] -800 build failed:", err?.message || err);
+    return null;
+  }
+}
+
+async function fileSize(abs) {
+  try {
+    return (await stat(abs)).size;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Website Check › "Make photos lighter": build the smaller copies an older product photo is
+ * missing (-400 card, -sm, -800 product page). Never changes or deletes the original.
+ * @param {string} url  /media/products/... or https://store/media/products/...
+ */
+export async function optimiseProductPhoto(url) {
+  const rel = String(url || "").replace(/^https?:\/\/[^/]+/i, "").split("?")[0];
+  if (!/^\/media\/products\//i.test(rel) || /-(400|800|sm)\.webp$/i.test(rel)) {
+    return { url, status: "skipped" };
+  }
+  const abs = resolveMediaFilePath(rel);
+  if (!abs) return { url, status: "skipped" };
+  const masterBytes = await fileSize(abs);
+  if (!masterBytes) return { url, status: "missing" };
+  const stem = abs.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "");
+  const built = [];
+  if (!(await fileSize(`${stem}-400.webp`)) && (await writeCardThumbBeside(abs, "products"))) built.push("400");
+  if (!(await fileSize(`${stem}-sm.webp`)) && (await writePdpSizeBeside(abs, "products"))) built.push("sm");
+  if (!(await fileSize(`${stem}-800.webp`)) && (await writePdpMidBeside(abs, "products"))) built.push("800");
+  const pageBytes = (await fileSize(`${stem}-800.webp`)) || masterBytes;
+  return { url, status: built.length ? "built" : "ok", built, masterBytes, pageBytes };
+}
+
 export async function writeMediaFile({ folder, filename, buffer }) {
   const root = await ensureMediaRoot();
   const safeFolder = sanitizeMediaFolder(folder);
@@ -151,6 +214,7 @@ export async function writeMediaFile({ folder, filename, buffer }) {
   await writeFile(abs, buffer);
   await writeCardThumbBeside(abs, safeFolder);
   await writePdpSizeBeside(abs, safeFolder);
+  await writePdpMidBeside(abs, safeFolder);
   const relative = path.join(safeFolder, safeName).replace(/\\/g, "/");
   return {
     absolutePath: abs,

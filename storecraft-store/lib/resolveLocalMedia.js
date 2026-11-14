@@ -69,9 +69,13 @@ export function resolveExistingLocalMedia(src, opts = {}) {
   return master || pathOnly;
 }
 
-/** PDP gallery / OG / LCP — prefer full original, then mid, then thumb. */
+/**
+ * PDP gallery / OG / LCP — prefer the ≤1000 px `-800.webp` copy (only built for heavy
+ * masters by admin upload / Website Check › "Make photos lighter"), then the original.
+ * The gallery keeps the original as `_masterUrl` for zoom.
+ */
 export function pdpImageUrlExisting(src) {
-  return resolveExistingLocalMedia(src, { prefer: ["original", "400", "sm"] });
+  return resolveExistingLocalMedia(src, { prefer: ["800", "original", "400", "sm"] });
 }
 
 /** Thumbnail strip / tiny cards — prefer small derivatives. */

@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 const LAST_KEY = "cc-website-check-last";
 const PAGE_BATCH = 30;
 const IMAGE_BATCH = 120;
+const OPTIMISE_BATCH = 20;
 
 function chunk(list, n) {
   const out = [];
@@ -68,6 +69,7 @@ export function WebsiteCheckPage() {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState({ step: "", done: 0, total: 0 });
   const [report, setReport] = useState(null);
+  const [optimised, setOptimised] = useState(null);
   const stopRef = useRef(false);
 
   useEffect(() => {
@@ -182,6 +184,45 @@ export function WebsiteCheckPage() {
 
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
 
+  /** Build the missing smaller copies of every product photo (originals untouched). */
+  async function optimisePhotos() {
+    setRunning(true);
+    stopRef.current = false;
+    try {
+      setProgress({ step: "Listing product photos…", done: 0, total: 1 });
+      const plan = await call("GET");
+      const urls = [...new Set(plan.images.map((i) => i.url))];
+      const batches = chunk(urls, OPTIMISE_BATCH);
+      const totals = { built: 0, missing: 0, before: 0, after: 0 };
+      for (const [i, batch] of batches.entries()) {
+        if (stopRef.current) break;
+        const r = await call("POST", { part: "optimise", urls: batch }).catch(() => ({ results: [] }));
+        for (const x of r.results) {
+          if (x.status === "built") totals.built += 1;
+          if (x.status === "missing") totals.missing += 1;
+          if (x.masterBytes) {
+            totals.before += x.masterBytes;
+            totals.after += x.pageBytes || x.masterBytes;
+          }
+        }
+        setProgress({
+          step: `Photos ${Math.min((i + 1) * OPTIMISE_BATCH, urls.length)} / ${urls.length} · ${totals.built} made lighter`,
+          done: i + 1,
+          total: batches.length,
+        });
+      }
+      const mb = (n) => (n / 1024 / 1024).toFixed(1);
+      setOptimised({ ...totals, at: new Date().toISOString(), photos: urls.length });
+      toast.success(
+        `${totals.built} photos got lighter copies. Product pages: ${mb(totals.before)} MB → ${mb(totals.after)} MB of photos.`
+      );
+    } catch (e) {
+      toast.error(e.message || "Could not optimise photos.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -207,6 +248,15 @@ export function WebsiteCheckPage() {
           ) : null}
           <button
             type="button"
+            onClick={optimisePhotos}
+            disabled={running}
+            title="Makes small and medium copies of heavy product photos so pages load faster. Originals are kept."
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
+          >
+            Make photos lighter
+          </button>
+          <button
+            type="button"
             onClick={run}
             disabled={running}
             className="rounded-lg bg-[#C41E1E] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#a51919] disabled:opacity-60"
@@ -225,6 +275,16 @@ export function WebsiteCheckPage() {
           <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
             <div className="h-full rounded-full bg-[#C41E1E] transition-all" style={{ width: `${pct}%` }} />
           </div>
+        </div>
+      ) : null}
+
+      {optimised ? (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-900">
+          <b>Photos made lighter.</b> {optimised.built} of {optimised.photos} product photos got smaller copies
+          {optimised.missing ? ` · ${optimised.missing} photo files were not found on the server` : ""}. Product-page
+          photos now total {(optimised.after / 1024 / 1024).toFixed(1)} MB instead of{" "}
+          {(optimised.before / 1024 / 1024).toFixed(1)} MB. Originals are unchanged. Pages show the new copies within
+          about 10 minutes.
         </div>
       ) : null}
 
