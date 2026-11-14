@@ -45,7 +45,14 @@ export function vehicleCardModelLabel(vehicle) {
     if (noYears) return noYears;
   }
 
-  const qualifier = nick && !isAmbiguousVehicleQualifier(nick) ? nick : gen;
+  // Nicknames sometimes repeat make / model / years ("Suzuki Alto (2020-Present)", "Civic X").
+  const cleanQualifier = (q) =>
+    stripBrandPrefix(vehicle.make, q)
+      .replace(/\s*\(\s*\d{4}\s*[–—-]\s*(?:\d{4}|Present|present)\s*\)\s*$/i, "")
+      .trim();
+  const qualifier = cleanQualifier(nick && !isAmbiguousVehicleQualifier(nick) ? nick : gen);
+  // Qualifier already names the model → use it alone, never "Civic Civic X".
+  if (model && qualifier && qualifier.toLowerCase().includes(model.toLowerCase())) return qualifier;
   if (model && qualifier && !model.toLowerCase().includes(qualifier.toLowerCase())) {
     // Ambiguous qualifiers still useful when paired with model: "City Classic", "Civic 11th Gen"
     if (isAmbiguousVehicleQualifier(qualifier) || nick === qualifier) {

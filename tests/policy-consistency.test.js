@@ -165,6 +165,14 @@ describe("vehicle card labels", () => {
       }),
       "Corolla E140"
     );
+    // Home "Shop by vehicle" rail: nickname already names the model / make / years.
+    assert.equal(vehicleCardModelLabel({ make: "Honda", model: "Civic", nickname: "Civic X" }), "Civic X");
+    assert.equal(
+      vehicleCardModelLabel({ make: "Suzuki", model: "Alto", nickname: "Suzuki Alto (2020-Present)" }),
+      "Alto"
+    );
+    assert.equal(vehicleCardModelLabel({ make: "Honda", model: "Civic", generation: "Reborn" }), "Civic Reborn");
+    assert.equal(vehicleCardModelLabel({ make: "Honda", model: "Civic", generation: "11th Gen" }), "Civic 11th Gen");
     assert.match(codAdvanceTierSummary(), /1,000/);
   });
 });

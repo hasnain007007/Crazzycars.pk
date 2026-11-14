@@ -143,11 +143,14 @@ export async function fetchCarCatalogServer(opts = {}) {
         let popular = buildPopularList(activeMakes).filter(keepIfHasProducts);
         let slimCarData = carData;
         if (lean) {
-          // Homepage SSR: popular rail + Filter-By-Car dropdown only. Full vehicles list
-          // lives on /api/car-catalog for /cars — embedding it doubles RSC weight.
+          // Homepage SSR: slim fields only (no descriptions / accessories text). The
+          // Shop-by-vehicle rail needs EVERY car with products (it showed only the 8
+          // "popular" ones, so most makes were missing) — ~14 KB for ~50 cars.
           const slimVehicle = (v) => ({
             make: v.make,
             model: v.model,
+            generation: v.generation || "",
+            nickname: v.nickname || "",
             slug: v.slug,
             years: Array.isArray(v.years) ? v.years.slice(0, 8) : [],
             yearFrom: v.yearFrom,
@@ -158,7 +161,7 @@ export async function fetchCarCatalogServer(opts = {}) {
             popularOrder: Number(v.popularOrder) || 9999,
           });
           popular = popular.map(slimVehicle).slice(0, 24);
-          vehicles = [];
+          vehicles = vehicles.map(slimVehicle);
           slimCarData = {};
           for (const [make, models] of Object.entries(carData || {})) {
             slimCarData[make] = (models || []).map((m) => ({
