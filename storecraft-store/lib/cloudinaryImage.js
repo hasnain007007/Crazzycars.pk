@@ -73,12 +73,11 @@ export function localMediaPath(src) {
  * Always inspect pixels when diagnosing; never assume `-sm` means "PDP large".
  *
  * Slot mapping for products / cars / brand:
- *  - thumb strip (≤160 CSS px request width) → `-sm.webp`
- *  - cards / mid (≤480) → `-400.webp`
+ *  - thumb strip + cards (≤480) → `-400.webp`
  *  - PDP main / lightbox / large → master (original)
  *
  * Categories / banners may still prefer `-sm` via categoryBannerUrl().
- * Missing derivatives: <img onError> falls back -sm → -400 → master.
+ * Missing derivatives: <img onError> falls back -400 → master.
  */
 function localMediaMasterPath(path) {
   return String(path || "").replace(/-(400|sm|800)\.(webp|jpe?g|png|gif|avif)$/i, ".$2");
@@ -95,11 +94,10 @@ function localMediaForWidth(src, width) {
   }
   const master = localMediaMasterPath(path);
   const w = Number(width) || 0;
-  // Thumbnail controls only.
-  if (w > 0 && w <= 160) {
-    return master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-sm.webp");
-  }
-  // Product cards / mid slots.
+  // Thumbnail strip + card slots → -400.webp.
+  // Do NOT use -sm here: many newer product uploads (and the recon pack) only
+  // ship master + -400, so -sm 404s and gallery thumbs show alt text instead.
+  // -sm remains available for category banners via categoryBannerUrl().
   if (w > 0 && w <= 480) {
     return master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
   }

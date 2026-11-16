@@ -104,28 +104,26 @@ export function WatermarkedImage({
     ...(itemProp ? { itemProp } : {}),
     onLoad: () => setLoaded(true),
     onError: () => {
-      // Derivative chain for local /media: requested → -400 → master → give up.
-      // Never leave a visitor on a broken <img>.
+      // Derivative chain for local /media: -sm/-800 → -400 → master → give up.
+      // Never leave a visitor on a broken <img> (alt text only).
       const master = String(src || "").trim().split("?")[0];
       if (isLocalMedia(master) || master.startsWith("/media/")) {
         const as400 = localMediaDerivative(master, "400");
         const asOrig = localMediaDerivative(master, "original");
-        if (!retrySrc && /-(sm|800)\./i.test(resolved) && as400 && as400 !== resolved) {
+        const tried = new Set(
+          [resolved, retrySrc].filter(Boolean).map((u) => String(u).split("?")[0])
+        );
+        if (/-(sm|800)\./i.test(resolved) && as400 && !tried.has(as400)) {
           setRetrySrc(as400);
           setLoaded(false);
           return;
         }
-        if (
-          !retrySrc &&
-          /-400\./i.test(resolved) &&
-          asOrig &&
-          asOrig !== resolved
-        ) {
-          setRetrySrc(asOrig);
+        if (as400 && !tried.has(as400) && resolved !== as400) {
+          setRetrySrc(as400);
           setLoaded(false);
           return;
         }
-        if (asOrig && resolved !== asOrig && retrySrc !== asOrig) {
+        if (asOrig && !tried.has(asOrig) && resolved !== asOrig) {
           setRetrySrc(asOrig);
           setLoaded(false);
           return;
