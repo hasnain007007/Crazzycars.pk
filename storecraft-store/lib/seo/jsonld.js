@@ -18,6 +18,7 @@ import {
 } from "../product-specs.mjs";
 import { STORE_NAP } from "../../config/store-nap.js";
 import { STORE_CONTACT } from "../../config/store-policy.js";
+import { toPlainTextWithTableSeparators } from "../sanitizeHtml.js";
 
 function site() {
   return getSiteUrl();
@@ -122,11 +123,7 @@ function resolveProductDescription(p, slug = "") {
   ];
   let raw = "";
   for (const c of candidates) {
-    const plain = String(c || "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\*\*/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
+    const plain = toPlainTextWithTableSeparators(String(c || "").replace(/\*\*/g, ""));
     if (plain.length > 40) {
       raw = plain;
       break;

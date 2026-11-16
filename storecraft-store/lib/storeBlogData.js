@@ -5,6 +5,17 @@ import {
   scrubPolicyConflictPlain,
   policyBlogCanonicalMeta,
 } from "@/lib/scrubPolicyConflictCopy";
+import { isRedirectSourcePath } from "@/lib/deletedUrlRedirects.mjs";
+import { resolveOldBlogNewsPath } from "@/lib/oldBlogNewsRedirects.mjs";
+
+function isBlogIndexEligible(slug) {
+  const s = String(slug || "").trim();
+  if (!s) return false;
+  const path = `/blogs/${s}`;
+  if (isRedirectSourcePath(path)) return false;
+  if (resolveOldBlogNewsPath(path)) return false;
+  return true;
+}
 
 function mapListPost(p) {
   return {
@@ -32,18 +43,17 @@ export async function loadBlogIndexBootstrap({ page = 1, limit = 12 } = {}) {
   const safePage = Math.max(1, Number(page) || 1);
   const skip = (safePage - 1) * safeLimit;
   const listFilter = { status: "published" };
-  const [rows, total, recentRows, allRows] = await Promise.all([
+  // Fetch a wider published window, then drop redirected slugs (same rule as sitemap + old blog redirects).
+  const [pageRows, recentRows, allRows] = await Promise.all([
     BlogPost.find(listFilter)
       .select("title slug excerpt content featuredImage publishedAt createdAt categories tags readTime views isFeatured author")
       .sort({ publishedAt: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(safeLimit)
+      .limit(120)
       .lean(),
-    BlogPost.countDocuments(listFilter),
     BlogPost.find({ status: "published" })
       .select("title slug excerpt featuredImage publishedAt readTime categories author")
       .sort({ publishedAt: -1, createdAt: -1 })
-      .limit(5)
+      .limit(20)
       .lean(),
     BlogPost.find({ status: "published" })
       .select("title slug excerpt content featuredImage publishedAt categories tags readTime views author")
@@ -52,9 +62,12 @@ export async function loadBlogIndexBootstrap({ page = 1, limit = 12 } = {}) {
       .lean(),
   ]);
 
+  const eligible = pageRows.filter((p) => isBlogIndexEligible(p.slug));
+  const total = eligible.length;
+  const rows = eligible.slice(skip, skip + safeLimit);
   const posts = rows.map(mapListPost);
-  const recent = recentRows.map(mapListPost);
-  const allPosts = allRows.map(mapListPost);
+  const recent = recentRows.filter((p) => isBlogIndexEligible(p.slug)).slice(0, 5).map(mapListPost);
+  const allPosts = allRows.filter((p) => isBlogIndexEligible(p.slug)).map(mapListPost);
 
   return {
     posts,

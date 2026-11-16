@@ -106,6 +106,15 @@ const PATH_MAP = new Map(
 );
 
 /**
+ * True when `path` is an explicit permanent-redirect source (sitemap / index exclusion).
+ * @param {string} path pathname with leading slash
+ */
+export function isRedirectSourcePath(path) {
+  const p = String(path || "").replace(/\/+$/, "").toLowerCase() || "/";
+  return PATH_MAP.has(p);
+}
+
+/**
  * @param {string} rawSlug flat product slug (no leading slash)
  * @returns {string|null} destination path
  */

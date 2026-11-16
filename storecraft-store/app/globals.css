@@ -1598,8 +1598,27 @@ textarea::placeholder {
   .product-description table,
   .article-content table {
     display: block;
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .product-description table tbody,
+  .product-description table thead,
+  .article-content table tbody,
+  .article-content table thead {
+    display: table;
+    width: 100%;
+    min-width: 280px;
+  }
+
+  .product-description table th,
+  .product-description table td,
+  .article-content table th,
+  .article-content table td {
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 }
 

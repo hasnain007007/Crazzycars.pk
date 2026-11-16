@@ -1858,9 +1858,8 @@ export function ProductDetailMedico({
                 onToggle={(sid) => setOpenSection(openSection === sid ? null : sid)}
               >
                 <p style={{ margin: 0, fontSize: 13, color: "#555555", lineHeight: 1.7 }}>
-                  Summary is above the description. Full rules:{" "}
                   <Link href="/shipping-policy" className="font-semibold underline underline-offset-2">
-                    shipping policy
+                    Shipping policy
                   </Link>
                   {" · "}
                   <Link href="/returns-policy" className="font-semibold underline underline-offset-2">

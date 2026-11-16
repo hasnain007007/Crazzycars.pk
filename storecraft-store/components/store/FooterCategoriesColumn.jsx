@@ -39,9 +39,7 @@ export function FooterCategoriesColumn({ initialCategoryTree = null }) {
   return (
     <div>
       <h4 className="footer-heading">Categories</h4>
-      {parents.length === 0 ? (
-        <p className="footer-meta">Categories will appear here once seeded.</p>
-      ) : (
+      {parents.length > 0 ? (
         <ul className="footer-cats">
           {parents.map((p) => (
             <li key={p.slug}>
@@ -49,7 +47,7 @@ export function FooterCategoriesColumn({ initialCategoryTree = null }) {
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 }

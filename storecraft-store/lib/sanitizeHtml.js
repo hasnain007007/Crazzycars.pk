@@ -20,10 +20,18 @@ const ALLOWED_TAGS = [
   "br",
   "hr",
   "a",
+  "table",
+  "thead",
+  "tbody",
+  "tr",
+  "th",
+  "td",
 ];
 
 const ALLOWED_ATTR = {
   a: ["href", "name", "target", "rel"],
+  th: ["scope", "colspan", "rowspan"],
+  td: ["colspan", "rowspan"],
 };
 
 /**
@@ -125,16 +133,36 @@ export function sanitizeCategoryHtml(dirty) {
   });
 }
 
-export function toPlainText(htmlOrText, maxLen = 0) {
-  const plain = decodeHtmlEntities(String(htmlOrText || ""))
+/**
+ * Plain text with readable table separators: "Product: … . Fits: … . Material: …".
+ * Used for Product JSON-LD so th/td cells do not run together after tag strip.
+ */
+export function toPlainTextWithTableSeparators(htmlOrText, maxLen = 0) {
+  let s = decodeHtmlEntities(String(htmlOrText || ""));
+  if (!s) return "";
+  // Each table row → "Label: Value. "
+  s = s.replace(/<tr[^>]*>\s*<t[hd][^>]*>([\s\S]*?)<\/t[hd]>\s*<t[hd][^>]*>([\s\S]*?)<\/t[hd]>\s*<\/tr>/gi, (_, a, b) => {
+    const label = String(a).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    const value = String(b).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    if (!label && !value) return " ";
+    if (!label) return `${value}. `;
+    return `${label}: ${value}. `;
+  });
+  s = s
+    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, " ")
+    .replace(/<br\s*\/?>/gi, " ")
     .replace(/<[^>]*>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
-  if (!maxLen || plain.length <= maxLen) return plain;
-  const cut = plain.slice(0, maxLen);
+  if (!maxLen || s.length <= maxLen) return s;
+  const cut = s.slice(0, maxLen);
   const lastSpace = cut.lastIndexOf(" ");
   return `${(lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trim()}…`;
+}
+
+export function toPlainText(htmlOrText, maxLen = 0) {
+  return toPlainTextWithTableSeparators(htmlOrText, maxLen);
 }
 
 /** CMS / static pages — slightly broader tags, still no scripts/handlers. */

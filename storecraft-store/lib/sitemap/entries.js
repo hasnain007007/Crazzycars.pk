@@ -13,22 +13,12 @@ import {
   SITEMAP_LISTING_EXTRA,
 } from "@/lib/productVisibility";
 import { CITY_LANDING_SLUGS, cityPath } from "@/lib/cityLandingPages";
-import { DELETED_URL_REDIRECTS } from "@/lib/deletedUrlRedirects.mjs";
+import { isRedirectSourcePath } from "@/lib/deletedUrlRedirects.mjs";
 import {
   productHasExternalCanonical,
   productHasRealImage,
 } from "@/lib/productImages";
 import { loadProductsForVehicle } from "@/lib/vehiclePageData";
-
-/** Paths that permanently redirect — never emit in sitemaps (F3). */
-const REDIRECT_SOURCE_PATHS = new Set(
-  DELETED_URL_REDIRECTS.map((r) => String(r.source || "").replace(/\/+$/, "").toLowerCase() || "/")
-);
-
-function isRedirectSourcePath(path) {
-  const p = String(path || "").replace(/\/+$/, "").toLowerCase() || "/";
-  return REDIRECT_SOURCE_PATHS.has(p);
-}
 
 /** Active website products with a sellable price and no deleted-URL redirect. */
 const SITEMAP_PRODUCT_FILTER = {

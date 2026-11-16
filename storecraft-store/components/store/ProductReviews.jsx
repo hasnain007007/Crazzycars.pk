@@ -180,7 +180,7 @@ export default function ProductReviews({ productId, productSlug, onReviewCountCh
           ) : null}
         </div>
 
-        {stats?.breakdown ? (
+        {stats?.breakdown && totalReviews > 0 ? (
           <div className="flex min-w-[200px] flex-col gap-1.5">
             {stats.breakdown.map(({ star, count, percentage }) => (
               <div key={star} className="flex items-center gap-2">
