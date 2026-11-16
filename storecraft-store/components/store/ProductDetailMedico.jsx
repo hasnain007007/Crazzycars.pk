@@ -16,6 +16,7 @@ import ProductVariations from "./ProductVariations";
 import ProductReviews, { StarDisplay } from "./ProductReviews";
 import { formatPrice } from "@/lib/currency";
 import { altBelongsToProduct, imageBelongsToProduct } from "@/lib/productCardShape";
+import { customerFacingAlt } from "@/lib/customerFacingAlt";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
@@ -442,11 +443,14 @@ export function ProductDetailMedico({
         const url = typeof im === "string" ? im : im?.url || "";
         const masterUrl =
           typeof im === "string" ? "" : String(im?._masterUrl || im?.masterUrl || "").trim();
+        const isMain = typeof im === "string" ? false : Boolean(im?.isMain);
         const rawAlt = typeof im === "string" ? "" : String(im?.altText || im?.alt || "").trim();
+        // TODO(remove-reconstructed-alt-belt): drop customerFacingAlt once DB alts are cleaned.
+        const belted = customerFacingAlt(rawAlt, nameForAlt, isMain);
         const fixedRaw = altOverride
           ? altOverride
-          : rawAlt
-            ? rawAlt.replace(/\bButto\b/g, "Button")
+          : belted
+            ? belted.replace(/\bButto\b/g, "Button")
             : "";
         const altText =
           fixedRaw && altBelongsToProduct(fixedRaw, { ...product, name: nameForAlt })

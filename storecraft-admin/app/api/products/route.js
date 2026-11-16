@@ -363,9 +363,10 @@ export async function POST(request) {
       { status: 201 }
     );
   } catch (error) {
+    const status = error?.status === 400 || error?.code === "FORBIDDEN_ALT" ? 400 : 500;
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create product." },
-      { status: 500 }
+      { success: false, error: error.message || "Failed to create product.", ...(error?.code ? { code: error.code } : {}) },
+      { status }
     );
   }
 }

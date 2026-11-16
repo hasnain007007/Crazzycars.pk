@@ -22,7 +22,7 @@ import {
   num,
 } from "@/lib/csv";
 import { PRODUCT_CSV_HEADERS, PRODUCT_CSV_SAMPLE_ROWS } from "@/lib/productCsv";
-import { sanitizeMediaImages } from "@/lib/productMutations";
+import { sanitizeMediaImagesForCsv } from "@/lib/productMutations";
 import { revalidateStorefront, CATALOG_REVALIDATE_PATHS } from "@/lib/revalidateStorefront";
 import { denySecurityHoldMutation } from "@/lib/securityHold";
 import { validateProductPricing } from "@/lib/productPriceRules";
@@ -166,6 +166,7 @@ export async function POST(request) {
     let created = 0;
     let updated = 0;
     const errors = [];
+    const altFixes = [];
 
     for (let idx = 0; idx < rows.length; idx += 1) {
       const row = rows[idx];
@@ -202,7 +203,12 @@ export async function POST(request) {
 
         const imageUrls = splitList(row.imageUrls);
         const requestedSlug = String(row.slug || "").trim() || slugify(name);
-        const mediaImages = sanitizeMediaImages(
+        const mediaOwner = {
+          name,
+          slug: requestedSlug,
+          isUniversal: truthy(row.isUniversal, false),
+        };
+        const mediaPrepared = sanitizeMediaImagesForCsv(
           imageUrls.map((url, i) => ({
             url,
             publicId: "",
@@ -210,8 +216,10 @@ export async function POST(request) {
             altText: name,
             imageName: "",
           })),
-          { name, slug: requestedSlug, isUniversal: truthy(row.isUniversal, false) }
+          mediaOwner
         );
+        const mediaImages = mediaPrepared.images;
+        const rowAltFixes = [...mediaPrepared.altFixes];
 
         const saleRaw = String(row.salePrice ?? "").trim();
         const priceCheck = validateProductPricing({ regularPrice, salePrice: saleRaw });
@@ -285,16 +293,14 @@ export async function POST(request) {
             throw new Error(body.error || "Security hold blocked CSV update");
           }
           const slug = await uniqueProductSlug(requestedSlug, existing._id);
-          // Merge images: if CSV provided images, replace; else keep existing (still filtered)
+          // Merge images: if CSV provided images, replace; else keep existing (still filtered + alt autofix)
           if (!imageUrls.length && existing.media?.images?.length) {
+            const kept = sanitizeMediaImagesForCsv(existing.media.images, mediaOwner);
             fields.media = {
               ...(typeof existing.media.toObject === "function" ? existing.media.toObject() : existing.media),
-              images: sanitizeMediaImages(existing.media.images, {
-                name,
-                slug: requestedSlug,
-                isUniversal: truthy(row.isUniversal, false),
-              }),
+              images: kept.images,
             };
+            rowAltFixes.push(...kept.altFixes);
           }
           Object.assign(existing, fields, { slug });
           // Strip any accidental timestamp props and repair invalid dates left
@@ -303,6 +309,15 @@ export async function POST(request) {
           existing.set("updatedAt", new Date());
           await existing.save();
           updated += 1;
+          if (rowAltFixes.length) {
+            altFixes.push({
+              row: idx + 2,
+              articleNo: articleNo || existing.articleNo || "",
+              slug,
+              name,
+              changes: rowAltFixes,
+            });
+          }
         } else {
           const slug = await uniqueProductSlug(requestedSlug);
           const doc = { ...fields, slug };
@@ -310,6 +325,15 @@ export async function POST(request) {
           delete doc.updatedAt;
           await Product.create(doc);
           created += 1;
+          if (rowAltFixes.length) {
+            altFixes.push({
+              row: idx + 2,
+              articleNo: articleNo || "",
+              slug,
+              name,
+              changes: rowAltFixes,
+            });
+          }
         }
       } catch (e) {
         errors.push({ row: idx + 2, name: row.name || "", error: e.message || String(e) });
@@ -324,6 +348,7 @@ export async function POST(request) {
       created,
       updated,
       errors,
+      altFixes,
       processed: rows.length,
       revalidated,
     });

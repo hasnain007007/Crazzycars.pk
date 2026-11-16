@@ -7,6 +7,7 @@ import { serializeStoreOption } from "@/lib/variationOptions";
 import { combinationSignature } from "@/lib/variantMatrix";
 import { sanitizeProductHtml, toPlainText } from "@/lib/sanitizeHtml";
 import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
+import { customerFacingAlt } from "@/lib/customerFacingAlt";
 
 /** Internal ops labels that must not appear on the public PDP. */
 const INTERNAL_NOTE_LABEL_RE =
@@ -58,17 +59,20 @@ const altKey = (t) => displayProductName(t).toLowerCase().replace(/[^a-z0-9]+/g,
  * Image alt = "{display name} – {view}". View comes from the image's admin label, else
  * front / side / installed / pack contents / detail by position. A custom alt written in
  * admin (anything other than the bare product name) is kept, minus claim words.
+ * Forbidden reconstructed/branding alts are replaced via customerFacingAlt (temp belt).
  */
 function mapImagesWithSafeAlt(images, productName = "") {
   const base = displayProductName(productName);
   return (images || []).map((i, idx) => {
-    const stored = String(i?.altText || "").trim();
+    const isMain = !!i?.isMain;
+    const storedRaw = customerFacingAlt(String(i?.altText || "").trim(), base, isMain);
+    const stored = displayProductName(storedRaw);
     const isBareName = !stored || (base && altKey(stored) === altKey(productName));
     const view = String(i?.label || "").trim() || DEFAULT_IMAGE_VIEWS[idx] || "detail";
     return {
       url: absoluteMediaUrl(i?.url),
-      isMain: !!i?.isMain,
-      altText: isBareName && base ? `${base} – ${view}` : displayProductName(stored),
+      isMain,
+      altText: isBareName && base ? `${base} – ${view}` : stored,
     };
   });
 }

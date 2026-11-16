@@ -1,11 +1,112 @@
 /**
  * Drop leftover photos copied from another SKU.
- * Keep in sync with storecraft-store/lib/productCardShape.js.
+ * Keep in sync with storecraft-store/lib/productCardShape.js
+ * (foreign-SKU filter) and storecraft-store/lib/customerFacingAlt.js
+ * (forbidden alt banlist / display belt).
  *
  * Hide an image only when alt or filename positively names another
  * product (different car, or leftover SKU tokens like dragon/dynamic).
  * Do not hide lifestyle shots or generic shared filenames.
  */
+
+/** Customer-facing alt banlist — never persist or show these phrases. */
+export const FORBIDDEN_ALT_MATCHERS = [
+  { token: "reconstructed", re: /reconstructed/i },
+  { token: "reconstruction", re: /reconstruction/i },
+  { token: "visual", re: /\bvisual\b/i },
+  { token: "branding", re: /branding/i },
+  { token: "illustrated", re: /illustrated/i },
+  { token: "ai-generated", re: /ai[\s-]?generated/i },
+];
+
+export class ForbiddenAltError extends Error {
+  constructor(message, { alt = "", token = "" } = {}) {
+    super(message);
+    this.name = "ForbiddenAltError";
+    this.code = "FORBIDDEN_ALT";
+    this.status = 400;
+    this.alt = alt;
+    this.token = token;
+  }
+}
+
+export function findForbiddenAltToken(alt) {
+  const s = String(alt || "");
+  if (!s.trim()) return null;
+  for (const m of FORBIDDEN_ALT_MATCHERS) {
+    if (m.re.test(s)) return m.token;
+  }
+  return null;
+}
+
+export function assertCustomerFacingAlt(alt) {
+  const token = findForbiddenAltToken(alt);
+  if (!token) return;
+  throw new ForbiddenAltError(
+    `Image alt text is not allowed (contains "${token}"). Use the product name, or product name + " - detail" for non-main images.`,
+    { alt: String(alt || ""), token }
+  );
+}
+
+/** Default alt for new/empty images: product name, or "name - detail" when not main. */
+export function defaultAltForImage(productName, isMain = true) {
+  const name = String(productName || "").trim();
+  if (!name) return "";
+  return isMain ? name : `${name} - detail`;
+}
+
+/**
+ * Strip `-recon-` from newly uploaded filenames only (never rename existing files).
+ * Collapses duplicate hyphens left behind.
+ */
+export function stripReconFromUploadName(name) {
+  return String(name || "")
+    .replace(/-recon-/gi, "-")
+    .replace(/-{2,}/g, "-");
+}
+
+/**
+ * Apply default alts + banlist for an already-normalized image list.
+ * mode "reject" (create/update/gallery): throw ForbiddenAltError on banned alts.
+ * mode "csv": autofix banned alts to product name and return altFixes[].
+ */
+export function applyCustomerFacingAlts(images, product = {}, { mode = "reject" } = {}) {
+  const productName = String(product?.name || "").trim();
+  const list = Array.isArray(images) ? images : [];
+  const withDefaults = list.map((img) => {
+    const alt = String(img?.altText || "").trim();
+    if (alt) return img;
+    return {
+      ...img,
+      altText: defaultAltForImage(productName, Boolean(img?.isMain)),
+    };
+  });
+
+  if (mode === "csv") {
+    const altFixes = [];
+    const out = withDefaults.map((img, index) => {
+      const before = String(img?.altText || "").trim();
+      const token = findForbiddenAltToken(before);
+      if (!token) return img;
+      const after = productName || defaultAltForImage(productName, Boolean(img?.isMain));
+      altFixes.push({
+        index,
+        url: String(img?.url || "").trim(),
+        isMain: Boolean(img?.isMain),
+        token,
+        before,
+        after,
+      });
+      return { ...img, altText: after };
+    });
+    return { images: out, altFixes };
+  }
+
+  for (const img of withDefaults) {
+    assertCustomerFacingAlt(img.altText);
+  }
+  return { images: withDefaults, altFixes: [] };
+}
 
 const GENERIC_ALTS = new Set(["", "product", "image", "photo", "img", "n/a", "na"]);
 const ALT_STOP = new Set([

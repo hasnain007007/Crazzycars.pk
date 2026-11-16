@@ -1,5 +1,6 @@
 import { productPath } from "@/lib/productPath";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
+import { customerFacingAlt } from "@/lib/customerFacingAlt";
 
 const GENERIC_ALTS = new Set(["", "product", "image", "photo", "img", "n/a", "na"]);
 const ALT_STOP = new Set([
@@ -186,13 +187,19 @@ export function getProductCardImage(product) {
 }
 
 function mediaImageAlt(product) {
+  const name = String(product?.name || "").trim();
   const media = product?.media?.images || [];
   const owned = media.filter((img) => imageBelongsToProduct(img, product));
   const main = owned.find((i) => i?.isMain) || owned[0];
-  const fromMedia = String(main?.altText || "").trim();
+  // TODO(remove-reconstructed-alt-belt): drop customerFacingAlt once DB alts are cleaned.
+  const fromMedia = customerFacingAlt(String(main?.altText || "").trim(), name, true);
   if (fromMedia && !GENERIC_ALTS.has(fromMedia.toLowerCase())) return fromMedia;
   const fromList = Array.isArray(product?.images)
-    ? String(product.images.find((i) => i?.altText)?.altText || "").trim()
+    ? customerFacingAlt(
+        String(product.images.find((i) => i?.altText)?.altText || "").trim(),
+        name,
+        true
+      )
     : "";
   if (fromList && !GENERIC_ALTS.has(fromList.toLowerCase())) return fromList;
   return "";

@@ -57,9 +57,21 @@ Or `docker exec` into `crazzycars-store` / `crazzycars-admin` (live URI already 
 3. Never use a laptop `.env.local` script to claim “production state” or to apply a production write.
 4. After any production data change, still verify with live Googlebot/Bingbot curls against `https://crazzycars.pk/...`.
 
+## One-off production scripts
+
+Any one-off script that writes production Mongo (or production media metadata) must:
+
+1. **Dry-run by default** — print the planned changes and exit unless an explicit `--write` / `APPLY=1` flag is passed.
+2. **Timestamped backup first** — before any write, dump the documents it will touch (JSON under `/tmp` or `ops/backups/` with an ISO timestamp in the filename).
+3. **Use the alt helper** — never hard-code customer-facing image alt text; call `assertCustomerFacingAlt` / `defaultAltForImage` from `storecraft-admin/lib/mediaAltGuard.js` (or set alt to the product name only). Forbidden phrases include reconstructed / visual / branding / illustrated / ai-generated.
+4. **Live in the repo** — save the script under `ops/scripts/` so the next agent can find it. Do not leave the only copy on the VPS `/tmp` or inside a container.
+
+Example retained from the CC-0283 activate: `ops/scripts/cc-0283-activate.js` (historical; does not yet follow dry-run/backup — do not re-run as-is).
+
 ## Related
 
 - Coolify store/admin apps: `NEXT_PUBLIC_SITE_URL` / admin URL on `crazzycars.pk`
 - Host path notes on the VPS: `/data/crazzycars/README-MIGRATE.md`
 - Held SKUs (`securityHold`) live only on VPS Mongo until reactivated there
 - Nightly dump / weekly restore-test / health alert: `/data/crazzycars/scripts/*` → `crazzycars_motorsports`
+- One-off scripts: `ops/scripts/`

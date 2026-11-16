@@ -37,17 +37,29 @@ export async function syncStockAlertForProduct(product) {
 }
 
 import { normalizeMediaImages } from "@/lib/productPayload";
-import { imageBelongsToProduct } from "@/lib/mediaAltGuard";
+import { applyCustomerFacingAlts, imageBelongsToProduct } from "@/lib/mediaAltGuard";
 
-/**
- * Persist-safe image rows (drops client-only keys like _localId).
- * Prefer photos that belong to this SKU; never wipe the whole gallery when
- * the alt-guard false-positives (that left products with visible UI photos
- * but empty JSON-LD `image` after the next admin save).
- */
-export function sanitizeMediaImages(images, product = {}) {
-  const normalized = normalizeMediaImages(images);
+function filterOwnedOrKeep(normalized, product = {}) {
   if (!normalized.length) return [];
   const owned = normalized.filter((img) => imageBelongsToProduct(img, product));
   return owned.length ? owned : normalized;
+}
+
+/**
+ * Persist-safe image rows for admin/API create + update (gallery save).
+ * Empty alts get product name / "name - detail". Forbidden alts are REJECTED
+ * (clear error) — never silently rewritten on these paths.
+ */
+export function sanitizeMediaImages(images, product = {}) {
+  const prepared = filterOwnedOrKeep(normalizeMediaImages(images), product);
+  return applyCustomerFacingAlts(prepared, product, { mode: "reject" }).images;
+}
+
+/**
+ * CSV import only: forbidden alts are auto-fixed to the product name.
+ * Returns { images, altFixes } so the import response can list every change.
+ */
+export function sanitizeMediaImagesForCsv(images, product = {}) {
+  const prepared = filterOwnedOrKeep(normalizeMediaImages(images), product);
+  return applyCustomerFacingAlts(prepared, product, { mode: "csv" });
 }

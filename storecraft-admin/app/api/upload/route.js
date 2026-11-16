@@ -12,6 +12,7 @@ import {
   sanitizeMediaFolder,
   writeMediaFile,
 } from "@/lib/mediaStorage";
+import { stripReconFromUploadName } from "@/lib/mediaAltGuard";
 
 /**
  * Extensions the admin UI actually uploads (WebP from the image pipeline, raw
@@ -79,8 +80,15 @@ export async function POST(request) {
     const rawItemName = String(formData.get("itemName") || "").trim();
     const rawImageName = String(formData.get("imageName") || "").trim();
     const imageIndex = String(formData.get("imageIndex") || "1").trim();
-    const baseName = rawItemName || rawImageName || path.basename(original, path.extname(original));
-    const filename = sanitizeMediaFilename(`${baseName}-${imageIndex}${ext}`, ext);
+    // New uploads only: drop "-recon-" so customer-facing filenames stay clean.
+    // Do not rename existing files on disk — that would break live image URLs.
+    const baseName = stripReconFromUploadName(
+      rawItemName || rawImageName || path.basename(original, path.extname(original))
+    );
+    const filename = sanitizeMediaFilename(
+      stripReconFromUploadName(`${baseName}-${imageIndex}${ext}`),
+      ext
+    );
 
     const saved = await writeMediaFile({ folder, filename, buffer });
 

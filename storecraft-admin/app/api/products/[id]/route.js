@@ -497,9 +497,10 @@ export async function PUT(request, context) {
       revalidated,
     });
   } catch (error) {
+    const status = error?.status === 400 || error?.code === "FORBIDDEN_ALT" ? 400 : 500;
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to update product." },
-      { status: 500 }
+      { success: false, error: error.message || "Failed to update product.", ...(error?.code ? { code: error.code } : {}) },
+      { status }
     );
   }
 }
