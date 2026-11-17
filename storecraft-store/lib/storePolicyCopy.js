@@ -84,6 +84,11 @@ export function prepaidDeliveryBoxLine() {
   return `${PREPAID_LINE}. WhatsApp ${STORE_POLICY.contact.whatsapp} for fitment help.`;
 }
 
+/** Body kits — courier settled by the customer at the receiving shop (Rs 0 on order). */
+export function bodyKitShopPaidFreightLine() {
+  return "No delivery charge on this order — courier is paid at the receiving shop.";
+}
+
 export function standardDeliveryFeeShort() {
   const regular = Number(STORE_POLICY.shipping.standardFeePKR).toLocaleString("en-PK");
   const bulky = Number(STORE_POLICY.shipping.bulkyFeePKR || 500).toLocaleString("en-PK");

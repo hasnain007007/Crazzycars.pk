@@ -2,7 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { cartLinesAdd, cartLinesRemove, cartLinesUpdate, getCart } from "@/lib/shopifyCartClient";
-import { productAllowsCod } from "@/lib/codEligibility";
+import { isBodyKitProduct, productAllowsCod } from "@/lib/codEligibility";
+import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { resolveProductContentId, trackAddToCart } from "@/lib/metaPixel";
 import { flushCartSyncOnUnload, syncCartToServer } from "@/lib/cartSyncClient";
 
@@ -218,7 +219,8 @@ export function CartProvider({ children, shopifyEnabled = false }) {
             articleNo: row.articleNo || "",
             sku: row.sku || "",
             codEnabled: productAllowsCod(row),
-            isBulky: row.isBulky === true,
+            isBulky: productIsBulkyForShipping(row),
+            isBodyKit: isBodyKitProduct(row),
             advancePercentRequired: Math.min(
               100,
               Math.max(0, Number(row.advancePercentRequired) || 0)

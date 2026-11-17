@@ -1,5 +1,6 @@
 import { displayProductName } from "@/lib/displayProductName";
 import { productAllowsCod } from "@/lib/codEligibility";
+import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { scrubPaymentClaims } from "@/lib/paymentCopy";
 import { scrubStaleProductBoilerplate } from "@/lib/scrubPolicyConflictCopy";
 import { effectiveUnitPrice, isSaleCurrentlyActive } from "@/lib/storePricing";
@@ -189,7 +190,7 @@ export function serializeStoreProductSummary(p, opts = {}) {
     newArrival: !!p.newArrival,
     sku,
     codEnabled: productAllowsCod(p),
-    isBulky: p.isBulky === true,
+    isBulky: productIsBulkyForShipping(p),
     createdAt: p.createdAt || null,
     categories: Array.isArray(p.categories)
       ? p.categories
@@ -406,7 +407,7 @@ export function serializeStoreProductDetail(p) {
     ),
     specifications: filterPublicSpecRows(p.specifications),
     codEnabled: productAllowsCod(p),
-    isBulky: p.isBulky === true,
+    isBulky: productIsBulkyForShipping(p),
     advancePercentRequired: Math.min(100, Math.max(0, Number(p.advancePercentRequired) || 0)),
     addOns: Array.isArray(p.addOns)
       ? p.addOns.map((a) => ({

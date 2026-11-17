@@ -58,7 +58,8 @@ describe("product JSON-LD", () => {
     assert.equal(ld.offers.price, "4599.00");
     assert.equal(ld.offers.priceCurrency, "PKR");
     assert.equal(ld.offers.shippingDetails["@type"], "OfferShippingDetails");
-    assert.equal(ld.offers.shippingDetails.shippingRate.value, "250.00");
+    // Trunk / floor mats are bulky → Rs 500 floor
+    assert.equal(ld.offers.shippingDetails.shippingRate.value, "500.00");
     assert.equal(ld.offers.acceptedPaymentMethod, undefined);
     // S8 / C11: PDP Offer must carry MerchantReturnPolicy (FreeReturn for defective/wrong).
     const policy = ld.offers.hasMerchantReturnPolicy;
@@ -73,7 +74,21 @@ describe("product JSON-LD", () => {
 
   test("bulky products emit Rs 500 shipping in Offer", () => {
     const ld = productJsonLd({
-      name: "Body Kit",
+      name: "Civic Floor Mats TPE",
+      slug: "civic-floor-mats-tpe",
+      isBulky: true,
+      media: {
+        images: [{ url: "https://crazzycars.pk/media/products/x.webp", isMain: true }],
+      },
+      price: 8900,
+      stock: 2,
+    });
+    assert.equal(ld.offers.shippingDetails.shippingRate.value, "500.00");
+  });
+
+  test("body kits emit Rs 0 shipping (shop-paid freight) in Offer", () => {
+    const ld = productJsonLd({
+      name: "Full Body Kit Fibreglass",
       slug: "test-body-kit",
       isBulky: true,
       media: {
@@ -82,7 +97,7 @@ describe("product JSON-LD", () => {
       price: 50000,
       stock: 2,
     });
-    assert.equal(ld.offers.shippingDetails.shippingRate.value, "500.00");
+    assert.equal(ld.offers.shippingDetails.shippingRate.value, "0.00");
   });
 
   test("seed / empty-orderId reviews do not appear in AggregateRating", () => {

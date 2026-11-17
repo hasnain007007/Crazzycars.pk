@@ -1,5 +1,9 @@
 /**
  * Single source for delivery fees — checkout, JSON-LD, ai-catalog, policy copy.
+ *
+ * - Body kits → Rs 0 (customer pays courier at the receiving shop)
+ * - Bulky (separators, mats, spoilers, splitters, …) → bulkyFeePKR (500)
+ * - Everything else → standardFeePKR (250)
  */
 import { STORE_POLICY } from "../config/store-policy.js";
 import { isBodyKitProduct } from "./codEligibility.js";
@@ -7,17 +11,16 @@ import { productIsBulkyForShipping } from "./bulkyShipping.js";
 
 /**
  * Shipping rate in PKR for a single product (Offer.shippingDetails.shippingRate).
- * 500 for bulky (flag, category, or name match); otherwise 250.
  * @param {object} [product]
  * @returns {number}
  */
 export function getShippingRate(product) {
   const std = Number(STORE_POLICY.shipping.standardFeePKR) || 250;
   const bulkyFee = Number(STORE_POLICY.shipping.bulkyFeePKR) || 500;
-  const bulky =
-    productIsBulkyForShipping(product) ||
-    (product ? isBodyKitProduct(product) : false);
-  return bulky ? bulkyFee : std;
+  if (!product) return std;
+  if (isBodyKitProduct(product)) return 0;
+  if (productIsBulkyForShipping(product)) return bulkyFee;
+  return std;
 }
 
 /**
@@ -29,17 +32,20 @@ export function shippingFeePkr(product) {
 }
 
 /**
- * Cart-level fee: any bulky / body-kit line → bulky fee.
+ * Cart-level fee:
+ * - any bulky (non-body-kit) line → bulky fee
+ * - all body-kit lines → 0 (shop-paid freight)
+ * - else → standard fee
  * @param {Array<object>} [lines]
  */
 export function cartShippingFeePkr(lines = []) {
-  const list = Array.isArray(lines) ? lines : [];
+  const list = (Array.isArray(lines) ? lines : []).map((line) => line?.product || line).filter(Boolean);
+  if (!list.length) return Number(STORE_POLICY.shipping.standardFeePKR) || 250;
+
+  const nonBodyKit = list.filter((p) => !isBodyKitProduct(p));
+  if (nonBodyKit.length === 0) return 0;
+
   const bulkyFee = Number(STORE_POLICY.shipping.bulkyFeePKR) || 500;
-  for (const line of list) {
-    const p = line?.product || line;
-    if (getShippingRate(p) >= bulkyFee) {
-      return bulkyFee;
-    }
-  }
+  if (nonBodyKit.some((p) => productIsBulkyForShipping(p))) return bulkyFee;
   return Number(STORE_POLICY.shipping.standardFeePKR) || 250;
 }

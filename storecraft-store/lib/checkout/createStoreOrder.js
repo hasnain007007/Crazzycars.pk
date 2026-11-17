@@ -19,7 +19,8 @@ import {
   normalizeShippingRules,
   storePolicyWhatsApp,
 } from "@/lib/freeDelivery";
-import { buildCodUnavailableMessage, productAllowsCod } from "@/lib/codEligibility";
+import { buildCodUnavailableMessage, isBodyKitProduct, productAllowsCod } from "@/lib/codEligibility";
+import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { computeCodAdvanceDue } from "@/lib/productAdvance";
 import {
   isOfflinePakistaniPayment,
@@ -44,7 +45,7 @@ import {
 } from "@/lib/actionRateLimit";
 import { requestIp } from "@/lib/requestIp";
 import { customerNetworkFromRequest } from "@/lib/customerIp";
-import { shippingFloorPKR } from "@/lib/shippingTier";
+import { cartIsShopPaidFreightOnly, shippingFloorPKR } from "@/lib/shippingTier";
 import {
   buildPurchaseCustomData,
   hashUserData,
@@ -511,7 +512,9 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
     const products = await Product.find({
       _id: { $in: productIds },
       status: { $regex: /^active$/i },
-    }).lean();
+    })
+      .populate({ path: "categories", select: "name slug parent" })
+      .lean();
     if (products.length !== productIds.length) {
       return NextResponse.json({ success: false, error: "One or more products are unavailable." }, { status: 400 });
     }
@@ -693,7 +696,7 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
         100,
         Math.max(0, Math.round(Number(p.advancePercentRequired) || 0))
       );
-      const isBulky = p.isBulky === true;
+      const isBulky = productIsBulkyForShipping(p);
       subtotal += lineTotal;
       lineItems.push({
         productId: p._id,
@@ -721,6 +724,7 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
         total: lineTotal,
         advancePercentRequired,
         isBulky,
+        isBodyKit: isBodyKitProduct(p),
       });
     }
 
@@ -803,6 +807,7 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
 
     const zoneShippingCost = roundRupees(quote.shippingCost);
     const cartHasBulky = lineItems.some((li) => li.isBulky === true);
+    const shopPaidFreightOnly = cartIsShopPaidFreightOnly(lineItems);
     const rulesResult = applyShippingRules({
       baseDeliveryCharge: zoneShippingCost,
       zoneShippingCost,
@@ -811,9 +816,14 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
       zoneIsFree: Boolean(quote.isFree),
       storePayment,
       hasBulky: cartHasBulky,
+      shopPaidFreightOnly,
     });
     shippingCost = roundRupees(rulesResult.shippingCost);
-    shippingMethod = cartHasBulky ? "Standard (bulky)" : "Standard";
+    shippingMethod = shopPaidFreightOnly
+      ? "Shop-paid freight (body kit)"
+      : cartHasBulky
+        ? "Standard (bulky)"
+        : "Standard";
     shippingZoneLabel = String(quote.zoneName || "").trim();
     const advanceNote = buildAdvancePaymentOrderNote(
       storePayment,
@@ -821,7 +831,9 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
       settingsDoc?.pakistaniPaymentMethods
     );
     const statusNotes = [];
-    if (cartHasBulky) {
+    if (shopPaidFreightOnly) {
+      statusNotes.push("Body kit: delivery paid by customer at receiving shop (Rs. 0 on order)");
+    } else if (cartHasBulky) {
       statusNotes.push(
         `Bulky shipping floor Rs. ${shippingFloorPKR(true)} (charged Rs. ${shippingCost})`
       );

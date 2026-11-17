@@ -1,8 +1,11 @@
 /**
  * Tiered shipping floors from STORE_POLICY (standardFeePKR / bulkyFeePKR).
  * Final charge = MAX(floor, zone rate). Never stacked per-item.
+ * Body-kit-only carts → floor 0 (courier paid at receiving shop).
  */
 import { STORE_POLICY } from "@/config/store-policy";
+import { isBodyKitProduct } from "@/lib/codEligibility";
+import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 
 export function regularShippingFeePKR() {
   return Math.max(0, Number(STORE_POLICY.shipping.standardFeePKR) || 0);
@@ -15,23 +18,53 @@ export function bulkyShippingFeePKR() {
   );
 }
 
-/** Floor for MAX(floor, zoneRate). */
-export function shippingFloorPKR(hasBulky) {
+/**
+ * Floor for MAX(floor, zoneRate).
+ * @param {boolean} hasBulky
+ * @param {{ shopPaidFreightOnly?: boolean }} [opts]
+ */
+export function shippingFloorPKR(hasBulky, opts = {}) {
+  if (opts?.shopPaidFreightOnly) return 0;
   return hasBulky ? bulkyShippingFeePKR() : regularShippingFeePKR();
 }
 
+/** True when any cart line needs the bulky Rs 500 floor (excludes body kits). */
 export function cartHasBulkyItem(items) {
-  return (items || []).some((item) => item && item.isBulky === true);
+  return (items || []).some((item) => item && productIsBulkyForShipping(item));
+}
+
+/** True when every cart line is a body kit (shop-paid freight → Rs 0 on site). */
+export function cartIsShopPaidFreightOnly(items) {
+  const list = (items || []).filter(Boolean);
+  return (
+    list.length > 0 &&
+    list.every((item) => item.isBodyKit === true || isBodyKitProduct(item))
+  );
+}
+
+/**
+ * Resolve cart shipping floor from line products (name/slug/categories/isBulky).
+ * @param {Array<object>} items
+ * @returns {number}
+ */
+export function resolveCartShippingFloor(items) {
+  const list = (items || []).filter(Boolean);
+  if (!list.length) return regularShippingFeePKR();
+  if (cartIsShopPaidFreightOnly(list)) return 0;
+  if (cartHasBulkyItem(list)) return bulkyShippingFeePKR();
+  return regularShippingFeePKR();
 }
 
 /**
  * Apply policy floor on top of a zone/courier quote.
  * @param {number} zoneRate
  * @param {boolean} hasBulky
+ * @param {{ shopPaidFreightOnly?: boolean }} [opts]
  */
-export function applyShippingFloor(zoneRate, hasBulky) {
+export function applyShippingFloor(zoneRate, hasBulky, opts = {}) {
+  if (opts?.shopPaidFreightOnly) return 0;
   const zone = Math.max(0, Number(zoneRate) || 0);
-  const floor = shippingFloorPKR(!!hasBulky);
+  const floor = shippingFloorPKR(!!hasBulky, opts);
   return Math.max(floor, zone > 0 ? zone : floor);
 }
 

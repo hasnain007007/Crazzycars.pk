@@ -26,7 +26,9 @@ import {
   normalizeShippingRules,
 } from "@/lib/freeDelivery";
 import { computeCouponDiscount } from "@/lib/couponCompute";
-import { buildCodUnavailableMessage, productAllowsCod } from "@/lib/codEligibility";
+import { buildCodUnavailableMessage, isBodyKitProduct, productAllowsCod } from "@/lib/codEligibility";
+import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
+import { cartIsShopPaidFreightOnly } from "@/lib/shippingTier";
 import { toKg } from "@/lib/shippingEstimate";
 import { isPaymentMethodEnabled } from "@/lib/mobile/paymentInstructions";
 import { mobileError } from "@/lib/mobile/response";
@@ -35,6 +37,7 @@ import { isOfflinePakistaniPayment, normalizePakistaniPaymentMethods } from "@/l
 export const dynamic = "force-dynamic";
 
 function getItemPrice(p, item) {
+  const isBulky = productIsBulkyForShipping(p);
   // Check combo matrix
   const mc = item.matchedCombination;
   if (mc && typeof mc === "object") {
@@ -61,7 +64,7 @@ function getItemPrice(p, item) {
       const base = effectiveUnitPrice(p);
       const comboPrice = Number(found.price);
       const unitPrice = Number.isFinite(comboPrice) && comboPrice >= 0 ? comboPrice : base;
-      return { unitPrice: roundRupees(unitPrice), perUnitWeightKg: Math.max(0, perUnitWeightKg), isBulky: p.isBulky === true };
+      return { unitPrice: roundRupees(unitPrice), perUnitWeightKg: Math.max(0, perUnitWeightKg), isBulky };
     }
   }
 
@@ -75,7 +78,7 @@ function getItemPrice(p, item) {
       return {
         unitPrice: roundRupees(Math.max(0, Number(v.price) || 0)),
         perUnitWeightKg: Math.max(0, baseWeightKg + addKg),
-        isBulky: p.isBulky === true,
+        isBulky,
       };
     }
   }
@@ -85,7 +88,7 @@ function getItemPrice(p, item) {
   return {
     unitPrice: roundRupees(effectiveUnitPrice(p)),
     perUnitWeightKg: baseWeightKg,
-    isBulky: p.isBulky === true,
+    isBulky,
   };
 }
 
@@ -130,7 +133,9 @@ export async function POST(request) {
   const products = await Product.find({
     _id: { $in: productIds },
     status: { $regex: /^active$/i },
-  }).lean();
+  })
+    .populate({ path: "categories", select: "name slug parent" })
+    .lean();
 
   const unavailableCount = productIds.length - products.length;
   if (unavailableCount > 0) {
@@ -169,6 +174,7 @@ export async function POST(request) {
       quantity: qty,
       total: lineTotal,
       isBulky,
+      isBodyKit: isBodyKitProduct(p),
     });
     advanceItems.push({ name: p.name, unitPrice, quantity: qty, advancePercentRequired: p.advancePercentRequired });
   }
@@ -249,6 +255,7 @@ export async function POST(request) {
   const activeZones = await ShippingZone.find({ status: "active" }).sort({ sortOrder: 1 }).lean();
   const totalWeightGrams = Math.max(0, Math.round(totalWeightKg * 1000));
   const cartHasBulky = lineItems.some((l) => l.isBulky);
+  const shopPaidFreightOnly = cartIsShopPaidFreightOnly(lineItems);
 
   let shippingCost = 0;
   let shippingEstimated = !city;
@@ -270,12 +277,13 @@ export async function POST(request) {
       zoneIsFree: Boolean(quote.isFree),
       storePayment,
       hasBulky: cartHasBulky,
+      shopPaidFreightOnly,
     });
     shippingCost = roundRupees(rulesResult.shippingCost);
   } else {
     // Estimate from floor (no city provided)
     const { shippingFloorPKR: floorFn } = await import("@/lib/shippingTier");
-    shippingCost = floorFn(cartHasBulky);
+    shippingCost = floorFn(cartHasBulky, { shopPaidFreightOnly });
     shippingEstimated = true;
   }
 

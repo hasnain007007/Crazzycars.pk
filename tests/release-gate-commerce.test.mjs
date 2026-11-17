@@ -100,11 +100,14 @@ describe("release gate — cart + variants", () => {
 });
 
 describe("release gate — shipping / COD / discount / totals", () => {
-  it("shipping: standard 250, bulky/body-kit 500", () => {
+  it("shipping: standard 250, bulky 500, body kit 0 (shop-paid)", () => {
     assert.equal(getShippingRate({ name: "Key Cover" }), 250);
-    assert.equal(getShippingRate({ name: "Full Body Kit Fibreglass", isBulky: true }), 500);
+    assert.equal(getShippingRate({ name: "Civic Floor Mats TPE" }), 500);
+    assert.equal(getShippingRate({ name: "Front Bumper Separator" }), 500);
+    assert.equal(getShippingRate({ name: "Full Body Kit Fibreglass", isBulky: true }), 0);
+    assert.equal(cartShippingFeePkr([{ name: "RS Body Kit Fibreglass" }]), 0);
     assert.equal(
-      cartShippingFeePkr([{ name: "Key Cover" }, { name: "RS Body Kit Fibreglass" }]),
+      cartShippingFeePkr([{ name: "Key Cover" }, { name: "Civic Floor Mats" }]),
       500
     );
   });

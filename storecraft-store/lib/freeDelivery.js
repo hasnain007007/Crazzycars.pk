@@ -136,14 +136,30 @@ export function toPublicShippingQuote(raw) {
  * Apply store policy on top of zone/courier quotes.
  * Courier is always charged — never waive the fee for order value.
  * Floor = STORE_POLICY.shipping.standardFeePKR (regular) or bulkyFeePKR; final = MAX(floor, zone).
+ * Body-kit-only carts (shopPaidFreightOnly): floor 0 — customer pays at receiving shop.
  */
 export function applyShippingRules({
   storePayment,
   baseDeliveryCharge,
   zoneShippingCost,
   hasBulky = false,
+  shopPaidFreightOnly = false,
 } = {}) {
   normalizeShippingRules(storePayment);
+  if (shopPaidFreightOnly) {
+    return {
+      shippingCost: 0,
+      isFree: false,
+      freeReason: null,
+      orderAboveThreshold: 0,
+      orderAboveEnabled: false,
+      freeDeliveryThreshold: 0,
+      baseDeliveryCharge: 0,
+      hasBulky: false,
+      shopPaidFreightOnly: true,
+      shippingFloor: 0,
+    };
+  }
   const floor = shippingFloorPKR(!!hasBulky);
   const rawBase =
     baseDeliveryCharge !== undefined && baseDeliveryCharge !== null
@@ -163,6 +179,7 @@ export function applyShippingRules({
     freeDeliveryThreshold: 0,
     baseDeliveryCharge: cost,
     hasBulky: !!hasBulky,
+    shopPaidFreightOnly: false,
     shippingFloor: floor,
   };
 }

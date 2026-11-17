@@ -81,7 +81,7 @@ const STORE_5PCT = {
 
 describe("mobile quote prepaid parity vs order total", () => {
   const cases = [
-    { name: "body kit light ship", subtotal: 10999, coupon: 0, shipping: 500 },
+    { name: "bulky ship 500", subtotal: 10999, coupon: 0, shipping: 500 },
     { name: "with coupon", subtotal: 10999, coupon: 200, shipping: 500 },
     { name: "regular COD ship", subtotal: 2499, coupon: 0, shipping: 250 },
     { name: "zero shipping edge", subtotal: 1000, coupon: 0, shipping: 0 },

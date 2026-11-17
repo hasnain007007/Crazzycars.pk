@@ -4,6 +4,7 @@
  * and share attribution-tagged buy URLs so orders show up in AI analytics.
  */
 import { productAllowsCod, isBodyKitProduct } from "@/lib/codEligibility";
+import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { STORE_CONTACT, STORE_POLICY } from "@/config/store-policy";
 import { STORE_NAP } from "@/config/store-nap";
 import { returnsRefundRules } from "@/lib/storePolicyCopy";
@@ -167,10 +168,12 @@ export function productToAiCatalogItem(p, opts = {}) {
       .trim()
       .slice(0, 280),
     fitment,
-    is_bulky: Boolean(p?.isBulky) || isBodyKitProduct(p),
-    shipping_fee_pkr_hint: Boolean(p?.isBulky) || isBodyKitProduct(p)
-      ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
-      : Number(STORE_POLICY?.shipping?.standardFeePKR) || 250,
+    is_bulky: productIsBulkyForShipping(p),
+    shipping_fee_pkr_hint: isBodyKitProduct(p)
+      ? 0
+      : productIsBulkyForShipping(p)
+        ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
+        : Number(STORE_POLICY?.shipping?.standardFeePKR) || 250,
   };
 }
 

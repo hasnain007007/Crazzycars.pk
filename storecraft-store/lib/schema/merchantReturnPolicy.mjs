@@ -44,7 +44,7 @@ export function buildMerchantReturnPolicies(siteUrl) {
 }
 
 /**
- * Offer shipping details — fee from product.isBulky / body-kit.
+ * Offer shipping details — fee from getShippingRate (bulky 500 / body kit 0 / else 250).
  * @param {object} [product]
  */
 export function buildOfferShippingDetails(product) {

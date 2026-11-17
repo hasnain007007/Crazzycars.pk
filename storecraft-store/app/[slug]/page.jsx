@@ -621,8 +621,9 @@ export default async function ProductPage({ params, searchParams }) {
     })();
     const ssrReviews = approvedReviews.slice(0, 5);
     const productFaqLd = faqPageJsonLd(productFaqItems);
-    const productIsBulky =
-      productIsBulkyForShipping(content.data) || isBodyKitProduct(content.data);
+    const productIsBulky = productIsBulkyForShipping(content.data);
+    const productIsBodyKit = isBodyKitProduct(content.data);
+    const shippingBand = productIsBodyKit ? "shop-paid" : productIsBulky ? "bulky" : "standard";
 
     return (
       <>
@@ -673,7 +674,7 @@ export default async function ProductPage({ params, searchParams }) {
         ) : null}
         <div
           data-is-bulky={productIsBulky ? "true" : "false"}
-          data-shipping-band={productIsBulky ? "bulky" : "standard"}
+          data-shipping-band={shippingBand}
         >
           <ProductDetailMedico
             product={productForView}

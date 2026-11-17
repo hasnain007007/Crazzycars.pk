@@ -30,8 +30,13 @@ export const STORE_POLICY = {
     freeShippingThresholdPKR: null,
     /** CONFIRMED — flat standard delivery fee (PKR) for non-bulky carts. */
     standardFeePKR: 250,
-    /** CONFIRMED — minimum delivery fee (PKR) when cart has any bulky item. */
+    /** CONFIRMED — minimum delivery fee (PKR) when cart has any bulky item (separators, mats, spoilers, splitters). */
     bulkyFeePKR: 500,
+    /**
+     * CONFIRMED — body kits: no on-site delivery fee; customer pays courier at the receiving shop.
+     * getShippingRate / cart floor return 0 for body-kit-only carts.
+     */
+    bodyKitShopPaidFreight: true,
     cityETAs: {
       /** CONFIRMED — Lahore only. */
       lahore: { minDays: 2, maxDays: 3 },

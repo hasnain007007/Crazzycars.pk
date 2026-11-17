@@ -22,11 +22,12 @@ import { WatermarkedImage } from "./WatermarkedImage";
 import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { ProductSpecificsPanel } from "./ProductSpecificsPanel";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
-import { productAllowsCod } from "@/lib/codEligibility";
+import { isBodyKitProduct, productAllowsCod } from "@/lib/codEligibility";
 import { scrubPaymentClaims } from "@/lib/paymentCopy";
 import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { getShippingRate } from "@/lib/shippingFee";
 import {
+  bodyKitShopPaidFreightLine,
   codAdvanceAmountsLabel,
   lahoreEtaStatement,
   nonLahoreEtaStatement,
@@ -973,11 +974,13 @@ export function ProductDetailMedico({
     : null;
 
   const shipRate = getShippingRate(product);
-  const deliveryFeeText = productIsBulkyForShipping(product)
-    ? `Delivery Rs. ${shipRate.toLocaleString("en-PK")} (bulky item)`
-    : deliveryInfo?.deliveryFeeText ||
-      deliveryInfo?.freeShippingText ||
-      `Delivery Rs. ${shipRate.toLocaleString("en-PK")}`;
+  const deliveryFeeText = isBodyKitProduct(product)
+    ? bodyKitShopPaidFreightLine()
+    : productIsBulkyForShipping(product)
+      ? `Delivery Rs. ${shipRate.toLocaleString("en-PK")} (bulky item)`
+      : deliveryInfo?.deliveryFeeText ||
+        deliveryInfo?.freeShippingText ||
+        `Delivery Rs. ${shipRate.toLocaleString("en-PK")}`;
   const lahoreEtaLine = lahoreEtaStatement();
   const otherCitiesEtaLine =
     deliveryInfo?.otherAreas?.copy || nonLahoreEtaStatement();

@@ -5,6 +5,7 @@
 import { getSiteUrl } from "@/lib/siteUrl";
 import { toPlainText } from "@/lib/sanitizeHtml";
 import { productAllowsCod, isBodyKitProduct } from "@/lib/codEligibility";
+import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { STORE_POLICY } from "@/config/store-policy";
 
 function escapeXml(value) {
@@ -216,10 +217,11 @@ export function productToMerchantItem(product, opts = {}) {
   const identifierExists = gtin.length >= 8 ? "yes" : "no";
 
   const shippingFee = Number(opts.shippingFeePKR);
-  const bulky = Boolean(product?.isBulky) || isBodyKitProduct(product);
-  const defaultFee = bulky
-    ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
-    : Number(STORE_POLICY?.shipping?.standardFeePKR) || 250;
+  const defaultFee = isBodyKitProduct(product)
+    ? 0
+    : productIsBulkyForShipping(product)
+      ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
+      : Number(STORE_POLICY?.shipping?.standardFeePKR) || 250;
   const shippingPrice =
     Number.isFinite(shippingFee) && shippingFee >= 0
       ? `${shippingFee.toFixed(2)} PKR`

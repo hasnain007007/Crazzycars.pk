@@ -41,7 +41,7 @@ import { PAKISTAN_PROVINCES, STORE_COUNTRY } from "@/lib/constants";
 import { resolveProductContentId, trackInitiateCheckout, getMetaClickIds, newMetaEventId } from "@/lib/metaPixel";
 import { ga4BeginCheckout } from "@/lib/ga4";
 import { ShippingAdvanceBanner } from "@/components/store/ShippingAdvanceBanner";
-import { cartHasBulkyItem } from "@/lib/shippingTier";
+import { cartHasBulkyItem, cartIsShopPaidFreightOnly } from "@/lib/shippingTier";
 import {
   fetchRecoverCart,
   flushCartSyncOnUnload,
@@ -738,6 +738,7 @@ export function CheckoutView() {
   );
 
   const cartHasBulky = useMemo(() => cartHasBulkyItem(items), [items]);
+  const shopPaidFreightOnly = useMemo(() => cartIsShopPaidFreightOnly(items), [items]);
 
   const shippingApplied = useMemo(
     () =>
@@ -749,8 +750,17 @@ export function CheckoutView() {
         zoneIsFree: shippingIsFree,
         storePayment,
         hasBulky: cartHasBulky,
+        shopPaidFreightOnly,
       }),
-    [zoneShippingCost, cartTotalAfterAllDiscounts, paymentMethod, shippingIsFree, storePayment, cartHasBulky]
+    [
+      zoneShippingCost,
+      cartTotalAfterAllDiscounts,
+      paymentMethod,
+      shippingIsFree,
+      storePayment,
+      cartHasBulky,
+      shopPaidFreightOnly,
+    ]
   );
   const displayShippingCost = shippingApplied.shippingCost;
   const displayShippingFree = shippingApplied.isFree;
@@ -1817,6 +1827,8 @@ export function CheckoutView() {
                 <span className="text-sm font-semibold tabular-nums text-zinc-900">
                   {calculatingShipping ? (
                     <span className="font-normal text-zinc-400">Calculating…</span>
+                  ) : shopPaidFreightOnly ? (
+                    <span className="font-medium text-zinc-700">Paid at receiving shop</span>
                   ) : (
                     <span className="price">{formatPrice(displayShippingCost)}</span>
                   )}
