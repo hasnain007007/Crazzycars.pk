@@ -47,8 +47,11 @@ echo "==> Copy importer + handoff into store container"
 docker cp "$HANDOFF" "${STORE_CTR}:/tmp/handoff-r3"
 docker cp "$(dirname "$0")/import-handoff-r3.mjs" "${STORE_CTR}:/tmp/import-handoff-r3.mjs"
 
+# Resolve mongoose/sharp from the app install (standalone image keeps deps under /app).
+NODE_APP_DIR=/app
+
 echo "==> Dry-run"
-docker exec -e MONGODB_URI="$STORE_URI" "$STORE_CTR" \
+docker exec -w "$NODE_APP_DIR" -e MONGODB_URI="$STORE_URI" -e NODE_PATH=/app/node_modules "$STORE_CTR" \
   node /tmp/import-handoff-r3.mjs \
   --handoff=/tmp/handoff-r3 \
   --out=/tmp/handoff-r3-out-dry \
@@ -63,7 +66,7 @@ if [[ "$MODE" != "apply" ]]; then
 fi
 
 echo "==> APPLY"
-docker exec -e MONGODB_URI="$STORE_URI" "$STORE_CTR" \
+docker exec -w "$NODE_APP_DIR" -e MONGODB_URI="$STORE_URI" -e NODE_PATH=/app/node_modules "$STORE_CTR" \
   node /tmp/import-handoff-r3.mjs \
   --handoff=/tmp/handoff-r3 \
   --apply \
@@ -74,7 +77,7 @@ mkdir -p "$BACKUP_DIR/apply"
 cp -a "$OUT_DIR/apply/." "$BACKUP_DIR/apply/" 2>/dev/null || true
 
 echo "==> Build web derivatives (-400/-sm/-800) beside new PNG masters"
-docker exec "$STORE_CTR" node --input-type=module -e '
+docker exec -w "$NODE_APP_DIR" -e NODE_PATH=/app/node_modules "$STORE_CTR" node --input-type=module -e '
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
