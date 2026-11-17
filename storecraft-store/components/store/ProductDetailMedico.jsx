@@ -974,10 +974,10 @@ export function ProductDetailMedico({
     : null;
 
   const shipRate = getShippingRate(product);
-  const deliveryFeeText = isBodyKitProduct(product)
-    ? bodyKitShopPaidFreightLine()
-    : productIsBulkyForShipping(product)
-      ? `Delivery Rs. ${shipRate.toLocaleString("en-PK")} (bulky item)`
+  const deliveryFeeText = productIsBulkyForShipping(product)
+    ? `Delivery Rs. ${shipRate.toLocaleString("en-PK")} (bulky item)`
+    : isBodyKitProduct(product)
+      ? bodyKitShopPaidFreightLine()
       : deliveryInfo?.deliveryFeeText ||
         deliveryInfo?.freeShippingText ||
         `Delivery Rs. ${shipRate.toLocaleString("en-PK")}`;

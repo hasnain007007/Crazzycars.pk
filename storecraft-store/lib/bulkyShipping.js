@@ -2,8 +2,9 @@
  * Bulky shipping category detection — shared by JSON-LD Offer shippingRate and checkout.
  * Keep aligned with STORE_POLICY.shipping and llms.txt.
  *
- * Body kits are NOT bulky for the Rs 500 floor — courier is paid by the customer
- * at the receiving shop (see getShippingRate / resolveCartShippingFloor).
+ * Body kits (by name) are NOT bulky for the Rs 500 floor — courier is paid at the
+ * receiving shop. Products co-tagged under body-kits-extensions that are actually
+ * mats / separators / spoilers / diffusers still get the bulky floor via name/slug.
  */
 
 import { isBodyKitProduct } from "./codEligibility.js";
@@ -23,6 +24,9 @@ export const BULKY_CATEGORY_SLUGS = new Set([
  */
 const BULKY_FRAGMENT_RE =
   /\b(spoiler|splitter|separator|diffuser|skirt|side[-_\s]?skirt|floor[-_\s]?mats?|dashboard[-_\s]?mats?|5d[-_\s]?mats?|7d[-_\s]?mats?|9d[-_\s]?mats?|tpe[-_\s]?mats?|mats?)\b/i;
+
+const BODY_KIT_NAME_RE = /body[-_\s]?kits?\b/i;
+const UNDERBODY_RE = /under[\s-]?body/i;
 
 /**
  * @param {object|string|null} category
@@ -49,15 +53,24 @@ export function categoryLooksBulky(category) {
   return false;
 }
 
+function productTextBlob(product) {
+  return [product?.name, product?.slug, product?.handle, product?.title]
+    .filter(Boolean)
+    .join(" ");
+}
+
 /**
- * True when product needs the bulky Rs 500 delivery floor (not body kits).
- * Uses isBulky flag, category slug/name, or product name/slug fragments.
+ * True when product needs the bulky Rs 500 delivery floor.
+ * Name-matched body kits never qualify (shop-paid freight instead).
+ * Diffusers/spoilers/mats co-tagged under body-kits still match via fragment/slug.
  * @param {object|null} product
  */
 export function productIsBulkyForShipping(product) {
   if (!product || typeof product !== "object") return false;
-  // Body kits: freight settled at the receiving shop — not the bulky floor.
-  if (isBodyKitProduct(product)) return false;
+
+  const blob = productTextBlob(product);
+  // True body kits by name → not the Rs 500 floor (even if isBulky flag is set).
+  if (blob && BODY_KIT_NAME_RE.test(blob) && !UNDERBODY_RE.test(blob)) return false;
 
   if (product.isBulky === true || product.is_bulky === true) return true;
 
@@ -66,11 +79,18 @@ export function productIsBulkyForShipping(product) {
     if (categoryLooksBulky(c)) return true;
   }
 
-  const blob = [product.name, product.slug, product.handle, product.title]
-    .filter(Boolean)
-    .join(" ");
-  if (blob && BULKY_FRAGMENT_RE.test(blob) && !/under[\s-]?body/i.test(blob)) {
+  if (blob && BULKY_FRAGMENT_RE.test(blob) && !UNDERBODY_RE.test(blob)) {
     return true;
   }
   return false;
+}
+
+/**
+ * Body-kit shop-paid freight (Rs 0 on order): true body kits only.
+ * Prefer name match; category alone is ignored when the product is bulky by name/category.
+ */
+export function productIsShopPaidFreight(product) {
+  if (!product || typeof product !== "object") return false;
+  if (productIsBulkyForShipping(product)) return false;
+  return isBodyKitProduct(product);
 }

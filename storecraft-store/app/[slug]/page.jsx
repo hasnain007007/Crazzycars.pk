@@ -623,7 +623,7 @@ export default async function ProductPage({ params, searchParams }) {
     const productFaqLd = faqPageJsonLd(productFaqItems);
     const productIsBulky = productIsBulkyForShipping(content.data);
     const productIsBodyKit = isBodyKitProduct(content.data);
-    const shippingBand = productIsBodyKit ? "shop-paid" : productIsBulky ? "bulky" : "standard";
+    const shippingBand = productIsBulky ? "bulky" : productIsBodyKit ? "shop-paid" : "standard";
 
     return (
       <>

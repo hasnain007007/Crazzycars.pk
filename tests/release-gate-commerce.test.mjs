@@ -104,6 +104,13 @@ describe("release gate — shipping / COD / discount / totals", () => {
     assert.equal(getShippingRate({ name: "Key Cover" }), 250);
     assert.equal(getShippingRate({ name: "Civic Floor Mats TPE" }), 500);
     assert.equal(getShippingRate({ name: "Front Bumper Separator" }), 500);
+    assert.equal(
+      getShippingRate({
+        name: "Rear Bumper Diffuser Gloss Black",
+        categories: [{ slug: "body-kits-extensions" }, { slug: "spoilers-diffusers" }],
+      }),
+      500
+    );
     assert.equal(getShippingRate({ name: "Full Body Kit Fibreglass", isBulky: true }), 0);
     assert.equal(cartShippingFeePkr([{ name: "RS Body Kit Fibreglass" }]), 0);
     assert.equal(

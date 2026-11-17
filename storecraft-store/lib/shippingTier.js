@@ -4,8 +4,7 @@
  * Body-kit-only carts → floor 0 (courier paid at receiving shop).
  */
 import { STORE_POLICY } from "@/config/store-policy";
-import { isBodyKitProduct } from "@/lib/codEligibility";
-import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
+import { productIsBulkyForShipping, productIsShopPaidFreight } from "@/lib/bulkyShipping";
 
 export function regularShippingFeePKR() {
   return Math.max(0, Number(STORE_POLICY.shipping.standardFeePKR) || 0);
@@ -33,12 +32,14 @@ export function cartHasBulkyItem(items) {
   return (items || []).some((item) => item && productIsBulkyForShipping(item));
 }
 
-/** True when every cart line is a body kit (shop-paid freight → Rs 0 on site). */
+/** True when every cart line is shop-paid freight (body kit → Rs 0 on site). */
 export function cartIsShopPaidFreightOnly(items) {
   const list = (items || []).filter(Boolean);
-  return (
-    list.length > 0 &&
-    list.every((item) => item.isBodyKit === true || isBodyKitProduct(item))
+  if (!list.length) return false;
+  // Any bulky line (mats/separators/diffusers) forces the Rs 500 floor.
+  if (list.some((item) => productIsBulkyForShipping(item))) return false;
+  return list.every(
+    (item) => item.isBodyKit === true || productIsShopPaidFreight(item)
   );
 }
 

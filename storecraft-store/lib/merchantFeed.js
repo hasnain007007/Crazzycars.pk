@@ -217,10 +217,10 @@ export function productToMerchantItem(product, opts = {}) {
   const identifierExists = gtin.length >= 8 ? "yes" : "no";
 
   const shippingFee = Number(opts.shippingFeePKR);
-  const defaultFee = isBodyKitProduct(product)
-    ? 0
-    : productIsBulkyForShipping(product)
-      ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
+  const defaultFee = productIsBulkyForShipping(product)
+    ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
+    : isBodyKitProduct(product)
+      ? 0
       : Number(STORE_POLICY?.shipping?.standardFeePKR) || 250;
   const shippingPrice =
     Number.isFinite(shippingFee) && shippingFee >= 0

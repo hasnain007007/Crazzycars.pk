@@ -169,10 +169,10 @@ export function productToAiCatalogItem(p, opts = {}) {
       .slice(0, 280),
     fitment,
     is_bulky: productIsBulkyForShipping(p),
-    shipping_fee_pkr_hint: isBodyKitProduct(p)
-      ? 0
-      : productIsBulkyForShipping(p)
-        ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
+    shipping_fee_pkr_hint: productIsBulkyForShipping(p)
+      ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
+      : isBodyKitProduct(p)
+        ? 0
         : Number(STORE_POLICY?.shipping?.standardFeePKR) || 250,
   };
 }
