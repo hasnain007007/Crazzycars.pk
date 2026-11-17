@@ -44,19 +44,26 @@ print('ok');
 EOF
 
 echo "==> Copy importer + handoff into store container"
-docker cp "$HANDOFF" "${STORE_CTR}:/tmp/handoff-r3"
-docker cp "$(dirname "$0")/import-handoff-r3.mjs" "${STORE_CTR}:/tmp/import-handoff-r3.mjs"
+# Importer must live under /app so ESM resolves mongoose/sharp from /app/node_modules.
+# Create as root then hand ownership to the app user (nextjs).
+RUN_DIR=/app/tmp/handoff-r3-run
+docker exec -u root "$STORE_CTR" mkdir -p "$RUN_DIR" /app/tmp/handoff-r3-out-dry /app/tmp/handoff-r3-out-apply
+docker exec -u root "$STORE_CTR" chown -R nextjs:nodejs /app/tmp
+docker cp "$HANDOFF" "${STORE_CTR}:${RUN_DIR}/handoff"
+docker cp "$(dirname "$0")/import-handoff-r3.mjs" "${STORE_CTR}:${RUN_DIR}/import-handoff-r3.mjs"
+docker exec -u root "$STORE_CTR" chown -R nextjs:nodejs /app/tmp
 
-# Resolve mongoose/sharp from the app install (standalone image keeps deps under /app).
 NODE_APP_DIR=/app
+IMPORTER=${RUN_DIR}/import-handoff-r3.mjs
+HANDOFF_IN=${RUN_DIR}/handoff
 
 echo "==> Dry-run"
-docker exec -w "$NODE_APP_DIR" -e MONGODB_URI="$STORE_URI" -e NODE_PATH=/app/node_modules "$STORE_CTR" \
-  node /tmp/import-handoff-r3.mjs \
-  --handoff=/tmp/handoff-r3 \
-  --out=/tmp/handoff-r3-out-dry \
+docker exec -w "$NODE_APP_DIR" -e MONGODB_URI="$STORE_URI" "$STORE_CTR" \
+  node "$IMPORTER" \
+  --handoff="$HANDOFF_IN" \
+  --out=/app/tmp/handoff-r3-out-dry \
   --media-root=/app/media
-docker cp "${STORE_CTR}:/tmp/handoff-r3-out-dry/plan.json" "$OUT_DIR/dry-plan.json"
+docker cp "${STORE_CTR}:/app/tmp/handoff-r3-out-dry/plan.json" "$OUT_DIR/dry-plan.json"
 cp "$OUT_DIR/dry-plan.json" "$BACKUP_DIR/dry-plan.json"
 echo "Dry plan written to $OUT_DIR/dry-plan.json"
 
@@ -66,22 +73,22 @@ if [[ "$MODE" != "apply" ]]; then
 fi
 
 echo "==> APPLY"
-docker exec -w "$NODE_APP_DIR" -e MONGODB_URI="$STORE_URI" -e NODE_PATH=/app/node_modules "$STORE_CTR" \
-  node /tmp/import-handoff-r3.mjs \
-  --handoff=/tmp/handoff-r3 \
+docker exec -w "$NODE_APP_DIR" -e MONGODB_URI="$STORE_URI" "$STORE_CTR" \
+  node "$IMPORTER" \
+  --handoff="$HANDOFF_IN" \
   --apply \
-  --out=/tmp/handoff-r3-out-apply \
+  --out=/app/tmp/handoff-r3-out-apply \
   --media-root=/app/media
-docker cp "${STORE_CTR}:/tmp/handoff-r3-out-apply/." "$OUT_DIR/apply/"
+docker cp "${STORE_CTR}:/app/tmp/handoff-r3-out-apply/." "$OUT_DIR/apply/"
 mkdir -p "$BACKUP_DIR/apply"
 cp -a "$OUT_DIR/apply/." "$BACKUP_DIR/apply/" 2>/dev/null || true
 
 echo "==> Build web derivatives (-400/-sm/-800) beside new PNG masters"
-docker exec -w "$NODE_APP_DIR" -e NODE_PATH=/app/node_modules "$STORE_CTR" node --input-type=module -e '
+docker exec -w "$NODE_APP_DIR" "$STORE_CTR" node --input-type=module -e '
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
-const plan=JSON.parse(fs.readFileSync("/tmp/handoff-r3-out-apply/plan.json","utf8"));
+const plan=JSON.parse(fs.readFileSync("/app/tmp/handoff-r3-out-apply/plan.json","utf8"));
 const rows=[...plan.creates,...plan.updates];
 for (const row of rows) {
   const abs=row.masterAbs;

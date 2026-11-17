@@ -61,6 +61,30 @@ const VEHICLE_MAP = {
     yearFrom: 2016,
     yearTo: 2021,
   },
+  "civic-11th": {
+    slug: "honda-civic-11th-gen-2022-present",
+    make: "Honda",
+    model: "Civic",
+    generationLabel: "Honda Civic 11th Gen (2022–Present)",
+    yearFrom: 2022,
+    yearTo: null,
+  },
+  "civic-es": {
+    slug: "honda-civic-es-2001-2005",
+    make: "Honda",
+    model: "Civic",
+    generationLabel: "Honda Civic ES (2001–2005)",
+    yearFrom: 2001,
+    yearTo: 2005,
+  },
+  "corolla-e120": {
+    slug: "toyota-corolla-e120-2002-2008",
+    make: "Toyota",
+    model: "Corolla",
+    generationLabel: "Toyota Corolla E120 (2002–2008)",
+    yearFrom: 2002,
+    yearTo: 2008,
+  },
 };
 
 function arg(name, fallback = "") {
