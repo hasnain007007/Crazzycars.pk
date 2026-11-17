@@ -205,9 +205,10 @@ export function serializeStoreProductSummary(p, opts = {}) {
     stock,
     quantity: stock,
     inventory: {
-      quantity: Number(p?.inventory?.quantity) || 0,
-      trackInventory: p?.inventory?.trackInventory ?? true,
-      allowBackorder: p?.inventory?.allowBackorder === true,
+      // Follow shared parent stock for car-specific alias listings.
+      quantity: stock,
+      trackInventory: sharedTracksInventory(p),
+      allowBackorder: sharedAllowsBackorder(p),
       sku,
     },
     requiresOptions: productRequiresOptions(p),
@@ -287,11 +288,8 @@ export function serializeStoreProductDetail(p) {
     .sort((a, b) => a.position - b.position);
   const serializedVariants = (p.variants || []).map(serializeVariantForStore).filter(Boolean);
   const usesVariantMatrix = variationTypes.length > 0 && serializedVariants.length > 0;
-  const stock = Number(p?.inventory?.quantity) || 0;
-  const inStock =
-    p?.inventory?.trackInventory === false || p?.inventory?.allowBackorder === true
-      ? true
-      : stock > 0;
+  const stock = getStock(p);
+  const inStock = isInStock(p);
 
   return {
     id: productDocId(p),
@@ -373,8 +371,16 @@ export function serializeStoreProductDetail(p) {
     inStock,
     quantityAvailable: stock,
     stock,
-    trackInventory: p?.inventory?.trackInventory ?? true,
-    allowBackorder: p?.inventory?.allowBackorder === true,
+    trackInventory: sharedTracksInventory(p),
+    allowBackorder: sharedAllowsBackorder(p),
+    inventory: {
+      quantity: stock,
+      trackInventory: sharedTracksInventory(p),
+      allowBackorder: sharedAllowsBackorder(p),
+      sku: p.articleNo || p.inventory?.sku || "",
+      weight: Number(p.inventory?.weight) || 0,
+      weightUnit: p.inventory?.weightUnit || "g",
+    },
     shippingBaseWeight: Number(p.inventory?.weight) || 0,
     shippingBaseWeightUnit: p.inventory?.weightUnit || "kg",
     seo: p.seo
