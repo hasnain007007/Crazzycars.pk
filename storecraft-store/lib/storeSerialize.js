@@ -9,6 +9,11 @@ import { combinationSignature } from "@/lib/variantMatrix";
 import { sanitizeProductHtml, toPlainText } from "@/lib/sanitizeHtml";
 import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
 import { customerFacingAlt } from "@/lib/customerFacingAlt";
+import {
+  sharedAllowsBackorder,
+  sharedStockQuantity,
+  sharedTracksInventory,
+} from "@/lib/sharedInventory";
 
 /** Internal ops labels that must not appear on the public PDP. */
 const INTERNAL_NOTE_LABEL_RE =
@@ -79,20 +84,15 @@ function mapImagesWithSafeAlt(images, productName = "") {
 }
 
 function getStock(product) {
-  return (
-    Number(product?.inventory?.quantity) ||
-    Number(product?.inventory?.stock) ||
-    Number(product?.stock) ||
-    0
-  );
+  return sharedStockQuantity(product);
 }
 
 function isInStock(product) {
-  if (product?.inventory?.trackInventory === false) {
+  if (!sharedTracksInventory(product)) {
     return true;
   }
   // Opt-in only — must match checkout allowsBackorder() or customers buy then fail at place-order.
-  if (product?.inventory?.allowBackorder === true) {
+  if (sharedAllowsBackorder(product)) {
     return true;
   }
   return getStock(product) > 0;

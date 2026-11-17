@@ -30,6 +30,13 @@ import { quoteShipping } from "@/lib/shippingZoneWeight";
 import { toKg } from "@/lib/shippingEstimate";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { allowsBackorder } from "@/lib/inventoryPolicy";
+import {
+  inventorySourceId,
+  resolveInventoryProduct,
+  sharedAllowsBackorder,
+  sharedStockQuantity,
+  sharedTracksInventory,
+} from "@/lib/sharedInventory";
 import { readAiAttributionFromRequest } from "@/lib/aiAttribution";
 import {
   aiSourceFromAttribution,
@@ -520,6 +527,20 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
     }
 
     const byId = new Map(products.map((p) => [p._id.toString(), p]));
+    // Load shared-inventory parents so alias listings decrement one physical pool.
+    const sourceIds = [
+      ...new Set(
+        products
+          .map((p) => inventorySourceId(p))
+          .filter((id) => id && !byId.has(id))
+      ),
+    ];
+    if (sourceIds.length) {
+      const parents = await Product.find({ _id: { $in: sourceIds } }).lean();
+      for (const parent of parents) {
+        byId.set(parent._id.toString(), parent);
+      }
+    }
 
     if (paymentMethod === "cod") {
       const blocked = products.filter((p) => !productAllowsCod(p));
@@ -540,8 +561,9 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
       if ((p.variants || []).length) continue;
       // Style/Size matrix stock lives on combinations — do not gate on base qty.
       if (usesComboInventory(p, itemsIn, pid)) continue;
-      if (allowsBackorder(p)) continue;
-      if (p.inventory?.trackInventory && (Number(p.inventory.quantity) || 0) < need) {
+      const stockP = resolveInventoryProduct(p, byId);
+      if (sharedAllowsBackorder(p, byId) || allowsBackorder(stockP)) continue;
+      if (sharedTracksInventory(p, byId) && sharedStockQuantity(p, byId) < need) {
         return NextResponse.json(
           { success: false, error: `Insufficient stock for ${p.name}.` },
           { status: 400 }
@@ -1182,23 +1204,25 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
 
       for (const [pid, qty] of byProduct.entries()) {
         const p = byId.get(pid);
-        if (!p?.inventory?.trackInventory) continue;
+        if (!p) continue;
         if ((p.variants || []).length) continue;
         if (usesComboInventory(p, itemsIn, pid)) continue;
-        if (allowsBackorder(p)) {
-          await Product.updateOne({ _id: pid }, { $inc: { "inventory.quantity": -qty } });
-          stockReversals.push({ type: "base", pid, qty, soft: true });
+        if (!sharedTracksInventory(p, byId)) continue;
+        const stockPid = inventorySourceId(p) || pid;
+        if (sharedAllowsBackorder(p, byId) || allowsBackorder(resolveInventoryProduct(p, byId))) {
+          await Product.updateOne({ _id: stockPid }, { $inc: { "inventory.quantity": -qty } });
+          stockReversals.push({ type: "base", pid: stockPid, qty, soft: true });
           continue;
         }
         const updated = await Product.findOneAndUpdate(
-          { _id: pid, "inventory.quantity": { $gte: qty } },
+          { _id: stockPid, "inventory.quantity": { $gte: qty } },
           { $inc: { "inventory.quantity": -qty } },
           { new: true }
         ).lean();
         if (!updated) {
           throw new Error("BASE_STOCK");
         }
-        stockReversals.push({ type: "base", pid, qty });
+        stockReversals.push({ type: "base", pid: stockPid, qty });
       }
     } catch (stockErr) {
       for (const rev of [...stockReversals].reverse()) {

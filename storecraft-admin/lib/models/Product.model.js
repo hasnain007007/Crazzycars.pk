@@ -206,6 +206,18 @@ const productSchema = new mongoose.Schema(
       lowStockThreshold: { type: Number, default: 5 },
       sku: { type: String, default: "" },
     },
+    /**
+     * When set, checkout and storefront stock follow this parent product's
+     * inventory (car-specific listing → universal physical parent).
+     */
+    inventorySourceProductId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      default: null,
+      index: true,
+    },
+    /** Stable handoff/import key (e.g. crazzycars-r3:civic-x:front-red). */
+    importKey: { type: String, default: "", trim: true, index: true },
     media: {
       images: { type: [imageSchema], default: [] },
       videos: { type: [videoSchema], default: [] },
