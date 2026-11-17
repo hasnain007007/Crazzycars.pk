@@ -12,19 +12,23 @@ import { fetchCategoryTreeServer } from "@/lib/serverCategoryTree";
 import { pickHomepageCategories, serializeHomepageCategory } from "@/lib/homepageCategories";
 import Product from "@/lib/models/Product.model";
 import { categoryHref } from "@/lib/categories";
-import { homeHubCollectionJsonLd } from "@/lib/seo/jsonld";
+import { homeHubCollectionJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { getPageSeoOverride } from "@/lib/seo/gscAudit2026-10.mjs";
+import { BRAND_NAME } from "@/lib/brand";
+import { STORE_NAP } from "@/config/store-nap";
 
 /** First paint: one desktop grid row (5) + a few extras — rest via Show more. */
 const HOME_GRID_LIMIT = 10;
 
 export const revalidate = 600;
 
+/** Brand-first homepage title — Google Images / sitelinks site-name signal. */
+const HOME_TITLE_DEFAULT = "CrazzyCars.pk | Car Accessories in Pakistan – Kits, LEDs & Mats";
 const homeSeo = getPageSeoOverride("/") || {};
-const HOME_TITLE = homeSeo.title || "Car Accessories in Pakistan | Kits, LEDs & Mats";
+const HOME_TITLE = homeSeo.title || HOME_TITLE_DEFAULT;
 export const metadata = buildPageMetadata({
-  // absoluteTitle: do not append brand again (override already branded / ≤60).
+  // absoluteTitle: brand already leading — do not append "| CrazzyCars.pk" again.
   title: HOME_TITLE,
   description:
     homeSeo.meta ||
@@ -109,9 +113,18 @@ export default async function Page() {
       "Buy car accessories online in Pakistan — splitters, body kits, LED lights, carbon fiber accessories & more. COD on eligible items.",
     items: hubItems,
   });
+  const websiteLd = websiteJsonLd({
+    name: BRAND_NAME,
+    alternateName: ["CrazzyCars", "Crazzy Cars"],
+    sameAs: STORE_NAP.sameAs,
+  });
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteLd) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(homeLd) }}

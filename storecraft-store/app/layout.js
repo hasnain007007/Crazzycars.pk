@@ -20,7 +20,7 @@ import { getSiteUrl, isIndexableEnvironment, absoluteUrl } from "@/lib/siteUrl";
 import { buildFaviconMetadata } from "@/lib/faviconUrl";
 import { sanitizeMetadata, withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
-import { organizationJsonLd as buildOrgLd, websiteJsonLd as buildWebsiteLd } from "@/lib/seo/jsonld";
+import { organizationJsonLd as buildOrgLd } from "@/lib/seo/jsonld";
 import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { BRAND_NAME, TITLE_SUFFIX, withBrandTitleSuffix } from "@/lib/brand";
 import { STORE_NAP } from "@/config/store-nap";
@@ -262,10 +262,8 @@ export default async function RootLayout({ children }) {
     priceRange: general.priceRange || undefined,
   });
 
-  const websiteJsonLd = buildWebsiteLd({
-    name: BRAND_NAME,
-    sameAs: STORE_NAP.sameAs,
-  });
+  // WebSite JSON-LD is homepage-only (app/page.jsx) so Google's site name
+  // signal is not diluted across every URL.
 
   const bodyFont = appearance.fontFamily || undefined;
 
@@ -301,12 +299,6 @@ export default async function RootLayout({ children }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: safeJsonLd(organizationJsonLd),
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: safeJsonLd(websiteJsonLd),
           }}
         />
         <CustomerProvider>

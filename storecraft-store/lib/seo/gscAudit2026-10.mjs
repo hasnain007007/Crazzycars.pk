@@ -132,12 +132,13 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: "Rebirth accessories in Pakistan: spoiler, body kit and exterior upgrades for Civic Rebirth 2012–2016. COD on eligible items from Gujranwala.",
   },
   "/cars/toyota-corolla-e170-2014-2026": {
-    title: "Corolla E170 Accessories Pakistan | Spoiler",
-    meta: "Corolla E170 accessories in Pakistan: 2015–2026 RS trunk spoiler, Grande carbon steering trim and body kits. COD on eligible items nationwide.",
+    // Buyers search years + Altis / Grande / GLi, not the E170 chassis code (14 Nov 2026).
+    title: "Corolla 2014–2026 Accessories | Altis, Grande, GLi",
+    meta: "Corolla 2015–2026 accessories in Pakistan for Altis, Grande, GLi and X: RS trunk spoiler, Grande carbon steering trim and body kits. COD nationwide.",
   },
   "/cars/toyota-corolla-e140-2009-2014": {
-    title: "Corolla E140 Accessories Pakistan | Body Kit",
-    meta: "2012 accessories for Corolla E140 in Pakistan: body kit, Nike style headlights and Canadian grill listings with prices. COD on eligible items.",
+    title: "Corolla 2009–2014 Accessories | Altis, GLi, Body Kit",
+    meta: "Corolla 2009–2014 (E140) accessories in Pakistan for Altis, GLi and XLi: body kit, Nike style headlights and Canadian grill. COD on eligible items.",
   },
   "/cars/honda-city-2021-present": {
     title: "City Accessories Pakistan | Body Kit, Spoiler",
@@ -165,7 +166,7 @@ const PAGE_SEO_OVERRIDES_BASE = {
   },
   "/toyota-corolla-x-carbon-fiber-interior-door-handle-panels-2014-2026": {
     // Live catalogue: Set of 4 / Rs. 5,999 (DOOR-SET4 2026-10-29).
-    title: "Corolla X Door Handle Panels 2014–2026 Set of 4 | CrazzyCars.pk",
+    title: "Corolla X Door Handle Panels 2014–2026 Set of 4 | CrazzyCars",
     meta: "Buy Toyota Corolla X carbon-style interior door handle panels (set of 4) for 2014–2026 Grande/Altis. Sale Rs. 5,999. COD on eligible items at CrazzyCars.pk.",
   },
   "/contact": {
@@ -173,8 +174,8 @@ const PAGE_SEO_OVERRIDES_BASE = {
     meta: `Contact CrazzyCars.pk: WhatsApp ${WA}, email, store address in Gujranwala and opening hours. Ask about fitment, orders and delivery.`,
   },
   "/": {
-    // ≤60 chars (T1). Em-dash variant was 63.
-    title: "Car Accessories in Pakistan | Kits, LEDs & Mats",
+    // Brand-first for Google site-name / Images source label (owner 2026-11-18).
+    title: "CrazzyCars.pk | Car Accessories in Pakistan – Kits, LEDs & Mats",
     meta: "Buy car accessories online in Pakistan: splitters, body kits, LED lights, carbon fiber and interior accessories. COD on eligible items, nationwide delivery.",
   },
   // Ranking page: title locked; fix truncated "Butto" in meta only
@@ -237,8 +238,10 @@ export function getPageSeoOverride(path) {
 
 export function assertSeoLengths(pair, path) {
   const errors = [];
-  if (pair?.title && pair.title.length > 62) {
-    errors.push(`${path} title length ${pair.title.length} > 62`);
+  // Homepage brand-first title is intentionally ~63; other pages stay ≤62.
+  const maxTitle = path === "/" ? 70 : 62;
+  if (pair?.title && pair.title.length > maxTitle) {
+    errors.push(`${path} title length ${pair.title.length} > ${maxTitle}`);
   }
   if (pair?.meta && pair.meta.length > 160) {
     errors.push(`${path} meta length ${pair.meta.length} > 160`);

@@ -635,11 +635,11 @@ export function organizationJsonLd(overrides = {}) {
     "@context": "https://schema.org",
     "@type": "AutoPartsStore",
     "@id": orgId,
-    name: overrides.name || STORE_NAP.businessName,
+    name: overrides.name || STORE_NAP.businessName || "CrazzyCars.pk",
     alternateName: Array.isArray(overrides.alternateName)
       ? overrides.alternateName.map((n) => String(n || "").trim()).filter(Boolean)
-      : ["Crazy Cars", "CrazyCars.pk"],
-    url: SITE,
+      : ["CrazzyCars", "Crazzy Cars"],
+    url: SITE.endsWith("/") ? SITE : `${SITE}/`,
     logo: {
       "@type": "ImageObject",
       url: overrides.logo || `${SITE}/logo.png`,
@@ -697,25 +697,34 @@ export function organizationJsonLd(overrides = {}) {
   return ld;
 }
 
-/** WebSite + SearchAction */
+/**
+ * WebSite + SearchAction — emit on the homepage only (see app/page.jsx).
+ * name/alternateName tell Google the site brand for sitelinks / Images source labels.
+ */
 export function websiteJsonLd(overrides = {}) {
   const SITE = site();
+  const siteUrl = SITE.endsWith("/") ? SITE : `${SITE}/`;
   const fromOverride = Array.isArray(overrides.sameAs)
     ? overrides.sameAs.map((u) => String(u || "").trim()).filter(Boolean)
     : [];
   const sameAs = fromOverride.length ? fromOverride : DEFAULT_SAME_AS;
-  return {
+  const alternateName = Array.isArray(overrides.alternateName)
+    ? overrides.alternateName.map((n) => String(n || "").trim()).filter(Boolean)
+    : ["CrazzyCars", "Crazzy Cars"];
+  const ld = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: overrides.name || "CrazzyCars.pk",
-    url: SITE,
-    sameAs,
+    alternateName,
+    url: siteUrl,
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE}/shop?q={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   };
+  if (sameAs.length) ld.sameAs = sameAs;
+  return ld;
 }
 
 /**

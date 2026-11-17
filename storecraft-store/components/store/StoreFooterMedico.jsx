@@ -490,11 +490,15 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
               settings?.general?.copyrightText ||
               ''
 
-            const text = customText
+            const raw = customText
               ? customText
                   .replace(/\{year\}/gi, year)
                   .replace(/%year%/gi, year)
               : `© ${year} ${storeName}. All rights reserved.`
+            // Keep brand spelling consistent with og:site_name (CrazzyCars.pk).
+            const text = String(raw)
+              .replace(/\bCrazzy\s*Cars(?!\.pk)\b/gi, "CrazzyCars.pk")
+              .replace(/\bCrazy\s*Cars(?!\.pk)\b/gi, "CrazzyCars.pk")
 
             return (
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 14px" }}>
