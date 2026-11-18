@@ -218,7 +218,7 @@ const loadContent = cache(async (slug) => {
     securityHold: { $ne: true },
   })
     .select(
-      "name slug articleNo media pricing inventory inventorySourceProductId status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts onCarPreviews customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky advancePercentRequired codEnabled compatibleVehicles compatibleCars vehicleCompatibility"
+      "name slug articleNo media pricing inventory inventorySourceProductId status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts onCarPreviews customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky advancePercentRequired codEnabled compatibleVehicles compatibleCars vehicleCompatibility sharedFittingInventory"
     )
     .populate("categories", "name slug")
     .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")
@@ -247,7 +247,7 @@ const loadContent = cache(async (slug) => {
         securityHold: { $ne: true },
       })
         .select(
-          "name slug articleNo media pricing inventory inventorySourceProductId status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts onCarPreviews customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky advancePercentRequired codEnabled compatibleVehicles compatibleCars vehicleCompatibility"
+          "name slug articleNo media pricing inventory inventorySourceProductId status simpleVariations variationCombinations featured newArrival categories variationTypes variationOptions variants shortDescription longDescription features addOns recommendedProducts onCarPreviews customSizing specifications seo metaTitle metaDescription averageRating ratingAverage rating reviewCount totalReviews numReviews isUniversal isBulky advancePercentRequired codEnabled compatibleVehicles compatibleCars vehicleCompatibility sharedFittingInventory"
         )
         .populate("categories", "name slug")
         .populate("compatibleVehicles", "slug displayName make model yearFrom yearTo")

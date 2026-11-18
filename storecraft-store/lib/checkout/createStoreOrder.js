@@ -104,6 +104,8 @@ function productHasComboMatrix(p) {
 
 /** True when cart lines for this product are stocked via variationCombinations, not base inventory. */
 function usesComboInventory(p, itemsIn, pid) {
+  // Shared fitting pool: options are for cart identity/images; qty lives on the parent.
+  if (p?.sharedFittingInventory === true) return false;
   if (!productHasComboMatrix(p)) return false;
   const lines = (itemsIn || []).filter((it) => String(it.productId || "").trim() === pid);
   if (!lines.length) return false;
@@ -1178,6 +1180,7 @@ export async function createStoreOrderFromRequest(request, opts = {}) {
         if (variantDoc) continue;
         const combo = resolveCombinationFromCart(p, raw);
         if (!combo?._id) continue;
+        if (p.sharedFittingInventory === true) continue; // parent pool only
         if (p.inventory?.trackInventory === false) continue;
         const cs = combo.stock;
         if (cs === undefined || cs === null || !Number.isFinite(Number(cs))) continue;

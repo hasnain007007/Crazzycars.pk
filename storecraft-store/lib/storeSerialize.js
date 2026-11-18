@@ -445,6 +445,7 @@ export function serializeStoreProductDetail(p) {
         : [],
     },
     isUniversal: Boolean(p.isUniversal),
+    sharedFittingInventory: p.sharedFittingInventory === true,
     compatibleCars: Array.isArray(p.compatibleCars)
       ? p.compatibleCars.map((c) => ({
           make: c?.make || "",

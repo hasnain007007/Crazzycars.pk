@@ -342,6 +342,12 @@ const productSchema = new mongoose.Schema(
     numReviews: { type: Number, default: 0 },
     totalReviews: { type: Number, default: 0 },
     restockRequested: { type: Boolean, default: false, index: true },
+    /**
+     * When true with a Fitting (or similar) variationCombinations matrix, stock is
+     * a single shared parent pool — do not treat each combo.stock as a separate
+     * sellable inventory. Checkout decrements inventory.quantity; PDP uses parent qty.
+     */
+    sharedFittingInventory: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
