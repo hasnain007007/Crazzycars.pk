@@ -125,6 +125,46 @@ const VEHICLE_MAP = {
     yearFrom: 2013,
     yearTo: 2018,
   },
+  "deepal-s05-reev-max": {
+    slug: "deepal-s05-2024-present",
+    make: "Deepal",
+    model: "S05",
+    generationLabel: "Deepal S05 (2024–Present)",
+    yearFrom: 2024,
+    yearTo: null,
+  },
+  "haval-h6-hev-facelift": {
+    slug: "haval-h6-2021-present",
+    make: "Haval",
+    model: "H6",
+    generationLabel: "Haval H6 (2021–Present)",
+    yearFrom: 2021,
+    yearTo: null,
+  },
+  "haval-jolion-hev": {
+    slug: "haval-jolion-hev-2024-present",
+    make: "Haval",
+    model: "Jolion",
+    generationLabel: "Haval Jolion HEV (2024–Present)",
+    yearFrom: 2024,
+    yearTo: null,
+  },
+  "jaecoo-j5-hev-premium": {
+    slug: "jaecoo-j5-hev-premium-2026",
+    make: "Jaecoo",
+    model: "J5",
+    generationLabel: "Jaecoo J5 HEV Premium (2026)",
+    yearFrom: 2026,
+    yearTo: null,
+  },
+  "jaecoo-j7-shsp-premium": {
+    slug: "jaecoo-j7-shsp-premium-2025-present",
+    make: "Jaecoo",
+    model: "J7",
+    generationLabel: "Jaecoo J7 SHS-P Premium (2025–Present)",
+    yearFrom: 2025,
+    yearTo: null,
+  },
 };
 
 function arg(name, fallback = "") {
