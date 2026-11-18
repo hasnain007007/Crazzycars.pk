@@ -21,10 +21,9 @@ const A4_H = 841.89;
 /** Shipper identity printed on every airbill (never portal merchant branding). */
 const CRAZZYCARS_SHIPPER = {
   company: "CrazzyCars.pk",
-  phone: "03307767799",
-  phoneDisplay: "+92 330 7767799",
-  pickup:
-    "Block A6, Phase 1, Citi Housing, Gujranwala 52203, Punjab, Pakistan",
+  phone: "03094676310",
+  phoneDisplay: "+92 309 4676310",
+  pickup: "Gujranwala, Pakistan",
   originCity: "Gujranwala",
   /** Live storefront logo — avoids bundling public/ via fs in the serverless trace. */
   logoUrl: "https://crazzycars.pk/logo.png",
@@ -728,25 +727,18 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
     color: rgb(0.35, 0.35, 0.35),
   });
   cy -= 9;
-  cy = drawText(page, fields.consigneeAddress, c1x + leftPad, cy, {
+  // drawText returns the baseline of the last line drawn — leave room for descenders
+  // so the Shipper header never covers the end of the customer's address.
+  const addrLastBaseline = drawText(page, fields.consigneeAddress, c1x + leftPad, cy, {
     size: 7.5,
     font,
     maxWidth: maxW1,
     lineHeight: 9,
-    maxLines: 3,
+    maxLines: 4,
   });
-  cy -= 10;
-
-  // Divider inside col1
-  page.drawLine({
-    start: { x: c1x + 2, y: cy + 4 },
-    end: { x: c1x + col1W - 2, y: cy + 4 },
-    thickness: 0.4,
-    color: rgb(0.7, 0.7, 0.7),
-  });
-  cy -= 2;
-  sectionHeader(page, fonts, c1x, cy + hdrH, col1W, hdrH, "Shipper Information");
-  cy -= 8;
+  cy = addrLastBaseline - 6;
+  sectionHeader(page, fonts, c1x, cy, col1W, hdrH, "Shipper Information");
+  cy -= hdrH + 8;
   page.drawText("Name:", { x: c1x + leftPad, y: cy, size: labelSize, font, color: rgb(0.35, 0.35, 0.35) });
   page.drawText(truncateToWidth(bold, CRAZZYCARS_SHIPPER.company, valSize, maxW1 - 28), {
     x: c1x + leftPad + 28,
