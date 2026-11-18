@@ -106,7 +106,7 @@ function wwwToApexRedirect(request) {
 }
 
 const CITY_LANDING_RE =
-  /^\/car-accessories-(gujranwala|lahore|karachi|islamabad|rawalpindi|faisalabad)\/?$/i;
+  /^\/car-accessories-(gujranwala|lahore|karachi|islamabad|rawalpindi|faisalabad|multan|peshawar|sialkot)\/?$/i;
 
 export async function middleware(request) {
   const wwwRedirect = wwwToApexRedirect(request);
@@ -178,7 +178,7 @@ export async function middleware(request) {
     }
     // Hide internal path — one hop to the public SEO URL.
     const internalCity = lower.match(
-      /^\/city\/(gujranwala|lahore|karachi|islamabad|rawalpindi|faisalabad)\/?$/
+      /^\/city\/(gujranwala|lahore|karachi|islamabad|rawalpindi|faisalabad|multan|peshawar|sialkot)\/?$/
     );
     if (internalCity) {
       return withPaidCookie(

@@ -14,6 +14,9 @@ export const CITY_LANDING_SLUGS = [
   "islamabad",
   "rawalpindi",
   "faisalabad",
+  "multan",
+  "peshawar",
+  "sialkot",
 ];
 
 const FEE = formatPkrAmount(STORE_POLICY.shipping.standardFeePKR);
@@ -207,6 +210,95 @@ export const CITY_LANDING_DEFAULTS = {
         question: "Can factories / fleets bulk-order?",
         answer:
           "Yes. Message WhatsApp 03284010007 with SKUs and quantities for a wholesale-style quote on repeat Faisalabad orders.",
+      },
+    ],
+  },
+  // Added 14 Nov 2026 from keyword research: "car accessories multan / peshawar / sialkot"
+  // are searched in Google Pakistan but had no page. Delivery days: owner to confirm.
+  multan: {
+    slug: "multan",
+    name: "Multan",
+    province: "Punjab",
+    h1: "Car Accessories in Multan — Cash on Delivery from CrazzyCars.pk",
+    introHtml: `<p>Multan drivers on Bosan Road, Gulgasht, Cantt and Shah Rukn-e-Alam Colony order body kits, LED headlights, ambient lights, floor mats and carbon interior trims from us with <strong>Cash on Delivery</strong> — no need to visit the Multan accessories market and guess at fitment.</p><p>Every part is listed by car model and year (Corolla, Civic, City, Alto, Cultus, Sportage, Haval H6 and more). Send your car model on WhatsApp and we confirm the fit before dispatch from Gujranwala.</p>`,
+    deliveryNote: feeNote("Multan"),
+    deliveryDays: "Typically 2–4 business days to Multan.",
+    metaTitle: "Car Accessories Multan | COD | CrazzyCars.pk",
+    metaDescription:
+      "Car accessories in Multan with Cash on Delivery: body kits, LED lights, ambient lights, mats and carbon trims, listed by car model and year.",
+    topCategorySlugs: ["body-kits", "led-lighting", "floor-mats", "carbon-fiber-accessories"],
+    emitLocalBusiness: false,
+    faq: [
+      {
+        question: "Do you deliver car accessories to Multan?",
+        answer: "Yes. Orders to Multan usually arrive in 2–4 business days after we confirm on WhatsApp.",
+      },
+      {
+        question: "Is Cash on Delivery available in Multan?",
+        answer:
+          "Yes, on eligible items with a small booking advance. Body kits are prepaid.",
+      },
+      {
+        question: "How do I know a part fits my car?",
+        answer: "Each product lists the model and years it fits. Send your car model and year on WhatsApp 03284010007 and we check before dispatch.",
+      },
+    ],
+  },
+  peshawar: {
+    slug: "peshawar",
+    name: "Peshawar",
+    province: "Khyber Pakhtunkhwa",
+    h1: "Car Accessories in Peshawar — Cash on Delivery from CrazzyCars.pk",
+    introHtml: `<p>We deliver to Peshawar — Hayatabad, University Road, Saddar, Cantt and Ring Road — with <strong>Cash on Delivery</strong> on eligible items. Popular orders from KPK are LED headlights and fog lights, floor mats, steering covers, body kits and accessories for SUVs like Fortuner, Revo, Prado and Haval H6.</p><p>Parts are listed by car model and year so you can order the right fit. Unsure? WhatsApp us your car model and year before you order.</p>`,
+    deliveryNote: feeNote("Peshawar"),
+    deliveryDays: "Typically 2–4 business days to Peshawar.",
+    metaTitle: "Car Accessories Peshawar | COD | CrazzyCars.pk",
+    metaDescription:
+      "Car accessories in Peshawar with Cash on Delivery: LED lights, floor mats, body kits and SUV accessories for Fortuner, Revo, Prado and Haval.",
+    topCategorySlugs: ["led-lighting", "floor-mats", "body-kits", "carbon-fiber-accessories"],
+    emitLocalBusiness: false,
+    faq: [
+      {
+        question: "Do you deliver to Peshawar and other KPK cities?",
+        answer: "Yes. Peshawar orders usually arrive in 2–4 business days; other KPK cities can take a day longer.",
+      },
+      {
+        question: "Is Cash on Delivery available in Peshawar?",
+        answer:
+          "Yes, on eligible items with a small booking advance. Body kits are prepaid.",
+      },
+      {
+        question: "Do you have accessories for Fortuner, Revo and Prado?",
+        answer: "Yes — see the Shop by car pages for Toyota Fortuner, Hilux Revo and Prado, or WhatsApp 03284010007 for a specific part.",
+      },
+    ],
+  },
+  sialkot: {
+    slug: "sialkot",
+    name: "Sialkot",
+    province: "Punjab",
+    h1: "Car Accessories in Sialkot — Fast Delivery from Gujranwala",
+    introHtml: `<p>Sialkot is next door to our Gujranwala store, so orders to Cantt, Paris Road, Kashmir Road and Daska usually arrive within <strong>1–2 business days</strong>. Order body kits, LED lights, ambient lights, mats and carbon trims online with Cash on Delivery on eligible items.</p><p>Prefer to see the part first? Our Gujranwala shop is a short drive away — WhatsApp us to check stock before you visit.</p>`,
+    deliveryNote: feeNote("Sialkot"),
+    deliveryDays: "Typically 1–2 business days to Sialkot.",
+    metaTitle: "Car Accessories Sialkot | COD | CrazzyCars.pk",
+    metaDescription:
+      "Car accessories in Sialkot, 1–2 day delivery from our Gujranwala store: body kits, LED lights, ambient lights, mats and carbon trims. COD.",
+    topCategorySlugs: ["body-kits", "led-lighting", "floor-mats", "carbon-fiber-accessories"],
+    emitLocalBusiness: false,
+    faq: [
+      {
+        question: "How fast is delivery to Sialkot?",
+        answer: "Usually 1–2 business days, because we ship from Gujranwala next door.",
+      },
+      {
+        question: "Can I visit the shop from Sialkot?",
+        answer: "Yes — our store is in Gujranwala. WhatsApp 03284010007 to check the part is in stock before you come.",
+      },
+      {
+        question: "Is Cash on Delivery available in Sialkot?",
+        answer:
+          "Yes, on eligible items with a small booking advance. Body kits are prepaid.",
       },
     ],
   },
