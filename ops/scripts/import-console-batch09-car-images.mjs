@@ -260,6 +260,27 @@ async function main() {
       throw new Error(`post-copy sha fail ${destName}`);
     }
 
+    // Gallery thumbs request -400.webp (see cloudinaryImage.localMediaForWidth).
+    // Masters stay untouched PNG; build sibling webp derivatives only.
+    try {
+      const sharp = (await import("sharp")).default;
+      const stem = destAbs.replace(/\.png$/i, "");
+      for (const [suf, size, q] of [
+        ["-400", 400, 72],
+        ["-sm", 200, 70],
+        ["-800", 1000, 78],
+      ]) {
+        const out = `${stem}${suf}.webp`;
+        if (fs.existsSync(out)) continue;
+        await sharp(destAbs)
+          .resize({ width: size, height: size, fit: "inside", withoutEnlargement: true })
+          .webp({ quality: q, effort: 4 })
+          .toFile(out);
+      }
+    } catch (err) {
+      console.warn("derivative_build_failed", destName, String(err?.message || err));
+    }
+
     const meta = { ...(existing.metadata || {}) };
     meta.image_batch = "09";
     meta.car_image_sha256 = a.sha256;
