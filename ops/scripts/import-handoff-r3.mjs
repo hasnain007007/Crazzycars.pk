@@ -318,10 +318,14 @@ async function main() {
       continue;
     }
 
-    if (draft.preflight_status === "HOLD_PARENT_MATCH") {
+    // Any HOLD_* preflight (parent match, fitment measurements, vehicle mapping, etc.)
+    // must stay unpublished until evidence clears the hold.
+    const preflight = String(draft.preflight_status || "");
+    if (preflight.startsWith("HOLD_") || preflight.startsWith("REJECT_")) {
       plan.blocked.push({
         importKey,
-        reason: draft.block_reason || "HOLD_PARENT_MATCH",
+        reason: draft.block_reason || preflight,
+        preflight_status: preflight,
         source_sku: draft.source_candidate?.sku || null,
       });
       continue;
