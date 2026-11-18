@@ -93,6 +93,38 @@ const VEHICLE_MAP = {
     yearFrom: 2009,
     yearTo: 2014,
   },
+  "alto-ha36": {
+    slug: "suzuki-alto-2020-present",
+    make: "Suzuki",
+    model: "Alto",
+    generationLabel: "Suzuki Alto HA36 (2019–Present)",
+    yearFrom: 2020,
+    yearTo: null,
+  },
+  liana: {
+    slug: "suzuki-liana-2006-2014",
+    make: "Suzuki",
+    model: "Liana",
+    generationLabel: "Suzuki Liana (2006–2014)",
+    yearFrom: 2006,
+    yearTo: 2014,
+  },
+  "markx-x120": {
+    slug: "toyota-mark-x-2004-1-genx120",
+    make: "Toyota",
+    model: "Mark X",
+    generationLabel: "Toyota Mark X 1st Gen (X120)",
+    yearFrom: 2004,
+    yearTo: 2011,
+  },
+  "vezel-ru": {
+    slug: "honda-vezel-2013-2018",
+    make: "Honda",
+    model: "Vezel",
+    generationLabel: "Honda Vezel 1st Gen (2013–2018)",
+    yearFrom: 2013,
+    yearTo: 2018,
+  },
 };
 
 function arg(name, fallback = "") {
@@ -133,7 +165,9 @@ function buildLongDescription(draft, parent) {
     draft.specifications_draft?.material ||
     (/\bABS\b/i.test(String(parent?.longDescription || "")) ? "ABS plastic" : null);
   const pieces = draft.specifications_draft?.candidate_piece_count;
-  const finish = draft.specifications_draft?.pictured_colour_finish;
+  const finish =
+    draft.specifications_draft?.pictured_colour_finish ||
+    draft.specifications_draft?.pictured_finish;
   const accessory = draft.specifications_draft?.accessory_type || "";
 
   const bits = [];
@@ -165,7 +199,9 @@ function escapeHtml(s) {
 
 function buildSpecs(draft, parent) {
   const rows = [];
-  const finish = draft.specifications_draft?.pictured_colour_finish;
+  const finish =
+    draft.specifications_draft?.pictured_colour_finish ||
+    draft.specifications_draft?.pictured_finish;
   const pieces = draft.specifications_draft?.candidate_piece_count;
   const accessory = draft.specifications_draft?.accessory_type;
   const material =
