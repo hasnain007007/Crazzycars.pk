@@ -7,6 +7,27 @@ import {
   airbillFieldsFromOrder,
   buildStoreAirbillsPdf,
 } from "@/lib/runcourierLabelPdf";
+import { fetchPostexTracking } from "@/lib/postex";
+
+/**
+ * Shipment type for the airbill "Order Type" box. Saved at booking since Nov 2026; older
+ * bookings ask PostEx (track-order returns the type it has on file). Falls back to "Normal".
+ */
+async function postexShipTypeFor(order, trackingNumber, settingsCourier) {
+  const saved = String(order?.postexShipType || "").trim();
+  if (saved) return saved;
+  const carrier = String(order?.courier || order?.tracking?.carrier || "Postex");
+  if (!/postex/i.test(carrier)) return "";
+  try {
+    const res = await Promise.race([
+      fetchPostexTracking(trackingNumber, { settingsCourier }),
+      new Promise((resolve) => setTimeout(() => resolve(null), 4000)),
+    ]);
+    return String(res?.orderType || "").trim();
+  } catch {
+    return "";
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -92,13 +113,22 @@ export async function GET(request) {
     }
 
     const items = [];
-    for (const tn of trackingNumbers) {
+    const withOrders = trackingNumbers.filter((tn) => byTracking.has(tn));
+    const shipTypes = new Map();
+    for (let i = 0; i < withOrders.length; i += 8) {
+      const chunk = withOrders.slice(i, i + 8);
+      const types = await Promise.all(
+        chunk.map((tn) => postexShipTypeFor(byTracking.get(tn), tn, settings.courier || {}))
+      );
+      chunk.forEach((tn, j) => shipTypes.set(tn, types[j]));
+    }
+    for (const tn of withOrders) {
       const order = byTracking.get(tn);
-      if (!order) continue;
       const fields = airbillFieldsFromOrder(order, {
         trackingNumber: tn,
         courier: order.courier || order.tracking?.carrier || "PostEx",
         settingsCourier: settings.courier || {},
+        orderType: shipTypes.get(tn) || "Normal",
       });
       items.push({ fields, orderNumber: order.orderNumber || fields.orderId });
     }

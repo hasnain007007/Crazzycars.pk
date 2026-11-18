@@ -677,7 +677,7 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
   });
 
   // --- BODY: 3 columns ---
-  const footerH = 28;
+  const footerH = 38; // header + up to 2 lines of order items
   const bodyTop = y;
   const bodyBottom = oy + pad + footerH;
   const bodyH = bodyTop - bodyBottom;
@@ -899,8 +899,8 @@ function drawAirbillIntoPage(page, fonts, images, fields, orderNo, region) {
     size: 8,
     font,
     maxWidth: innerW - 8,
-    lineHeight: 9,
-    maxLines: 1,
+    lineHeight: 9.5,
+    maxLines: 2,
   });
 
   return { contentBottom: oy, usedHeight: rh };
@@ -967,12 +967,22 @@ export function airbillFieldsFromOrder(order, opts = {}) {
   const addr = order?.shippingAddress || {};
   const customer = order?.customer || {};
   const items = Array.isArray(order?.items) ? order.items : [];
-  const product =
-    items
-      .map((i) => `${Math.max(1, Number(i.quantity) || 1)}x ${String(i.name || "Item").trim()}`)
-      .filter(Boolean)
-      .join(", ")
-      .slice(0, 220) || "Car accessories";
+  // Whole item names only; anything that will not fit becomes "+N more" so the packer
+  // never thinks a 6-item parcel holds 3.
+  const lines = items.map(
+    (i) => `${Math.max(1, Number(i.quantity) || 1)}x ${String(i.name || "Item").trim()}`
+  );
+  let product = "";
+  for (let k = 0; k < lines.length; k++) {
+    const next = product ? `${product}, ${lines[k]}` : lines[k];
+    const rest = lines.length - k - 1;
+    if (next.length > 290 - (rest ? 10 : 0) && product) {
+      product = `${product} +${lines.length - k} more`;
+      break;
+    }
+    product = next;
+  }
+  product = product || "Car accessories";
   const pieces =
     Math.max(
       1,

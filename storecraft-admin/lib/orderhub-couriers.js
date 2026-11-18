@@ -43,6 +43,8 @@ const POSTEX = {
       weight: num(input.weightKg),
       pieces: num(input.pieces),
       remarks: input.remarks || undefined,
+      // Normal / Reversed / Replacement / Overland — was dropped, so every hub booking went as Normal.
+      type: input.type || input.shipType || input.orderType || undefined,
     };
     if (num(input.codAmount) !== undefined) body.codAmount = num(input.codAmount);
     const res = await callAdminRoute(req, postexBook, { path: "/api/postex/create-shipment", method: "POST", body, by: input.by });

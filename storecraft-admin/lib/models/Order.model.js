@@ -223,6 +223,8 @@ const orderSchema = new mongoose.Schema(
     courier: { type: String, default: "Postex", trim: true },
     trackingUrl: { type: String, default: "", trim: true },
     postexLabel: { type: String, default: "", trim: true },
+    /** PostEx shipment type used at booking (Normal / Reversed / Replacement / Overland). */
+    postexShipType: { type: String, default: "", trim: true },
     /** Cached Run Courier label (base64 PDF) — separate from postexLabel. */
     runCourierLabel: { type: String, default: "", trim: true },
     /** Select API used for Run Courier booking (Trax, TCS, Auto, …). */

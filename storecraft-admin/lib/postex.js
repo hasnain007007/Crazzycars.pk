@@ -165,6 +165,8 @@ export function parsePostexOrderDetail(json, trackingNumber) {
     destination: pick(dist, "deliveryCity", "cityName", "destinationCity", "deliveryAddress"),
     weight,
     pieces: Number(dist.items ?? dist.pieces ?? dist.itemCount) || 1,
+    /** Shipment type PostEx has on file (Normal / Reversed / Replacement / Overland). */
+    orderType: pick(dist, "orderType", "orderTypeName", "shipmentType"),
   };
 }
 
@@ -1067,6 +1069,7 @@ export async function createPostexShipment(orderData, options = {}) {
         return {
           ...parsed,
           matchedCity: payload.cityName,
+          orderType: payload.orderType,
           cityResolvedFrom: cityCheck.original || "",
           cityMatchReason: cityCheck.reason || "",
         };

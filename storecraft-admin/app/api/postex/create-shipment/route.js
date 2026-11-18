@@ -23,8 +23,12 @@ function requestIp(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
 }
 
-function applyShipmentToOrder(order, { trackingNumber, label, adminName, rebook = false }) {
+function applyShipmentToOrder(order, { trackingNumber, label, adminName, rebook = false, shipType = "" }) {
   const tn = String(trackingNumber || "").trim();
+  const type = String(shipType || "").trim() || "Normal";
+  // Saved so the CrazzyCars airbill prints the real type (it always said "Normal").
+  order.postexShipType = type;
+  const typeBit = type !== "Normal" ? ` (${type} shipment)` : "";
   const url = storefrontTrackingUrl(tn);
 
   const archived = archiveCurrentTracking(order, {
@@ -75,7 +79,7 @@ function applyShipmentToOrder(order, { trackingNumber, label, adminName, rebook 
     : "";
   order.timeline.push({
     status: rebook || archived ? "postex_rebooked" : "postex_booked",
-    title: rebook || archived ? "Postex rebooked" : "Shipment booked with Postex",
+    title: rebook || archived ? `Postex rebooked${typeBit}` : `Shipment booked with Postex${typeBit}`,
     description: `Tracking number assigned: ${tn}.${prevBit}`,
     timestamp: new Date(),
     by: "admin",
@@ -248,6 +252,7 @@ export async function POST(request) {
       label,
       adminName,
       rebook: Boolean(rebook || existingTracking),
+      shipType: result.orderType || body.type,
     });
 
     await order.save();
