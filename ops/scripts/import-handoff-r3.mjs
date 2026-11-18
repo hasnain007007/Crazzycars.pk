@@ -85,6 +85,14 @@ const VEHICLE_MAP = {
     yearFrom: 2002,
     yearTo: 2008,
   },
+  "corolla-e140": {
+    slug: "toyota-corolla-e140-2009-2014",
+    make: "Toyota",
+    model: "Corolla",
+    generationLabel: "Toyota Corolla E140 (2009–2014)",
+    yearFrom: 2009,
+    yearTo: 2014,
+  },
 };
 
 function arg(name, fallback = "") {
