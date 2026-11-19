@@ -49,7 +49,9 @@ const rajdhani = Rajdhani({
   // optional = no late swap CLS on <main> (was 0.175). Inter stays swap for body text.
   display: "optional",
   weight: ["600", "700"],
-  preload: true,
+  // Do not preload — frees slow-4G bandwidth for the homepage LCP hero image.
+  // optional + adjustFontFallback keeps CLS stable if the file arrives late.
+  preload: false,
   adjustFontFallback: true,
 });
 

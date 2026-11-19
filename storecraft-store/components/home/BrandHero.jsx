@@ -62,7 +62,8 @@ export default function BrandHero({ prepaidPercent: prepaidPercentProp } = {}) {
               width={1205}
               height={576}
               fetchPriority="high"
-              decoding="async"
+              /* sync decode: async contributed to LCP element-render delay on slow CPU */
+              decoding="sync"
               className="brand-hero__car"
             />
           </picture>
