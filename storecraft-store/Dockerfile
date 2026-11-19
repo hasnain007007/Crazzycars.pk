@@ -32,12 +32,13 @@ ENV NEXT_PUBLIC_STORE_NAME=$NEXT_PUBLIC_STORE_NAME \
 ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
 # Own cache id so the admin build never shares this Next cache (see storecraft-admin/Dockerfile).
-# Turbopack cache can poison webpack builds (next/font → @vercel/turbopack-next/.../font
-# "Module not found") and also serve stale CSS. Wipe turbopack every build; force webpack.
+# Next 16 `next build` uses Turbopack; a poisoned font/CSS cache yields
+# `@vercel/turbopack-next/internal/font/google/font` Module not found. Wipe the
+# whole cache mount each build (npm cache mount still speeds installs).
 RUN --mount=type=cache,id=crazzycars-store-next-cache,target=/app/.next/cache \
     --mount=type=cache,target=/root/.npm \
-    rm -rf /app/.next/cache/turbopack /app/.next/cache/**/turbopack* \
- && npx next build --webpack \
+    rm -rf /app/.next/cache/* \
+ && npm run build \
  && node -e "\
 const fs=require('fs');const path=require('path');\
 const dir='.next/static/chunks';\
