@@ -196,7 +196,9 @@ export function ProductCard({ product }) {
                 }`}
                 imgStyle={{ height: "100%", width: "100%", objectFit: "contain" }}
                 width={400}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                widths={[400, 800]}
+                // Cap desktop slot so DPR never needs more than -800 (no master in srcset).
+                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 200px"
               />
             </div>
             {hoverImageUrl && hoverReady ? (
@@ -209,6 +211,8 @@ export function ProductCard({ product }) {
                   imgClassName="h-full w-full object-contain"
                   imgStyle={{ height: "100%", width: "100%", objectFit: "contain" }}
                   width={400}
+                  widths={[400, 800]}
+                  sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 200px"
                   loading="eager"
                 />
               </div>

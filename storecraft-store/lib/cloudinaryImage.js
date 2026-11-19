@@ -73,48 +73,53 @@ export function localMediaPath(src) {
  * Always inspect pixels when diagnosing; never assume `-sm` means "PDP large".
  *
  * Slot mapping for products / cars / brand:
- *  - thumb strip + cards (≤480) → `-400.webp`
- *  - PDP main / lightbox / large → master (original)
+ *  - thumb strip + cards (≤480) → `-400.webp` (srcset: 400 + 800 only)
+ *  - PDP main stage → `-1200.webp` (srcset: 800 + 1200; master only onError)
  *
  * Categories / banners may still prefer `-sm` via categoryBannerUrl().
- * Missing derivatives: <img onError> falls back -400 → master.
+ * Missing derivatives: <img onError> falls back -400/-800/-1200 → master.
  */
+const DERIV_SUFFIX_RE = /-(400|sm|800|1200|full)\.(webp|jpe?g|png|gif|avif)$/i;
+
 function localMediaMasterPath(path) {
-  return String(path || "").replace(/-(400|sm|800)\.(webp|jpe?g|png|gif|avif)$/i, ".$2");
+  return String(path || "").replace(DERIV_SUFFIX_RE, ".$2");
 }
 
 function localMediaForWidth(src, width) {
   const path = localMediaPath(src) || "";
   const fallback = path || unwrapNextImageUrl(src) || String(src || "").trim();
   if (!path) return fallback;
-  // Already a concrete derivative or master path — keep as requested.
-  if (/-(400|sm|800)\.(webp|jpe?g|png)$/i.test(path)) return path;
+  // Already a concrete derivative — keep as requested.
+  if (DERIV_SUFFIX_RE.test(path)) return path;
   if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
     return fallback;
   }
   const master = localMediaMasterPath(path);
+  const stem = master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "");
   const w = Number(width) || 0;
   // Thumbnail strip + card slots → -400.webp.
-  // Do NOT use -sm here: many newer product uploads (and the recon pack) only
-  // ship master + -400, so -sm 404s and gallery thumbs show alt text instead.
-  // -sm remains available for category banners via categoryBannerUrl().
   if (w > 0 && w <= 480) {
-    return master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
+    return `${stem}-400.webp`;
   }
-  // PDP gallery + lightbox: full-resolution original.
-  return master;
+  // Mid cards / hover → -800.webp (never the multi-MB master).
+  if (w > 0 && w <= 900) {
+    return `${stem}-800.webp`;
+  }
+  // PDP gallery main stage → -1200.webp (master only via onError fallback).
+  return `${stem}-1200.webp`;
 }
 
 /** Build sibling derivative path from any /media URL. */
-export function localMediaDerivative(src, kind /* "sm" | "400" | "800" | "original" */) {
+export function localMediaDerivative(src, kind /* "sm" | "400" | "800" | "1200" | "original" */) {
   const path = localMediaPath(src) || "";
   if (!path) return String(src || "").trim();
-  const master = path.replace(/-(400|sm|800)\.(webp|jpe?g|png|gif|avif)$/i, ".$2");
+  const master = localMediaMasterPath(path);
   const stem = master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "");
   if (kind === "original") return master;
   if (kind === "sm") return `${stem}-sm.webp`;
   if (kind === "400") return `${stem}-400.webp`;
   if (kind === "800") return `${stem}-800.webp`;
+  if (kind === "1200") return `${stem}-1200.webp`;
   return master;
 }
 
@@ -149,10 +154,11 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
 }
 
 /**
- * Responsive srcset for local /media: expose real on-disk derivatives with
- * honest width descriptors (400w / master). Browsers pick by `sizes` + DPR.
+ * Responsive srcset for local /media.
+ * - card: -400 / -800 only (NEVER the master — that was the Jaecoo 2 MB leak)
+ * - gallery: -800 / -1200 only (master only via <img onError>)
  */
-export function localMediaSrcSet(src) {
+export function localMediaSrcSet(src, { mode = "card" } = {}) {
   const path = localMediaPath(src) || "";
   if (!path) return "";
   if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
@@ -160,15 +166,19 @@ export function localMediaSrcSet(src) {
   }
   const master = localMediaMasterPath(path);
   const stem = master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "");
-  const as400 = `${stem}-400.webp`;
-  // Do not advertise -sm here — many product -sm files are 200² thumbs.
-  return `${as400} 400w, ${master} 1200w`;
+  if (mode === "gallery") {
+    return `${stem}-800.webp 800w, ${stem}-1200.webp 1200w`;
+  }
+  // Cards / related / listings — cap at 800w so desktop DPR never fetches the master.
+  return `${stem}-400.webp 400w, ${stem}-800.webp 800w`;
 }
 
 /** Responsive srcset — Cloudinary widths, or local derivative pair. */
-export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill" } = {}) {
+export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill", mode } = {}) {
   if (isLocalMedia(src) || unwrapNextImageUrl(src).includes("/media/")) {
-    return localMediaSrcSet(src);
+    const maxW = Math.max(0, ...widths.map((w) => Math.round(Number(w) || 0)));
+    const resolvedMode = mode || (maxW > 900 ? "gallery" : "card");
+    return localMediaSrcSet(src, { mode: resolvedMode });
   }
   const unique = [...new Set(widths.map((w) => Math.round(w)).filter((w) => w > 0))].sort((a, b) => a - b);
   return unique
@@ -195,15 +205,15 @@ export function heroImageUrlMobile(src) {
 }
 
 /**
- * PDP main viewer — full local master (or Cloudinary limit-fit).
- * Pass width ≥ 481 so localMediaForWidth does not pick a thumb derivative.
+ * PDP main viewer — local -1200.webp (or Cloudinary limit-fit).
+ * Pass width ≥ 901 so localMediaForWidth picks the gallery derivative.
  */
 export function pdpImageUrl(src, width = 1200) {
   return cloudinaryUrl(src, { width, crop: "limit" });
 }
 
-/** Product / card thumbnails — default 480px (2× for ~240px slots). */
-export function cardImageUrl(src, width = 480) {
+/** Product / card thumbnails — default 400px slot (srcset adds -800 for DPR). */
+export function cardImageUrl(src, width = 400) {
   return cloudinaryUrl(src, { width, height: width, crop: "fill" });
 }
 

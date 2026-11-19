@@ -104,34 +104,34 @@ export function WatermarkedImage({
     ...(itemProp ? { itemProp } : {}),
     onLoad: () => setLoaded(true),
     onError: () => {
-      // Derivative chain for local /media: -sm/-800 → -400 → master → give up.
-      // Never leave a visitor on a broken <img> (alt text only).
+      // Derivative chain: -1200 → -800 → -400 → master → give up.
       const master = String(src || "").trim().split("?")[0];
       if (isLocalMedia(master) || master.startsWith("/media/")) {
+        const as1200 = localMediaDerivative(master, "1200");
+        const as800 = localMediaDerivative(master, "800");
         const as400 = localMediaDerivative(master, "400");
         const asOrig = localMediaDerivative(master, "original");
         const tried = new Set(
           [resolved, retrySrc].filter(Boolean).map((u) => String(u).split("?")[0])
         );
-        if (/-(sm|800)\./i.test(resolved) && as400 && !tried.has(as400)) {
-          setRetrySrc(as400);
-          setLoaded(false);
-          return;
-        }
-        if (as400 && !tried.has(as400) && resolved !== as400) {
-          setRetrySrc(as400);
-          setLoaded(false);
-          return;
-        }
-        if (asOrig && !tried.has(asOrig) && resolved !== asOrig) {
-          setRetrySrc(asOrig);
-          setLoaded(false);
-          return;
-        }
+        const tryNext = (next) => {
+          if (next && !tried.has(next) && resolved !== next) {
+            setRetrySrc(next);
+            setLoaded(false);
+            return true;
+          }
+          return false;
+        };
+        if (/-(1200)\./i.test(resolved) && tryNext(as800)) return;
+        if (/-(800|sm)\./i.test(resolved) && tryNext(as400)) return;
+        if (tryNext(as1200)) return;
+        if (tryNext(as800)) return;
+        if (tryNext(as400)) return;
+        if (tryNext(asOrig)) return;
         setFailed(true);
         return;
       }
-      if (!retrySrc && master && resolved !== master && !/-(400|sm|800)\./i.test(master)) {
+      if (!retrySrc && master && resolved !== master && !/-(400|sm|800|1200)\./i.test(master)) {
         setRetrySrc(master);
         setLoaded(false);
         return;

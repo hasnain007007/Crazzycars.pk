@@ -26,7 +26,7 @@ import {
 import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
-import { pdpImageUrlExisting } from "@/lib/resolveLocalMedia";
+import { galleryImageUrlExisting, pdpImageUrlExisting } from "@/lib/resolveLocalMedia";
 import {
   productHasExternalCanonical,
   productHasRealImage,
@@ -619,7 +619,8 @@ export default async function ProductPage({ params, searchParams }) {
           images: images.map((img) => {
             const url = String(img?.url || "").trim();
             if (!url) return img;
-            return { ...img, url: pdpImageUrlExisting(url), _masterUrl: url };
+            // Visible gallery: -1200/-800 only. OG/JSON-LD still use raw/master via other paths.
+            return { ...img, url: galleryImageUrlExisting(url), _masterUrl: url };
           }),
         },
       };

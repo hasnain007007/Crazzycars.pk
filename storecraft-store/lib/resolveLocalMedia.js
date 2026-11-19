@@ -33,12 +33,12 @@ function existsMedia(mediaPath) {
 /** Strip known size suffixes to get the master stem path. */
 export function mediaMasterPath(mediaPath) {
   const p = String(mediaPath || "").split("?")[0];
-  return p.replace(/-(400|sm|800)\.(webp|jpe?g|png|gif|avif)$/i, ".$2");
+  return p.replace(/-(400|sm|800|1200|full)\.(webp|jpe?g|png|gif|avif)$/i, ".$2");
 }
 
 /**
  * @param {string} src
- * @param {{ prefer?: Array<"sm"|"400"|"800"|"original"> }} [opts]
+ * @param {{ prefer?: Array<"sm"|"400"|"800"|"1200"|"original"> }} [opts]
  */
 export function resolveExistingLocalMedia(src, opts = {}) {
   const prefer = opts.prefer || ["sm", "400", "original"];
@@ -56,12 +56,14 @@ export function resolveExistingLocalMedia(src, opts = {}) {
     if (kind === "sm") candidates.push(`${stem}-sm.webp`);
     else if (kind === "400") candidates.push(`${stem}-400.webp`);
     else if (kind === "800") candidates.push(`${stem}-800.webp`);
+    else if (kind === "1200") candidates.push(`${stem}-1200.webp`);
     else if (kind === "original") {
       candidates.push(master);
       if (!/\.webp$/i.test(master)) candidates.push(`${stem}.webp`);
     }
   }
-  if (!candidates.includes(master)) candidates.push(master);
+  // Last-resort fallback only when prefer already asked for original, or nothing else exists.
+  if (prefer.includes("original") && !candidates.includes(master)) candidates.push(master);
 
   for (const c of candidates) {
     if (existsMedia(c)) return c;
@@ -70,17 +72,23 @@ export function resolveExistingLocalMedia(src, opts = {}) {
 }
 
 /**
- * PDP gallery / OG / LCP — prefer the ≤1000 px `-800.webp` copy (only built for heavy
- * masters by admin upload / Website Check › "Make photos lighter"), then the original.
- * The gallery keeps the original as `_masterUrl` for zoom.
+ * OG / Twitter metadata — keep preferring `-800` then master (unchanged URL policy for Phase 1B).
+ * Do not use this for the visible gallery.
  */
 export function pdpImageUrlExisting(src) {
   return resolveExistingLocalMedia(src, { prefer: ["800", "original", "400", "sm"] });
 }
 
+/**
+ * Visible PDP gallery / LCP preload — prefer `-1200` then `-800`; master only if variants missing.
+ */
+export function galleryImageUrlExisting(src) {
+  return resolveExistingLocalMedia(src, { prefer: ["1200", "800", "400", "original"] });
+}
+
 /** Thumbnail strip / tiny cards — prefer small derivatives. */
 export function thumbImageUrlExisting(src) {
-  return resolveExistingLocalMedia(src, { prefer: ["sm", "400", "original"] });
+  return resolveExistingLocalMedia(src, { prefer: ["400", "sm", "800", "original"] });
 }
 
 export function mediaRootPath() {

@@ -1082,11 +1082,10 @@ export function ProductDetailMedico({
                   alt={selectedItem.altText || product.name}
                   watermark={productImageWatermark}
                   className="h-full w-full"
-                  // Large stage: local master (1200² typical) + srcset (-400 / master).
-                  // Do NOT request -sm here — many product -sm files are 200×200 thumbs.
+                  // Large stage: -1200 src + srcset (-800 / -1200). Master only onError.
                   width={1200}
                   crop="limit"
-                  widths={[400, 800, 1200]}
+                  widths={[800, 1200]}
                   sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
                   loading={selectedIndex === 0 ? "eager" : "lazy"}
                   fetchPriority={selectedIndex === 0 ? "high" : "low"}
