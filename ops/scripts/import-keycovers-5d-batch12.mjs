@@ -2,13 +2,15 @@
 /**
  * CrazzyCars.pk — 5D Zinc-Leather Key Covers Batch 12
  *
- * Creates/updates DRAFT model+colour parents for AVAILABLE catalogue rows only.
- * Never publishes without verified price + stock + fitment.
- * Does not mutate existing Premium Metal Key Cover SKUs (different product line).
+ * Creates/updates model+colour parents for AVAILABLE catalogue rows only.
+ * Default: draft + securityHold (no price/stock).
+ * --publish: activate using related metal key-cover price tiers (or 1399/1799 default)
+ *            and shared parent stock 25. Does not mutate Premium Metal SKUs.
  *
  * Usage (store container):
- *   node /app/tmp/import-keycovers-5d-batch12.mjs --handoff=/app/tmp/keycovers12 --out=/app/tmp/keycovers12-out
+ *   node ... --handoff=/path --out=/path
  *   node ... --apply --media-root=/app/media
+ *   node ... --apply --publish --media-root=/app/media
  */
 import crypto from "crypto";
 import fs from "fs";
@@ -71,6 +73,12 @@ const RELATED_METAL = {
   "Toyota Yaris 1.5": ["CC-KC-TOYOTAYARIS"],
   "Jaecoo J7 / Chery Tiggo 7 / 8 / 9": ["CC-KC-CHERYTIGGO8PRO", "CC-KC-CHERYTIGGO4PRO"],
 };
+
+/** Premium metal tier models (1699/2199) when no related metal hit. */
+const PREMIUM_GROUPS = new Set(["Toyota Fortuner 4B", "Toyota Prado 3B", "Hyundai Sonata New", "Hyundai Sonata Old"]);
+
+const DEFAULT_TIER = { sale: 1399, regular: 1799, qty: 25 };
+const PREMIUM_TIER = { sale: 1699, regular: 2199, qty: 25 };
 
 function arg(name, fallback = "") {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
@@ -158,6 +166,25 @@ ${holdNote}
 ${whyBuy()}`;
 }
 
+function resolvePublishPricing(group, relatedMetal, metalByArticle) {
+  for (const a of relatedMetal) {
+    const m = metalByArticle[a];
+    const sale = Number(m?.pricing?.salePrice);
+    const regular = Number(m?.pricing?.regularPrice);
+    if (Number.isFinite(sale) && sale > 0 && Number.isFinite(regular) && regular > 0) {
+      const qty = Number(m?.inventory?.quantity);
+      return {
+        sale,
+        regular,
+        qty: Number.isFinite(qty) && qty > 0 ? qty : DEFAULT_TIER.qty,
+        source: `metal:${a}`,
+      };
+    }
+  }
+  if (PREMIUM_GROUPS.has(group)) return { ...PREMIUM_TIER, source: "premium_tier" };
+  return { ...DEFAULT_TIER, source: "default_keycover_tier" };
+}
+
 function holdReasonsFor(group, rows) {
   const reasons = [];
   if (FITMENT_HOLD.has(group)) {
@@ -191,6 +218,7 @@ async function main() {
     process.exit(2);
   }
   const dryRun = !hasFlag("apply");
+  const publish = hasFlag("publish");
   const mediaRoot = arg("media-root", process.env.MEDIA_ROOT || "/app/media");
   const outDir = arg("out", path.join(handoff, "import-out"));
   fs.mkdirSync(outDir, { recursive: true });
@@ -268,10 +296,13 @@ async function main() {
     created_at: new Date().toISOString(),
     batch: BATCH,
     policy: {
-      publish: "never_without_verified_price_stock_fitment",
+      publish: publish
+        ? "owner_requested_publish_using_metal_keycover_price_tiers"
+        : "draft_until_publish_flag",
       metal_key_covers: "not_mutated",
       pending_images: "not_published_or_referenced",
     },
+    publish,
     summary: {
       catalogue_rows: 118,
       available_images: available.length,
@@ -312,7 +343,9 @@ async function main() {
           r.image_status === "PENDING"
             ? "held_pending_image"
             : availRows.length
-              ? "draft_colour_option"
+              ? publish
+                ? "published_colour_option"
+                : "draft_colour_option"
               : "held_no_available_image",
         product_slug: availRows.length ? slug : null,
         hold_reasons: holdReasons,
@@ -361,14 +394,21 @@ async function main() {
       height: 1254,
     }));
 
+    const pricingResolved = publish
+      ? resolvePublishPricing(group, relatedMetal, metalByArticle)
+      : { sale: 0, regular: 0, qty: 0, source: "draft" };
+    const comboSale = publish ? pricingResolved.sale : 0;
+    const comboRegular = publish ? pricingResolved.regular : 0;
+    const parentQty = publish ? pricingResolved.qty : 0;
+
     const variationCombinations = staged.map((s) => ({
       options: [{ name: COLOUR_AXIS, value: s.row.colour }],
       priceDelta: 0,
       weightDelta: 0,
-      price: 0,
-      compareAtPrice: 0,
+      price: comboSale,
+      compareAtPrice: comboRegular,
       weight: 0,
-      stock: 0,
+      stock: parentQty,
       sku: `${articleNo}-${s.row.colour.replace(/\s+/g, "").toUpperCase()}`,
       image: s.destUrl,
     }));
@@ -387,10 +427,11 @@ async function main() {
       (await Product.findOne({ articleNo })) ||
       (await Product.findOne({ slug }));
 
-    // Never activate: no batch prices/stock; fitment unresolved for all catalogue rows
-    const status = "draft";
-    const securityHold = true;
-    const securityHoldReason = `Batch 12 key-cover hold: ${holdReasons.join("; ") || "awaiting price, stock and fitment"}`;
+    const status = publish ? "active" : "draft";
+    const securityHold = !publish;
+    const securityHoldReason = publish
+      ? ""
+      : `Batch 12 key-cover hold: ${holdReasons.join("; ") || "awaiting price, stock and fitment"}`;
 
     const setDoc = {
       name,
@@ -413,14 +454,21 @@ async function main() {
         { label: "Listing code", value: articleNo },
         { label: "Condition", value: "New" },
       ],
-      pricing: {
-        regularPrice: 0,
-        salePrice: null,
-        costPerItem: 0,
-        saleSchedule: { enabled: false },
-      },
+      pricing: publish
+        ? {
+            regularPrice: pricingResolved.regular,
+            salePrice: pricingResolved.sale,
+            costPerItem: 0,
+            saleSchedule: { enabled: false },
+          }
+        : {
+            regularPrice: 0,
+            salePrice: null,
+            costPerItem: 0,
+            saleSchedule: { enabled: false },
+          },
       inventory: {
-        quantity: 0,
+        quantity: parentQty,
         trackInventory: true,
         allowBackorder: false,
         lowStockThreshold: 5,
@@ -463,10 +511,10 @@ async function main() {
         metaTitle,
         metaDescription,
         metaKeywords: [displayName(group), "key cover", "Pakistan", "CrazzyCars.pk"],
-        excludeFromMerchantFeed: true,
-        excludeFromSitemap: true,
-        excludeFromListings: true,
-        robots: "noindex,nofollow",
+        excludeFromMerchantFeed: !publish,
+        excludeFromSitemap: !publish,
+        excludeFromListings: !publish,
+        robots: publish ? "" : "noindex,nofollow",
         omitProductSchemaImage: false,
       },
       status,
@@ -484,12 +532,21 @@ async function main() {
         available_colours: colours,
         asset_ids: availRows.map((r) => r.asset_id),
         image_kind: "AI studio visualisation; not physical-stock photography",
+        pricing_source: pricingResolved.source,
+        published_at: publish ? new Date().toISOString() : null,
       },
       updatedAt: new Date(),
     };
 
-    const action = existing ? "update_draft" : "create_draft";
-    if (existing) plan.summary.draft_updates += 1;
+    const action = publish
+      ? existing
+        ? "publish_update"
+        : "publish_create"
+      : existing
+        ? "update_draft"
+        : "create_draft";
+    if (publish) plan.summary.published += 1;
+    else if (existing) plan.summary.draft_updates += 1;
     else plan.summary.draft_creates += 1;
 
     plan.products.push({
@@ -500,6 +557,10 @@ async function main() {
       importKey,
       status,
       securityHold,
+      sale: comboSale,
+      regular: comboRegular,
+      qty: parentQty,
+      pricing_source: pricingResolved.source,
       colours,
       pending_colours: pendRows.map((r) => r.colour),
       media: staged.map((s) => s.destName),
@@ -548,29 +609,45 @@ async function main() {
     }
 
     if (existing) {
-      // Preserve pricing/inventory if a later owner-priced publish already happened
-      const keepPrice =
-        Number(existing.pricing?.regularPrice) > 0 || Number(existing.pricing?.salePrice) > 0;
-      const keepQty = Number(existing.inventory?.quantity) > 0;
-      if (keepPrice) {
+      // Keep prior owner-edited price/qty when re-running without intending to reset
+      if (!publish) {
+        const keepPrice =
+          Number(existing.pricing?.regularPrice) > 0 || Number(existing.pricing?.salePrice) > 0;
+        const keepQty = Number(existing.inventory?.quantity) > 0;
+        if (keepPrice) setDoc.pricing = existing.pricing;
+        if (keepQty) {
+          setDoc.inventory = {
+            ...setDoc.inventory,
+            quantity: existing.inventory.quantity,
+            sku: existing.inventory?.sku || articleNo,
+          };
+        }
+      } else if (
+        Number(existing.pricing?.salePrice) > 0 &&
+        Number(existing.pricing?.regularPrice) > 0 &&
+        existing.status === "active"
+      ) {
+        // Re-publish: preserve already-live owner prices/stock if present
         setDoc.pricing = existing.pricing;
-        // Still do not auto-activate
+        if (Number(existing.inventory?.quantity) > 0) {
+          setDoc.inventory = {
+            ...setDoc.inventory,
+            quantity: existing.inventory.quantity,
+            sku: existing.inventory?.sku || articleNo,
+          };
+          for (const c of setDoc.variationCombinations) {
+            c.price = Number(existing.pricing.salePrice);
+            c.compareAtPrice = Number(existing.pricing.regularPrice);
+            c.stock = Number(existing.inventory.quantity);
+          }
+        }
       }
-      if (keepQty) {
-        setDoc.inventory = {
-          ...setDoc.inventory,
-          quantity: existing.inventory.quantity,
-          sku: existing.inventory?.sku || articleNo,
-        };
-      }
-      // If previously activated with price+stock AND fitment cleared manually, don't re-hold? 
-      // Batch policy: always draft until owner clears — re-apply hold.
       await Product.updateOne({ _id: existing._id }, { $set: setDoc });
-      console.log("updated_draft", String(existing._id), slug);
+      console.log(publish ? "published" : "updated_draft", String(existing._id), slug);
     } else {
       setDoc.createdAt = new Date();
       const ins = await Product.insertOne(setDoc);
-      console.log("created_draft", String(ins.insertedId), slug);
+      console.log(publish ? "published_new" : "created_draft", String(ins.insertedId), slug);
     }
   }
 
