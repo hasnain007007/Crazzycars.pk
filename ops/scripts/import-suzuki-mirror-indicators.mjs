@@ -2,12 +2,14 @@
 /**
  * CrazzyCars.pk — Suzuki Side Mirror Indicators (Complete pack, 4 posters)
  *
- * Creates/updates DRAFT listings only. Owner PKR: sale 5199 / regular 7000.
+ * Owner PKR: sale 5199 / regular 7000. Default create/update is draft;
+ * pass --publish to activate (status active, hold cleared, SEO/COD on).
  * Illustrative PNGs retained as masters; not treated as verified stock photos.
  *
  * Usage (store container, DB crazzycars_motorsports only):
  *   node ... --handoff=/path --out=/path
  *   node ... --apply --media-root=/app/media
+ *   node ... --apply --publish --media-root=/app/media
  */
 import crypto from "crypto";
 import fs from "fs";
@@ -153,6 +155,7 @@ async function main() {
     process.exit(2);
   }
   const dryRun = !hasFlag("apply");
+  const publish = hasFlag("publish");
   const mediaRoot = arg("media-root", process.env.MEDIA_ROOT || "/app/media");
   const outDir = arg("out", path.join(handoff, "import-out"));
   fs.mkdirSync(outDir, { recursive: true });
@@ -269,11 +272,12 @@ async function main() {
     created_at: new Date().toISOString(),
     batch: BATCH,
     policy: {
-      status: "draft_only",
+      status: publish ? "active_on_apply" : "draft_only",
       price: `owner_sale_${OWNER_SALE_PKR}_regular_${OWNER_REGULAR_PKR}`,
       compare_at: "regularPrice_as_list",
       images: "illustrative_poster_as_main_for_new_drafts",
       currency: "PKR",
+      publish,
     },
     summary: { creates: 0, updates: 0, published: 0 },
     review_table: [],
@@ -301,13 +305,22 @@ async function main() {
     const destUrl = `/media/products/${destName}`;
     const alt = row.image_alt || `${row.title} — illustrative preview — CrazzyCars.pk`;
 
-    const longHtml = `${mdToHtml(row.description)}\n${whyBuy()}
-<p><strong>Draft blockers:</strong> ${escapeHtml(hold.join("; "))}.</p>`;
-
     const existing =
       (await Product.findOne({ importKey })) ||
       (await Product.findOne({ articleNo })) ||
       (await Product.findOne({ slug: row.slug }));
+
+    // Keep already-live listings active on re-run unless creating fresh drafts
+    const makeLive =
+      publish ||
+      (existing &&
+        String(existing.status || "").toLowerCase() === "active" &&
+        existing.securityHold !== true);
+
+    const longHtml = makeLive
+      ? `${mdToHtml(row.description)}\n${whyBuy()}`
+      : `${mdToHtml(row.description)}\n${whyBuy()}
+<p><strong>Draft blockers:</strong> ${escapeHtml(hold.join("; "))}.</p>`;
 
     // Never replace an active verified listing's primary gallery with this poster
     if (existing && existing.status === "active" && Number(existing.pricing?.salePrice) > 0) {
@@ -427,8 +440,8 @@ async function main() {
       ),
       isUniversal: false,
       isBulky: false,
-      codEligible: false,
-      codEnabled: false,
+      codEligible: makeLive,
+      codEnabled: makeLive,
       vehicleCompatibility: {
         fitmentType: "specific",
         universalNote:
@@ -454,15 +467,15 @@ async function main() {
         metaTitle: row.meta_title,
         metaDescription: row.meta_description,
         metaKeywords: row.tags || [],
-        excludeFromMerchantFeed: true,
-        excludeFromSitemap: true,
-        excludeFromListings: true,
-        robots: "noindex,nofollow",
+        excludeFromMerchantFeed: !makeLive,
+        excludeFromSitemap: !makeLive,
+        excludeFromListings: !makeLive,
+        robots: makeLive ? "" : "noindex,nofollow",
         omitProductSchemaImage: false,
       },
-      status: "draft",
-      securityHold: true,
-      securityHoldReason: `Suzuki mirror indicator hold: ${hold.join("; ")}`,
+      status: makeLive ? "active" : "draft",
+      securityHold: !makeLive,
+      securityHoldReason: makeLive ? "" : `Suzuki mirror indicator hold: ${hold.join("; ")}`,
       vendor: "CrazzyCars.pk",
       condition: "new",
       segment: "car",
@@ -470,18 +483,19 @@ async function main() {
         batch_id: BATCH,
         proposed_reference: row.proposed_reference,
         sha256: row._sha,
-        hold_reasons: hold,
+        hold_reasons: makeLive ? [] : hold,
         unconfirmed_fields: (row.unconfirmed_fields || []).filter(
           (f) => String(f).toLowerCase() !== "selling price"
         ),
-        publish_blockers: (row.publish_blockers || []).filter(
-          (r) => !/^confirm selling price$/i.test(String(r))
-        ),
+        publish_blockers: makeLive
+          ? []
+          : (row.publish_blockers || []).filter((r) => !/^confirm selling price$/i.test(String(r))),
         owner_reports_available: true,
         stock_quantity: null,
         pricing_source: "owner_confirmed_2026-11-20",
         owner_sale_price_pkr: OWNER_SALE_PKR,
         owner_regular_price_pkr: OWNER_REGULAR_PKR,
+        ...(makeLive ? { published_by: "owner_request_2026-11-20" } : {}),
         currency: "PKR",
         image_status: row.image_status,
         research_note: row.research_note || "",
@@ -492,9 +506,16 @@ async function main() {
       updatedAt: new Date(),
     };
 
-    const action = existing ? "draft_update" : "create_draft";
+    const action = makeLive
+      ? existing
+        ? "publish_update"
+        : "publish_create"
+      : existing
+        ? "draft_update"
+        : "create_draft";
     if (existing) plan.summary.updates += 1;
     else plan.summary.creates += 1;
+    if (makeLive) plan.summary.published += 1;
 
     plan.review_table.push({
       proposed_reference: row.proposed_reference,
@@ -503,10 +524,10 @@ async function main() {
       vehicle: row.vehicle,
       file: row.image,
       title: row.title,
-      draft_state: "draft",
+      draft_state: makeLive ? "active" : "draft",
       price_state: OWNER_SALE_PKR,
       disposition: action,
-      unresolved: hold,
+      unresolved: makeLive ? [] : hold,
       live_url: `https://crazzycars.pk/${row.slug}`,
     });
 
