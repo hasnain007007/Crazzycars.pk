@@ -2,7 +2,7 @@
 /**
  * CrazzyCars.pk — Suzuki Side Mirror Indicators (Complete pack, 4 posters)
  *
- * Creates/updates DRAFT listings only. No selling prices in pack → salePrice null.
+ * Creates/updates DRAFT listings only. Owner PKR: sale 5199 / regular 7000.
  * Illustrative PNGs retained as masters; not treated as verified stock photos.
  *
  * Usage (store container, DB crazzycars_motorsports only):
@@ -18,6 +18,9 @@ const LIVE_DB = "crazzycars_motorsports";
 const BATCH = "CC-SUZUKI-MIRROR-IND-4";
 const IMPORT_PREFIX = "crazzycars-suzuki-mirror-ind:";
 const EXPECTED = 4;
+/** Owner-confirmed PKR (2026-11-20) — apply to all four SKUs */
+const OWNER_SALE_PKR = 5199;
+const OWNER_REGULAR_PKR = 7000;
 
 const VEHICLE_SLUGS = {
   "Suzuki Fronx": [],
@@ -106,13 +109,17 @@ function whyBuy() {
 <p>CrazzyCars.pk is a Gujranwala car accessories shop. Message WhatsApp 03284010007 with clear photos of your outside mirror and any existing indicator (plus model year and trim) so we can help match the lamp before you order. Cash on Delivery is available on eligible items. Delivery charges follow the current store shipping policy on crazzycars.pk.</p>`;
 }
 function holdReasons(row, vehicleSlugs) {
+  const priceOk = OWNER_SALE_PKR > 0 && OWNER_REGULAR_PKR > OWNER_SALE_PKR;
+  const blockers = (row.publish_blockers || []).filter(
+    (r) => !/^confirm selling price$/i.test(String(r))
+  );
   const reasons = [
-    ...(row.publish_blockers || []),
-    "selling price not supplied",
+    ...blockers,
     "illustrative poster — not verified stock photography",
     "LED / sequential / RGB / voltage claims not confirmed",
     "package quantity and LH/RH supply unconfirmed",
   ];
+  if (!priceOk) reasons.unshift("selling price not supplied");
   if (!vehicleSlugs.length) reasons.push("no matching vehicle page slug (Fronx)");
   return [...new Set(reasons.map(String))];
 }
@@ -263,8 +270,8 @@ async function main() {
     batch: BATCH,
     policy: {
       status: "draft_only",
-      price: "null_until_owner_confirms",
-      compare_at: "never",
+      price: `owner_sale_${OWNER_SALE_PKR}_regular_${OWNER_REGULAR_PKR}`,
+      compare_at: "regularPrice_as_list",
       images: "illustrative_poster_as_main_for_new_drafts",
       currency: "PKR",
     },
@@ -366,7 +373,8 @@ async function main() {
         { label: "Product", value: "Side mirror indicator" },
         { label: "Vehicle reference", value: row.vehicle },
         { label: "Currency", value: "PKR" },
-        { label: "Sale price (PKR)", value: "Pending confirmation" },
+        { label: "Sale price (PKR)", value: String(OWNER_SALE_PKR) },
+        { label: "Regular price (PKR)", value: String(OWNER_REGULAR_PKR) },
         { label: "Package quantity", value: "Unconfirmed" },
         { label: "Light source", value: "Unconfirmed" },
         { label: "Listing code", value: articleNo },
@@ -374,8 +382,8 @@ async function main() {
         { label: "Image status", value: "AI illustration — not verified stock photo" },
       ],
       pricing: {
-        regularPrice: 0,
-        salePrice: null,
+        regularPrice: OWNER_REGULAR_PKR,
+        salePrice: OWNER_SALE_PKR,
         costPerItem: 0,
         saleSchedule: { enabled: false },
       },
@@ -463,11 +471,17 @@ async function main() {
         proposed_reference: row.proposed_reference,
         sha256: row._sha,
         hold_reasons: hold,
-        unconfirmed_fields: row.unconfirmed_fields || [],
-        publish_blockers: row.publish_blockers || [],
+        unconfirmed_fields: (row.unconfirmed_fields || []).filter(
+          (f) => String(f).toLowerCase() !== "selling price"
+        ),
+        publish_blockers: (row.publish_blockers || []).filter(
+          (r) => !/^confirm selling price$/i.test(String(r))
+        ),
         owner_reports_available: true,
         stock_quantity: null,
-        pricing_source: "pending_owner",
+        pricing_source: "owner_confirmed_2026-11-20",
+        owner_sale_price_pkr: OWNER_SALE_PKR,
+        owner_regular_price_pkr: OWNER_REGULAR_PKR,
         currency: "PKR",
         image_status: row.image_status,
         research_note: row.research_note || "",
@@ -490,7 +504,7 @@ async function main() {
       file: row.image,
       title: row.title,
       draft_state: "draft",
-      price_state: "unset",
+      price_state: OWNER_SALE_PKR,
       disposition: action,
       unresolved: hold,
       live_url: `https://crazzycars.pk/${row.slug}`,
