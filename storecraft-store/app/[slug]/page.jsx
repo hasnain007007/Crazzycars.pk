@@ -2,9 +2,12 @@ import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ProductDetailMedico } from "@/components/store/ProductDetailMedico";
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
-import PageView from "@/components/store/PageView";
+import dynamic from "next/dynamic";
 import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
 import { loadCmsPageNeighbors, loadProductNeighbors } from "@/lib/storeNeighborLoaders";
+import { sanitizePageHtml } from "@/lib/sanitizeHtml";
+
+const PageView = dynamic(() => import("@/components/store/PageView"), { ssr: true });
 import { blogsForProduct } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";
@@ -732,9 +735,13 @@ export default async function ProductPage({ params, searchParams }) {
     const raw = String(content.data?.content || "");
     if (!raw.trim() || /placeholder\s+copy/i.test(raw)) notFound();
     const pageNeighbors = await loadCmsPageNeighbors(content.data, { hrefPrefix: "" });
+    const safePage = {
+      ...content.data,
+      content: sanitizePageHtml(content.data?.content),
+    };
     return (
       <>
-        <PageView page={content.data} slug={slugStr} />
+        <PageView page={safePage} slug={slugStr} />
         <DetailNeighborNav {...pageNeighbors} />
       </>
     );

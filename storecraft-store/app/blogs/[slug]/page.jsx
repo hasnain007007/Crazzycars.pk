@@ -5,7 +5,9 @@ import { notFound } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
-import BlogPostView from "@/components/store/BlogPostView";
+import dynamic from "next/dynamic";
+
+const BlogPostView = dynamic(() => import("@/components/store/BlogPostView"), { ssr: true });
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
 import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
 import { loadBlogNeighbors } from "@/lib/storeNeighborLoaders";

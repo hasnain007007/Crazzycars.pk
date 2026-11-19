@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCarCatalogClient, seedCarCatalogClient } from "@/lib/fetchCarCatalogClient";
 import { stripBrandPrefix, vehicleCardModelLabel } from "@/lib/carCatalogDisplay";
 import { mediaImageUrl } from "@/lib/carCatalogCopy";
+import { cardImageUrl, localMediaPath } from "@/lib/cloudinaryImage";
 import { VehicleImageFallback } from "@/components/store/VehicleImageFallback";
 
 function yearLabel(v) {
@@ -91,7 +92,7 @@ function VehicleCard({ v }) {
         {v.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={v.image}
+            src={cardImageUrl(v.image, 400) || v.image}
             alt={`${[v.make, modelLabel].filter(Boolean).join(" ").trim() || "Vehicle"} accessories`}
             width={148}
             height={148}
@@ -101,6 +102,13 @@ function VehicleCard({ v }) {
             decoding="async"
             fetchPriority="low"
             draggable={false}
+            onError={(e) => {
+              const img = e.currentTarget;
+              const master = localMediaPath(v.image) || String(v.image || "").split("?")[0];
+              if (master && img.getAttribute("src") !== master) {
+                img.src = master;
+              }
+            }}
           />
         ) : (
           <VehicleImageFallback className="h-full w-full" />

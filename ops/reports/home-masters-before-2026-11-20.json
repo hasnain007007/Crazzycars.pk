@@ -1,0 +1,362 @@
+[
+  {
+    "file": "cars/honda-vezel-2013-2018-c0f99d9134.webp",
+    "kb": 243.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/haval-jolion-hev-2024-present-b4f7c9c116.webp",
+    "kb": 123.8,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/jaecoo-j5-hev-premium-2026-0282563dc8.webp",
+    "kb": 122.0,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "banners/hero-1-first.webp",
+    "kb": 111.5,
+    "where": "HeroBanner",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/jaecoo-j7-shsp-premium-2025-present-46e205bc9f.webp",
+    "kb": 89.8,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-corolla-e140-2009-2014-c1de7e5309.webp",
+    "kb": 88.2,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/dfsk-glory-580-2018-present-a188590534.webp",
+    "kb": 53.3,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/haval-h6-2021-present-c26e368a9e.webp",
+    "kb": 50.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/kia-stonic-2021-present-9d15b05049.webp",
+    "kb": 50.8,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/changan-oshanx7-2022-present-b1a3603cec.webp",
+    "kb": 50.5,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/baic-bj40-2020-present-2ad028438c.webp",
+    "kb": 50.0,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/proton-x70-2020-present-c30bea3db8.webp",
+    "kb": 50.0,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-corolla-cross-2020-present-ff81e045a7.webp",
+    "kb": 49.7,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-hilux-revo-2016-present-1205a0ebf4.webp",
+    "kb": 49.5,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/suzuki-swift-2018-2024-b7e6bb3e7c.webp",
+    "kb": 48.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/kia-sorento-2021-2024-b84cc7d0f0.webp",
+    "kb": 48.6,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/kia-sportage-2019-2024-7415efdcb8.webp",
+    "kb": 48.1,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/chery-tiggo4pro-2022-present-b24ae2414e.webp",
+    "kb": 48.0,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/kia-picanto-2019-present-821f32b716.webp",
+    "kb": 47.8,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-vitz-2012-present-4889aaf82e.webp",
+    "kb": 47.1,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/suzuki-swift-2025-present-9fad69a2ca.webp",
+    "kb": 46.6,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/honda-civic-x-2016-2021-2cee49fc4e.webp",
+    "kb": 46.3,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-raize-2019-present-cc3e347aa2.webp",
+    "kb": 45.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/changan-alsvin-2021-present-1a1d114d01.webp",
+    "kb": 45.4,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-fortuner-2020-present-c6b4036414.webp",
+    "kb": 45.4,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/suzuki-liana-2006-2014-ec61883b42.webp",
+    "kb": 45.4,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/mg-hs-2020-2025-546a316ce1.webp",
+    "kb": 45.1,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/chery-tiggo8pro-2022-present-591de0ecfd.webp",
+    "kb": 44.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/hyundai-elantra-2020-2024-24b68130bf.webp",
+    "kb": 44.6,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/honda-brv-2017-present-4b28b3e6a6.webp",
+    "kb": 44.3,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/byd-atto3-2025-present-30ebf8be60.webp",
+    "kb": 44.3,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/hyundai-tucson-2020-2024-5864c72893.webp",
+    "kb": 44.2,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/suzuki-wagonr-2014-present-5223ce3318.webp",
+    "kb": 43.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/hyundai-sonata-2020-2024-04b640d12b.webp",
+    "kb": 43.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/honda-civic-reborn-2006-2012-fd9e7d5efa.webp",
+    "kb": 43.5,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-aqua-2012-present-bf63e6a8aa.webp",
+    "kb": 42.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-corolla-e170-2014-2026-49b4603da2.webp",
+    "kb": 42.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/honda-vezel-2020-2026-38d50494c3.webp",
+    "kb": 42.8,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-yaris-cross-2020-present-c4932f8bc1.webp",
+    "kb": 42.8,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "products/toyota-mark-x-abs-roof-spoiler-2020-2022-2-e09759d7ea.webp",
+    "kb": 42.7,
+    "where": "HomeProductCard/rail",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/honda-civic-11th-gen-2022-present-d93e06b4d8.webp",
+    "kb": 41.7,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/nissan-note-2012-present-909fda7792.webp",
+    "kb": 41.5,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-yaris-2020-present-2bb2379b54.webp",
+    "kb": 40.8,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/honda-civic-rebirth-2012-2016-e57c76c83e.webp",
+    "kb": 40.8,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/honda-city-classic-2009-2020-0e55e91381.webp",
+    "kb": 40.6,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-corolla-e120-2002-2008-b2f13b9158.webp",
+    "kb": 40.6,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-mark-x-2004-1-genx120-9b8b01b38e.webp",
+    "kb": 40.1,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/suzuki-cultus-2017-present-4582183a06.webp",
+    "kb": 39.9,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/hyundai-elantra-hybrid-2025-present-380b3012b1.webp",
+    "kb": 39.8,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/suzuki-alto-2020-present-4b254852c2.webp",
+    "kb": 39.4,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/honda-civic-es-2001-2005-62efdd6390.webp",
+    "kb": 37.6,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-prius-2009-2015-3d8bbfc9e0.webp",
+    "kb": 37.6,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-prius-2016-2022-aa0124ae0e.webp",
+    "kb": 37.0,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/deepal-s05-2024-present-5243669542.webp",
+    "kb": 36.7,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-prius-2004-2009-41b34cdccd.webp",
+    "kb": 35.2,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "products/toyota-passo-2016-22-velvet-dashboard-mat-1-6213fcf74f.webp",
+    "kb": 18.6,
+    "where": "HomeProductCard/rail",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "products/toyota-axio-2014-22-velvet-dashboard-mat-1-68c5662a74.webp",
+    "kb": 16.6,
+    "where": "HomeProductCard/rail",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "products/suzuki-alto-old-velvet-dashboard-mat-1-b40370f51e.webp",
+    "kb": 16.6,
+    "where": "HomeProductCard/rail",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/toyota-logo-49e29bc4bf.webp",
+    "kb": 16.4,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  },
+  {
+    "file": "cars/honda-city-2021-present-c6a0dbe05a.webp",
+    "kb": 14.5,
+    "where": "ShopByVehicle",
+    "fix": "serve -400 via cardImageUrl / hero -800"
+  }
+]

@@ -1,13 +1,16 @@
 import Link from "next/link";
 import InfoBar from "./InfoBar";
-import { sanitizePageHtml } from "@/lib/sanitizeHtml";
 
+/**
+ * Presentational CMS page body. Caller must pass already-sanitized `page.content`
+ * (sanitizePageHtml on the server in app/pages/[slug] or app/[slug]).
+ */
 export default function PageView({ page, slug }) {
   if (!page) return null;
   const raw = String(page.content || "");
   // Never ship placeholder legal copy — caller should 404 instead.
   if (/placeholder\s+copy/i.test(raw)) return null;
-  const safeContent = sanitizePageHtml(page.content);
+  const safeContent = raw;
   if (!String(safeContent || "").replace(/<[^>]+>/g, "").trim()) return null;
 
   return (

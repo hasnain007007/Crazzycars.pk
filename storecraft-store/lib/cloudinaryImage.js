@@ -91,7 +91,7 @@ function localMediaForWidth(src, width) {
   if (!path) return fallback;
   // Already a concrete derivative — keep as requested.
   if (DERIV_SUFFIX_RE.test(path)) return path;
-  if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
+  if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand|banners)\//i.test(path)) {
     return fallback;
   }
   const master = localMediaMasterPath(path);
@@ -166,7 +166,7 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
 export function localMediaSrcSet(src, { mode = "card" } = {}) {
   const path = localMediaPath(src) || "";
   if (!path) return "";
-  if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(path)) {
+  if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand|banners)\//i.test(path)) {
     return "";
   }
   const master = localMediaMasterPath(path);
@@ -195,17 +195,30 @@ export function cloudinarySrcSet(src, widths = [320, 480, 640], { crop = "fill",
 }
 
 /**
- * Homepage hero — local banners are HQ-compressed WebP on /media.
- * Desktop: master. Mobile: dedicated *-mobile.webp when present in Mongo,
- * otherwise the same master (heroImageUrlMobile still returns a path).
+ * Homepage hero — prefer prebuilt -800.webp for local banners (masters stay on disk).
+ * Mobile: dedicated *-mobile.webp when present in Mongo, else -400/-800 path.
  */
 export function heroImageUrl(src) {
-  if (isLocalMedia(src)) return localMediaPath(src) || String(src || "").trim();
+  if (isLocalMedia(src) || unwrapNextImageUrl(src).includes("/media/")) {
+    const path = localMediaPath(src);
+    if (path && /\/media\/banners\//i.test(path)) {
+      if (DERIV_SUFFIX_RE.test(path)) return path;
+      return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-800.webp");
+    }
+    return path || unwrapNextImageUrl(src) || String(src || "").trim();
+  }
   return cloudinaryUrl(src, { width: 1920, crop: "limit", quality: "auto:good", format: "auto" });
 }
 
 export function heroImageUrlMobile(src) {
-  if (isLocalMedia(src)) return localMediaPath(src) || String(src || "").trim();
+  if (isLocalMedia(src) || unwrapNextImageUrl(src).includes("/media/")) {
+    const path = localMediaPath(src);
+    if (path && /\/media\/banners\//i.test(path)) {
+      if (DERIV_SUFFIX_RE.test(path)) return path;
+      return path.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
+    }
+    return path || unwrapNextImageUrl(src) || String(src || "").trim();
+  }
   return cloudinaryUrl(src, { width: 828, crop: "limit", quality: "auto:good", format: "auto" });
 }
 

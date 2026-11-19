@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { dbConnect } from "@/lib/db";
 import BlogPost from "@/lib/models/BlogPost.model";
 import "@/lib/models/Product.model";
-import BlogPostView from "@/components/store/BlogPostView";
+import dynamic from "next/dynamic";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { withSafeMetadata, isNextNavigationError } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
+
+const BlogPostView = dynamic(() => import("@/components/store/BlogPostView"), { ssr: true });
 import { recordBlogPostPageView } from "@/lib/blogEngagement";
 import { blogContentModifiedAt } from "@/lib/blogContentDate";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";

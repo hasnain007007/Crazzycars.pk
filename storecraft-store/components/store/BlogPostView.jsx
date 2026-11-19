@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { sanitizeBlogHtml } from "@/lib/sanitizeHtml";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 
 function rowId(p) {
   if (!p || typeof p !== "object") return "";
@@ -136,7 +136,7 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
             }}
           >
             <img
-              src={post.featuredImage.url}
+              src={cardImageUrl(post.featuredImage.url, 1200) || post.featuredImage.url}
               alt={post.featuredImage.altText || post.title}
               style={{ width: "100%", height: 480, objectFit: "cover", display: "block" }}
             />
@@ -145,7 +145,8 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
       </div>
 
       <div style={{ maxWidth: 820, margin: "0 auto", padding: "44px 20px", background: "#FFFFFF", color: "#222", fontSize: 18, lineHeight: 1.9 }}>
-        <div className="article-content" dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(post.content) }} />
+        {/* content is sanitized on the server (blogs/[slug]/page, storeBlogData) before SSR */}
+        <div className="article-content" dangerouslySetInnerHTML={{ __html: String(post.content || "") }} />
 
         {Array.isArray(post.relatedProducts) && post.relatedProducts.length > 0 ? (
           <div
@@ -327,7 +328,7 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
                     >
                       {p.featuredImage?.url ? (
                         <img
-                          src={p.featuredImage.url}
+                          src={cardImageUrl(p.featuredImage.url, 400) || p.featuredImage.url}
                           alt={p.title}
                           loading="lazy"
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}

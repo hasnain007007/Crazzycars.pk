@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 
 // Dates print in Pakistan time on server and browser alike, so hydration text matches.
 const TZ = "Asia/Karachi";
@@ -188,7 +189,7 @@ export default function BlogListView({
                         <Link href={`/blogs/${post.slug}`} className="blog-list-image-link">
                           {post.featuredImage?.url ? (
                             <img
-                              src={post.featuredImage.url}
+                              src={cardImageUrl(post.featuredImage.url, 800) || post.featuredImage.url}
                               alt={post.featuredImage?.altText || post.title}
                               className="blog-list-image"
                             />

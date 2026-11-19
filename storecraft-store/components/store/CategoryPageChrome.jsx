@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { CategoryHeroBanner } from "@/components/store/CategoryHeroBanner";
 import { categoryHref } from "@/lib/categories";
-import { sanitizeCategoryHtml } from "@/lib/sanitizeHtml";
 import { categoryImageUrl, localMediaPath } from "@/lib/cloudinaryImage";
 import LocalMediaImg from "@/components/store/LocalMediaImg";
 
@@ -68,14 +67,14 @@ function CategorySubcategoryMarquee({ subcategories = [] }) {
 
 /**
  * Prefer full description HTML; fall back to shortDescription.
- * Renders sanitized HTML (entities decoded) for crawlers and shoppers.
+ * Expects server-sanitized HTML (categories/[slug]/page runs sanitizeCategoryHtml).
  */
 function resolveCategoryDescriptionHtml(category) {
-  const raw =
+  return (
     String(category?.description || "").trim() ||
     String(category?.shortDescription || "").trim() ||
-    "";
-  return sanitizeCategoryHtml(raw);
+    ""
+  );
 }
 
 /**

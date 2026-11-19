@@ -20,6 +20,7 @@ import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
 import { effectiveUnitPrice } from "@/lib/storePricing";
 import { BRAND_NAME, withBrandTitleSuffix } from "@/lib/brand";
 import { loadCityNeighbors } from "@/lib/storeNeighborLoaders";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 
 export const revalidate = 3600;
 
@@ -63,11 +64,13 @@ async function loadCityPage(citySlug) {
       .lean();
     products = rows.map((p) => {
       const img = (p.media?.images || []).find((i) => i.isMain) || p.media?.images?.[0];
+      const raw = img?.url || "";
       return {
         name: p.name,
         slug: p.slug,
         href: `/${p.slug}`,
-        image: img?.url || "",
+        // Card slot: -400.webp (masters stay on disk for onError / OG).
+        image: raw ? cardImageUrl(raw, 400) || raw : "",
         price: effectiveUnitPrice(p) || Number(p.pricing?.regularPrice) || 0,
       };
     });
