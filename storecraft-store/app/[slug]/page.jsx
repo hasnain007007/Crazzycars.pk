@@ -2,12 +2,12 @@ import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ProductDetailMedico } from "@/components/store/ProductDetailMedico";
 import { InternalBlogLinks } from "@/components/store/InternalBlogLinks";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
 import { loadCmsPageNeighbors, loadProductNeighbors } from "@/lib/storeNeighborLoaders";
 import { sanitizePageHtml } from "@/lib/sanitizeHtml";
 
-const PageView = dynamic(() => import("@/components/store/PageView"), { ssr: true });
+const PageView = nextDynamic(() => import("@/components/store/PageView"), { ssr: true });
 import { blogsForProduct } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product.model";

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { dbConnect } from "@/lib/db";
 import Page from "@/lib/models/Page.model";
 import { DetailNeighborNav } from "@/components/store/DetailNeighborNav";
@@ -9,7 +9,7 @@ import { withSafeMetadata } from "@/lib/safeMetadata";
 import { loadCmsPageNeighbors } from "@/lib/storeNeighborLoaders";
 import { sanitizePageHtml } from "@/lib/sanitizeHtml";
 
-const PageView = dynamic(() => import("@/components/store/PageView"), { ssr: true });
+const PageView = nextDynamic(() => import("@/components/store/PageView"), { ssr: true });
 
 const BRAND = process.env.NEXT_PUBLIC_STORE_NAME || "CrazzyCars.pk";
 
