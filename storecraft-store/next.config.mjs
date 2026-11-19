@@ -218,12 +218,11 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 360, 400, 480],
   },
   experimental: {
-    // App Router: Critters (optimizeCss) never runs — stylesheets stay render-blocking
-    // and caused ~2s LCP element-render delay on mobile lab after the hero image loaded.
-    // inlineCss puts CSS in <style> with the HTML so first paint does not wait on the
-    // 180KB chunk. optimizeCss kept for any pages-router paths.
+    // Critters only runs on Pages router (noop for App Router). Do NOT enable
+    // experimental.inlineCss: it inlines ~180KB into <style> AND duplicates it
+    // inside the RSC payload (~2× HTML). Critical CSS + deferred stylesheets
+    // are handled in app/layout.js instead.
     optimizeCss: true,
-    inlineCss: true,
   },
   async headers() {
     return [

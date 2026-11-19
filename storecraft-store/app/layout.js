@@ -25,6 +25,7 @@ import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { BRAND_NAME, TITLE_SUFFIX, withBrandTitleSuffix } from "@/lib/brand";
 import { STORE_NAP } from "@/config/store-nap";
 import { STORE_CONTACT } from "@/config/store-policy";
+import { CRITICAL_CSS, DEFER_STYLESHEETS_SCRIPT } from "@/lib/criticalCss";
 import "./globals.css";
 
 const MobileBottomNav = dynamic(() => import("@/components/store/MobileBottomNav"));
@@ -36,23 +37,18 @@ export const revalidate = 300;
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
+  // optional: no late swap CLS when preload is off (swap+no-preload caused ~0.08 CLS).
+  display: "optional",
   weight: ["400", "600"],
-  // No preload: 48KB High-priority woff2 was competing with the homepage LCP image
-  // on slow 4G. display:swap + adjustFontFallback keeps text visible without CLS spike.
   preload: false,
-  // Metric-matched fallback cuts the ~0.175 CLS from late font swap (S7b).
   adjustFontFallback: true,
 });
 
 const rajdhani = Rajdhani({
   subsets: ["latin"],
   variable: "--font-rajdhani",
-  // optional = no late swap CLS on <main> (was 0.175). Inter stays swap for body text.
   display: "optional",
   weight: ["600", "700"],
-  // Do not preload — frees slow-4G bandwidth for the homepage LCP hero image.
-  // optional + adjustFontFallback keeps CLS stable if the file arrives late.
   preload: false,
   adjustFontFallback: true,
 });
@@ -274,7 +270,10 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${rajdhani.variable} h-full`}>
       <head>
-        {/* Early LCP image discovery — before Next injects script tags (page.jsx preloads landed too late). */}
+        {/* Unblock first paint: stylesheets block rendering, not parsing — flip to media=print until load. */}
+        <script dangerouslySetInnerHTML={{ __html: DEFER_STYLESHEETS_SCRIPT }} />
+        <style dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
+        {/* Early LCP image discovery (also sent as Link headers). */}
         <link
           rel="preload"
           as="image"
@@ -299,13 +298,6 @@ export default async function RootLayout({ children }) {
         }}
         suppressHydrationWarning
       >
-        {/* Ships with HTML so desktop nav / SEO tree stay hidden if CSS chunks 404 mid-deploy */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html:
-              ".cc-seo-nav{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}.store-header-desktop-nav,.store-header-desktop-actions{display:none!important}@media(min-width:768px){.store-header-desktop-nav{display:block!important}.store-header-desktop-actions{display:flex!important}}",
-          }}
-        />
         <ThemeInjector settings={settings} />
         <Suspense fallback={null}>
           <AnalyticsScripts settings={settings} />
@@ -324,7 +316,10 @@ export default async function RootLayout({ children }) {
         />
         <CustomerProvider>
           <StoreProviders settings={settings} shopifyEnabled={isShopifyEnabled()}>
-            <AnnouncementBar />
+            {/* Reserve announcement height before client messages hydrate (CLS). */}
+            <Suspense fallback={<div aria-hidden className="store-announcement-bar" style={{ minHeight: 36 }} />}>
+              <AnnouncementBar />
+            </Suspense>
             <Suspense fallback={null}>
               <ScrollToTop />
             </Suspense>

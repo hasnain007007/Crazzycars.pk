@@ -1047,6 +1047,7 @@ export function ProductDetailMedico({
         >
           <div className="product-images-col min-w-0 -mx-4 w-[calc(100%+2rem)] max-w-none md:mx-0 md:w-auto md:max-w-[560px]">
             <div
+              data-pdp-gallery
               className="product-main-viewer aspect-square w-full max-h-none overflow-hidden rounded-none border-0 border-b border-[#E5E5E5] bg-[#F8F8F8] md:rounded-lg md:border md:border-[#E5E5E5]"
               style={{ width: "100%", minHeight: "min(100vw, 420px)" }}
             >
