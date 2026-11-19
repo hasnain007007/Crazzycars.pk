@@ -91,17 +91,25 @@ function skuSlug(label) {
 function absMediaUrl(raw) {
   const s = String(raw || "").trim();
   if (!s) return "";
-  if (s.startsWith("/media/")) return s.split("?")[0];
-  if (/^https?:\/\//i.test(s) && s.includes("/media/")) {
-    try {
-      return new URL(s).pathname.split("?")[0];
-    } catch {
-      return s;
+  // Undo accidental /media/products/https://… prefix from an earlier bad normalize
+  const unprefixed = s.replace(/^\/media\/products\/(https?:\/\/)/i, "$1");
+  if (/^https?:\/\//i.test(unprefixed)) {
+    // Keep external CDN URLs (legacy Shopify) intact; local media hosts → pathname only
+    if (unprefixed.includes("/media/")) {
+      try {
+        return new URL(unprefixed).pathname.split("?")[0];
+      } catch {
+        return unprefixed.split("?")[0];
+      }
     }
+    return unprefixed.split("?")[0];
   }
+  if (unprefixed.startsWith("/media/")) return unprefixed.split("?")[0];
   // Legacy Shopify-ish bare filenames — treat as unusable for local media
-  if (!s.includes("/")) return "";
-  return s.startsWith("/") ? s.split("?")[0] : `/media/products/${s.split("?")[0]}`;
+  if (!unprefixed.includes("/")) return "";
+  return unprefixed.startsWith("/")
+    ? unprefixed.split("?")[0]
+    : `/media/products/${unprefixed.split("?")[0]}`;
 }
 
 async function main() {
