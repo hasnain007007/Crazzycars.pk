@@ -468,6 +468,8 @@ export function ProductDetailMedico({
         const url = typeof im === "string" ? im : im?.url || "";
         const masterUrl =
           typeof im === "string" ? "" : String(im?._masterUrl || im?.masterUrl || "").trim();
+        const srcSet =
+          typeof im === "string" ? "" : String(im?.srcSet || im?.srcset || "").trim();
         const isMain = typeof im === "string" ? false : Boolean(im?.isMain);
         const rawAlt = typeof im === "string" ? "" : String(im?.altText || im?.alt || "").trim();
         // TODO(remove-reconstructed-alt-belt): drop customerFacingAlt once DB alts are cleaned.
@@ -481,7 +483,7 @@ export function ProductDetailMedico({
           fixedRaw && altBelongsToProduct(fixedRaw, { ...product, name: nameForAlt })
             ? fixedRaw
             : nameForAlt;
-        return { url, masterUrl, altText };
+        return { url, masterUrl, srcSet, altText };
       })
       .filter((im) => Boolean(im.url));
     const owned = mapped.filter((im) => imageBelongsToProduct(im, product));
@@ -517,12 +519,14 @@ export function ProductDetailMedico({
   const galleryItems = useMemo(() => {
     const items = [];
     images.forEach((img) => {
-      // Prefer master for the large stage; keep any SSR derivative for thumbs.
-      const displayUrl = img.masterUrl || img.url;
+      // SSR already rewrote url to an existing -1200/-800; do not prefer master
+      // (that re-served multi-MB PNG/JPG masters in <img>).
+      const displayUrl = img.url || img.masterUrl;
       items.push({
         type: "image",
         url: displayUrl,
         thumbnail: img.url || displayUrl,
+        srcSet: img.srcSet || "",
         altText: img.altText || "",
       });
     });
@@ -1106,10 +1110,11 @@ export function ProductDetailMedico({
                   alt={selectedItem.altText || product.name}
                   watermark={productImageWatermark}
                   className="h-full w-full"
-                  // Large stage: -1200 src + srcset (-800 / -1200). Master only onError.
+                  // Large stage: -1200 src + disk-checked srcset. Master only onError.
                   width={1200}
                   crop="limit"
                   widths={[800, 1200]}
+                  srcSet={selectedItem.srcSet || undefined}
                   sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
                   loading={selectedIndex === 0 ? "eager" : "lazy"}
                   fetchPriority={selectedIndex === 0 ? "high" : "low"}

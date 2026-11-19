@@ -14,6 +14,7 @@ import {
   sharedStockQuantity,
   sharedTracksInventory,
 } from "@/lib/sharedInventory";
+import { thumbImageUrlExisting } from "@/lib/resolveLocalMedia";
 
 /** Internal ops labels that must not appear on the public PDP. */
 const INTERNAL_NOTE_LABEL_RE =
@@ -159,13 +160,17 @@ export function serializeStoreProductSummary(p, opts = {}) {
     ...rawImgs.filter((i) => !i?.isMain),
   ].filter(Boolean);
   const mediaImages = mainFirst.slice(0, maxImages || rawImgs.length);
-  const summaryImage = absoluteMediaUrl(
+  const summaryImageRaw = absoluteMediaUrl(
     mediaImages.find((i) => i?.isMain)?.url ||
       mediaImages[0]?.url ||
       rawImgs.find((i) => i?.isMain)?.url ||
       rawImgs[0]?.url ||
       ""
-  ) || null;
+  );
+  // Prefer on-disk -400 for cards / quick-add thumbs (never ship multi-MB PNG masters).
+  const summaryImage = summaryImageRaw
+    ? absoluteMediaUrl(thumbImageUrlExisting(summaryImageRaw)) || summaryImageRaw
+    : null;
   const summaryImages = leanCard
     ? summaryImage
       ? [summaryImage]

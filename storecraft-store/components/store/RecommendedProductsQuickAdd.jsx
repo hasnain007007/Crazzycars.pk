@@ -6,6 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/currency";
 import { productPath } from "@/lib/productPath";
 import { productAllowsCod } from "@/lib/codEligibility";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 
 function lineProductId(item) {
   return String(item?._id || item?.id || item?.productId || "");
@@ -106,7 +107,7 @@ export function RecommendedProductsQuickAdd({ products = [] }) {
                 {rec.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={rec.image}
+                    src={cardImageUrl(rec.image, 96) || rec.image}
                     alt={rec.name}
                     width={48}
                     height={48}

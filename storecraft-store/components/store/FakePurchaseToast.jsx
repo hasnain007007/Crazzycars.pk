@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { pickSocialProof } from "@/lib/fakeSocialProof";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 
 /**
  * Floating “someone just bought this” toast — soft social proof on PDPs.
@@ -72,7 +73,7 @@ export function FakePurchaseToast({ productName = "", productImage = "" }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img
           className="fake-purchase-toast__img"
-          src={toast.productImage}
+          src={cardImageUrl(toast.productImage, 96) || toast.productImage}
           alt=""
           width={48}
           height={48}

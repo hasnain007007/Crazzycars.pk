@@ -26,6 +26,8 @@ export function WatermarkedImage({
   widths,
   sizes = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw",
   responsive = true,
+  /** Server-built srcset (disk-checked). Wins over client-built cloudinarySrcSet. */
+  srcSet: srcSetProp,
   itemProp,
 }) {
   const [failed, setFailed] = useState(false);
@@ -78,15 +80,15 @@ export function WatermarkedImage({
   }
 
   const srcSetWidths = widths || [Math.round(width * 0.75), width, Math.round(width * 1.5)];
-  // Local /media gets an honest -400/master srcset; Cloudinary gets width list.
-  // Skip srcset for tiny thumb slots (request width ≤160) so controls stay on -sm.
+  // Prefer server disk-checked srcset; else client-built. Skip for tiny thumbs (≤160).
   const srcSet =
-    optimize &&
+    (srcSetProp && String(srcSetProp).trim()) ||
+    (optimize &&
     responsive &&
     Number(width) > 160 &&
     !/res\.cloudinary\.com/i.test(String(src))
       ? cloudinarySrcSet(src, srcSetWidths, { crop }) || undefined
-      : undefined;
+      : undefined);
 
   const showWatermark = Boolean(watermark?.enabled && watermark?.text && loaded);
 

@@ -91,6 +91,40 @@ export function thumbImageUrlExisting(src) {
   return resolveExistingLocalMedia(src, { prefer: ["400", "sm", "800", "original"] });
 }
 
+/**
+ * Responsive srcset that only lists derivatives present on disk.
+ * Falls back to -400 / master when -800/-1200 are missing (avoids browser 404s).
+ * @param {string} src
+ * @param {{ mode?: "card" | "gallery" }} [opts]
+ */
+export function localMediaSrcSetExisting(src, { mode = "card" } = {}) {
+  const pathOnly =
+    localMediaPath(unwrapNextImageUrl(src)) ||
+    (String(src || "").startsWith("/media/") ? String(src).split("?")[0] : "");
+  if (!pathOnly) return "";
+  if (!/\/media\/(categories|products|uploads|blogs|vehicles|cars|brand)\//i.test(pathOnly)) {
+    return "";
+  }
+  const master = mediaMasterPath(pathOnly);
+  const stem = master.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "");
+  const as400 = `${stem}-400.webp`;
+  const as800 = `${stem}-800.webp`;
+  const as1200 = `${stem}-1200.webp`;
+  const parts = [];
+  if (mode === "gallery") {
+    if (existsMedia(as800)) parts.push(`${as800} 800w`);
+    if (existsMedia(as1200)) parts.push(`${as1200} 1200w`);
+    if (!parts.length && existsMedia(as400)) parts.push(`${as400} 400w`);
+    if (!parts.length && existsMedia(master)) parts.push(`${master} 1200w`);
+    return parts.join(", ");
+  }
+  if (existsMedia(as400)) parts.push(`${as400} 400w`);
+  if (existsMedia(as800)) parts.push(`${as800} 800w`);
+  if (!parts.length && existsMedia(as1200)) parts.push(`${as1200} 800w`);
+  if (!parts.length && existsMedia(master)) parts.push(`${master} 400w`);
+  return parts.join(", ");
+}
+
 export function mediaRootPath() {
   return MEDIA_ROOT;
 }

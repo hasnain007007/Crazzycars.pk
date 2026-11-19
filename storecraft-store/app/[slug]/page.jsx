@@ -26,7 +26,11 @@ import {
 import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
-import { galleryImageUrlExisting, pdpImageUrlExisting } from "@/lib/resolveLocalMedia";
+import {
+  galleryImageUrlExisting,
+  localMediaSrcSetExisting,
+  pdpImageUrlExisting,
+} from "@/lib/resolveLocalMedia";
 import {
   productHasExternalCanonical,
   productHasRealImage,
@@ -620,7 +624,13 @@ export default async function ProductPage({ params, searchParams }) {
             const url = String(img?.url || "").trim();
             if (!url) return img;
             // Visible gallery: -1200/-800 only. OG/JSON-LD still use raw/master via other paths.
-            return { ...img, url: galleryImageUrlExisting(url), _masterUrl: url };
+            // srcSet lists only derivatives that exist on disk (no phantom -800/-1200).
+            return {
+              ...img,
+              url: galleryImageUrlExisting(url),
+              _masterUrl: url,
+              srcSet: localMediaSrcSetExisting(url, { mode: "gallery" }),
+            };
           }),
         },
       };

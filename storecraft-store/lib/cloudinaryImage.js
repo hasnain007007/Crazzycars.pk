@@ -158,6 +158,11 @@ export function cloudinaryUrl(src, { width, height, crop = "fill", quality = "au
  * - card: -400 / -800 only (NEVER the master — that was the Jaecoo 2 MB leak)
  * - gallery: -800 / -1200 only (master only via <img onError>)
  */
+/**
+ * Client-safe srcset builder (no disk check). Prefer `localMediaSrcSetExisting`
+ * from `@/lib/resolveLocalMedia` on the server when emitting HTML srcset.
+ * Missing files fall back via <img onError>; nightly HEAD audit catches gaps.
+ */
 export function localMediaSrcSet(src, { mode = "card" } = {}) {
   const path = localMediaPath(src) || "";
   if (!path) return "";
