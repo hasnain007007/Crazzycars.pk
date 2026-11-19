@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/check-policy-literals.mjs",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test:seo-indexing": "node --experimental-strip-types --test ../tests/seo-indexing.test.ts",
