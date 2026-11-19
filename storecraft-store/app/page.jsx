@@ -132,13 +132,11 @@ export default async function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(homeLd) }}
       />
-      {/* Preload the BrandHero car (LCP) — same files as components/home/BrandHero.jsx. */}
-      <link rel="preload" as="image" href="/hero/civic-night-760.webp" media="(max-width: 767px)" fetchPriority="high" />
-      <link rel="preload" as="image" href="/hero/civic-night-1205.webp" media="(min-width: 768px)" fetchPriority="high" />
       {/*
-        Critical hero CSS inlined: .brand-hero lives in the ~176KB CSS chunk and Critters
-        does not extract it. On mobile lab (slow 4G) that caused ~2s LCP element-render delay
-        after the image had already downloaded. Keep in sync with globals.css brand-hero block.
+        Hero image preloads live in app/layout.js <head> (earlier discovery).
+        Brand-hero CSS: experimental.inlineCss + sync decode on the LCP img.
+        Keep a minimal critical block here as belt-and-suspenders if inlineCss
+        fails mid-deploy — styles still apply before the car paints.
       */}
       <style
         dangerouslySetInnerHTML={{

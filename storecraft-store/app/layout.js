@@ -38,7 +38,9 @@ const inter = Inter({
   variable: "--font-inter",
   display: "swap",
   weight: ["400", "600"],
-  preload: true,
+  // No preload: 48KB High-priority woff2 was competing with the homepage LCP image
+  // on slow 4G. display:swap + adjustFontFallback keeps text visible without CLS spike.
+  preload: false,
   // Metric-matched fallback cuts the ~0.175 CLS from late font swap (S7b).
   adjustFontFallback: true,
 });
@@ -271,6 +273,23 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${rajdhani.variable} h-full`}>
+      <head>
+        {/* Early LCP image discovery — before Next injects script tags (page.jsx preloads landed too late). */}
+        <link
+          rel="preload"
+          as="image"
+          href="/hero/civic-night-760.webp"
+          media="(max-width: 767px)"
+          fetchPriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/hero/civic-night-1205.webp"
+          media="(min-width: 768px)"
+          fetchPriority="high"
+        />
+      </head>
       <body
         className="font-sans antialiased min-h-full flex flex-col"
         style={{
