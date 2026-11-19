@@ -16,7 +16,7 @@
     "seed:car-catalog:replace": "node --env-file=.env.local scripts/vehicles/replaceCarCatalog.mjs",
     "seed:products": "node --env-file=.env.local scripts/products/seedProducts.mjs",
     "seed:all": "npm run seed:categories && npm run seed:vehicles && npm run seed:car-catalog:replace && npm run seed:products",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build --webpack"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

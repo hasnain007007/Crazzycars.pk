@@ -1,0 +1,80 @@
+{
+  "slug": "honda-city-2009-2018-interior-carbon-fiber-trims",
+  "mediaImages": [
+    "https://crazzycars.pk/media/products/honda-city-2009-2018-interior-carbon-fiber-trims-recon-01-product-7c7066fc8ac9.png",
+    "https://crazzycars.pk/media/products/honda-city-2009-2018-interior-carbon-fiber-trims-recon-02-detail-76467a1dab3f.png"
+  ],
+  "before": [
+    {
+      "i": 0,
+      "options": [
+        {
+          "name": "Select Product",
+          "value": "Ac Vents"
+        }
+      ],
+      "image": "https://crazzycars.pk/media/products/honda-city-2009-2018-interior-carbon-fiber-trims-1-f00f93c853.jpg",
+      "sku": "CC-0222-AC-VENTS"
+    },
+    {
+      "i": 1,
+      "options": [
+        {
+          "name": "Select Product",
+          "value": "Gear Shifter"
+        }
+      ],
+      "image": "https://crazzycars.pk/media/products/honda-city-2009-2018-interior-carbon-fiber-trims-3-9786bb1b3d.jpg",
+      "sku": "CC-0222-GEAR-SHIFTER"
+    },
+    {
+      "i": 2,
+      "options": [
+        {
+          "name": "Select Product",
+          "value": "Gear Trim"
+        }
+      ],
+      "image": "https://crazzycars.pk/media/products/honda-city-2009-2018-interior-carbon-fiber-trims-2-dc435b0e05.jpg",
+      "sku": "CC-0222-GEAR-TRIM"
+    }
+  ],
+  "afterProposed": [
+    {
+      "i": 0,
+      "options": [
+        {
+          "name": "Select Product",
+          "value": "Ac Vents"
+        }
+      ],
+      "sku": "CC-0222-AC-VENTS",
+      "image": "",
+      "note": "CLEAR_DEAD_URL"
+    },
+    {
+      "i": 1,
+      "options": [
+        {
+          "name": "Select Product",
+          "value": "Gear Shifter"
+        }
+      ],
+      "sku": "CC-0222-GEAR-SHIFTER",
+      "image": "",
+      "note": "CLEAR_DEAD_URL"
+    },
+    {
+      "i": 2,
+      "options": [
+        {
+          "name": "Select Product",
+          "value": "Gear Trim"
+        }
+      ],
+      "sku": "CC-0222-GEAR-TRIM",
+      "image": "",
+      "note": "CLEAR_DEAD_URL"
+    }
+  ]
+}
