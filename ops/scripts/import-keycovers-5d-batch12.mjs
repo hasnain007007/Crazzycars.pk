@@ -77,8 +77,8 @@ const RELATED_METAL = {
 /** Premium metal tier models (1699/2199) when no related metal hit. */
 const PREMIUM_GROUPS = new Set(["Toyota Fortuner 4B", "Toyota Prado 3B", "Hyundai Sonata New", "Hyundai Sonata Old"]);
 
-const DEFAULT_TIER = { sale: 1399, regular: 1799, qty: 25 };
-const PREMIUM_TIER = { sale: 1699, regular: 2199, qty: 25 };
+const DEFAULT_TIER = { sale: 1399, regular: 1799, qty: 100 };
+const PREMIUM_TIER = { sale: 1699, regular: 2199, qty: 100 };
 
 function arg(name, fallback = "") {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
