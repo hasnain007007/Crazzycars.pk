@@ -13,6 +13,21 @@ export default function BrandHero({ prepaidPercent: prepaidPercentProp } = {}) {
   return (
     <section className="brand-hero" aria-label="CrazzyCars.pk">
       <div className="brand-hero__inner">
+        {/* Visual first in DOM so the LCP <img> is parsed early; mobile CSS order keeps it in-viewport. */}
+        <div className="brand-hero__visual" aria-hidden>
+          <picture>
+            <source media="(min-width: 768px)" srcSet="/hero/civic-night-1205.webp" />
+            <img
+              src="/hero/civic-night-760.webp"
+              alt="Honda Civic at night — car accessories from CrazzyCars.pk"
+              width={1205}
+              height={576}
+              fetchPriority="high"
+              decoding="async"
+              className="brand-hero__car"
+            />
+          </picture>
+        </div>
         <div className="brand-hero__copy">
           <p className="brand-hero__kicker">Body kits · LED lighting · Carbon accessories</p>
           <h1
@@ -52,21 +67,6 @@ export default function BrandHero({ prepaidPercent: prepaidPercentProp } = {}) {
               Find parts for my car
             </Link>
           </div>
-        </div>
-        <div className="brand-hero__visual" aria-hidden>
-          <picture>
-            <source media="(min-width: 768px)" srcSet="/hero/civic-night-1205.webp" />
-            <img
-              src="/hero/civic-night-760.webp"
-              alt="Honda Civic at night — car accessories from CrazzyCars.pk"
-              width={1205}
-              height={576}
-              fetchPriority="high"
-              /* sync decode: async contributed to LCP element-render delay on slow CPU */
-              decoding="sync"
-              className="brand-hero__car"
-            />
-          </picture>
         </div>
       </div>
       <div className="brand-hero__road" aria-hidden>
