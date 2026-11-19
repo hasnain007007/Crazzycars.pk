@@ -5,7 +5,6 @@ import Product from "@/lib/models/Product.model";
 import { buildMerchantRssXml, productToMerchantItem } from "@/lib/merchantFeed";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { WEBSITE_PRODUCT_FILTER } from "@/lib/productVisibility";
-import { STORE_POLICY } from "@/config/store-policy";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,19 +17,19 @@ export async function GET() {
   try {
     const h = await headers();
     const site = getSiteUrl({ headers: h });
-    const shippingFeePKR = Number(STORE_POLICY?.shipping?.standardFeePKR) || 250;
 
     await dbConnect();
     const products = await Product.find(WEBSITE_PRODUCT_FILTER)
       .select(
-        "name slug articleNo ean partNumber condition vendor shortDescription longDescription seo media pricing inventory categories updatedAt variationCombinations codEnabled isBulky"
+        "name slug articleNo ean partNumber condition vendor shortDescription longDescription seo media pricing inventory categories tags primaryCategorySlug updatedAt variationCombinations codEnabled isBulky"
       )
       .populate("categories", "name slug")
       .sort({ updatedAt: -1 })
       .lean();
 
+    // Per-product shipping (standard / bulky / body-kit) — do not blanket-override with standardFeePKR
     const items = (products || [])
-      .map((p) => productToMerchantItem(p, { siteUrl: site, shippingFeePKR }))
+      .map((p) => productToMerchantItem(p, { siteUrl: site }))
       .filter((it) => it.id && it.title && it.link && it.image_link);
 
     const xml = buildMerchantRssXml(items, {

@@ -216,14 +216,17 @@ export function productToMerchantItem(product, opts = {}) {
   // Only claim identifiers when we have a GTIN; still send MPN when available.
   const identifierExists = gtin.length >= 8 ? "yes" : "no";
 
+  const bulky = productIsBulkyForShipping(product);
   const shippingFee = Number(opts.shippingFeePKR);
-  const defaultFee = productIsBulkyForShipping(product)
+  const defaultFee = bulky
     ? Number(STORE_POLICY?.shipping?.bulkyFeePKR) || 500
     : isBodyKitProduct(product)
       ? 0
       : Number(STORE_POLICY?.shipping?.standardFeePKR) || 250;
+  // Prefer per-product fee; only honor opts.shippingFeePKR when caller opts in explicitly
+  // and does not intend a blanket override for every SKU.
   const shippingPrice =
-    Number.isFinite(shippingFee) && shippingFee >= 0
+    opts.forceShippingFeePKR === true && Number.isFinite(shippingFee) && shippingFee >= 0
       ? `${shippingFee.toFixed(2)} PKR`
       : `${Number(defaultFee).toFixed(2)} PKR`;
   const cod = productAllowsCod(product);
