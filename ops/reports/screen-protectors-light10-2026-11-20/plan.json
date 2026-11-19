@@ -1,0 +1,355 @@
+{
+  "dry_run": false,
+  "created_at": "2026-11-19T22:41:14.872Z",
+  "batch": "CC-SCREENPROT-LIGHT-10",
+  "publish": false,
+  "policy": {
+    "scope": "light10_only",
+    "prices_stock": "none_in_pack_all_new_draft",
+    "omoda_tiggo": "hard_hold_draft",
+    "deleted_haval_slug": "avoided_via_-frame_suffix"
+  },
+  "summary": {
+    "catalogue_rows": 10,
+    "models": 8,
+    "draft_creates": 8,
+    "draft_updates": 0,
+    "colour_merges": 0,
+    "colour_skips": 0,
+    "published": 0,
+    "held": 8
+  },
+  "products": [
+    {
+      "action": "create_draft",
+      "model": "BYD Atto 2",
+      "slug": "byd-atto-2-rubber-infotainment-screen-protector-frame",
+      "articleNo": "CC-SPF-BYDATTO2",
+      "importKey": "crazzycars-screenprot-light10:byd-atto-2",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Black"
+      ],
+      "media_added": [
+        "spf-byd-atto-2--black-01a146c309.png"
+      ],
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false,
+      "vehicle_slugs": [
+        "byd-atto2-2025-present"
+      ],
+      "live_url": "https://crazzycars.pk/byd-atto-2-rubber-infotainment-screen-protector-frame",
+      "existingId": null
+    },
+    {
+      "action": "create_draft",
+      "model": "BYD Atto 3",
+      "slug": "byd-atto-3-rubber-infotainment-screen-protector-frame",
+      "articleNo": "CC-SPF-BYDATTO3",
+      "importKey": "crazzycars-screenprot-light10:byd-atto-3",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Black"
+      ],
+      "media_added": [
+        "spf-byd-atto-3--black-6422ff75c3.png"
+      ],
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false,
+      "vehicle_slugs": [
+        "byd-atto3-2025-present"
+      ],
+      "live_url": "https://crazzycars.pk/byd-atto-3-rubber-infotainment-screen-protector-frame",
+      "existingId": null
+    },
+    {
+      "action": "create_draft",
+      "model": "Deepal S05",
+      "slug": "deepal-s05-rubber-infotainment-screen-protector-frame",
+      "articleNo": "CC-SPF-DEEPALS05",
+      "importKey": "crazzycars-screenprot-light10:deepal-s05",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Black",
+        "Orange"
+      ],
+      "media_added": [
+        "spf-deepal-s05--black-a970d438d2.png",
+        "spf-deepal-s05--orange-9b25b07f60.png"
+      ],
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false,
+      "vehicle_slugs": [
+        "deepal-s05-2024-present"
+      ],
+      "live_url": "https://crazzycars.pk/deepal-s05-rubber-infotainment-screen-protector-frame",
+      "existingId": null
+    },
+    {
+      "action": "create_draft",
+      "model": "Haval H6",
+      "slug": "haval-h6-rubber-infotainment-screen-protector-frame",
+      "articleNo": "CC-SPF-HAVALH6",
+      "importKey": "crazzycars-screenprot-light10:haval-h6",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Black",
+        "Orange"
+      ],
+      "media_added": [
+        "spf-haval-h6--black-831ac42773.png",
+        "spf-haval-h6--orange-2c963ae9e5.png"
+      ],
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false,
+      "vehicle_slugs": [
+        "haval-h6-2021-present"
+      ],
+      "live_url": "https://crazzycars.pk/haval-h6-rubber-infotainment-screen-protector-frame",
+      "existingId": null
+    },
+    {
+      "action": "create_draft",
+      "model": "Jetour T2",
+      "slug": "jetour-t2-rubber-infotainment-screen-protector-frame",
+      "articleNo": "CC-SPF-JETOURT2",
+      "importKey": "crazzycars-screenprot-light10:jetour-t2",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Black"
+      ],
+      "media_added": [
+        "spf-jetour-t2--black-dea0d3467b.png"
+      ],
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false,
+      "vehicle_slugs": [
+        "jetour-t2-2024-present"
+      ],
+      "live_url": "https://crazzycars.pk/jetour-t2-rubber-infotainment-screen-protector-frame",
+      "existingId": null
+    },
+    {
+      "action": "create_draft",
+      "model": "Omoda",
+      "slug": "omoda-rubber-infotainment-screen-protector-frame",
+      "articleNo": "CC-SPF-OMODA",
+      "importKey": "crazzycars-screenprot-light10:omoda",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Black"
+      ],
+      "media_added": [
+        "spf-omoda--black-6e3be47d02.png"
+      ],
+      "hold_reasons": [
+        "exact Omoda model unspecified — keep draft",
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no matching vehicle page slug mapped yet",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": true,
+      "vehicle_slugs": [],
+      "live_url": "https://crazzycars.pk/omoda-rubber-infotainment-screen-protector-frame",
+      "existingId": null
+    },
+    {
+      "action": "create_draft",
+      "model": "Tank 500",
+      "slug": "tank-500-rubber-infotainment-screen-protector-frame",
+      "articleNo": "CC-SPF-TANK500",
+      "importKey": "crazzycars-screenprot-light10:tank-500",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Black"
+      ],
+      "media_added": [
+        "spf-tank-500--black-befc0f411f.png"
+      ],
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no matching vehicle page slug mapped yet",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false,
+      "vehicle_slugs": [],
+      "live_url": "https://crazzycars.pk/tank-500-rubber-infotainment-screen-protector-frame",
+      "existingId": null
+    },
+    {
+      "action": "create_draft",
+      "model": "Tiggo 8 & 9 Pro",
+      "slug": "tiggo-8-and-9-pro-rubber-infotainment-screen-protector-frame",
+      "articleNo": "CC-SPF-TIGGO8AND9PRO",
+      "importKey": "crazzycars-screenprot-light10:tiggo-8-and-9-pro",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Black"
+      ],
+      "media_added": [
+        "spf-tiggo-8-9-pro--black-9d70480bde.png"
+      ],
+      "hold_reasons": [
+        "supplier shared Tiggo 8 & 9 Pro grouping — common fitment not verified",
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no matching vehicle page slug mapped yet",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": true,
+      "vehicle_slugs": [],
+      "live_url": "https://crazzycars.pk/tiggo-8-and-9-pro-rubber-infotainment-screen-protector-frame",
+      "existingId": null
+    }
+  ],
+  "rows": [
+    {
+      "asset_id": "byd-atto-2--black",
+      "model": "BYD Atto 2",
+      "colour": "Black",
+      "disposition": "create_draft",
+      "product_slug": "byd-atto-2-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false
+    },
+    {
+      "asset_id": "byd-atto-3--black",
+      "model": "BYD Atto 3",
+      "colour": "Black",
+      "disposition": "create_draft",
+      "product_slug": "byd-atto-3-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false
+    },
+    {
+      "asset_id": "deepal-s05--black",
+      "model": "Deepal S05",
+      "colour": "Black",
+      "disposition": "create_draft",
+      "product_slug": "deepal-s05-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false
+    },
+    {
+      "asset_id": "deepal-s05--orange",
+      "model": "Deepal S05",
+      "colour": "Orange",
+      "disposition": "create_draft",
+      "product_slug": "deepal-s05-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false
+    },
+    {
+      "asset_id": "haval-h6--black",
+      "model": "Haval H6",
+      "colour": "Black",
+      "disposition": "create_draft",
+      "product_slug": "haval-h6-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false
+    },
+    {
+      "asset_id": "haval-h6--orange",
+      "model": "Haval H6",
+      "colour": "Orange",
+      "disposition": "create_draft",
+      "product_slug": "haval-h6-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false
+    },
+    {
+      "asset_id": "jetour-t2--black",
+      "model": "Jetour T2",
+      "colour": "Black",
+      "disposition": "create_draft",
+      "product_slug": "jetour-t2-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false
+    },
+    {
+      "asset_id": "omoda--black",
+      "model": "Omoda",
+      "colour": "Black",
+      "disposition": "create_draft",
+      "product_slug": "omoda-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "exact Omoda model unspecified — keep draft",
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no matching vehicle page slug mapped yet",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": true
+    },
+    {
+      "asset_id": "tank-500--black",
+      "model": "Tank 500",
+      "colour": "Black",
+      "disposition": "create_draft",
+      "product_slug": "tank-500-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no matching vehicle page slug mapped yet",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": false
+    },
+    {
+      "asset_id": "tiggo-8-9-pro--black",
+      "model": "Tiggo 8 & 9 Pro",
+      "colour": "Black",
+      "disposition": "create_draft",
+      "product_slug": "tiggo-8-and-9-pro-rubber-infotainment-screen-protector-frame",
+      "hold_reasons": [
+        "supplier shared Tiggo 8 & 9 Pro grouping — common fitment not verified",
+        "catalogue fitment_verified=false — artwork is not physical-stock proof",
+        "no matching vehicle page slug mapped yet",
+        "no pack price or stock supplied"
+      ],
+      "hard_hold": true
+    }
+  ],
+  "backup_path": "/tmp/CrazzyCars_Screen_Protectors_Light_10/import-out-apply/backup.pre.json"
+}
