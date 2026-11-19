@@ -1,0 +1,2039 @@
+{
+  "dry_run": false,
+  "created_at": "2026-11-19T22:36:02.849Z",
+  "batch": "CC-KEYCOVER-5D-12-NEXT44",
+  "prior_batch": "CC-KEYCOVER-5D-12",
+  "publish": true,
+  "policy": {
+    "scope": "next44_only",
+    "metal_key_covers": "not_mutated",
+    "existing_primary_og": "retained",
+    "new_groups": "draft_until_price_stock_fitment",
+    "publish_merges": "only onto already-active parents that already have salePrice>0 and quantity>0"
+  },
+  "summary": {
+    "catalogue_rows": 44,
+    "groups": 36,
+    "colour_merges": 42,
+    "colour_skips_already_present": 0,
+    "draft_creates": 2,
+    "draft_updates": 0,
+    "published_merges": 34,
+    "held_creates": 2,
+    "held_fitment_existing_active": 16
+  },
+  "products": [
+    {
+      "action": "merge_colour_on_active",
+      "group": "AION",
+      "slug": "aion-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-AION",
+      "importKey": "crazzycars-keycovers12:aion",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-aion--black-405d31408e.png"
+      ],
+      "primary_retained": "/media/products/kc5d-aion--blue-d9f5681597.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "brand-only owner label — exact model/key not verified"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4932d517a1488baab29e",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "BYD",
+      "slug": "byd-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-BYD",
+      "importKey": "crazzycars-keycovers12:byd",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black",
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-byd--black-b920e5fe18.png",
+        "kc5d-byd--grey-753933cafd.png"
+      ],
+      "primary_retained": "/media/products/kc5d-byd--blue-e1813db4ef.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "brand-only owner label — exact model/key not verified"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4932d517a1488baab29f",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Changan Alsvin",
+      "slug": "changan-alsvin-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-CHANGANALSVIN",
+      "importKey": "crazzycars-keycovers12:changan-alsvin",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-changan-alsvin--black-970e4abcb7.png"
+      ],
+      "primary_retained": "/media/products/kc5d-changan-alsvin--blue-3cc6b7b64a.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-CHANGANALSVIN"
+      ],
+      "existingId": "6aff4932d517a1488baab2a0",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Changan Oshan X7",
+      "slug": "changan-oshan-x7-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-CHANGANOSHANX7",
+      "importKey": "crazzycars-keycovers12:changan-oshan-x7",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black",
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-changan-oshan-x7--black-172463b15d.png",
+        "kc5d-changan-oshan-x7--grey-31bc45068d.png"
+      ],
+      "primary_retained": "/media/products/kc5d-changan-oshan-x7--blue-2208d000fb.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-OSHANX7"
+      ],
+      "existingId": "6aff4932d517a1488baab2a1",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Haval H6",
+      "slug": "haval-h6-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HAVALH6",
+      "importKey": "crazzycars-keycovers12:haval-h6",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-haval-h6--black-c4b75bf574.png"
+      ],
+      "primary_retained": "/media/products/kc5d-haval-h6--blue-b510285884.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HAVALH6"
+      ],
+      "existingId": "6aff4932d517a1488baab2a3",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Haval H6 New",
+      "slug": "haval-h6-new-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HAVALH6NEW",
+      "importKey": "crazzycars-keycovers12:haval-h6-new",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black",
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-haval-h6-new--black-0a7bfd6112.png",
+        "kc5d-haval-h6-new--grey-e34224e5ec.png"
+      ],
+      "primary_retained": "/media/products/kc5d-haval-h6-new--blue-76ed23d447.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HAVALH6"
+      ],
+      "existingId": "6aff4932d517a1488baab2a4",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Honda City New",
+      "slug": "honda-city-new-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HONDACITYNEW",
+      "importKey": "crazzycars-keycovers12:honda-city-new",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black",
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-honda-city-new--black-a314579910.png",
+        "kc5d-honda-city-new--grey-7e087ca868.png"
+      ],
+      "primary_retained": "/media/products/kc5d-honda-city-new--blue-7f084253a9.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HONDACITY20223BUTTON"
+      ],
+      "existingId": "6aff4933d517a1488baab2a6",
+      "publish_eligible": true
+    },
+    {
+      "action": "create_draft_new_parent",
+      "group": "Honda City Old",
+      "slug": "honda-city-old-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HONDACITYOLD",
+      "importKey": "crazzycars-keycovers12:honda-city-old",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-honda-city-old--grey-91bb3c8396.png"
+      ],
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range",
+        "Honda City Old — first image only; reconcile vs City 2018/New metal SKUs before publish"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HONDACITY20092021",
+        "CC-KC-HONDACITY20092020"
+      ],
+      "related_metal_live": [
+        {
+          "articleNo": "CC-KC-HONDACITY20092021",
+          "slug": "honda-city-2009-2021-premium-metal-key-cover",
+          "sale": 1399,
+          "qty": 25,
+          "status": "active",
+          "note": "metal key cover — not merged / not overwritten"
+        },
+        {
+          "articleNo": "CC-KC-HONDACITY20092020",
+          "slug": "honda-city-2009-2020-premium-metal-key-cover",
+          "sale": 1399,
+          "qty": 25,
+          "status": "active",
+          "note": "metal key cover — not merged / not overwritten"
+        }
+      ],
+      "forceHold": true,
+      "existingId": null
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Honda Civic X",
+      "slug": "honda-civic-x-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HONDACIVICX",
+      "importKey": "crazzycars-keycovers12:honda-civic-x",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-honda-civic-x--grey-c707c5215e.png"
+      ],
+      "primary_retained": "/media/products/kc5d-honda-civic-x--black-07e7a3610a.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HONDACIVIC3BUTTON",
+        "CC-KC-HONDACIVIC4BUTTON"
+      ],
+      "existingId": "6aff4933d517a1488baab2a8",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Honda HR-V",
+      "slug": "honda-hr-v-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HONDAHRV",
+      "importKey": "crazzycars-keycovers12:honda-hr-v",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-honda-hr-v--black-5e1dbf9f42.png"
+      ],
+      "primary_retained": "/media/products/kc5d-honda-hr-v--brown-958181c915.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4933d517a1488baab2a9",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Honda Vezel / BR-V",
+      "slug": "honda-vezel-br-v-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HONDAVEZELBRV",
+      "importKey": "crazzycars-keycovers12:honda-vezel-br-v",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-honda-vezel-br-v--black-1a68284c5b.png"
+      ],
+      "primary_retained": "/media/products/kc5d-honda-vezel-br-v--brown-7006c1455c.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "shared owner group is not proof of identical fitment"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HONDAVEZEL",
+        "CC-KC-HONDABRV"
+      ],
+      "existingId": "6aff4933d517a1488baab2aa",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Hyundai Sonata New",
+      "slug": "hyundai-sonata-new-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HYUNDAISONATANEW",
+      "importKey": "crazzycars-keycovers12:hyundai-sonata-new",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-hyundai-sonata-new--black-dd7b5cdfb3.png"
+      ],
+      "primary_retained": "/media/products/kc5d-hyundai-sonata-new--blue-91e258618f.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HYUNDAISONATA"
+      ],
+      "existingId": "6aff4933d517a1488baab2ab",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Hyundai Sonata Old",
+      "slug": "hyundai-sonata-old-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HYUNDAISONATAOLD",
+      "importKey": "crazzycars-keycovers12:hyundai-sonata-old",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-hyundai-sonata-old--black-24dad581cd.png"
+      ],
+      "primary_retained": "/media/products/kc5d-hyundai-sonata-old--blue-6defbac406.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HYUNDAISONATA"
+      ],
+      "existingId": "6aff4933d517a1488baab2ac",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Hyundai Tucson Old",
+      "slug": "hyundai-tucson-old-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-HYUNDAITUCSONOLD",
+      "importKey": "crazzycars-keycovers12:hyundai-tucson-old",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-hyundai-tucson-old--black-540d89d99a.png"
+      ],
+      "primary_retained": "/media/products/kc5d-hyundai-tucson-old--blue-6e035bb3ab.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HYUNDAITUCSON"
+      ],
+      "existingId": "6aff4933d517a1488baab2ad",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Jaecoo J5",
+      "slug": "jaecoo-j5-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-JAECOOJ5",
+      "importKey": "crazzycars-keycovers12:jaecoo-j5",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black",
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-jaecoo-j5--black-f59b96e20a.png",
+        "kc5d-jaecoo-j5--grey-1e21da8573.png"
+      ],
+      "primary_retained": "/media/products/kc5d-jaecoo-j5--blue-6d36d4674d.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4933d517a1488baab2ae",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Jaecoo J7",
+      "slug": "jaecoo-j7-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-JAECOOJ7",
+      "importKey": "crazzycars-keycovers12:jaecoo-j7",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-jaecoo-j7--black-8c99275a91.png"
+      ],
+      "primary_retained": "/media/products/kc5d-jaecoo-j7--blue-510c3088da.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4933d517a1488baab2af",
+      "publish_eligible": true
+    },
+    {
+      "action": "create_draft_new_parent",
+      "group": "Jaecoo J7 / Chery Tiggo 7 / 8 / 9",
+      "slug": "jaecoo-j7-chery-tiggo-7-8-9-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-JAECOOJ7CHERYTIGGO",
+      "importKey": "crazzycars-keycovers12:jaecoo-j7-chery-tiggo-7-8-9",
+      "status": "draft",
+      "securityHold": true,
+      "colours": [
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-jaecoo-j7-chery-tiggo-7-8-9--grey-4268e36d27.png"
+      ],
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "shared owner group is not proof of identical fitment"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-CHERYTIGGO8PRO",
+        "CC-KC-CHERYTIGGO4PRO"
+      ],
+      "related_metal_live": [
+        {
+          "articleNo": "CC-KC-CHERYTIGGO8PRO",
+          "slug": "chery-tiggo-8-pro-premium-metal-key-cover",
+          "sale": 1399,
+          "qty": 25,
+          "status": "active",
+          "note": "metal key cover — not merged / not overwritten"
+        },
+        {
+          "articleNo": "CC-KC-CHERYTIGGO4PRO",
+          "slug": "chery-tiggo-4-pro-premium-metal-key-cover",
+          "sale": 1399,
+          "qty": 25,
+          "status": "active",
+          "note": "metal key cover — not merged / not overwritten"
+        }
+      ],
+      "forceHold": true,
+      "existingId": null
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Jetour Dashing",
+      "slug": "jetour-dashing-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-JETOURDASHING",
+      "importKey": "crazzycars-keycovers12:jetour-dashing",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-jetour-dashing--black-9b3c14c64f.png"
+      ],
+      "primary_retained": "/media/products/kc5d-jetour-dashing--brown-20b1408539.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4933d517a1488baab2b0",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Kia Sportage New",
+      "slug": "kia-sportage-new-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-KIASPORTAGENEW",
+      "importKey": "crazzycars-keycovers12:kia-sportage-new",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-kia-sportage-new--black-218e86b6d5.png"
+      ],
+      "primary_retained": "/media/products/kc5d-kia-sportage-new--blue-e7be3d1115.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-KIASPORTAGEAWD"
+      ],
+      "existingId": "6aff4934d517a1488baab2b1",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Kia Sportage Old",
+      "slug": "kia-sportage-old-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-KIASPORTAGEOLD",
+      "importKey": "crazzycars-keycovers12:kia-sportage-old",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-kia-sportage-old--black-df467e5339.png"
+      ],
+      "primary_retained": "/media/products/kc5d-kia-sportage-old--blue-8f744a2cb7.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-KIASPORTAGEALPHA"
+      ],
+      "existingId": "6aff4934d517a1488baab2b2",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "MG HS",
+      "slug": "mg-hs-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-MGHS",
+      "importKey": "crazzycars-keycovers12:mg-hs",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-mg-hs--black-9224353a83.png"
+      ],
+      "primary_retained": "/media/products/kc5d-mg-hs--blue-6f17ae243e.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-MGHS"
+      ],
+      "existingId": "6aff4934d517a1488baab2b3",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Suzuki Alto New",
+      "slug": "suzuki-alto-new-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-SUZUKIALTONEW",
+      "importKey": "crazzycars-keycovers12:suzuki-alto-new",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-suzuki-alto-new--grey-78dcebd693.png"
+      ],
+      "primary_retained": "/media/products/kc5d-suzuki-alto-new--black-ab8d1157d7.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-SUZUKIALTO"
+      ],
+      "existingId": "6aff4934d517a1488baab2b4",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Suzuki Swift New",
+      "slug": "suzuki-swift-new-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-SUZUKISWIFTNEW",
+      "importKey": "crazzycars-keycovers12:suzuki-swift-new",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-suzuki-swift-new--grey-c92d34dd13.png"
+      ],
+      "primary_retained": "/media/products/kc5d-suzuki-swift-new--black-7e09a1962b.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-SUZUKISWIFT"
+      ],
+      "existingId": "6aff4934d517a1488baab2b5",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Tank 500",
+      "slug": "tank-500-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TANK500",
+      "importKey": "crazzycars-keycovers12:tank-500",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black",
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-tank-500--black-b1c4f8a1c7.png",
+        "kc5d-tank-500--grey-5f0af8dc3e.png"
+      ],
+      "primary_retained": "/media/products/kc5d-tank-500--blue-7f191b5c2b.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4934d517a1488baab2b6",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Aqua / Prius",
+      "slug": "toyota-aqua-prius-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTAAQUAPRIUS",
+      "importKey": "crazzycars-keycovers12:toyota-aqua-prius",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black",
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-toyota-aqua-prius--black-2e8cf359e0.png",
+        "kc5d-toyota-aqua-prius--grey-ee6252b13f.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-aqua-prius--blue-271783636b.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "shared owner group is not proof of identical fitment"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAPRIUS"
+      ],
+      "existingId": "6aff4934d517a1488baab2b7",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Corolla 2015",
+      "slug": "toyota-corolla-2015-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTACOROLLA2015",
+      "importKey": "crazzycars-keycovers12:toyota-corolla-2015",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-corolla-2015--black-88873cef9c.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-corolla-2015--blue-c6b0523cf7.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4934d517a1488baab2b8",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Corolla Cross",
+      "slug": "toyota-corolla-cross-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTACOROLLACROSS",
+      "importKey": "crazzycars-keycovers12:toyota-corolla-cross",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-corolla-cross--black-6839d479e7.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-corolla-cross--brown-f6150d2605.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4934d517a1488baab2b9",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Fortuner 4B",
+      "slug": "toyota-fortuner-4b-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTAFORTUNER4B",
+      "importKey": "crazzycars-keycovers12:toyota-fortuner-4b",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-fortuner-4b--black-3836250684.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-fortuner-4b--blue-3fef8d1d6b.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAFORTUNER4BUTTO"
+      ],
+      "existingId": "6aff4934d517a1488baab2ba",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Grande New",
+      "slug": "toyota-grande-new-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTAGRANDENEW",
+      "importKey": "crazzycars-keycovers12:toyota-grande-new",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black",
+        "Grey"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Grey"
+      ],
+      "media_added": [
+        "kc5d-toyota-grande-new--black-68b72dea08.png",
+        "kc5d-toyota-grande-new--grey-881bdc1811.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-grande-new--blue-8bbab25a21.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTACOROLLAGRANDE"
+      ],
+      "existingId": "6aff4934d517a1488baab2bb",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Grande Old",
+      "slug": "toyota-grande-old-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTAGRANDEOLD",
+      "importKey": "crazzycars-keycovers12:toyota-grande-old",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-grande-old--black-08c0d6e139.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-grande-old--brown-33a02e0f8c.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range",
+        "Grande Old open-frame visualisation unverified"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4934d517a1488baab2bc",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Prado 3B",
+      "slug": "toyota-prado-3b-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTAPRADO3B",
+      "importKey": "crazzycars-keycovers12:toyota-prado-3b",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-prado-3b--black-bd4b01ef9c.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-prado-3b--blue-eea4e5270c.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Prado button-count / layout needs physical reconciliation"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAPRADO"
+      ],
+      "existingId": "6aff4935d517a1488baab2bd",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Raize",
+      "slug": "toyota-raize-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTARAIZE",
+      "importKey": "crazzycars-keycovers12:toyota-raize",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-raize--black-721aa9f318.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-raize--blue-4e8efdebce.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4935d517a1488baab2be",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Revo 3B",
+      "slug": "toyota-revo-3b-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTAREVO3B",
+      "importKey": "crazzycars-keycovers12:toyota-revo-3b",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-revo-3b--black-97c5a5a190.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-revo-3b--blue-0c89d94a81.png",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4935d517a1488baab2bf",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Yaris 1.3",
+      "slug": "toyota-yaris-1-3-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTAYARIS13",
+      "importKey": "crazzycars-keycovers12:toyota-yaris-1-3",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-yaris-1-3--black-ea0787727f.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-yaris-1-3--blue-8cc9eaa003.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAYARIS"
+      ],
+      "existingId": "6aff4935d517a1488baab2c0",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Yaris 1.5",
+      "slug": "toyota-yaris-1-5-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTAYARIS15",
+      "importKey": "crazzycars-keycovers12:toyota-yaris-1-5",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-yaris-1-5--black-1e00a9ab8c.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-yaris-1-5--blue-2e78f7e9fa.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAYARIS"
+      ],
+      "existingId": "6aff4935d517a1488baab2c1",
+      "publish_eligible": true
+    },
+    {
+      "action": "merge_colour_on_active",
+      "group": "Toyota Yaris Hatchback",
+      "slug": "toyota-yaris-hatchback-5d-zinc-leather-key-cover",
+      "articleNo": "CC-KC5D-TOYOTAYARISHATCHBA",
+      "importKey": "crazzycars-keycovers12:toyota-yaris-hatchback",
+      "status": "active",
+      "securityHold": false,
+      "sale": 2299,
+      "regular": 2999,
+      "qty": 100,
+      "colours_added": [
+        "Black"
+      ],
+      "colours_skipped": [],
+      "colours_after": [
+        "Black",
+        "Blue",
+        "Brown"
+      ],
+      "media_added": [
+        "kc5d-toyota-yaris-hatchback--black-5deb4992bb.png"
+      ],
+      "primary_retained": "/media/products/kc5d-toyota-yaris-hatchback--blue-6750e93948.png",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existingId": "6aff4935d517a1488baab2c2",
+      "publish_eligible": true
+    }
+  ],
+  "rows": [
+    {
+      "asset_id": "aion--black",
+      "owner_model_or_group": "AION",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "aion-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "brand-only owner label — exact model/key not verified"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "byd--black",
+      "owner_model_or_group": "BYD",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "byd-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "brand-only owner label — exact model/key not verified"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "byd--grey",
+      "owner_model_or_group": "BYD",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "byd-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "brand-only owner label — exact model/key not verified"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "changan-alsvin--black",
+      "owner_model_or_group": "Changan Alsvin",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "changan-alsvin-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-CHANGANALSVIN"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "changan-oshan-x7--black",
+      "owner_model_or_group": "Changan Oshan X7",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "changan-oshan-x7-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-OSHANX7"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "changan-oshan-x7--grey",
+      "owner_model_or_group": "Changan Oshan X7",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "changan-oshan-x7-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-OSHANX7"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "haval-h6--black",
+      "owner_model_or_group": "Haval H6",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "haval-h6-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HAVALH6"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "haval-h6-new--black",
+      "owner_model_or_group": "Haval H6 New",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "haval-h6-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HAVALH6"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "haval-h6-new--grey",
+      "owner_model_or_group": "Haval H6 New",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "haval-h6-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HAVALH6"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "honda-city-new--black",
+      "owner_model_or_group": "Honda City New",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "honda-city-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HONDACITY20223BUTTON"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "honda-city-new--grey",
+      "owner_model_or_group": "Honda City New",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "honda-city-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HONDACITY20223BUTTON"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "honda-city-old--grey",
+      "owner_model_or_group": "Honda City Old",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "create_draft_new_parent",
+      "product_slug": "honda-city-old-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range",
+        "Honda City Old — first image only; reconcile vs City 2018/New metal SKUs before publish"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HONDACITY20092021",
+        "CC-KC-HONDACITY20092020"
+      ],
+      "existing_status": null,
+      "existing_sale": null,
+      "existing_qty": null
+    },
+    {
+      "asset_id": "honda-civic-x--grey",
+      "owner_model_or_group": "Honda Civic X",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "honda-civic-x-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HONDACIVIC3BUTTON",
+        "CC-KC-HONDACIVIC4BUTTON"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "honda-hr-v--black",
+      "owner_model_or_group": "Honda HR-V",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "honda-hr-v-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "honda-vezel-br-v--black",
+      "owner_model_or_group": "Honda Vezel / BR-V",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "honda-vezel-br-v-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "shared owner group is not proof of identical fitment"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HONDAVEZEL",
+        "CC-KC-HONDABRV"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "hyundai-sonata-new--black",
+      "owner_model_or_group": "Hyundai Sonata New",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "hyundai-sonata-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HYUNDAISONATA"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "hyundai-sonata-old--black",
+      "owner_model_or_group": "Hyundai Sonata Old",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "hyundai-sonata-old-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HYUNDAISONATA"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "hyundai-tucson-old--black",
+      "owner_model_or_group": "Hyundai Tucson Old",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "hyundai-tucson-old-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-HYUNDAITUCSON"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "jaecoo-j5--black",
+      "owner_model_or_group": "Jaecoo J5",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "jaecoo-j5-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "jaecoo-j5--grey",
+      "owner_model_or_group": "Jaecoo J5",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "jaecoo-j5-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "jaecoo-j7--black",
+      "owner_model_or_group": "Jaecoo J7",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "jaecoo-j7-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "jaecoo-j7-chery-tiggo-7-8-9--grey",
+      "owner_model_or_group": "Jaecoo J7 / Chery Tiggo 7 / 8 / 9",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "create_draft_new_parent",
+      "product_slug": "jaecoo-j7-chery-tiggo-7-8-9-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "shared owner group is not proof of identical fitment"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-CHERYTIGGO8PRO",
+        "CC-KC-CHERYTIGGO4PRO"
+      ],
+      "existing_status": null,
+      "existing_sale": null,
+      "existing_qty": null
+    },
+    {
+      "asset_id": "jetour-dashing--black",
+      "owner_model_or_group": "Jetour Dashing",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "jetour-dashing-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "kia-sportage-new--black",
+      "owner_model_or_group": "Kia Sportage New",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "kia-sportage-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-KIASPORTAGEAWD"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "kia-sportage-old--black",
+      "owner_model_or_group": "Kia Sportage Old",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "kia-sportage-old-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-KIASPORTAGEALPHA"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "mg-hs--black",
+      "owner_model_or_group": "MG HS",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "mg-hs-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-MGHS"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "suzuki-alto-new--grey",
+      "owner_model_or_group": "Suzuki Alto New",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "suzuki-alto-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-SUZUKIALTO"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "suzuki-swift-new--grey",
+      "owner_model_or_group": "Suzuki Swift New",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "suzuki-swift-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-SUZUKISWIFT"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "tank-500--black",
+      "owner_model_or_group": "Tank 500",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "tank-500-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "tank-500--grey",
+      "owner_model_or_group": "Tank 500",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "tank-500-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-aqua-prius--black",
+      "owner_model_or_group": "Toyota Aqua / Prius",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-aqua-prius-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "shared owner group is not proof of identical fitment"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAPRIUS"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-aqua-prius--grey",
+      "owner_model_or_group": "Toyota Aqua / Prius",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-aqua-prius-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "shared owner group is not proof of identical fitment"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAPRIUS"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-corolla-2015--black",
+      "owner_model_or_group": "Toyota Corolla 2015",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-corolla-2015-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-corolla-cross--black",
+      "owner_model_or_group": "Toyota Corolla Cross",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-corolla-cross-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-fortuner-4b--black",
+      "owner_model_or_group": "Toyota Fortuner 4B",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-fortuner-4b-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAFORTUNER4BUTTO"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-grande-new--black",
+      "owner_model_or_group": "Toyota Grande New",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-grande-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTACOROLLAGRANDE"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-grande-new--grey",
+      "owner_model_or_group": "Toyota Grande New",
+      "colour": "Grey",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-grande-new-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTACOROLLAGRANDE"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-grande-old--black",
+      "owner_model_or_group": "Toyota Grande Old",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-grande-old-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Old/New label does not establish exact year range",
+        "Grande Old open-frame visualisation unverified"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-prado-3b--black",
+      "owner_model_or_group": "Toyota Prado 3B",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-prado-3b-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false",
+        "Prado button-count / layout needs physical reconciliation"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAPRADO"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-raize--black",
+      "owner_model_or_group": "Toyota Raize",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-raize-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-revo-3b--black",
+      "owner_model_or_group": "Toyota Revo 3B",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-revo-3b-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-yaris-1-3--black",
+      "owner_model_or_group": "Toyota Yaris 1.3",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-yaris-1-3-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAYARIS"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-yaris-1-5--black",
+      "owner_model_or_group": "Toyota Yaris 1.5",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-yaris-1-5-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [
+        "CC-KC-TOYOTAYARIS"
+      ],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    },
+    {
+      "asset_id": "toyota-yaris-hatchback--black",
+      "owner_model_or_group": "Toyota Yaris Hatchback",
+      "colour": "Black",
+      "image_status": "AVAILABLE",
+      "disposition": "merge_colour_on_active",
+      "product_slug": "toyota-yaris-hatchback-5d-zinc-leather-key-cover",
+      "hold_reasons": [
+        "owner-flagged fitment/grouping unresolved",
+        "catalogue fitment_verified=false"
+      ],
+      "related_metal_articleNos": [],
+      "existing_status": "active",
+      "existing_sale": 2299,
+      "existing_qty": 100
+    }
+  ],
+  "backup_path": "/tmp/CrazzyCars_Key_Covers_Next_44/import-out-apply/backup-before-next44.pre.json",
+  "backup_path_post": "/tmp/CrazzyCars_Key_Covers_Next_44/import-out-apply/backup-before-next44.post.json"
+}
