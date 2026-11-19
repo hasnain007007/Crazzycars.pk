@@ -1,18 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDeferredThirdParty } from "@/lib/useDeferredThirdParty";
 
 /**
- * SSR null, then mount interaction-only widgets.
- * Dynamic-import after mount so CartDrawer / WhatsApp stay out of the first JS graph.
+ * SSR null, then mount interaction-only widgets after idle/gesture.
+ * Dynamic-import after arm so CartDrawer / WhatsApp stay out of the first JS graph.
  * Avoid next/dynamic `{ ssr: false }`, which emits BAILOUT_TO_CLIENT_SIDE_RENDERING.
  */
-function AfterMount({ children }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  if (!mounted) return null;
+function AfterIdle({ children, delayMs = 4000 }) {
+  const ready = useDeferredThirdParty(delayMs);
+  if (!ready) return null;
   return children;
 }
 
@@ -60,16 +58,16 @@ function LazyLivePresence() {
 
 export function LivePresenceClient() {
   return (
-    <AfterMount>
+    <AfterIdle delayMs={6000}>
       <LazyLivePresence />
-    </AfterMount>
+    </AfterIdle>
   );
 }
 
 export function ClientOnlyWidgets() {
   return (
-    <AfterMount>
+    <AfterIdle delayMs={4000}>
       <LazyCartAndWhatsApp />
-    </AfterMount>
+    </AfterIdle>
   );
 }

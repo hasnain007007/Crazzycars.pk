@@ -81,7 +81,23 @@ export function CustomerProvider({ children }) {
       }
     };
 
-    checkAuth();
+    // Defer session probe until idle so home/PDP hydration is not competing with /api/customer/me.
+    let idleId = 0;
+    let timeoutId = 0;
+    const start = () => {
+      if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(() => checkAuth(), { timeout: 2500 });
+      } else {
+        timeoutId = window.setTimeout(checkAuth, 800);
+      }
+    };
+    start();
+    return () => {
+      if (idleId && typeof window !== "undefined" && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
   }, []);
 
   const login = useCallback(async (email, password) => {

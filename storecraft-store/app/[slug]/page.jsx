@@ -70,6 +70,7 @@ import {
   PRODUCT_CONTENT_OVERRIDES,
   PRODUCT_FAQ_OVERRIDES,
   PRODUCT_H1_OVERRIDES,
+  PRODUCT_NAME_OVERRIDES,
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { stripEmbeddedFaqHtml } from "@/lib/seo/stripEmbeddedFaqHtml";
 
@@ -707,6 +708,16 @@ export default async function ProductPage({ params, searchParams }) {
             relatedProducts={content.relatedProducts || []}
             carLinks={content.carLinks || []}
             soldRecently={soldRecently}
+            contentOverride={
+              PRODUCT_CONTENT_OVERRIDES[String(content.data?.slug || "").trim()] || null
+            }
+            displayName={
+              PRODUCT_H1_OVERRIDES[String(content.data?.slug || "").trim()] ||
+              PRODUCT_NAME_OVERRIDES[String(content.data?.slug || "").trim()] ||
+              displayProductName(content.data?.name) ||
+              content.data?.name ||
+              null
+            }
           />
         </div>
         <FaqSection

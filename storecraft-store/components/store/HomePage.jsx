@@ -1,41 +1,42 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import { useMemo } from "react";
+import nextDynamic from "next/dynamic";
 import BrandHero from "@/components/home/BrandHero";
-import { useStoreSettings } from "@/context/StoreSettingsContext";
+import StatsBar from "@/components/home/StatsBar";
+import GoogleReviewsNote from "@/components/home/GoogleReviewsNote";
+import WhyChooseUs from "@/components/home/WhyChooseUs";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
 
-/** Above-the-fold LCP stays eager (BrandHero). Everything else is code-split. */
-const StatsBar = dynamic(() => import("@/components/home/StatsBar"), {
-  loading: () => <SectionSkeleton height={72} />,
-});
-const ShopByCar = dynamic(() => import("@/components/home/ShopByCar"), {
+/**
+ * Homepage shell is a Server Component so StatsBar / BrandHero / WhyChooseUs /
+ * GoogleReviewsNote do not hydrate. Interactive below-fold sections stay client
+ * via next/dynamic with ssr:true (HTML stays in the document).
+ */
+const ShopByCar = nextDynamic(() => import("@/components/home/ShopByCar"), {
+  ssr: true,
   loading: () => <SectionSkeleton height={220} />,
 });
-const ShopByVehicle = dynamic(() => import("@/components/home/ShopByVehicle"), {
+const ShopByVehicle = nextDynamic(() => import("@/components/home/ShopByVehicle"), {
+  ssr: true,
   loading: () => <SectionSkeleton height={280} />,
 });
-const CategoryGrid = dynamic(() => import("@/components/home/CategoryGrid"), {
+const CategoryGrid = nextDynamic(() => import("@/components/home/CategoryGrid"), {
+  ssr: true,
   loading: () => <SectionSkeleton height={200} />,
 });
-const HotDeals = dynamic(() => import("@/components/home/HotDeals"), {
+const HotDeals = nextDynamic(() => import("@/components/home/HotDeals"), {
+  ssr: true,
   loading: () => <SectionSkeleton height={360} />,
 });
-const CategoryShowcaseRails = dynamic(() => import("@/components/home/CategoryShowcaseRails"), {
+const CategoryShowcaseRails = nextDynamic(() => import("@/components/home/CategoryShowcaseRails"), {
+  ssr: true,
   loading: () => <SectionSkeleton height={420} />,
 });
-const BestSellers = dynamic(() => import("@/components/home/BestSellers"), {
+const BestSellers = nextDynamic(() => import("@/components/home/BestSellers"), {
+  ssr: true,
   loading: () => <SectionSkeleton height={360} />,
 });
-const ReviewsCarousel = dynamic(() => import("@/components/home/ReviewsCarousel"), {
+const ReviewsCarousel = nextDynamic(() => import("@/components/home/ReviewsCarousel"), {
+  ssr: true,
   loading: () => <SectionSkeleton height={320} />,
-});
-const GoogleReviewsNote = dynamic(() => import("@/components/home/GoogleReviewsNote"), {
-  loading: () => null,
-});
-const WhyChooseUs = dynamic(() => import("@/components/home/WhyChooseUs"), {
-  loading: () => <SectionSkeleton height={380} />,
 });
 
 function SectionSkeleton({ height = 240 }) {
@@ -58,8 +59,8 @@ function mergeHomepageSettings(raw) {
 }
 
 /**
- * Homepage — above-the-fold sections are in the first JS/HTML.
- * Deals / best sellers / story stay code-split.
+ * Homepage — above-the-fold BrandHero + StatsBar stay server-rendered.
+ * Deals / best sellers / car shoppers stay code-split client islands.
  */
 export function HomePage({
   intro = null,
@@ -69,14 +70,12 @@ export function HomePage({
   initialCarCatalog = null,
   initialCategories = null,
   activeProductCount = null,
+  homepageSettings: homepageSettingsProp = null,
+  brandStory: brandStoryProp = null,
+  prepaidPercent = null,
 }) {
-  const ctx = useStoreSettings();
-
-  const homepageSettings = useMemo(
-    () => mergeHomepageSettings(ctx?.homepageSettings),
-    [ctx?.homepageSettings]
-  );
-  const brandStory = ctx?.brandStory || null;
+  const homepageSettings = mergeHomepageSettings(homepageSettingsProp);
+  const brandStory = brandStoryProp || null;
 
   const sectionOrder =
     Array.isArray(homepageSettings.sectionOrder) && homepageSettings.sectionOrder.length
@@ -86,9 +85,7 @@ export function HomePage({
 
   return (
     <div style={{ background: "var(--color-background)" }}>
-      {sectionEnabled("hero") ? (
-        <BrandHero />
-      ) : null}
+      {sectionEnabled("hero") ? <BrandHero prepaidPercent={prepaidPercent} /> : null}
       <StatsBar
         settings={{ brandStory, stats: homepageSettings?.stats }}
         activeProductCount={activeProductCount}
@@ -127,6 +124,7 @@ export function HomePage({
               ? initialHeroSlides[0].imageUrl
               : ""
           }
+          prepaidPercent={prepaidPercent}
         />
       ) : null}
       {/* Server-rendered "About CrazzyCars.pk" (from app/page.jsx) — last block above the footer. */}

@@ -40,9 +40,12 @@ export const metadata = buildPageMetadata({
 export default async function Page() {
   const shopify = isShopifyEnabled();
   // Same per-request cached settings read as the layout.
-  const homeIntro = await getPublicStoreSettings()
-    .then((st) => st?.homepageSettings?.homeIntro || "")
-    .catch(() => "");
+  const publicSettings = await getPublicStoreSettings().catch(() => null);
+  const homeIntro = publicSettings?.homepageSettings?.homeIntro || "";
+  const homepageSettings = publicSettings?.homepageSettings || null;
+  const brandStory = publicSettings?.brandStory || null;
+  const prepaidPercent =
+    Number(publicSettings?.storePayment?.advancePaymentDiscountPercent) || null;
   let bestSellers = [];
   let hotDeals = [];
   let heroSlides = [];
@@ -140,6 +143,9 @@ export default async function Page() {
         initialCarCatalog={carCatalog}
         initialCategories={homepageCategories}
         activeProductCount={activeProductCount}
+        homepageSettings={homepageSettings}
+        brandStory={brandStory}
+        prepaidPercent={prepaidPercent}
       />
     </>
   );

@@ -1,19 +1,15 @@
-"use client";
-
 import Link from "next/link";
 import { COD_ADVANCE_AMOUNT, PREPAID_DISCOUNT_PERCENT } from "@/config/checkout-money";
-import { useStorePayment } from "@/context/StoreSettingsContext";
 import { formatPkrAmount } from "@/lib/storePolicyCopy";
 
 /**
  * Homepage hero: real text (sharp and readable on phones), the brand's white Civic Type R
- * on the right, and a road strip whose lane markings move.
- * Prepaid % comes from live Settings.storePayment (same source as checkout).
+ * on the right, and a road strip whose lane markings move (CSS only — no client JS).
+ * Prepaid % comes from live Settings.storePayment (passed from the server page).
  */
-export default function BrandHero() {
-  const storePayment = useStorePayment();
+export default function BrandHero({ prepaidPercent: prepaidPercentProp } = {}) {
   const prepaidPercent =
-    Number(storePayment?.advancePaymentDiscountPercent) || PREPAID_DISCOUNT_PERCENT;
+    Number(prepaidPercentProp) > 0 ? Number(prepaidPercentProp) : PREPAID_DISCOUNT_PERCENT;
   return (
     <section className="brand-hero" aria-label="CrazzyCars.pk">
       <div className="brand-hero__inner">

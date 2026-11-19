@@ -10,9 +10,8 @@ import { useCart } from "@/context/CartContext";
 import { resolveProductContentId, trackViewContent } from "@/lib/metaPixel";
 import { ga4AddToCart, ga4ViewItem } from "@/lib/ga4";
 import { CountdownTimer } from "./CountdownTimer";
-import { RecommendedProductsQuickAdd } from "./RecommendedProductsQuickAdd";
 import ProductVariations from "./ProductVariations";
-import { StarDisplay } from "./ProductReviews";
+import { StarDisplay } from "@/components/store/StarDisplay";
 import { formatPrice } from "@/lib/currency";
 import { altBelongsToProduct, imageBelongsToProduct } from "@/lib/productCardShape";
 import { customerFacingAlt } from "@/lib/customerFacingAlt";
@@ -36,17 +35,21 @@ import {
 } from "@/lib/storePolicyCopy";
 /* ProductLiveView removed: simulated "N viewing now" fails C20 / trust audit. */
 /* FakePurchaseToast removed 2026-11-11: fabricated "someone purchased" social proof. */
-import {
-  PRODUCT_CONTENT_OVERRIDES,
-  PRODUCT_H1_OVERRIDES,
-  PRODUCT_NAME_OVERRIDES,
-} from "@/lib/seo/gscAudit2026-10.mjs";
+/* SEO overrides applied on the server (app/[slug]/page.jsx) and passed as props —
+   keep gscAudit2026-10.mjs out of the client bundle. */
 import { stripEmbeddedFaqHtml } from "@/lib/seo/stripEmbeddedFaqHtml";
 import { scrubStaleProductBoilerplate } from "@/lib/scrubPolicyConflictCopy";
 
 // Below-the-fold PDP chunks — ssr:true keeps fitment/related/review shells in HTML.
 // Do not dynamic-import add-to-cart, variations, or pixel/tracking paths.
 const ProductReviews = dynamic(() => import("./ProductReviews"), { ssr: true });
+const RecommendedProductsQuickAdd = dynamic(
+  () =>
+    import("./RecommendedProductsQuickAdd").then((m) => ({
+      default: m.RecommendedProductsQuickAdd,
+    })),
+  { ssr: true }
+);
 const VehicleCompatibilitySection = dynamic(
   () =>
     import("./VehicleCompatibilitySection").then((m) => ({
@@ -283,6 +286,10 @@ export function ProductDetailMedico({
   carLinks = null,
   /** Units sold in the last 30 days (real orders); shown from 3 up. */
   soldRecently = 0,
+  /** Server-resolved SEO content override for this slug (from gscAudit maps). */
+  contentOverride = null,
+  /** Server-resolved H1 / display name for this slug. */
+  displayName: displayNameProp = null,
 }) {
   const { addItem } = useCart();
   const router = useRouter();
@@ -448,13 +455,9 @@ export function ProductDetailMedico({
   const scheduleEnabled = Boolean(product?.saleSchedule?.enabled || product?.pricing?.saleSchedule?.enabled);
   const salePct = hasSale && regularPrice > 0 ? Math.max(1, Math.round(((regularPrice - basePrice) / regularPrice) * 100)) : 0;
   const images = useMemo(() => {
-    const slug = String(product?.slug || "").trim();
-    const altOverride = PRODUCT_CONTENT_OVERRIDES[slug]?.imageAlt || "";
+    const altOverride = contentOverride?.imageAlt || "";
     const nameForAlt =
-      altOverride ||
-      PRODUCT_H1_OVERRIDES[slug] ||
-      PRODUCT_NAME_OVERRIDES[slug] ||
-      String(product?.name || "");
+      altOverride || displayNameProp || String(product?.name || "");
     const mapped = (
       Array.isArray(product?.images)
         ? product.images
@@ -489,7 +492,7 @@ export function ProductDetailMedico({
     const owned = mapped.filter((im) => imageBelongsToProduct(im, product));
     // Soft fallback: never blank the gallery when media still exists in Mongo.
     return owned.length ? owned : mapped;
-  }, [product]);
+  }, [product, contentOverride, displayNameProp]);
 
   const productVideoUrl =
     String(product?.videoUrl || product?.media?.videoUrl || "").trim();
@@ -974,12 +977,7 @@ export function ProductDetailMedico({
     }
   }
 
-  const contentOverride =
-    PRODUCT_CONTENT_OVERRIDES[String(product?.slug || "").trim()] || null;
-  const displayName =
-    PRODUCT_H1_OVERRIDES[String(product?.slug || "").trim()] ||
-    PRODUCT_NAME_OVERRIDES[String(product?.slug || "").trim()] ||
-    product.name;
+  const displayName = displayNameProp || product?.name;
   const rawDescription = contentOverride?.descriptionHtml
     ? contentOverride.descriptionHtml
     : product.descriptionHtml || product.longDescription || product.description || "";

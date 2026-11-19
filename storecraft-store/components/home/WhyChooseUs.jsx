@@ -1,9 +1,6 @@
-"use client";
-
 import Link from "next/link";
 import { COD_ADVANCE_AMOUNT, PREPAID_DISCOUNT_PERCENT } from "@/config/checkout-money";
 import { STORE_CONTACT } from "@/config/store-policy";
-import { useStorePayment } from "@/context/StoreSettingsContext";
 import { formatPkrAmount } from "@/lib/storePolicyCopy";
 import { editorialCoverUrl, editorialInsetUrl } from "@/lib/cloudinaryImage";
 
@@ -17,10 +14,14 @@ function mediaUrl(field) {
   return "";
 }
 
-export default function WhyChooseUs({ story = null, heroImage = "" }) {
-  const storePayment = useStorePayment();
+/** Server Component — prepaid % passed from the homepage RSC (no StoreSettings hydration). */
+export default function WhyChooseUs({
+  story = null,
+  heroImage = "",
+  prepaidPercent: prepaidPercentProp = null,
+} = {}) {
   const prepaidPercent =
-    Number(storePayment?.advancePaymentDiscountPercent) || PREPAID_DISCOUNT_PERCENT;
+    Number(prepaidPercentProp) > 0 ? Number(prepaidPercentProp) : PREPAID_DISCOUNT_PERCENT;
   const city = STORE_CONTACT.address.city;
   const coverRaw = mediaUrl(story?.image1) || String(heroImage || "").trim();
   const insetRaw = mediaUrl(story?.image2);
