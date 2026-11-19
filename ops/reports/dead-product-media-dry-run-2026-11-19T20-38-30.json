@@ -1,0 +1,31 @@
+{
+  "warning": "READ-ONLY plan. Do not apply until approved. Backup required first.",
+  "db": "crazzycars_motorsports",
+  "fingerprintExpected": "187aad8c44fe3a84",
+  "productsAffected": 1,
+  "plan": [
+    {
+      "productId": "6aab04490b9ff94704a1f3a7",
+      "slug": "honda-city-2009-2018-interior-carbon-fiber-trims",
+      "name": "Honda City 2009-2018 Interior Carbon Fiber Trims",
+      "status": "active",
+      "removeUrls": [
+        {
+          "field": "variationCombinations[0].image",
+          "url": "https://crazzycars.pk/media/products/honda-city-2009-2018-interior-carbon-fiber-trims-1-f00f93c853.jpg",
+          "statusCode": 404
+        },
+        {
+          "field": "variationCombinations[1].image",
+          "url": "https://crazzycars.pk/media/products/honda-city-2009-2018-interior-carbon-fiber-trims-3-9786bb1b3d.jpg",
+          "statusCode": 404
+        },
+        {
+          "field": "variationCombinations[2].image",
+          "url": "https://crazzycars.pk/media/products/honda-city-2009-2018-interior-carbon-fiber-trims-2-dc435b0e05.jpg",
+          "statusCode": 404
+        }
+      ]
+    }
+  ]
+}

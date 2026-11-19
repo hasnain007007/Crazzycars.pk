@@ -6,7 +6,8 @@ import { contentTypeForExt, resolveMediaFilePath } from "@/lib/mediaStorage";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const CACHE = "public, max-age=31536000, immutable";
+// Match next.config /media headers: unique hashed filenames, never overwritten.
+const CACHE = "public, max-age=2592000, immutable";
 
 function notFound() {
   return new NextResponse("Not found", {

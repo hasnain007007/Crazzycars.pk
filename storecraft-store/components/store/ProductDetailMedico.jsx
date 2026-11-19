@@ -1,25 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { MyCarFitTag } from "@/components/store/MyCar";
-import { OnCarPreviewButton, TryOnButton } from "@/components/store/OnCarPreview";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { resolveProductContentId, trackViewContent } from "@/lib/metaPixel";
 import { ga4AddToCart, ga4ViewItem } from "@/lib/ga4";
-import { ProductCard } from "./ProductCard";
 import { CountdownTimer } from "./CountdownTimer";
 import { RecommendedProductsQuickAdd } from "./RecommendedProductsQuickAdd";
 import ProductVariations from "./ProductVariations";
-import ProductReviews, { StarDisplay } from "./ProductReviews";
+import { StarDisplay } from "./ProductReviews";
 import { formatPrice } from "@/lib/currency";
 import { altBelongsToProduct, imageBelongsToProduct } from "@/lib/productCardShape";
 import { customerFacingAlt } from "@/lib/customerFacingAlt";
 import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { WatermarkedImage } from "./WatermarkedImage";
-import { VehicleCompatibilitySection } from "./VehicleCompatibilitySection";
 import { ProductSpecificsPanel } from "./ProductSpecificsPanel";
 import { normalizeProductImageWatermark } from "@/lib/productImageWatermark";
 import { isBodyKitProduct, productAllowsCod } from "@/lib/codEligibility";
@@ -45,6 +43,32 @@ import {
 } from "@/lib/seo/gscAudit2026-10.mjs";
 import { stripEmbeddedFaqHtml } from "@/lib/seo/stripEmbeddedFaqHtml";
 import { scrubStaleProductBoilerplate } from "@/lib/scrubPolicyConflictCopy";
+
+// Below-the-fold PDP chunks — ssr:true keeps fitment/related/review shells in HTML.
+// Do not dynamic-import add-to-cart, variations, or pixel/tracking paths.
+const ProductReviews = dynamic(() => import("./ProductReviews"), { ssr: true });
+const VehicleCompatibilitySection = dynamic(
+  () =>
+    import("./VehicleCompatibilitySection").then((m) => ({
+      default: m.VehicleCompatibilitySection,
+    })),
+  { ssr: true }
+);
+const RelatedProductsRail = dynamic(() => import("./RelatedProductsRail"), { ssr: true });
+const OnCarPreviewButton = dynamic(
+  () =>
+    import("@/components/store/OnCarPreview").then((m) => ({
+      default: m.OnCarPreviewButton,
+    })),
+  { ssr: true }
+);
+const TryOnButton = dynamic(
+  () =>
+    import("@/components/store/OnCarPreview").then((m) => ({
+      default: m.TryOnButton,
+    })),
+  { ssr: true }
+);
 const WISHLIST_KEY = "sialkot_wishlist";
 const COMPARE_KEY = "sialkot_compare";
 
@@ -1989,19 +2013,7 @@ export function ProductDetailMedico({
         </div>
       </div>
 
-      {related.length ? (
-        <section className="mx-auto mt-12 max-w-7xl px-4">
-          <h2 className="mb-4 text-center text-xl font-bold md:mb-6 md:text-2xl">You May Also Like</h2>
-          <div className="product-grid grid grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4 xl:grid-cols-5">
-            {related.map((p) => <ProductCard key={p.id} product={p} />)}
-          </div>
-        </section>
-      ) : (
-        <section className="mx-auto mt-12 max-w-7xl px-4">
-          <h2 className="mb-4 text-center text-xl font-bold md:mb-6 md:text-2xl">You May Also Like</h2>
-          <p className="text-center text-sm text-[#707070]">No related products available.</p>
-        </section>
-      )}
+      <RelatedProductsRail products={related} />
 
     </div>
 

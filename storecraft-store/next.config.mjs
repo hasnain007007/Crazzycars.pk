@@ -1,8 +1,13 @@
 /** @type {import('next').NextConfig} */
+import bundleAnalyzer from "@next/bundle-analyzer";
 import { buildLegacyRedirects } from "./lib/legacyHandleMaps.mjs";
 import { DELETED_URL_REDIRECTS } from "./lib/deletedUrlRedirects.mjs";
 import { OLD_BLOG_NEWS_REDIRECTS } from "./lib/oldBlogNewsRedirects.mjs";
 import { VEHICLE_SLUG_REDIRECTS } from "./lib/vehicleSlugRedirects.mjs";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig = {
   async redirects() {
@@ -384,9 +389,15 @@ const nextConfig = {
         source,
         headers: [
           {
-            // S7c: immutable-ish product images at the origin (edge can layer longer TTL).
+            // Filenames are unique per upload (timestamp + hex in sanitizeMediaFilename);
+            // writers never overwrite an existing name. Safe for long immutable TTL.
             key: "Cache-Control",
-            value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+            value: "public, max-age=2592000, immutable",
+          },
+          {
+            // Keep shared caches warm a bit longer than browsers; s-maxage unchanged intent (~7d).
+            key: "CDN-Cache-Control",
+            value: "public, s-maxage=604800, stale-while-revalidate=86400",
           },
           {
             key: "Content-Security-Policy",
@@ -402,4 +413,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

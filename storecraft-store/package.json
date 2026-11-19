@@ -16,7 +16,7 @@
     "seed:car-catalog:replace": "node --env-file=.env.local scripts/vehicles/replaceCarCatalog.mjs",
     "seed:products": "node --env-file=.env.local scripts/products/seedProducts.mjs",
     "seed:all": "npm run seed:categories && npm run seed:vehicles && npm run seed:car-catalog:replace && npm run seed:products",
-    "analyze": "echo \"@next/bundle-analyzer is installed. Wire temporarily with ANALYZE=true when needed; production next.config is unchanged.\""
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
