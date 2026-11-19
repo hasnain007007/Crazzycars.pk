@@ -93,6 +93,10 @@ export async function ensureMediaRoot() {
   return root;
 }
 
+const DERIV_NAME_RE = /-(400|800|1200|sm|full)\./i;
+export const MAX_STORED_MASTER_WIDTH = 2400;
+export const HEAVY_MASTER_BYTES = 200 * 1024;
+
 /** Prebuild card thumbs so PDP/grid do not 404 on *-400.webp after upload. */
 async function writeCardThumbBeside(absMasterPath, folder) {
   const folderKey = String(folder || "").toLowerCase();
@@ -101,7 +105,7 @@ async function writeCardThumbBeside(absMasterPath, folder) {
   }
   const ext = path.extname(absMasterPath);
   if (!/\.(webp|jpe?g|png|gif|avif)$/i.test(ext)) return null;
-  if (/-400\./i.test(absMasterPath) || /-800\./i.test(absMasterPath)) return null;
+  if (DERIV_NAME_RE.test(absMasterPath)) return null;
   const outAbs = absMasterPath.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-400.webp");
   try {
     const sharp = (await import("sharp")).default;
@@ -117,13 +121,10 @@ async function writeCardThumbBeside(absMasterPath, folder) {
   }
 }
 
-/**
- * Product pages load `{stem}-sm.webp` (≤1200 px) first and only fall back to the master on
- * 404 — build it on upload so a new photo shows straight away without a failed request.
- */
+/** Legacy `-sm.webp` (≤1200) — kept for category banners / older clients. */
 async function writePdpSizeBeside(absMasterPath, folder) {
   if (folder !== "products") return null;
-  if (!/\.(webp|jpe?g|png|gif|avif)$/i.test(absMasterPath) || /-(400|800|sm)\./i.test(absMasterPath)) return null;
+  if (!/\.(webp|jpe?g|png|gif|avif)$/i.test(absMasterPath) || DERIV_NAME_RE.test(absMasterPath)) return null;
   const outAbs = absMasterPath.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-sm.webp");
   try {
     const sharp = (await import("sharp")).default;
@@ -139,36 +140,90 @@ async function writePdpSizeBeside(absMasterPath, folder) {
   }
 }
 
-/** Above this a product master is too heavy for the product page — build a -800 copy. */
-export const HEAVY_MASTER_BYTES = 200 * 1024;
-
-/**
- * Product page size: ≤1000 px webp. Only written for heavy masters (PNG/JPEG or > 200 KB);
- * the store's PDP prefers `-800.webp` when it exists and keeps the master for zoom.
- */
+/** Card/desktop mid size: max 800 px wide WebP. */
 async function writePdpMidBeside(absMasterPath, folder) {
   if (folder !== "products") return null;
-  if (!/\.(webp|jpe?g|png|gif|avif)$/i.test(absMasterPath) || /-(400|800|sm)\./i.test(absMasterPath)) return null;
+  if (!/\.(webp|jpe?g|png|gif|avif)$/i.test(absMasterPath) || DERIV_NAME_RE.test(absMasterPath)) return null;
   try {
-    const st = await stat(absMasterPath);
-    if (st.size <= HEAVY_MASTER_BYTES && /\.webp$/i.test(absMasterPath)) return null;
     const outAbs = absMasterPath.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-800.webp");
     const sharp = (await import("sharp")).default;
     await sharp(absMasterPath)
       .rotate()
-      .resize(1000, 1000, { fit: "inside", withoutEnlargement: true })
-      .webp({ quality: 78, effort: 4 })
+      .resize(800, 800, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 80, effort: 4 })
       .toFile(outAbs);
-    // Never serve a "lighter" copy that is not clearly lighter (e.g. flat PNG artwork).
-    if ((await stat(outAbs)).size > st.size * 0.8) {
-      await unlink(outAbs).catch(() => {});
-      return null;
-    }
     return outAbs;
   } catch (err) {
     console.warn("[mediaStorage] -800 build failed:", err?.message || err);
     return null;
   }
+}
+
+/** PDP gallery size: max 1200 px wide WebP. */
+async function writePdpLargeBeside(absMasterPath, folder) {
+  if (folder !== "products") return null;
+  if (!/\.(webp|jpe?g|png|gif|avif)$/i.test(absMasterPath) || DERIV_NAME_RE.test(absMasterPath)) return null;
+  try {
+    const outAbs = absMasterPath.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "-1200.webp");
+    const sharp = (await import("sharp")).default;
+    await sharp(absMasterPath)
+      .rotate()
+      .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 80, effort: 4 })
+      .toFile(outAbs);
+    return outAbs;
+  } catch (err) {
+    console.warn("[mediaStorage] -1200 build failed:", err?.message || err);
+    return null;
+  }
+}
+
+/**
+ * Cap stored master at 2400 px; convert PNG→WebP when there is no real alpha.
+ * Returns { buffer, filename } (filename may change extension to .webp).
+ */
+export async function prepareMasterBuffer(buffer, filename) {
+  const sharp = (await import("sharp")).default;
+  let name = String(filename || "upload.webp");
+  let pipeline = sharp(buffer, { failOn: "none" }).rotate();
+  const meta = await pipeline.metadata();
+  const hasAlpha = Boolean(meta.hasAlpha);
+  const width = Number(meta.width) || 0;
+
+  if (width > MAX_STORED_MASTER_WIDTH) {
+    pipeline = pipeline.resize({
+      width: MAX_STORED_MASTER_WIDTH,
+      withoutEnlargement: true,
+      fit: "inside",
+    });
+  }
+
+  const isPng = /\.png$/i.test(name) || String(meta.format || "").toLowerCase() === "png";
+  if (isPng && !hasAlpha) {
+    const out = await pipeline.webp({ quality: 82, effort: 4 }).toBuffer();
+    name = name.replace(/\.png$/i, ".webp");
+    if (!/\.webp$/i.test(name)) name = `${name.replace(/\.[^.]+$/, "")}.webp`;
+    return { buffer: out, filename: name, converted: "png_to_webp", hasAlpha: false };
+  }
+
+  // Still re-encode when we resized, to strip metadata and persist the cap.
+  if (width > MAX_STORED_MASTER_WIDTH) {
+    if (/\.webp$/i.test(name) || String(meta.format || "").toLowerCase() === "webp") {
+      const out = await pipeline.webp({ quality: 82, effort: 4 }).toBuffer();
+      return { buffer: out, filename: name, converted: "resize_webp", hasAlpha };
+    }
+    if (/\.jpe?g$/i.test(name) || String(meta.format || "").toLowerCase() === "jpeg") {
+      const out = await pipeline.jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+      return { buffer: out, filename: name, converted: "resize_jpeg", hasAlpha };
+    }
+    // PNG with real transparency — keep PNG, just resized.
+    if (isPng && hasAlpha) {
+      const out = await pipeline.png({ compressionLevel: 9 }).toBuffer();
+      return { buffer: out, filename: name, converted: "resize_png_alpha", hasAlpha: true };
+    }
+  }
+
+  return { buffer, filename: name, converted: "none", hasAlpha };
 }
 
 async function fileSize(abs) {
@@ -186,7 +241,7 @@ async function fileSize(abs) {
  */
 export async function optimiseProductPhoto(url) {
   const rel = String(url || "").replace(/^https?:\/\/[^/]+/i, "").split("?")[0];
-  if (!/^\/media\/products\//i.test(rel) || /-(400|800|sm)\.webp$/i.test(rel)) {
+  if (!/^\/media\/products\//i.test(rel) || /-(400|800|1200|sm|full)\.webp$/i.test(rel)) {
     return { url, status: "skipped" };
   }
   const abs = resolveMediaFilePath(rel);
@@ -198,29 +253,53 @@ export async function optimiseProductPhoto(url) {
   if (!(await fileSize(`${stem}-400.webp`)) && (await writeCardThumbBeside(abs, "products"))) built.push("400");
   if (!(await fileSize(`${stem}-sm.webp`)) && (await writePdpSizeBeside(abs, "products"))) built.push("sm");
   if (!(await fileSize(`${stem}-800.webp`)) && (await writePdpMidBeside(abs, "products"))) built.push("800");
-  const pageBytes = (await fileSize(`${stem}-800.webp`)) || masterBytes;
+  if (!(await fileSize(`${stem}-1200.webp`)) && (await writePdpLargeBeside(abs, "products"))) built.push("1200");
+  const pageBytes =
+    (await fileSize(`${stem}-1200.webp`)) ||
+    (await fileSize(`${stem}-800.webp`)) ||
+    masterBytes;
   return { url, status: built.length ? "built" : "ok", built, masterBytes, pageBytes };
 }
 
-export async function writeMediaFile({ folder, filename, buffer }) {
+export async function writeMediaFile({ folder, filename, buffer, processImage = false }) {
   const root = await ensureMediaRoot();
   const safeFolder = sanitizeMediaFolder(folder);
-  const safeName = filename.includes("/")
+  let safeName = filename.includes("/")
     ? sanitizeMediaFilename(path.basename(filename))
-    : filename;
+    : filename.includes("-") && /\d{10,}-[a-f0-9]{8}/i.test(filename)
+      ? filename // already unique from sanitizeMediaFilename upstream
+      : sanitizeMediaFilename(filename);
+
+  let outBuffer = buffer;
+  let processMeta = null;
+  if (processImage) {
+    const prepared = await prepareMasterBuffer(buffer, safeName);
+    outBuffer = prepared.buffer;
+    // Preserve unique stem; only swap extension when PNG→WebP.
+    if (prepared.filename !== safeName) {
+      const stem = safeName.replace(/\.[^.]+$/, "");
+      const newExt = path.extname(prepared.filename) || ".webp";
+      safeName = `${stem}${newExt}`;
+    }
+    processMeta = { converted: prepared.converted, hasAlpha: prepared.hasAlpha };
+  }
+
   const dir = path.join(root, safeFolder);
   await mkdir(dir, { recursive: true });
   const abs = path.join(dir, safeName);
-  await writeFile(abs, buffer);
+  await writeFile(abs, outBuffer);
   await writeCardThumbBeside(abs, safeFolder);
   await writePdpSizeBeside(abs, safeFolder);
   await writePdpMidBeside(abs, safeFolder);
+  await writePdpLargeBeside(abs, safeFolder);
   const relative = path.join(safeFolder, safeName).replace(/\\/g, "/");
   return {
     absolutePath: abs,
     relativePath: relative,
     url: publicMediaUrl(relative),
     publicId: `local:${relative}`,
+    bytes: outBuffer.length,
+    processMeta,
   };
 }
 

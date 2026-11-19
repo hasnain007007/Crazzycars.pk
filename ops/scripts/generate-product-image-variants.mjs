@@ -19,7 +19,9 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DRY = process.argv.includes("--dry-run");
 const QUALITY = 80;
-const MIN_MASTER_BYTES = 300 * 1024;
+// Default 0 = every product master (srcset always needs -800/-1200).
+// Set MIN_MASTER_BYTES=307200 to only process heavy files.
+const MIN_MASTER_BYTES = Number(process.env.MIN_MASTER_BYTES || 0);
 const VARIANTS = [
   { kind: "800", maxWidth: 800 },
   { kind: "1200", maxWidth: 1200 },

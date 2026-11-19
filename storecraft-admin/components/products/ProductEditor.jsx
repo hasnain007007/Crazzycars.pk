@@ -1034,8 +1034,8 @@ export function ProductEditor({ mode, productId }) {
                 onChange={(images) => updateFormData("media", { ...form.media, images })}
                 enableWatermark
                 multiple
-                maxSizeMB={1}
-                maxImageWidth={1200}
+                maxSizeMB={8}
+                maxImageWidth={2400}
                 uploadFolder="products"
                 itemName={form.name || ""}
                 existingImageCount={(form.media.images || []).length}

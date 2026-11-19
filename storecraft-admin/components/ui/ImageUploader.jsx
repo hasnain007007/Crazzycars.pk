@@ -96,7 +96,7 @@ export function ImageUploader({
   value,
   onChange,
   multiple = false,
-  maxSizeMB = 1,
+  maxSizeMB = 8,
   showControls = true,
   maxImageWidth = 1200,
   /** WebP encoder quality 0–1 (higher = sharper, larger files). */

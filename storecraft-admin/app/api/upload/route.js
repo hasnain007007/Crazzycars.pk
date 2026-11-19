@@ -22,7 +22,8 @@ import { stripReconFromUploadName } from "@/lib/mediaAltGuard";
  */
 const IMAGE_EXTS = new Set([".webp", ".jpg", ".jpeg", ".png", ".gif", ".avif", ".heic", ".heif"]);
 const VIDEO_EXTS = new Set([".mp4", ".webm", ".mov", ".m4v", ".ogv", ".avi", ".mkv"]);
-const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
+/** Reject oversized uploads early — clear message for admins. */
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
 
 export async function POST(request) {
@@ -61,21 +62,37 @@ export async function POST(request) {
     const maxBytes = isImage ? MAX_IMAGE_BYTES : MAX_VIDEO_BYTES;
     if (Number(file.size) > maxBytes) {
       return NextResponse.json(
-        { success: false, error: `File is too large (max ${maxBytes / (1024 * 1024)}MB).` },
+        {
+          success: false,
+          error: isImage
+            ? `Image is too large (${(Number(file.size) / (1024 * 1024)).toFixed(1)} MB). Max is 8 MB — compress or resize, then try again.`
+            : `File is too large (max ${maxBytes / (1024 * 1024)}MB).`,
+          code: "file_too_large",
+        },
         { status: 413 }
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    let buffer = Buffer.from(await file.arrayBuffer());
     if (!buffer.length) {
       return NextResponse.json({ success: false, error: "Empty file." }, { status: 400 });
+    }
+    // Defence in depth: reject after read too (client may lie about size).
+    if (isImage && buffer.length > MAX_IMAGE_BYTES) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Image is too large (${(buffer.length / (1024 * 1024)).toFixed(1)} MB). Max is 8 MB.`,
+          code: "file_too_large",
+        },
+        { status: 413 }
+      );
     }
 
     const folder = sanitizeMediaFolder(formData.get("folder"));
     const originalSize = Number(formData.get("originalSize"));
     const finalSize = Number(formData.get("finalSize"));
     const reportedOriginal = Number.isFinite(originalSize) && originalSize > 0 ? originalSize : buffer.length;
-    const reportedFinal = Number.isFinite(finalSize) && finalSize > 0 ? finalSize : buffer.length;
 
     const rawItemName = String(formData.get("itemName") || "").trim();
     const rawImageName = String(formData.get("imageName") || "").trim();
@@ -85,12 +102,19 @@ export async function POST(request) {
     const baseName = stripReconFromUploadName(
       rawItemName || rawImageName || path.basename(original, path.extname(original))
     );
-    const filename = sanitizeMediaFilename(
+    let filename = sanitizeMediaFilename(
       stripReconFromUploadName(`${baseName}-${imageIndex}${ext}`),
       ext
     );
 
-    const saved = await writeMediaFile({ folder, filename, buffer });
+    // Cap width at 2400, convert opaque PNG→WebP, build -400/-800/-1200 (inside writeMediaFile).
+    const prepared = await writeMediaFile({ folder, filename, buffer, processImage: isImage });
+    const saved = prepared;
+    buffer = null;
+    const reportedFinal =
+      Number.isFinite(finalSize) && finalSize > 0
+        ? finalSize
+        : Number(saved.bytes) || reportedOriginal;
 
     return NextResponse.json({
       success: true,
