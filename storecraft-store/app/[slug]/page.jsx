@@ -639,14 +639,13 @@ export default async function ProductPage({ params, searchParams }) {
         },
       };
     })();
-    const lcpMain = (() => {
+    const lcpHref = (() => {
       const img =
         productForView?.media?.images?.find((i) => i?.isMain) ||
         productForView?.media?.images?.[0] ||
         null;
-      const href = img?.url ? String(img.url).split("?")[0] : "";
-      const srcSet = String(img?.srcSet || "").trim();
-      return { href, srcSet };
+      // Exact same URL as <img src> (no imageSrcSet) so the preload is reused.
+      return img?.url ? String(img.url).split("?")[0] : "";
     })();
     const ssrReviews = approvedReviews.slice(0, 5);
     const productFaqLd = faqPageJsonLd(productFaqItems);
@@ -658,19 +657,9 @@ export default async function ProductPage({ params, searchParams }) {
       <>
         {/* OG product type — Next.js rejects openGraph.type=product */}
         <meta property="og:type" content="product" />
-        {/* Single PDP LCP preload — home hero preloads must not appear here. */}
-        {lcpMain.href ? (
-          lcpMain.srcSet ? (
-            <link
-              rel="preload"
-              as="image"
-              imageSrcSet={lcpMain.srcSet}
-              imageSizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
-              fetchPriority="high"
-            />
-          ) : (
-            <link rel="preload" as="image" href={lcpMain.href} fetchPriority="high" />
-          )
+        {/* One PDP LCP preload — href must equal the gallery <img src> candidate. */}
+        {lcpHref ? (
+          <link rel="preload" as="image" href={lcpHref} fetchPriority="high" />
         ) : null}
         {isCompleteProductJsonLd(productLd) ? (
           <script

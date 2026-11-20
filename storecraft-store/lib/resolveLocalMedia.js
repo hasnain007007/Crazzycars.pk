@@ -80,10 +80,12 @@ export function pdpImageUrlExisting(src) {
 }
 
 /**
- * Visible PDP gallery / LCP preload — prefer `-1200` then `-800`; master only if variants missing.
+ * Visible PDP gallery / LCP preload — prefer `-800` then `-1200`.
+ * Mobile PSI (412×1.75 ≈ 721px) selects 800w from srcset; using 1200 as <img src>
+ * while preload imageSrcSet picked 800 caused a non-reused fetch (load delay ~310ms).
  */
 export function galleryImageUrlExisting(src) {
-  return resolveExistingLocalMedia(src, { prefer: ["1200", "800", "400", "original"] });
+  return resolveExistingLocalMedia(src, { prefer: ["800", "1200", "400", "original"] });
 }
 
 /** Thumbnail strip / tiny cards — prefer small derivatives. */

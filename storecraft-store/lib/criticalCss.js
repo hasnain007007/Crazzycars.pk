@@ -58,15 +58,21 @@ export const CRITICAL_CSS = [
   ".brand-hero__lane{position:absolute;left:-80px;right:-80px;top:50%;height:4px;margin-top:-2px;background:repeating-linear-gradient(90deg,#e5b100 0 44px,transparent 44px 80px)}",
   /* Mobile: car early in flex order so LCP image is in the first viewport */
   "@media(max-width:767px){.brand-hero__inner{display:flex;flex-direction:column;align-items:stretch;text-align:left;min-height:0;padding:16px 16px 0}.brand-hero__copy{display:contents}.brand-hero__visual{order:1;position:relative;right:auto;bottom:auto;width:auto;margin:0 -16px 8px}.brand-hero__kicker{order:2;font-size:11px;margin:0 0 6px}.brand-hero__title{order:3;font-size:clamp(36px,10vw,46px)}.brand-hero__offers{order:4;margin-top:0;gap:8px 12px}.brand-hero__coupon{font-size:12.5px;padding:6px 10px}.brand-hero__coupon strong{font-size:14px}.brand-hero__offer-link{font-size:12.5px}.brand-hero__actions{order:5;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px}.brand-hero__btn{min-height:46px;padding:0 10px;font-size:14px}.brand-hero__sub{display:none}.brand-hero__seo-h1{order:0;margin:0 0 8px!important}.brand-hero__road{height:30px}}",
-  /* PDP gallery — keep LCP <img> in first viewport while full CSS is deferred */
-  "[data-pdp-crumb]{min-height:36px;max-height:44px;overflow:hidden;padding:8px 16px;font-size:13px;line-height:1.3;background:#f8f8f8;border-bottom:1px solid #e5e5e5}",
-  ".product-detail-grid{display:block;width:100%;max-width:1280px;margin:0 auto;padding:0 0 12px}",
-  ".product-images-col{width:100%;max-width:100%;min-width:0}",
-  "[data-pdp-gallery],.product-main-viewer{aspect-ratio:1/1;width:100%;max-width:100%;overflow:hidden;background:#f8f8f8}",
-  ".product-main-viewer img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;background:#fff}",
-  /* Thumbs compact so they do not shove the main image below the fold before CSS loads */
-  ".product-thumbs-rail{display:flex;gap:8px;padding:8px 16px;overflow:hidden;max-height:72px}",
+  /* PDP gallery — keep LCP in first viewport; sizes must match final CSS to avoid CLS */
+  "[data-pdp-crumb]{min-height:40px;padding:12px 16px;font-size:14px;line-height:1.25;background:#f8f8f8;border-bottom:1px solid #e5e5e5;box-sizing:border-box}",
+  ".product-detail-grid{display:block;width:100%;max-width:1280px;margin:0 auto}",
+  /* Match Tailwind -mx-4 w-[calc(100%+2rem)] so full CSS does not widen the gallery (CLS) */
+  ".product-images-col{width:100%;max-width:100%;min-width:0;box-sizing:border-box}",
+  "@media(max-width:767px){.product-images-col{width:calc(100% + 2rem);max-width:none;margin-left:-1rem;margin-right:-1rem}}",
+  "[data-pdp-gallery],.product-main-viewer{aspect-ratio:1/1;width:100%;max-width:100%;min-height:0;overflow:hidden;background:#f8f8f8;contain:layout style}",
+  ".product-main-viewer img{width:100%;height:100%;max-width:none;object-fit:contain;object-position:center;display:block;background:#fff}",
+  /* Reserve thumb rail height (final layout) so full CSS does not push price/badges */
+  ".product-thumbs-rail{display:flex;gap:8px;padding:8px 16px 4px;min-height:72px;box-sizing:border-box;overflow-x:auto}",
   ".product-thumb-btn{width:56px;height:56px;flex:0 0 auto;border:2px solid #e5e5e5;border-radius:4px;padding:0;background:#f8f8f8;overflow:hidden}",
+  /* Price row reserve — avoids font/badge CLS when full CSS arrives */
+  ".pdp-price{font-size:26px;font-weight:700;line-height:1.2;min-height:1.2em}",
+  ".pdp-price-was{font-size:18px;font-weight:700;line-height:1.2}",
+  "@media(min-width:768px){.product-images-col{width:100%;margin-left:0;margin-right:0}.product-detail-grid{padding-top:2rem}}",
   "@media(min-width:1024px){.product-detail-grid{display:grid;grid-template-columns:minmax(280px,560px) minmax(0,1fr);gap:24px;padding:24px 16px 0;align-items:start}.product-images-col{max-width:560px}.product-main-viewer{max-width:560px}}",
 ].join("");
 

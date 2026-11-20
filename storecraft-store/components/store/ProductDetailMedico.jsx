@@ -1110,7 +1110,8 @@ export function ProductDetailMedico({
                   watermark={productImageWatermark}
                   className="h-full w-full"
                   // Large stage: -1200 src + disk-checked srcset. Master only onError.
-                  width={1200}
+                  // src is already -800 (galleryImageUrlExisting); keep srcset for desktop 1200.
+                  width={800}
                   crop="limit"
                   widths={[800, 1200]}
                   srcSet={selectedItem.srcSet || undefined}
@@ -1161,6 +1162,8 @@ export function ProductDetailMedico({
                       crop="fill"
                       responsive={false}
                       loading="lazy"
+                      fetchPriority="low"
+                      decoding="async"
                       imgStyle={{
                         width: "100%",
                         height: "100%",
@@ -1180,6 +1183,8 @@ export function ProductDetailMedico({
                           crop="fill"
                           responsive={false}
                           loading="lazy"
+                          fetchPriority="low"
+                          decoding="async"
                           imgStyle={{
                             width: "100%",
                             height: "100%",
