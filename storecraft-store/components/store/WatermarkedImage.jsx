@@ -104,7 +104,8 @@ export function WatermarkedImage({
     fetchPriority,
     width,
     height: width,
-    sizes,
+    // Only emit sizes with a srcset — otherwise Next still invents an imageSrcSet preload.
+    ...(srcSet ? { sizes } : {}),
     ...(itemProp ? { itemProp } : {}),
     onLoad: () => setLoaded(true),
     onError: () => {

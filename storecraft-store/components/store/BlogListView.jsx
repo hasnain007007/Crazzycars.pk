@@ -179,8 +179,8 @@ export default function BlogListView({
                 ) : null}
                 {posts.map((post, postIndex) => {
                   const date = getDayMonth(post.publishedAt || post.createdAt);
-                  // Only the first 2 covers are above-the-fold candidates — rest must be lazy
-                  // or Next injects high-priority <link rel=preload as=image> for every cover.
+                  // Only the first cover is reliably above-the-fold; #2 low/eager max.
+                  // Rest must be lazy or Next injects high-priority image preloads for every cover.
                   const aboveFold = postIndex < 2;
                   return (
                     <article key={post._id || post.id || post.slug} className="blog-list-item">
@@ -196,7 +196,7 @@ export default function BlogListView({
                               alt={post.featuredImage?.altText || post.title}
                               className="blog-list-image"
                               loading={aboveFold ? "eager" : "lazy"}
-                              fetchPriority={aboveFold ? (postIndex === 0 ? "high" : "low") : "low"}
+                              fetchPriority={postIndex === 0 ? "high" : "low"}
                               decoding="async"
                               width={800}
                               height={450}

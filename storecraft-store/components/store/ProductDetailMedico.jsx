@@ -1109,13 +1109,19 @@ export function ProductDetailMedico({
                   alt={selectedItem.altText || product.name}
                   watermark={productImageWatermark}
                   className="h-full w-full"
-                  // Large stage: -1200 src + disk-checked srcset. Master only onError.
-                  // src is already -800 (galleryImageUrlExisting); keep srcset for desktop 1200.
+                  // LCP (index 0): single -800 candidate only — no srcset, so Next does not
+                  // inject a competing imageSrcSet preload that can pick 1200w and miss reuse.
+                  // Later slides keep responsive 800/1200.
                   width={800}
                   crop="limit"
-                  widths={[800, 1200]}
-                  srcSet={selectedItem.srcSet || undefined}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
+                  widths={selectedIndex === 0 ? [800] : [800, 1200]}
+                  srcSet={selectedIndex === 0 ? undefined : selectedItem.srcSet || undefined}
+                  responsive={selectedIndex !== 0}
+                  sizes={
+                    selectedIndex === 0
+                      ? undefined
+                      : "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
+                  }
                   loading={selectedIndex === 0 ? "eager" : "lazy"}
                   fetchPriority={selectedIndex === 0 ? "high" : "low"}
                   decoding={selectedIndex === 0 ? "sync" : "async"}
