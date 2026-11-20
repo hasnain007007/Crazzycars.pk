@@ -1,0 +1,67 @@
+# Coolify Traefik dynamic config for crazzycars.pk / admin.crazzycars.pk
+# Live path on VPS: /data/coolify/proxy/dynamic/crazzycars.yml
+#
+# Compress is required here: storecraft-store runs with Next compress:false so
+# patch-html-css-defer.cjs can rewrite HTML. Without this middleware, HTML/JS/CSS
+# ship uncompressed (~361 KB home vs ~50 KB gzip) and PSI LCP regresses hard.
+http:
+  routers:
+    crazzycars-www-http:
+      rule: "Host(`www.crazzycars.pk`)"
+      entryPoints: [http]
+      middlewares: [crazzycars-www-to-apex]
+      service: noop@internal
+      priority: 200
+    crazzycars-www-https:
+      rule: "Host(`www.crazzycars.pk`)"
+      entryPoints: [https]
+      middlewares: [crazzycars-www-to-apex]
+      service: noop@internal
+      tls:
+        certResolver: letsencrypt
+      priority: 200
+    crazzycars-store-http:
+      rule: "Host(`crazzycars.pk`)"
+      entryPoints: [http]
+      service: crazzycars-store
+      middlewares: [redirect-to-https]
+    crazzycars-store-https:
+      rule: "Host(`crazzycars.pk`)"
+      entryPoints: [https]
+      middlewares: [crazzycars-compress]
+      service: crazzycars-store
+      tls:
+        certResolver: letsencrypt
+    crazzycars-admin-http:
+      rule: "Host(`admin.crazzycars.pk`)"
+      entryPoints: [http]
+      service: crazzycars-admin
+      middlewares: [redirect-to-https]
+    crazzycars-admin-https:
+      rule: "Host(`admin.crazzycars.pk`)"
+      entryPoints: [https]
+      middlewares: [crazzycars-compress]
+      service: crazzycars-admin
+      tls:
+        certResolver: letsencrypt
+  middlewares:
+    crazzycars-compress:
+      compress: {}
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    crazzycars-www-to-apex:
+      redirectRegex:
+        regex: "^https?://www\\.crazzycars\\.pk(.*)"
+        replacement: "https://crazzycars.pk${1}"
+        permanent: true
+  services:
+    crazzycars-store:
+      loadBalancer:
+        servers:
+          - url: "http://crazzycars-store:3000"
+    crazzycars-admin:
+      loadBalancer:
+        servers:
+          - url: "http://crazzycars-admin:3000"

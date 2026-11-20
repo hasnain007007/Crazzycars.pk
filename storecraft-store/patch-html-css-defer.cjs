@@ -64,7 +64,7 @@ function patchResponse(res) {
 
     const ct = String(res.getHeader("content-type") || "");
     const ce = String(res.getHeader("content-encoding") || "");
-    // Only rewrite plain (uncompressed) HTML — Next compress:false so Traefik can gzip.
+    // Plain HTML only (Next compress:false). Traefik `crazzycars-compress` gzips to clients.
     if (ct.includes("text/html") && !ce) {
       try {
         const html = Buffer.concat(chunks).toString("utf8");

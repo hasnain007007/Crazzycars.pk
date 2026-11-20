@@ -181,8 +181,10 @@ const nextConfig = {
   // Required for Docker/Coolify (output: .next/standalone)
   output: "standalone",
   poweredByHeader: false,
-  // Disable Next gzip so patch-html-css-defer.cjs can rewrite text/html.
-  // Traefik/CDN still compresses to clients.
+  // Keep false so patch-html-css-defer.cjs can rewrite plain text/html.
+  // Compression is Traefik middleware `crazzycars-compress` in
+  // deploy/traefik/crazzycars.yml (/data/coolify/proxy/dynamic/crazzycars.yml).
+  // Do NOT leave both off — 318548a shipped uncompressed and PSI LCP jumped +0.9s.
   compress: false,
   reactStrictMode: false,
   compiler: {
