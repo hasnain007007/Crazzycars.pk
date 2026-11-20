@@ -181,7 +181,9 @@ const nextConfig = {
   // Required for Docker/Coolify (output: .next/standalone)
   output: "standalone",
   poweredByHeader: false,
-  compress: true,
+  // Disable Next gzip so patch-html-css-defer.cjs can rewrite text/html.
+  // Traefik/CDN still compresses to clients.
+  compress: false,
   reactStrictMode: false,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",

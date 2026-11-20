@@ -79,6 +79,8 @@ COPY --chown=nextjs:nodejs scripts/assert-preview-mongo.mjs ./assert-preview-mon
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# After standalone copy — inject CSS-defer at <head> (see patch-html-css-defer.cjs).
+COPY --chown=nextjs:nodejs patch-html-css-defer.cjs ./patch-html-css-defer.cjs
 USER nextjs
 EXPOSE 3000
 VOLUME ["/app/media"]

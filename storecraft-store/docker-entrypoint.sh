@@ -17,4 +17,8 @@ if [ "${PREVIEW_GUARD:-0}" = "1" ]; then
   fi
 fi
 
+# Inject CSS-defer script at the start of <head> (Next hoists stylesheets before
+# any React <script>, which made the in-layout defer run too late for PSI).
+export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--require /app/patch-html-css-defer.cjs"
+
 exec "$@"

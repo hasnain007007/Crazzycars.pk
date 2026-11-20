@@ -25,7 +25,7 @@ import { resolveStoreLogoUrl } from "@/lib/storeLogo";
 import { BRAND_NAME, TITLE_SUFFIX, withBrandTitleSuffix } from "@/lib/brand";
 import { STORE_NAP } from "@/config/store-nap";
 import { STORE_CONTACT } from "@/config/store-policy";
-import { CRITICAL_CSS, DEFER_STYLESHEETS_SCRIPT } from "@/lib/criticalCss";
+import { CRITICAL_CSS } from "@/lib/criticalCss";
 import "./globals.css";
 
 const MobileBottomNav = dynamic(() => import("@/components/store/MobileBottomNav"));
@@ -269,11 +269,9 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${rajdhani.variable} h-full`}>
-      {/* FIRST in <html>: must run before Next's stylesheet links. A classic script
-          after <link rel=stylesheet> waits for those sheets, so a late defer never
-          unblocks paint (PSI render-blocking ~770ms on PDP). */}
-      <script dangerouslySetInnerHTML={{ __html: DEFER_STYLESHEETS_SCRIPT }} />
       <head>
+        {/* CSS defer is injected at the very start of <head> by patch-html-css-defer.cjs
+            (Next hoists stylesheets before any React <script>, so in-layout defer is too late). */}
         <style dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
         {/* Home hero image preloads live only on app/page.jsx — not every route. */}
       </head>
