@@ -1,7 +1,11 @@
 "use client";
 
 import { formatAdminPrice } from "@/lib/currency";
-import { abandonedCartDisplayName } from "@/lib/abandonedCart";
+import {
+  abandonedCartCustomerName,
+  abandonedCartDisplayName,
+  abandonedCartHasContact,
+} from "@/lib/abandonedCart";
 
 function formatWhen(d) {
   if (!d) return "—";
@@ -58,6 +62,7 @@ export function AbandonedCartDetailModal({
   onWhatsApp,
   onEmail,
   onConvert,
+  onEditContact,
   onDismiss,
   onReopen,
   cartList = null,
@@ -69,6 +74,10 @@ export function AbandonedCartDetailModal({
   const reminders = Array.isArray(cart.reminders) ? cart.reminders : [];
   const canConvert =
     !cart.convertedOrderNumber && items.length > 0;
+  const realName = abandonedCartCustomerName(cart);
+  const phone = String(cart.customer?.phone || cart.shippingAddress?.phone || "").trim();
+  const email = String(cart.customer?.email || cart.shippingAddress?.email || "").trim();
+  const hasContact = abandonedCartHasContact(cart);
   const list = Array.isArray(cartList) ? cartList : [];
   const idx = list.findIndex((c) => c?.id === cart.id);
   const prevCart = idx > 0 ? list[idx - 1] : null;
@@ -138,14 +147,30 @@ export function AbandonedCartDetailModal({
 
         <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
           <section>
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-              Customer
-            </h3>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Customer
+              </h3>
+              <button
+                type="button"
+                onClick={() => onEditContact?.(cart)}
+                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+              >
+                {hasContact ? "Edit contact" : "Add contact"}
+              </button>
+            </div>
+            {!hasContact ? (
+              <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-snug text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+                <strong className="font-semibold">No phone / email captured.</strong> This shopper
+                left before checkout details. Add WhatsApp or email here, then message them or
+                convert to a COD order.
+              </div>
+            ) : null}
             <dl className="rounded-xl border border-slate-200 px-3 dark:border-slate-700">
-              <Row label="Name">{abandonedCartDisplayName(cart)}</Row>
+              <Row label="Name">{realName || "—"}</Row>
               <Row label="Phone">
-                {cart.customer?.phone || cart.shippingAddress?.phone || "—"}
-                {cart.customer?.phone ? (
+                {phone || "—"}
+                {phone ? (
                   <span
                     className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
                       cart.customer?.phoneValid === false
@@ -157,7 +182,7 @@ export function AbandonedCartDetailModal({
                   </span>
                 ) : null}
               </Row>
-              <Row label="Email">{cart.customer?.email || cart.shippingAddress?.email || "—"}</Row>
+              <Row label="Email">{email || "—"}</Row>
               <Row label="Stage">{cart.checkoutStage || "—"}</Row>
               <Row label="Address">
                 {[

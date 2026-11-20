@@ -26,7 +26,15 @@ export async function markIdleCartsAbandoned(CartSession, opts = {}) {
   return { modifiedCount: result.modifiedCount || 0, cutoff };
 }
 
-/** Human label when checkout never captured a name. */
+/** True when session has any staff-usable contact channel. */
+export function abandonedCartHasContact(cart) {
+  const phone = String(cart?.customer?.phone || cart?.shippingAddress?.phone || "").trim();
+  const email = String(cart?.customer?.email || cart?.shippingAddress?.email || "").trim();
+  const name = String(cart?.customer?.name || cart?.shippingAddress?.name || "").trim();
+  return Boolean(phone || (email && email.includes("@") && !email.startsWith("guest+")) || name);
+}
+
+/** List/header label — falls back to first item so empty-PII rows stay scannable. */
 export function abandonedCartDisplayName(cart) {
   const name = String(cart?.customer?.name || cart?.shippingAddress?.name || "").trim();
   if (name) return name;
@@ -37,6 +45,11 @@ export function abandonedCartDisplayName(cart) {
   const first = cart?.items?.[0]?.name;
   if (first) return `Guest · ${first}`;
   return "Guest cart";
+}
+
+/** Real customer name only — never invent from product title (detail modal Name row). */
+export function abandonedCartCustomerName(cart) {
+  return String(cart?.customer?.name || cart?.shippingAddress?.name || "").trim();
 }
 
 export const DEFAULT_ABANDONED_CART_WHATSAPP = {

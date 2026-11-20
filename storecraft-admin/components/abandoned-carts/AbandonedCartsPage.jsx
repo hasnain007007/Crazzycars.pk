@@ -35,6 +35,8 @@ const STATUS_TABS = [
 export function AbandonedCartsPage() {
   const [status, setStatus] = useState("abandoned");
   const [q, setQ] = useState("");
+  /** all | with_phone | missing — reachability filter for recovery work. */
+  const [contactFilter, setContactFilter] = useState("all");
   const [rows, setRows] = useState([]);
   const [stats, setStats] = useState({
     active: 0,
@@ -42,6 +44,8 @@ export function AbandonedCartsPage() {
     recovered: 0,
     dismissed: 0,
     abandonedValue: 0,
+    withPhone: 0,
+    missingContact: 0,
   });
   const [contactModal, setContactModal] = useState(null); // { mode, cart }
   const [settings, setSettings] = useState({
@@ -69,6 +73,7 @@ export function AbandonedCartsPage() {
         limit: "20",
       });
       if (q.trim()) params.set("q", q.trim());
+      if (contactFilter && contactFilter !== "all") params.set("contact", contactFilter);
       const res = await fetch(`/api/abandoned-carts?${params}`, { credentials: "include" });
       const json = await res.json();
       if (!res.ok || !json.success) {
@@ -89,7 +94,7 @@ export function AbandonedCartsPage() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [status, page, q]);
+  }, [status, page, q, contactFilter]);
 
   useEffect(() => {
     load();
@@ -321,17 +326,33 @@ export function AbandonedCartsPage() {
     if (!cart?.id) return;
     if (mode === "whatsapp") {
       const pk = normalizePkMobile(details.phone);
-      await patchAction(cart.id, "set-contact", {
+      const saved = await patchAction(cart.id, "set-contact", {
         silent: true,
         name: details.name || undefined,
         phone: details.phone,
       });
       setContactModal(null);
-      openWhatsAppWithPhone(cart, pk.normalized || details.phone);
+      const cartForWa =
+        saved && typeof saved === "object"
+          ? saved
+          : {
+              ...cart,
+              customer: {
+                ...(cart.customer || {}),
+                name: details.name || cart.customer?.name,
+                phone: pk.normalized || details.phone,
+              },
+            };
+      openWhatsAppWithPhone(cartForWa, pk.normalized || details.phone);
       return;
     }
     if (mode === "email") {
-      await patchAction(cart.id, "set-contact", { silent: true, email: details.email });
+      await patchAction(cart.id, "set-contact", {
+        silent: true,
+        name: details.name || undefined,
+        email: details.email,
+        phone: details.phone || undefined,
+      });
       setContactModal(null);
       await postRecoveryEmail(cart.id);
       return;
@@ -339,7 +360,18 @@ export function AbandonedCartsPage() {
     if (mode === "convert") {
       setContactModal(null);
       await executeConvert(cart, details);
+      return;
     }
+    // mode === "contact" — save only, keep detail open with refreshed cart
+    await patchAction(cart.id, "set-contact", {
+      name: details.name || undefined,
+      phone: details.phone || undefined,
+      email: details.email || undefined,
+      street: details.street || undefined,
+      city: details.city || undefined,
+      state: details.state || undefined,
+    });
+    setContactModal(null);
   }
 
   async function saveSettings() {
@@ -374,7 +406,7 @@ export function AbandonedCartsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         {[
           { label: "Abandoned", value: stats.abandoned, tone: "text-amber-700" },
           {
@@ -382,6 +414,8 @@ export function AbandonedCartsPage() {
             value: formatAdminPrice(stats.abandonedValue || 0),
             tone: "text-slate-900",
           },
+          { label: "With phone", value: stats.withPhone ?? "—", tone: "text-emerald-700" },
+          { label: "No contact", value: stats.missingContact ?? "—", tone: "text-rose-700" },
           { label: "Active carts", value: stats.active, tone: "text-sky-700" },
           { label: "Recovered", value: stats.recovered, tone: "text-emerald-700" },
         ].map((c) => (
@@ -470,27 +504,52 @@ export function AbandonedCartsPage() {
             </button>
           ))}
         </div>
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setPage(1);
-            load();
-          }}
-        >
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name, phone, email…"
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
-          />
-          <button
-            type="submit"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold dark:border-slate-600 dark:bg-slate-800"
+        <div className="flex flex-col gap-2 sm:items-end">
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { key: "all", label: "All contacts" },
+              { key: "with_phone", label: "Has phone" },
+              { key: "missing", label: "Missing contact" },
+            ].map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => {
+                  setPage(1);
+                  setContactFilter(t.key);
+                }}
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold ${
+                  contactFilter === t.key
+                    ? "bg-emerald-700 text-white"
+                    : "border border-slate-200 bg-white text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setPage(1);
+              load();
+            }}
           >
-            Search
-          </button>
-        </form>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search name, phone, email…"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
+            />
+            <button
+              type="submit"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold dark:border-slate-600 dark:bg-slate-800"
+            >
+              Search
+            </button>
+          </form>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
@@ -688,6 +747,7 @@ export function AbandonedCartsPage() {
           onWhatsApp={sendWhatsApp}
           onEmail={sendEmail}
           onConvert={convertToOrder}
+          onEditContact={(cart) => setContactModal({ mode: "contact", cart })}
           onDismiss={(id) => patchAction(id, "dismiss")}
           onReopen={(id) => patchAction(id, "reopen")}
         />

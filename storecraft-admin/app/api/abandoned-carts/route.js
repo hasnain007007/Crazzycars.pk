@@ -22,6 +22,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const status = String(searchParams.get("status") || "abandoned").trim();
     const q = String(searchParams.get("q") || "").trim();
+    const contact = String(searchParams.get("contact") || "all").trim(); // all | with_phone | missing
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20", 10) || 20));
     const skip = (page - 1) * limit;
@@ -41,23 +42,48 @@ export async function GET(request) {
     if (status && status !== "all") filter.status = status;
     // Active / Abandoned: only carts with ≥1 item (empty sync rows are noise).
     if (status === "active" || status === "abandoned") filter.itemCount = { $gt: 0 };
+    const phonePresent = {
+      $or: [
+        { "customer.phone": { $exists: true, $nin: [null, ""] } },
+        { "shippingAddress.phone": { $exists: true, $nin: [null, ""] } },
+      ],
+    };
+    const phoneMissing = {
+      $and: [
+        { $or: [{ "customer.phone": { $exists: false } }, { "customer.phone": "" }, { "customer.phone": null }] },
+        {
+          $or: [
+            { "shippingAddress.phone": { $exists: false } },
+            { "shippingAddress.phone": "" },
+            { "shippingAddress.phone": null },
+          ],
+        },
+      ],
+    };
+    const andParts = [];
+    if (contact === "with_phone") andParts.push(phonePresent);
+    else if (contact === "missing") andParts.push(phoneMissing);
     if (q) {
       const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-      filter.$or = [
-        { "customer.name": rx },
-        { "customer.email": rx },
-        { "customer.phone": rx },
-        { "shippingAddress.street": rx },
-        { "shippingAddress.city": rx },
-        { "shippingAddress.state": rx },
-        { "shippingAddress.phone": rx },
-        { "shippingAddress.name": rx },
-        { customerId: rx },
-        { sessionId: rx },
-      ];
+      andParts.push({
+        $or: [
+          { "customer.name": rx },
+          { "customer.email": rx },
+          { "customer.phone": rx },
+          { "shippingAddress.street": rx },
+          { "shippingAddress.city": rx },
+          { "shippingAddress.state": rx },
+          { "shippingAddress.phone": rx },
+          { "shippingAddress.name": rx },
+          { customerId: rx },
+          { sessionId: rx },
+        ],
+      });
     }
+    if (andParts.length) filter.$and = andParts;
 
-    const [rows, total, statsAgg] = await Promise.all([
+    const abandonedBase = { status: "abandoned", itemCount: { $gt: 0 } };
+    const [rows, total, statsAgg, withPhone, missingContact] = await Promise.all([
       CartSession.find(filter).sort({ lastActivityAt: -1 }).skip(skip).limit(limit).lean(),
       CartSession.countDocuments(filter),
       CartSession.aggregate([
@@ -79,9 +105,19 @@ export async function GET(request) {
           },
         },
       ]),
+      CartSession.countDocuments({ ...abandonedBase, ...phonePresent }),
+      CartSession.countDocuments({ ...abandonedBase, ...phoneMissing }),
     ]);
 
-    const stats = { active: 0, abandoned: 0, recovered: 0, dismissed: 0, abandonedValue: 0 };
+    const stats = {
+      active: 0,
+      abandoned: 0,
+      recovered: 0,
+      dismissed: 0,
+      abandonedValue: 0,
+      withPhone,
+      missingContact,
+    };
     for (const row of statsAgg) {
       const key = row._id;
       if (key && key in stats) stats[key] = row.count;

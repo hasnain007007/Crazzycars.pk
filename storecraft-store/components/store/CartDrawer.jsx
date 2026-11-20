@@ -55,6 +55,7 @@ export function CartDrawer() {
   const [promoBusy, setPromoBusy] = useState(false);
   const [leadName, setLeadName] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
+  const [leadError, setLeadError] = useState("");
   const codPanelId = useId();
   const hasBulky = cartHasBulkyItem(items);
   const estimatedShipping = items.length > 0 ? shippingFloorPKR(hasBulky) : 0;
@@ -67,6 +68,7 @@ export function CartDrawer() {
     if (draft.phone) setLeadPhone((prev) => prev || draft.phone);
     if (authCustomer?.name) setLeadName((prev) => prev || String(authCustomer.name));
     if (authCustomer?.phone) setLeadPhone((prev) => prev || String(authCustomer.phone));
+    setLeadError("");
   }, [open, authCustomer]);
 
   useEffect(() => {
@@ -110,6 +112,49 @@ export function CartDrawer() {
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [leadName, leadPhone, items, authCustomerId]);
+
+  /** Soft-require WhatsApp before checkout so abandoned carts stay recoverable. */
+  function guardCheckout(e) {
+    const phone = String(leadPhone || "").trim();
+    if (!phone) {
+      e.preventDefault();
+      setLeadError("Enter your WhatsApp number so we can help if checkout is interrupted.");
+      return false;
+    }
+    // Accept common PK shapes; sync stores even if not perfectly normalized.
+    const digits = phone.replace(/\D/g, "");
+    const ok =
+      /^03\d{9}$/.test(digits) ||
+      /^(92)?3\d{9}$/.test(digits) ||
+      digits.length >= 10;
+    if (!ok) {
+      e.preventDefault();
+      setLeadError("Use a Pakistani mobile like 03XX XXXXXXX.");
+      return false;
+    }
+    setLeadError("");
+    // Force a sync before navigating so the session has contact for admin recovery.
+    const name = String(leadName || "").trim();
+    const draft = writeCheckoutDraft({ name, phone });
+    syncCartToServer({
+      items,
+      customer: { name: draft.name, phone: draft.phone, email: draft.email },
+      shippingAddress: {
+        name: draft.name,
+        phone: draft.phone,
+        street: draft.street,
+        city: draft.city,
+        state: draft.state,
+        country: draft.country,
+      },
+      path: typeof window !== "undefined" ? window.location.pathname : "/cart",
+      includeDraft: false,
+      checkoutStage: "cart",
+      customerId: authCustomerId || undefined,
+    });
+    setOpen(false);
+    return true;
+  }
   const promoDiscount = promo.valid ? Math.min(Number(promo.discount) || 0, Number(subtotal) || 0) : 0;
   const estimatedTotal =
     Math.round((Number(subtotal) - promoDiscount + Number(estimatedShipping || 0)) * 100) / 100;
@@ -489,8 +534,8 @@ export function CartDrawer() {
                 ) : null}
               </div>
               <div className="mb-2 space-y-1.5">
-                <p className="m-0 text-[11px] font-medium text-zinc-500">
-                  Optional — save name & WhatsApp so we can help if you leave (checkout still works without this)
+                <p className="m-0 text-[11px] font-medium text-zinc-600">
+                  WhatsApp number required — so we can help if you leave before paying
                 </p>
                 <input
                   type="text"
@@ -503,17 +548,29 @@ export function CartDrawer() {
                 <input
                   type="tel"
                   value={leadPhone}
-                  onChange={(e) => setLeadPhone(e.target.value)}
-                  placeholder="WhatsApp / phone optional (03XX…)"
+                  onChange={(e) => {
+                    setLeadPhone(e.target.value);
+                    if (leadError) setLeadError("");
+                  }}
+                  placeholder="WhatsApp / phone (03XX XXXXXXX)"
                   autoComplete="tel"
                   inputMode="tel"
-                  className="h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm"
+                  required
+                  aria-invalid={Boolean(leadError)}
+                  className={`h-10 w-full rounded-lg border px-3 text-sm ${
+                    leadError ? "border-red-500" : "border-[var(--border)]"
+                  }`}
                 />
+                {leadError ? (
+                  <p className="m-0 text-[11px] font-medium text-red-600" role="alert">
+                    {leadError}
+                  </p>
+                ) : null}
               </div>
               {checkoutUrl ? (
                 <a
                   href={checkoutHref}
-                  onClick={() => setOpen(false)}
+                  onClick={guardCheckout}
                   className="flex h-12 min-h-12 w-full items-center justify-center rounded-xl text-center text-base font-semibold transition hover:opacity-90"
                   style={{ background: "#111111", color: "#FFFFFF" }}
                 >
@@ -522,7 +579,7 @@ export function CartDrawer() {
               ) : (
                 <Link
                   href={checkoutHref}
-                  onClick={() => setOpen(false)}
+                  onClick={guardCheckout}
                   className="flex h-12 min-h-12 w-full items-center justify-center rounded-xl text-center text-base font-semibold transition hover:opacity-90"
                   style={{ background: "#111111", color: "#FFFFFF" }}
                 >

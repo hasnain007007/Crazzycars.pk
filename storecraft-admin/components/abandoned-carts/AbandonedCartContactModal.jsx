@@ -66,6 +66,23 @@ export function AbandonedCartContactModal({
         return;
       }
     }
+    if (mode === "contact") {
+      if (!nextPhone && !nextEmail) {
+        setError("Add a WhatsApp number or email so you can reach this customer.");
+        return;
+      }
+      if (nextPhone) {
+        const pk = normalizePkMobile(nextPhone);
+        if (!pk.ok) {
+          setError("Enter a valid Pakistani mobile (e.g. 03XX XXXXXXX).");
+          return;
+        }
+      }
+      if (nextEmail && (!nextEmail.includes("@") || nextEmail.startsWith("guest+"))) {
+        setError("Enter a real email address.");
+        return;
+      }
+    }
     if (mode === "convert" && !nextName) {
       setError("Customer name is required to create an order.");
       return;
@@ -101,7 +118,11 @@ export function AbandonedCartContactModal({
       >
         <h3 className="text-base font-bold text-slate-900 dark:text-white">{title}</h3>
         <p className="mt-1 text-xs text-slate-500">
-          Saved onto this cart session for recovery. Does not message the customer by itself.
+          {mode === "whatsapp"
+            ? "Save the number on this cart, then WhatsApp opens with a ready recovery message for you to send."
+            : mode === "convert"
+              ? "Name + WhatsApp are required to create a COD order from this cart."
+              : "Saved onto this cart session for recovery. Does not message the customer by itself."}
         </p>
         <div className="mt-4 space-y-3">
           {mode !== "email" ? (
@@ -184,7 +205,13 @@ export function AbandonedCartContactModal({
             disabled={saving}
             className="rounded-lg bg-[#1d6fb8] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
           >
-            {saving ? "Saving…" : mode === "convert" ? "Continue" : "Save & continue"}
+            {saving
+              ? "Saving…"
+              : mode === "convert"
+                ? "Continue"
+                : mode === "contact"
+                  ? "Save contact"
+                  : "Save & continue"}
           </button>
         </div>
       </form>
