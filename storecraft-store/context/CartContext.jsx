@@ -6,6 +6,8 @@ import { isBodyKitProduct, productAllowsCod } from "@/lib/codEligibility";
 import { productIsBulkyForShipping } from "@/lib/bulkyShipping";
 import { resolveProductContentId, trackAddToCart } from "@/lib/metaPixel";
 import { flushCartSyncOnUnload, syncCartToServer } from "@/lib/cartSyncClient";
+import { authCustomerContact, seedCheckoutDraftFromAuth } from "@/lib/checkoutDraft";
+import { useCustomer } from "@/lib/customerAuth";
 
 const STORAGE_KEY = "cart_items";
 const LEGACY_STORAGE_KEY = "sialkot_store_cart_v1";
@@ -71,11 +73,18 @@ function computeRequiresVariant(row) {
 }
 
 export function CartProvider({ children, shopifyEnabled = false }) {
+  const { customer: authCustomer } = useCustomer();
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState("");
   const [shopifyActive, setShopifyActive] = useState(false);
   const [cartReady, setCartReady] = useState(false);
+
+  // Seed local draft from account so abandoned-cart sync gets real name/phone/email/address.
+  useEffect(() => {
+    if (!authCustomer) return;
+    seedCheckoutDraftFromAuth(authCustomer);
+  }, [authCustomer]);
 
   useEffect(() => {
     // Hydrate cart from localStorage after mount (avoid SSR/client cart mismatch).
@@ -106,23 +115,34 @@ export function CartProvider({ children, shopifyEnabled = false }) {
     saveCart(items);
   }, [items]);
 
-  // Debounced server sync for abandoned-cart recovery (+ unload flush)
+  // Debounced server sync for abandoned-cart recovery (+ unload flush).
+  // Always merge checkout draft + logged-in profile from the browser — not items-only.
   const syncTimer = useRef(null);
   const itemsRef = useRef(items);
   itemsRef.current = items;
+  const authRef = useRef(authCustomer);
+  authRef.current = authCustomer;
   useEffect(() => {
     if (!cartReady) return;
     if (syncTimer.current) clearTimeout(syncTimer.current);
-    syncTimer.current = setTimeout(() => {
-      const stage = items.length > 0 ? "cart" : "browsing";
-      syncCartToServer({ items, checkoutStage: stage });
-    }, 1200);
-    const onHide = () => {
-      const list = itemsRef.current || [];
-      flushCartSyncOnUnload({
+
+    const buildOpts = (list) => {
+      const contact = authCustomerContact(authRef.current);
+      return {
         items: list,
         checkoutStage: list.length > 0 ? "cart" : "browsing",
-      });
+        includeDraft: true,
+        customerId: contact?.customerId,
+        customer: contact?.customer,
+        shippingAddress: contact?.shippingAddress,
+      };
+    };
+
+    syncTimer.current = setTimeout(() => {
+      syncCartToServer(buildOpts(items));
+    }, 1200);
+    const onHide = () => {
+      flushCartSyncOnUnload(buildOpts(itemsRef.current || []));
     };
     const onVis = () => {
       if (document.visibilityState === "hidden") onHide();
@@ -134,7 +154,7 @@ export function CartProvider({ children, shopifyEnabled = false }) {
       window.removeEventListener("pagehide", onHide);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [items, cartReady]);
+  }, [items, cartReady, authCustomer]);
 
   const replaceItems = useCallback((nextItems) => {
     setItems(Array.isArray(nextItems) ? nextItems : []);

@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import CartSession from "@/lib/models/CartSession.model";
+import Customer from "@/lib/models/Customer.model";
 import {
   cartTotals,
   ensureRecoveryToken,
@@ -13,6 +14,7 @@ import {
 } from "@/lib/abandonedCart";
 import { normalizeCheckoutStage } from "@/lib/cartSyncNormalize";
 import { phoneForStorage } from "@/lib/pkPhone";
+import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
 
@@ -46,23 +48,71 @@ export async function POST(request) {
     const incomingShip =
       body.shippingAddress && typeof body.shippingAddress === "object" ? body.shippingAddress : {};
 
-    const name = pickStr(incomingCustomer, ["name"], 120) || pickStr(incomingShip, ["name"], 120);
-    const email =
+    let name = pickStr(incomingCustomer, ["name"], 120) || pickStr(incomingShip, ["name"], 120);
+    let email =
       pickStr(incomingCustomer, ["email"], 160).toLowerCase() ||
       pickStr(incomingShip, ["email"], 160).toLowerCase();
-    const phoneIncoming =
+    let phoneIncoming =
       pickStr(incomingCustomer, ["phone"], 40) || pickStr(incomingShip, ["phone"], 40);
-    const phoneStored = phoneIncoming ? phoneForStorage(phoneIncoming) : null;
 
-    const street = pickStr(incomingShip, ["street", "address", "line1"], 200);
-    const street2 = pickStr(incomingShip, ["street2", "line2"], 200);
-    const area = pickStr(incomingShip, ["area"], 120);
-    const city = pickStr(incomingShip, ["city"], 80);
-    const state = pickStr(incomingShip, ["state", "province"], 80);
-    const zip = pickStr(incomingShip, ["zip", "postcode"], 20);
-    const country = pickStr(incomingShip, ["country"], 60) || "Pakistan";
+    let street = pickStr(incomingShip, ["street", "address", "line1"], 200);
+    let street2 = pickStr(incomingShip, ["street2", "line2"], 200);
+    let area = pickStr(incomingShip, ["area"], 120);
+    let city = pickStr(incomingShip, ["city"], 80);
+    let state = pickStr(incomingShip, ["state", "province"], 80);
+    let zip = pickStr(incomingShip, ["zip", "postcode"], 20);
+    let country = pickStr(incomingShip, ["country"], 60) || "Pakistan";
 
     await dbConnect();
+
+    // Logged-in browser: fill gaps from Customer account (real data only).
+    if (customerId && mongoose.Types.ObjectId.isValid(customerId)) {
+      const needsProfile =
+        !name ||
+        !email ||
+        !phoneIncoming ||
+        !street ||
+        !city;
+      if (needsProfile) {
+        try {
+          const account = await Customer.findById(customerId)
+            .select("name firstName lastName email phone address addresses")
+            .lean();
+          if (account) {
+            const fn = String(account.firstName || "").trim();
+            const ln = String(account.lastName || "").trim();
+            const accountName =
+              String(account.name || "").trim() || `${fn} ${ln}`.trim();
+            if (!name && accountName) name = accountName.slice(0, 120);
+            if (!email && account.email) email = String(account.email).trim().toLowerCase().slice(0, 160);
+            if (!phoneIncoming && account.phone) {
+              phoneIncoming = String(account.phone).trim().slice(0, 40);
+            }
+            const book = Array.isArray(account.addresses) ? account.addresses : [];
+            const def = book.find((a) => a?.isDefault) || book[0] || account.address || null;
+            if (def && typeof def === "object") {
+              if (!phoneIncoming && def.phone) {
+                phoneIncoming = String(def.phone).trim().slice(0, 40);
+              }
+              if (!street) street = String(def.street || def.address || "").trim().slice(0, 200);
+              if (!street2) street2 = String(def.street2 || "").trim().slice(0, 200);
+              if (!area) area = String(def.area || "").trim().slice(0, 120);
+              if (!city) city = String(def.city || "").trim().slice(0, 80);
+              if (!state) state = String(def.state || def.province || "").trim().slice(0, 80);
+              if (!zip) zip = String(def.zip || def.postcode || "").trim().slice(0, 20);
+              if (!pickStr(incomingShip, ["country"], 60) && def.country) {
+                country = String(def.country).trim().slice(0, 60) || country;
+              }
+            }
+          }
+        } catch {
+          /* ignore account lookup failures — sync must still save cart items */
+        }
+      }
+    }
+
+    const phoneStored = phoneIncoming ? phoneForStorage(phoneIncoming) : null;
+
     let doc = await CartSession.findOne({ sessionId });
     if (!doc) {
       if (items.length === 0) {

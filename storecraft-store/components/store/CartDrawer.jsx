@@ -12,9 +12,14 @@ import {
   shippingAdvanceCollapsedEn,
 } from "@/lib/storePolicyCopy";
 import { cartHasBulkyItem, shippingFloorPKR } from "@/lib/shippingTier";
-import { readCheckoutDraft, writeCheckoutDraft } from "@/lib/checkoutDraft";
+import {
+  authCustomerContact,
+  readCheckoutDraft,
+  writeCheckoutDraft,
+} from "@/lib/checkoutDraft";
 import { flushCartSyncOnUnload, syncCartToServer } from "@/lib/cartSyncClient";
 import { useCustomer } from "@/lib/customerAuth";
+import { normalizeWhatsAppPhone } from "@/lib/pkPhone";
 import { readPendingCoupon, validateCoupon, writePendingCoupon } from "@/lib/pendingCoupon";
 
 function lineKey(x) {
@@ -64,12 +69,59 @@ export function CartDrawer() {
   useEffect(() => {
     if (!open) return;
     const draft = readCheckoutDraft();
-    if (draft.name) setLeadName((prev) => prev || draft.name);
-    if (draft.phone) setLeadPhone((prev) => prev || draft.phone);
-    if (authCustomer?.name) setLeadName((prev) => prev || String(authCustomer.name));
-    if (authCustomer?.phone) setLeadPhone((prev) => prev || String(authCustomer.phone));
+    const auth = authCustomerContact(authCustomer);
+    const name =
+      String(leadName || "").trim() ||
+      draft.name ||
+      auth?.customer?.name ||
+      "";
+    const phone =
+      String(leadPhone || "").trim() ||
+      draft.phone ||
+      auth?.customer?.phone ||
+      "";
+    if (name) setLeadName((prev) => prev || name);
+    if (phone) setLeadPhone((prev) => prev || phone);
     setLeadError("");
-  }, [open, authCustomer]);
+
+    // Push whatever the browser already knows (draft / account) as soon as drawer opens.
+    if (!items.length) return;
+    if (!name && !phone && !auth?.customer?.email && !authCustomerId) return;
+    const merged = writeCheckoutDraft({
+      name,
+      phone,
+      email: auth?.customer?.email || draft.email,
+      street: auth?.shippingAddress?.street || draft.street,
+      city: auth?.shippingAddress?.city || draft.city,
+      state: auth?.shippingAddress?.state || draft.state,
+      country: auth?.shippingAddress?.country || draft.country,
+    });
+    syncCartToServer({
+      items,
+      customer: {
+        name: merged.name,
+        phone: merged.phone,
+        email: merged.email,
+      },
+      shippingAddress: {
+        name: merged.name,
+        phone: merged.phone,
+        email: merged.email,
+        street: merged.street,
+        street2: merged.street2,
+        area: merged.area,
+        city: merged.city,
+        state: merged.state,
+        zip: merged.zip,
+        country: merged.country,
+      },
+      path: typeof window !== "undefined" ? window.location.pathname : "/cart",
+      includeDraft: true,
+      checkoutStage: "cart",
+      customerId: authCustomerId || auth?.customerId || undefined,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once per open / auth change
+  }, [open, authCustomer, authCustomerId, items.length]);
 
   useEffect(() => {
     if (!items.length) return;
@@ -79,21 +131,30 @@ export function CartDrawer() {
     const flush = (unload = false) => {
       if (!name && !phone && !unload) return;
       const draft = writeCheckoutDraft({ name, phone });
+      const auth = authCustomerContact(authCustomer);
       const payload = {
         items,
-        customer: { name: draft.name, phone: draft.phone, email: draft.email },
+        customer: {
+          name: draft.name || auth?.customer?.name || "",
+          phone: draft.phone || auth?.customer?.phone || "",
+          email: draft.email || auth?.customer?.email || "",
+        },
         shippingAddress: {
-          name: draft.name,
-          phone: draft.phone,
-          street: draft.street,
-          city: draft.city,
-          state: draft.state,
-          country: draft.country,
+          name: draft.name || auth?.shippingAddress?.name || "",
+          phone: draft.phone || auth?.shippingAddress?.phone || "",
+          email: draft.email || auth?.shippingAddress?.email || "",
+          street: draft.street || auth?.shippingAddress?.street || "",
+          street2: draft.street2 || auth?.shippingAddress?.street2 || "",
+          area: draft.area || auth?.shippingAddress?.area || "",
+          city: draft.city || auth?.shippingAddress?.city || "",
+          state: draft.state || auth?.shippingAddress?.state || "",
+          zip: draft.zip || auth?.shippingAddress?.zip || "",
+          country: draft.country || auth?.shippingAddress?.country || "Pakistan",
         },
         path: typeof window !== "undefined" ? window.location.pathname : "/cart",
-        includeDraft: false,
+        includeDraft: true,
         checkoutStage: "cart",
-        customerId: authCustomerId || undefined,
+        customerId: authCustomerId || auth?.customerId || undefined,
       };
       if (unload) flushCartSyncOnUnload(payload);
       else syncCartToServer(payload);
@@ -111,7 +172,7 @@ export function CartDrawer() {
       window.removeEventListener("pagehide", onHide);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [leadName, leadPhone, items, authCustomerId]);
+  }, [leadName, leadPhone, items, authCustomerId, authCustomer]);
 
   /** Soft-require WhatsApp before checkout so abandoned carts stay recoverable. */
   function guardCheckout(e) {
@@ -121,36 +182,37 @@ export function CartDrawer() {
       setLeadError("Enter your WhatsApp number so we can help if checkout is interrupted.");
       return false;
     }
-    // Accept common PK shapes; sync stores even if not perfectly normalized.
-    const digits = phone.replace(/\D/g, "");
-    const ok =
-      /^03\d{9}$/.test(digits) ||
-      /^(92)?3\d{9}$/.test(digits) ||
-      digits.length >= 10;
-    if (!ok) {
+    const parsed = normalizeWhatsAppPhone(phone);
+    if (!parsed.ok) {
       e.preventDefault();
-      setLeadError("Use a Pakistani mobile like 03XX XXXXXXX.");
+      setLeadError(parsed.error || "Enter a valid mobile with country code (e.g. 03XX… or +966 5X…).");
       return false;
     }
     setLeadError("");
     // Force a sync before navigating so the session has contact for admin recovery.
     const name = String(leadName || "").trim();
-    const draft = writeCheckoutDraft({ name, phone });
+    const draft = writeCheckoutDraft({ name, phone: parsed.normalized || phone });
+    const auth = authCustomerContact(authCustomer);
     syncCartToServer({
       items,
-      customer: { name: draft.name, phone: draft.phone, email: draft.email },
+      customer: {
+        name: draft.name,
+        phone: draft.phone,
+        email: draft.email || auth?.customer?.email || "",
+      },
       shippingAddress: {
         name: draft.name,
         phone: draft.phone,
-        street: draft.street,
-        city: draft.city,
-        state: draft.state,
-        country: draft.country,
+        email: draft.email || auth?.shippingAddress?.email || "",
+        street: draft.street || auth?.shippingAddress?.street || "",
+        city: draft.city || auth?.shippingAddress?.city || "",
+        state: draft.state || auth?.shippingAddress?.state || "",
+        country: draft.country || auth?.shippingAddress?.country || "Pakistan",
       },
       path: typeof window !== "undefined" ? window.location.pathname : "/cart",
-      includeDraft: false,
+      includeDraft: true,
       checkoutStage: "cart",
-      customerId: authCustomerId || undefined,
+      customerId: authCustomerId || auth?.customerId || undefined,
     });
     setOpen(false);
     return true;
@@ -552,7 +614,7 @@ export function CartDrawer() {
                     setLeadPhone(e.target.value);
                     if (leadError) setLeadError("");
                   }}
-                  placeholder="WhatsApp / phone (03XX XXXXXXX)"
+                  placeholder="WhatsApp / phone (03XX… or +966 5X…)"
                   autoComplete="tel"
                   inputMode="tel"
                   required

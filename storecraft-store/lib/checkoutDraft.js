@@ -126,3 +126,76 @@ export function draftToSyncPayload(draft) {
     },
   };
 }
+
+function pickDefaultAddress(authCustomer) {
+  const book = Array.isArray(authCustomer?.addresses) ? authCustomer.addresses : [];
+  const def = book.find((a) => a?.isDefault) || book[0] || null;
+  const legacy = authCustomer?.address && typeof authCustomer.address === "object" ? authCustomer.address : null;
+  const src = def || legacy;
+  if (!src) return {};
+  return {
+    phone: clean(src.phone, 40),
+    street: clean(src.street || src.address, 200),
+    street2: clean(src.street2, 200),
+    area: clean(src.area, 120),
+    city: clean(src.city, 80),
+    state: clean(src.state || src.province, 80),
+    zip: clean(src.zip || src.postcode, 20),
+    country: clean(src.country, 60) || "Pakistan",
+  };
+}
+
+/**
+ * Map logged-in /api/customer/me profile into cart-sync + draft fields.
+ * Only real account data — never invents guest identity.
+ */
+export function authCustomerContact(authCustomer) {
+  if (!authCustomer || typeof authCustomer !== "object") return null;
+  const customerId = String(authCustomer._id || authCustomer.id || "").trim();
+  const firstName = clean(authCustomer.firstName, 60);
+  const lastName = clean(authCustomer.lastName, 60);
+  const name =
+    clean(authCustomer.name, 120) || `${firstName} ${lastName}`.trim() || "";
+  const email = clean(authCustomer.email, 160).toLowerCase();
+  const phone = clean(authCustomer.phone, 40);
+  const addr = pickDefaultAddress(authCustomer);
+  const phoneFromAddr = clean(addr.phone || "", 40);
+  const resolvedPhone = phone || phoneFromAddr;
+  const hasAny = Boolean(name || email || resolvedPhone || addr.street || addr.city);
+  if (!customerId && !hasAny) return null;
+
+  const { phone: _addrPhone, ...addrRest } = addr;
+  const draftPartial = {
+    name,
+    firstName,
+    lastName,
+    email,
+    phone: resolvedPhone,
+    ...addrRest,
+  };
+
+  return {
+    customerId: customerId || undefined,
+    customer: { name, email, phone: resolvedPhone },
+    shippingAddress: {
+      name,
+      email,
+      phone: resolvedPhone,
+      street: addr.street || "",
+      street2: addr.street2 || "",
+      area: addr.area || "",
+      city: addr.city || "",
+      state: addr.state || "",
+      zip: addr.zip || "",
+      country: addr.country || "Pakistan",
+    },
+    draftPartial,
+  };
+}
+
+/** Persist account PII into local draft so item-only syncs still send contact. */
+export function seedCheckoutDraftFromAuth(authCustomer) {
+  const contact = authCustomerContact(authCustomer);
+  if (!contact?.draftPartial) return null;
+  return writeCheckoutDraft(contact.draftPartial);
+}
