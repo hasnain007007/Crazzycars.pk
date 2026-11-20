@@ -8,7 +8,7 @@ import { openWhatsApp } from "@/components/orders/OrderWhatsAppButton";
 import { getAdminSettings } from "@/lib/adminSettingsCache";
 import { AbandonedCartDetailModal } from "@/components/abandoned-carts/AbandonedCartDetailModal";
 import { AbandonedCartContactModal } from "@/components/abandoned-carts/AbandonedCartContactModal";
-import { normalizePkMobile } from "@/lib/pkPhone";
+import { normalizePkMobile, normalizeWhatsAppPhone } from "@/lib/pkPhone";
 
 function formatWhen(d) {
   if (!d) return "—";
@@ -186,9 +186,9 @@ export function AbandonedCartsPage() {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     const existing = String(cart?.customer?.phone || cart?.shippingAddress?.phone || "").trim();
-    const pk = normalizePkMobile(existing);
-    if (pk.ok) {
-      openWhatsAppWithPhone(cart, pk.normalized);
+    const wa = normalizeWhatsAppPhone(existing);
+    if (wa.ok) {
+      openWhatsAppWithPhone(cart, wa.waDigits || wa.normalized);
       return;
     }
     setContactModal({ mode: "whatsapp", cart });
@@ -306,14 +306,14 @@ export function AbandonedCartsPage() {
 
     const name = String(cart.customer?.name || "").trim();
     const phone = String(cart.customer?.phone || cart.shippingAddress?.phone || "").trim();
-    const pk = normalizePkMobile(phone);
-    if (!name || !pk.ok) {
+    const wa = normalizeWhatsAppPhone(phone);
+    if (!name || !wa.ok) {
       setContactModal({ mode: "convert", cart });
       return;
     }
     await executeConvert(cart, {
       name,
-      phone: pk.normalized,
+      phone: wa.normalized,
       email: String(cart.customer?.email || "").trim(),
       street: String(cart.shippingAddress?.street || "").trim(),
       city: String(cart.shippingAddress?.city || "").trim(),
@@ -325,13 +325,14 @@ export function AbandonedCartsPage() {
     const { mode, cart } = contactModal || {};
     if (!cart?.id) return;
     if (mode === "whatsapp") {
-      const pk = normalizePkMobile(details.phone);
+      const wa = normalizeWhatsAppPhone(details.phone);
       const saved = await patchAction(cart.id, "set-contact", {
         silent: true,
         name: details.name || undefined,
         phone: details.phone,
       });
       setContactModal(null);
+      const dial = wa.waDigits || details.phone;
       const cartForWa =
         saved && typeof saved === "object"
           ? saved
@@ -340,10 +341,10 @@ export function AbandonedCartsPage() {
               customer: {
                 ...(cart.customer || {}),
                 name: details.name || cart.customer?.name,
-                phone: pk.normalized || details.phone,
+                phone: wa.normalized || details.phone,
               },
             };
-      openWhatsAppWithPhone(cartForWa, pk.normalized || details.phone);
+      openWhatsAppWithPhone(cartForWa, dial);
       return;
     }
     if (mode === "email") {

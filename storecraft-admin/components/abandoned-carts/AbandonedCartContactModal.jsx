@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { normalizePkMobile } from "@/lib/pkPhone";
+import { normalizeWhatsAppPhone } from "@/lib/pkPhone";
 
 /**
  * Structured contact/address capture for WhatsApp / email / convert flows.
@@ -60,9 +60,9 @@ export function AbandonedCartContactModal({
         setError("Phone / WhatsApp number is required.");
         return;
       }
-      const pk = normalizePkMobile(nextPhone);
-      if (!pk.ok) {
-        setError("Enter a valid Pakistani mobile (e.g. 03XX XXXXXXX).");
+      const wa = normalizeWhatsAppPhone(nextPhone);
+      if (!wa.ok) {
+        setError(wa.error || "Enter a valid mobile with country code (e.g. 03XX… or +966 5X…).");
         return;
       }
     }
@@ -72,9 +72,9 @@ export function AbandonedCartContactModal({
         return;
       }
       if (nextPhone) {
-        const pk = normalizePkMobile(nextPhone);
-        if (!pk.ok) {
-          setError("Enter a valid Pakistani mobile (e.g. 03XX XXXXXXX).");
+        const wa = normalizeWhatsAppPhone(nextPhone);
+        if (!wa.ok) {
+          setError(wa.error || "Enter a valid mobile with country code (e.g. 03XX… or +966 5X…).");
           return;
         }
       }
@@ -143,7 +143,7 @@ export function AbandonedCartContactModal({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-                placeholder="03XX XXXXXXX"
+                placeholder="03XX… or +966 5X… (any country)"
                 inputMode="tel"
                 autoComplete="tel"
               />
