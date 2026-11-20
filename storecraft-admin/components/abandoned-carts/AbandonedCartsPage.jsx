@@ -8,7 +8,7 @@ import { openWhatsApp } from "@/components/orders/OrderWhatsAppButton";
 import { getAdminSettings } from "@/lib/adminSettingsCache";
 import { AbandonedCartDetailModal } from "@/components/abandoned-carts/AbandonedCartDetailModal";
 import { AbandonedCartContactModal } from "@/components/abandoned-carts/AbandonedCartContactModal";
-import { normalizePkMobile, normalizeWhatsAppPhone } from "@/lib/pkPhone";
+import { normalizeWhatsAppPhone } from "@/lib/pkPhone";
 
 function formatWhen(d) {
   if (!d) return "—";
