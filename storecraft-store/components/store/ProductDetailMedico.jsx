@@ -1111,19 +1111,14 @@ export function ProductDetailMedico({
                   alt={selectedItem.altText || product.name}
                   watermark={productImageWatermark}
                   className="h-full w-full"
-                  // LCP (index 0): single -800 candidate only — no srcset, so Next does not
-                  // inject a competing imageSrcSet preload that can pick 1200w and miss reuse.
-                  // Later slides keep responsive 800/1200.
+                  // src=-800 fallback; srcset 800/1200 for retina/desktop sharpness.
+                  // sizes keep mobile PSI (412×1.75≈721) on 800w so LCP preload matches.
                   width={800}
                   crop="limit"
-                  widths={selectedIndex === 0 ? [800] : [800, 1200]}
-                  srcSet={selectedIndex === 0 ? undefined : selectedItem.srcSet || undefined}
-                  responsive={selectedIndex !== 0}
-                  sizes={
-                    selectedIndex === 0
-                      ? undefined
-                      : "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
-                  }
+                  widths={[800, 1200]}
+                  srcSet={selectedItem.srcSet || undefined}
+                  responsive
+                  sizes="(max-width: 767px) 100vw, 560px"
                   loading={selectedIndex === 0 ? "eager" : "lazy"}
                   fetchPriority={selectedIndex === 0 ? "high" : "low"}
                   decoding={selectedIndex === 0 ? "sync" : "async"}

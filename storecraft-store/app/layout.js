@@ -269,9 +269,11 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${rajdhani.variable} h-full`}>
+      {/* FIRST in <html>: must run before Next's stylesheet links. A classic script
+          after <link rel=stylesheet> waits for those sheets, so a late defer never
+          unblocks paint (PSI render-blocking ~770ms on PDP). */}
+      <script dangerouslySetInnerHTML={{ __html: DEFER_STYLESHEETS_SCRIPT }} />
       <head>
-        {/* Unblock first paint: stylesheets block rendering, not parsing — flip to media=print until load. */}
-        <script dangerouslySetInnerHTML={{ __html: DEFER_STYLESHEETS_SCRIPT }} />
         <style dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
         {/* Home hero image preloads live only on app/page.jsx — not every route. */}
       </head>

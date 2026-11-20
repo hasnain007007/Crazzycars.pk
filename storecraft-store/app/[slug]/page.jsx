@@ -30,6 +30,7 @@ import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
 import {
+  galleryImageUrl1200Existing,
   galleryImageUrlExisting,
   localMediaSrcSetExisting,
   pdpImageUrlExisting,
@@ -639,13 +640,23 @@ export default async function ProductPage({ params, searchParams }) {
         },
       };
     })();
-    const lcpHref = (() => {
+    const lcpMain = (() => {
       const img =
         productForView?.media?.images?.find((i) => i?.isMain) ||
         productForView?.media?.images?.[0] ||
         null;
-      // Exact same URL as <img src> (no imageSrcSet) so the preload is reused.
-      return img?.url ? String(img.url).split("?")[0] : "";
+      return img;
+    })();
+    // Mobile LCP: Next auto-preloads the fetchPriority=high <img> (single early tag).
+    // Do NOT also emit an href preload — that duplicated the same URL.
+    // Desktop/retina: media-gated -1200 so wide screens get a sharp candidate.
+    const lcpHref800 = lcpMain?.url ? String(lcpMain.url).split("?")[0] : "";
+    const lcpHref1200 = (() => {
+      const master = lcpMain?._masterUrl || lcpMain?.url;
+      if (!master) return "";
+      const u1200 = galleryImageUrl1200Existing(master);
+      const cleaned = u1200 ? String(u1200).split("?")[0] : "";
+      return cleaned && cleaned !== lcpHref800 ? cleaned : "";
     })();
     const ssrReviews = approvedReviews.slice(0, 5);
     const productFaqLd = faqPageJsonLd(productFaqItems);
@@ -657,9 +668,14 @@ export default async function ProductPage({ params, searchParams }) {
       <>
         {/* OG product type — Next.js rejects openGraph.type=product */}
         <meta property="og:type" content="product" />
-        {/* One PDP LCP preload — href must equal the gallery <img src> candidate. */}
-        {lcpHref ? (
-          <link rel="preload" as="image" href={lcpHref} fetchPriority="high" />
+        {lcpHref1200 ? (
+          <link
+            rel="preload"
+            as="image"
+            href={lcpHref1200}
+            media="(min-width: 768px)"
+            fetchPriority="high"
+          />
         ) : null}
         {isCompleteProductJsonLd(productLd) ? (
           <script

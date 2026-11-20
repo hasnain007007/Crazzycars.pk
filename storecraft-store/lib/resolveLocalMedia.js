@@ -88,6 +88,11 @@ export function galleryImageUrlExisting(src) {
   return resolveExistingLocalMedia(src, { prefer: ["800", "1200", "400", "original"] });
 }
 
+/** Desktop/retina gallery candidate — prefer -1200 when on disk. */
+export function galleryImageUrl1200Existing(src) {
+  return resolveExistingLocalMedia(src, { prefer: ["1200", "800", "400", "original"] });
+}
+
 /** Thumbnail strip / tiny cards — prefer small derivatives. */
 export function thumbImageUrlExisting(src) {
   return resolveExistingLocalMedia(src, { prefer: ["400", "sm", "800", "original"] });

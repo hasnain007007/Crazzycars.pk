@@ -78,7 +78,12 @@ export const CRITICAL_CSS = [
 ].join("");
 
 /**
- * Sync head script: flip Next's render-blocking stylesheets to media=print
- * until load, so critical inline CSS can paint LCP without waiting on ~180KB.
+ * MUST run before any <link rel=stylesheet> in the HTML.
+ * Classic scripts after stylesheets wait for those sheets — so a late defer
+ * script never unblocks first paint (PSI "Render-blocking requests" ~770ms).
+ * Place as the first child of <html> (before <head>).
+ *
+ * Flip sheets to media=print immediately; apply media=all only after first paint
+ * (do NOT apply early when l.sheet is already set — that re-blocks LCP).
  */
-export const DEFER_STYLESHEETS_SCRIPT = `(function(){function d(l){if(!l||l.tagName!=="LINK"||l.rel!=="stylesheet"||l.dataset.ccDefer==="1")return;var m=l.getAttribute("media");if(m&&m!=="all")return;l.dataset.ccDefer="1";l.media="print";var f=function(){l.media="all";l.onload=null};if(l.sheet){f();return}l.onload=f}function s(r){var n=(r||document).querySelectorAll('link[rel="stylesheet"]');for(var i=0;i<n.length;i++)d(n[i])}s(document);var o=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var ns=ms[i].addedNodes;for(var j=0;j<ns.length;j++){var n=ns[j];if(n.tagName==="LINK")d(n);else if(n.querySelectorAll)s(n)}}});o.observe(document.documentElement,{childList:true,subtree:true});addEventListener("load",function(){o.disconnect();s(document)})})();`;
+export const DEFER_STYLESHEETS_SCRIPT = `(function(){function d(l){if(!l||l.tagName!=="LINK")return;var rel=l.rel||l.getAttribute("rel")||"";if(rel.indexOf("stylesheet")===-1||l.dataset.ccDefer==="1")return;var m=l.getAttribute("media");if(m&&m!=="all"&&m!=="screen")return;l.dataset.ccDefer="1";l.media="print";}function s(r){var n=(r||document).querySelectorAll('link[rel="stylesheet"]');for(var i=0;i<n.length;i++)d(n[i]);}function apply(){var n=document.querySelectorAll('link[data-cc-defer="1"]');for(var i=0;i<n.length;i++){var l=n[i];if((l.rel||"").indexOf("stylesheet")!==-1)l.media="all";}}s(document);var o=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var ns=ms[i].addedNodes;for(var j=0;j<ns.length;j++){var n=ns[j];if(!n||n.nodeType!==1)continue;if(n.tagName==="LINK")d(n);else if(n.querySelectorAll)s(n);}}});try{o.observe(document.documentElement,{childList:true,subtree:true});}catch(e){}function afterPaint(){requestAnimationFrame(function(){requestAnimationFrame(function(){o.disconnect();apply();});});}if(document.readyState==="complete")afterPaint();else addEventListener("load",afterPaint);})();`;
