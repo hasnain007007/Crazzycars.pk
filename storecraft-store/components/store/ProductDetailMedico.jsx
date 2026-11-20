@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { MyCarFitTag } from "@/components/store/MyCar";
 import toast from "react-hot-toast";
@@ -325,8 +325,10 @@ export function ProductDetailMedico({
       .catch(() => {});
   }, []);
 
-  /** Land at the top of the PDP on a new visit (Back/Forward restore is handled by ScrollToTop). */
-  useLayoutEffect(() => {
+  /** Land at the top of the PDP on a new visit (Back/Forward restore is handled by ScrollToTop).
+   * useEffect (not useLayoutEffect): layout scroll before paint was adding ~100–300ms+ to LCP
+   * element-render delay under CPU throttle. */
+  useEffect(() => {
     if (typeof window === "undefined" || window.__ccRestoring) return;
     const html = document.documentElement;
     const prev = html.style.scrollBehavior;

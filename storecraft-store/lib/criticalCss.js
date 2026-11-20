@@ -21,7 +21,8 @@ export const CRITICAL_CSS = [
   ".store-header-desktop-nav,.store-header-desktop-actions{display:none!important}",
   "@media(min-width:768px){.store-header-desktop-nav{display:block!important}.store-header-desktop-actions{display:flex!important}.store-site-header .store-container{display:flex;height:72px}}",
   /* Advance band — WITHOUT flex/grid this stacks to ~540px and pushes hero LCP below the fold */
-  ".adv-band{width:100%;align-self:stretch;position:relative;overflow:hidden;color:#fff;background:linear-gradient(90deg,#8c0e13 0%,#c41e1e 50%,#8c0e13 100%)}",
+  /* contain:layout — hydration/font tweaks inside the band must not shift the gallery (CLS) */
+  ".adv-band{width:100%;align-self:stretch;position:relative;overflow:hidden;color:#fff;background:linear-gradient(90deg,#8c0e13 0%,#c41e1e 50%,#8c0e13 100%);contain:layout style;min-height:48px}",
   ".adv-band__inner{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:18px}",
   ".adv-band__icon{flex:0 0 auto;display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff}",
   ".adv-band__icon svg{width:22px;height:22px}",

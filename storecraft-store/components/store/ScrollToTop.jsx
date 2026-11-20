@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 /**
@@ -102,7 +102,9 @@ export default function ScrollToTop() {
     };
   }, []);
 
-  useLayoutEffect(() => {
+  // useEffect (not useLayoutEffect): jumpTo(0) before first paint delayed LCP element
+  // render under CPU throttle. History restore still runs ASAP after paint.
+  useEffect(() => {
     if (typeof window === "undefined") return undefined;
     // Soft Back (popstate) or a full reload reached through Back (checked once per document).
     const firstRun = !window.__ccScrollInit;
