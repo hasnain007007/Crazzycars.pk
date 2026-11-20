@@ -20,6 +20,8 @@ export function WatermarkedImage({
   imgStyle,
   loading = "lazy",
   fetchPriority,
+  /** LCP images should use "sync" so paint is not deferred after decode. */
+  decoding = "async",
   optimize = true,
   width = 480,
   crop = "fill",
@@ -98,7 +100,7 @@ export function WatermarkedImage({
     className: imgClassName,
     style: imgStyle,
     loading,
-    decoding: "async",
+    decoding,
     fetchPriority,
     width,
     height: width,

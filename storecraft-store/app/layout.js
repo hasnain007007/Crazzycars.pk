@@ -273,21 +273,7 @@ export default async function RootLayout({ children }) {
         {/* Unblock first paint: stylesheets block rendering, not parsing — flip to media=print until load. */}
         <script dangerouslySetInnerHTML={{ __html: DEFER_STYLESHEETS_SCRIPT }} />
         <style dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
-        {/* Early LCP image discovery (also sent as Link headers). */}
-        <link
-          rel="preload"
-          as="image"
-          href="/hero/civic-night-760.webp"
-          media="(max-width: 767px)"
-          fetchPriority="high"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="/hero/civic-night-1205.webp"
-          media="(min-width: 768px)"
-          fetchPriority="high"
-        />
+        {/* Home hero image preloads live only on app/page.jsx — not every route. */}
       </head>
       <body
         className="font-sans antialiased min-h-full flex flex-col"

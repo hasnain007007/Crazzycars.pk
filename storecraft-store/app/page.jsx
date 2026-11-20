@@ -124,6 +124,21 @@ export default async function Page() {
 
   return (
     <>
+      {/* Home-only LCP preloads — must not appear on PDP/category (layout used to leak these). */}
+      <link
+        rel="preload"
+        as="image"
+        href="/hero/civic-night-760.webp"
+        media="(max-width: 767px)"
+        fetchPriority="high"
+      />
+      <link
+        rel="preload"
+        as="image"
+        href="/hero/civic-night-1205.webp"
+        media="(min-width: 768px)"
+        fetchPriority="high"
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteLd) }}

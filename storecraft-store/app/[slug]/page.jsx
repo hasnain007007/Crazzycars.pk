@@ -639,12 +639,14 @@ export default async function ProductPage({ params, searchParams }) {
         },
       };
     })();
-    const lcpHref = (() => {
-      const main =
-        productForView?.media?.images?.find((i) => i?.isMain)?.url ||
-        productForView?.media?.images?.[0]?.url ||
-        "";
-      return main ? String(main).split("?")[0] : "";
+    const lcpMain = (() => {
+      const img =
+        productForView?.media?.images?.find((i) => i?.isMain) ||
+        productForView?.media?.images?.[0] ||
+        null;
+      const href = img?.url ? String(img.url).split("?")[0] : "";
+      const srcSet = String(img?.srcSet || "").trim();
+      return { href, srcSet };
     })();
     const ssrReviews = approvedReviews.slice(0, 5);
     const productFaqLd = faqPageJsonLd(productFaqItems);
@@ -656,8 +658,19 @@ export default async function ProductPage({ params, searchParams }) {
       <>
         {/* OG product type — Next.js rejects openGraph.type=product */}
         <meta property="og:type" content="product" />
-        {lcpHref ? (
-          <link rel="preload" as="image" href={lcpHref} fetchPriority="high" />
+        {/* Single PDP LCP preload — home hero preloads must not appear here. */}
+        {lcpMain.href ? (
+          lcpMain.srcSet ? (
+            <link
+              rel="preload"
+              as="image"
+              imageSrcSet={lcpMain.srcSet}
+              imageSizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
+              fetchPriority="high"
+            />
+          ) : (
+            <link rel="preload" as="image" href={lcpMain.href} fetchPriority="high" />
+          )
         ) : null}
         {isCompleteProductJsonLd(productLd) ? (
           <script

@@ -118,7 +118,8 @@ function slugTokens(slug) {
   return String(slug || "")
     .toLowerCase()
     .split(/[^a-z0-9]+/)
-    .filter((t) => t && t.length > 2 && !IMAGE_STOP.has(t) && !/^\d+$/.test(t));
+    // Keep 2-char brand tokens (mg, hs, …) — length>2 dropped MG HS key-cover from the feed.
+    .filter((t) => t && t.length >= 2 && !IMAGE_STOP.has(t) && !/^\d+$/.test(t));
 }
 
 function imageBasename(url) {

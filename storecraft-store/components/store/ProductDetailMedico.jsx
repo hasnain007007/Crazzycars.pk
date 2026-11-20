@@ -1034,7 +1034,7 @@ export function ProductDetailMedico({
           to { transform: translateX(0); opacity: 1; }
         }
       `}</style>
-      <div className="bg-[#F8F8F8] py-3 border-b border-[#E5E5E5]">
+      <div data-pdp-crumb className="bg-[#F8F8F8] py-3 border-b border-[#E5E5E5]">
         <div className="mx-auto max-w-7xl px-4 text-sm text-[#888888] leading-snug break-words">
           <Link href="/">Home</Link> / <span>{displayName}</span>
         </div>
@@ -1117,6 +1117,7 @@ export function ProductDetailMedico({
                   sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px"
                   loading={selectedIndex === 0 ? "eager" : "lazy"}
                   fetchPriority={selectedIndex === 0 ? "high" : "low"}
+                  decoding={selectedIndex === 0 ? "sync" : "async"}
                   imgStyle={{
                     width: "100%",
                     height: "100%",
