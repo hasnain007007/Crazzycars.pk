@@ -10,7 +10,10 @@ const {
   resolveBookingSelectApi,
   isRunCourierServiceRefusal,
   isPakistanDomesticCountry,
+  isLeopardSelectApi,
   RUN_COURIER_DEFAULT_API,
+  RUN_COURIER_SPECIAL_INSTRUCTION_MAX,
+  buildRunCourierPayload,
 } = await import("../storecraft-admin/lib/runcourier.js");
 
 // Trimmed from the live Run Courier lists (21 Nov 2026).
@@ -56,13 +59,42 @@ test("auto-fallback prefers Trax then TCS for uncovered towns", () => {
   assert.equal(pickPreferredCoveringCourier([]), null);
 });
 
-test("default Select API is Trax; Leopard2 settings soft-migrate to Trax", () => {
+test("default Select API is Trax; Leopard2 / Digi leopard soft-migrate to Trax", () => {
   assert.equal(RUN_COURIER_DEFAULT_API, "Trax");
   assert.equal(resolveBookingSelectApi("", "Leopard2"), "Trax");
   assert.equal(resolveBookingSelectApi("Auto", "Leopard2"), "Trax");
   assert.equal(resolveBookingSelectApi("Leopard2", "Leopard2"), "Trax");
+  assert.equal(resolveBookingSelectApi("RunCourier-leopard", ""), "Trax");
+  assert.equal(isLeopardSelectApi("RunCourier-leopard"), true);
   assert.equal(resolveBookingSelectApi("TCS", "Leopard2"), "TCS");
   assert.equal(resolveBookingSelectApi("Trax", ""), "Trax");
+});
+
+test("special_instruction capped at 190 chars (Digi Leopard rule)", () => {
+  assert.equal(RUN_COURIER_SPECIAL_INSTRUCTION_MAX, 190);
+  const longItems = Array.from({ length: 8 }, (_, i) => ({
+    quantity: 2,
+    name: `Very Long Product Name Number ${i + 1} With Extra Words`,
+  }));
+  const built = buildRunCourierPayload(
+    {
+      orderNumber: "ORD-TEST-190",
+      shippingAddress: { city: "Karachi", phone: "03001234567", name: "Test", street: "Addr" },
+      items: longItems,
+      pricing: { total: 5000 },
+      paymentStatus: "pending",
+      internalNotes: [{ note: "x".repeat(80) }, { note: "y".repeat(80) }],
+    },
+    { remarks: "Call customer before delivery. Do not leave parcel unattended." },
+    {
+      runCourierAddOrderNotesInRemarks: true,
+      runCourierPrintItemDetails: true,
+      runCourierDefaultApi: "Trax",
+    },
+    ["Karachi", "Gujranwala"]
+  );
+  assert.ok(built.special_instruction.length <= 190, built.special_instruction.length);
+  assert.equal(built.special_instruction.length, 190);
 });
 
 test("service refusal + domestic country helpers", () => {

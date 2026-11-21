@@ -22,6 +22,9 @@ export const RUN_COURIER_DEFAULT_API = "Trax";
 /** Account rule from live CreateOrder: Zero COD rejected; minimum collection is Rs. 500. */
 export const RUN_COURIER_MIN_COD = 500;
 
+/** Digi/Leopard CreateOrder: "Special Instructions must be between 0 and 190 characters." */
+export const RUN_COURIER_SPECIAL_INSTRUCTION_MAX = 190;
+
 /** Friendly label for Select API options (UI only). */
 export function runCourierApiLabel(api) {
   const v = String(api || "").trim();
@@ -165,15 +168,22 @@ export function normalizeRunCourierApi(raw, fallback = "Auto") {
   return hit || v;
 }
 
+/** Digi titles like "RunCourier-leopard" / "leopard" count as Leopard for migrate/fallback. */
+export function isLeopardSelectApi(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  if (!v) return false;
+  return /leopard/.test(v);
+}
+
 export function displayCourierName(selectedApi) {
   const api = normalizeRunCourierApi(selectedApi, RUN_COURIER_DEFAULT_API);
   if (!api || api.toLowerCase() === "auto") return "Leopard";
-  if (/^leopard/i.test(api)) return "Leopard";
-  if (/^tcs/i.test(api)) return "TCS";
-  if (/^trax/i.test(api)) return "Trax";
-  if (/^(m&p|mnp)/i.test(api)) return "M&P";
+  if (isLeopardSelectApi(api)) return "Leopard";
+  if (/^tcs/i.test(api) || /tcs/i.test(api)) return "TCS";
+  if (/^trax/i.test(api) || /trax/i.test(api)) return "Trax";
+  if (/^(m&p|mnp)/i.test(api) || /m&p|mnp/i.test(api)) return "M&P";
   if (/^daewoo/i.test(api)) return "Daewoo";
-  if (/^dastaq/i.test(api)) return "Dastaq";
+  if (/^dastaq/i.test(api) || /dastaq/i.test(api)) return "Dastaq";
   if (/^ahl/i.test(api)) return "AHL";
   return runCourierApiLabel(api);
 }
@@ -196,7 +206,8 @@ export function resolveBookingSelectApi(raw, settingsDefault = "") {
   if (!api || String(api).toLowerCase() === "auto") {
     api = RUN_COURIER_DEFAULT_API;
   }
-  if (/^leopard/i.test(String(api))) {
+  // Digi dropdown may send "RunCourier-leopard" — same broken lane as Leopard2.
+  if (isLeopardSelectApi(api)) {
     api = RUN_COURIER_DEFAULT_API;
   }
   return api;
@@ -1004,11 +1015,16 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
           .slice(0, 3)
           .join(" | ")
       : "";
-    if (notes) remarks = `${remarks} | Notes: ${notes}`.slice(0, 500);
+    if (notes) remarks = `${remarks} | Notes: ${notes}`;
   }
   if (printDetails && details) {
-    remarks = `${remarks} | Items: ${details}`.slice(0, 500);
+    remarks = `${remarks} | Items: ${details}`;
   }
+  // Digi Leopard rejects >190; keep a clean hard cap for all carriers.
+  remarks = String(remarks || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, RUN_COURIER_SPECIAL_INSTRUCTION_MAX);
 
   const destRaw = String(opts.cityName || opts.city || addr.city || "").trim();
   const originRaw = String(
@@ -1371,6 +1387,8 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
       friendly = /Zero COD/i.test(upstream)
         ? `Run Courier rejected Zero COD on this account (minimum Rs. ${RUN_COURIER_MIN_COD}). For prepaid orders ask Run Courier to enable Zero COD, or book via PostEx.`
         : `Run Courier requires collection of at least Rs. ${RUN_COURIER_MIN_COD}. ${upstream}`;
+    } else if (/Special Instructions must be between/i.test(upstream)) {
+      friendly = `Special instructions were too long for Run Courier (max ${RUN_COURIER_SPECIAL_INSTRUCTION_MAX} chars). Shorten Remarks and retry — item/notes auto-text is now trimmed automatically.`;
     } else if (/API HTTP Error:\s*5\d\d/i.test(upstream)) {
       friendly = `Run Courier / ${selectedApi} failed (${upstream}). Origin ${apiBody.origin} → ${apiBody.destination}. Try again, or pick another carrier.`;
     } else if (/city is disabled for origin/i.test(upstream)) {
