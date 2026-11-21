@@ -62,8 +62,20 @@ function paymentMethodLabel(method) {
   const normalized = String(method || "").toLowerCase();
   if (normalized === "stripe") return "💳 Stripe";
   if (normalized === "paypal") return "🅿️ PayPal";
-  return method || "—";
+  const hit = EDITABLE_PAYMENT_METHODS.find((m) => m.value.toLowerCase() === normalized);
+  return hit ? hit.label : method || "—";
 }
+
+/** Methods staff can switch an order to (values match Order.paymentMethod enum). */
+const EDITABLE_PAYMENT_METHODS = [
+  { value: "cod", label: "Cash on Delivery (COD)" },
+  { value: "jazzcash", label: "JazzCash" },
+  { value: "easypaisa", label: "Easypaisa" },
+  { value: "bankTransfer", label: "Bank transfer" },
+  { value: "hbl", label: "HBL" },
+  { value: "meezan", label: "Meezan Bank" },
+  { value: "ubl", label: "UBL" },
+];
 
 function formatCurrencyAmount(order, amount) {
   const currency = order?.currency || "PKR";
@@ -556,7 +568,40 @@ function ShippingDetailsCard({ order, orderId, onUpdated }) {
   );
 }
 
-function PaymentInformationSection({ order, orderId, onRefunded, orderTotal }) {
+function PaymentInformationSection({ order, orderId, onRefunded, onUpdated, orderTotal }) {
+  const [editingMethod, setEditingMethod] = useState(false);
+  const [methodDraft, setMethodDraft] = useState(order.paymentMethod || "cod");
+  const [savingMethod, setSavingMethod] = useState(false);
+
+  async function saveMethod() {
+    if (methodDraft === order.paymentMethod) {
+      setEditingMethod(false);
+      return;
+    }
+    setSavingMethod(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentMethod: methodDraft }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast.error(json.error || "Could not change payment method.");
+        return;
+      }
+      toast.success("Payment method updated.");
+      setEditingMethod(false);
+      if (json.order) onUpdated?.(json.order);
+      else onRefunded?.();
+    } catch {
+      toast.error("Network error.");
+    } finally {
+      setSavingMethod(false);
+    }
+  }
+
   const pm = order.payment?.method || order.paymentMethod || "";
   const total = roundRupees(orderTotal ?? order.pricing?.total ?? order.total ?? 0);
   const paidAmount = roundRupees(order.payment?.paidAmount ?? order.payment?.amount ?? 0);
@@ -614,13 +659,94 @@ function PaymentInformationSection({ order, orderId, onRefunded, orderTotal }) {
           <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>
             Payment method
           </p>
-          <p style={{ fontSize: 15, fontWeight: 600, color: "#111827", margin: 0 }} className="dark:text-white">
-            {pm === "stripe"
-              ? "💳 Stripe (card)"
-              : pm === "paypal"
-                ? "🅿️ PayPal"
-                : paymentMethodLabel(order.paymentMethod) || "—"}
-          </p>
+          {editingMethod ? (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+              <select
+                value={methodDraft}
+                onChange={(e) => setMethodDraft(e.target.value)}
+                disabled={savingMethod}
+                aria-label="Payment method"
+                style={{
+                  padding: "6px 8px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: 6,
+                  fontSize: 13,
+                  maxWidth: "100%",
+                }}
+                className="dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              >
+                {(EDITABLE_PAYMENT_METHODS.some((m) => m.value === order.paymentMethod) || !order.paymentMethod
+                  ? EDITABLE_PAYMENT_METHODS
+                  : [{ value: order.paymentMethod, label: paymentMethodLabel(order.paymentMethod) }, ...EDITABLE_PAYMENT_METHODS]
+                ).map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={saveMethod}
+                disabled={savingMethod}
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 6,
+                  background: "#C41E1E",
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                {savingMethod ? "Saving…" : "Save"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMethodDraft(order.paymentMethod || "cod");
+                  setEditingMethod(false);
+                }}
+                disabled={savingMethod}
+                style={{ padding: "6px 8px", fontSize: 12, color: "#6b7280", background: "none", border: "none", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#111827", margin: 0 }} className="dark:text-white">
+                {pm === "stripe"
+                  ? "💳 Stripe (card)"
+                  : pm === "paypal"
+                    ? "🅿️ PayPal"
+                    : paymentMethodLabel(order.paymentMethod) || "—"}
+              </p>
+              {pm !== "stripe" && pm !== "paypal" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMethodDraft(order.paymentMethod || "cod");
+                    setEditingMethod(true);
+                  }}
+                  aria-label="Edit payment method"
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: 6,
+                    border: "1px solid #e5e7eb",
+                    background: "#fff",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#374151",
+                    cursor: "pointer",
+                  }}
+                  className="dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  ✎ Edit
+                </button>
+              ) : null}
+            </div>
+          )}
         </div>
 
         <div>
@@ -2025,6 +2151,7 @@ export function OrderDetail({ orderId }) {
               order={order}
               orderId={orderId}
               onRefunded={load}
+              onUpdated={setOrder}
               orderTotal={effectiveTotal}
             />
 

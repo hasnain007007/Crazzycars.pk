@@ -449,6 +449,28 @@ export async function PUT(request, context) {
       }
     }
 
+    if (body.paymentMethod !== undefined) {
+      const allowedMethods = Order.schema.path("paymentMethod").enumValues;
+      const nextMethod = String(body.paymentMethod || "").trim();
+      if (!allowedMethods.includes(nextMethod)) {
+        return NextResponse.json({ success: false, error: "Invalid payment method." }, { status: 400 });
+      }
+      const prevMethod = String(order.paymentMethod || "").trim();
+      if (nextMethod !== prevMethod) {
+        order.paymentMethod = nextMethod;
+        if (!Array.isArray(order.timeline)) order.timeline = [];
+        order.timeline.push({
+          status: "payment_method_changed",
+          title: "Payment method changed",
+          description: `${adminName} changed payment method: ${prevMethod || "—"} → ${nextMethod}`,
+          timestamp: new Date(),
+          by: "admin",
+        });
+        order.markModified("timeline");
+        updates.push(`paymentMethod → ${nextMethod}`);
+      }
+    }
+
     if (Array.isArray(body.items)) {
       if (body.items.length < 1) {
         return NextResponse.json(
