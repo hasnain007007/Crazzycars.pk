@@ -7,6 +7,10 @@ const {
   matchVendorCity,
   citySpellingKey,
   pickPreferredCoveringCourier,
+  resolveBookingSelectApi,
+  isRunCourierServiceRefusal,
+  isPakistanDomesticCountry,
+  RUN_COURIER_DEFAULT_API,
 } = await import("../storecraft-admin/lib/runcourier.js");
 
 // Trimmed from the live Run Courier lists (21 Nov 2026).
@@ -41,13 +45,34 @@ test("existing exact / alias / Cantt behaviour unchanged", () => {
   assert.equal(matchRunCourierCity("Kallar Syedan", combined), "Kallar Saidan"); // alias → M&P spelling
 });
 
-test("auto-fallback prefers M&P then TCS for uncovered towns", () => {
+test("auto-fallback prefers Trax then TCS for uncovered towns", () => {
   const pick = pickPreferredCoveringCourier([
     { vendor: "13|0", title: "TCS", city: "Kallar saydian" },
     { vendor: "10|0", title: "M&P", city: "Kallar Saidan" },
     { vendor: "6|0", title: "Trax", city: "Kallar Syedan" },
   ]);
-  assert.equal(pick.title, "M&P");
-  assert.equal(pick.city, "Kallar Saidan");
+  assert.equal(pick.title, "Trax");
+  assert.equal(pick.city, "Kallar Syedan");
   assert.equal(pickPreferredCoveringCourier([]), null);
+});
+
+test("default Select API is Trax; Leopard2 settings soft-migrate to Trax", () => {
+  assert.equal(RUN_COURIER_DEFAULT_API, "Trax");
+  assert.equal(resolveBookingSelectApi("", "Leopard2"), "Trax");
+  assert.equal(resolveBookingSelectApi("Auto", "Leopard2"), "Trax");
+  assert.equal(resolveBookingSelectApi("Leopard2", "Leopard2"), "Trax");
+  assert.equal(resolveBookingSelectApi("TCS", "Leopard2"), "TCS");
+  assert.equal(resolveBookingSelectApi("Trax", ""), "Trax");
+});
+
+test("service refusal + domestic country helpers", () => {
+  assert.equal(
+    isRunCourierServiceRefusal(
+      "Booking failed: this courier does not service the selected destination city or service type."
+    ),
+    true
+  );
+  assert.equal(isPakistanDomesticCountry("Pakistan"), true);
+  assert.equal(isPakistanDomesticCountry("Saudi Arabia"), false);
+  assert.equal(isPakistanDomesticCountry(""), true);
 });

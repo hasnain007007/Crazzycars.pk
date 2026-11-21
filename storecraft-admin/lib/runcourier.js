@@ -11,28 +11,42 @@ import { storefrontTrackingUrl } from "@/lib/postex";
 
 export { storefrontTrackingUrl };
 
-/** Default Select API when Settings / booking form has no override — always Leopards. */
-export const RUN_COURIER_DEFAULT_API = "Leopard2";
+/**
+ * Default Select API when Settings / booking form has no override.
+ * Live probe (21 Nov 2026): Leopard2/M&P CreateOrder returns
+ * "does not service the selected destination city or service type" for Karachi/Lahore
+ * on this account; Trax and TCS succeed. Prefer Trax.
+ */
+export const RUN_COURIER_DEFAULT_API = "Trax";
 
-/** Friendly label for Select API options (UI only; value stays Leopard2). */
+/** Account rule from live CreateOrder: Zero COD rejected; minimum collection is Rs. 500. */
+export const RUN_COURIER_MIN_COD = 500;
+
+/** Friendly label for Select API options (UI only). */
 export function runCourierApiLabel(api) {
   const v = String(api || "").trim();
   if (/^leopard2$/i.test(v) || /^leopards$/i.test(v)) return "Leopards";
   if (/^leopard$/i.test(v)) return "Leopard";
-  return v || "Leopards";
+  return v || "Trax";
 }
 
-/** Default Select API carriers shown in the portal dropdown (Leopard2 first after Auto). */
+/** Default Select API carriers shown in the portal dropdown (Trax first after Auto). */
 export const RUN_COURIER_APIS = [
   "Auto",
-  "Leopard2",
   "Trax",
-  "M&P",
   "TCS",
+  "M&P",
+  "Leopard2",
   "Daewoo",
   "Dastaq Logistics",
   "AHL",
 ];
+
+/**
+ * Couriers to try when CreateOrder says the selected carrier does not service the lane.
+ * Order is live-proven on this account (Trax/TCS book; Leopard/M&P often refuse).
+ */
+export const RUN_COURIER_SERVICE_FALLBACK_APIS = ["Trax", "TCS", "M&P", "Leopard2"];
 
 /**
  * iCargos CreateOrder Select API field is `api_vendor` = "{id}|{gateway_id}".
@@ -166,8 +180,12 @@ export function displayCourierName(selectedApi) {
 
 /**
  * Resolve the Select API for a booking.
- * Never leave "Auto" — without api_vendor the portal defaults to Trax on this account.
- * Prefers Leopard2 when empty / Auto / unknown.
+ * Never leave "Auto" — without api_vendor the portal picks an account default.
+ * Prefers Trax when empty / Auto / unknown.
+ *
+ * Soft-migrate: stored/default Leopard2 is remapped to Trax because live CreateOrder
+ * on this account returns "does not service" for Karachi/Lahore via Leopard2/M&P.
+ * Explicit Trax/TCS/M&P choices are kept. Service-fallback still retries other couriers.
  */
 export function resolveBookingSelectApi(raw, settingsDefault = "") {
   const fallback = normalizeRunCourierApi(
@@ -178,7 +196,24 @@ export function resolveBookingSelectApi(raw, settingsDefault = "") {
   if (!api || String(api).toLowerCase() === "auto") {
     api = RUN_COURIER_DEFAULT_API;
   }
+  if (/^leopard/i.test(String(api))) {
+    api = RUN_COURIER_DEFAULT_API;
+  }
   return api;
+}
+
+/** True when CreateOrder failed because this courier will not take the lane/service. */
+export function isRunCourierServiceRefusal(error) {
+  const e = String(error || "");
+  return /does not service|not.*(service|cover|deliver)|missing\s*Mappings|Invalid charges calculation/i.test(
+    e
+  );
+}
+
+/** True when CreateOrder failed on Zero / below-minimum COD (account rule). */
+export function isRunCourierCodRefusal(error) {
+  const e = String(error || "");
+  return /Zero COD|Minimum COD amount|COD amount is not allowed/i.test(e);
 }
 
 /**
@@ -333,6 +368,9 @@ export function isPrepaidOrderForCod(order) {
  * COD amount for Run Courier booking.
  * Explicit override always wins; else remaining COD (partial) or order total.
  * When runCourierPaidOrdersCodZero (or shared paidOrdersCodZero) is on, fully paid → 0.
+ *
+ * Note: this Run Courier account rejects Zero COD and requires collection ≥ RUN_COURIER_MIN_COD.
+ * createRunCourierShipment surfaces that clearly instead of silently bumping prepaid to 500.
  */
 export function resolveRunCourierCodAmount(order, bookingOptions = {}, settingsCourier = {}) {
   const opts = normalizeBookingOptions(bookingOptions);
@@ -371,6 +409,13 @@ export function resolveRunCourierCodAmount(order, bookingOptions = {}, settingsC
 
   const pricing = order.pricing || {};
   return Math.round(Math.max(0, Number(pricing.total ?? order.total) || 0));
+}
+
+/** Domestic Pakistan only — Run Courier CreateOrder has no international destinations. */
+export function isPakistanDomesticCountry(country) {
+  const c = String(country || "").trim().toLowerCase();
+  if (!c) return true; // blank treated as PK (storefront default)
+  return /^(pakistan|pak|pk)$/i.test(c);
 }
 
 function buildCleanStreet(addr = {}) {
@@ -483,7 +528,7 @@ const RUN_COURIER_CITY_ALIASES = {
 };
 
 /** Prefer these when auto-falling back off a courier that does not cover the town. */
-const RUN_COURIER_FALLBACK_PREF = ["M&P", "TCS", "Trax", "Daewoo", "AHL", "Dastaq Logistics"];
+const RUN_COURIER_FALLBACK_PREF = ["Trax", "TCS", "M&P", "Leopard2", "Daewoo", "AHL", "Dastaq Logistics"];
 
 /**
  * Pick the best covering courier for a town (M&P → TCS → Trax…).
@@ -1061,6 +1106,38 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     return { success: false, error: "Destination city is required." };
   }
 
+  const shipCountry = String(
+    bookingOptions?.country ||
+      order?.shippingAddress?.country ||
+      order?.customer?.country ||
+      "Pakistan"
+  ).trim();
+  if (!isPakistanDomesticCountry(shipCountry)) {
+    return {
+      success: false,
+      error: `Run Courier only delivers inside Pakistan (this order’s country is "${shipCountry}"). Use a Pakistan city or another courier for overseas.`,
+      destination: built.consigneeCity,
+    };
+  }
+
+  // Account rejects Zero COD and amounts under Rs. 500 — fail before CreateOrder.
+  if (Number(built.codAmount) === 0) {
+    return {
+      success: false,
+      error: `Run Courier rejected Zero COD on this account (minimum Rs. ${RUN_COURIER_MIN_COD}). For prepaid orders ask Run Courier to enable Zero COD, set remaining COD ≥ ${RUN_COURIER_MIN_COD}, or book via PostEx.`,
+      selectedApi: built.selectedApi,
+      codAmount: 0,
+    };
+  }
+  if (Number(built.codAmount) > 0 && Number(built.codAmount) < RUN_COURIER_MIN_COD) {
+    return {
+      success: false,
+      error: `Run Courier requires collection amount of at least Rs. ${RUN_COURIER_MIN_COD} (this order’s COD is Rs. ${built.codAmount}). Raise remaining COD or ask Run Courier to lower the minimum.`,
+      selectedApi: built.selectedApi,
+      codAmount: built.codAmount,
+    };
+  }
+
   // Audit against raw order/settings cities (not already-matched names) so aliases
   // that miss the live GetCitiesList fail before CreateOrder.
   const destRawForAudit = String(
@@ -1222,28 +1299,37 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     }
   }
 
-  // Lane/mapping failures: try one covering courier even when the city looked "on list".
-  if (
-    !res.ok &&
-    /missing\s*Mappings|Invalid charges calculation|not.*(service|cover|deliver)/i.test(
-      String(res.error || "")
-    )
-  ) {
-    const coveredBy = await couriersCoveringCity(
-      wantedDest || apiBody.destination,
-      carrierRows,
-      settingsCourier,
-      apiVendor
-    ).catch(() => []);
-    const pick = pickPreferredCoveringCourier(
-      coveredBy.filter((c) => String(c.vendor) !== String(apiBody.api_vendor || ""))
-    );
-    if (pick) {
-      const retryApi = pick.title;
+  // Lane/service refusals: city can be ON the courier list yet CreateOrder still says
+  // "does not service" (live: Leopard2/M&P for Karachi/Lahore). Walk Trax → TCS → …
+  if (!res.ok && isRunCourierServiceRefusal(res.error)) {
+    const triedVendors = new Set([String(apiBody.api_vendor || apiVendor || "")]);
+    const attemptApis = [
+      ...RUN_COURIER_SERVICE_FALLBACK_APIS.filter(
+        (a) => String(a).toLowerCase() !== String(requestedApi).toLowerCase()
+      ),
+    ];
+    for (const retryApi of attemptApis) {
+      if (res.ok) break;
+      const retryVendor = resolveRunCourierApiVendor(retryApi, carrierRows);
+      if (!retryVendor || triedVendors.has(retryVendor)) continue;
+      triedVendors.add(retryVendor);
+
+      let dest = apiBody.destination;
+      const vendorCities = await fetchRunCourierCitiesForVendor(retryVendor, settingsCourier).catch(
+        () => []
+      );
+      if (vendorCities.length) {
+        const matched =
+          matchVendorCity(wantedDest || dest, vendorCities) ||
+          matchVendorCity(dest, vendorCities);
+        if (!matched) continue; // this courier truly lacks the town
+        dest = matched;
+      }
+
       const retryBody = {
         ...apiBody,
-        api_vendor: pick.vendor,
-        destination: pick.city,
+        api_vendor: retryVendor,
+        destination: dest,
         service_type: resolveRunCourierServiceForApi(
           retryApi,
           apiBody.service_type || apiBody.product,
@@ -1259,29 +1345,42 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
         res = retryRes;
         Object.assign(apiBody, retryBody);
         selectedApi = retryApi;
-        apiVendor = pick.vendor;
+        apiVendor = retryVendor;
         autoFallback = {
           from: requestedApi,
           to: retryApi,
-          city: pick.city,
-          vendor: pick.vendor,
+          city: dest,
+          vendor: retryVendor,
         };
         notOnCourierList = null;
+        break;
       }
+      // Keep walking if this courier also refuses the lane.
+      if (!isRunCourierServiceRefusal(retryRes.error) && !isRetryableRunCourierFailure(retryRes)) {
+        res = retryRes;
+        break;
+      }
+      res = retryRes;
     }
   }
 
   if (!res.ok) {
     const upstream = String(res.error || "Booking failed.").trim();
     let friendly = upstream;
-    if (/API HTTP Error:\s*5\d\d/i.test(upstream)) {
+    if (isRunCourierCodRefusal(upstream)) {
+      friendly = /Zero COD/i.test(upstream)
+        ? `Run Courier rejected Zero COD on this account (minimum Rs. ${RUN_COURIER_MIN_COD}). For prepaid orders ask Run Courier to enable Zero COD, or book via PostEx.`
+        : `Run Courier requires collection of at least Rs. ${RUN_COURIER_MIN_COD}. ${upstream}`;
+    } else if (/API HTTP Error:\s*5\d\d/i.test(upstream)) {
       friendly = `Run Courier / ${selectedApi} failed (${upstream}). Origin ${apiBody.origin} → ${apiBody.destination}. Try again, or pick another carrier.`;
     } else if (/city is disabled for origin/i.test(upstream)) {
       friendly = `Origin city "${apiBody.origin}" is not enabled for ${selectedApi}. Check Settings → Run Courier origin city (use Gujranwala, not Cantt).`;
+    } else if (/does not service/i.test(upstream)) {
+      friendly = `${displayCourierName(selectedApi)} will not take ${apiBody.origin} → ${apiBody.destination} on this Run Courier account. Tried Trax/TCS fallbacks too. Pick another Select API or book via PostEx.`;
     } else if (/Invalid charges calculation/i.test(upstream)) {
       friendly = `Run Courier could not price ${apiBody.origin} → ${apiBody.destination} via ${selectedApi}. Check city names or try another carrier.`;
     } else if (/missing\s*Mappings/i.test(upstream)) {
-      friendly = `${selectedApi} has no service mapping for ${apiBody.origin} → ${apiBody.destination}. Pick another Select API (e.g. Trax / M&P / Leopard) or a city from the Run Courier list.`;
+      friendly = `${selectedApi} has no service mapping for ${apiBody.origin} → ${apiBody.destination}. Pick another Select API (e.g. Trax / TCS) or a city from the Run Courier list.`;
     } else if (apiBody.origin && apiBody.destination) {
       friendly = `${upstream} (${selectedApi}: ${apiBody.origin} → ${apiBody.destination})`;
     }
