@@ -1002,6 +1002,9 @@ export function OrderDetail({ orderId }) {
   const [draftPricing, setDraftPricing] = useState(null);
   const [showRunCourierForm, setShowRunCourierForm] = useState(false);
   const [runCourierRebook, setRunCourierRebook] = useState(false);
+  const [editingOrderNumber, setEditingOrderNumber] = useState(false);
+  const [orderNumberDraft, setOrderNumberDraft] = useState("");
+  const [savingOrderNumber, setSavingOrderNumber] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1860,9 +1863,94 @@ export function OrderDetail({ orderId }) {
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="m-0 text-lg font-bold leading-tight text-slate-900 dark:text-white">
-                  Order #{order.orderNumber}
-                </h1>
+                {editingOrderNumber ? (
+                  <form
+                    className="flex flex-wrap items-center gap-2"
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const next = String(orderNumberDraft || "").trim();
+                      if (!next) {
+                        toast.error("Order number cannot be empty.");
+                        return;
+                      }
+                      if (next === String(order.orderNumber || "").trim()) {
+                        setEditingOrderNumber(false);
+                        return;
+                      }
+                      setSavingOrderNumber(true);
+                      try {
+                        const res = await fetch(`/api/orders/${orderId}`, {
+                          method: "PATCH",
+                          credentials: "include",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ orderNumber: next }),
+                        });
+                        const json = await res.json().catch(() => ({}));
+                        if (!res.ok || !json.success) {
+                          toast.error(json.error || "Could not update order number.");
+                          return;
+                        }
+                        toast.success(`Order number updated to ${json.order?.orderNumber || next}`);
+                        if (json.order) setOrder(json.order);
+                        setEditingOrderNumber(false);
+                      } catch {
+                        toast.error("Network error.");
+                      } finally {
+                        setSavingOrderNumber(false);
+                      }
+                    }}
+                  >
+                    <label className="sr-only" htmlFor="edit-order-number">
+                      Order number
+                    </label>
+                    <span className="text-lg font-bold text-slate-900 dark:text-white">Order #</span>
+                    <input
+                      id="edit-order-number"
+                      value={orderNumberDraft}
+                      onChange={(e) => setOrderNumberDraft(e.target.value)}
+                      disabled={savingOrderNumber}
+                      autoFocus
+                      maxLength={48}
+                      className="min-w-[12rem] rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-sm font-semibold text-slate-900 shadow-sm focus:border-[#1d6fb8] focus:outline-none focus:ring-2 focus:ring-[#1d6fb8]/30 dark:border-slate-500 dark:bg-slate-800 dark:text-white"
+                    />
+                    <button
+                      type="submit"
+                      disabled={savingOrderNumber}
+                      className="rounded-lg bg-[#1d6fb8] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#185a96] disabled:opacity-50"
+                    >
+                      {savingOrderNumber ? "Saving…" : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={savingOrderNumber}
+                      onClick={() => {
+                        setOrderNumberDraft(String(order.orderNumber || ""));
+                        setEditingOrderNumber(false);
+                      }}
+                      className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-100"
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                ) : (
+                  <h1 className="m-0 flex flex-wrap items-center gap-1.5 text-lg font-bold leading-tight text-slate-900 dark:text-white">
+                    <span>Order #{order.orderNumber}</span>
+                    <button
+                      type="button"
+                      title="Edit order number"
+                      aria-label="Edit order number"
+                      onClick={() => {
+                        setOrderNumberDraft(String(order.orderNumber || ""));
+                        setEditingOrderNumber(true);
+                      }}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-200"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                    </button>
+                  </h1>
+                )}
                 <OrderStatusBadges order={order} />
                 <CustomerConfirmBadge order={order} />
                 <span

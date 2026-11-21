@@ -9,6 +9,7 @@ import { getRequestUser } from "@/lib/getRequestUser";
 import { denyUnlessCapability } from "@/lib/denyCapability";
 import { hasCapability, stripLineItemCosts } from "@/lib/permissions";
 import Order from "@/lib/models/Order.model";
+import Invoice from "@/lib/models/Invoice.model";
 import Product from "@/lib/models/Product.model";
 import { orderGrandTotal, orderPricing } from "@/lib/orderFormat";
 import { roundRupees } from "@/lib/currency";
@@ -289,6 +290,68 @@ export async function PUT(request, context) {
     const prevStatus = order.orderStatus;
     const prevPayment = order.paymentStatus;
     const prevTracking = String(order.trackingNumber || order.tracking?.number || "").trim();
+
+    if (body.orderNumber !== undefined) {
+      const nextNumber = String(body.orderNumber || "")
+        .trim()
+        .replace(/\s+/g, " ")
+        .slice(0, 48);
+      if (!nextNumber) {
+        return NextResponse.json(
+          { success: false, error: "Order number cannot be empty." },
+          { status: 400 }
+        );
+      }
+      if (!/^[A-Za-z0-9][A-Za-z0-9._/#\- ]{1,47}$/.test(nextNumber)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Order number may use letters, numbers, spaces, and . _ / # - (2–48 characters).",
+          },
+          { status: 400 }
+        );
+      }
+      const prevNumber = String(order.orderNumber || "").trim();
+      if (nextNumber !== prevNumber) {
+        const clash = await Order.findOne({
+          orderNumber: nextNumber,
+          _id: { $ne: order._id },
+        })
+          .select("_id orderNumber")
+          .lean();
+        if (clash) {
+          return NextResponse.json(
+            { success: false, error: `Order number "${nextNumber}" is already used.` },
+            { status: 409 }
+          );
+        }
+        order.orderNumber = nextNumber;
+        if (!Array.isArray(order.timeline)) order.timeline = [];
+        order.timeline.push({
+          status: "order_number_changed",
+          title: "Order number changed",
+          description: `${adminName} changed order number: ${prevNumber || "—"} → ${nextNumber}`,
+          timestamp: new Date(),
+          by: "admin",
+        });
+        order.markModified("timeline");
+        updates.push(`orderNumber → ${nextNumber}`);
+
+        // Keep linked invoice search/index in sync when present.
+        if (order.invoiceId && mongoose.Types.ObjectId.isValid(String(order.invoiceId))) {
+          await Invoice.updateOne(
+            { _id: order.invoiceId },
+            { $set: { orderNumber: nextNumber } }
+          ).catch(() => {});
+        } else if (prevNumber) {
+          await Invoice.updateMany(
+            { orderNumber: prevNumber },
+            { $set: { orderNumber: nextNumber } }
+          ).catch(() => {});
+        }
+      }
+    }
 
     if (body.orderStatus !== undefined && body.orderStatus !== order.orderStatus) {
       const allowed = [
