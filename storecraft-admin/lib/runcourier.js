@@ -538,7 +538,99 @@ export function matchRunCourierCity(rawCity, cityList = []) {
     return best.c;
   }
 
+  // Same town, different spelling (Kallar Syedan / Kallar Saidan / Kallar saydian):
+  // compare consonant skeletons. Only for longer names, so short towns never collide.
+  // First letter must agree ("Ahmed Pur" ≠ "Hamid pur"); closest spelling wins.
+  const key = citySpellingKey(raw);
+  const first = compact.charAt(0);
+  if (key.length >= 5 && first) {
+    const hits = cityList
+      .filter((c) => {
+        const cc = String(c).toLowerCase().replace(/[^a-z0-9]/g, "");
+        return cc.charAt(0) === first && citySpellingKey(c) === key;
+      })
+      .map((c) => ({ c, d: editDistance(compact, String(c).toLowerCase().replace(/[^a-z0-9]/g, "")) }))
+      .sort((a, b) => a.d - b.d || String(a.c).length - String(b.c).length);
+    if (hits.length) return hits[0].c;
+  }
+
   return raw;
+}
+
+function editDistance(a, b) {
+  const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i += 1) {
+    let diag = prev[0];
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const tmp = prev[j];
+      prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+      diag = tmp;
+    }
+  }
+  return prev[b.length];
+}
+
+/** Spelling-insensitive key: letters only, doubles collapsed, vowels (and y) dropped. */
+export function citySpellingKey(name) {
+  return String(name || "")
+    .toLowerCase()
+    .replace(/[^a-z]/g, "")
+    .replace(/(.)\1+/g, "$1")
+    .replace(/[aeiouy]/g, "");
+}
+
+/** Per-courier destination lists (portal GetCitiesByApi), keyed by api_vendor "id|gateway". */
+const vendorCitiesCache = new Map();
+
+export async function fetchRunCourierCitiesForVendor(apiVendor, settingsCourier) {
+  const vendor = String(apiVendor || "").trim();
+  const [apiId, gatewayId = "0"] = vendor.split("|");
+  if (!apiId) return [];
+  const cached = vendorCitiesCache.get(vendor);
+  if (cached && Date.now() - cached.at < 6 * 60 * 60 * 1000) return cached.list;
+  const res = await runCourierFetch("/API/GetCitiesByApi.php", {
+    method: "POST",
+    body: { api_id: apiId, gateway_id: gatewayId },
+    settingsCourier,
+  });
+  if (!res.ok) return [];
+  const data = res.json?.data || res.json?.cities || [];
+  const list = (Array.isArray(data) ? data : [])
+    .map((c) => (typeof c === "string" ? c : c?.city_name || c?.name || c?.city || ""))
+    .filter(Boolean);
+  if (list.length) vendorCitiesCache.set(vendor, { at: Date.now(), list });
+  return list;
+}
+
+/** City name as a specific courier spells it, or "" when that courier does not list it. */
+export function matchVendorCity(rawCity, vendorCities = []) {
+  const m = matchRunCourierCity(rawCity, vendorCities);
+  const hit = vendorCities.find((c) => String(c).toLowerCase() === String(m || "").toLowerCase());
+  return hit || "";
+}
+
+/** Other Run Courier couriers that list this city (with their spelling). */
+async function couriersCoveringCity(rawCity, carrierRows, settingsCourier, skipVendor) {
+  const vendors = new Map();
+  for (const r of carrierRows || []) {
+    if (r?.id == null || String(r.id).toLowerCase() === "auto") continue;
+    vendors.set(`${r.id}|${r.gateway_id ?? 0}`, String(r.title || r.id));
+  }
+  if (!vendors.size) {
+    for (const [title, v] of Object.entries(RUN_COURIER_VENDOR_FALLBACK)) {
+      if (!vendors.has(v)) vendors.set(v, title);
+    }
+  }
+  vendors.delete(skipVendor);
+  const rows = await Promise.all(
+    [...vendors].map(async ([vendor, title]) => {
+      const list = await fetchRunCourierCitiesForVendor(vendor, settingsCourier).catch(() => []);
+      const city = list.length ? matchVendorCity(rawCity, list) : "";
+      return city ? { vendor, title: displayCourierName(title) || title, city } : null;
+    })
+  );
+  return rows.filter(Boolean);
 }
 
 /**
@@ -1016,6 +1108,27 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     apiBody.api_vendor = apiVendor;
   }
 
+  // Each courier has its OWN destination list in Run Courier (Leopard via DigiDukaan has
+  // ~924 cities). A town in the combined list can still be missing for the chosen courier,
+  // e.g. Kallar Syedan: M&P / TCS list it, Leopard does not. Use the courier's own
+  // spelling when it has the town; otherwise say which couriers do deliver there.
+  // Booking is still attempted when the town is missing (Run Courier has accepted a few
+  // off-list names before); the coverage hint is only added if it then fails.
+  let notOnCourierList = null;
+  if (apiVendor) {
+    const vendorCities = await fetchRunCourierCitiesForVendor(apiVendor, settingsCourier).catch(() => []);
+    if (vendorCities.length) {
+      const wanted = destRawForAudit || apiBody.destination;
+      const vendorCity =
+        matchVendorCity(wanted, vendorCities) || matchVendorCity(apiBody.destination, vendorCities);
+      if (vendorCity) {
+        apiBody.destination = vendorCity;
+      } else {
+        notOnCourierList = { wanted, vendorCities };
+      }
+    }
+  }
+
   const path = resolveRunCourierPath(settingsCourier, "create");
   let res = await runCourierFetch(path, {
     method: "POST",
@@ -1066,6 +1179,22 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     } else if (apiBody.origin && apiBody.destination) {
       friendly = `${upstream} (${selectedApi}: ${apiBody.origin} → ${apiBody.destination})`;
     }
+    let coveredBy = [];
+    if (notOnCourierList) {
+      const courierName = displayCourierName(selectedApi);
+      const { wanted, vendorCities } = notOnCourierList;
+      coveredBy = await couriersCoveringCity(wanted, carrierRows, settingsCourier, apiVendor).catch(() => []);
+      const nearest = suggestRunCourierCities(wanted, vendorCities, 4);
+      const parts = [
+        `${courierName} is not set up for "${wanted}" in Run Courier (not in its ${courierName} city list).`,
+      ];
+      if (coveredBy.length) {
+        parts.push(`Book with ${coveredBy.map((o) => `${o.title} (${o.city})`).join(" or ")}.`);
+      }
+      if (nearest.length) parts.push(`Nearest ${courierName} cities: ${nearest.join(", ")}.`);
+      parts.push(`Run Courier said: ${friendly}`);
+      friendly = parts.join(" ");
+    }
     return {
       success: false,
       error: friendly,
@@ -1074,6 +1203,7 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
       apiVendor: apiVendor || "",
       origin: apiBody.origin,
       destination: apiBody.destination,
+      coveredBy,
     };
   }
 
