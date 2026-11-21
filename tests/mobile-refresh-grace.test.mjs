@@ -4,17 +4,31 @@
  */
 import assert from "node:assert/strict";
 import { describe, it, before, after } from "node:test";
-import { register } from "node:module";
+import { createRequire, register } from "node:module";
 import { pathToFileURL } from "node:url";
 import path from "path";
 import { fileURLToPath } from "url";
-import mongoose from "mongoose";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const abDir = path.resolve(__dirname, "../scripts/ab-checkout");
 register(pathToFileURL(path.join(abDir, "alias-loader.mjs")).href);
 
 const storeRoot = path.resolve(__dirname, "../storecraft-store");
+
+// Use the store's mongoose — the SAME instance its models and db.js use. (tests/ has no
+// node_modules, and a second copy would mean the test's connection is not the models'.)
+const mongoose = createRequire(path.join(storeRoot, "package.json"))("mongoose");
+
+// In-memory MongoDB lives in scripts/ab-checkout (run `npm ci` there once).
+let MongoMemoryServer = null;
+try {
+  ({ MongoMemoryServer } = createRequire(path.join(abDir, "package.json"))("mongodb-memory-server"));
+} catch {
+  MongoMemoryServer = null;
+}
+const SKIP = MongoMemoryServer
+  ? false
+  : "needs mongodb-memory-server — run `npm ci` in scripts/ab-checkout";
 
 let mem;
 let issueRefreshToken;
@@ -26,10 +40,7 @@ let CustomerRefreshToken;
 let dbConnect;
 
 before(async () => {
-  const { createRequire } = await import("module");
-  const require = createRequire(path.join(abDir, "package.json"));
-  const { MongoMemoryServer } = require("mongodb-memory-server");
-
+  if (SKIP) return;
   mem = await MongoMemoryServer.create();
   const u = new URL(mem.getUri());
   u.pathname = "/cc_refresh_grace_test";
@@ -71,7 +82,7 @@ async function wipe() {
   await CustomerRefreshToken.deleteMany({});
 }
 
-describe("refresh grace window", () => {
+describe("refresh grace window", { skip: SKIP }, () => {
   it("retry in window with unused child issues a NEW child; lost child no longer works", async () => {
     await wipe();
     const customerId = new mongoose.Types.ObjectId();
