@@ -2,7 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 await import("./admin-alias-loader.mjs");
-const { matchRunCourierCity, matchVendorCity, citySpellingKey } = await import("../storecraft-admin/lib/runcourier.js");
+const {
+  matchRunCourierCity,
+  matchVendorCity,
+  citySpellingKey,
+  pickPreferredCoveringCourier,
+} = await import("../storecraft-admin/lib/runcourier.js");
 
 // Trimmed from the live Run Courier lists (21 Nov 2026).
 const combined = ["Kallar Saidan", "Kallar saydian", "Kallar Saddiyian", "Kallar Kahar", "Kalar kahar",
@@ -33,4 +38,16 @@ test("existing exact / alias / Cantt behaviour unchanged", () => {
   assert.equal(matchRunCourierCity("Gujranwala Cantt", combined), "Gujranwala"); // alias: Cantt origin is disabled
   assert.equal(matchRunCourierCity("Rawalpindi", leopard), "Rawalpindi");
   assert.equal(matchRunCourierCity("Unknown Town", combined), "Unknown Town");
+  assert.equal(matchRunCourierCity("Kallar Syedan", combined), "Kallar Saidan"); // alias → M&P spelling
+});
+
+test("auto-fallback prefers M&P then TCS for uncovered towns", () => {
+  const pick = pickPreferredCoveringCourier([
+    { vendor: "13|0", title: "TCS", city: "Kallar saydian" },
+    { vendor: "10|0", title: "M&P", city: "Kallar Saidan" },
+    { vendor: "6|0", title: "Trax", city: "Kallar Syedan" },
+  ]);
+  assert.equal(pick.title, "M&P");
+  assert.equal(pick.city, "Kallar Saidan");
+  assert.equal(pickPreferredCoveringCourier([]), null);
 });

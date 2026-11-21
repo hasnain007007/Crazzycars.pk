@@ -474,7 +474,35 @@ const RUN_COURIER_CITY_ALIASES = {
   sheikhupura: "Sheikhupura",
   jhelum: "Jhelum",
   "jehlum": "Jhelum",
+  // Combined list spellings vary by courier (M&P Saidan / TCS saydian).
+  "kallar syedan": "Kallar Saidan",
+  "kallar sayedan": "Kallar Saidan",
+  "kalar syedan": "Kallar Saidan",
+  "kallar saidan": "Kallar Saidan",
+  "kallar saydian": "Kallar Saidan",
 };
+
+/** Prefer these when auto-falling back off a courier that does not cover the town. */
+const RUN_COURIER_FALLBACK_PREF = ["M&P", "TCS", "Trax", "Daewoo", "AHL", "Dastaq Logistics"];
+
+/**
+ * Pick the best covering courier for a town (M&P → TCS → Trax…).
+ * @param {{ vendor: string, title: string, city: string }[]} covered
+ */
+export function pickPreferredCoveringCourier(covered = []) {
+  const rows = Array.isArray(covered) ? covered.filter((r) => r?.vendor && r?.city) : [];
+  if (!rows.length) return null;
+  const rank = (title) => {
+    const t = String(title || "").toLowerCase();
+    const idx = RUN_COURIER_FALLBACK_PREF.findIndex((p) => {
+      const pLow = p.toLowerCase();
+      if (pLow === "m&p") return /^(m&p|mnp)\b/.test(t) || t.includes("m&p");
+      return t.includes(pLow);
+    });
+    return idx === -1 ? 99 : idx;
+  };
+  return [...rows].sort((a, b) => rank(a.title) - rank(b.title) || String(a.title).localeCompare(String(b.title)))[0];
+}
 
 /**
  * Match order city to an exact Run Courier city_name (case-sensitive API).
@@ -1093,7 +1121,7 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     built.origin = laneAudit.origin.matched;
   }
 
-  const {
+  let {
     selectedApi,
     orderRef,
     consigneePhone,
@@ -1101,9 +1129,10 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     codAmount,
     ...apiBody
   } = built;
+  const requestedApi = selectedApi;
 
   // Critical: without api_vendor, iCargos uses account api_default_vendor (Trax-first here).
-  const apiVendor = resolveRunCourierApiVendor(selectedApi, carrierRows);
+  let apiVendor = resolveRunCourierApiVendor(selectedApi, carrierRows);
   if (apiVendor) {
     apiBody.api_vendor = apiVendor;
   }
@@ -1111,21 +1140,49 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
   // Each courier has its OWN destination list in Run Courier (Leopard via DigiDukaan has
   // ~924 cities). A town in the combined list can still be missing for the chosen courier,
   // e.g. Kallar Syedan: M&P / TCS list it, Leopard does not. Use the courier's own
-  // spelling when it has the town; otherwise say which couriers do deliver there.
-  // Booking is still attempted when the town is missing (Run Courier has accepted a few
-  // off-list names before); the coverage hint is only added if it then fails.
+  // spelling when it has the town; otherwise auto-fall back to a courier that covers it.
   let notOnCourierList = null;
+  let autoFallback = null;
+  const wantedDest = destRawForAudit || apiBody.destination;
   if (apiVendor) {
     const vendorCities = await fetchRunCourierCitiesForVendor(apiVendor, settingsCourier).catch(() => []);
     if (vendorCities.length) {
-      const wanted = destRawForAudit || apiBody.destination;
       const vendorCity =
-        matchVendorCity(wanted, vendorCities) || matchVendorCity(apiBody.destination, vendorCities);
+        matchVendorCity(wantedDest, vendorCities) || matchVendorCity(apiBody.destination, vendorCities);
       if (vendorCity) {
         apiBody.destination = vendorCity;
       } else {
-        notOnCourierList = { wanted, vendorCities };
+        notOnCourierList = { wanted: wantedDest, vendorCities };
       }
+    }
+  }
+
+  // Auto-switch before CreateOrder when the selected courier clearly does not list the town.
+  if (notOnCourierList) {
+    const coveredBy = await couriersCoveringCity(
+      notOnCourierList.wanted,
+      carrierRows,
+      settingsCourier,
+      apiVendor
+    ).catch(() => []);
+    const pick = pickPreferredCoveringCourier(coveredBy);
+    if (pick) {
+      autoFallback = {
+        from: selectedApi,
+        to: pick.title,
+        city: pick.city,
+        vendor: pick.vendor,
+      };
+      selectedApi = pick.title;
+      apiVendor = pick.vendor;
+      apiBody.api_vendor = pick.vendor;
+      apiBody.destination = pick.city;
+      apiBody.service_type = resolveRunCourierServiceForApi(
+        pick.title,
+        apiBody.service_type || apiBody.product,
+        apiBody.product
+      );
+      notOnCourierList = null;
     }
   }
 
@@ -1165,6 +1222,55 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     }
   }
 
+  // Lane/mapping failures: try one covering courier even when the city looked "on list".
+  if (
+    !res.ok &&
+    /missing\s*Mappings|Invalid charges calculation|not.*(service|cover|deliver)/i.test(
+      String(res.error || "")
+    )
+  ) {
+    const coveredBy = await couriersCoveringCity(
+      wantedDest || apiBody.destination,
+      carrierRows,
+      settingsCourier,
+      apiVendor
+    ).catch(() => []);
+    const pick = pickPreferredCoveringCourier(
+      coveredBy.filter((c) => String(c.vendor) !== String(apiBody.api_vendor || ""))
+    );
+    if (pick) {
+      const retryApi = pick.title;
+      const retryBody = {
+        ...apiBody,
+        api_vendor: pick.vendor,
+        destination: pick.city,
+        service_type: resolveRunCourierServiceForApi(
+          retryApi,
+          apiBody.service_type || apiBody.product,
+          apiBody.product
+        ),
+      };
+      const retryRes = await runCourierFetch(path, {
+        method: "POST",
+        body: retryBody,
+        settingsCourier,
+      });
+      if (retryRes.ok) {
+        res = retryRes;
+        Object.assign(apiBody, retryBody);
+        selectedApi = retryApi;
+        apiVendor = pick.vendor;
+        autoFallback = {
+          from: requestedApi,
+          to: retryApi,
+          city: pick.city,
+          vendor: pick.vendor,
+        };
+        notOnCourierList = null;
+      }
+    }
+  }
+
   if (!res.ok) {
     const upstream = String(res.error || "Booking failed.").trim();
     let friendly = upstream;
@@ -1181,7 +1287,7 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     }
     let coveredBy = [];
     if (notOnCourierList) {
-      const courierName = displayCourierName(selectedApi);
+      const courierName = displayCourierName(requestedApi);
       const { wanted, vendorCities } = notOnCourierList;
       coveredBy = await couriersCoveringCity(wanted, carrierRows, settingsCourier, apiVendor).catch(() => []);
       const nearest = suggestRunCourierCities(wanted, vendorCities, 4);
@@ -1200,10 +1306,12 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
       error: friendly,
       debugUrl: res.url,
       selectedApi,
+      requestedApi,
       apiVendor: apiVendor || "",
       origin: apiBody.origin,
       destination: apiBody.destination,
       coveredBy,
+      autoFallback,
     };
   }
 
@@ -1230,8 +1338,9 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     trackingNumber,
     orderReference: orderRef,
     selectedApi: bookedApi,
-    requestedApi: selectedApi,
+    requestedApi,
     apiVendor: apiVendor || "",
+    autoFallback,
     label: "",
     invoiceLink,
     orderId: res.json?.id || "",

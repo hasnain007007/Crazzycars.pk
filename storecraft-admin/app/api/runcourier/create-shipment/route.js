@@ -244,8 +244,11 @@ export async function POST(request) {
           success: false,
           error: result.error || "Booking failed.",
           selectedApi: result.selectedApi || bookingOptions.selectedApi,
+          requestedApi: result.requestedApi || bookingOptions.selectedApi,
           origin: result.origin || "",
           destination: result.destination || "",
+          coveredBy: result.coveredBy || [],
+          autoFallback: result.autoFallback || null,
         },
         { status: 400 }
       );
@@ -326,12 +329,17 @@ export async function POST(request) {
     if (!labelPdf && label && !String(label).startsWith("http")) {
       labelPdf = String(label).replace(/^data:application\/pdf;base64,/, "");
     }
+    const fallbackNote = result.autoFallback?.from
+      ? ` Auto-switched from ${result.autoFallback.from} → ${result.autoFallback.to} (${result.autoFallback.city}) because the first courier does not cover that city.`
+      : "";
     return NextResponse.json({
       success: true,
-      message: `Shipment booked via Run Courier (${result.selectedApi}).`,
+      message: `Shipment booked via Run Courier (${result.selectedApi}).${fallbackNote}`,
       trackingNumber: result.trackingNumber,
       orderReference: result.orderReference || "",
       selectedApi: result.selectedApi,
+      requestedApi: result.requestedApi || result.selectedApi,
+      autoFallback: result.autoFallback || null,
       trackingUrl: order.trackingUrl,
       label: Boolean(label || invoiceUrl),
       hasLabel: Boolean(label || invoiceUrl),
