@@ -121,6 +121,27 @@ async function writeCardThumbBeside(absMasterPath, folder) {
   }
 }
 
+/**
+ * Lossy WebP can come out HEAVIER than a small flat-colour PNG master (logos, graphics),
+ * and product pages always prefer the -800 / -1200 copy. When that happens, re-encode
+ * losslessly and keep whichever file is smaller, so a copy never bloats the page.
+ */
+async function keepLighterCopy(absMasterPath, outAbs, maxPx) {
+  try {
+    const [master, out] = await Promise.all([stat(absMasterPath), stat(outAbs)]);
+    if (out.size <= master.size) return;
+    const sharp = (await import("sharp")).default;
+    const lossless = await sharp(absMasterPath)
+      .rotate()
+      .resize(maxPx, maxPx, { fit: "inside", withoutEnlargement: true })
+      .webp({ lossless: true, effort: 4 })
+      .toBuffer();
+    if (lossless.length < out.size) await writeFile(outAbs, lossless);
+  } catch (err) {
+    console.warn("[mediaStorage] lighter-copy check failed:", err?.message || err);
+  }
+}
+
 /** Legacy `-sm.webp` (≤1200) — kept for category banners / older clients. */
 async function writePdpSizeBeside(absMasterPath, folder) {
   if (folder !== "products") return null;
@@ -133,6 +154,7 @@ async function writePdpSizeBeside(absMasterPath, folder) {
       .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
       .webp({ quality: 80, effort: 4 })
       .toFile(outAbs);
+    await keepLighterCopy(absMasterPath, outAbs, 1200);
     return outAbs;
   } catch (err) {
     console.warn("[mediaStorage] -sm build failed:", err?.message || err);
@@ -152,6 +174,7 @@ async function writePdpMidBeside(absMasterPath, folder) {
       .resize(800, 800, { fit: "inside", withoutEnlargement: true })
       .webp({ quality: 80, effort: 4 })
       .toFile(outAbs);
+    await keepLighterCopy(absMasterPath, outAbs, 800);
     return outAbs;
   } catch (err) {
     console.warn("[mediaStorage] -800 build failed:", err?.message || err);
@@ -171,6 +194,7 @@ async function writePdpLargeBeside(absMasterPath, folder) {
       .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
       .webp({ quality: 80, effort: 4 })
       .toFile(outAbs);
+    await keepLighterCopy(absMasterPath, outAbs, 1200);
     return outAbs;
   } catch (err) {
     console.warn("[mediaStorage] -1200 build failed:", err?.message || err);
