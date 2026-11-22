@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ownerTitleNote } from "@/lib/paymentOwnerNote";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
@@ -150,6 +151,8 @@ function pakistaniPaymentInstructions(methodKey, config) {
     const lines = [{ text: `Send payment via ${c.label || key}.` }];
     if (c.accountNumber) lines.push({ label: "Account number", value: c.accountNumber });
     if (c.accountName) lines.push({ label: "Account name", value: c.accountName });
+    const owner = ownerTitleNote([c.accountName || c.accountTitle]);
+    if (owner) lines.push({ text: owner });
     lines.push({ text: "Share your payment screenshot on WhatsApp after transfer." });
     return lines;
   }
@@ -159,6 +162,7 @@ function pakistaniPaymentInstructions(methodKey, config) {
     if (c.accountNumber) lines.push({ label: "Account", value: c.accountNumber });
     if (c.accountTitle) lines.push({ label: "Title", value: c.accountTitle });
     if (c.iban) lines.push({ label: "IBAN", value: c.iban });
+    if (ownerTitleNote([c.accountTitle])) lines.push({ text: ownerTitleNote([c.accountTitle]) });
     return lines;
   }
   if (key === "meezan") {
@@ -167,12 +171,14 @@ function pakistaniPaymentInstructions(methodKey, config) {
     if (c.accountNumber) lines.push({ label: "Account", value: c.accountNumber });
     if (c.accountTitle) lines.push({ label: "Title", value: c.accountTitle });
     if (c.iban) lines.push({ label: "IBAN", value: c.iban });
+    if (ownerTitleNote([c.accountTitle])) lines.push({ text: ownerTitleNote([c.accountTitle]) });
     return lines;
   }
   if (key === "hbl" || key === "ubl") {
     const lines = [{ text: `${c.label || key} account details:` }];
     if (c.accountNumber) lines.push({ label: "Account number", value: c.accountNumber });
     if (c.accountTitle) lines.push({ label: "Account title", value: c.accountTitle });
+    if (ownerTitleNote([c.accountTitle])) lines.push({ text: ownerTitleNote([c.accountTitle]) });
     return lines;
   }
   return [];

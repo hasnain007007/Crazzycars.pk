@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ownerTitleNote } from "@/lib/paymentOwnerNote";
 import CopyButton from "@/components/store/CopyButton";
 import { paymentQrFor } from "@/config/payment-qr";
 import { STORE_CONTACT } from "@/config/store-policy";
@@ -67,6 +68,7 @@ async function loadPaymentPageData() {
           type: m.key === "jazzcash" || m.key === "easypaisa" ? "Mobile wallet" : "Bank account",
           accent: BRAND_ACCENT[m.key] || "#c41e1e",
           qr,
+          title: m.accountTitle || m.accountName || "",
           rows: [
             (m.accountTitle || m.accountName) && {
               label: "Account title",
@@ -92,6 +94,7 @@ export default async function AdvancePaymentPage() {
     hasAccounts: accounts.length > 0,
   });
   const hasQr = accounts.some((a) => a.qr);
+  const ownerNote = ownerTitleNote(accounts.map((a) => a.title));
   const wa = STORE_CONTACT.phoneE164.replace(/\D/g, "");
   const waLink = `https://wa.me/${wa}?text=${encodeURIComponent(
     "Hi CrazzyCars.pk, I've sent the advance for order #____. Screenshot attached."
@@ -232,6 +235,7 @@ export default async function AdvancePaymentPage() {
             Account details are shown at checkout after you choose a payment method.
           </p>
         )}
+        {ownerNote ? <p className="adv-muted">{ownerNote}</p> : null}
         <p className="adv-important">
           <strong>Important:</strong> {c.safety}
         </p>
