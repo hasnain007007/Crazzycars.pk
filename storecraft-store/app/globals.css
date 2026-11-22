@@ -7479,3 +7479,25 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
 .pdp-trust-strip li { display: flex; gap: 8px; align-items: baseline; }
 .pdp-trust-strip li::before { content: "✓"; color: #047857; font-weight: 700; }
 .pdp-trust-strip a { color: #047857; font-weight: 700; text-decoration: underline; }
+
+/* Previously only in lib/criticalCss.js. Critical CSS is now disabled after the full
+   stylesheet loads, so these must live here too (same values). */
+[data-pdp-crumb] {
+  min-height: 40px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.25;
+  background: #f8f8f8;
+  border-bottom: 1px solid #e5e5e5;
+  box-sizing: border-box;
+}
+
+[data-pdp-gallery] {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #f8f8f8;
+  contain: layout style;
+}

@@ -35,9 +35,11 @@ function fakePage() {
     };
     return l;
   };
+  const critical = { disabled: false };
   const document = {
     readyState: "loading",
     documentElement: {},
+    getElementById: (id) => (id === "cc-critical" ? critical : null),
     querySelectorAll(sel) {
       if (sel.includes("data-cc-defer")) return links.filter((l) => l.dataset.ccDefer === "1");
       return links.filter((l) => l.rel === "stylesheet");
@@ -57,6 +59,7 @@ function fakePage() {
   };
   return {
     ctx,
+    critical,
     run(script) {
       vm.runInNewContext(script, ctx);
     },
@@ -97,6 +100,32 @@ for (const [name, script] of [
     assert.equal(b.media, "print");
     page.windowLoad();
     assert.equal(b.media, "all");
+  });
+}
+
+for (const [name, script] of [
+  ["server-injected script", DEFER_SCRIPT],
+  ["criticalCss copy", DEFER_STYLESHEETS_SCRIPT],
+]) {
+  test(`${name}: critical CSS switches off only after EVERY deferred sheet loaded`, () => {
+    // Left on, critical CSS overrode the real stylesheet (mega menu squashed to 72px).
+    const page = fakePage();
+    page.run(script);
+    const a = page.addLink("/a.css");
+    const b = page.addLink("/b.css");
+    a.fire("load");
+    assert.equal(page.critical.disabled, false, "b.css still loading — keep critical CSS");
+    b.fire("load");
+    assert.equal(page.critical.disabled, true);
+  });
+
+  test(`${name}: critical CSS stays on when a stylesheet fails`, () => {
+    const page = fakePage();
+    page.run(script);
+    const a = page.addLink("/a.css");
+    a.fire("error");
+    page.windowLoad();
+    assert.equal(page.critical.disabled, false, "no real CSS — critical CSS is the only styling left");
   });
 }
 

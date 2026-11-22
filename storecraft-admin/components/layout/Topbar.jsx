@@ -44,6 +44,18 @@ function titleFromPath(pathname) {
   return hit?.title || "Admin";
 }
 
+/** "Crazzycars.pk" → "C", "Ali Raza" → "AR". Empty while loading (never a placeholder name). */
+export function adminInitials(name) {
+  const words = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  return words
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
 export function Topbar({ onMenuClick }) {
   const pathname = usePathname();
   const title = titleFromPath(pathname);
@@ -54,6 +66,21 @@ export function Topbar({ onMenuClick }) {
   const [stockData, setStockData] = useState({ total: 0, preview: [] });
   const [storeSettings, setStoreSettings] = useState(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [userName, setUserName] = useState("");
+
+  // Avatar shows the signed-in admin (was hard-coded "MI" from the template).
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (!cancelled && json?.success && json.user?.name) setUserName(String(json.user.name));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     function onDocClick(e) {
@@ -233,8 +260,10 @@ export function Topbar({ onMenuClick }) {
           className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1d6fb8] text-xs font-semibold text-white ring-2 ring-white dark:ring-slate-900"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
+          aria-label={userName ? `Account menu for ${userName}` : "Account menu"}
+          title={userName || undefined}
         >
-          MI
+          {adminInitials(userName)}
         </button>
         {menuOpen ? (
           <div

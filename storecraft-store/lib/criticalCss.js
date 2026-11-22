@@ -15,11 +15,16 @@ export const CRITICAL_CSS = [
   "a{color:inherit}",
   /* Announcement + header shell (compact mobile) */
   ".store-announcement-bar{min-height:36px;max-height:40px;overflow:hidden}",
-  ".store-container{width:100%;max-width:1280px;margin:0 auto;padding:0 16px}",
-  ".store-site-header .store-container{display:grid;height:56px;grid-template-columns:72px 1fr 72px;align-items:center}",
+  /* Must mirror globals.css exactly (inline wins ties): 1200 / 24px, 14px ≤768 (≤480 is !important there). */
+  ".store-container{max-width:1200px;margin-left:auto;margin-right:auto;padding-left:24px;padding-right:24px}",
+  "@media(max-width:768px){.store-container{padding-left:14px;padding-right:14px}}",
+  /* Scope to the logo/search row ONLY. A bare `.store-site-header .store-container` also hit the
+     mega-menu grid (`store-container mega-menu__grid`) and, being more specific than
+     `.mega-menu__grid`, squashed the Shop-by-category dropdown to 72px on every page. */
+  ".store-site-header .store-header-row{display:grid;height:56px;grid-template-columns:72px 1fr 72px;align-items:center}",
   ".cc-seo-nav{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}",
   ".store-header-desktop-nav,.store-header-desktop-actions{display:none!important}",
-  "@media(min-width:768px){.store-header-desktop-nav{display:block!important}.store-header-desktop-actions{display:flex!important}.store-site-header .store-container{display:flex;height:72px}}",
+  "@media(min-width:768px){.store-header-desktop-nav{display:block!important}.store-header-desktop-actions{display:flex!important}.store-site-header .store-header-row{display:flex;height:72px}}",
   /* Advance band — WITHOUT flex/grid this stacks to ~540px and pushes hero LCP below the fold */
   /* contain:layout — hydration/font tweaks inside the band must not shift the gallery (CLS) */
   ".adv-band{width:100%;align-self:stretch;position:relative;overflow:hidden;color:#fff;background:linear-gradient(90deg,#8c0e13 0%,#c41e1e 50%,#8c0e13 100%);contain:layout style;min-height:48px}",
@@ -86,4 +91,4 @@ export const CRITICAL_CSS = [
  * Flip sheets to media=print immediately; apply media=all only after first paint
  * (do NOT apply early when l.sheet is already set — that re-blocks LCP).
  */
-export const DEFER_STYLESHEETS_SCRIPT = `(function(){function d(l){if(!l||l.tagName!=="LINK")return;var rel=l.rel||l.getAttribute("rel")||"";if(rel.indexOf("stylesheet")===-1||l.dataset.ccDefer==="1")return;var m=l.getAttribute("media");if(m&&m!=="all"&&m!=="screen")return;l.dataset.ccDefer="1";l.media="print";var on=function(){l.media="all";};l.addEventListener("load",on);l.addEventListener("error",on);if(l.sheet)on();}function s(r){var n=(r||document).querySelectorAll('link[rel="stylesheet"]');for(var i=0;i<n.length;i++)d(n[i]);}function apply(){var n=document.querySelectorAll('link[data-cc-defer="1"]');for(var i=0;i<n.length;i++){var l=n[i];if((l.rel||"").indexOf("stylesheet")!==-1)l.media="all";}}s(document);var o=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var ns=ms[i].addedNodes;for(var j=0;j<ns.length;j++){var n=ns[j];if(!n||n.nodeType!==1)continue;if(n.tagName==="LINK")d(n);else if(n.querySelectorAll)s(n);}}});try{o.observe(document.documentElement,{childList:true,subtree:true});}catch(e){}function afterPaint(){requestAnimationFrame(function(){requestAnimationFrame(function(){o.disconnect();apply();});});}if(document.readyState==="complete")afterPaint();else addEventListener("load",afterPaint);})();`;
+export const DEFER_STYLESHEETS_SCRIPT = `(function(){function d(l){if(!l||l.tagName!=="LINK")return;var rel=l.rel||l.getAttribute("rel")||"";if(rel.indexOf("stylesheet")===-1||l.dataset.ccDefer==="1")return;var m=l.getAttribute("media");if(m&&m!=="all"&&m!=="screen")return;l.dataset.ccDefer="1";l.media="print";var on=function(){l.media="all";c();};l.addEventListener("load",on);l.addEventListener("error",on);if(l.sheet)on();}function c(){var n=document.querySelectorAll('link[data-cc-defer="1"]');for(var i=0;i<n.length;i++){if(!n[i].sheet||n[i].media!=="all")return;}var k=document.getElementById("cc-critical");if(k)k.disabled=true;}function s(r){var n=(r||document).querySelectorAll('link[rel="stylesheet"]');for(var i=0;i<n.length;i++)d(n[i]);}function apply(){var n=document.querySelectorAll('link[data-cc-defer="1"]');for(var i=0;i<n.length;i++){var l=n[i];if((l.rel||"").indexOf("stylesheet")!==-1)l.media="all";}c();}s(document);var o=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var ns=ms[i].addedNodes;for(var j=0;j<ns.length;j++){var n=ns[j];if(!n||n.nodeType!==1)continue;if(n.tagName==="LINK")d(n);else if(n.querySelectorAll)s(n);}}});try{o.observe(document.documentElement,{childList:true,subtree:true});}catch(e){}function afterPaint(){requestAnimationFrame(function(){requestAnimationFrame(function(){o.disconnect();apply();});});}if(document.readyState==="complete")afterPaint();else addEventListener("load",afterPaint);})();`;

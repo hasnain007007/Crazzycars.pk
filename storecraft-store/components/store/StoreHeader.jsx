@@ -591,7 +591,7 @@ export function StoreHeader({ initialCategoryTree = null }) {
       {/* Contact lives in site-wide AnnouncementBar (all pages). */}
       {/* Row 1 — main (above nav so search dropdown is never covered) */}
       <div className="relative z-[80] border-b bg-white" style={{ borderColor: "#E5E7EB" }}>
-        <div className="store-container relative grid h-14 grid-cols-[72px_1fr_72px] items-center md:flex md:h-[72px] md:gap-4">
+        <div className="store-container store-header-row relative grid h-14 grid-cols-[72px_1fr_72px] items-center md:flex md:h-[72px] md:gap-4">
           <button
             type="button"
             className="relative z-[2] flex h-10 w-10 shrink-0 items-center justify-center justify-self-start md:hidden"

@@ -272,7 +272,7 @@ export default async function RootLayout({ children }) {
       <head>
         {/* CSS defer is injected at the very start of <head> by patch-html-css-defer.cjs
             (Next hoists stylesheets before any React <script>, so in-layout defer is too late). */}
-        <style dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
+        <style id="cc-critical" dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
         {/* Home hero image preloads live only on app/page.jsx — not every route. */}
       </head>
       <body

@@ -277,8 +277,8 @@ function isActive(pathname, href) {
 
 export function Sidebar({ mobileOpen, onClose }) {
   const pathname = usePathname();
-  const [displayName, setDisplayName] = useState("Muhammad Imran");
-  const [displayRole, setDisplayRole] = useState("Super Admin");
+  const [displayName, setDisplayName] = useState("");
+  const [displayRole, setDisplayRole] = useState("");
   const [stockAlertTotal, setStockAlertTotal] = useState(0);
   const [storeSettings, setStoreSettings] = useState(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
@@ -290,7 +290,7 @@ export function Sidebar({ mobileOpen, onClose }) {
         const res = await fetch("/api/auth/me", { credentials: "include" });
         const json = await res.json();
         if (!cancelled && json.success && json.user) {
-          setDisplayName(json.user.name || "Muhammad Imran");
+          setDisplayName(json.user.name || json.user.email || "");
           setDisplayRole(roleLabel(json.user.role));
         }
       } catch {
