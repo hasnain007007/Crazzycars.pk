@@ -5,12 +5,18 @@
  * classic defer script in React never runs until those sheets load — PSI then
  * reports ~770ms render-blocking CSS. This patch rewrites text/html responses
  * to put the defer snippet immediately after <head>.
+ *
+ * Each deferred sheet switches back to media=all as soon as THAT sheet has
+ * loaded (its own load/error event). Waiting for window "load" instead left
+ * phones on slow signal looking unstyled (grey buttons, serif text, squashed
+ * prices) until every product photo had downloaded. Window load stays only as
+ * a fallback.
  */
 "use strict";
 
 const http = require("http");
 
-const DEFER_SCRIPT = `(function(){function d(l){if(!l||l.tagName!=="LINK")return;var rel=l.rel||l.getAttribute("rel")||"";if(rel.indexOf("stylesheet")===-1||l.dataset.ccDefer==="1")return;var m=l.getAttribute("media");if(m&&m!=="all"&&m!=="screen")return;l.dataset.ccDefer="1";l.media="print";}function s(r){var n=(r||document).querySelectorAll('link[rel="stylesheet"]');for(var i=0;i<n.length;i++)d(n[i]);}function apply(){var n=document.querySelectorAll('link[data-cc-defer="1"]');for(var i=0;i<n.length;i++){var l=n[i];if((l.rel||"").indexOf("stylesheet")!==-1)l.media="all";}}s(document);var o=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var ns=ms[i].addedNodes;for(var j=0;j<ns.length;j++){var n=ns[j];if(!n||n.nodeType!==1)continue;if(n.tagName==="LINK")d(n);else if(n.querySelectorAll)s(n);}}});try{o.observe(document.documentElement,{childList:true,subtree:true});}catch(e){}function afterPaint(){requestAnimationFrame(function(){requestAnimationFrame(function(){o.disconnect();apply();});});}if(document.readyState==="complete")afterPaint();else addEventListener("load",afterPaint);})();`;
+const DEFER_SCRIPT = `(function(){function d(l){if(!l||l.tagName!=="LINK")return;var rel=l.rel||l.getAttribute("rel")||"";if(rel.indexOf("stylesheet")===-1||l.dataset.ccDefer==="1")return;var m=l.getAttribute("media");if(m&&m!=="all"&&m!=="screen")return;l.dataset.ccDefer="1";l.media="print";var on=function(){l.media="all";};l.addEventListener("load",on);l.addEventListener("error",on);if(l.sheet)on();}function s(r){var n=(r||document).querySelectorAll('link[rel="stylesheet"]');for(var i=0;i<n.length;i++)d(n[i]);}function apply(){var n=document.querySelectorAll('link[data-cc-defer="1"]');for(var i=0;i<n.length;i++){var l=n[i];if((l.rel||"").indexOf("stylesheet")!==-1)l.media="all";}}s(document);var o=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var ns=ms[i].addedNodes;for(var j=0;j<ns.length;j++){var n=ns[j];if(!n||n.nodeType!==1)continue;if(n.tagName==="LINK")d(n);else if(n.querySelectorAll)s(n);}}});try{o.observe(document.documentElement,{childList:true,subtree:true});}catch(e){}function afterPaint(){requestAnimationFrame(function(){requestAnimationFrame(function(){o.disconnect();apply();});});}if(document.readyState==="complete")afterPaint();else addEventListener("load",afterPaint);})();`;
 
 const INJECT = `<script id="cc-css-defer">${DEFER_SCRIPT}</script>`;
 
@@ -97,3 +103,5 @@ http.Server.prototype.emit = function (event, ...args) {
   }
   return origEmit.call(this, event, ...args);
 };
+
+module.exports = { DEFER_SCRIPT, injectDefer };
