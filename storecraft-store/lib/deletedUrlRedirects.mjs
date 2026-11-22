@@ -84,11 +84,38 @@ export const DELETED_URL_REDIRECTS = [
   { source: "/categories/car-organizers", destination: "/categories/interior", permanent: true },
   { source: "/categories/luxury-7d-9d-floor-mats", destination: "/categories/floor-mats", permanent: true },
   { source: "/categories/stickers-monograms-emblems", destination: "/categories/exterior", permanent: true },
+  // GSC "Not found (404)" audit 23 Nov 2026 — pages deleted/renamed (mostly 16–17 Nov)
+  // without a redirect. Every destination verified 200 on crazzycars.pk before merge.
+  { source: "/honda-civic-reborn-2006-2012-carbon-interior-combo", destination: "/cars/honda-civic-reborn-2006-2012", permanent: true },
+  { source: "/toyota-corolla-2014-2026-carbon-interior-combo", destination: "/cars/toyota-corolla-e170-2014-2026", permanent: true },
+  { source: "/toyota-corolla-2014-2026-side-mirror-neon-style-indicator", destination: "/toyota-corolla-2015-2026-led-side-mirror-neon-indicator-pair", permanent: true },
+  { source: "/usb-galaxy-moon-star-projector-light-car-roof", destination: "/usb-car-roof-star-night-light-galaxy-projector", permanent: true },
+  { source: "/honda-civic-reborn-2006-2012-carbon-fiber-gear-box-trim", destination: "/honda-civic-reborn-2006-2011-carbon-gear-shift-panel-cover", permanent: true },
+  { source: "/batman-style-side-mirror-cover-toyota-corolla-e170-yaris-aqua-vitz", destination: "/toyota-corolla-2015-2022-batman-style-side-mirror-cover", permanent: true },
+  { source: "/batman-style-side-mirror-cover-toyota-corolla-e170-yaris-aqua-vitz-crazzycars-pk", destination: "/toyota-corolla-2015-2022-batman-style-side-mirror-cover", permanent: true },
+  { source: "/honda-civic-11th-gen-2022-2026-carbon-center-console-ac-vent-cover", destination: "/honda-civic-11th-gen-2022-2024-carbon-fiber-rear-armrest-air-vent-outlet-cover-trim", permanent: true },
+  { source: "/honda-civic-11th-gen-2022-2026-carbon-dashboard-air-vent-trim-cover", destination: "/honda-civic-11th-gen-2022-2024-carbon-fiber-dashboard-ac-air-vent-trims", permanent: true },
+  { source: "/toyota-corolla-2014-2023-interior-door-handle-carbon-fiber-trims-8pcs", destination: "/toyota-corolla-2014-2026-interior-door-handle-carbon-fiber-trims-4pcs", permanent: true },
+  { source: "/toyota-corolla-2014-2023-interior-door-handle-carbon-fiber-trims-8pcs-crazzycars-pk", destination: "/toyota-corolla-2014-2026-interior-door-handle-carbon-fiber-trims-4pcs", permanent: true },
+  { source: "/universal-sportline-full-kit-front-splitter-side-skirts-rear-red-black", destination: "/categories/splitters-side-skirts", permanent: true },
+  { source: "/blogs/push-start-cover-carbon-key-fob-accessories-pakistan", destination: "/categories/key-covers-key-chains", permanent: true },
+  { source: "/blogs/key-covers-key-chains-match-buttons-pakistan", destination: "/categories/key-covers-key-chains", permanent: true },
+  { source: "/blogs/car-accessories-returns-wrong-item-pakistan-crazzycars", destination: "/blogs/car-accessories-returns-wrong-item-pakistan", permanent: true },
+  { source: "/blogs/honda-city-2021-2026-carbon-interior-upgrades-pakistan", destination: "/blogs/honda-city-2021-modification-cost-pakistan", permanent: true },
+  { source: "/blogs/honda-civic-11th-gen-carbon-fiber-interior-kit-pakistan-guide", destination: "/blogs/honda-civic-accessories-guide-every-generation", permanent: true },
+  { source: "/blogs/cabin-mood-lighting-usb-atmosphere-digital-eyes-pakistan", destination: "/blogs/led-ambient-lighting-car-buyer-guide", permanent: true },
+  { source: "/cars/1-genx120", destination: "/cars/toyota-mark-x-2004-1-genx120", permanent: true },
+  { source: "/cars/tucson-hybrid-2025-nx4", destination: "/cars/hyundai-tucson-2020-2024", permanent: true },
+  { source: "/cars/hyundai-tucson-hybrid-2024-tucson-hybrid-2025-nx4", destination: "/cars/hyundai-tucson-2020-2024", permanent: true },
+  { source: "/cars/hyundai-tucson-hybrid-2020-elantra-hybrid-2025-nx4", destination: "/cars/hyundai-elantra-hybrid-2025-present", permanent: true },
 ];
 
 /** Flat product rows (not /cars/ or /categories/) that permanently redirect. */
 const FLAT_PRODUCT_REDIRECTS = DELETED_URL_REDIRECTS.filter(
-  (r) => !r.source.startsWith("/cars/") && !r.source.startsWith("/categories/")
+  (r) =>
+    !r.source.startsWith("/cars/") &&
+    !r.source.startsWith("/categories/") &&
+    !r.source.startsWith("/blogs/")
 );
 
 /** Flat product slugs that permanently redirect (exclude from listings/feeds/llms). */

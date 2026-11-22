@@ -294,6 +294,14 @@ export async function middleware(request) {
       if (dest) {
         return withPaidCookie(request, redirectPath(request, dest, 308));
       }
+      // No static mapping: singular /product/{slug} has no route of its own (GSC showed
+      // 4 "Redirect error"/404 rows). Serve it through /products/[handle], which
+      // DB-resolves (exact / previousSlugs / prefix / year drift) and 308s once.
+      if (prefix === "/product/") {
+        const url = request.nextUrl.clone();
+        url.pathname = `/products/${rest}`;
+        return withPaidCookie(request, NextResponse.rewrite(url));
+      }
     }
   }
 

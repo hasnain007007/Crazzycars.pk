@@ -17,6 +17,12 @@
  * @type {{ source: string, destination: string, permanent: true }[]}
  */
 export const OLD_BLOG_NEWS_REDIRECTS = [
+  // GSC 404 audit 23 Nov 2026 — clear single-hop matches only (no-match posts stay 404).
+  { source: "/blogs/news/best-car-accessories-for-haval-h6-in-pakistan-2024", destination: "/cars/haval-h6-2021-present", permanent: true },
+  { source: "/blogs/news/best-car-accessories-for-honda-civic-2022-in-pakistan", destination: "/cars/honda-civic-11th-gen-2022-present", permanent: true },
+  { source: "/blogs/news/car-accessories-with-cash-on-delivery-in-pakistan-crazzycars-pk", destination: "/blogs/cod-vs-online-payment-car-accessories-pakistan", permanent: true },
+  { source: "/blogs/news/car-accessories-online-shopping-pakistan-cash-on-delivery", destination: "/blogs/cod-vs-online-payment-car-accessories-pakistan", permanent: true },
+  { source: "/blogs/news/how-to-choose-the-right-car-spoiler-in-pakistan-complete-guide", destination: "/blogs/trunk-lip-spoiler-buying-guide-pakistan-alsvin-city-corolla", permanent: true },
   {
     source: "/blogs/news/best-car-accessories-for-honda-city-in-pakistan-2024",
     destination: "/blogs/toyota-yaris-vs-honda-city-best-accessories",
