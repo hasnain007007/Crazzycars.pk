@@ -229,23 +229,16 @@ export const generateMetadata = withSafeMetadata(async function categoryMetadata
       const keywords = Array.isArray(category.seo?.metaKeywords)
         ? category.seo.metaKeywords.map((k) => String(k || "").trim()).filter(Boolean)
         : [];
-      const ogImage = category.image?.url
-        ? [
-            {
-              url: category.image.url,
-              width: 1200,
-              height: 630,
-              alt: category.image?.altText || category.name,
-            },
-          ]
-        : [
-            {
-              url: "/og/default-1200x630.jpg",
-              width: 1200,
-              height: 630,
-              alt: category.name || BRAND,
-            },
-          ];
+      // Branded 1200×630 JPEG card (name + real product photos). The square WebP
+      // category image was declared 1200×630 and center-cropped / dropped by WhatsApp.
+      const ogImage = [
+        {
+          url: `/og/c/${slugStr}.jpg`,
+          width: 1200,
+          height: 630,
+          alt: category.image?.altText || category.name || BRAND,
+        },
+      ];
       const listingSeo = listingMetadata(listingPath, listing, {
         thin: Boolean(detail && Number(detail.productCount) === 0),
       });

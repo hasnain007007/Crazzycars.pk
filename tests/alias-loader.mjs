@@ -31,6 +31,15 @@ register(
           }
         }
       }
+      // next/og, next/server… are extensionless files without an exports map;
+      // Next's bundler resolves them, plain Node ESM needs the ".js".
+      if (/^next\\/[a-z-]+$/.test(specifier)) {
+        try {
+          return await nextResolve(specifier, context);
+        } catch {
+          return nextResolve(specifier + ".js", context);
+        }
+      }
       return nextResolve(specifier, context);
     }
   `)}`,

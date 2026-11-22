@@ -29,6 +29,7 @@ import {
 import { resolveFlatProductFallback } from "@/lib/productFallbackRedirects.mjs";
 import { resolveDeletedFlatSlug } from "@/lib/deletedUrlRedirects.mjs";
 import { resolveInactiveProductRedirect } from "@/lib/inactiveProductRedirect";
+import { ogCardVersion } from "@/lib/ogCardUrl";
 import {
   galleryImageUrl1200Existing,
   galleryImageUrlExisting,
@@ -404,6 +405,11 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     // OG/Twitter: prefer master on disk (original → -400 → -sm). Never point at a 404.
     const mainImg = mainImgRaw ? pdpImageUrlExisting(mainImgRaw) : "";
     const ogAlt = contentOverride?.imageAlt || displayName;
+    // Branded JPEG share card (photo + name + price). `v` changes with price/photo so
+    // WhatsApp/Facebook re-fetch instead of showing a stale price.
+    const ogCardUrl = mainImg
+      ? `${BASE_URL}/og/p/${slugKey}.jpg?v=${ogCardVersion(p.price, p.salePrice, p.regularPrice, p.pricing?.salePrice, p.pricing?.regularPrice, mainImgRaw)}`
+      : "";
 
     const robotsRaw = String(p.seo?.robots || "").toLowerCase();
     const noPhoto = !productHasRealImage(p);
@@ -427,13 +433,13 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
         type: "website",
         url: canonical,
         siteName: BRAND_NAME,
-        images: mainImg ? [{ url: mainImg, width: 800, height: 800, alt: ogAlt }] : [],
+        images: ogCardUrl ? [{ url: ogCardUrl, width: 1200, height: 630, alt: ogAlt }] : [],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: mainImg ? [mainImg] : [],
+        images: ogCardUrl ? [ogCardUrl] : [],
       },
     };
   }
@@ -449,7 +455,7 @@ export const generateMetadata = withSafeMetadata(async function buildSlugMetadat
     page.seo?.ogImage ||
     page.featuredImage?.url ||
     page.image?.url ||
-    `${BASE_URL}/og/default-1200x630.jpg`;
+    `${BASE_URL}/og/site/home.jpg`;
   const pageOgAbs = /^https?:\/\//i.test(pageOg) ? pageOg : `${BASE_URL}${pageOg.startsWith("/") ? "" : "/"}${pageOg}`;
   return {
     title: pageTitleMeta,

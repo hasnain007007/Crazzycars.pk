@@ -123,7 +123,7 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
     [...String(metaDescriptionRaw || "")].length > 160
       ? `${[...String(metaDescriptionRaw)].slice(0, 157).join("")}…`
       : String(metaDescriptionRaw || "");
-  const rawImg = post.featuredImage?.url || `${BASE_URL}/og/default-1200x630.jpg`;
+  const rawImg = post.featuredImage?.url || `${BASE_URL}/og/site/home.jpg`;
   const ogImage = /^https?:\/\//i.test(rawImg)
     ? rawImg
     : `${BASE_URL}${rawImg.startsWith("/") ? "" : "/"}${rawImg}`;

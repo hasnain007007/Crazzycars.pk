@@ -147,7 +147,6 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
       listing.page <= 1
         ? `${SITE}/cars/${vehicle.slug}`
         : listingSeo.alternates?.canonical || `${SITE}/cars/${vehicle.slug}`;
-    const ogImage = mediaImageUrl(vehicle.image);
 
     return {
       title: titleMeta,
@@ -161,15 +160,15 @@ export const generateMetadata = withSafeMetadata(async function vehicleMetadata(
         title,
         description,
         url: canonical,
-        images: ogImage
-          ? [{ url: ogImage, alt: vehicle.displayName }]
-          : [{ url: "/og/default-1200x630.jpg", width: 1200, height: 630, alt: `${vehicle.displayName} accessories` }],
+        // Branded JPEG card (car name + fitted product photos). Square WebP car shots
+        // were center-cropped / dropped by WhatsApp.
+        images: [{ url: `/og/car/${vehicle.slug}.jpg`, width: 1200, height: 630, alt: `${vehicle.displayName} accessories` }],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: ogImage ? [ogImage] : ["/og/default-1200x630.jpg"],
+        images: [`/og/car/${vehicle.slug}.jpg`],
       },
     };
   } catch (err) {

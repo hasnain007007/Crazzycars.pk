@@ -124,7 +124,7 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
         ogSafe = "";
       }
     }
-    const ogImageUrl = ogSafe || absoluteUrl("/og/default-1200x630.jpg");
+    const ogImageUrl = ogSafe || absoluteUrl("/og/site/home.jpg");
 
     const gsc = seo.googleSearchConsoleId?.trim();
     const verification = gsc ? { google: gsc } : {};
@@ -187,11 +187,11 @@ export const generateMetadata = withSafeMetadata(async function rootMetadata() {
       robots: isIndexableEnvironment() ? undefined : { index: false, follow: false },
       openGraph: {
         siteName: BRAND_NAME,
-        images: [{ url: absoluteUrl("/og/default-1200x630.jpg"), width: 1200, height: 630, alt: BRAND_NAME }],
+        images: [{ url: absoluteUrl("/og/site/home.jpg"), width: 1200, height: 630, alt: BRAND_NAME }],
       },
       twitter: {
         card: "summary_large_image",
-        images: [absoluteUrl("/og/default-1200x630.jpg")],
+        images: [absoluteUrl("/og/site/home.jpg")],
       },
     });
   }

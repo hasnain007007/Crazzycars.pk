@@ -97,7 +97,7 @@ export const generateMetadata = withSafeMetadata(async function cityMeta({ param
       title: city.metaTitle,
       description: city.metaDescription,
       url: canonical,
-      images: [{ url: "/og/default-1200x630.jpg", width: 1200, height: 630 }],
+      images: [{ url: "/og/site/home.jpg", width: 1200, height: 630 }],
     },
   };
 });

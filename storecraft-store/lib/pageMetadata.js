@@ -3,8 +3,14 @@ import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, ROBOTS_NOINDEX_NOFOLLOW } f
 import { sanitizeMetadata } from "@/lib/safeMetadata";
 import { BRAND_NAME } from "@/lib/brand";
 
-/** Default Open Graph / Twitter image (1200×630). */
-export const DEFAULT_OG_IMAGE_PATH = "/og/default-1200x630.jpg";
+/**
+ * Default Open Graph / Twitter image (1200×630 JPEG): branded card with real product
+ * photos, rendered by app/og/[kind]/[slug]/route.js. WhatsApp center-crops previews,
+ * so the old text-on-gradient card showed an empty dark square.
+ */
+export const DEFAULT_OG_IMAGE_PATH = "/og/site/home.jpg";
+/** Static emergency image if a card cannot render (never point the route here in a loop). */
+export const FALLBACK_OG_IMAGE_PATH = "/og/default-1200x630.jpg";
 
 export function buildPageMetadata({
   title,
