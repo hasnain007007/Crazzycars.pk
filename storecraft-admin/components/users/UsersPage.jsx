@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { capabilitiesForRole } from "@/lib/permissions";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { roleBadgeClass } from "@/lib/userUi";
@@ -42,7 +43,8 @@ export function UsersPage() {
     load();
   }, [load]);
 
-  const isSuper = me?.role === "superadmin";
+  // Roles were renamed (superadmin → owner); check the capability, same as the API.
+  const isSuper = Boolean(me && capabilitiesForRole(me.role).canManageUsers);
 
   return (
     <div className="space-y-6">

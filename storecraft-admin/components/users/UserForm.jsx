@@ -4,22 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { capabilitiesForRole, normalizeRole } from "@/lib/permissions";
 import { roleBadgeClass } from "@/lib/userUi";
 import { NeighborNav } from "@/components/layout/NeighborNav";
 import { useEntityNeighbors } from "@/lib/useEntityNeighbors";
 
+// Canonical roles (lib/permissions.js). Old ids superadmin/admin/editor are read
+// aliases only — a stored "manager"/"staff" never matched them, so no role showed as selected.
 const ROLES = [
-  {
-    id: "superadmin",
-    title: "Super Admin",
-    desc: "Full access including settings and user management.",
-  },
-  {
-    id: "admin",
-    title: "Admin",
-    desc: "Full catalog and orders access; user management restricted.",
-  },
-  { id: "editor", title: "Editor", desc: "Manage products, orders, and content." },
+  { id: "owner", title: "Owner", desc: "Full access including settings and team management." },
+  { id: "manager", title: "Manager", desc: "Full catalog and orders access; team management restricted." },
+  { id: "staff", title: "Staff", desc: "Manage products, orders, and content." },
   { id: "viewer", title: "Viewer", desc: "Read-only access to the admin panel." },
 ];
 
@@ -41,7 +36,7 @@ export function UserForm({ userId }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [role, setRole] = useState("editor");
+  const [role, setRole] = useState("staff");
   const [status, setStatus] = useState("active");
   const [saving, setSaving] = useState(false);
 
@@ -62,7 +57,7 @@ export function UserForm({ userId }) {
     const u = json.user;
     setName(u.name || "");
     setEmail(u.email || "");
-    setRole(u.role || "editor");
+    setRole(normalizeRole(u.role || "staff"));
     setStatus(u.status || "active");
   }, [userId]);
 
@@ -107,8 +102,8 @@ export function UserForm({ userId }) {
     }
   }
 
-  if (me && me.role !== "superadmin") {
-    return <p className="text-sm text-red-600">Superadmin access required.</p>;
+  if (me && !capabilitiesForRole(me.role).canManageUsers) {
+    return <p className="text-sm text-red-600">Owner access required.</p>;
   }
 
   return (
