@@ -1,0 +1,327 @@
+{
+  "at": "2026-11-23T13:17:31.490Z",
+  "batch": "CC-PHOTO-BATCH02-2026-11-23",
+  "products": [
+    {
+      "_id": "6a5ea474086726a54a151393",
+      "articleNo": "CC-INT-134",
+      "slug": "suzuki-alto-2019-2026-tpe-floor-mats-premium",
+      "status": "active",
+      "pricing": {
+        "regularPrice": 12000,
+        "salePrice": 6999,
+        "costPerItem": 0,
+        "saleSchedule": {
+          "enabled": false
+        }
+      },
+      "inventory": {
+        "quantity": 50,
+        "weight": 3,
+        "weightUnit": "kg",
+        "trackInventory": true,
+        "allowBackorder": false,
+        "lowStockThreshold": 5,
+        "sku": "CC-INT-134"
+      },
+      "mediaImages": [
+        {
+          "url": "/media/products/suzuki-alto-2019-2026-tpe-floor-mats-premium-main-4db58be1f1.webp",
+          "publicId": "",
+          "isMain": true,
+          "altText": "Suzuki Alto 2019-2026 TPE Floor Mats",
+          "label": "",
+          "imageName": "Suzuki Alto 2019-2026 TPE Floor Mats",
+          "width": 1254,
+          "height": 1254
+        },
+        {
+          "url": "/media/products/suzuki-alto-2019-2026-tpe-floor-mats-premium-2-5d895caad7.webp",
+          "publicId": "",
+          "isMain": false,
+          "altText": "Suzuki Alto 2019-2026 TPE Floor Mats Premium",
+          "label": "",
+          "imageName": "Suzuki Alto 2019-2026 TPE Floor Mats Premium"
+        },
+        {
+          "url": "/media/products/tpe47-18-suzuki-alto-new-6ab7343dbf.png",
+          "publicId": "",
+          "isMain": false,
+          "altText": "TPE Floor Mats for Suzuki Alto New – TPE floor mats vehicle reference card – CrazzyCars.pk",
+          "alt": "TPE Floor Mats for Suzuki Alto New – TPE floor mats vehicle reference card – CrazzyCars.pk",
+          "label": "Vehicle reference visualisation (TPE mats 47 Light)",
+          "imageName": "TPE Floor Mats for Suzuki Alto New",
+          "width": 1254,
+          "height": 1254
+        }
+      ]
+    },
+    {
+      "_id": "6a5d227589c0c8d16c69207f",
+      "articleNo": "CC-0203",
+      "slug": "car-front-bumper-splitter-abs-plastic-3pcs",
+      "status": "active",
+      "pricing": {
+        "regularPrice": 5499,
+        "salePrice": 4499,
+        "costPerItem": 0
+      },
+      "inventory": {
+        "quantity": 43,
+        "weight": 0,
+        "weightUnit": "g",
+        "trackInventory": true,
+        "allowBackorder": false,
+        "lowStockThreshold": 5,
+        "sku": "CC-0203"
+      },
+      "mediaImages": [
+        {
+          "url": "/media/products/car-front-bumper-splitter-abs-plastic-3pcs-1-72fd0ff7da.webp",
+          "publicId": "",
+          "isMain": true,
+          "altText": "Batman Style Front Bumper Splitter ABS 3PCS",
+          "label": "",
+          "imageName": ""
+        },
+        {
+          "url": "/media/products/car-front-bumper-splitter-abs-plastic-3pcs-gallery-handoff-3217ae464e0b.webp",
+          "publicId": "",
+          "isMain": false,
+          "isPlaceholder": false,
+          "altText": "Batman-Style ABS Front Splitter · 3 pcs with mounting example and vehicle example",
+          "alt": "Batman-Style ABS Front Splitter · 3 pcs with mounting example and vehicle example",
+          "label": "gallery-handoff",
+          "imageName": "Batman Style Front Bumper Splitter ABS 3PCS"
+        },
+        {
+          "url": "/media/products/car-front-bumper-splitter-abs-plastic-3pcs-2-d97cee3d06.webp",
+          "publicId": "",
+          "isMain": false,
+          "altText": "Batman Style Front Bumper Splitter ABS 3PCS",
+          "label": "",
+          "imageName": ""
+        },
+        {
+          "url": "/media/products/car-front-bumper-splitter-abs-plastic-3pcs-4-8a1d2d9818.webp",
+          "publicId": "",
+          "isMain": false,
+          "altText": "Batman Style Front Bumper Splitter ABS 3PCS",
+          "label": "",
+          "imageName": ""
+        },
+        {
+          "url": "/media/products/car-front-bumper-splitter-abs-plastic-3pcs-5-153f796438.webp",
+          "publicId": "",
+          "isMain": false,
+          "altText": "Batman Style Front Bumper Splitter ABS 3PCS",
+          "label": "",
+          "imageName": ""
+        }
+      ]
+    },
+    {
+      "_id": "6a5d226f89c0c8d16c692037",
+      "articleNo": "CC-0145",
+      "slug": "corolla-e210-grande-led-rear-reflector",
+      "status": "active",
+      "pricing": {
+        "regularPrice": 2999,
+        "salePrice": 1799,
+        "costPerItem": 0,
+        "saleSchedule": {
+          "enabled": false
+        }
+      },
+      "inventory": {
+        "quantity": 50,
+        "weight": 0,
+        "weightUnit": "g",
+        "trackInventory": true,
+        "allowBackorder": true,
+        "lowStockThreshold": 5,
+        "sku": "CC-0145"
+      },
+      "mediaImages": [
+        {
+          "url": "/media/products/corolla-e210-grande-led-rear-reflector-1-09cd624aca.webp",
+          "publicId": "",
+          "isMain": true,
+          "altText": "Toyota Corolla E210 Grande / Grande X LED Rear Bumper Reflector Lights – Brake + DRL",
+          "label": "",
+          "imageName": "Toyota Corolla E210 Grande / Grande X LED Rear Bumper Reflector Lights – Brake + DRL"
+        },
+        {
+          "url": "/media/products/corolla-e210-grande-led-rear-reflector-gallery-handoff-c0b3c6d4e382.webp",
+          "publicId": "",
+          "isMain": false,
+          "isPlaceholder": false,
+          "altText": "Grande / Grande X LED Rear Bumper Reflectors with second pattern and bumper location",
+          "alt": "Grande / Grande X LED Rear Bumper Reflectors with second pattern and bumper location",
+          "label": "gallery-handoff",
+          "imageName": "Toyota Corolla E210 Grande / Grande X LED Rear Bumper Reflector Lights – Brake + DRL"
+        },
+        {
+          "url": "/media/products/corolla-e210-grande-led-rear-reflector-2-52893c0f6a.webp",
+          "publicId": "",
+          "isMain": false,
+          "altText": "Toyota Corolla E210 Grande / Grande X LED Rear Bumper Reflector Lights – Brake + DRL",
+          "label": "",
+          "imageName": "Toyota Corolla E210 Grande / Grande X LED Rear Bumper Reflector Lights – Brake + DRL"
+        },
+        {
+          "url": "/media/products/corolla-e210-grande-led-rear-reflector-3-cbeb974a73.webp",
+          "publicId": "",
+          "isMain": false,
+          "altText": "Toyota Corolla E210 Grande / Grande X LED Rear Bumper Reflector Lights – Brake + DRL",
+          "label": "",
+          "imageName": "Toyota Corolla E210 Grande / Grande X LED Rear Bumper Reflector Lights – Brake + DRL"
+        }
+      ]
+    },
+    {
+      "_id": "6a5ea475086726a54a151396",
+      "articleNo": "CC-INT-137",
+      "slug": "honda-civic-2016-2021-tpe-floor-mats-premium",
+      "status": "active",
+      "pricing": {
+        "regularPrice": 12000,
+        "salePrice": 6999,
+        "costPerItem": 0,
+        "saleSchedule": {
+          "enabled": false
+        }
+      },
+      "inventory": {
+        "quantity": 49,
+        "weight": 3,
+        "weightUnit": "kg",
+        "trackInventory": true,
+        "allowBackorder": false,
+        "lowStockThreshold": 5,
+        "sku": "CC-INT-137"
+      },
+      "mediaImages": [
+        {
+          "url": "/media/products/honda-civic-2016-2021-tpe-floor-mats-premium-1-4091eb0794.webp",
+          "publicId": "",
+          "isMain": true,
+          "altText": "Honda Civic 2016-2021 TPE Floor Mats Premium",
+          "label": "",
+          "imageName": "Honda Civic 2016-2021 TPE Floor Mats Premium"
+        },
+        {
+          "url": "/media/products/honda-civic-2016-2021-tpe-floor-mats-premium-gallery-handoff-57d0047a6401.webp",
+          "publicId": "",
+          "isMain": false,
+          "altText": "TPE Floor Mats for Honda Civic X 2016–2021 with a product detail and vehicle reference",
+          "label": "",
+          "imageName": "Honda Civic 2016-2021 TPE Floor Mats Premium"
+        },
+        {
+          "url": "/media/products/honda-civic-2016-2021-tpe-floor-mats-premium-2-145bcef7a2.webp",
+          "publicId": "",
+          "isMain": false,
+          "altText": "Honda Civic 2016-2021 TPE Floor Mats Premium",
+          "label": "",
+          "imageName": "Honda Civic 2016-2021 TPE Floor Mats Premium"
+        },
+        {
+          "url": "/media/products/tpe47-14-honda-civic-2016-21-a70693449e.png",
+          "publicId": "",
+          "isMain": false,
+          "altText": "TPE Floor Mats for Honda Civic 2016–21 – TPE floor mats vehicle reference card – CrazzyCars.pk",
+          "alt": "TPE Floor Mats for Honda Civic 2016–21 – TPE floor mats vehicle reference card – CrazzyCars.pk",
+          "label": "Vehicle reference visualisation (TPE mats 47 Light)",
+          "imageName": "TPE Floor Mats for Honda Civic 2016–21",
+          "width": 1254,
+          "height": 1254
+        }
+      ]
+    },
+    {
+      "_id": "6aca96e94861cefd369e4d7c",
+      "articleNo": "CC-0281",
+      "slug": "toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026",
+      "status": "active",
+      "pricing": {
+        "regularPrice": 9999,
+        "salePrice": 7499,
+        "costPerItem": 0,
+        "saleSchedule": {
+          "enabled": false
+        }
+      },
+      "inventory": {
+        "quantity": 20,
+        "weight": 0,
+        "weightUnit": "g",
+        "trackInventory": true,
+        "allowBackorder": false,
+        "lowStockThreshold": 5,
+        "sku": "CC-0281"
+      },
+      "mediaImages": [
+        {
+          "url": "/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-1793403556416-2e86b251.webp",
+          "publicId": "local:products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-1793403556416-2e86b251.webp",
+          "isMain": true,
+          "altText": "Toyota Corolla Carbon Fiber Dashboard Trim 3PCS 2014–2026 (L/R + LCD)",
+          "label": "",
+          "imageName": "Toyota Corolla Carbon Fiber Dashboard Trim 3PCS 2014–2026 (L/R + LCD)"
+        },
+        {
+          "url": "/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-gallery-quality-v4-839238479884.png",
+          "alt": "Corolla carbon-look dashboard trim with fitted detail and vehicle reference",
+          "isMain": false,
+          "label": "gallery-quality-v4",
+          "width": 1254,
+          "height": 1254
+        },
+        {
+          "url": "/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-gallery-handoff-e1304f9af230.webp",
+          "publicId": "",
+          "isMain": false,
+          "isPlaceholder": false,
+          "altText": "Toyota Corolla Carbon Fiber Dashboard Trim 3PCS 2014–2026 (L/R + LCD), installed product photo, installed close-up and Toyota Corolla vehicle reference",
+          "alt": "Toyota Corolla Carbon Fiber Dashboard Trim 3PCS 2014–2026 (L/R + LCD), installed product photo, installed close-up and Toyota Corolla vehicle reference",
+          "label": "gallery-handoff",
+          "imageName": "Toyota Corolla Carbon Fiber Dashboard Trim 3PCS 2014–2026 (L/R + LCD)"
+        }
+      ]
+    },
+    {
+      "_id": "6a83637eca0c535f938e3590",
+      "articleNo": "CC-COR-BBL-2",
+      "slug": "toyota-corolla-rgb-dynamic-back-bumper-light",
+      "status": "active",
+      "pricing": {
+        "regularPrice": 7000,
+        "salePrice": 3999,
+        "costPerItem": 0,
+        "saleSchedule": {
+          "enabled": false
+        }
+      },
+      "inventory": {
+        "quantity": 49,
+        "weight": 0.8,
+        "weightUnit": "kg",
+        "trackInventory": true,
+        "allowBackorder": false,
+        "lowStockThreshold": 5,
+        "sku": "CC-COR-BBL-2"
+      },
+      "mediaImages": [
+        {
+          "url": "/media/products/toyota-corolla-rgb-dynamic-back-bumper-light-1-1793404036092-3cfee38d.webp",
+          "publicId": "local:products/toyota-corolla-rgb-dynamic-back-bumper-light-1-1793404036092-3cfee38d.webp",
+          "isMain": true,
+          "altText": "Toyota Corolla RGB Dynamic Back Bumper Light",
+          "label": "",
+          "imageName": "Toyota Corolla RGB Dynamic Back Bumper Light"
+        }
+      ]
+    }
+  ]
+}

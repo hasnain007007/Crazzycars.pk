@@ -1,0 +1,148 @@
+{
+  "dryRun": true,
+  "batch": "CC-PHOTO-BATCH02-2026-11-23",
+  "db": "crazzycars_motorsports",
+  "backupPath": "/tmp/cc_photo_batch02/import-out/backup-before-1795439844920.json",
+  "counts": {
+    "products_matched": 6,
+    "gallery_append": 6,
+    "gallery_skip": 0,
+    "held": 0,
+    "published_new": 0,
+    "drafts_created": 0
+  },
+  "report": [
+    {
+      "id": 2,
+      "action": "existing_gallery_append",
+      "sku": "CC-INT-134",
+      "slug": "suzuki-alto-2019-2026-tpe-floor-mats-premium",
+      "url": "https://crazzycars.pk/suzuki-alto-2019-2026-tpe-floor-mats-premium",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 6999,
+      "regular": 12000,
+      "stock": 50,
+      "primary_retained": "/media/products/suzuki-alto-2019-2026-tpe-floor-mats-premium-main-4db58be1f1.webp",
+      "appended": [
+        "/media/products/suzuki-alto-2019-2026-tpe-floor-mats-premium-main-illust-b30a4c7d59.png",
+        "/media/products/suzuki-alto-2019-2026-tpe-floor-mats-premium-fitted-illust-994bf6d3b7.png"
+      ],
+      "dims_main": "2048x2048",
+      "dims_fitted": "2048x2048",
+      "hold_note": "AI illustrations — stock/fitment not verified by these images; primary stock photo retained",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 3,
+      "action": "existing_gallery_append",
+      "sku": "CC-0203",
+      "slug": "car-front-bumper-splitter-abs-plastic-3pcs",
+      "url": "https://crazzycars.pk/car-front-bumper-splitter-abs-plastic-3pcs",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 4499,
+      "regular": 5499,
+      "stock": 43,
+      "primary_retained": "/media/products/car-front-bumper-splitter-abs-plastic-3pcs-1-72fd0ff7da.webp",
+      "appended": [
+        "/media/products/car-front-bumper-splitter-abs-plastic-3pcs-main-illust-eacaf05587.png",
+        "/media/products/car-front-bumper-splitter-abs-plastic-3pcs-fitted-illust-dcec264e2d.png"
+      ],
+      "dims_main": "2048x2048",
+      "dims_fitted": "2048x2048",
+      "hold_note": "Universal Batman-style splitter — vehicle fit not verified by illustration",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 4,
+      "action": "existing_gallery_append",
+      "sku": "CC-0145",
+      "slug": "corolla-e210-grande-led-rear-reflector",
+      "url": "https://crazzycars.pk/corolla-e210-grande-led-rear-reflector",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 1799,
+      "regular": 2999,
+      "stock": 50,
+      "primary_retained": "/media/products/corolla-e210-grande-led-rear-reflector-1-09cd624aca.webp",
+      "appended": [
+        "/media/products/corolla-e210-grande-led-rear-reflector-main-illust-8ea9d6bd08.png",
+        "/media/products/corolla-e210-grande-led-rear-reflector-fitted-illust-057270fa22.png"
+      ],
+      "dims_main": "2048x2048",
+      "dims_fitted": "2048x2048",
+      "hold_note": "E210 Grande reflector illustration — confirm bumper/facelift against stock",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 5,
+      "action": "existing_gallery_append",
+      "sku": "CC-INT-137",
+      "slug": "honda-civic-2016-2021-tpe-floor-mats-premium",
+      "url": "https://crazzycars.pk/honda-civic-2016-2021-tpe-floor-mats-premium",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 6999,
+      "regular": 12000,
+      "stock": 49,
+      "primary_retained": "/media/products/honda-civic-2016-2021-tpe-floor-mats-premium-1-4091eb0794.webp",
+      "appended": [
+        "/media/products/honda-civic-2016-2021-tpe-floor-mats-premium-main-illust-1fafbe6038.png",
+        "/media/products/honda-civic-2016-2021-tpe-floor-mats-premium-fitted-illust-2fc26d094d.png"
+      ],
+      "dims_main": "2048x2048",
+      "dims_fitted": "2048x2048",
+      "hold_note": "AI illustrations — stock/fitment not verified by these images; primary stock photo retained",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 6,
+      "action": "existing_gallery_append",
+      "sku": "CC-0281",
+      "slug": "toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026",
+      "url": "https://crazzycars.pk/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 7499,
+      "regular": 9999,
+      "stock": 20,
+      "primary_retained": "/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-1-1793403556416-2e86b251.webp",
+      "appended": [
+        "/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-main-illust-18129e5602.png",
+        "/media/products/toyota-corolla-carbon-fiber-dashboard-trim-3pcs-lcd-2014-2026-fitted-illust-3a661552ba.png"
+      ],
+      "dims_main": "2048x2048",
+      "dims_fitted": "2048x2048",
+      "hold_note": "Carbon-look dash trim — composition not independently documented by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 7,
+      "action": "existing_gallery_append",
+      "sku": "CC-COR-BBL-2",
+      "slug": "toyota-corolla-rgb-dynamic-back-bumper-light",
+      "url": "https://crazzycars.pk/toyota-corolla-rgb-dynamic-back-bumper-light",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 3999,
+      "regular": 7000,
+      "stock": 49,
+      "primary_retained": "/media/products/toyota-corolla-rgb-dynamic-back-bumper-light-1-1793404036092-3cfee38d.webp",
+      "appended": [
+        "/media/products/toyota-corolla-rgb-dynamic-back-bumper-light-main-illust-95cdc62fb5.png",
+        "/media/products/toyota-corolla-rgb-dynamic-back-bumper-light-fitted-illust-77b86dea22.png"
+      ],
+      "dims_main": "2048x2048",
+      "dims_fitted": "2048x2048",
+      "hold_note": "RGB bumper lamp — electrical/CANbus compatibility not verified by illustration",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    }
+  ]
+}
