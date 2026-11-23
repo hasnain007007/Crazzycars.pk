@@ -1,0 +1,768 @@
+{
+  "dryRun": true,
+  "updateCategories": true,
+  "batch": "CC-PHOTO-75-2026-11-23",
+  "db": "crazzycars_motorsports",
+  "backupPath": "/tmp/cc_complete_product_photos_2026_11_23/import-out/backup-before-1795396154624.json",
+  "counts": {
+    "products_matched": 36,
+    "gallery_append": 36,
+    "gallery_skip": 0,
+    "held": 0,
+    "category_rows": 3,
+    "published_new": 0,
+    "drafts_created": 0
+  },
+  "report": [
+    {
+      "id": 1,
+      "action": "existing_gallery_append",
+      "sku": "CC-UNI-142",
+      "slug": "air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump",
+      "url": "https://crazzycars.pk/air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 5999,
+      "regular": 8500,
+      "stock": 10,
+      "primary_retained": "/media/products/air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-1-7faaec6175.webp",
+      "appended": [
+        "/media/products/air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump-main-illust-b9c62c2b2b.png",
+        "/media/products/air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-pump-fitted-illust-f82ffd0cef.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 2,
+      "action": "existing_gallery_append",
+      "sku": "CC-0124",
+      "slug": "honda-city-2009-2020-sequential-side-mirror-indicators",
+      "url": "https://crazzycars.pk/honda-city-2009-2020-sequential-side-mirror-indicators",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 5499,
+      "regular": 8000,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-city-2009-2020-sequential-side-mirror-indicators-1-dc10b9e9a6.webp",
+      "appended": [
+        "/media/products/honda-city-2009-2020-sequential-side-mirror-indicators-main-illust-897870eeae.png",
+        "/media/products/honda-city-2009-2020-sequential-side-mirror-indicators-fitted-illust-b6b1ed0f3c.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 3,
+      "action": "existing_gallery_append",
+      "sku": "CC-0090",
+      "slug": "honda-city-2021-2025-drive-68-style-body-kit-fibreglass",
+      "url": "https://crazzycars.pk/honda-city-2021-2025-drive-68-style-body-kit-fibreglass",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 13999,
+      "regular": 18000,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-city-2021-2025-drive-68-style-body-kit-fibreglass-1-4864455e6d.webp",
+      "appended": [
+        "/media/products/honda-city-2021-2025-drive-68-style-body-kit-fibreglass-main-illust-485332c1a1.png",
+        "/media/products/honda-city-2021-2025-drive-68-style-body-kit-fibreglass-fitted-illust-3b77feed98.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 4,
+      "action": "existing_gallery_append",
+      "sku": "CC-INT-138",
+      "slug": "honda-city-2021-2026-tpe-floor-mats-premium",
+      "url": "https://crazzycars.pk/honda-city-2021-2026-tpe-floor-mats-premium",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 6999,
+      "regular": 12000,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-city-2021-2026-tpe-floor-mats-premium-1-a320428bb9.webp",
+      "appended": [
+        "/media/products/honda-city-2021-2026-tpe-floor-mats-premium-main-illust-1e8655d9dd.png",
+        "/media/products/honda-city-2021-2026-tpe-floor-mats-premium-fitted-illust-43187d0789.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 5,
+      "action": "existing_gallery_append",
+      "sku": "CC-LGT-103",
+      "slug": "honda-civic-back-bumper-aesthetic-drl-2018-2020",
+      "url": "https://crazzycars.pk/honda-civic-back-bumper-aesthetic-drl-2018-2020",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 6099,
+      "regular": 6999,
+      "stock": 10,
+      "primary_retained": "/media/products/honda-civic-back-bumper-aesthetic-drl-2018-2020-1-26a866a0f9.webp",
+      "appended": [
+        "/media/products/honda-civic-back-bumper-aesthetic-drl-2018-2020-main-illust-4297377067.png",
+        "/media/products/honda-civic-back-bumper-aesthetic-drl-2018-2020-fitted-illust-67b753bfea.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 6,
+      "action": "existing_gallery_append",
+      "sku": "CC-LGT-105",
+      "slug": "honda-civic-eyebrow-headlight-in-pair-2018-2021",
+      "url": "https://crazzycars.pk/honda-civic-eyebrow-headlight-in-pair-2018-2021",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 8500,
+      "regular": 9000,
+      "stock": 10,
+      "primary_retained": "/media/products/honda-civic-eyebrow-headlight-in-pair-2018-2021-1-99c87cf18f.webp",
+      "appended": [
+        "/media/products/honda-civic-eyebrow-headlight-in-pair-2018-2021-main-illust-f6e804056c.png",
+        "/media/products/honda-civic-eyebrow-headlight-in-pair-2018-2021-fitted-illust-77344f0909.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 7,
+      "action": "existing_gallery_append",
+      "sku": "CC-0086",
+      "slug": "honda-civic-x-2016-2021-ativus-style-body-kit-d3",
+      "url": "https://crazzycars.pk/honda-civic-x-2016-2021-ativus-style-body-kit-d3",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 15499,
+      "regular": 18999,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-civic-x-2016-2021-ativus-style-body-kit-d3-main-8dfe6295e4.webp",
+      "appended": [
+        "/media/products/honda-civic-x-2016-2021-ativus-style-body-kit-d3-main-illust-4604e12955.png",
+        "/media/products/honda-civic-x-2016-2021-ativus-style-body-kit-d3-fitted-illust-ff3a389bda.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 8,
+      "action": "existing_gallery_append",
+      "sku": "CC-0085",
+      "slug": "honda-civic-x-2016-2021-ativus-style-body-kit-d7-4pcs",
+      "url": "https://crazzycars.pk/honda-civic-x-2016-2021-ativus-style-body-kit-d7-4pcs",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 15499,
+      "regular": 19999,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-civic-x-2016-2021-ativus-style-body-kit-d7-4pcs-main-5407926335.webp",
+      "appended": [
+        "/media/products/honda-civic-x-2016-2021-ativus-style-body-kit-d7-4pcs-main-illust-fc3b57be61.png",
+        "/media/products/honda-civic-x-2016-2021-ativus-style-body-kit-d7-4pcs-fitted-illust-34a1c82b9e.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 9,
+      "action": "existing_gallery_append",
+      "sku": "CC-0083",
+      "slug": "honda-civic-x-2016-2021-body-kit-d1",
+      "url": "https://crazzycars.pk/honda-civic-x-2016-2021-body-kit-d1",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 12999,
+      "regular": 16999,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-civic-x-2016-2021-body-kit-d1-main-8cea96778b.webp",
+      "appended": [
+        "/media/products/honda-civic-x-2016-2021-body-kit-d1-main-illust-dbf4c91cc2.png",
+        "/media/products/honda-civic-x-2016-2021-body-kit-d1-fitted-illust-29fe944fd3.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 10,
+      "action": "existing_gallery_append",
+      "sku": "CC-0070",
+      "slug": "honda-civic-x-2016-2021-side-splitter-abs",
+      "url": "https://crazzycars.pk/honda-civic-x-2016-2021-side-splitter-abs",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 4499,
+      "regular": 5500,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-civic-x-2016-2021-side-splitter-abs-1-936381b60a.webp",
+      "appended": [
+        "/media/products/honda-civic-x-2016-2021-side-splitter-abs-main-illust-e52e978866.png",
+        "/media/products/honda-civic-x-2016-2021-side-splitter-abs-fitted-illust-486836e8fd.png"
+      ],
+      "hold_note": "Title/box identity conflict: pack shows front splitter; live listing is Side Splitter ABS — gallery append only; identity still held",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 11,
+      "action": "existing_gallery_append",
+      "sku": "CC-0063",
+      "slug": "suzuki-swift-2022-2024-rs-style-body-kit-fibreglass",
+      "url": "https://crazzycars.pk/suzuki-swift-2022-2024-rs-style-body-kit-fibreglass",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 13999,
+      "regular": 17500,
+      "stock": 48,
+      "primary_retained": "/media/products/suzuki-swift-2022-2024-rs-style-body-kit-fibreglass-1-55a1d57c70.webp",
+      "appended": [
+        "/media/products/suzuki-swift-2022-2024-rs-style-body-kit-fibreglass-main-illust-e990cb37d5.png",
+        "/media/products/suzuki-swift-2022-2024-rs-style-body-kit-fibreglass-fitted-illust-7e3d827364.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 12,
+      "action": "existing_gallery_append",
+      "sku": "CC-0059",
+      "slug": "toyota-aqua-2012-2015-complete-body-kit",
+      "url": "https://crazzycars.pk/toyota-aqua-2012-2015-complete-body-kit",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 12999,
+      "regular": 14999,
+      "stock": 50,
+      "primary_retained": "/media/products/toyota-aqua-2012-2015-complete-body-kit-main-b155848442.webp",
+      "appended": [
+        "/media/products/toyota-aqua-2012-2015-complete-body-kit-main-illust-6cb67846cc.png",
+        "/media/products/toyota-aqua-2012-2015-complete-body-kit-fitted-illust-7272312050.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 13,
+      "action": "existing_gallery_append",
+      "sku": "CC-0092",
+      "slug": "toyota-corolla-2012-2014-black-canadian-style-front-grille",
+      "url": "https://crazzycars.pk/toyota-corolla-2012-2014-black-canadian-style-front-grille",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 8500,
+      "regular": 10500,
+      "stock": 48,
+      "primary_retained": "/media/products/toyota-corolla-2012-2014-black-canadian-style-front-grille-main-cd27ba969d.webp",
+      "appended": [
+        "/media/products/toyota-corolla-2012-2014-black-canadian-style-front-grille-main-illust-cd4cf47ba1.png",
+        "/media/products/toyota-corolla-2012-2014-black-canadian-style-front-grille-fitted-illust-c9239aaaf0.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 14,
+      "action": "existing_gallery_append",
+      "sku": "CC-0162",
+      "slug": "toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler",
+      "url": "https://crazzycars.pk/toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 5999,
+      "regular": 7499,
+      "stock": 50,
+      "primary_retained": "/media/products/toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler-1-279da88c15.webp",
+      "appended": [
+        "/media/products/toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler-main-illust-7cdbf4329c.png",
+        "/media/products/toyota-corolla-e140-2009-2013-ducktail-trunk-spoiler-fitted-illust-130a664152.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 15,
+      "action": "existing_gallery_append",
+      "sku": "CC-LGT-102",
+      "slug": "toyota-corolla-premium-fog-lights-with-covers-2015-2022",
+      "url": "https://crazzycars.pk/toyota-corolla-premium-fog-lights-with-covers-2015-2022",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 5999,
+      "regular": 6999,
+      "stock": 10,
+      "primary_retained": "/media/products/toyota-corolla-premium-fog-lights-with-covers-2015-2022-1-e9af7872c4.webp",
+      "appended": [
+        "/media/products/toyota-corolla-premium-fog-lights-with-covers-2015-2022-main-illust-b9b6123efe.png",
+        "/media/products/toyota-corolla-premium-fog-lights-with-covers-2015-2022-fitted-illust-f52a03294b.png"
+      ],
+      "hold_note": "Fog covers span Corolla pre/facelift; illustration is one bumper only",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 16,
+      "action": "existing_gallery_append",
+      "sku": "CC-EXT-128",
+      "slug": "toyota-mark-x-trd-style-body-kit-2004-2009-unpainted-fiberglass",
+      "url": "https://crazzycars.pk/toyota-mark-x-trd-style-body-kit-2004-2009-unpainted-fiberglass",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 14999,
+      "regular": 19999,
+      "stock": 10,
+      "primary_retained": "/media/products/toyota-mark-x-trd-style-body-kit-2004-2009-unpainted-fibergl-1-7283a5cfc9.webp",
+      "appended": [
+        "/media/products/toyota-mark-x-trd-style-body-kit-2004-2009-unpainted-fiberglass-main-illust-496e9e381b.png",
+        "/media/products/toyota-mark-x-trd-style-body-kit-2004-2009-unpainted-fiberglass-fitted-illust-790eca9e58.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 17,
+      "action": "existing_gallery_append",
+      "sku": "CC-EXT-134",
+      "slug": "toyota-mark-x-vertex-style-body-kit-2006-2009",
+      "url": "https://crazzycars.pk/toyota-mark-x-vertex-style-body-kit-2006-2009",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 16999,
+      "regular": 26000,
+      "stock": 10,
+      "primary_retained": "/media/products/toyota-mark-x-vertex-style-body-kit-2006-2009-1-46cb71cd8a.webp",
+      "appended": [
+        "/media/products/toyota-mark-x-vertex-style-body-kit-2006-2009-main-illust-c48bee55f4.png",
+        "/media/products/toyota-mark-x-vertex-style-body-kit-2006-2009-fitted-illust-294564e4de.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 18,
+      "action": "existing_gallery_append",
+      "sku": "CC-PRI-MIR-BAT-17",
+      "slug": "toyota-prius-2017-2021-batman-style-side-mirror-covers",
+      "url": "https://crazzycars.pk/toyota-prius-2017-2021-batman-style-side-mirror-covers",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 4090,
+      "regular": 5499,
+      "stock": 25,
+      "primary_retained": "/media/products/toyota-prius-2017-2021-batman-style-side-mirror-covers-1-1793403567230-878238a5.webp",
+      "appended": [
+        "/media/products/toyota-prius-2017-2021-batman-style-side-mirror-covers-main-illust-9c80c66811.png",
+        "/media/products/toyota-prius-2017-2021-batman-style-side-mirror-covers-fitted-illust-8a49ae4c35.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 19,
+      "action": "existing_gallery_append",
+      "sku": "CC-LGT-104",
+      "slug": "universal-led-flash-lights-cd-076",
+      "url": "https://crazzycars.pk/universal-led-flash-lights-cd-076",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 1390,
+      "regular": 2000,
+      "stock": 10,
+      "primary_retained": "/media/products/universal-led-flash-lights-cd-076-1-1354cb748c.webp",
+      "appended": [
+        "/media/products/universal-led-flash-lights-cd-076-main-illust-e7d63670e1.png",
+        "/media/products/universal-led-flash-lights-cd-076-fitted-illust-b682b446c2.png"
+      ],
+      "hold_note": "Strobe legality / public-road use unverified",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 20,
+      "action": "existing_gallery_append",
+      "sku": "CC-0091",
+      "slug": "honda-city-2008-2014-complete-body-kit",
+      "url": "https://crazzycars.pk/honda-city-2008-2014-complete-body-kit",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 13999,
+      "regular": 17000,
+      "stock": 49,
+      "primary_retained": "/media/products/honda-city-2008-2014-complete-body-kit-1-8864c8b1cd.webp",
+      "appended": [
+        "/media/products/honda-city-2008-2014-complete-body-kit-main-illust-f55f0e3190.png",
+        "/media/products/honda-city-2008-2014-complete-body-kit-fitted-illust-a1daad0ccd.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 21,
+      "action": "existing_gallery_append",
+      "sku": "CC-0089",
+      "slug": "honda-city-2015-2021-modulo-style-body-kit-d1",
+      "url": "https://crazzycars.pk/honda-city-2015-2021-modulo-style-body-kit-d1",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 13499,
+      "regular": 17499,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-city-2015-2021-modulo-style-body-kit-d1-1-618aa4e996.webp",
+      "appended": [
+        "/media/products/honda-city-2015-2021-modulo-style-body-kit-d1-main-illust-edaebf0365.png",
+        "/media/products/honda-city-2015-2021-modulo-style-body-kit-d1-fitted-illust-ea11807c1d.png"
+      ],
+      "hold_note": "PK City year-range vs GM6 illustration conflict — fitment not verified for full range",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 22,
+      "action": "existing_gallery_append",
+      "sku": "CC-EXT-113",
+      "slug": "honda-city-premium-fog-lights-with-covers-2020-2022",
+      "url": "https://crazzycars.pk/honda-city-premium-fog-lights-with-covers-2020-2022",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 6999,
+      "regular": 9000,
+      "stock": 10,
+      "primary_retained": "/media/products/honda-city-premium-fog-lights-with-covers-2020-2022-1-9b72fdc3af.webp",
+      "appended": [
+        "/media/products/honda-city-premium-fog-lights-with-covers-2020-2022-main-illust-97c02e00a4.png",
+        "/media/products/honda-city-premium-fog-lights-with-covers-2020-2022-fitted-illust-6f74a19ac2.png"
+      ],
+      "hold_note": "City fog covers span gen change; illustration is 2022 GM6 only",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 23,
+      "action": "existing_gallery_append",
+      "sku": "CC-EXT-116",
+      "slug": "honda-civic-front-bumper-mustang-drl-2018-2020",
+      "url": "https://crazzycars.pk/honda-civic-front-bumper-mustang-drl-2018-2020",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 10999,
+      "regular": 13999,
+      "stock": 10,
+      "primary_retained": "/media/products/honda-civic-front-bumper-mustang-drl-2018-2020-1-4d8ecf97b8.webp",
+      "appended": [
+        "/media/products/honda-civic-front-bumper-mustang-drl-2018-2020-main-illust-4c6848d7c4.png",
+        "/media/products/honda-civic-front-bumper-mustang-drl-2018-2020-fitted-illust-56393c699d.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 24,
+      "action": "existing_gallery_append",
+      "sku": "CC-0077",
+      "slug": "honda-civic-rebirth-2012-2015-complete-body-kit",
+      "url": "https://crazzycars.pk/honda-civic-rebirth-2012-2015-complete-body-kit",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 12999,
+      "regular": 17000,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-civic-rebirth-2012-2015-complete-body-kit-main-f3b5a0c490.webp",
+      "appended": [
+        "/media/products/honda-civic-rebirth-2012-2015-complete-body-kit-main-illust-e9c1404e48.png",
+        "/media/products/honda-civic-rebirth-2012-2015-complete-body-kit-fitted-illust-06bcbeb99a.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 25,
+      "action": "existing_gallery_append",
+      "sku": "CC-0080",
+      "slug": "honda-civic-reborn-2014-2015-modulo-style-body-kit",
+      "url": "https://crazzycars.pk/honda-civic-reborn-2014-2015-modulo-style-body-kit",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 12999,
+      "regular": 17000,
+      "stock": 49,
+      "primary_retained": "/media/products/honda-civic-reborn-2014-2015-modulo-style-body-kit-main-efb0e9f9af.webp",
+      "appended": [
+        "/media/products/honda-civic-reborn-2014-2015-modulo-style-body-kit-main-illust-cc284c8241.png",
+        "/media/products/honda-civic-reborn-2014-2015-modulo-style-body-kit-fitted-illust-6b26ff8894.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 26,
+      "action": "existing_gallery_append",
+      "sku": "CC-0072",
+      "slug": "honda-civic-reborn-2006-2011-body-kit-d3",
+      "url": "https://crazzycars.pk/honda-civic-reborn-2006-2011-body-kit-d3",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 12999,
+      "regular": 16999,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-civic-reborn-2006-2011-body-kit-d3-main-fb15ebfc95.webp",
+      "appended": [
+        "/media/products/honda-civic-reborn-2006-2011-body-kit-d3-main-illust-c04656db52.png",
+        "/media/products/honda-civic-reborn-2006-2011-body-kit-d3-fitted-illust-150d1d7380.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 27,
+      "action": "existing_gallery_append",
+      "sku": "CC-0071",
+      "slug": "honda-civic-reborn-2006-2011-sportline-front-splitter-canards-red-black",
+      "url": "https://crazzycars.pk/honda-civic-reborn-2006-2011-sportline-front-splitter-canards-red-black",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 13500,
+      "regular": 17500,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-civic-reborn-2006-2011-sportline-front-splitter-canards-red-black-main-35eb1abc9e.webp",
+      "appended": [
+        "/media/products/honda-civic-reborn-2006-2011-sportline-front-splitter-canards-red-black-main-illust-d7a6afe7e6.png",
+        "/media/products/honda-civic-reborn-2006-2011-sportline-front-splitter-canards-red-black-fitted-illust-5a7f54d05c.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 28,
+      "action": "existing_gallery_append",
+      "sku": "CC-0151",
+      "slug": "honda-civic-reborn-ducktail-spoiler",
+      "url": "https://crazzycars.pk/honda-civic-reborn-ducktail-spoiler",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 5999,
+      "regular": 7449,
+      "stock": 49,
+      "primary_retained": "/media/products/honda-civic-reborn-ducktail-spoiler-main-401da766ac.webp",
+      "appended": [
+        "/media/products/honda-civic-reborn-ducktail-spoiler-main-illust-be38f4b5d8.png",
+        "/media/products/honda-civic-reborn-ducktail-spoiler-fitted-illust-5ac64d5bf3.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 29,
+      "action": "existing_gallery_append",
+      "sku": "CC-0075",
+      "slug": "honda-civic-reborn-2007-front-rear-body-kit-with-side-skirts",
+      "url": "https://crazzycars.pk/honda-civic-reborn-2007-front-rear-body-kit-with-side-skirts",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 12499,
+      "regular": 14999,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-civic-reborn-2007-front-rear-body-kit-with-side-skirts-main-704427e559.webp",
+      "appended": [
+        "/media/products/honda-civic-reborn-2007-front-rear-body-kit-with-side-skirts-main-illust-2907a785ea.png",
+        "/media/products/honda-civic-reborn-2007-front-rear-body-kit-with-side-skirts-fitted-illust-a429ce2131.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 30,
+      "action": "existing_gallery_append",
+      "sku": "CC-0079",
+      "slug": "honda-civic-x-2016-2021-body-kit-d2",
+      "url": "https://crazzycars.pk/honda-civic-x-2016-2021-body-kit-d2",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 12999,
+      "regular": 16999,
+      "stock": 50,
+      "primary_retained": "/media/products/honda-civic-x-2016-2021-body-kit-d2-main-3bb4fbb673.webp",
+      "appended": [
+        "/media/products/honda-civic-x-2016-2021-body-kit-d2-main-illust-b3ee6cca25.png",
+        "/media/products/honda-civic-x-2016-2021-body-kit-d2-fitted-illust-c642619a69.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 31,
+      "action": "existing_gallery_append",
+      "sku": "CC-SAL-EXT-RFS-RS-19",
+      "slug": "suzuki-alto-rs-rear-roof-spoiler-2019-2026",
+      "url": "https://crazzycars.pk/suzuki-alto-rs-rear-roof-spoiler-2019-2026",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 4999,
+      "regular": 6000,
+      "stock": 50,
+      "primary_retained": "/media/products/suzuki-alto-rs-rear-roof-spoiler-2019-2026-main-e2872c6b6e.webp",
+      "appended": [
+        "/media/products/suzuki-alto-rs-rear-roof-spoiler-2019-2026-main-illust-d09f01364a.png",
+        "/media/products/suzuki-alto-rs-rear-roof-spoiler-2019-2026-fitted-illust-e764056452.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 32,
+      "action": "existing_gallery_append",
+      "sku": "CC-0126",
+      "slug": "toyota-corolla-2008-2013-sequential-side-mirror-indicators",
+      "url": "https://crazzycars.pk/toyota-corolla-2008-2013-sequential-side-mirror-indicators",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 4999,
+      "regular": 7500,
+      "stock": 49,
+      "primary_retained": "/media/products/toyota-corolla-2008-2013-sequential-side-mirror-indicators-main-a2da09cd73.webp",
+      "appended": [
+        "/media/products/toyota-corolla-2008-2013-sequential-side-mirror-indicators-main-illust-cf4941adee.png",
+        "/media/products/toyota-corolla-2008-2013-sequential-side-mirror-indicators-fitted-illust-f7cb7b9e25.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 33,
+      "action": "existing_gallery_append",
+      "sku": "CC-0041",
+      "slug": "toyota-corolla-2012-2014-body-kit-fibreglass",
+      "url": "https://crazzycars.pk/toyota-corolla-2012-2014-body-kit-fibreglass",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 13999,
+      "regular": 17999,
+      "stock": 50,
+      "primary_retained": "/media/products/toyota-corolla-2012-2014-body-kit-fibreglass-1-deddbfafb7.webp",
+      "appended": [
+        "/media/products/toyota-corolla-2012-2014-body-kit-fibreglass-main-illust-8a14a60dae.png",
+        "/media/products/toyota-corolla-2012-2014-body-kit-fibreglass-fitted-illust-dd88228149.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 34,
+      "action": "existing_gallery_append",
+      "sku": "CC-0054",
+      "slug": "toyota-corolla-2015-2017-complete-body-kit-d1",
+      "url": "https://crazzycars.pk/toyota-corolla-2015-2017-complete-body-kit-d1",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 12999,
+      "regular": 15000,
+      "stock": 49,
+      "primary_retained": "/media/products/toyota-corolla-2015-2017-complete-body-kit-d1-1-f1272fb91b.webp",
+      "appended": [
+        "/media/products/toyota-corolla-2015-2017-complete-body-kit-d1-main-illust-e32a5b5694.png",
+        "/media/products/toyota-corolla-2015-2017-complete-body-kit-d1-fitted-illust-ce27969b3c.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 35,
+      "action": "existing_gallery_append",
+      "sku": "CC-0159",
+      "slug": "toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+      "url": "https://crazzycars.pk/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 3999,
+      "regular": 5000,
+      "stock": 50,
+      "primary_retained": "/media/products/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs-1-b7153da042.webp",
+      "appended": [
+        "/media/products/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs-main-illust-66f5a87e82.png",
+        "/media/products/toyota-corolla-2015-2026-rs-style-trunk-spoiler-abs-fitted-illust-19d92981b4.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 36,
+      "action": "existing_gallery_append",
+      "sku": "CC-0165",
+      "slug": "toyota-corolla-e140-2009-2012-carbon-side-mirror-cover",
+      "url": "https://crazzycars.pk/toyota-corolla-e140-2009-2012-carbon-side-mirror-cover",
+      "status": "active",
+      "price_source": "live_preserved",
+      "sale": 3199,
+      "regular": 4999,
+      "stock": 44,
+      "primary_retained": "/media/products/toyota-corolla-e140-2009-2012-carbon-side-mirror-cover-1-29273cfed1.webp",
+      "appended": [
+        "/media/products/toyota-corolla-e140-2009-2012-carbon-side-mirror-cover-main-illust-1bb4d8772e.png",
+        "/media/products/toyota-corolla-e140-2009-2012-carbon-side-mirror-cover-fitted-illust-83cb74da6d.png"
+      ],
+      "hold_note": "AI illustrations — stock/fitment not verified by these images",
+      "fitment_verified": false,
+      "stock_match_verified": false
+    },
+    {
+      "id": 37,
+      "action": "category_image_would_update",
+      "type": "category_asset",
+      "slug": "fender-light",
+      "url": "https://crazzycars.pk/categories/fender-light",
+      "previous_image": "/media/categories/fender-light-e5f7fd9bd0.webp",
+      "proposed_image": "/media/categories/fender-light-illust-e384eb2c62.png",
+      "hold_note": "Category collage only — not a sellable product / not inventory proof"
+    },
+    {
+      "id": 38,
+      "action": "category_image_would_update",
+      "type": "category_asset",
+      "slug": "rear-reflectors",
+      "url": "https://crazzycars.pk/categories/rear-reflectors",
+      "previous_image": "/media/categories/rear-reflectors-09cd624aca.webp",
+      "proposed_image": "/media/categories/rear-reflectors-illust-162c164210.png",
+      "hold_note": "Category collage only — not a sellable product / not inventory proof"
+    },
+    {
+      "id": 39,
+      "action": "category_image_would_update",
+      "type": "category_asset",
+      "slug": "utility",
+      "url": "https://crazzycars.pk/categories/utility",
+      "previous_image": "/media/products/air-compressor-dual-cylinder-full-kit-with-box-auto-inflator-1-7faaec6175.webp",
+      "proposed_image": "/media/categories/utility-illust-be7eaaaf2c.png",
+      "hold_note": "Category collage only — not a sellable product / not inventory proof"
+    }
+  ]
+}
