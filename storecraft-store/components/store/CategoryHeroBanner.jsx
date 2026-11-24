@@ -77,9 +77,8 @@ export function CategoryHeroBanner({ category, subcategories, products, brand })
                 src={logoUrl}
                 alt={storeName || "CrazzyCars.pk"}
                 className="cat-hero__brand-logo"
-                width={40}
-                height={40}
-                loading="lazy"
+                width={34}
+                height={34}
                 decoding="async"
                 fetchPriority="low"
               />

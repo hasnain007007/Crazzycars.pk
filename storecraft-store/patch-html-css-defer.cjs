@@ -16,6 +16,10 @@
  * is disabled. It exists only for first paint; left on, its approximations override
  * the real stylesheet (it squashed the Shop-by-category mega menu to 72px and made the
  * header 28px taller). If a sheet fails to load, critical CSS stays as the fallback.
+ *
+ * Deploy guard: healthcheck.js fails the container if local home HTML lacks
+ * id="cc-css-defer" / id="cc-critical", and (via NEXT_PUBLIC_SITE_URL) if the
+ * Traefik edge response has no Content-Encoding gzip|br.
  */
 "use strict";
 

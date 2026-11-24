@@ -109,8 +109,12 @@ async function vehicleIdsWithProducts() {
 }
 
 function toEntry(headers, path, lastmod, changefreq, priority) {
+  // Final crawl URL only: strip trailing slashes except site root (Next 308s /sale/ → /sale).
+  const raw = String(path || "/");
+  const normalized =
+    raw === "/" ? "/" : raw.replace(/\/+$/, "") || "/";
   return {
-    loc: absoluteUrl(path, { headers }),
+    loc: absoluteUrl(normalized, { headers }),
     lastmod: lastmod || undefined,
     changefreq,
     priority,

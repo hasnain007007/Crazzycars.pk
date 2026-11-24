@@ -1,0 +1,246 @@
+{
+  "stats": {
+    "feed_items_total": 586,
+    "sampled": 200,
+    "over_1mb_in_sample": 107,
+    "png_in_sample": 105,
+    "largest_mb_in_sample": 2.47
+  },
+  "sample20": [
+    {
+      "id": "CC-R3-COROLLA-E140-FRONT-SMOOTH-BLACK",
+      "title": "Toyota Corolla E140 2009\u20132014 Smooth black front splitter",
+      "before": "https://crazzycars.pk/media/products/toyota-corolla-e140-2009-2014-smooth-black-front-splitter-main-e09d91f8.png",
+      "before_kb": 2529.8,
+      "after": "https://crazzycars.pk/media/products/toyota-corolla-e140-2009-2014-smooth-black-front-splitter-main-e09d91f8-1200.webp",
+      "after_status": 200,
+      "after_kb": 173.5,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-COROLLA-E140-FRONT-RED",
+      "title": "Toyota Corolla E140 2009\u20132014 Red-centre front splitter",
+      "before": "https://crazzycars.pk/media/products/toyota-corolla-e140-2009-2014-red-centre-front-splitter-main-12e26568.png",
+      "before_kb": 2455.3,
+      "after": "https://crazzycars.pk/media/products/toyota-corolla-e140-2009-2014-red-centre-front-splitter-main-12e26568-1200.webp",
+      "after_status": 200,
+      "after_kb": 160.8,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-X-FRONT-RED",
+      "title": "Honda Civic X 2016\u20132021 Red-Centre Front Splitter",
+      "before": "https://crazzycars.pk/media/products/honda-civic-x-2016-2021-red-centre-front-splitter-main-60b4cda4.png",
+      "before_kb": 2449.6,
+      "after": "https://crazzycars.pk/media/products/honda-civic-x-2016-2021-red-centre-front-splitter-main-60b4cda4-1200.webp",
+      "after_status": 200,
+      "after_kb": 171.6,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-COROLLA-E120-SIDE-RED",
+      "title": "Toyota Corolla E120 2002\u20132008 Red-line side skirts 4-piece set",
+      "before": "https://crazzycars.pk/media/products/toyota-corolla-e120-2002-2008-red-line-side-skirts-4-piece-set-main-7a7763f7.png",
+      "before_kb": 2428.8,
+      "after": "https://crazzycars.pk/media/products/toyota-corolla-e120-2002-2008-red-line-side-skirts-4-piece-set-main-7a7763f7-1200.webp",
+      "after_status": 200,
+      "after_kb": 164.6,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-11TH-SIDE-RED",
+      "title": "Honda Civic 11th Gen 2022\u20132026 Red-line side skirts 4-piece set",
+      "before": "https://crazzycars.pk/media/products/honda-civic-11th-gen-2022-2026-red-line-side-skirts-4-piece-set-main-fa03bf68.png",
+      "before_kb": 2410.0,
+      "after": "https://crazzycars.pk/media/products/honda-civic-11th-gen-2022-2026-red-line-side-skirts-4-piece-set-main-fa03bf68-1200.webp",
+      "after_status": 200,
+      "after_kb": 173.0,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-COROLLA-E120-SIDE-BLACK",
+      "title": "Toyota Corolla E120 2002\u20132008 Black side skirts 4-piece set",
+      "before": "https://crazzycars.pk/media/products/toyota-corolla-e120-2002-2008-black-side-skirts-4-piece-set-main-f5f08ad6.png",
+      "before_kb": 2403.4,
+      "after": "https://crazzycars.pk/media/products/toyota-corolla-e120-2002-2008-black-side-skirts-4-piece-set-main-f5f08ad6-1200.webp",
+      "after_status": 200,
+      "after_kb": 165.9,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-COROLLA-E140-SIDE-RED",
+      "title": "Toyota Corolla E140 2009\u20132014 Red-line side skirts 4-piece set",
+      "before": "https://crazzycars.pk/media/products/toyota-corolla-e140-2009-2014-red-line-side-skirts-4-piece-set-main-df651cec.png",
+      "before_kb": 2395.9,
+      "after": "https://crazzycars.pk/media/products/toyota-corolla-e140-2009-2014-red-line-side-skirts-4-piece-set-main-df651cec-1200.webp",
+      "after_status": 200,
+      "after_kb": 155.5,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-ES-SIDE-BLACK",
+      "title": "Honda Civic ES 2001\u20132005 Black side skirts 4-piece set",
+      "before": "https://crazzycars.pk/media/products/honda-civic-es-2001-2005-black-side-skirts-4-piece-set-main-b7dc7af7.png",
+      "before_kb": 2384.6,
+      "after": "https://crazzycars.pk/media/products/honda-civic-es-2001-2005-black-side-skirts-4-piece-set-main-b7dc7af7-1200.webp",
+      "after_status": 200,
+      "after_kb": 166.6,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-REBIRTH-SIDE-RED",
+      "title": "Honda Civic Rebirth 2012\u20132016 Red-Line Side Skirts 4PCS",
+      "before": "https://crazzycars.pk/media/products/honda-civic-rebirth-2012-2016-red-line-side-skirts-4pcs-main-e0b3235f.png",
+      "before_kb": 2378.4,
+      "after": "https://crazzycars.pk/media/products/honda-civic-rebirth-2012-2016-red-line-side-skirts-4pcs-main-e0b3235f-1200.webp",
+      "after_status": 200,
+      "after_kb": 156.4,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CITY-GM-FRONT-SMOOTH-BLACK",
+      "title": "Honda City GM 2009\u20132020 Smooth black front splitter",
+      "before": "https://crazzycars.pk/media/products/honda-city-gm-2009-2020-smooth-black-front-splitter-main-9a4479d7.png",
+      "before_kb": 2373.7,
+      "after": "https://crazzycars.pk/media/products/honda-city-gm-2009-2020-smooth-black-front-splitter-main-9a4479d7-1200.webp",
+      "after_status": 200,
+      "after_kb": 166.0,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-X-SIDE-BLACK",
+      "title": "Honda Civic X 2016\u20132021 Black Side Skirts 4PCS",
+      "before": "https://crazzycars.pk/media/products/honda-civic-x-2016-2021-black-side-skirts-4pcs-main-cb22860c.png",
+      "before_kb": 2371.9,
+      "after": "https://crazzycars.pk/media/products/honda-civic-x-2016-2021-black-side-skirts-4pcs-main-cb22860c-1200.webp",
+      "after_status": 200,
+      "after_kb": 160.3,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-ALTO-HA36-FRONT-RED",
+      "title": "Suzuki Alto HA36 2019\u20132026 Red-centre front splitter",
+      "before": "https://crazzycars.pk/media/products/suzuki-alto-ha36-2019-2026-red-centre-front-splitter-main-3d4d6b4f.png",
+      "before_kb": 2362.5,
+      "after": "https://crazzycars.pk/media/products/suzuki-alto-ha36-2019-2026-red-centre-front-splitter-main-3d4d6b4f-1200.webp",
+      "after_status": 200,
+      "after_kb": 159.4,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-ES-SIDE-RED",
+      "title": "Honda Civic ES 2001\u20132005 Red-line side skirts 4-piece set",
+      "before": "https://crazzycars.pk/media/products/honda-civic-es-2001-2005-red-line-side-skirts-4-piece-set-main-600e5a72.png",
+      "before_kb": 2361.2,
+      "after": "https://crazzycars.pk/media/products/honda-civic-es-2001-2005-red-line-side-skirts-4-piece-set-main-600e5a72-1200.webp",
+      "after_status": 200,
+      "after_kb": 164.5,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-ALTO-HA36-SIDE-RED",
+      "title": "Suzuki Alto HA36 2019\u20132026 Red-line side skirts 4-piece set",
+      "before": "https://crazzycars.pk/media/products/suzuki-alto-ha36-2019-2026-red-line-side-skirts-4-piece-set-main-ec800f5d.png",
+      "before_kb": 2361.2,
+      "after": "https://crazzycars.pk/media/products/suzuki-alto-ha36-2019-2026-red-line-side-skirts-4-piece-set-main-ec800f5d-1200.webp",
+      "after_status": 200,
+      "after_kb": 167.7,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CITY-2021-SIDE-RED",
+      "title": "Honda City 2021\u20132026 Red-line side skirts 4-piece set",
+      "before": "https://crazzycars.pk/media/products/honda-city-2021-2026-red-line-side-skirts-4-piece-set-main-9c2b1d09.png",
+      "before_kb": 2357.6,
+      "after": "https://crazzycars.pk/media/products/honda-city-2021-2026-red-line-side-skirts-4-piece-set-main-9c2b1d09-1200.webp",
+      "after_status": 200,
+      "after_kb": 164.9,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-REBIRTH-SIDE-BLACK",
+      "title": "Honda Civic Rebirth 2012\u20132016 Black Side Skirts 4PCS",
+      "before": "https://crazzycars.pk/media/products/honda-civic-rebirth-2012-2016-black-side-skirts-4pcs-main-43c760d9.png",
+      "before_kb": 2345.7,
+      "after": "https://crazzycars.pk/media/products/honda-civic-rebirth-2012-2016-black-side-skirts-4pcs-main-43c760d9-1200.webp",
+      "after_status": 200,
+      "after_kb": 145.5,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-X-REAR-CUT",
+      "title": "Honda Civic X 2016\u20132021 Cut-Style Rear Bumper Splitter Pair",
+      "before": "https://crazzycars.pk/media/products/honda-civic-x-2016-2021-cut-style-rear-bumper-splitter-pair-main-d2682a2e.png",
+      "before_kb": 2342.6,
+      "after": "https://crazzycars.pk/media/products/honda-civic-x-2016-2021-cut-style-rear-bumper-splitter-pair-main-d2682a2e-1200.webp",
+      "after_status": 200,
+      "after_kb": 144.5,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-X-SIDE-RED",
+      "title": "Honda Civic X 2016\u20132021 Red-Line Side Skirts 4PCS",
+      "before": "https://crazzycars.pk/media/products/honda-civic-x-2016-2021-red-line-side-skirts-4pcs-main-c50dac5c.png",
+      "before_kb": 2342.4,
+      "after": "https://crazzycars.pk/media/products/honda-civic-x-2016-2021-red-line-side-skirts-4pcs-main-c50dac5c-1200.webp",
+      "after_status": 200,
+      "after_kb": 160.1,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-ALTO-HA36-FRONT-SMOOTH-BLACK",
+      "title": "Suzuki Alto HA36 2019\u20132026 Smooth black front splitter",
+      "before": "https://crazzycars.pk/media/products/suzuki-alto-ha36-2019-2026-smooth-black-front-splitter-main-fd366767.png",
+      "before_kb": 2336.7,
+      "after": "https://crazzycars.pk/media/products/suzuki-alto-ha36-2019-2026-smooth-black-front-splitter-main-fd366767-1200.webp",
+      "after_status": 200,
+      "after_kb": 166.7,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    },
+    {
+      "id": "CC-R3-CIVIC-REBIRTH-FRONT-RED",
+      "title": "Honda Civic Rebirth 2012\u20132016 Red-Centre Front Splitter",
+      "before": "https://crazzycars.pk/media/products/honda-civic-rebirth-2012-2016-red-centre-front-splitter-main-399da8a3.png",
+      "before_kb": 2333.1,
+      "after": "https://crazzycars.pk/media/products/honda-civic-rebirth-2012-2016-red-centre-front-splitter-main-399da8a3-1200.webp",
+      "after_status": 200,
+      "after_kb": 150.5,
+      "watermark_suspect_filename": false,
+      "note": "use_1200"
+    }
+  ],
+  "merchant_center_checked": {
+    "docs": [
+      "https://support.google.com/merchants/answer/6324350",
+      "https://support.google.com/merchants/answer/12473903",
+      "https://support.google.com/merchants/answer/16989427"
+    ],
+    "limits": {
+      "max_file_size": "16 MB",
+      "max_resolution": "64 megapixels",
+      "min_recommended": "1500x1500 preferred; min 500x500 from 2027-01-31",
+      "formats": "JPEG, WebP, PNG, GIF, BMP, TIFF",
+      "no_promotional_overlays_watermarks": true
+    },
+    "why_1200": "Site already ships -1200.webp derivatives (~1200px). Cuts multi-MB PNG/WebP masters while staying well above 500px min and under 16MB. Fallback to master if derivative missing."
+  }
+}
