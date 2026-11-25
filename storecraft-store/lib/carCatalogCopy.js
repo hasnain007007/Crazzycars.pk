@@ -39,6 +39,8 @@ const VEHICLE_PHOTO_FALLBACK_SLUGS = new Set([
   "hyundai-tucson-hybrid-2025-present",
   "hyundai-santa-fe-hybrid-tm-facelift",
   "kia-sorento-um-third-generation",
+  "hyundai-elantra-ad-2016-2020",
+  "hyundai-sonata-n-line-2021-present",
 ]);
 
 /** @param {string} slug */
