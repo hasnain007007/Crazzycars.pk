@@ -28,9 +28,44 @@ export const RUN_COURIER_SPECIAL_INSTRUCTION_MAX = 190;
 /** Friendly label for Select API options (UI only). */
 export function runCourierApiLabel(api) {
   const v = String(api || "").trim();
-  if (/^leopard2$/i.test(v) || /^leopards$/i.test(v)) return "Leopards";
-  if (/^leopard$/i.test(v)) return "Leopard";
-  return v || "Trax";
+  if (!v) return "Trax";
+  // Digi / RC aliases → clean brand label (avoid "RunCourier-Tcs" in the dropdown).
+  const canon = canonicalizeRunCourierSelectTitle(v);
+  if (/^leopard2$/i.test(canon) || /^leopards$/i.test(canon)) return "Leopards";
+  if (/^leopard$/i.test(canon)) return "Leopard";
+  if (canon !== v) return canon;
+  return v;
+}
+
+/**
+ * Map Digi/RC portal titles onto our canonical Select API names.
+ * Keeps direct Trax/TCS/M&P ids; Digi rows still resolve via live carrier title when needed.
+ */
+export function canonicalizeRunCourierSelectTitle(raw) {
+  const v = String(raw || "").trim();
+  if (!v) return "";
+  const lower = v.toLowerCase().replace(/\s+/g, " ");
+  // Strip common Digi / RC prefixes: "RunCourier-trax", "RC-TCS", "Run Courier - M&P"
+  const stripped = lower
+    .replace(/^run\s*courier\s*[-_:.]?\s*/i, "")
+    .replace(/^rc\s*[-_:.]?\s*/i, "")
+    .trim();
+  const key = stripped || lower;
+  if (key === "auto") return "Auto";
+  if (key === "trax") return "Trax";
+  if (key === "tcs" || key === "tcs overnight") return "TCS";
+  if (key === "m&p" || key === "mnp" || key === "m and p" || key === "m & p") return "M&P";
+  if (key === "leopard2" || key === "leopards" || key === "leopard courier" || key === "leopards courier") {
+    return "Leopard2";
+  }
+  if (key === "leopard") return "Leopard2";
+  if (key === "daewoo") return "Daewoo";
+  if (key === "dastaq" || key === "dastaq logistics") return "Dastaq Logistics";
+  if (key === "ahl") return "AHL";
+  if (key === "bluex") return "bluex";
+  if (key === "dex") return "DEX";
+  // Unknown Digi-only title — keep original casing for exact api_vendor match.
+  return v;
 }
 
 /** Default Select API carriers shown in the portal dropdown (Trax first after Auto). */
@@ -162,10 +197,11 @@ export function resolveRunCourierPath(settingsCourier, key) {
 export function normalizeRunCourierApi(raw, fallback = "Auto") {
   const v = String(raw || "").trim();
   if (!v) return fallback;
-  const alias = RUN_COURIER_API_ALIASES[v.toLowerCase()];
+  const canon = canonicalizeRunCourierSelectTitle(v);
+  const alias = RUN_COURIER_API_ALIASES[canon.toLowerCase()] || RUN_COURIER_API_ALIASES[v.toLowerCase()];
   if (alias) return alias;
-  const hit = RUN_COURIER_APIS.find((a) => a.toLowerCase() === v.toLowerCase());
-  return hit || v;
+  const hit = RUN_COURIER_APIS.find((a) => a.toLowerCase() === canon.toLowerCase());
+  return hit || canon || v;
 }
 
 /** Digi titles like "RunCourier-leopard" / "leopard" count as Leopard for migrate/fallback. */
@@ -177,40 +213,51 @@ export function isLeopardSelectApi(raw) {
 
 export function displayCourierName(selectedApi) {
   const api = normalizeRunCourierApi(selectedApi, RUN_COURIER_DEFAULT_API);
-  if (!api || api.toLowerCase() === "auto") return "Leopard";
+  if (!api || api.toLowerCase() === "auto") return "Trax";
   if (isLeopardSelectApi(api)) return "Leopard";
-  if (/^tcs/i.test(api) || /tcs/i.test(api)) return "TCS";
-  if (/^trax/i.test(api) || /trax/i.test(api)) return "Trax";
-  if (/^(m&p|mnp)/i.test(api) || /m&p|mnp/i.test(api)) return "M&P";
-  if (/^daewoo/i.test(api)) return "Daewoo";
-  if (/^dastaq/i.test(api) || /dastaq/i.test(api)) return "Dastaq";
-  if (/^ahl/i.test(api)) return "AHL";
+  // Word-boundary checks — never treat "…tcs…" substring inside unrelated titles.
+  if (/^tcs\b/i.test(api)) return "TCS";
+  if (/^trax\b/i.test(api)) return "Trax";
+  if (/^(m&p|mnp)\b/i.test(api)) return "M&P";
+  if (/^daewoo\b/i.test(api)) return "Daewoo";
+  if (/^dastaq\b/i.test(api)) return "Dastaq";
+  if (/^ahl\b/i.test(api)) return "AHL";
+  if (/^dex\b/i.test(api)) return "DEX";
   return runCourierApiLabel(api);
 }
 
 /**
  * Resolve the Select API for a booking.
  * Never leave "Auto" — without api_vendor the portal picks an account default.
- * Prefers Trax when empty / Auto / unknown.
+ * Prefers Trax when empty / Auto.
  *
- * Soft-migrate: stored/default Leopard2 is remapped to Trax because live CreateOrder
- * on this account returns "does not service" for Karachi/Lahore via Leopard2/M&P.
- * Explicit Trax/TCS/M&P choices are kept. Service-fallback still retries other couriers.
+ * Explicit courier picks (Trax / TCS / Daewoo / Leopard2 / Digi titles) are kept as-is.
+ * Soft-remap Leopard→Trax only when opts.softMigrateLeopard is true (legacy Auto path).
  */
-export function resolveBookingSelectApi(raw, settingsDefault = "") {
+export function resolveBookingSelectApi(raw, settingsDefault = "", opts = {}) {
+  const softMigrateLeopard = opts.softMigrateLeopard === true;
   const fallback = normalizeRunCourierApi(
     settingsDefault || RUN_COURIER_DEFAULT_API,
     RUN_COURIER_DEFAULT_API
   );
-  let api = normalizeRunCourierApi(raw || fallback, fallback);
+  const rawTrim = String(raw || "").trim();
+  let api = normalizeRunCourierApi(rawTrim || fallback, fallback);
   if (!api || String(api).toLowerCase() === "auto") {
     api = RUN_COURIER_DEFAULT_API;
   }
-  // Digi dropdown may send "RunCourier-leopard" — same broken lane as Leopard2.
-  if (isLeopardSelectApi(api)) {
+  // Only remap Digi/direct Leopard when caller opts in (Auto booking), so an explicit
+  // "Leopards" pick is not silently rewritten to Trax → TCS fallback.
+  if (softMigrateLeopard && isLeopardSelectApi(api)) {
     api = RUN_COURIER_DEFAULT_API;
   }
   return api;
+}
+
+/** True when the admin explicitly chose a courier (not Auto / empty). */
+export function isExplicitRunCourierSelect(raw) {
+  const v = String(raw || "").trim();
+  if (!v) return false;
+  return String(canonicalizeRunCourierSelectTitle(v) || v).toLowerCase() !== "auto";
 }
 
 /** True when CreateOrder failed because this courier will not take the lane/service. */
@@ -229,21 +276,23 @@ export function isRunCourierCodRefusal(error) {
 
 /**
  * Pick a Select API value that exists in the live carriers dropdown.
- * Keeps Leopard2 preferred; maps aliases (Leopards / leopard) onto the list.
+ * Maps Digi/RC aliases onto canonical titles present in the list.
  */
 export function pickRunCourierSelectApi(preferred, carriers = []) {
-  const want = resolveBookingSelectApi(preferred, RUN_COURIER_DEFAULT_API);
+  const want = resolveBookingSelectApi(preferred, RUN_COURIER_DEFAULT_API, {
+    softMigrateLeopard: false,
+  });
   const list = Array.isArray(carriers) && carriers.length ? carriers : RUN_COURIER_APIS;
   const lower = (s) => String(s || "").toLowerCase();
   const exact = list.find((c) => lower(c) === lower(want));
   if (exact) return exact;
+  // Preferred Digi title → canonical already in list
+  const canonInList = list.find((c) => lower(canonicalizeRunCourierSelectTitle(c)) === lower(want));
+  if (canonInList) return want; // keep canonical value even if list still has Digi spelling
   if (/^leopard/i.test(want)) {
-    const l2 = list.find((c) => lower(c) === "leopard2");
-    if (l2) return l2;
-    const leopards = list.find((c) => lower(c) === "leopards");
-    if (leopards) return leopards;
+    const l2 = list.find((c) => lower(canonicalizeRunCourierSelectTitle(c)) === "leopard2");
+    if (l2) return "Leopard2";
   }
-  // Keep canonical Leopard2 even if portal list is still loading.
   return want;
 }
 
@@ -257,21 +306,27 @@ export function resolveRunCourierApiVendor(selectedApi, carrierRows = []) {
 
   const rows = Array.isArray(carrierRows) ? carrierRows : [];
   const rawLower = raw.toLowerCase();
-
-  // Exact title from live carrier list first (keeps digi "leopard" distinct from Leopard2)
-  const exact = rows.find((r) => String(r.title || "").toLowerCase() === rawLower);
-  if (exact?.id != null && String(exact.id).toLowerCase() !== "auto") {
-    const gw = exact.gateway_id != null ? exact.gateway_id : 0;
-    return `${exact.id}|${gw}`;
-  }
-
   const api = normalizeRunCourierApi(raw, "Auto");
   if (!api || api.toLowerCase() === "auto") return "";
 
-  const canon = rows.find((r) => String(r.title || "").toLowerCase() === api.toLowerCase());
-  if (canon?.id != null && String(canon.id).toLowerCase() !== "auto") {
-    const gw = canon.gateway_id != null ? canon.gateway_id : 0;
-    return `${canon.id}|${gw}`;
+  const vendorOf = (row) => {
+    if (row?.id == null || String(row.id).toLowerCase() === "auto") return "";
+    const gw = row.gateway_id != null ? row.gateway_id : 0;
+    return `${row.id}|${gw}`;
+  };
+
+  // Prefer direct (non-Digi) gateway when both Digi + direct rows match the brand.
+  // Digi gateway_id is typically > 0; direct Trax/TCS/M&P use gateway_id 0.
+  const matches = rows.filter((r) => {
+    const title = String(r.title || "").trim();
+    if (!title) return false;
+    if (title.toLowerCase() === rawLower || title.toLowerCase() === api.toLowerCase()) return true;
+    return canonicalizeRunCourierSelectTitle(title).toLowerCase() === api.toLowerCase();
+  });
+  if (matches.length) {
+    const direct = matches.find((r) => Number(r.gateway_id) === 0) || matches[0];
+    const v = vendorOf(direct);
+    if (v) return v;
   }
 
   if (RUN_COURIER_VENDOR_FALLBACK[api]) return RUN_COURIER_VENDOR_FALLBACK[api];
@@ -943,10 +998,13 @@ export function buildRunCourierPayload(order, bookingOptions = {}, settingsCouri
   const courier = settingsCourier || {};
   const addr = order?.shippingAddress || {};
   const customer = order?.customer || {};
-  // Always resolve to a real carrier (default Leopard2) — never Auto/empty (Trax-first portal).
+  // Always resolve to a real carrier — never Auto/empty (Trax-first portal).
+  // Keep explicit picks; only soft-migrate Leopard when booking as Auto.
+  const rawSelect = opts.selectedApi || opts.api || courier.runCourierDefaultApi;
   const selectedApi = resolveBookingSelectApi(
-    opts.selectedApi || opts.api || courier.runCourierDefaultApi,
-    courier.runCourierDefaultApi || RUN_COURIER_DEFAULT_API
+    rawSelect,
+    courier.runCourierDefaultApi || RUN_COURIER_DEFAULT_API,
+    { softMigrateLeopard: !isExplicitRunCourierSelect(rawSelect) }
   );
   const product = String(
     opts.product || opts.productType || courier.runCourierProductType || "Overnight"
@@ -1250,7 +1308,14 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     }
   }
 
-  // Auto-switch before CreateOrder when the selected courier clearly does not list the town.
+  // Auto-switch only when allowed (Auto select, or admin opted in). Explicit Trax/Daewoo/TCS
+  // picks must not silently become TCS — that was booking every Bagh/AK lane on TCS.
+  const allowCourierFallback =
+    bookingOptions?.allowCourierFallback === true ||
+    !isExplicitRunCourierSelect(
+      bookingOptions?.rawSelectedApi || bookingOptions?.selectedApi || bookingOptions?.api || ""
+    );
+
   if (notOnCourierList) {
     const coveredBy = await couriersCoveringCity(
       notOnCourierList.wanted,
@@ -1258,24 +1323,62 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
       settingsCourier,
       apiVendor
     ).catch(() => []);
-    const pick = pickPreferredCoveringCourier(coveredBy);
-    if (pick) {
-      autoFallback = {
-        from: selectedApi,
-        to: pick.title,
-        city: pick.city,
-        vendor: pick.vendor,
+    if (allowCourierFallback) {
+      const pick = pickPreferredCoveringCourier(coveredBy);
+      if (pick) {
+        autoFallback = {
+          from: selectedApi,
+          to: pick.title,
+          city: pick.city,
+          vendor: pick.vendor,
+        };
+        selectedApi = pick.title;
+        apiVendor = pick.vendor;
+        apiBody.api_vendor = pick.vendor;
+        apiBody.destination = pick.city;
+        apiBody.service_type = resolveRunCourierServiceForApi(
+          pick.title,
+          apiBody.service_type || apiBody.product,
+          apiBody.product
+        );
+        notOnCourierList = null;
+      }
+    } else if (!coveredBy.length) {
+      // Keep notOnCourierList for the error path below after CreateOrder attempt,
+      // or fail fast with a clear message.
+      const courierName = displayCourierName(requestedApi);
+      const nearest = suggestRunCourierCities(notOnCourierList.wanted, notOnCourierList.vendorCities, 4);
+      const parts = [
+        `${courierName} does not cover "${notOnCourierList.wanted}" on this Run Courier account.`,
+      ];
+      if (nearest.length) parts.push(`Nearest ${courierName} cities: ${nearest.join(", ")}.`);
+      parts.push("Pick another Select API, or tick “Allow auto-switch courier”.");
+      return {
+        success: false,
+        error: parts.join(" "),
+        selectedApi: requestedApi,
+        requestedApi,
+        apiVendor: apiVendor || "",
+        origin: apiBody.origin,
+        destination: notOnCourierList.wanted,
+        coveredBy: [],
+        autoFallback: null,
       };
-      selectedApi = pick.title;
-      apiVendor = pick.vendor;
-      apiBody.api_vendor = pick.vendor;
-      apiBody.destination = pick.city;
-      apiBody.service_type = resolveRunCourierServiceForApi(
-        pick.title,
-        apiBody.service_type || apiBody.product,
-        apiBody.product
-      );
-      notOnCourierList = null;
+    } else {
+      const courierName = displayCourierName(requestedApi);
+      return {
+        success: false,
+        error: `${courierName} does not cover "${notOnCourierList.wanted}". Book with ${coveredBy
+          .map((o) => `${o.title} (${o.city})`)
+          .join(" or ")}, or tick “Allow auto-switch courier”.`,
+        selectedApi: requestedApi,
+        requestedApi,
+        apiVendor: apiVendor || "",
+        origin: apiBody.origin,
+        destination: notOnCourierList.wanted,
+        coveredBy,
+        autoFallback: null,
+      };
     }
   }
 
@@ -1315,9 +1418,9 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     }
   }
 
-  // Lane/service refusals: city can be ON the courier list yet CreateOrder still says
-  // "does not service" (live: Leopard2/M&P for Karachi/Lahore). Walk Trax → TCS → …
-  if (!res.ok && isRunCourierServiceRefusal(res.error)) {
+  // Lane/service refusals: only walk Trax → TCS → … when fallback is allowed.
+  // Explicit courier picks must fail clearly instead of quietly becoming TCS.
+  if (!res.ok && isRunCourierServiceRefusal(res.error) && allowCourierFallback) {
     const triedVendors = new Set([String(apiBody.api_vendor || apiVendor || "")]);
     const attemptApis = [
       ...RUN_COURIER_SERVICE_FALLBACK_APIS.filter(
@@ -1751,26 +1854,31 @@ export async function fetchRunCourierCarriers({ settingsCourier } = {}) {
     carriersCache = { at: Date.now(), rows };
   }
   const list = rows.map((r) => r.title).filter(Boolean);
-  // Prefer human titles; ensure Auto first; de-dupe case-insensitively preferring first
+  // Collapse Digi/RC duplicates (RunCourier-Tcs, RC-TCS, Tcs) onto one canonical title
+  // so the dropdown no longer shows 3× TCS / Trax / Leopard.
   const unique = [];
-  const seen = new Set();
-  for (const title of list) {
-    const key = String(title).toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(String(title));
-  }
-  if (!unique.some((x) => String(x).toLowerCase() === "auto")) unique.unshift("Auto");
+  const seenCanon = new Set();
+  const pushUnique = (title) => {
+    const raw = String(title || "").trim();
+    if (!raw) return;
+    const canon = canonicalizeRunCourierSelectTitle(raw) || raw;
+    const key = String(canon).toLowerCase();
+    if (seenCanon.has(key)) return;
+    seenCanon.add(key);
+    // Prefer canonical spelling for known brands.
+    const preferred =
+      RUN_COURIER_APIS.find((a) => a.toLowerCase() === key) ||
+      (/^leopard2$/i.test(canon) ? "Leopard2" : canon);
+    unique.push(preferred);
+  };
 
-  // Portal Digi list often returns "leopard" / "bluex" / "Tcs" — not "Leopard2".
-  // Merge our canonical Select APIs so Leopard2, Trax, M&P, etc. always appear.
-  // "leopard" ≠ "leopard2" (different api_vendor); both can show.
-  for (const canonical of RUN_COURIER_APIS) {
-    const key = String(canonical).toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(canonical);
+  if (!list.some((x) => String(canonicalizeRunCourierSelectTitle(x) || x).toLowerCase() === "auto")) {
+    pushUnique("Auto");
   }
+  for (const title of list) pushUnique(title);
+
+  // Ensure direct Select APIs always appear even if Digi-only list came back.
+  for (const canonical of RUN_COURIER_APIS) pushUnique(canonical);
 
   if (!unique.length) {
     return { success: true, carriers: [...RUN_COURIER_APIS], rows: [], source: "fallback" };

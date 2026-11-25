@@ -65,6 +65,8 @@ export default function RunCourierBookingPanel({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [allowWithoutAdvance, setAllowWithoutAdvance] = useState(false);
+  /** When off (default), the selected courier is booked as-is — no silent Trax/TCS switch. */
+  const [allowCourierFallback, setAllowCourierFallback] = useState(false);
 
   const advanceUnpaid = isCodAdvanceUnpaid(order);
   const advanceRequired = Math.max(0, roundRupees(Number(order?.payment?.advanceRequired) || 0));
@@ -206,6 +208,7 @@ export default function RunCourierBookingPanel({
           orderId: order.id || order._id,
           rebook,
           selectedApi: pickRunCourierSelectApi(selectedApi, carriers),
+          allowCourierFallback,
           productType,
           serviceType,
           codAmount: cod,
@@ -219,9 +222,17 @@ export default function RunCourierBookingPanel({
       });
       const data = await res.json();
       if (!data.success) {
-        setError(data.error || "Booking failed");
+        const covered = Array.isArray(data.coveredBy) && data.coveredBy.length
+          ? ` Also covers: ${data.coveredBy.map((c) => c.title || c).join(", ")}.`
+          : "";
+        setError(`${data.error || "Booking failed"}${covered}`);
         toast.error(data.error || "Run Courier booking failed");
         return;
+      }
+      if (data.autoFallback?.from && data.autoFallback?.to) {
+        toast(
+          `Courier auto-switched ${data.autoFallback.from} → ${data.autoFallback.to} for ${data.autoFallback.city || dest}`
+        );
       }
       setSuccess(`Booked! Tracking: ${data.trackingNumber} (${data.selectedApi})`);
       toast.success(`Run Courier booked: ${data.trackingNumber}`);
@@ -454,6 +465,28 @@ export default function RunCourierBookingPanel({
                 </option>
               ))}
             </select>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 8,
+                marginTop: 8,
+                fontSize: 12,
+                color: "#475569",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={allowCourierFallback}
+                onChange={(e) => setAllowCourierFallback(e.target.checked)}
+                style={{ marginTop: 2 }}
+              />
+              <span>
+                Allow auto-switch courier if this one does not cover the city (may book Trax/TCS
+                instead of your selection). Leave off to keep the courier you picked.
+              </span>
+            </label>
           </div>
 
           <div>

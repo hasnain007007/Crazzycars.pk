@@ -609,6 +609,8 @@ export default function RunCourierApp() {
       body: JSON.stringify({
         orderId: id,
         selectedApi: api,
+        // Keep the selected courier — do not silent-switch to TCS/Trax.
+        allowCourierFallback: false,
         customerName: name,
         customerPhone: phone,
         cityName: cityForBook,

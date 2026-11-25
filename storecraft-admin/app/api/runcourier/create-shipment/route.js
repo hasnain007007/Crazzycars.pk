@@ -13,6 +13,7 @@ import {
   createRunCourierShipment,
   displayCourierName,
   fetchRunCourierLabel,
+  isExplicitRunCourierSelect,
   resolveBookingSelectApi,
   RUN_COURIER_DEFAULT_API,
   storefrontTrackingUrl,
@@ -170,11 +171,22 @@ export async function POST(request) {
       });
       order.markModified("timeline");
     }
+    const rawSelectedApi =
+      body.selectedApi || body.api || body.courierApi || settings?.courier?.runCourierDefaultApi || "";
+    const explicitCourier = isExplicitRunCourierSelect(rawSelectedApi);
+    // Never silent-switch Trax/Daewoo/… → TCS unless admin opted in or picked Auto.
+    const allowCourierFallback =
+      body.allowCourierFallback === true ||
+      body.autoSwitchCourier === true ||
+      !explicitCourier;
     const bookingOptions = {
       selectedApi: resolveBookingSelectApi(
-        body.selectedApi || body.api || body.courierApi || settings?.courier?.runCourierDefaultApi,
-        settings?.courier?.runCourierDefaultApi || RUN_COURIER_DEFAULT_API
+        rawSelectedApi,
+        settings?.courier?.runCourierDefaultApi || RUN_COURIER_DEFAULT_API,
+        { softMigrateLeopard: !explicitCourier }
       ),
+      rawSelectedApi: String(rawSelectedApi || "").trim(),
+      allowCourierFallback,
       productType: body.productType,
       serviceType: body.serviceType,
       pieces: body.pieces,
