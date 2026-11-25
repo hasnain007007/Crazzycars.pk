@@ -20,7 +20,7 @@ export const FOUNDER = {
   intro: [
     "Assalam-o-Alaikum, I'm Hussnain Kamran, the founder of CrazzyCars.pk.",
     "I started CrazzyCars in 2023 in Gujranwala so car owners across Pakistan can buy accessories that actually fit their car — body kits, LED lights and interior upgrades for cars like the Civic, Corolla, City, Swift and Alto — with honest photos, fitment help and delivery across Pakistan.",
-    "I'm also a software engineer, and I built the CrazzyCars website, order tracking and delivery system myself, so every order can be followed from booking to your door.",
+    "I'm also a software engineer, and I built the CrazzyCars website, order tracking and delivery system myself, so every order can be followed from booking to your door. And soon we will launch the CrazzyCars mobile app, to make finding the right part for your car, ordering and tracking your delivery even easier for you.",
   ],
   /**
    * "My story" — the owner's own voice. Only true, general statements: no invented
@@ -30,7 +30,7 @@ export const FOUNDER = {
   story: [
     "For most of us in Pakistan, a car is never just a machine. It is the first big thing a family saves for, the car that takes everyone to weddings and on Eid visits, the one you wash on Sunday morning and look back at after you park. When you want to make it a little more yours — a new spoiler, better lights, a cleaner interior — that wish deserves to be taken seriously.",
     "But buying car accessories online here has often meant guessing. Photos that don't match what arrives. Parts made for a different model. Sellers who reply quickly before you pay and go quiet after. I wanted to build the opposite of that: a shop where you know exactly what you are getting, for your exact car, from people who answer.",
-    "That is why I started CrazzyCars from Gujranwala in 2023. As a software engineer, I built everything behind it myself — the website, the car-by-car fitment pages, order tracking and the delivery system — because I wanted every customer, anywhere in Pakistan, to be able to see where their order is at any moment.",
+    "That is why I started CrazzyCars from Gujranwala in 2023. As a software engineer, I built everything behind it myself — the website, the car-by-car fitment pages, order tracking and the delivery system — because I wanted every customer, anywhere in Pakistan, to be able to see where their order is at any moment. The next step is our own mobile app, which we are building now, so CrazzyCars is always right there in your pocket.",
     "Every order that comes in is someone trusting a shop they have never visited, often with a booking advance in their hand. I never take that trust for granted. That is why my name, my face and my profiles are on this page. If something goes wrong, you don't have to wonder who is responsible — it is me, and I will make it right.",
   ],
   /** Only promises that match published store policy. */
