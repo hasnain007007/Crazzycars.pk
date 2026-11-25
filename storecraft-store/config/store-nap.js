@@ -40,12 +40,16 @@ export const STORE_NAP = {
   ],
   hoursDisplay: "Open 24 hours, 7 days",
   /** Canonical social URLs (must 200; no opaque share links). */
+  // Order matters: [0] Facebook, [1] Instagram, [2] TikTok (ContactPageView indexes them).
+  // facebook.com/crazzycars.pk is an OLD duplicate page (0 followers, owner's personal
+  // number) — the real page is the profile.php id below (verified 26 Nov 2026).
   sameAs: [
-    "https://www.facebook.com/crazzycars.pk",
+    "https://www.facebook.com/profile.php?id=61587132488377",
     "https://www.instagram.com/crazzycars.pk",
     "https://www.tiktok.com/@crazzycars.pk",
+    "https://www.linkedin.com/company/crazzycars-pk/",
   ],
-  facebookUrl: "https://www.facebook.com/crazzycars.pk",
+  facebookUrl: "https://www.facebook.com/profile.php?id=61587132488377",
   mapUrl: "https://g.page/r/CYWo8sid7vn5EBM",
 };
 

@@ -18,6 +18,7 @@ import {
 } from "../product-specs.mjs";
 import { STORE_NAP } from "../../config/store-nap.js";
 import { STORE_CONTACT } from "../../config/store-policy.js";
+import { FOUNDER, FOUNDER_PATH, founderLdId, founderSameAs } from "../../config/founder.js";
 import { toPlainTextWithTableSeparators } from "../sanitizeHtml.js";
 
 function site() {
@@ -683,7 +684,16 @@ export function organizationJsonLd(overrides = {}) {
   };
 
   const founding = String(overrides.foundingDate || "").trim();
-  if (founding) ld.foundingDate = founding;
+  ld.foundingDate = founding || String(FOUNDER.foundedYear);
+  // Real, named owner (see /founder) — Google E-E-A-T "who is behind this site".
+  ld.founder = {
+    "@type": "Person",
+    "@id": founderLdId(SITE),
+    name: FOUNDER.name,
+    jobTitle: FOUNDER.jobTitle,
+    url: `${SITE}${FOUNDER_PATH}`,
+    sameAs: founderSameAs(),
+  };
 
   const mapUrl = String(
     overrides.mapUrl || overrides.googleMapsUrl || STORE_NAP.mapUrl || ""

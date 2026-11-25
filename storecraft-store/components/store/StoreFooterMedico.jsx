@@ -7,6 +7,7 @@ import { resolveStoreLogoUrl, trimmedLogoUrl } from '@/lib/storeLogo'
 import { rewriteStorePath } from '@/lib/categoryHandleAliases'
 import { STORE_NAP, storeNapTelHref } from '@/config/store-nap'
 import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
+import { FOUNDER, FOUNDER_PATH } from '@/config/founder'
 
 /** Remap opaque Facebook share URLs to the canonical page URL. */
 function normalizeFooterSocialUrl(platform, url) {
@@ -37,6 +38,7 @@ const DEFAULT_CUSTOMER_CARE_LINKS = [
   { label: "Cash on Delivery", href: "/cash-on-delivery" },
   { label: "Contact", href: "/contact" },
   { label: "About CrazzyCars", href: "/about" },
+  { label: "Meet the Founder", href: FOUNDER_PATH },
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "Terms & Conditions", href: "/terms-conditions" },
   { label: "Shipping Policy", href: "/shipping-policy" },
@@ -511,6 +513,13 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
                 >
                   {text}
                 </p>
+                <Link
+                  href={FOUNDER_PATH}
+                  className="footer-link"
+                  style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", display: "inline" }}
+                >
+                  Founded by {FOUNDER.name}
+                </Link>
                 {legalLinks.map((link, i) => (
                   <Link
                     key={i}

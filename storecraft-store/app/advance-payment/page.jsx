@@ -235,7 +235,14 @@ export default async function AdvancePaymentPage() {
             Account details are shown at checkout after you choose a payment method.
           </p>
         )}
-        {ownerNote ? <p className="adv-muted">{ownerNote}</p> : null}
+        {ownerNote ? (
+          <p className="adv-muted">
+            {ownerNote}{" "}
+            <Link href="/founder" style={{ color: "#c41e1e", fontWeight: 600, textDecoration: "underline" }}>
+              Meet the founder →
+            </Link>
+          </p>
+        ) : null}
         <p className="adv-important">
           <strong>Important:</strong> {c.safety}
         </p>

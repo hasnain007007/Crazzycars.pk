@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FOUNDER, FOUNDER_PATH, founderInitials } from "@/config/founder";
 import { COD_LINE, PREPAID_LINE, TRUST_LINE } from "@/lib/paymentCopy";
 import { formatPkrAmount } from "@/lib/storePolicyCopy";
 import { STORE_POLICY } from "@/config/store-policy";
@@ -168,6 +169,25 @@ export default function AboutPageView({ aboutPage }) {
             {p}
           </p>
         ))}
+
+        <Link
+          href={FOUNDER_PATH}
+          className="mt-8 flex items-center gap-4 rounded-lg border border-[#E5E5E5] p-4 hover:border-[#C41E1E]"
+        >
+          {FOUNDER.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={FOUNDER.photo} alt={FOUNDER.photoAlt} width={64} height={64} className="h-16 w-16 rounded-full object-cover" />
+          ) : (
+            <span aria-hidden className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#111111] font-heading text-xl font-bold text-white">
+              {founderInitials()}
+            </span>
+          )}
+          <span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-[#C41E1E]">Meet the founder</span>
+            <span className="block font-heading text-lg font-bold text-[#111111]">{FOUNDER.name}</span>
+            <span className="block text-sm text-[#555555]">Who runs CrazzyCars, our promise, and how to reach the owner →</span>
+          </span>
+        </Link>
 
         {stats.length ? (
           <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
