@@ -4,6 +4,10 @@
  * no personal phone, home address or CNIC here (complaints go through the official
  * WhatsApp line). Profiles verified in the owner's browser on 26 Nov 2026.
  */
+import { STORE_POLICY } from "./store-policy.js";
+
+const RETURNS_WINDOW_DAYS = STORE_POLICY.returns.windowDays;
+
 export const FOUNDER = {
   name: "Hussnain Kamran",
   firstName: "Hussnain",
@@ -25,8 +29,8 @@ export const FOUNDER = {
       text: "Not sure it fits? Send your car model and year on WhatsApp and we'll confirm fitment before you order.",
     },
     {
-      title: "7-day return if defective or wrong",
-      text: "If a part arrives defective or is not what you ordered, tell us within 7 days and we'll sort it out.",
+      title: "Return if defective or wrong",
+      text: `If a part arrives defective or is not what you ordered, tell us within ${RETURNS_WINDOW_DAYS} days and we'll sort it out.`,
     },
     {
       title: "Pay only to official accounts",
