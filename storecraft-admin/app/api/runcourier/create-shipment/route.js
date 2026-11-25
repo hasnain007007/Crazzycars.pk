@@ -25,7 +25,11 @@ import {
   fetchPostexLabel,
   storefrontTrackingUrl as postexStorefrontTrackingUrl,
 } from "@/lib/postex";
-import { buildRunCourierAirbillPdf } from "@/lib/runcourierLabelPdf";
+import {
+  airbillFieldsFromOrder,
+  buildRunCourierAirbillPdf,
+  buildStoreAirbillsPdf,
+} from "@/lib/runcourierLabelPdf";
 import { assertCodAdvanceAllowsDispatch } from "@/lib/codAdvanceGate";
 import { archiveCurrentTracking } from "@/lib/previousTrackings";
 
@@ -131,6 +135,9 @@ function applyPostexFallbackToOrder(order, { trackingNumber, label, adminName, r
   order.courier = "Postex";
   order.trackingUrl = url;
   order.runCourierApi = "";
+  // Drop stale Run Courier invoice HTML — otherwise Download Label rebuilds a
+  // Leopard/ECS airbill while the live tracking is already PostEx.
+  order.runCourierLabel = "";
   order.tracking = {
     number: tn,
     carrier: "Postex",
@@ -138,6 +145,9 @@ function applyPostexFallbackToOrder(order, { trackingNumber, label, adminName, r
     notifiedAt: null,
   };
   if (label) order.postexLabel = String(label);
+  if (!String(order.postexShipType || "").trim()) {
+    order.postexShipType = "Normal";
+  }
 
   const wasNotShipped = order.orderStatus !== "shipped" && order.orderStatus !== "delivered";
   if (wasNotShipped) {
@@ -410,6 +420,27 @@ export async function POST(request) {
           });
 
           const total = orderGrandTotal(order);
+          // Branded CrazzyCars airbill (Via PostEx / Normal) — never a leftover RC invoice.
+          let labelPdf = "";
+          try {
+            const fields = airbillFieldsFromOrder(order.toObject(), {
+              trackingNumber: postex.trackingNumber,
+              courier: "PostEx",
+              orderType: String(order.postexShipType || "Normal").trim() || "Normal",
+              settingsCourier: settings.courier || {},
+            });
+            const built = await buildStoreAirbillsPdf([
+              { fields, orderNumber: order.orderNumber || fields.orderId },
+            ]);
+            if (built.success && built.pdf?.length) {
+              labelPdf = Buffer.from(built.pdf).toString("base64");
+            }
+          } catch (e) {
+            console.error("[runcourier] postex fallback airbill:", e?.message || e);
+          }
+          if (!labelPdf && label && !String(label).startsWith("http")) {
+            labelPdf = String(label).replace(/^data:application\/pdf;base64,/, "");
+          }
           return NextResponse.json({
             success: true,
             message: `Run Courier cannot deliver ${result.origin || "origin"} → ${
@@ -425,11 +456,12 @@ export async function POST(request) {
               matchedCity,
             },
             trackingUrl: order.trackingUrl,
-            label: Boolean(label),
-            hasLabel: Boolean(label),
-            ...(label && !String(label).startsWith("http")
-              ? { labelPdfBase64: String(label).replace(/^data:application\/pdf;base64,/, "") }
-              : {}),
+            label: Boolean(labelPdf || label),
+            hasLabel: Boolean(labelPdf || label),
+            ...(labelPdf ? { labelPdfBase64: labelPdf } : {}),
+            labelDownloadUrl: `/api/postex/label?trackingNumber=${encodeURIComponent(
+              postex.trackingNumber
+            )}&orderId=${encodeURIComponent(orderId)}&download=1`,
             ...emailSummary,
             order: {
               id: order._id.toString(),

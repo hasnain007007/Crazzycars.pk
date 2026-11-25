@@ -156,8 +156,13 @@ function serializeOrder(doc, productImageById = null) {
     origin: orderOriginLabel(o) || "Direct",
     ...serializeCustomerNetwork(o),
     hasPostexLabel: Boolean(o.postexLabel),
-    hasRunCourierLabel: Boolean(o.runCourierLabel),
-    runCourierApi: o.runCourierApi || "",
+    // Hide stale Run Courier invoices once the live courier is PostEx.
+    hasRunCourierLabel:
+      Boolean(o.runCourierLabel) &&
+      !/postex/i.test(String(o.courier || o.tracking?.carrier || "")),
+    runCourierApi: /postex/i.test(String(o.courier || o.tracking?.carrier || ""))
+      ? ""
+      : o.runCourierApi || "",
     shippedAt: o.shippedAt || null,
     deliveredAt: o.deliveredAt || null,
     tracking: {

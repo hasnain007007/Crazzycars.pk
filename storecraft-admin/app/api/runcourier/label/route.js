@@ -3,11 +3,13 @@ import { dbConnect } from "@/lib/db";
 import { getRequestUser } from "@/lib/getRequestUser";
 import Order from "@/lib/models/Order.model";
 import Settings, { SETTINGS_SINGLETON_KEY } from "@/lib/models/Settings.model";
-import { fetchRunCourierLabel } from "@/lib/runcourier";
+import { fetchRunCourierLabel, isPostexOrder } from "@/lib/runcourier";
 import { prepareRunCourierInvoiceHtml } from "@/lib/runcourierInvoice";
 import {
+  airbillFieldsFromOrder,
   buildRunCourierAirbillPdf,
   buildRunCourierAirbillsPdf,
+  buildStoreAirbillsPdf,
 } from "@/lib/runcourierLabelPdf";
 
 export const dynamic = "force-dynamic";
@@ -74,10 +76,34 @@ export async function GET(request) {
     const labelJobs = [];
 
     if (orderIds.length) {
-      const orders = await Order.find({ _id: { $in: orderIds } })
-        .select("trackingNumber tracking runCourierLabel orderNumber runCourierApi")
-        .lean();
+      const orders = await Order.find({ _id: { $in: orderIds } }).lean();
+      // PostEx-current orders must never rebuild from a leftover Run Courier invoice
+      // (that printed Via Leopard + ECS Overnight with a PostEx tracking #).
+      const postexOrders = orders.filter((o) => isPostexOrder(o));
+      if (postexOrders.length === orders.length && orders.length) {
+        const items = postexOrders.map((order) => {
+          const tn = String(order.trackingNumber || order.tracking?.number || "").trim();
+          const fields = airbillFieldsFromOrder(order, {
+            trackingNumber: tn,
+            courier: "PostEx",
+            orderType: String(order.postexShipType || "Normal").trim() || "Normal",
+            settingsCourier: settings.courier || {},
+          });
+          return { fields, orderNumber: order.orderNumber || fields.orderId };
+        });
+        const built = await buildStoreAirbillsPdf(items);
+        if (!built.success || !built.pdf?.length) {
+          return NextResponse.json(
+            { success: false, error: built.error || "Could not build PostEx airbill." },
+            { status: 502 }
+          );
+        }
+        return pdfResponse(built.pdf, built.trackingNumber || trackingNumbers[0] || "shipment", {
+          download,
+        });
+      }
       for (const order of orders) {
+        if (isPostexOrder(order)) continue;
         const tn = String(order.trackingNumber || order.tracking?.number || "").trim();
         if (tn) trackingNumbers.push(tn);
         const link = String(order.runCourierLabel || "").trim();

@@ -73,26 +73,31 @@ export function normalizeCourierLabel(raw, hints = {}) {
   const tracking = String(hints.tracking || "").trim().toUpperCase();
   const rawStr = String(raw || "").trim();
 
-  // 1) Select API from booking (Leopard2, TCS, Trax, M&P, …)
+  // Tracking shape is authoritative when it clearly identifies the last-mile carrier.
+  // Stops PostEx CNs (14-digit) printing "Via Leopard" from a stale Select API / invoice.
+  if (/^DA\d+/i.test(tracking)) return "Leopard";
+  if (/^GW\d+/i.test(tracking)) {
+    const fromApiGw = prettyCarrierName(api);
+    return fromApiGw || "Leopard";
+  }
+  if (/^\d{10,}$/.test(tracking)) return "PostEx";
+
+  // Explicit PostEx on the order / opts beats a leftover Leopard2 Select API.
+  const fromRawEarly = prettyCarrierName(rawStr);
+  if (fromRawEarly === "PostEx") return "PostEx";
+
+  // Select API from booking (Leopard2, TCS, Trax, M&P, …)
   const fromApi = prettyCarrierName(api);
   if (fromApi) return fromApi;
 
-  // 2) "Run Courier (Leopard2)" → Leopard
+  // "Run Courier (Leopard2)" → Leopard
   const paren = rawStr.match(/run\s*courier\s*\(([^)]+)\)/i);
   if (paren) {
     const fromParen = prettyCarrierName(paren[1]);
     if (fromParen) return fromParen;
   }
 
-  // 3) Direct carrier string on the order
-  const fromRaw = prettyCarrierName(rawStr);
-  if (fromRaw) return fromRaw;
-
-  // 4) Tracking heuristics when Select API was not stored
-  if (/^DA\d+/i.test(tracking)) return "Leopard";
-  if (/^\d{10,}$/.test(tracking)) return "PostEx";
-  // GW* is Run Courier CN format — default Select API on this account is Leopard2
-  if (/^GW\d+/i.test(tracking)) return "Leopard";
+  if (fromRawEarly) return fromRawEarly;
 
   return "Courier";
 }
@@ -317,7 +322,9 @@ function parseAirbillFields(html) {
     pieces: valueAfter(lines, "No. of Pieces") || "1",
     product: scrubForeignBrand(product) || "Car accessories",
     instructions: scrubForeignBrand(valueAfter(lines, "Special Instruction") || ""),
-    courier: normalizeCourierLabel("", { tracking: tracking || "", runCourierApi: "Leopard2" }),
+    // Leave courier empty — caller fills via normalizeCourierLabel(runCourierApi).
+    // Never hardcode Leopard2 (that printed "Via Leopard" on PostEx rebooks).
+    courier: "",
   };
 }
 
@@ -1016,19 +1023,19 @@ export function airbillFieldsFromOrder(order, opts = {}) {
     String(opts.remarks || "").trim() ||
     String(order?.courierRemarks || "").trim() ||
     DEFAULT_POSTEX_REMARKS;
-  const courier = normalizeCourierLabel(
-    opts.courier || order?.runCourierApi || order?.courier || order?.tracking?.carrier || "",
-    {
-      tracking,
-      // Prefer the Select API (Leopard / TCS / Trax) over the portal brand.
-      runCourierApi: order?.runCourierApi || opts.runCourierApi || "",
-    }
-  );
+  const orderCarrier = String(order?.courier || order?.tracking?.carrier || "").trim();
+  const optsCourier = String(opts.courier || "").trim();
+  const isPostexShipment = /postex/i.test(optsCourier || orderCarrier) || /^\d{10,}$/.test(tracking);
+  const courier = normalizeCourierLabel(optsCourier || orderCarrier || order?.runCourierApi || "", {
+    tracking,
+    // PostEx shipments must not inherit a leftover Leopard2 Select API.
+    runCourierApi: isPostexShipment ? "" : order?.runCourierApi || opts.runCourierApi || "",
+  });
 
   return {
     tracking,
     date: formatAirbillDate(opts.date || order?.shippedAt || order?.updatedAt || new Date()),
-    services: String(opts.orderType || "Normal").trim() || "Normal",
+    services: String(opts.orderType || (isPostexShipment ? "Normal" : "") || "Normal").trim() || "Normal",
     origin: CRAZZYCARS_SHIPPER.originCity,
     destination,
     weight: "",

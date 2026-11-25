@@ -374,24 +374,27 @@ const RUN_COURIER_CARRIER_HINTS = [
 
 export function isRunCourierOrder(order) {
   if (!order) return false;
-  if (String(order.runCourierApi || "").trim()) return true;
-  if (String(order.runCourierLabel || "").trim()) return true;
   const carrier = String(order.courier || order.tracking?.carrier || "")
     .trim()
     .toLowerCase();
-  if (!carrier) return false;
+  // Current shipment wins — a stale runCourierLabel from an earlier attempt must not
+  // keep a PostEx-booked order classified as Run Courier (wrong Via / label / track).
   if (carrier.includes("postex")) return false;
+  if (String(order.runCourierApi || "").trim()) return true;
+  if (String(order.runCourierLabel || "").trim()) return true;
+  if (!carrier) return false;
   return RUN_COURIER_CARRIER_HINTS.some((h) => carrier.includes(h));
 }
 
 export function isPostexOrder(order) {
   if (!order) return false;
-  if (isRunCourierOrder(order)) return false;
   const carrier = String(order.courier || order.tracking?.carrier || "")
     .trim()
     .toLowerCase();
+  if (carrier.includes("postex")) return true;
+  if (isRunCourierOrder(order)) return false;
   if (!carrier || carrier === "postex") return true;
-  return carrier.includes("postex");
+  return false;
 }
 
 function pick(obj, ...keys) {

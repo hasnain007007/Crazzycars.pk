@@ -93,6 +93,14 @@ async function autoDownloadAirbill(json, orderId) {
   const tn = String(json?.trackingNumber || "").trim();
   if (downloadLabelBase64(json?.labelPdfBase64, tn)) return true;
   try {
+    if (json?.postexFallback) {
+      window.open(
+        `/api/postex/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+      return true;
+    }
     await downloadAirbillPdf({ orderId, trackingNumber: tn });
     return true;
   } catch {

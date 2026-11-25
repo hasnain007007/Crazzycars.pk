@@ -2435,7 +2435,7 @@ export function OrderDetail({ orderId }) {
                     </a>
                     {(hasLabel || order.hasPostexLabel || order.hasRunCourierLabel) ? (
                       <>
-                        {order.hasRunCourierLabel || order.runCourierApi ? (
+                        {isRunCourierOrder(order) && (order.hasRunCourierLabel || order.runCourierApi) ? (
                           <button
                             type="button"
                             onClick={printRunCourierLabel}
@@ -2447,8 +2447,13 @@ export function OrderDetail({ orderId }) {
                         <button
                           type="button"
                           onClick={() => {
-                            if (order.hasRunCourierLabel || order.runCourierApi) openRunCourierLabel();
-                            else openPostexLabel();
+                            // Current courier wins — never open a stale Run Courier invoice
+                            // after a PostEx rebook (showed Via Leopard + ECS Overnight).
+                            if (isRunCourierOrder(order) && (order.hasRunCourierLabel || order.runCourierApi)) {
+                              openRunCourierLabel();
+                            } else {
+                              openPostexLabel();
+                            }
                           }}
                           className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
                         >

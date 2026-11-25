@@ -265,7 +265,7 @@ export default function RunCourierBookingPanel({
           const a = document.createElement("a");
           a.href = blobUrl;
           a.rel = "noopener";
-          a.download = `runcourier-airbill-${tn || "shipment"}.pdf`;
+          a.download = `${data.postexFallback ? "postex" : "runcourier"}-airbill-${tn || "shipment"}.pdf`;
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -277,9 +277,19 @@ export default function RunCourierBookingPanel({
       }
       if (!downloaded && (tn || orderId)) {
         try {
-          const { downloadRunCourierLabelPdf } = await import("@/lib/downloadRunCourierLabelPdf");
-          await downloadRunCourierLabelPdf({ orderId, trackingNumber: tn });
-          downloaded = true;
+          if (data.postexFallback) {
+            // PostEx fallback — never hit /api/runcourier/label (stale Leopard invoice).
+            window.open(
+              `/api/postex/label?trackingNumber=${encodeURIComponent(tn)}&orderId=${encodeURIComponent(orderId)}&download=1`,
+              "_blank",
+              "noopener,noreferrer"
+            );
+            downloaded = true;
+          } else {
+            const { downloadRunCourierLabelPdf } = await import("@/lib/downloadRunCourierLabelPdf");
+            await downloadRunCourierLabelPdf({ orderId, trackingNumber: tn });
+            downloaded = true;
+          }
         } catch {
           downloaded = false;
         }
