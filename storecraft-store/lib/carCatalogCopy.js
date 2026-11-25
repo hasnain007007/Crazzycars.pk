@@ -34,6 +34,8 @@ const VEHICLE_PHOTO_FALLBACK_SLUGS = new Set([
   "jetour-t1-2024-present",
   "jetour-t2-2024-present",
   "mercedes-benz-e-class-2009-present",
+  "suzuki-swift-2010-2021",
+  "honda-fit-gp5-2013-2017",
 ]);
 
 /** @param {string} slug */

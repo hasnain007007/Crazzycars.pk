@@ -165,6 +165,31 @@ const VEHICLE_MAP = {
     yearFrom: 2025,
     yearTo: null,
   },
+  // Fitment cards label "2022–2026"; catalog gen slug is 2025-present (Z Series).
+  "swift-new": {
+    slug: "suzuki-swift-2025-present",
+    make: "Suzuki",
+    model: "Swift",
+    generationLabel: "Suzuki Swift (2022–Present)",
+    yearFrom: 2022,
+    yearTo: null,
+  },
+  "swift-old": {
+    slug: "suzuki-swift-2010-2021",
+    make: "Suzuki",
+    model: "Swift",
+    generationLabel: "Suzuki Swift (2010–2021)",
+    yearFrom: 2010,
+    yearTo: 2021,
+  },
+  "fit-gp5": {
+    slug: "honda-fit-gp5-2013-2017",
+    make: "Honda",
+    model: "Fit",
+    generationLabel: "Honda Fit Hybrid GP5 Pre-facelift (2013–2017)",
+    yearFrom: 2013,
+    yearTo: 2017,
+  },
 };
 
 function arg(name, fallback = "") {
