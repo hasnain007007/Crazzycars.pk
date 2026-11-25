@@ -118,6 +118,7 @@ export default function FounderPage() {
               width={144}
               height={144}
               className="h-36 w-36 rounded-full object-cover shadow-md"
+              style={{ objectPosition: "50% 22%" }}
             />
           ) : (
             <div
@@ -146,6 +147,17 @@ export default function FounderPage() {
             <p key={p.slice(0, 40)}>{p}</p>
           ))}
         </section>
+
+        {FOUNDER.story?.length ? (
+          <Section title={FOUNDER.storyTitle || "My story"}>
+            <div className="space-y-4 text-[15px] leading-relaxed text-[#333333]">
+              {FOUNDER.story.map((p) => (
+                <p key={p.slice(0, 40)}>{p}</p>
+              ))}
+            </div>
+            <p className="mt-4 font-heading text-lg font-bold text-[#111111]">— {FOUNDER.name}</p>
+          </Section>
+        ) : null}
 
         <Section title="My promise to you">
           <ul className="grid gap-4 sm:grid-cols-3">

@@ -176,7 +176,7 @@ export default function AboutPageView({ aboutPage }) {
         >
           {FOUNDER.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={FOUNDER.photo} alt={FOUNDER.photoAlt} width={64} height={64} className="h-16 w-16 rounded-full object-cover" />
+            <img src={FOUNDER.photo} alt={FOUNDER.photoAlt} width={64} height={64} className="h-16 w-16 rounded-full object-cover" style={{ objectPosition: "50% 22%" }} />
           ) : (
             <span aria-hidden className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#111111] font-heading text-xl font-bold text-white">
               {founderInitials()}
