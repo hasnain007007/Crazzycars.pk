@@ -36,6 +36,9 @@ const VEHICLE_PHOTO_FALLBACK_SLUGS = new Set([
   "mercedes-benz-e-class-2009-present",
   "suzuki-swift-2010-2021",
   "honda-fit-gp5-2013-2017",
+  "hyundai-tucson-hybrid-2025-present",
+  "hyundai-santa-fe-hybrid-tm-facelift",
+  "kia-sorento-um-third-generation",
 ]);
 
 /** @param {string} slug */
