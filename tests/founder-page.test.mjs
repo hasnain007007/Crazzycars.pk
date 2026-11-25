@@ -18,6 +18,9 @@ test("founder config holds no private contact details", () => {
 
 test("founder profiles are real URLs and feed the Person sameAs", () => {
   assert.equal(FOUNDER.profiles.linkedin, "https://www.linkedin.com/in/hussnainkamran/");
+  // Clean profile URL — no QR / tracking query string.
+  assert.equal(FOUNDER.profiles.instagram, "https://www.instagram.com/_muhammad_hasnain/");
+  assert.deepEqual(founderSameAs(), [FOUNDER.profiles.linkedin, FOUNDER.profiles.instagram]);
   for (const u of founderSameAs()) assert.match(u, /^https:\/\//);
   assert.equal(founderLdId("https://crazzycars.pk/"), "https://crazzycars.pk/founder#person");
   assert.equal(founderInitials(), "HK");

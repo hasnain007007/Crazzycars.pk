@@ -35,8 +35,8 @@ export const FOUNDER = {
   ],
   profiles: {
     linkedin: "https://www.linkedin.com/in/hussnainkamran/",
-    /** Owner's personal Instagram — add the URL when the owner confirms it; null hides it. */
-    instagram: null,
+    /** Owner's personal Instagram (confirmed by the owner, 26 Nov 2026). null hides it. */
+    instagram: "https://www.instagram.com/_muhammad_hasnain/",
   },
   /** Company profiles shown under "CrazzyCars online" (business, not personal). */
   companyProfiles: {
