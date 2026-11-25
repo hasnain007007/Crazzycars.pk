@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ownerTitleNote } from "@/lib/paymentOwnerNote";
+import WhyBookingAdvance from "@/components/store/WhyBookingAdvance";
 import CopyButton from "@/components/store/CopyButton";
 import { paymentQrFor } from "@/config/payment-qr";
 import { STORE_CONTACT } from "@/config/store-policy";
@@ -177,6 +178,10 @@ export default async function AdvancePaymentPage() {
         </p>
         <p className="adv-note">{c.deductedNote}</p>
       </section>
+
+      <div className="adv-section" style={{ paddingLeft: 0, paddingRight: 0 }}>
+        <WhyBookingAdvance id="why-advance" />
+      </div>
 
       <section className="adv-section" id="adv-accounts" aria-labelledby="adv-accounts-h">
         <h2 id="adv-accounts-h">

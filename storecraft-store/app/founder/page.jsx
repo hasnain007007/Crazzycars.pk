@@ -12,6 +12,7 @@ import { buildPageMetadata } from "@/lib/pageMetadata";
 import { withSafeMetadata } from "@/lib/safeMetadata";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { getSiteUrl } from "@/lib/siteUrl";
+import WhyBookingAdvance from "@/components/store/WhyBookingAdvance";
 
 const SITE = getSiteUrl().replace(/\/+$/, "");
 const TITLE = `Meet the Founder – ${FOUNDER.name} | CrazzyCars.pk`;
@@ -278,6 +279,30 @@ export default function FounderPage() {
             ))}
           </ul>
         </div>
+      </section>
+
+      {/* ---------- WHY BOOKING ADVANCE (English + Urdu) ---------- */}
+      <section className="store-container fp-section">
+        <WhyBookingAdvance
+          signature={
+            <>
+              {FOUNDER.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={FOUNDER.photo}
+                  alt=""
+                  width={44}
+                  height={44}
+                  style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", objectPosition: "50% 22%" }}
+                />
+              ) : null}
+              <div>
+                <p className="fp-signature__name" style={{ fontSize: 24 }}>{FOUNDER.name}</p>
+                <p className="fp-signature__role">Founder, CrazzyCars.pk</p>
+              </div>
+            </>
+          }
+        />
       </section>
 
       {/* ---------- COMPLAINTS ---------- */}
