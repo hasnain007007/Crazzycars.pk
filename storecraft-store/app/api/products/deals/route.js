@@ -35,7 +35,9 @@ export async function GET(request) {
     return NextResponse.json(
       {
         success: true,
-        products: rows.map(serializeStoreProductSummary),
+        products: rows.map((row) =>
+          serializeStoreProductSummary(row, { leanCard: true, maxImages: 2 })
+        ),
         total: rows.length,
       },
       {

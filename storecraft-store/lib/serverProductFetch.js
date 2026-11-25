@@ -165,7 +165,7 @@ export async function fetchProductsServer(params = {}) {
       products: rows
         .map((row) => {
           try {
-            return serializeStoreProductSummary(row);
+            return serializeStoreProductSummary(row, { leanCard: true, maxImages: 2 });
           } catch (err) {
             console.error("[serializeStoreProductSummary]", row?.slug, err);
             return null;

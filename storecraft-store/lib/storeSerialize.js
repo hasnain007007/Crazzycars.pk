@@ -8,12 +8,20 @@ import { serializeStoreOption } from "@/lib/variationOptions";
 import { combinationSignature } from "@/lib/variantMatrix";
 import { sanitizeProductHtml, toPlainText } from "@/lib/sanitizeHtml";
 import { absoluteMediaUrl } from "@/lib/mobile/absoluteMediaUrl";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 import { customerFacingAlt } from "@/lib/customerFacingAlt";
 import {
   sharedAllowsBackorder,
   sharedStockQuantity,
   sharedTracksInventory,
 } from "@/lib/sharedInventory";
+
+/** List/card payloads must never expose multi-MB PNG/JPEG masters. */
+function toCardMediaUrl(url) {
+  const abs = absoluteMediaUrl(url);
+  if (!abs) return null;
+  return cardImageUrl(abs, 400) || abs;
+}
 
 /** Internal ops labels that must not appear on the public PDP. */
 const INTERNAL_NOTE_LABEL_RE =
@@ -141,6 +149,9 @@ function serializeMediaVideos(videos) {
 
 export function serializeStoreProductSummary(p, opts = {}) {
   const leanCard = opts.leanCard === true;
+  // Summaries feed product cards — rewrite to -400.webp unless caller opts out.
+  const useCardImages = opts.cardImages !== false;
+  const toUrl = useCardImages ? toCardMediaUrl : (u) => absoluteMediaUrl(u) || null;
   const regularPrice = Number(p.pricing?.regularPrice) || 0;
   const salePrice = Number(p.pricing?.salePrice) || 0;
   const schedule = leanCard ? null : p.pricing?.saleSchedule || null;
@@ -149,29 +160,35 @@ export function serializeStoreProductSummary(p, opts = {}) {
   const stock = getStock(p);
   const inStock = isInStock(p);
   const rawImgs = Array.isArray(p?.media?.images) ? p.media.images : [];
+  // Cap gallery in list payloads (was: full gallery → 30+ master URLs per product).
   const maxImages = Number.isFinite(Number(opts.maxImages))
     ? Math.max(1, Number(opts.maxImages))
     : leanCard
       ? 1
-      : rawImgs.length;
+      : 2;
   const mainFirst = [
     rawImgs.find((i) => i?.isMain),
     ...rawImgs.filter((i) => !i?.isMain),
   ].filter(Boolean);
-  const mediaImages = mainFirst.slice(0, maxImages || rawImgs.length);
-  const summaryImage = absoluteMediaUrl(
-    mediaImages.find((i) => i?.isMain)?.url ||
-      mediaImages[0]?.url ||
-      rawImgs.find((i) => i?.isMain)?.url ||
-      rawImgs[0]?.url ||
-      ""
-  ) || null;
+  const mediaImages = mainFirst.slice(0, maxImages || 2);
+  const summaryImage =
+    toUrl(
+      mediaImages.find((i) => i?.isMain)?.url ||
+        mediaImages[0]?.url ||
+        rawImgs.find((i) => i?.isMain)?.url ||
+        rawImgs[0]?.url ||
+        ""
+    ) || null;
   const summaryImages = leanCard
     ? summaryImage
       ? [summaryImage]
       : []
-    : mediaImages.map((i) => absoluteMediaUrl(i?.url)).filter(Boolean);
+    : mediaImages.map((i) => toUrl(i?.url)).filter(Boolean);
   const sku = p.articleNo || p.inventory?.sku || "";
+  const mappedMedia = mapImagesWithSafeAlt(mediaImages, p.name).map((img) => ({
+    ...img,
+    url: useCardImages ? toCardMediaUrl(img.url) || img.url : img.url,
+  }));
   const base = {
     id: productDocId(p),
     name: displayProductName(p.name),
@@ -179,7 +196,7 @@ export function serializeStoreProductSummary(p, opts = {}) {
     image: summaryImage,
     images: summaryImages,
     media: {
-      images: mapImagesWithSafeAlt(mediaImages, p.name),
+      images: mappedMedia,
     },
     price,
     regularPrice,
@@ -246,7 +263,7 @@ export function serializeRecommendedProducts(docs, { excludeId = "" } = {}) {
     .filter((row) => String(row.status || "active").toLowerCase() === "active")
     .filter((row) => !skip || productDocId(row) !== skip)
     .slice(0, 6)
-    .map((row) => serializeStoreProductSummary(row));
+    .map((row) => serializeStoreProductSummary(row, { leanCard: true, maxImages: 1 }));
 }
 
 function serializeVariantForStore(v) {

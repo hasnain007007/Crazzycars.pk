@@ -196,8 +196,9 @@ export function ProductCard({ product }) {
                 }`}
                 imgStyle={{ height: "100%", width: "100%", objectFit: "contain" }}
                 width={400}
-                widths={[400, 800]}
-                // Cap desktop slot so DPR never needs more than -800 (no master in srcset).
+                // Single 400w candidate — card slots are ~200px; skip -800 to cut bytes.
+                widths={[400]}
+                responsive={false}
                 sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 200px"
               />
             </div>
@@ -211,7 +212,8 @@ export function ProductCard({ product }) {
                   imgClassName="h-full w-full object-contain"
                   imgStyle={{ height: "100%", width: "100%", objectFit: "contain" }}
                   width={400}
-                  widths={[400, 800]}
+                  widths={[400]}
+                  responsive={false}
                   sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 200px"
                   loading="eager"
                 />

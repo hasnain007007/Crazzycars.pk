@@ -399,7 +399,7 @@ export async function loadStoreCategoryDetail(slugStr, opts = {}) {
     subcategories: liveSubcategories,
     // Serialize so JSON-LD always gets top-level price + rating fields (not bare Mongo docs).
     products: (products || []).map((p) => ({
-      ...serializeStoreProductSummary(p),
+      ...serializeStoreProductSummary(p, { leanCard: true, maxImages: 2 }),
       createdAt: p.createdAt || null,
       updatedAt: p.updatedAt || null,
       reviews: reviewsByProduct.get(String(p._id)) || [],

@@ -1,16 +1,43 @@
 "use client";
 
+import { isLocalMedia, localMediaDerivative } from "@/lib/cloudinaryImage";
+
 /**
- * Local /media thumb with automatic fallback to the master when *-400.webp / *-800.webp is missing.
- * Prefer explicit width/height + sizes for CLS; keep plain <img> for /media (avoids /_next/image 400s).
+ * Swap a failed thumb to a mid-size derivative — never a multi-MB PNG/JPEG master.
+ * Prefer explicit width/height + sizes for CLS; keep plain <img> for /media
+ * (avoids /_next/image 400s).
  */
-/** Swap a failed thumb to its full-size master (data-master); hide it if that fails too. */
 export function applyMasterFallback(img) {
-  const fallback = img.getAttribute("data-master") || "";
-  if (fallback && img.getAttribute("src") !== fallback) {
-    img.src = fallback;
+  const current = String(img.getAttribute("src") || "")
+    .trim()
+    .split("?")[0];
+  const configured = String(img.getAttribute("data-master") || "")
+    .trim()
+    .split("?")[0];
+  const base = configured || current;
+  const tried = new Set(
+    String(img.getAttribute("data-tried") || "")
+      .split("|")
+      .filter(Boolean)
+  );
+  if (current) tried.add(current);
+
+  const candidates = [];
+  if (isLocalMedia(base) || base.includes("/media/")) {
+    // Card/list thumbs: -800 then -400 only. Never jump to the master.
+    candidates.push(localMediaDerivative(base, "800"), localMediaDerivative(base, "400"));
+  } else if (configured && configured !== current) {
+    candidates.push(configured);
+  }
+
+  for (const next of candidates) {
+    if (!next || tried.has(next)) continue;
+    tried.add(next);
+    img.setAttribute("data-tried", [...tried].join("|"));
+    img.src = next;
     return;
   }
+
   img.removeAttribute("alt");
   img.style.visibility = "hidden";
 }
@@ -31,9 +58,14 @@ export default function LocalMediaImg({
   draggable,
   onLoad,
 }) {
-  const masterUrl = String(master || src || "")
+  // Prefer a mid derivative as the recovery target so onError never fetches a 2MB+ master.
+  const rawMaster = String(master || src || "")
     .trim()
     .split("?")[0];
+  const masterUrl =
+    isLocalMedia(rawMaster) || rawMaster.includes("/media/")
+      ? localMediaDerivative(rawMaster, "800")
+      : rawMaster;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element

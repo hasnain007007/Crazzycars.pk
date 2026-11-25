@@ -72,6 +72,8 @@ export function ServerProductCard({ product, categoryName, priority = false, var
   const rawImageUrl = getProductCardImage(card);
   // Always use direct /media (or Cloudinary) URLs — never /_next/image wrappers.
   const imageUrl = cardImageUrl(rawImageUrl, 400) || rawImageUrl;
+  // Recovery target is -800.webp, never the multi-MB PNG/JPEG master.
+  const fallbackUrl = cardImageUrl(rawImageUrl, 800) || imageUrl;
   const { regular, sale, onSale } = getProductCardPrices(card);
   const reviews = getProductCardReviews(card);
   const alt = productCardAlt(card, categoryName);
@@ -99,7 +101,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
             <span className="pl-row-thumb relative block overflow-hidden">
               <CardImage
                 src={imageUrl}
-                master={rawImageUrl}
+                master={fallbackUrl}
                 alt={alt}
                 priority={priority}
                 sizes="120px"
@@ -138,7 +140,7 @@ export function ServerProductCard({ product, categoryName, priority = false, var
         <div className="cc-card-media relative block aspect-square overflow-hidden bg-[#F9FAFB]">
           <CardImage
             src={imageUrl}
-            master={rawImageUrl}
+            master={fallbackUrl}
             alt={alt}
             priority={priority}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

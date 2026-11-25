@@ -41,8 +41,12 @@ async function bikeSections() {
     find({ "pricing.salePrice": { $gt: 0 } }, { updatedAt: -1 }),
   ]);
   return {
-    bestSellers: featured.map((p) => serializeStoreProductSummary(p)),
-    hotDeals: deals.map((p) => serializeStoreProductSummary(p)),
+    bestSellers: featured.map((p) =>
+      serializeStoreProductSummary(p, { leanCard: true, maxImages: 2 })
+    ),
+    hotDeals: deals.map((p) =>
+      serializeStoreProductSummary(p, { leanCard: true, maxImages: 2 })
+    ),
   };
 }
 
@@ -158,7 +162,9 @@ export async function GET(request) {
       flashSaleEndTime,
       /** @deprecated alias — same list as bestSellers.products (featured flag). */
       featured: bestSellers,
-      newArrivals: newArrivalsRaw.map((p) => serializeStoreProductSummary(p)),
+      newArrivals: newArrivalsRaw.map((p) =>
+        serializeStoreProductSummary(p, { leanCard: true, maxImages: 2 })
+      ),
       categories: categoriesRaw.map((c) => ({
         id: String(c._id),
         name: c.name,

@@ -24,6 +24,7 @@ export function HomeProductCard({ product }) {
   for (const img of product.media?.images || []) push(img);
   const imageUrl = cardImageUrl(images[0] || "", 400) || images[0] || "";
   const hoverImageUrl = cardImageUrl(images[1] || "", 400) || images[1] || "";
+  const fallbackUrl = cardImageUrl(images[0] || "", 800) || imageUrl;
   const [hoverLoaded, setHoverLoaded] = useState(false);
   const regular = Number(product.regularPrice ?? product.compareAt ?? 0);
   const saleVal = Number(product.salePrice ?? 0);
@@ -71,7 +72,7 @@ export function HomeProductCard({ product }) {
           <>
             <LocalMediaImg
               src={imageUrl}
-              master={images[0] || imageUrl}
+              master={fallbackUrl}
               alt={product.name || "Product"}
               className={`absolute inset-0 h-full w-full object-contain transition duration-300 ${
                 hoverImageUrl ? "group-hover:opacity-0" : "group-hover:scale-[1.03]"

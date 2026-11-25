@@ -58,7 +58,7 @@ function CategoriesPageInner({ initialCategories }) {
                       className="category-image"
                       loading="lazy"
                       decoding="async"
-                      data-master={cat.image.url.split("?")[0]}
+                      data-master={categoryImageUrl(cat.image.url, 800) || cat.image.url.split("?")[0]}
                       style={{
                         position: "absolute",
                         top: 0,

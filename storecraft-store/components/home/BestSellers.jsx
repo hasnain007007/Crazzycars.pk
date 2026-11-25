@@ -36,7 +36,7 @@ export default function BestSellers({ initialProducts = [], settings }) {
 
   useEffect(() => {
     if (hasInitial) return;
-    fetch("/api/products?featured=true&limit=48")
+    fetch("/api/products?featured=true&limit=24")
       .then((r) => r.json())
       .then((data) => {
         const list = data?.products || data?.data || [];

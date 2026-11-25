@@ -173,7 +173,11 @@ async function loadRelatedProducts(product) {
   try {
     const curated = relatedFromRecommended(product);
     if (curated.length) {
-      return JSON.parse(JSON.stringify(curated.map(serializeStoreProductSummary)));
+      return JSON.parse(
+        JSON.stringify(
+          curated.map((row) => serializeStoreProductSummary(row, { leanCard: true, maxImages: 2 }))
+        )
+      );
     }
 
     const categoryIds = (product?.categories || [])
@@ -202,7 +206,11 @@ async function loadRelatedProducts(product) {
       .lean();
 
     // Ensure RSC → client props are plain JSON (no Date / ObjectId surprises).
-    return JSON.parse(JSON.stringify(rows.map(serializeStoreProductSummary)));
+    return JSON.parse(
+      JSON.stringify(
+        rows.map((row) => serializeStoreProductSummary(row, { leanCard: true, maxImages: 2 }))
+      )
+    );
   } catch (err) {
     console.error("[loadRelatedProducts]", err?.message || err);
     return [];

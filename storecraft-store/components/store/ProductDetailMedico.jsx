@@ -1119,6 +1119,7 @@ export function ProductDetailMedico({
                   srcSet={selectedItem.srcSet || undefined}
                   responsive
                   sizes="(max-width: 767px) 100vw, 560px"
+                  allowMasterFallback
                   loading={selectedIndex === 0 ? "eager" : "lazy"}
                   fetchPriority={selectedIndex === 0 ? "high" : "low"}
                   decoding={selectedIndex === 0 ? "sync" : "async"}

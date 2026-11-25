@@ -31,6 +31,8 @@ export function WatermarkedImage({
   /** Server-built srcset (disk-checked). Wins over client-built cloudinarySrcSet. */
   srcSet: srcSetProp,
   itemProp,
+  /** PDP gallery only — cards must never fall through to multi-MB masters. */
+  allowMasterFallback = false,
 }) {
   const [failed, setFailed] = useState(false);
   const [retrySrc, setRetrySrc] = useState(null);
@@ -132,11 +134,18 @@ export function WatermarkedImage({
         if (tryNext(as1200)) return;
         if (tryNext(as800)) return;
         if (tryNext(as400)) return;
-        if (tryNext(asOrig)) return;
+        // Masters are often 1–3 MB PNGs — only allow on PDP (allowMasterFallback).
+        if (allowMasterFallback && tryNext(asOrig)) return;
         setFailed(true);
         return;
       }
-      if (!retrySrc && master && resolved !== master && !/-(400|sm|800|1200)\./i.test(master)) {
+      if (
+        allowMasterFallback &&
+        !retrySrc &&
+        master &&
+        resolved !== master &&
+        !/-(400|sm|800|1200)\./i.test(master)
+      ) {
         setRetrySrc(master);
         setLoaded(false);
         return;

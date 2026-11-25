@@ -60,7 +60,7 @@ export async function GET(request) {
         return productMatchesVehicle(p, make, model, year, variant);
       })
       .map((p) => ({
-        product: serializeStoreProductSummary(p),
+        product: serializeStoreProductSummary(p, { leanCard: true, maxImages: 2 }),
         score: vehicleMatchScore(p, make, model, year, variant),
       }))
       .sort((a, b) => b.score - a.score || (b.product.featured ? 1 : 0) - (a.product.featured ? 1 : 0))

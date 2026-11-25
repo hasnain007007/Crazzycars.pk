@@ -69,8 +69,12 @@ export async function GET() {
       {
         success: true,
         banners: groupedBanners,
-        featured: featuredRaw.map(serializeStoreProductSummary),
-        newArrivals: newArrivalsRaw.map(serializeStoreProductSummary),
+        featured: featuredRaw.map((p) =>
+          serializeStoreProductSummary(p, { leanCard: true, maxImages: 2 })
+        ),
+        newArrivals: newArrivalsRaw.map((p) =>
+          serializeStoreProductSummary(p, { leanCard: true, maxImages: 2 })
+        ),
         categories: categoriesRaw.map((c) => ({
           id: c._id.toString(),
           name: c.name,

@@ -130,7 +130,7 @@ export async function GET(request) {
 
     const labels = vehicleDoc ? await fitmentLabels(products, vehicleDoc) : null;
     const data = products.map((p) => {
-      const summary = serializeStoreProductSummary(p);
+      const summary = serializeStoreProductSummary(p, { leanCard: true, maxImages: 2 });
       if (!labels) return summary;
       const fitment = labels.get(String(p._id)) || "none";
       return { ...summary, fitment, fitsVehicle: fitment === "exact" };

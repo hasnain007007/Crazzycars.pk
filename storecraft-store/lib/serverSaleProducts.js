@@ -95,7 +95,11 @@ export async function fetchSaleProductsServer({
       .populate("categories", "name slug")
       .lean();
 
-    return JSON.parse(JSON.stringify(rows.map(serializeStoreProductSummary)));
+    return JSON.parse(
+      JSON.stringify(
+        rows.map((row) => serializeStoreProductSummary(row, { leanCard: true, maxImages: 2 }))
+      )
+    );
   } catch (err) {
     console.error("[fetchSaleProductsServer]", err?.message || err);
     return [];

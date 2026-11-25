@@ -36,7 +36,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
 
   const loadAll = () => {
     setLoadingMore(true);
-    fetch(`/api/products/deals?filter=${encodeURIComponent(defaultFilter)}&limit=48`)
+    fetch(`/api/products/deals?filter=${encodeURIComponent(defaultFilter)}&limit=24`)
       .then((r) => r.json())
       .then((data) => {
         const list = Array.isArray(data?.products) ? data.products : [];
@@ -60,7 +60,7 @@ export default function HotDeals({ settings, initialProducts = null }) {
     }
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/products/deals?filter=${encodeURIComponent(active)}&limit=48`)
+    fetch(`/api/products/deals?filter=${encodeURIComponent(active)}&limit=24`)
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
