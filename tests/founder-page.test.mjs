@@ -39,6 +39,8 @@ test("site links the REAL Facebook page, not the old duplicate with a personal n
 test("founder page is wired into Google data, sitemap, About, footer and payment page", () => {
   assert.match(read("lib/seo/jsonld.js"), /ld\.founder = \{/);
   assert.match(read("app/founder/page.jsx"), /"@type": "ProfilePage"/);
+  // Owner asked to remove the "Visit our shop" section (26 Nov 2026).
+  assert.doesNotMatch(read("app/founder/page.jsx"), /Visit our shop/);
   assert.match(read("app/founder/page.jsx"), /worksFor: \{ "@id": `\$\{SITE\}\/#org` \}/);
   assert.match(read("lib/sitemap/entries.js"), /"\/founder"/);
   assert.match(read("components/store/AboutPageView.jsx"), /href=\{FOUNDER_PATH\}/);

@@ -202,25 +202,6 @@ export default function FounderPage() {
           </div>
         </Section>
 
-        <Section title="Visit our shop">
-          <p className="text-[15px] leading-relaxed text-[#333333]">
-            {STORE_NAP.streetAddress}, {STORE_NAP.addressLocality}, {STORE_NAP.addressRegion}
-            {STORE_NAP.mapUrl ? (
-              <>
-                {" · "}
-                <a
-                  href={STORE_NAP.mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-[#C41E1E] underline"
-                >
-                  Open in Google Maps
-                </a>
-              </>
-            ) : null}
-          </p>
-        </Section>
-
         <Section title="CrazzyCars online">
           <LinkPills links={COMPANY_LINKS} />
         </Section>
