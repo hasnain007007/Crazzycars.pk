@@ -14,10 +14,17 @@ import {
   displayCourierName,
   fetchRunCourierLabel,
   isExplicitRunCourierSelect,
+  isRunCourierServiceRefusal,
   resolveBookingSelectApi,
   RUN_COURIER_DEFAULT_API,
   storefrontTrackingUrl,
 } from "@/lib/runcourier";
+import {
+  buildCleanStreetAddress,
+  createPostexShipment,
+  fetchPostexLabel,
+  storefrontTrackingUrl as postexStorefrontTrackingUrl,
+} from "@/lib/postex";
 import { buildRunCourierAirbillPdf } from "@/lib/runcourierLabelPdf";
 import { assertCodAdvanceAllowsDispatch } from "@/lib/codAdvanceGate";
 import { archiveCurrentTracking } from "@/lib/previousTrackings";
@@ -106,6 +113,76 @@ function applyRunCourierShipmentToOrder(
     order.shippedAt = order.runCourierBookedAt;
   }
 
+  order.markModified("timeline");
+  order.markModified("tracking");
+}
+
+/** Persist a PostEx booking when Run Courier cannot service the lane (e.g. Bagh AJK). */
+function applyPostexFallbackToOrder(order, { trackingNumber, label, adminName, rebook = false, matchedCity = "" }) {
+  const tn = String(trackingNumber || "").trim();
+  const url = postexStorefrontTrackingUrl(tn);
+  const archived = archiveCurrentTracking(order, {
+    nextTrackingNumber: tn,
+    reason: rebook ? "rebook" : "book",
+    replacedBy: adminName,
+  });
+
+  order.trackingNumber = tn;
+  order.courier = "Postex";
+  order.trackingUrl = url;
+  order.runCourierApi = "";
+  order.tracking = {
+    number: tn,
+    carrier: "Postex",
+    url,
+    notifiedAt: null,
+  };
+  if (label) order.postexLabel = String(label);
+
+  const wasNotShipped = order.orderStatus !== "shipped" && order.orderStatus !== "delivered";
+  if (wasNotShipped) {
+    order.orderStatus = "shipped";
+    if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
+    order.statusHistory.push({
+      status: "shipped",
+      changedBy: adminName,
+      changedAt: new Date(),
+      note: `Shipment booked with Postex (Run Courier lane unavailable) — ${tn}`,
+    });
+    const statusInfo = ORDER_STATUS_TIMELINE_TITLES.shipped || {
+      title: "Order Shipped",
+      description: "",
+    };
+    if (!Array.isArray(order.timeline)) order.timeline = [];
+    order.timeline.push({
+      status: "shipped",
+      title: statusInfo.title,
+      description: statusInfo.description,
+      timestamp: new Date(),
+      by: "admin",
+    });
+  }
+
+  if (!Array.isArray(order.timeline)) order.timeline = [];
+  const prevBit = archived?.trackingNumber
+    ? ` Previous tracking kept: ${archived.trackingNumber}.`
+    : "";
+  const cityBit = matchedCity ? ` City mapped to ${matchedCity}.` : "";
+  order.timeline.push({
+    status: rebook || archived ? "postex_rebooked" : "postex_booked",
+    title: rebook || archived
+      ? "Postex rebooked (Run Courier fallback)"
+      : "Shipment booked with Postex (Run Courier fallback)",
+    description: `Tracking number assigned: ${tn}.${cityBit}${prevBit}`,
+    timestamp: new Date(),
+    by: "admin",
+  });
+
+  if (matchedCity && order.shippingAddress) {
+    order.shippingAddress.city = matchedCity;
+    order.markModified("shippingAddress");
+  }
+  if (!order.shippedAt) order.shippedAt = new Date();
   order.markModified("timeline");
   order.markModified("tracking");
 }
@@ -251,6 +328,140 @@ export async function POST(request) {
     );
 
     if (!result.success) {
+      const laneDead =
+        isRunCourierServiceRefusal(result.error) ||
+        /book via PostEx|does not cover|not set up for/i.test(String(result.error || ""));
+      // Run Courier cannot deliver some lanes on this account (live: Gujranwala → Bagh).
+      // PostEx covers BAGH (AJK) — book there instead of failing the admin.
+      const allowPostexFallback =
+        body.allowPostexFallback !== false && body.skipPostexFallback !== true;
+      if (laneDead && allowPostexFallback) {
+        const postexOpts = {
+          handling: body.handling,
+          type: body.type || body.shipType,
+          pieces: bookingOptions.pieces,
+          remarks: bookingOptions.remarks,
+          weight: bookingOptions.weight,
+          paymentMethod: bookingOptions.paymentMethod,
+          cityName: bookingOptions.cityName || result.destination || "",
+          deliveryAddress: bookingOptions.deliveryAddress || "",
+          customerName: bookingOptions.customerName || "",
+          customerPhone: bookingOptions.customerPhone || "",
+          codAmount: bookingOptions.codAmount,
+        };
+        const postex = await createPostexShipment(
+          { order: order.toObject(), settings },
+          { settings, bookingOptions: postexOpts }
+        );
+        if (postex.success) {
+          let label = postex.label || "";
+          if (!label) {
+            const labelRes = await fetchPostexLabel(postex.trackingNumber, {
+              settingsCourier: settings.courier,
+            });
+            if (labelRes.success) label = labelRes.label;
+          }
+          const matchedCity = String(postex.matchedCity || "").trim();
+          if (order.shippingAddress) {
+            const cleanStreet = buildCleanStreetAddress(order.shippingAddress);
+            if (cleanStreet) {
+              order.shippingAddress.street = cleanStreet;
+              order.shippingAddress.line1 = cleanStreet;
+              order.shippingAddress.address = cleanStreet;
+            }
+          }
+          applyPostexFallbackToOrder(order, {
+            trackingNumber: postex.trackingNumber,
+            label,
+            adminName,
+            rebook: Boolean(rebook || existingTracking),
+            matchedCity,
+          });
+          await order.save();
+
+          let emailSummary = { trackingEmail: "none", trackingEmailOk: false, trackingEmailError: "" };
+          try {
+            const emailResults = await dispatchOrderLifecycleEmails(order, {
+              prevStatus,
+              nextStatus: order.orderStatus,
+              prevPayment: order.paymentStatus,
+              nextPayment: order.paymentStatus,
+              prevTracking: existingTracking,
+              nextTracking: String(order.trackingNumber || order.tracking?.number || "").trim(),
+            });
+            emailSummary = summarizeLifecycleEmailResults(emailResults);
+          } catch (e) {
+            console.error("[email] runcourier→postex fallback:", e?.message || e);
+            emailSummary = {
+              trackingEmail: "failed",
+              trackingEmailOk: false,
+              trackingEmailError: e?.message || "Email failed",
+            };
+          }
+
+          await logActivity({
+            user: user.userId,
+            userName: adminName,
+            action: `PostEx fallback booked for ${order.orderNumber}: ${postex.trackingNumber} (Run Courier refused ${result.origin || "origin"} → ${result.destination || bookingOptions.cityName || "dest"})`,
+            resource: "Order",
+            resourceId: orderId,
+            type: "update",
+            ip: requestIp(request),
+          });
+
+          const total = orderGrandTotal(order);
+          return NextResponse.json({
+            success: true,
+            message: `Run Courier cannot deliver ${result.origin || "origin"} → ${
+              result.destination || bookingOptions.cityName || "destination"
+            } on this account. Booked via PostEx${matchedCity ? ` (${matchedCity})` : ""} instead.`,
+            trackingNumber: postex.trackingNumber,
+            selectedApi: "Postex",
+            requestedApi: result.requestedApi || bookingOptions.selectedApi,
+            courier: "Postex",
+            postexFallback: {
+              from: result.requestedApi || bookingOptions.selectedApi,
+              reason: result.error || "Run Courier lane unavailable",
+              matchedCity,
+            },
+            trackingUrl: order.trackingUrl,
+            label: Boolean(label),
+            hasLabel: Boolean(label),
+            ...(label && !String(label).startsWith("http")
+              ? { labelPdfBase64: String(label).replace(/^data:application\/pdf;base64,/, "") }
+              : {}),
+            ...emailSummary,
+            order: {
+              id: order._id.toString(),
+              orderNumber: order.orderNumber,
+              orderStatus: order.orderStatus,
+              trackingNumber: order.trackingNumber,
+              courier: order.courier,
+              trackingUrl: order.trackingUrl,
+              total,
+            },
+          });
+        }
+        // PostEx also failed — surface both errors.
+        return NextResponse.json(
+          {
+            success: false,
+            error: `${result.error || "Run Courier booking failed."} PostEx fallback also failed: ${
+              postex.error || "unknown"
+            }.`,
+            selectedApi: result.selectedApi || bookingOptions.selectedApi,
+            requestedApi: result.requestedApi || bookingOptions.selectedApi,
+            origin: result.origin || "",
+            destination: result.destination || "",
+            coveredBy: result.coveredBy || [],
+            autoFallback: result.autoFallback || null,
+            postexError: postex.error || "",
+            suggestions: postex.suggestions || [],
+          },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         {
           success: false,

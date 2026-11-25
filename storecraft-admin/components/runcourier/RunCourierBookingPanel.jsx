@@ -229,13 +229,20 @@ export default function RunCourierBookingPanel({
         toast.error(data.error || "Run Courier booking failed");
         return;
       }
-      if (data.autoFallback?.from && data.autoFallback?.to) {
+      if (data.postexFallback) {
+        toast(
+          `Run Courier cannot deliver this lane — booked PostEx${
+            data.postexFallback.matchedCity ? ` (${data.postexFallback.matchedCity})` : ""
+          }`
+        );
+      } else if (data.autoFallback?.from && data.autoFallback?.to) {
         toast(
           `Courier auto-switched ${data.autoFallback.from} → ${data.autoFallback.to} for ${data.autoFallback.city || dest}`
         );
       }
-      setSuccess(`Booked! Tracking: ${data.trackingNumber} (${data.selectedApi})`);
-      toast.success(`Run Courier booked: ${data.trackingNumber}`);
+      const via = data.postexFallback ? "PostEx" : data.selectedApi || "Run Courier";
+      setSuccess(`Booked! Tracking: ${data.trackingNumber} (${via})`);
+      toast.success(`${via} booked: ${data.trackingNumber}`);
       if (data.trackingEmail === "sent") {
         toast.success("Tracking email sent to customer");
       } else if (data.trackingEmail === "failed") {

@@ -742,6 +742,14 @@ const CITY_ALIASES = {
   "district attock": "ATTOCK",
   bahawalnagar: "BAHAWALNAGAR",
   "bahawal nagar": "BAHAWALNAGAR",
+  // AJK Bagh — bare "Bagh" must not fuzzy-match CHAR BAGH / SAMAR BAGH.
+  bagh: "BAGH (AJK)",
+  "bagh ajk": "BAGH (AJK)",
+  "bagh (ajk)": "BAGH (AJK)",
+  "bagh a k": "BAGH (AJK)",
+  "bagh a.k": "BAGH (AJK)",
+  "bagh (a.k)": "BAGH (AJK)",
+  "bagh azad kashmir": "BAGH (AJK)",
 };
 
 export function normalizeCityKey(raw) {

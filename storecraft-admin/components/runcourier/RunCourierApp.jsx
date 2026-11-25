@@ -632,6 +632,13 @@ export default function RunCourierApp() {
     });
     const json = await res.json();
     if (res.ok && json.success) {
+      if (json.postexFallback) {
+        toast(
+          `Run Courier lane unavailable — booked PostEx${
+            json.postexFallback.matchedCity ? ` (${json.postexFallback.matchedCity})` : ""
+          }: ${json.trackingNumber || ""}`
+        );
+      }
       if (await autoDownloadAirbill(json, id)) {
         toast.success(
           json.trackingNumber

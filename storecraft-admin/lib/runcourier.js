@@ -591,6 +591,13 @@ const RUN_COURIER_CITY_ALIASES = {
   "kalar syedan": "Kallar Saidan",
   "kallar saidan": "Kallar Saidan",
   "kallar saydian": "Kallar Saidan",
+  // AJK Bagh — prefer parenthetical when present; never Trax "Bagho Bahar".
+  bagh: "Bagh",
+  "bagh ajk": "Bagh (ajk)",
+  "bagh (ajk)": "Bagh (ajk)",
+  "bagh a.k": "Bagh (ajk)",
+  "bagh (a.k)": "Bagh (ajk)",
+  "bagh azad kashmir": "Bagh (ajk)",
 };
 
 /** Prefer these when auto-falling back off a courier that does not cover the town. */
@@ -656,14 +663,19 @@ export function matchRunCourierCity(rawCity, cityList = []) {
       scored.push({ c, score: 1 + (lower.length - cl.length) });
       continue;
     }
-    // List entry extends order city — only if extension is not Cantt/City noise when a base exists
+    // List entry extends order city — only safe suffixes (Cantt/City) or parenthetical
+    // region tags like "Bagh (ajk)". Never "Bagh" → "Bagho Bahar" (letter glue) or
+    // unrelated multi-word upgrades.
     if (cl.startsWith(lower) && (cl.length === lower.length || /[\s-]/.test(cl[lower.length]))) {
       const rest = cl.slice(lower.length).trim();
       if (/^(cantt|cantonment|city|town|district)\b/i.test(rest)) {
         scored.push({ c, score: 50 + rest.length });
-      } else {
-        scored.push({ c, score: 10 + (cl.length - lower.length) });
+      } else if (/^\([^)]+\)$/i.test(rest)) {
+        scored.push({ c, score: 8 + rest.length });
+      } else if (!rest) {
+        scored.push({ c, score: 0 });
       }
+      // else: ignore unsafe extensions (Bagho…, Housing Scheme, etc.)
     }
   }
   if (scored.length) {
@@ -1497,11 +1509,14 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     } else if (/city is disabled for origin/i.test(upstream)) {
       friendly = `Origin city "${apiBody.origin}" is not enabled for ${selectedApi}. Check Settings → Run Courier origin city (use Gujranwala, not Cantt).`;
     } else if (/does not service/i.test(upstream)) {
-      friendly = `${displayCourierName(selectedApi)} will not take ${apiBody.origin} → ${apiBody.destination} on this Run Courier account. Tried Trax/TCS fallbacks too. Pick another Select API or book via PostEx.`;
+      const triedFallback = Boolean(autoFallback) || allowCourierFallback;
+      friendly = triedFallback
+        ? `${displayCourierName(requestedApi || selectedApi)} will not take ${apiBody.origin} → ${apiBody.destination} on this Run Courier account (Trax/TCS/M&P also refused). Book via PostEx for this lane.`
+        : `${displayCourierName(requestedApi || selectedApi)} will not take ${apiBody.origin} → ${apiBody.destination} on this Run Courier account. Tick “Allow auto-switch courier”, pick another Select API, or book via PostEx.`;
     } else if (/Invalid charges calculation/i.test(upstream)) {
-      friendly = `Run Courier could not price ${apiBody.origin} → ${apiBody.destination} via ${selectedApi}. Check city names or try another carrier.`;
+      friendly = `Run Courier could not price ${apiBody.origin} → ${apiBody.destination} via ${selectedApi}. Check city names, try PostEx, or pick another carrier.`;
     } else if (/missing\s*Mappings/i.test(upstream)) {
-      friendly = `${selectedApi} has no service mapping for ${apiBody.origin} → ${apiBody.destination}. Pick another Select API (e.g. Trax / TCS) or a city from the Run Courier list.`;
+      friendly = `${selectedApi} has no service mapping for ${apiBody.origin} → ${apiBody.destination}. Pick another Select API, or book via PostEx.`;
     } else if (apiBody.origin && apiBody.destination) {
       friendly = `${upstream} (${selectedApi}: ${apiBody.origin} → ${apiBody.destination})`;
     }
