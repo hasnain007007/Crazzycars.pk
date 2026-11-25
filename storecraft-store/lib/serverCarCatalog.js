@@ -5,6 +5,10 @@ import { unstable_cache } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import { buildCatalogFromMakes } from "@/lib/carCatalogApi";
 import { CAR_MAKES, CAR_DATA, QUICK_CAR_PILLS } from "@/lib/carCatalog";
+import {
+  dedupeOverlappingVehicleGens,
+  resolveVehicleImageUrl,
+} from "@/lib/carCatalogCopy";
 import CarCatalog from "@/lib/models/CarCatalog.model";
 import { loadShopByCarIndex, vehicleSlugsWithStorefrontProducts } from "@/lib/vehiclePageData";
 
@@ -139,8 +143,18 @@ export async function fetchCarCatalogServer(opts = {}) {
         const keepIfHasProducts = (row) =>
           slugsWithProducts.has(String(row?.slug || "").trim());
 
-        let vehicles = buildAllModelsList(activeMakes).filter(keepIfHasProducts);
-        let popular = buildPopularList(activeMakes).filter(keepIfHasProducts);
+        let vehicles = dedupeOverlappingVehicleGens(
+          buildAllModelsList(activeMakes).filter(keepIfHasProducts)
+        ).map((v) => ({
+          ...v,
+          image: resolveVehicleImageUrl(v.image, v.slug),
+        }));
+        let popular = dedupeOverlappingVehicleGens(
+          buildPopularList(activeMakes).filter(keepIfHasProducts)
+        ).map((v) => ({
+          ...v,
+          image: resolveVehicleImageUrl(v.image, v.slug),
+        }));
 
         // Cars that have products but were never added to Admin › Car Catalog (e.g. every
         // Audi / Mercedes-Benz) — the Shop "Shop by your car" list already shows them, so
@@ -158,7 +172,7 @@ export async function fetchCarCatalogServer(opts = {}) {
               yearFrom: v.yearFrom ?? null,
               yearTo: v.yearTo ?? null,
               bodyStyle: "",
-              image: v.image || "",
+              image: resolveVehicleImageUrl(v.image, v.slug),
               description: "",
               popularAccessories: [],
               generation: v.generation || "",
@@ -185,6 +199,7 @@ export async function fetchCarCatalogServer(opts = {}) {
               });
             }
           }
+          vehicles = dedupeOverlappingVehicleGens(vehicles);
           vehicles.sort(
             (a, b) =>
               (a.isPopular === b.isPopular ? 0 : a.isPopular ? -1 : 1) ||
@@ -247,7 +262,7 @@ export async function fetchCarCatalogServer(opts = {}) {
         return JSON.parse(JSON.stringify(fallbackPayload()));
       }
     },
-    ["car-catalog", lean ? "lean" : "full"],
+    ["car-catalog", lean ? "lean-v2" : "full-v2"],
     { revalidate: 600, tags: ["cars:catalog"] }
   )();
 }

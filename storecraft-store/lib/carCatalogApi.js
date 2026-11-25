@@ -1,4 +1,4 @@
-import { mediaImageUrl } from "@/lib/carCatalogCopy";
+import { resolveVehicleImageUrl } from "@/lib/carCatalogCopy";
 
 /** Build storefront-friendly catalog shape from API / DB makes. */
 export function buildCatalogFromMakes(makes) {
@@ -22,7 +22,7 @@ export function buildCatalogFromMakes(makes) {
           yearFrom: m.yearFrom ?? yearFrom,
           yearTo: m.yearTo ?? yearTo,
           bodyStyle: m.bodyStyle || "Sedan",
-          image: mediaImageUrl(m.image),
+          image: resolveVehicleImageUrl(m.image, m.slug),
           description: m.description || "",
           popularAccessories: Array.isArray(m.popularAccessories) ? m.popularAccessories : [],
           generation: m.generation || "",

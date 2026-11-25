@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCarCatalogClient, seedCarCatalogClient } from "@/lib/fetchCarCatalogClient";
 import { stripBrandPrefix, vehicleCardModelLabel } from "@/lib/carCatalogDisplay";
-import { mediaImageUrl } from "@/lib/carCatalogCopy";
-import { cardImageUrl, localMediaPath } from "@/lib/cloudinaryImage";
+import {
+  dedupeOverlappingVehicleGens,
+  resolveVehicleImageUrl,
+} from "@/lib/carCatalogCopy";
+import { cardImageUrl, localMediaDerivative, localMediaPath } from "@/lib/cloudinaryImage";
 import { VehicleImageFallback } from "@/components/store/VehicleImageFallback";
 
 function yearLabel(v) {
@@ -44,6 +47,7 @@ function freezeScroller(el) {
 function VehicleCard({ v }) {
   const router = useRouter();
   const tapRef = useRef(null);
+  const [imgFailed, setImgFailed] = useState(false);
 
   function onPointerDown(e) {
     if (e.pointerType === "mouse") return;
@@ -89,7 +93,7 @@ function VehicleCard({ v }) {
       draggable={false}
     >
       <span className="sbv-ring relative flex h-[118px] w-[118px] items-center justify-center overflow-hidden rounded-full border-2 border-[#E8E8E8] bg-white transition group-hover:border-[#C41E1E] group-hover:shadow-[0_8px_18px_rgba(196,30,30,0.16)] md:h-[148px] md:w-[148px]">
-        {v.image ? (
+        {v.image && !imgFailed ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={cardImageUrl(v.image, 400) || v.image}
@@ -104,10 +108,14 @@ function VehicleCard({ v }) {
             draggable={false}
             onError={(e) => {
               const img = e.currentTarget;
-              const master = localMediaPath(v.image) || String(v.image || "").split("?")[0];
-              if (master && img.getAttribute("src") !== master) {
-                img.src = master;
+              const raw = localMediaPath(v.image) || String(v.image || "").split("?")[0];
+              const mid = raw.includes("/media/") ? localMediaDerivative(raw, "800") : "";
+              const cur = String(img.getAttribute("src") || "").split("?")[0];
+              if (mid && cur !== mid) {
+                img.src = mid;
+                return;
               }
+              setImgFailed(true);
             }}
           />
         ) : (
@@ -135,30 +143,32 @@ function mapCatalogToItems(data) {
   const popular = Array.isArray(data?.popular) ? data.popular : [];
   const source = vehicles.length ? vehicles : popular;
   if (source.length) {
-    return source
-      .map((p, idx) => {
-        const slug = String(p.slug || "")
-          .trim()
-          .replace(/^\/+|\/+$/g, "");
-        // Never emit /cars/[object Object], /cars/undefined, or empty slugs (T10g).
-        if (!slug || slug === "[object Object]" || slug === "undefined") return null;
-        return {
-          make: p.make,
-          model: vehicleCardModelLabel(p) || stripBrandPrefix(p.make, p.model || p.nickname || p.generation),
-          generation: p.generation,
-          nickname: p.nickname,
-          displayName: p.displayName,
-          slug,
-          yearFrom: p.yearFrom,
-          yearTo: p.yearTo,
-          image: mediaImageUrl(p.image),
-          href: `/cars/${slug}`,
-          sortIndex: idx,
-          isPopular: Boolean(p.isPopular),
-          popularOrder: Number(p.popularOrder) || 9999,
-        };
-      })
-      .filter(Boolean);
+    return dedupeOverlappingVehicleGens(
+      source
+        .map((p, idx) => {
+          const slug = String(p.slug || "")
+            .trim()
+            .replace(/^\/+|\/+$/g, "");
+          // Never emit /cars/[object Object], /cars/undefined, or empty slugs (T10g).
+          if (!slug || slug === "[object Object]" || slug === "undefined") return null;
+          return {
+            make: p.make,
+            model: vehicleCardModelLabel(p) || stripBrandPrefix(p.make, p.model || p.nickname || p.generation),
+            generation: p.generation,
+            nickname: p.nickname,
+            displayName: p.displayName,
+            slug,
+            yearFrom: p.yearFrom,
+            yearTo: p.yearTo,
+            image: resolveVehicleImageUrl(p.image, slug),
+            href: `/cars/${slug}`,
+            sortIndex: idx,
+            isPopular: Boolean(p.isPopular),
+            popularOrder: Number(p.popularOrder) || 9999,
+          };
+        })
+        .filter(Boolean)
+    );
   }
   const carData = data?.carData || {};
   const flat = [];
@@ -176,7 +186,7 @@ function mapCatalogToItems(data) {
         slug: m.slug,
         yearFrom: m.yearFrom,
         yearTo: m.yearTo,
-        image: mediaImageUrl(m.image),
+        image: resolveVehicleImageUrl(m.image, m.slug),
         href: `/cars/${m.slug}`,
         sortIndex: flat.length,
         isPopular: Boolean(m.isPopular),
@@ -184,7 +194,7 @@ function mapCatalogToItems(data) {
       });
     }
   }
-  return flat.sort((a, b) => {
+  return dedupeOverlappingVehicleGens(flat).sort((a, b) => {
     if (a.isPopular !== b.isPopular) return a.isPopular ? -1 : 1;
     if (a.isPopular && b.isPopular) return a.popularOrder - b.popularOrder;
     return `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`);

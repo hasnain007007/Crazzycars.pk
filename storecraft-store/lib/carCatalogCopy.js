@@ -23,6 +23,105 @@ export function mediaImageUrl(value) {
 }
 
 /**
+ * Static car thumbs shipped in `public/vehicle-photos/` for catalog rows that
+ * never got a `/media/cars/…` upload (Jetour T1/T2, BYD Atto 2, Audi, etc.).
+ */
+const VEHICLE_PHOTO_FALLBACK_SLUGS = new Set([
+  "audi-a4-2008-present",
+  "audi-a5-2008-present",
+  "byd-atto2-2025-present",
+  "byd-shark6-2025-present",
+  "jetour-t1-2024-present",
+  "jetour-t2-2024-present",
+  "mercedes-benz-e-class-2009-present",
+]);
+
+/** @param {string} slug */
+export function vehiclePhotoFallbackUrl(slug) {
+  const s = String(slug || "")
+    .trim()
+    .replace(/^\/+|\/+$/g, "");
+  if (!s || !VEHICLE_PHOTO_FALLBACK_SLUGS.has(s)) return "";
+  return `/vehicle-photos/${s}.webp`;
+}
+
+/**
+ * Prefer Mongo `/media/cars` URL; otherwise the static fallback thumb.
+ * @param {unknown} image
+ * @param {string} [slug]
+ */
+export function resolveVehicleImageUrl(image, slug = "") {
+  return mediaImageUrl(image) || vehiclePhotoFallbackUrl(slug) || "";
+}
+
+function normKey(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function yearSpan(v) {
+  const from = Number(v?.yearFrom);
+  const to = Number(v?.yearTo);
+  const a = Number.isFinite(from) ? from : 0;
+  const b = Number.isFinite(to) ? to : 9999;
+  return [Math.min(a, b), Math.max(a, b)];
+}
+
+function rangeContained(inner, outer) {
+  return inner[0] >= outer[0] && inner[1] <= outer[1] && !(inner[0] === outer[0] && inner[1] === outer[1]);
+}
+
+function vehicleRank(v) {
+  const hasImg = mediaImageUrl(v?.image) || vehiclePhotoFallbackUrl(v?.slug) ? 1 : 0;
+  const [from, to] = yearSpan(v);
+  const span = to - from;
+  const hasGen = String(v?.generation || v?.nickname || "").trim() ? 1 : 0;
+  return hasImg * 1e6 + hasGen * 1e3 + span;
+}
+
+/**
+ * Drop true catalog duplicates: same make+model where one year range is a
+ * strict subset of another (e.g. Audi A5 2014–2016 inside A5 2008–Present).
+ * Distinct generations with adjacent/non-subset years are kept.
+ * @template {{ make?: string, model?: string, slug?: string, yearFrom?: number|null, yearTo?: number|null, image?: unknown, generation?: string, nickname?: string }} T
+ * @param {T[]} list
+ * @returns {T[]}
+ */
+export function dedupeOverlappingVehicleGens(list) {
+  const rows = Array.isArray(list) ? list.filter(Boolean) : [];
+  if (rows.length < 2) return rows;
+
+  const byMakeModel = new Map();
+  for (const v of rows) {
+    const key = `${normKey(v.make)}|${normKey(v.model)}`;
+    if (!byMakeModel.has(key)) byMakeModel.set(key, []);
+    byMakeModel.get(key).push(v);
+  }
+
+  const drop = new Set();
+  for (const group of byMakeModel.values()) {
+    if (group.length < 2) continue;
+    for (let i = 0; i < group.length; i++) {
+      for (let j = 0; j < group.length; j++) {
+        if (i === j) continue;
+        const a = group[i];
+        const b = group[j];
+        const ra = yearSpan(a);
+        const rb = yearSpan(b);
+        // Prefer dropping the contained / weaker row.
+        if (rangeContained(ra, rb) || (ra[0] === rb[0] && ra[1] === rb[1] && vehicleRank(a) < vehicleRank(b))) {
+          drop.add(String(a.slug || ""));
+        }
+      }
+    }
+  }
+
+  if (!drop.size) return rows;
+  return rows.filter((v) => !drop.has(String(v.slug || "")));
+}
+
+/**
  * Exact Car Catalog model match by nested model.slug (case-insensitive).
  * Never matches on bare make/model/nickname — those collide across generations.
  * @param {Array<object>} makes
@@ -88,7 +187,10 @@ export function mergeCatalogCopyOntoVehicle(vehicle, model) {
         ? vehicle.popularAccessories
         : [],
     nickname: nickname || String(vehicle.nickname || "").trim() || "",
-    image: mediaImageUrl(vehicle.image) || mediaImageUrl(model.image) || "",
+    image:
+      resolveVehicleImageUrl(vehicle.image, vehicle.slug) ||
+      resolveVehicleImageUrl(model.image, model.slug) ||
+      "",
     catalogModelSlug:
       String(model.slug || "").trim().toLowerCase() ||
       String(vehicle.catalogModelSlug || "").trim().toLowerCase() ||
