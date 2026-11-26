@@ -47,3 +47,11 @@ test("founder page is wired into Google data, sitemap, About, footer and payment
   assert.match(read("components/store/StoreFooterMedico.jsx"), /Founded by \{FOUNDER\.name\}/);
   assert.match(read("app/advance-payment/page.jsx"), /href="\/founder"/);
 });
+
+test("footer phone is the WhatsApp/order line 03284010007 (owner request)", () => {
+  const src = read("components/store/StoreFooterMedico.jsx");
+  assert.match(src, /const footerPhone = STORE_CONTACT\.whatsapp/);
+  assert.doesNotMatch(src, /footerPhone = STORE_NAP\.shopPhoneDisplay/);
+  // Google Business Profile shop line stays in structured data (NAP match).
+  assert.equal(STORE_NAP.shopPhoneLocal, "03307767799");
+});

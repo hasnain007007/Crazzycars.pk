@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation'
 import { normalizeStoreEmail } from '@/lib/storeContact'
 import { resolveStoreLogoUrl, trimmedLogoUrl } from '@/lib/storeLogo'
 import { rewriteStorePath } from '@/lib/categoryHandleAliases'
-import { STORE_NAP, storeNapTelHref } from '@/config/store-nap'
+import { STORE_NAP } from '@/config/store-nap'
+import { STORE_CONTACT } from '@/config/store-policy'
 import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
 import { FOUNDER, FOUNDER_PATH } from '@/config/founder'
 
@@ -279,8 +280,10 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
   const footerEmail = normalizeStoreEmail(
     footer.contactEmail || footer.email || footer.contact?.email || settings?.general?.email || settings?.email
   )
-  // CALL number = GBP shop line (not WhatsApp 0328…).
-  const footerPhone = STORE_NAP.shopPhoneDisplay
+  // Owner request (26 Nov 2026): footer shows the WhatsApp/order line 03284010007.
+  // Google Business Profile NAP (shop line) stays in STORE_NAP for structured data.
+  const footerPhone = STORE_CONTACT.whatsapp || "03284010007"
+  const footerPhoneTel = String(STORE_CONTACT.phoneE164 || "+923284010007").replace(/[^+\d]/g, "")
   const socialLinksRaw = Array.isArray(footer.socialLinks) && footer.socialLinks.length > 0
     ? footer.socialLinks.filter((s) => s?.url)
     : Object.entries(footer.social || {})
@@ -364,7 +367,7 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
             <div className="footer-contact">
               {footerEmail ? <a href={`mailto:${footerEmail}`}>✉ {footerEmail}</a> : null}
               {footerPhone ? (
-                <a href={`tel:${storeNapTelHref()}`}>☎ {footerPhone}</a>
+                <a href={`tel:${footerPhoneTel}`}>☎ {footerPhone}</a>
               ) : null}
               {String(settings?.general?.googleReviewUrl || "").trim() ? (
                 <a
