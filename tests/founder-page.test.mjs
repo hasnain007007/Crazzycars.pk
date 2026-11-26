@@ -55,3 +55,13 @@ test("footer phone is the WhatsApp/order line 03284010007 (owner request)", () =
   // Google Business Profile shop line stays in structured data (NAP match).
   assert.equal(STORE_NAP.shopPhoneLocal, "03307767799");
 });
+
+test("founder is reachable from homepage, main menu and footer (even with admin-set links)", () => {
+  assert.match(read("components/store/HomePage.jsx"), /<HomeFounderSection \/>/);
+  assert.match(read("components/home/HomeFounderSection.jsx"), /href=\{FOUNDER_PATH\}/);
+  // Main menu always gets "Our Story" when admin nav lacks /founder.
+  assert.match(read("components/store/StoreHeader.jsx"), /label: "Our Story", href: "\/founder"/);
+  const footer = read("components/store/StoreFooterMedico.jsx");
+  assert.match(footer, /helpLinks\.push\(\{ label: "Meet the Founder", href: FOUNDER_PATH \}\)/);
+  assert.match(footer, /className="footer-founder"/);
+});

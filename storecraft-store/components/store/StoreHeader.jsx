@@ -191,6 +191,11 @@ function deriveHeaderConfig(data) {
     megaCols = buildMegaCols(footer);
   }
 
+  // Founder page is a trust page — always reachable from the main menu, whatever
+  // the admin nav settings contain.
+  if (!nav.some((i) => String(i?.href || "").split("?")[0] === "/founder")) {
+    nav = [...nav, { label: "Our Story", href: "/founder" }];
+  }
   return { brand, nav, megaCols, megaEnabled: mega.enabled !== false };
 }
 

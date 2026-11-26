@@ -1,6 +1,7 @@
 import nextDynamic from "next/dynamic";
 import BrandHero from "@/components/home/BrandHero";
 import StatsBar from "@/components/home/StatsBar";
+import HomeFounderSection from "@/components/home/HomeFounderSection";
 import GoogleReviewsNote from "@/components/home/GoogleReviewsNote";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
 import { DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/defaultHomepageSettings";
@@ -116,6 +117,7 @@ export function HomePage({
         <ReviewsCarousel />
       ) : null}
       <GoogleReviewsNote />
+      <HomeFounderSection />
       {sectionEnabled("whyChooseUs") && homepageSettings.sections?.showWhyChooseUs !== false ? (
         <WhyChooseUs
           story={brandStory}

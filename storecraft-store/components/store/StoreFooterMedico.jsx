@@ -8,7 +8,7 @@ import { rewriteStorePath } from '@/lib/categoryHandleAliases'
 import { STORE_NAP } from '@/config/store-nap'
 import { STORE_CONTACT } from '@/config/store-policy'
 import { FooterCategoriesColumn } from "./FooterCategoriesColumn"
-import { FOUNDER, FOUNDER_PATH } from '@/config/founder'
+import { FOUNDER, FOUNDER_PATH, founderInitials } from '@/config/founder'
 
 /** Remap opaque Facebook share URLs to the canonical page URL. */
 function normalizeFooterSocialUrl(platform, url) {
@@ -346,6 +346,10 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
     return /privacy|terms|shipping|returns|refund/.test(blob)
   }
   const helpLinks = resolvedCustomerCareLinks.filter((l) => l.href && !isLegalLink(l))
+  // Admin footer settings replace the defaults — keep the founder trust page in Help regardless.
+  if (!helpLinks.some((l) => String(l.href || "").split("?")[0] === FOUNDER_PATH)) {
+    helpLinks.push({ label: "Meet the Founder", href: FOUNDER_PATH })
+  }
   const legalLinks = resolvedCustomerCareLinks.filter((l) => l.href && isLegalLink(l))
 
   return (
@@ -378,6 +382,19 @@ export default function StoreFooterMedico({ settings, initialCategoryTree = null
                 </a>
               ) : null}
             </div>
+            <Link href={FOUNDER_PATH} className="footer-founder">
+              {FOUNDER.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={FOUNDER.photo} alt="" width={40} height={40} loading="lazy" decoding="async" />
+              ) : (
+                <span className="footer-founder__initials">{founderInitials()}</span>
+              )}
+              <span>
+                <span className="footer-founder__label">Founded by</span>
+                <span className="footer-founder__name">{FOUNDER.name}</span>
+                <span className="footer-founder__cta">Meet the founder →</span>
+              </span>
+            </Link>
             {footer.companyName ? (
               <p className="footer-meta" style={{ marginTop: 10, fontWeight: 600 }}>
                 {footer.companyName}
