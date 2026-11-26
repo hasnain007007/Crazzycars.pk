@@ -83,7 +83,7 @@ docker cp "${STORE_CTR}:/app/tmp/handoff-r3-out-apply/." "$OUT_DIR/apply/"
 mkdir -p "$BACKUP_DIR/apply"
 cp -a "$OUT_DIR/apply/." "$BACKUP_DIR/apply/" 2>/dev/null || true
 
-echo "==> Build web derivatives (-400/-sm/-800) beside new PNG masters"
+echo "==> Build web derivatives (-400/-sm/-800/-1200) beside new PNG masters"
 docker exec -w "$NODE_APP_DIR" "$STORE_CTR" node --input-type=module -e '
 import fs from "fs";
 import path from "path";
@@ -94,7 +94,8 @@ for (const row of rows) {
   const abs=row.masterAbs;
   if (!abs || !fs.existsSync(abs)) { console.log("skip missing", abs); continue; }
   const stem=abs.replace(/\.png$/i,"");
-  for (const [suf,size,q] of [["-400",400,72],["-sm",1200,80],["-800",1000,78]]) {
+  // PDP gallery srcset needs -1200; cards use -400/-800. Never leave gaps or browsers fall back to multi-MB PNG.
+  for (const [suf,size,q] of [["-400",400,72],["-sm",1200,80],["-800",1000,78],["-1200",1200,80]]) {
     const out=stem+suf+".webp";
     if (fs.existsSync(out)) continue;
     await sharp(abs).resize({ width:size, height:size, fit:"inside", withoutEnlargement:true }).webp({ quality:q, effort:4 }).toFile(out);
