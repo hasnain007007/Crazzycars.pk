@@ -36,23 +36,32 @@ function GoogleG() {
 export default function GoogleReviewCard({ variant = "after-order", className = "", compact = false }) {
   const c = COPY[variant] || COPY["after-order"];
   if (compact) {
-    // One-line strip (success page stays short). Same neutral, policy-safe ask.
+    // Tap-a-star strip. Google only accepts reviews posted on Google itself, so EVERY star
+    // opens the Google review form (where the customer picks stars and posts). All five go
+    // to the same place on purpose — sending only high ratings to Google is "review gating",
+    // which Google prohibits.
     return (
-      <a
-        className={`grc-strip ${className}`.trim()}
-        href="/review"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Review CrazzyCars on Google"
-      >
+      <div className={`grc-strip ${className}`.trim()}>
         <GoogleG />
         <span className="grc-strip__text">
-          <b>Got your parcel?</b> Share your honest review on Google
+          <b>Got your parcel?</b> Tap a star — share your honest review on Google
         </span>
-        <span className="grc-strip__go" aria-hidden="true">
-          ★ →
+        <span className="grc-rate" role="group" aria-label="Review CrazzyCars on Google">
+          {[5, 4, 3, 2, 1].map((n) => (
+            <a
+              key={n}
+              className="grc-rate__star"
+              href="/review"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${n} star${n === 1 ? "" : "s"} — opens Google reviews`}
+              style={{ "--i": 5 - n }}
+            >
+              ★
+            </a>
+          ))}
         </span>
-      </a>
+      </div>
     );
   }
   return (

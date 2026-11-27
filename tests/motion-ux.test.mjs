@@ -174,3 +174,17 @@ test("order success stays short: collapsible summary, one-line founder + review 
   assert.match(strip, /honest review on Google/);
   assert.doesNotMatch(strip, /discount|coupon|free|reward|5[- ]star/i);
 });
+
+test("success page: summary looks tappable; every review star opens Google (no gating)", () => {
+  const v = read("components/store/CheckoutSuccessView.jsx");
+  assert.match(v, /className="osp-sum__btn"/);
+  assert.match(v, /<div className="osp-sum__body">/);
+  const css = read("app/globals.css");
+  assert.match(css, /\.osp-sum\[open\] \.osp-sum__body \{ animation: osp-open/);
+  const card = read("components/store/GoogleReviewCard.jsx");
+  const strip = card.slice(card.indexOf("if (compact)"), card.indexOf("return (\n    <aside"));
+  // One link target for all 5 stars — never route low ratings elsewhere.
+  assert.match(strip, /\[5, 4, 3, 2, 1\]\.map/);
+  assert.equal((strip.match(/href="/g) || []).length, 1);
+  assert.match(strip, /href="\/review"/);
+});
