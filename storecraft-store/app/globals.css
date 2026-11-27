@@ -7780,75 +7780,138 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
   color: #6b7280;
 }
 
-/* Order placed — van drives store → house (components/store/DeliveryScene.jsx).
-   Base = final frame; keyframes animate FROM the start (fill: both). */
-.ds {
-  margin: 0 auto 24px;
-  max-width: 440px;
-}
-.ds__svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 18px;
-  box-shadow: 0 18px 40px -22px rgba(196, 30, 30, 0.45);
-  animation: ds-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-.ds__cap {
-  margin-top: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #6b7280;
-}
-@keyframes ds-in { from { opacity: 0; transform: scale(0.96); } }
-
-.ds-move { transform: translateX(126px); animation: ds-drive 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.5s both; }
-@keyframes ds-drive { from { transform: translateX(0); } }
-.ds-van { animation: ds-bob 0.32s ease-in-out 0.5s 8 alternate; }
-@keyframes ds-bob { to { transform: translateY(-1.4px); } }
-.ds-wheel { transform-box: fill-box; transform-origin: center; animation: ds-spin 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.5s both; }
-@keyframes ds-spin { from { transform: rotate(-1080deg); } to { transform: rotate(0deg); } }
-.ds-speed,
-.ds-puffs { opacity: 0; animation: ds-trail 2.6s linear 0.5s both; }
-@keyframes ds-trail { 0% { opacity: 0; } 12%, 80% { opacity: 1; } 100% { opacity: 0; } }
-.ds-puff { transform-box: fill-box; transform-origin: center; animation: ds-puff 0.6s ease-out infinite; }
-.ds-puff--2 { animation-delay: 0.3s; }
-@keyframes ds-puff { from { transform: scale(0.4); opacity: 1; } to { transform: translate(-8px, -4px) scale(1.6); opacity: 0; } }
-.ds-parcel { transform: translate(100px, 18px); animation: ds-hop 0.75s cubic-bezier(0.3, 0, 0.4, 1) 3.1s both; }
-@keyframes ds-hop {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  50% { transform: translate(52px, -30px) rotate(14deg); }
-  85% { transform: translate(100px, 20px) rotate(0deg); }
-  100% { transform: translate(100px, 18px); }
-}
-.ds-door-light { opacity: 0.9; animation: ds-fade-in 0.5s ease 3.8s both; }
-.ds-glow { opacity: 1; animation: ds-fade-in 0.6s ease 3.8s both; }
+/* Order placed — "parcel journey" map card (components/store/DeliveryScene.jsx).
+   Base = final frame; animations run FROM the start (fill: both). */
 @keyframes ds-fade-in { from { opacity: 0; } }
-.ds-tick { transform-box: fill-box; transform-origin: center; animation: ds-pop 0.55s cubic-bezier(0.3, 1.7, 0.5, 1) 4s both; }
-@keyframes ds-pop { from { transform: scale(0); opacity: 0; } }
-.ds-c { transform-box: fill-box; transform-origin: center; opacity: 0; }
-@media (prefers-reduced-motion: no-preference) {
-  .ds-c { animation: ds-confetti 0.9s cubic-bezier(0.2, 0.7, 0.4, 1) 4.05s both; }
-  .ds-c--1 { --dx: -30px; --dy: -14px; }
-  .ds-c--2 { --dx: 28px; --dy: -18px; }
-  .ds-c--3 { --dx: -22px; --dy: 16px; }
-  .ds-c--4 { --dx: 32px; --dy: 10px; }
-  .ds-c--5 { --dx: -6px; --dy: -26px; }
-  .ds-c--6 { --dx: 12px; --dy: 22px; }
-  .ds-cloud--1 { animation: ds-cloud 7s ease-in-out infinite alternate; }
-  .ds-cloud--2 { animation: ds-cloud 9s ease-in-out 1s infinite alternate-reverse; }
+.pj {
+  margin: 0 auto 26px;
+  max-width: 460px;
+  text-align: left;
 }
-@keyframes ds-confetti {
-  0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(1); }
-  8% { opacity: 1; }
-  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(220deg) scale(0.6); }
+.pj-map {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  aspect-ratio: 2 / 1;
+  background: #eef0ea;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05), 0 18px 40px -24px rgba(17, 24, 39, 0.35);
+  animation: pj-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-@keyframes ds-cloud { to { transform: translateX(14px); } }
+@keyframes pj-in { from { opacity: 0; transform: translateY(8px) scale(0.985); } }
+.pj-map__svg { display: block; width: 100%; height: 100%; }
+.pj-progress {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation: pj-draw 3.2s cubic-bezier(0.45, 0, 0.25, 1) 0.6s both;
+}
+@keyframes pj-draw { from { stroke-dashoffset: 100; } }
+.pj-pin { animation: pj-pin-in 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.3s both; }
+@keyframes pj-pin-in { from { opacity: 0; transform: translate(314px, 38px) scale(0.6); } }
+.pj-tick { transform-box: fill-box; transform-origin: center; animation: pj-pop 0.5s cubic-bezier(0.3, 1.7, 0.5, 1) 3.85s both; }
+@keyframes pj-pop { from { transform: scale(0); opacity: 0; } }
+.pj-pulse { transform-box: fill-box; transform-origin: center; animation: pj-pulse 1.6s ease-out 3.8s 3 both; }
+@keyframes pj-pulse { 0% { transform: scale(0.6); opacity: 0.45; } 100% { transform: scale(2.8); opacity: 0; } }
+.pj-label {
+  position: absolute;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 14px -6px rgba(17, 24, 39, 0.35);
+  font-size: 11.5px;
+  line-height: 1.25;
+  color: #374151;
+  white-space: nowrap;
+  max-width: 58%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: ds-fade-in 0.4s ease 0.4s both;
+}
+.pj-label b { color: #c41e1e; }
+.pj-label--from { left: 4%; bottom: 6%; }
+.pj-label--to { right: 17%; top: 8%; font-weight: 700; color: #111827; animation-delay: 3.7s; }
+.pj-replay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  min-height: 0 !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+  padding: 5px 10px !important;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.62);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+.pj-replay:hover { background: rgba(17, 24, 39, 0.8); }
+
+.pj-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pj-steps::before,
+.pj-steps::after {
+  content: "";
+  position: absolute;
+  top: 13px;
+  left: 12.5%;
+  right: 12.5%;
+  height: 3px;
+  border-radius: 3px;
+  background: #e5e7eb;
+}
+.pj-steps::after {
+  right: auto;
+  width: 25%;
+  background: linear-gradient(90deg, #16a34a, #f59e0b);
+  transform-origin: left;
+  animation: pj-bar 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.9s both;
+}
+@keyframes pj-bar { from { transform: scaleX(0); } }
+.pj-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+  min-width: 0;
+}
+.pj-step__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  color: #9ca3af;
+}
+.pj-step--done .pj-step__dot { background: #16a34a; border-color: #16a34a; color: #fff; animation: pj-pop 0.45s cubic-bezier(0.3, 1.7, 0.5, 1) 0.5s both; }
+.pj-step--now .pj-step__dot { border-color: #f59e0b; color: #b45309; background: #fffbeb; box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); animation: pj-now 1.8s ease-out 1.4s infinite; }
+@keyframes pj-now { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); } 70%, 100% { box-shadow: 0 0 0 9px rgba(245, 158, 11, 0); } }
+.pj-step__title { font-size: 12px; font-weight: 700; color: #111827; line-height: 1.25; }
+.pj-step--next .pj-step__title { color: #6b7280; font-weight: 600; }
+.pj-step__note { font-size: 10.5px; line-height: 1.3; color: #6b7280; }
+.pj-step--now .pj-step__note { color: #b45309; }
+@media (max-width: 380px) {
+  .pj-step__note { display: none; }
+}
+.pj--still *, .pj--still .pj-map { animation: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ea *, .ea, .ccl *, .ds *, .ds__svg, .cc-cart-pop { animation: none !important; }
+  .ea *, .ea, .ccl *, .pj *, .pj-map, .cc-cart-pop { animation: none !important; }
 }
 
 /* Checkout: full-screen "placing your order" overlay (CheckoutView) */
@@ -7883,7 +7946,6 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
    keep feedback, drop decorative loops so the CPU and data go to the page itself. */
 html[data-lite] .ea-spark,
 html[data-lite] .ea-mini,
-html[data-lite] .ds-cloud,
-html[data-lite] .ds-puff {
+html[data-lite] .pj-step--now .pj-step__dot {
   animation: none !important;
 }

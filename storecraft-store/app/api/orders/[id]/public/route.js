@@ -96,6 +96,8 @@ export async function GET(req, { params }) {
         paymentMethod: order.paymentMethod,
         orderStatus: order.orderStatus,
         createdAt: order.createdAt,
+        /** City only (no street / phone) — powers the "parcel journey" card on the success page. */
+        shippingCity: String(order?.shippingAddress?.city || "").trim().slice(0, 60),
         payment: {
           advanceRequired: Number(order.payment?.advanceRequired) || 0,
           advanceMode: String(order.payment?.advanceMode || ""),

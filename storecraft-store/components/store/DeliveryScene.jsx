@@ -1,121 +1,191 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { isLahoreCity, lahoreEtaRange } from "@/lib/storePolicyCopy";
+
 /**
- * Order-placed celebration: the CrazzyCars van drives from our store to the customer's
- * house, drops the parcel at the door, the door lights up and a green tick pops.
- * Plays once (~4.5s). Pure SVG + CSS (`.ds-*` in globals.css). Base styles are the
- * FINAL frame and the keyframes animate *from* the start, so with reduced motion
- * (animation: none) the customer simply sees the delivered state.
+ * Order-placed "parcel journey" card — styled like a real delivery app, not a cartoon:
+ *   1. a soft map tile (blocks, river, park, main roads) with the route from our shop in
+ *      Gujranwala to the customer's city; the route draws in while a top-down CrazzyCars
+ *      van drives along the road (SVG <animateMotion>, works in Safari too) and parks at
+ *      the customer's pin, which then pulses with a green tick;
+ *   2. an honest tracker underneath: Order placed ✓ → (booking advance, when due) →
+ *      Packed & dispatched → Delivered, with the CONFIRMED Lahore ETA only
+ *      (store-policy), neutral copy for other cities.
+ * Reduced motion: the van is shown parked and the route fully drawn (no movement).
+ * Styles: `.pj-*` in globals.css.
  */
-export default function DeliveryScene({ caption = "From our store to your door" }) {
+const ROUTE = "M40 138 C 88 138, 104 104, 146 104 S 206 124, 242 98 S 284 52, 314 50";
+const EASE = ".45 0 .25 1";
+
+function Van() {
   return (
-    <figure className="ds" aria-label="Your order is on its way from our store to your door">
-      <svg className="ds__svg" viewBox="0 0 360 160" role="img" aria-hidden="true" focusable="false">
-        <defs>
-          <linearGradient id="ds-sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff1f1" />
-            <stop offset="1" stopColor="#ffffff" />
-          </linearGradient>
-          <radialGradient id="ds-glow" cx=".5" cy=".5" r=".5">
-            <stop offset="0" stopColor="#ffd36b" stopOpacity=".85" />
-            <stop offset="1" stopColor="#ffd36b" stopOpacity="0" />
-          </radialGradient>
-        </defs>
+    <g>
+      <ellipse cx="0" cy="3.2" rx="14" ry="7.4" fill="#0b1220" opacity=".18" />
+      <rect x="-13" y="-7" width="26" height="14" rx="3.2" fill="#b91c1c" />
+      <rect x="-12" y="-6" width="15.5" height="12" rx="2" fill="#dc2626" />
+      <path d="M-10 -3.2h11.5M-10 0h11.5M-10 3.2h11.5" stroke="#fca5a5" strokeWidth=".7" opacity=".8" />
+      <rect x="4.6" y="-6" width="3.6" height="12" rx="1" fill="#991b1b" />
+      <rect x="8.6" y="-5.6" width="3.2" height="11.2" rx="1.2" fill="#1f2937" />
+      <rect x="9.1" y="-4.8" width="1.1" height="4" rx=".5" fill="#94a3b8" opacity=".7" />
+      <rect x="6.5" y="-8.6" width="2.4" height="1.8" rx=".6" fill="#7f1d1d" />
+      <rect x="6.5" y="6.8" width="2.4" height="1.8" rx=".6" fill="#7f1d1d" />
+      <rect x="12.4" y="-5.4" width="1.2" height="2.6" rx=".6" fill="#fde68a" />
+      <rect x="12.4" y="2.8" width="1.2" height="2.6" rx=".6" fill="#fde68a" />
+    </g>
+  );
+}
 
-        <rect x="0" y="0" width="360" height="160" rx="18" fill="url(#ds-sky)" />
-        <circle cx="190" cy="34" r="13" fill="#ffe08a" opacity=".9" />
-        <g className="ds-cloud ds-cloud--1" fill="#fff">
-          <ellipse cx="110" cy="30" rx="16" ry="7" />
-          <ellipse cx="122" cy="26" rx="10" ry="7" />
-        </g>
-        <g className="ds-cloud ds-cloud--2" fill="#fff">
-          <ellipse cx="248" cy="22" rx="14" ry="6" />
-          <ellipse cx="258" cy="18" rx="9" ry="6" />
-        </g>
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mq) return undefined;
+    const apply = () => setReduced(mq.matches);
+    apply();
+    mq.addEventListener?.("change", apply);
+    return () => mq.removeEventListener?.("change", apply);
+  }, []);
+  return reduced;
+}
 
-        {/* ground + road */}
-        <rect x="0" y="122" width="360" height="6" fill="#d9f0d3" />
-        <rect x="0" y="128" width="360" height="22" fill="#2b2f36" />
-        <line x1="0" y1="139" x2="360" y2="139" stroke="#fff" strokeWidth="2" strokeDasharray="12 10" opacity=".55" />
+function Step({ state, title, note, icon }) {
+  return (
+    <li className={`pj-step pj-step--${state}`}>
+      <span className="pj-step__dot" aria-hidden="true">
+        {state === "done" ? (
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
+        ) : (
+          icon
+        )}
+      </span>
+      <span className="pj-step__title">{title}</span>
+      {note ? <span className="pj-step__note">{note}</span> : null}
+    </li>
+  );
+}
 
-        {/* our store */}
-        <g>
-          <rect x="12" y="80" width="58" height="44" rx="2" fill="#fff" stroke="#e5e7eb" />
-          <path d="M8 80h66l-4 10H12z" fill="#C41E1E" />
-          <path d="M20 80h8l-2 10h-8zM36 80h8l-1 10h-8zM52 80h8v10h-8z" fill="#fff" opacity=".9" />
-          <rect x="10" y="64" width="62" height="14" rx="3" fill="#111" />
-          <text x="41" y="74" textAnchor="middle" fontSize="7.6" fontWeight="800" fill="#fff" fontFamily="system-ui,sans-serif" textLength="54" lengthAdjust="spacingAndGlyphs">
-            Crazzy<tspan fill="#ff5a4f">Cars</tspan>
-          </text>
-          <rect x="34" y="100" width="14" height="24" rx="1.5" fill="#f3f4f6" stroke="#d1d5db" />
-          <rect x="18" y="96" width="12" height="10" rx="1.5" fill="#dbeafe" />
-          <rect x="52" y="96" width="12" height="10" rx="1.5" fill="#dbeafe" />
-        </g>
+const ICON = {
+  wallet: (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="6" width="18" height="13" rx="2.5" />
+      <path d="M16 12.5h2M3 9.5h18" />
+    </svg>
+  ),
+  box: (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z" />
+      <path d="M3.5 7.5L12 12l8.5-4.5M12 12v9" />
+    </svg>
+  ),
+  home: (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 11l8-6.5 8 6.5v8.5a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" />
+    </svg>
+  ),
+};
 
-        {/* customer's house */}
-        <g>
-          <rect x="294" y="60" width="8" height="16" fill="#8b5e3c" />
-          <rect x="276" y="80" width="66" height="44" rx="2" fill="#fff" stroke="#e5e7eb" />
-          <path d="M268 83l41-31 41 31z" fill="#7a2020" />
-          <rect x="283" y="90" width="12" height="11" rx="1.5" fill="#dbeafe" />
-          <rect x="325" y="90" width="12" height="11" rx="1.5" fill="#dbeafe" />
-          <circle className="ds-glow" cx="309" cy="112" r="22" fill="url(#ds-glow)" />
-          <rect x="301" y="99" width="16" height="25" rx="1.5" fill="#b45309" />
-          <rect className="ds-door-light" x="301" y="99" width="16" height="25" rx="1.5" fill="#ffd36b" />
-          <circle cx="313.5" cy="112" r="1.2" fill="#78350f" />
-        </g>
+export default function DeliveryScene({ city = "", advanceDue = false, cod = true }) {
+  const reduced = useReducedMotion();
+  const [run, setRun] = useState(0);
+  const cityName = String(city || "").trim();
+  const lahore = isLahoreCity(cityName);
+  const destination = cityName ? `Your door · ${cityName}` : "Your door";
+  const begin = reduced ? "0s" : "0.6s";
+  const dur = reduced ? "0.01s" : "3.2s";
 
-        {/* van + parcel (both ride the same translate) */}
-        <g className="ds-move">
-          <g className="ds-speed" stroke="#C41E1E" strokeWidth="2.2" strokeLinecap="round" opacity=".55">
-            <line x1="40" y1="112" x2="56" y2="112" />
-            <line x1="46" y1="120" x2="58" y2="120" />
-            <line x1="38" y1="128" x2="54" y2="128" />
+  return (
+    <figure className={`pj${reduced ? " pj--still" : ""}`} aria-label={`Your parcel's journey from CrazzyCars, Gujranwala to ${cityName || "your door"}`}>
+      <div className="pj-map" key={run}>
+        <svg className="pj-map__svg" viewBox="0 0 360 180" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <pattern id="pj-blocks" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(-12)">
+              <rect width="22" height="22" fill="#eef0ea" />
+              <rect x="2" y="2" width="18" height="18" rx="2.5" fill="#e6e9e1" />
+            </pattern>
+          </defs>
+
+          {/* map tile */}
+          <rect width="360" height="180" fill="url(#pj-blocks)" />
+          <path d="M-10 26 C 50 44, 92 8, 158 22 S 276 2, 372 14" fill="none" stroke="#c9e2f2" strokeWidth="13" strokeLinecap="round" />
+          <path d="M196 140c14-12 40-14 56-4 12 8 8 26-8 30-20 6-58-8-48-26z" fill="#d6ead0" />
+          <path d="M60 60c10-9 32-8 38 2 6 10-6 20-20 19-15-1-26-12-18-21z" fill="#d6ead0" />
+          <path d="M-5 90 L 370 66" stroke="#fff" strokeWidth="5" />
+          <path d="M120 -5 L 92 190" stroke="#fff" strokeWidth="5" />
+          <path d="M262 -5 L 286 190" stroke="#fff" strokeWidth="4" />
+          <path d="M-5 160 L 370 150" stroke="#fff" strokeWidth="3.5" />
+
+          {/* the route on its own road */}
+          <path d={ROUTE} fill="none" stroke="#d7dbe2" strokeWidth="11" strokeLinecap="round" />
+          <path d={ROUTE} fill="none" stroke="#fff" strokeWidth="8" strokeLinecap="round" />
+          <path d={ROUTE} fill="none" stroke="#9ca3af" strokeWidth="2.2" strokeDasharray="1 5.5" strokeLinecap="round" />
+          <path className="pj-progress" d={ROUTE} pathLength="100" fill="none" stroke="#C41E1E" strokeWidth="3.6" strokeLinecap="round" />
+
+          {/* shop marker */}
+          <g transform="translate(40 138)">
+            <ellipse cx="0" cy="13" rx="9" ry="3" fill="#0b1220" opacity=".15" />
+            <circle r="12.5" fill="#fff" />
+            <circle r="10.5" fill="#C41E1E" />
+            <path d="M-5.5 -2h11l-1.2-3.8h-8.6zM-4.5 -2v6.5h9V-2M-1.3 4.5v-3.2h2.6v3.2" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" />
           </g>
-          <g className="ds-puffs" fill="#cbd5e1">
-            <circle className="ds-puff ds-puff--1" cx="60" cy="130" r="3" />
-            <circle className="ds-puff ds-puff--2" cx="54" cy="127" r="2.4" />
-          </g>
-          <g className="ds-van">
-            <path d="M64 132v-20q0-6 6-6h42l14 12h6q4 0 4 4v10q0 2-2 2H66q-2 0-2-2z" fill="#C41E1E" />
-            <path d="M104 109h9l10 9h-19z" fill="#fde2e2" />
-            <rect x="68" y="110" width="30" height="10" rx="2" fill="#fff" opacity=".18" />
-            <text x="83" y="117.6" textAnchor="middle" fontSize="6.4" fontWeight="800" fill="#fff" fontFamily="system-ui,sans-serif">
-              CC.pk
-            </text>
-            <rect x="132" y="121" width="4" height="3.5" rx="1.2" fill="#ffd36b" />
-            <path className="ds-beam" d="M136 121l22-4v13l-22-4z" fill="#ffd36b" opacity=".35" />
-            <g className="ds-wheel">
-              <circle cx="80" cy="136" r="7" fill="#111" />
-              <circle cx="80" cy="136" r="2.6" fill="#e5e7eb" />
-              <rect x="79.2" y="130" width="1.6" height="3.2" fill="#e5e7eb" />
+
+          {/* customer pin */}
+          <g className="pj-pin" transform="translate(314 50)">
+            <circle className="pj-pulse" r="9" fill="#16a34a" opacity="0" />
+            <ellipse cx="0" cy="1.5" rx="6" ry="2" fill="#0b1220" opacity=".2" />
+            <path d="M0 0c-7-8.5-12-13.5-12-20a12 12 0 0 1 24 0c0 6.5-5 11.5-12 20z" fill="#111827" />
+            <path d="M-5 -19.5l5-4.2 5 4.2v5.6h-10z" fill="#fff" />
+            <g className="pj-tick">
+              <circle cx="10" cy="-27" r="6.2" fill="#16a34a" stroke="#fff" strokeWidth="1.6" />
+              <path d="M7.4 -27l1.8 1.8 3.6-3.8" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </g>
-            <g className="ds-wheel">
-              <circle cx="122" cy="136" r="7" fill="#111" />
-              <circle cx="122" cy="136" r="2.6" fill="#e5e7eb" />
-              <rect x="121.2" y="130" width="1.6" height="3.2" fill="#e5e7eb" />
-            </g>
           </g>
-          <g className="ds-parcel">
-            <rect x="74" y="92" width="18" height="14" rx="1.5" fill="#d6a46c" />
-            <rect x="74" y="92" width="18" height="4" fill="#c48b4f" />
-            <rect x="81.5" y="92" width="3" height="14" fill="#C41E1E" />
-          </g>
-        </g>
 
-        {/* delivered tick + confetti */}
-        <g className="ds-tick">
-          <circle cx="309" cy="34" r="12" fill="#16a34a" />
-          <path d="M303.5 34.5l4 4 8-8.5" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        </g>
-        <g className="ds-confetti">
-          <rect className="ds-c ds-c--1" x="307" y="32" width="4" height="4" rx="1" fill="#C41E1E" />
-          <rect className="ds-c ds-c--2" x="307" y="32" width="4" height="4" rx="1" fill="#ffd36b" />
-          <rect className="ds-c ds-c--3" x="307" y="32" width="4" height="4" rx="1" fill="#16a34a" />
-          <rect className="ds-c ds-c--4" x="307" y="32" width="4" height="4" rx="1" fill="#3b82f6" />
-          <rect className="ds-c ds-c--5" x="307" y="32" width="4" height="4" rx="1" fill="#C41E1E" />
-          <rect className="ds-c ds-c--6" x="307" y="32" width="4" height="4" rx="1" fill="#ffd36b" />
-        </g>
-      </svg>
-      {caption ? <figcaption className="ds__cap">{caption}</figcaption> : null}
+          {/* van follows the route (rotate=auto), parks just before the pin */}
+          <g>
+            <Van />
+            <animateMotion
+              dur={dur}
+              begin={begin}
+              fill="freeze"
+              rotate="auto"
+              calcMode="spline"
+              keyTimes="0;1"
+              keyPoints={reduced ? "0.94;0.94" : "0;0.94"}
+              keySplines={EASE}
+              path={ROUTE}
+            />
+          </g>
+        </svg>
+
+        <span className="pj-label pj-label--from">
+          <b>CrazzyCars</b> · Gujranwala
+        </span>
+        <span className="pj-label pj-label--to">{destination}</span>
+        {!reduced ? (
+          <button type="button" className="pj-replay" onClick={() => setRun((n) => n + 1)} aria-label="Replay the parcel journey">
+            ↻ Replay
+          </button>
+        ) : null}
+      </div>
+
+      <ol className="pj-steps" aria-label="Order progress">
+        <Step state="done" title="Order placed" note="Just now" />
+        {advanceDue ? (
+          <Step state="now" title="Booking advance" note="Send screenshot on WhatsApp" icon={ICON.wallet} />
+        ) : (
+          <Step state="now" title="Confirming" note="We’ll call / WhatsApp you" icon={ICON.wallet} />
+        )}
+        <Step state="next" title="Packed & sent" note="Tracking no. on WhatsApp" icon={ICON.box} />
+        <Step
+          state="next"
+          title="At your door"
+          note={lahore ? `Lahore: ${lahoreEtaRange()} days` : cod ? "Pay the rest on delivery" : "Delivered to you"}
+          icon={ICON.home}
+        />
+      </ol>
     </figure>
   );
 }

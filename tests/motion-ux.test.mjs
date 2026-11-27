@@ -38,14 +38,22 @@ test("motion layer never hides on-screen content and honours reduced motion", ()
 });
 
 test("order success shows the delivery scene; checkout keeps a loader until redirect", () => {
-  assert.match(read("components/store/CheckoutSuccessView.jsx"), /<DeliveryScene /);
+  assert.match(read("components/store/CheckoutSuccessView.jsx"), /<DeliveryScene\s/);
   const checkout = read("components/store/CheckoutView.jsx");
   assert.match(checkout, /setRedirecting\(true\);\n\s*window\.location\.href = `\/checkout\/success/);
   assert.match(checkout, /submitting \|\| redirecting/);
-  // Reduced motion = final (delivered) frame: base styles hold the end state.
+  // Journey card: van follows the route (Safari-safe SMIL), parks still under reduced motion.
+  const scene = read("components/store/DeliveryScene.jsx");
+  assert.match(scene, /<animateMotion/);
+  assert.match(scene, /keyPoints=\{reduced \? "0\.94;0\.94" : "0;0\.94"\}/);
+  // Only the CONFIRMED Lahore ETA is ever shown; no invented timing for other cities.
+  assert.match(scene, /lahore \? `Lahore: \$\{lahoreEtaRange\(\)\} days`/);
+  // Public order API exposes the city only — never street or phone.
+  const api = read("app/api/orders/[id]/public/route.js");
+  assert.match(api, /shippingCity: String\(order\?\.shippingAddress\?\.city/);
+  assert.doesNotMatch(api, /shippingAddress\.(line|street|address1|phone)/);
   const css = read("app/globals.css");
-  assert.match(css, /\.ds-move \{ transform: translateX\(126px\);/);
-  assert.match(css, /\.ds-parcel \{ transform: translate\(100px, 18px\);/);
+  assert.match(css, /\.pj-progress \{\n\s*stroke-dasharray: 100;\n\s*stroke-dashoffset: 0;/);
 });
 
 test("empty screens use the animated art", () => {

@@ -382,8 +382,12 @@ export default function CheckoutSuccessView() {
           textAlign: "center",
         }}
       >
-        {/* Van drives from our store to the customer's door, parcel drops, tick pops. */}
-        <DeliveryScene caption="Packed with care · delivered to your door" />
+        {/* Parcel journey map (shop → customer's city) + honest next-step tracker. */}
+        <DeliveryScene
+          city={order?.shippingCity || ""}
+          cod={String(order?.paymentMethod || "").toLowerCase() === "cod" || (!order?.paymentMethod && !paid)}
+          advanceDue={Number(order?.payment?.advanceRequired) > 0 && !paid}
+        />
 
         <h1
           style={{
