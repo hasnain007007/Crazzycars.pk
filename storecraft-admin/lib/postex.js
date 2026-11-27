@@ -750,6 +750,11 @@ const CITY_ALIASES = {
   "bagh a.k": "BAGH (AJK)",
   "bagh (a.k)": "BAGH (AJK)",
   "bagh azad kashmir": "BAGH (AJK)",
+  // KP — Katlang is a Mardan tehsil; PostEx has no KATLANG city. Never alias to TANK
+  // (street word "bank" used to fuzzy-match TANK — see resolvePostexCityName).
+  katlang: "MARDAN",
+  "katlang mardan": "MARDAN",
+  "tehsil katlang": "MARDAN",
 };
 
 export function normalizeCityKey(raw) {
@@ -811,23 +816,27 @@ function findCityByAliasOrExact(needle, cities) {
   return exact || "";
 }
 
+/** Reasons strong enough to rewrite order.shippingAddress.city after booking. */
+export const POSTEX_CITY_PERSIST_REASONS = new Set([
+  "EXACT",
+  "CLEANED",
+  "COMPACT_EXACT",
+]);
+
 /**
  * Map messy customer city/address text → PostEx operational city name.
- * Uses exact, alias, substring, token, and fuzzy (edit-distance) matching.
+ * Exact/alias/cleaned on the city field first. Street/state may help CONTAINS /
+ * TOKENS (embedded city names), but NEVER fuzzy-match street tokens — that made
+ * "mcb bank katlang" book as TANK (bank≈tank, edit distance 1).
  */
 export function resolvePostexCityName(input, cities, extras = {}) {
   const list = Array.isArray(cities) ? cities.filter(Boolean) : [];
   const rawCity = String(input || "").trim();
-  const haystack = [
-    rawCity,
-    extras.street,
-    extras.state,
-    extras.province,
-    extras.address,
-  ]
+  const streetHay = [extras.street, extras.state, extras.province, extras.address]
     .map((v) => String(v || "").trim())
     .filter(Boolean)
     .join(" ");
+  const haystack = [rawCity, streetHay].filter(Boolean).join(" ");
 
   if (!rawCity && !haystack) {
     return { ok: false, matched: "", reason: "CITY_EMPTY", suggestions: [] };
@@ -837,17 +846,21 @@ export function resolvePostexCityName(input, cities, extras = {}) {
   }
 
   const forced = findCityByAliasOrExact(rawCity, list);
-  if (forced) return { ok: true, matched: forced, reason: "EXACT", suggestions: [] };
+  if (forced) return { ok: true, matched: forced, reason: "EXACT", suggestions: [], original: rawCity };
 
   const cleanedCity = stripCityNoise(rawCity);
   const cleanedCityHit = findCityByAliasOrExact(cleanedCity, list);
   if (cleanedCityHit) {
-    return { ok: true, matched: cleanedCityHit, reason: "CLEANED", suggestions: [] };
+    return { ok: true, matched: cleanedCityHit, reason: "CLEANED", suggestions: [], original: rawCity };
   }
 
+  // Street helps locate an embedded operational city ("… Tehsil Fateh Jang …"),
+  // but fuzzy must not run against street tokens (bank→TANK, park→PATRAK, …).
   const hayKey = stripCityNoise(haystack) || normalizeCityKey(haystack);
   const hayCompact = compactCityKey(hayKey);
   const hayTokens = hayKey.split(" ").filter((t) => t.length >= 3);
+  const cleanedCompact = compactCityKey(cleanedCity);
+  const cityFieldCompact = cleanedCompact || compactCityKey(rawCity);
 
   let best = null;
   const scored = [];
@@ -860,15 +873,19 @@ export function resolvePostexCityName(input, cities, extras = {}) {
     let score = 0;
     let reason = "";
 
-    if (hayCompact === cityCompact) {
+    if (cityFieldCompact && cityFieldCompact === cityCompact) {
       score = 10000 + cityCompact.length;
       reason = "COMPACT_EXACT";
-    } else if (hayCompact.includes(cityCompact)) {
+    } else if (hayCompact === cityCompact) {
+      score = 9500 + cityCompact.length;
+      reason = "COMPACT_EXACT";
+    } else if (hayCompact.includes(cityCompact) && cityCompact.length >= 4) {
       // Prefer longer city names (FATEH JANG over ATTOCK when both appear).
+      // Require length ≥4 so short codes (e.g. "TAN") never hitchhike on street noise.
       score = 8000 + cityCompact.length * 10;
       reason = "CONTAINS";
-    } else if (cityCompact.includes(hayCompact) && hayCompact.length >= 4) {
-      score = 7000 + hayCompact.length;
+    } else if (cityFieldCompact && cityCompact.includes(cityFieldCompact) && cityFieldCompact.length >= 4) {
+      score = 7000 + cityFieldCompact.length;
       reason = "CITY_CONTAINS_INPUT";
     } else {
       const cityTokens = cityKey.split(" ").filter(Boolean);
@@ -886,27 +903,18 @@ export function resolvePostexCityName(input, cities, extras = {}) {
       if (allTokensPresent) {
         score = 6000 + cityCompact.length * 8;
         reason = "TOKENS";
-      } else {
-        // Fuzzy: compare compact city to each hay token / sliding join
-        let minDist = Infinity;
-        for (const ht of hayTokens) {
-          const hc = compactCityKey(ht);
-          if (hc.length < 4) continue;
-          minDist = Math.min(minDist, levenshtein(hc, cityCompact));
-          if (cityTokens.length > 1) {
-            minDist = Math.min(minDist, levenshtein(hc, compactCityKey(cityTokens.join(""))));
+      } else if (cityFieldCompact.length >= 4) {
+        // Fuzzy ONLY against the city field — never street tokens.
+        // First-letter guard blocks bank→TANK, store→MATORE-class collisions.
+        const sameInitial = cityFieldCompact[0] === cityCompact[0];
+        if (sameInitial) {
+          const dist = levenshtein(cityFieldCompact, cityCompact);
+          const maxLen = Math.max(cityCompact.length, cityFieldCompact.length);
+          const threshold = cityCompact.length <= 5 ? 1 : cityCompact.length <= 9 ? 2 : 3;
+          if (dist <= threshold) {
+            score = 4000 + Math.round((1 - dist / maxLen) * 500) + cityCompact.length;
+            reason = "FUZZY";
           }
-        }
-        // Also compare cleaned city string alone
-        const cleanedCompact = compactCityKey(cleanedCity);
-        if (cleanedCompact.length >= 4) {
-          minDist = Math.min(minDist, levenshtein(cleanedCompact, cityCompact));
-        }
-        const maxLen = Math.max(cityCompact.length, cleanedCompact.length || 1);
-        const threshold = cityCompact.length <= 5 ? 1 : cityCompact.length <= 9 ? 2 : 3;
-        if (minDist <= threshold && minDist < Infinity) {
-          score = 4000 + Math.round((1 - minDist / maxLen) * 500) + cityCompact.length;
-          reason = "FUZZY";
         }
       }
     }

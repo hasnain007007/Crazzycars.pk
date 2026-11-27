@@ -15,6 +15,7 @@ import {
   buildCleanStreetAddress,
   isPrepaidOrder,
   storefrontTrackingUrl,
+  POSTEX_CITY_PERSIST_REASONS,
 } from "@/lib/postex";
 import { assertCodAdvanceAllowsDispatch } from "@/lib/codAdvanceGate";
 import { archiveCurrentTracking } from "@/lib/previousTrackings";
@@ -222,8 +223,11 @@ export async function POST(request) {
       if (labelRes.success) label = labelRes.label;
     }
 
-    // Persist cleaned street (dedupe line1/address clones) + mapped city.
+    // Persist cleaned street. Only overwrite customer city on strong matches
+    // (EXACT/CLEANED/COMPACT_EXACT) — never on FUZZY/CONTAINS from street noise
+    // (e.g. "mcb bank katlang" must not rewrite city to TANK).
     const matchedCity = String(result.matchedCity || "").trim();
+    const matchReason = String(result.cityMatchReason || "").trim().toUpperCase();
     if (order.shippingAddress) {
       const cleanStreet = buildCleanStreetAddress(order.shippingAddress);
       if (cleanStreet) {
@@ -232,13 +236,21 @@ export async function POST(request) {
         order.shippingAddress.address = cleanStreet;
       }
       const prevCity = String(order.shippingAddress.city || "").trim();
-      if (matchedCity && prevCity !== matchedCity) {
+      const mayPersistCity =
+        matchedCity &&
+        prevCity !== matchedCity &&
+        POSTEX_CITY_PERSIST_REASONS.has(matchReason);
+      if (mayPersistCity) {
         order.shippingAddress.city = matchedCity;
+      }
+      if (matchedCity && prevCity !== matchedCity) {
         if (!Array.isArray(order.timeline)) order.timeline = [];
         order.timeline.push({
           status: "city_mapped",
-          title: "City mapped for PostEx",
-          description: `Customer city "${prevCity || "—"}" → PostEx "${matchedCity}"`,
+          title: mayPersistCity ? "City mapped for PostEx" : "PostEx operational city",
+          description: mayPersistCity
+            ? `Customer city "${prevCity || "—"}" → PostEx "${matchedCity}" (${matchReason || "mapped"})`
+            : `Booked PostEx city "${matchedCity}" (${matchReason || "mapped"}); kept customer city "${prevCity || "—"}"`,
           timestamp: new Date(),
           by: "admin",
         });
