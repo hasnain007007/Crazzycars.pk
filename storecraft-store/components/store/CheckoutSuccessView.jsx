@@ -19,7 +19,6 @@ import {
 } from "@/lib/freeDelivery";
 import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods";
 import { codBookingAmountForTotal } from "@/config/checkout-money";
-import { WhatsAppPaymentButton } from "@/components/store/WhatsAppPaymentButton";
 import GoogleCustomerReviewsOptIn from "@/components/store/GoogleCustomerReviewsOptIn";
 import DeliveryScene from "@/components/store/DeliveryScene";
 import GoogleReviewCard from "@/components/store/GoogleReviewCard";
@@ -75,61 +74,61 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   );
   const waLink = `https://wa.me/${whatsappWaMeDigits(waNum || storePolicyWhatsApp())}?text=${waText}`;
 
+  const title = showPercent
+    ? `Pay ${formatPrice(amount)} advance to confirm`
+    : showBooking
+      ? `Pay ${formatPrice(amount)} booking advance to confirm`
+      : `Pay ${formatPrice(amount)} delivery charges to confirm`;
+  const sub =
+    showPercent || showBooking
+      ? `Deducted from your total · ${formatPrice(remainingCod)} on delivery`
+      : "The rest is paid on delivery";
+
+  // Compact "sticky note": one action line, one detail line, two small buttons.
+  // Full admin message + account numbers stay one tap away under "How to pay".
   return (
-    <div
-      style={{
-        background: "#FFFBEB",
-        border: "1px solid #FDE68A",
-        borderLeft: "4px solid #F59E0B",
-        borderRadius: 14,
-        padding: "16px 18px",
-        marginBottom: 16,
-        textAlign: "left",
-      }}
-    >
-      <p
-        style={{
-          margin: "0 0 10px",
-          fontWeight: 700,
-          fontSize: 15,
-          color: "#78350F",
-        }}
-      >
-        {showPercent
-          ? `Pay at least ${advanceMaxPercent}% advance`
-          : showBooking
-            ? rules.advancePaymentMessageTitle || "Pay booking amount to confirm COD"
-            : rules.advancePaymentMessageTitle || "Pay Delivery Charges to Confirm"}
-      </p>
-      <p
-        style={{
-          margin: "0 0 10px",
-          fontSize: 14,
-          color: "#78350F",
-          lineHeight: 1.6,
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        {messageBody}
-      </p>
-      {accountLines.length > 0 ? (
-        <ul
-          style={{
-            margin: "0 0 10px",
-            paddingLeft: 18,
-            fontSize: 14,
-            color: "#78350F",
-            lineHeight: 1.7,
-          }}
-        >
-          {accountLines.map((line) => (
-            <li key={line.label}>
-              <strong style={{ color: "#451A03" }}>{line.label}:</strong> {line.value}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      <WhatsAppPaymentButton href={waLink} displayNumber={waDisplay} />
+    <div className="osp-advance" role="note" aria-label="Booking advance">
+      <div className="osp-advance__top">
+        <span className="osp-advance__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="6" width="18" height="13" rx="2.5" />
+            <path d="M16 12.5h2M3 9.5h18" />
+          </svg>
+        </span>
+        <span className="osp-advance__text">
+          <strong>{title}</strong>
+          <span>{sub}</span>
+        </span>
+      </div>
+      <div className="osp-advance__actions">
+        <a className="osp-advance__wa" href={waLink} target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="currentColor">
+            <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3a.5.5 0 0 0 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.5-.3z" />
+          </svg>
+          Send screenshot
+        </a>
+        <details className="osp-advance__how">
+          <summary>How to pay</summary>
+          <div className="osp-advance__more">
+            {accountLines.length > 0 ? (
+              <ul>
+                {accountLines.map((line) => (
+                  <li key={line.label}>
+                    <b>{line.label}:</b> {line.value}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <p>{messageBody}</p>
+            <p>
+              WhatsApp: <b>{waDisplay}</b> ·{" "}
+              <a href="/advance-payment" target="_blank" rel="noopener noreferrer">
+                All payment accounts
+              </a>
+            </p>
+          </div>
+        </details>
+      </div>
     </div>
   );
 }

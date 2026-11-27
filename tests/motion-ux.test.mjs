@@ -154,3 +154,11 @@ test("order success page: confirmation first, then journey, details, customer ca
   assert.match(css, /grid-template-areas: "journey" "details" "care";/);
   assert.match(css, /grid-template-areas: "journey details" "care details";/);
 });
+
+test("booking advance on success page is a compact note (details tucked under How to pay)", () => {
+  const v = read("components/store/CheckoutSuccessView.jsx");
+  assert.match(v, /className="osp-advance" role="note"/);
+  assert.match(v, /<details className="osp-advance__how">/);
+  assert.match(v, /Deducted from your total · \$\{formatPrice\(remainingCod\)\} on delivery/);
+  assert.doesNotMatch(v, /<WhatsAppPaymentButton/);
+});
