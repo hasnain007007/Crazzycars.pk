@@ -26,6 +26,8 @@ import { BRAND_NAME, TITLE_SUFFIX, withBrandTitleSuffix } from "@/lib/brand";
 import { STORE_NAP } from "@/config/store-nap";
 import { STORE_CONTACT } from "@/config/store-policy";
 import { CRITICAL_CSS } from "@/lib/criticalCss";
+import { NAV_LOADER_SCRIPT } from "@/lib/navLoaderScript";
+import MotionEffects from "@/components/store/MotionEffects";
 import "./globals.css";
 
 const MobileBottomNav = dynamic(() => import("@/components/store/MobileBottomNav"));
@@ -284,6 +286,8 @@ export default async function RootLayout({ children }) {
         }}
         suppressHydrationWarning
       >
+        {/* Instant tap feedback (progress bar + destination skeleton) — plain JS, runs before hydration. */}
+        <script id="cc-nav-loader" dangerouslySetInnerHTML={{ __html: NAV_LOADER_SCRIPT }} />
         <ThemeInjector settings={settings} />
         <Suspense fallback={null}>
           <AnalyticsScripts settings={settings} />
@@ -324,6 +328,7 @@ export default async function RootLayout({ children }) {
             <Suspense fallback={null}>
               <ClientOnlyWidgets />
             </Suspense>
+            <MotionEffects />
             <Suspense fallback={null}>
               <MobileBottomNav />
             </Suspense>

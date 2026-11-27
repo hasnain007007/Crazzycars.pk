@@ -7669,3 +7669,212 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
 .footer-founder__label { display: block; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); }
 .footer-founder__name { display: block; font-size: 14px; font-weight: 700; color: #ffffff; }
 .footer-founder__cta { display: block; font-size: 12px; color: #ff6b6b; }
+
+/* ============================================
+   MOTION — reveal, 3D card tilt, cart pop, empty-state art, car loader, delivery scene
+   (Nav loader styles are self-injected by lib/navLoaderScript.js.)
+   Transform/opacity only: no layout shift. Everything stills under reduced motion.
+   ============================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+  .cc-reveal {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  .cc-reveal.cc-revealed {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) var(--cc-reveal-delay, 0ms),
+      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) var(--cc-reveal-delay, 0ms);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .product-card.cc-tilting,
+  [data-product-card].cc-tilting {
+    transform: perspective(900px) rotateX(var(--cc-rx, 0deg)) rotateY(var(--cc-ry, 0deg)) translateY(-4px) !important;
+    transition: transform 0.12s ease-out, box-shadow 0.25s ease !important;
+    box-shadow: 0 22px 44px -16px rgba(17, 17, 17, 0.28), 0 4px 12px rgba(17, 17, 17, 0.06) !important;
+    z-index: 2;
+  }
+  .product-card.cc-tilting::after,
+  [data-product-card].cc-tilting::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    border-radius: inherit;
+    background: radial-gradient(circle at var(--cc-gx, 50%) var(--cc-gy, 50%), rgba(255, 255, 255, 0.28), transparent 55%);
+  }
+  .product-card .cc-card-media img,
+  [data-product-card] img {
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
+  }
+  .product-card.cc-tilting .cc-card-media img,
+  [data-product-card].cc-tilting img {
+    transform: scale(1.06);
+  }
+}
+
+@media (hover: none) and (prefers-reduced-motion: no-preference) {
+  .product-card:active,
+  [data-product-card]:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+.cc-cart-pop {
+  animation: cc-cart-pop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes cc-cart-pop {
+  30% { transform: scale(1.25) rotate(-8deg); }
+  60% { transform: scale(0.95) rotate(4deg); }
+  100% { transform: none; }
+}
+
+/* Empty-state illustrations (components/store/EmptyArt.jsx) */
+.ea {
+  display: block;
+  margin: 0 auto;
+  overflow: visible;
+}
+.ea-float { animation: ea-float 2.6s ease-in-out infinite alternate; }
+.ea-shadow { transform-box: fill-box; transform-origin: center; animation: ea-shadow 2.6s ease-in-out infinite alternate; }
+@keyframes ea-float { to { transform: translateY(-7px); } }
+@keyframes ea-shadow { to { transform: scaleX(0.78); opacity: 0.6; } }
+.ea-spark { transform-box: fill-box; transform-origin: center; animation: ea-spark 1.8s ease-in-out infinite; }
+.ea-spark--2 { animation-delay: 0.6s; }
+.ea-spark--3 { animation-delay: 1.2s; }
+@keyframes ea-spark { 0%, 100% { transform: scale(0.4); opacity: 0.2; } 50% { transform: scale(1); opacity: 1; } }
+.ea-beat { transform-box: fill-box; transform-origin: center; animation: ea-beat 1.5s ease-in-out infinite; }
+@keyframes ea-beat { 0%, 60%, 100% { transform: scale(1); } 15% { transform: scale(1.1); } 30% { transform: scale(0.97); } 45% { transform: scale(1.06); } }
+.ea-mini { transform-box: fill-box; transform-origin: center; animation: ea-mini 3s ease-in infinite; }
+.ea-mini--2 { animation-delay: 1s; }
+.ea-mini--3 { animation-delay: 2s; }
+@keyframes ea-mini { 0% { transform: translateY(8px) scale(0.6); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(-26px) scale(1); opacity: 0; } }
+.ea-scan { animation: ea-scan 3.2s ease-in-out infinite; }
+@keyframes ea-scan { 0%, 100% { transform: translate(-22px, 2px) rotate(-6deg); } 50% { transform: translate(24px, 0) rotate(6deg); } }
+.ea-road { stroke-dasharray: 16 12; animation: ea-road 0.55s linear infinite; }
+@keyframes ea-road { to { stroke-dashoffset: 28; } }
+.ea-drive .ea-car-body { animation: ea-bob 0.45s ease-in-out infinite alternate; }
+@keyframes ea-bob { to { transform: translateY(-1.5px); } }
+.ea-wheel { transform-box: fill-box; transform-origin: center; animation: ea-spin 0.5s linear infinite; }
+@keyframes ea-spin { to { transform: rotate(360deg); } }
+.ea-pin { animation: ea-pin 1.4s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate; }
+@keyframes ea-pin { to { transform: translateY(-8px); } }
+
+.ccl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 0;
+}
+.ccl__label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+/* Order placed — van drives store → house (components/store/DeliveryScene.jsx).
+   Base = final frame; keyframes animate FROM the start (fill: both). */
+.ds {
+  margin: 0 auto 24px;
+  max-width: 440px;
+}
+.ds__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  box-shadow: 0 18px 40px -22px rgba(196, 30, 30, 0.45);
+  animation: ds-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ds__cap {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+@keyframes ds-in { from { opacity: 0; transform: scale(0.96); } }
+
+.ds-move { transform: translateX(126px); animation: ds-drive 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.5s both; }
+@keyframes ds-drive { from { transform: translateX(0); } }
+.ds-van { animation: ds-bob 0.32s ease-in-out 0.5s 8 alternate; }
+@keyframes ds-bob { to { transform: translateY(-1.4px); } }
+.ds-wheel { transform-box: fill-box; transform-origin: center; animation: ds-spin 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.5s both; }
+@keyframes ds-spin { from { transform: rotate(-1080deg); } to { transform: rotate(0deg); } }
+.ds-speed,
+.ds-puffs { opacity: 0; animation: ds-trail 2.6s linear 0.5s both; }
+@keyframes ds-trail { 0% { opacity: 0; } 12%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.ds-puff { transform-box: fill-box; transform-origin: center; animation: ds-puff 0.6s ease-out infinite; }
+.ds-puff--2 { animation-delay: 0.3s; }
+@keyframes ds-puff { from { transform: scale(0.4); opacity: 1; } to { transform: translate(-8px, -4px) scale(1.6); opacity: 0; } }
+.ds-parcel { transform: translate(100px, 18px); animation: ds-hop 0.75s cubic-bezier(0.3, 0, 0.4, 1) 3.1s both; }
+@keyframes ds-hop {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(52px, -30px) rotate(14deg); }
+  85% { transform: translate(100px, 20px) rotate(0deg); }
+  100% { transform: translate(100px, 18px); }
+}
+.ds-door-light { opacity: 0.9; animation: ds-fade-in 0.5s ease 3.8s both; }
+.ds-glow { opacity: 1; animation: ds-fade-in 0.6s ease 3.8s both; }
+@keyframes ds-fade-in { from { opacity: 0; } }
+.ds-tick { transform-box: fill-box; transform-origin: center; animation: ds-pop 0.55s cubic-bezier(0.3, 1.7, 0.5, 1) 4s both; }
+@keyframes ds-pop { from { transform: scale(0); opacity: 0; } }
+.ds-c { transform-box: fill-box; transform-origin: center; opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .ds-c { animation: ds-confetti 0.9s cubic-bezier(0.2, 0.7, 0.4, 1) 4.05s both; }
+  .ds-c--1 { --dx: -30px; --dy: -14px; }
+  .ds-c--2 { --dx: 28px; --dy: -18px; }
+  .ds-c--3 { --dx: -22px; --dy: 16px; }
+  .ds-c--4 { --dx: 32px; --dy: 10px; }
+  .ds-c--5 { --dx: -6px; --dy: -26px; }
+  .ds-c--6 { --dx: 12px; --dy: 22px; }
+  .ds-cloud--1 { animation: ds-cloud 7s ease-in-out infinite alternate; }
+  .ds-cloud--2 { animation: ds-cloud 9s ease-in-out 1s infinite alternate-reverse; }
+}
+@keyframes ds-confetti {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(1); }
+  8% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(220deg) scale(0.6); }
+}
+@keyframes ds-cloud { to { transform: translateX(14px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ea *, .ea, .ccl *, .ds *, .ds__svg, .cc-cart-pop { animation: none !important; }
+}
+
+/* Checkout: full-screen "placing your order" overlay (CheckoutView) */
+.checkout-placing {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: ds-fade-in 0.2s ease both;
+}
+.checkout-placing__card {
+  min-width: 260px;
+  padding: 12px 28px 22px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 60px -20px rgba(17, 17, 17, 0.35);
+  text-align: center;
+}
+.checkout-placing__hint {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+}

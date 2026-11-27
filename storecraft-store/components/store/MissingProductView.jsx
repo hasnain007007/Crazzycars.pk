@@ -2,6 +2,7 @@ import Link from "next/link";
 import { categoryHref } from "@/lib/categories";
 import { FAST_404_CATEGORIES } from "@/lib/missingProductHelpers";
 import { ServerProductCard } from "@/components/store/ServerProductCard";
+import { EmptyArt } from "@/components/store/EmptyArt";
 
 function whatsappUrl(message) {
   const digits = String(
@@ -51,6 +52,7 @@ export function MissingProductView({
 
   return (
     <section className="mx-auto flex min-h-[50vh] max-w-5xl flex-col items-center px-4 py-10 text-center md:px-6 md:py-16">
+      <EmptyArt variant="lost" size={170} className="mb-2" />
       <p className="text-sm font-semibold uppercase tracking-widest text-red-700">
         {unavailable ? "Unavailable" : "Quick help"}
       </p>

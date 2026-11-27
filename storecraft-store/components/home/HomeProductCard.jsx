@@ -61,7 +61,7 @@ export function HomeProductCard({ product }) {
   }
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm transition hover:shadow-md">
+    <div data-product-card className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm transition hover:shadow-md">
       <Link
         href={`/${product.slug}`}
         className="relative block aspect-square overflow-hidden bg-[#f9fafb]"

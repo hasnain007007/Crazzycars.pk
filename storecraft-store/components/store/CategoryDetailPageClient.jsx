@@ -18,6 +18,7 @@ import {
   normalizeListingSort,
   normalizeListingView,
 } from "@/lib/productListing";
+import { EmptyArt } from "@/components/store/EmptyArt";
 
 /** Maps category-page product documents to the flat shape ProductCard + /api/products use. */
 function toProductCard(product) {
@@ -318,7 +319,8 @@ export function CategoryDetailPageClient({
           )
         ) : (
           <div style={{ textAlign: "center", padding: "60px 24px", color: "#888888" }}>
-            <p style={{ fontSize: 16, margin: "0 0 16px" }}>No products found in this category.</p>
+            <EmptyArt variant="search" size={150} />
+            <p style={{ fontSize: 16, margin: "12px 0 16px" }}>No products found in this category.</p>
             <Link
               href="/shop"
               style={{

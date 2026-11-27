@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { LISTING_VIEWS } from "@/lib/productListing";
 import { ServerProductCard } from "@/components/store/ServerProductCard";
+import { EmptyArt } from "@/components/store/EmptyArt";
 
 /**
  * Server-rendered product grid for listing pages.
@@ -23,7 +24,8 @@ export function ServerProductGrid({
   if (!rows.length) {
     return (
       <section id={id} aria-label="Products" className="py-12 text-center text-sm text-[#888888]">
-        <p>{emptyMessage}</p>
+        <EmptyArt variant="search" size={150} />
+        <p className="mt-3">{emptyMessage}</p>
       </section>
     );
   }

@@ -21,6 +21,7 @@ import { flushCartSyncOnUnload, syncCartToServer } from "@/lib/cartSyncClient";
 import { useCustomer } from "@/lib/customerAuth";
 import { normalizeWhatsAppPhone } from "@/lib/pkPhone";
 import { readPendingCoupon, validateCoupon, writePendingCoupon } from "@/lib/pendingCoupon";
+import { EmptyArt } from "@/components/store/EmptyArt";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -319,20 +320,7 @@ export function CartDrawer() {
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5">
           {!items.length ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center text-center">
-              <svg
-                className="h-16 w-16 text-gray-200"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                aria-hidden
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 6h13M9 21h.01M16 21h.01"
-                />
-              </svg>
+              <EmptyArt variant="cart" size={150} />
               <p className="mt-2 text-lg font-semibold text-[#111111]">{emptyMsg}</p>
               <p className="text-sm text-[#4B5563]">Discover our products</p>
               <Link

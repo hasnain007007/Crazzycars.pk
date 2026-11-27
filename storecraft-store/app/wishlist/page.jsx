@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatPrice } from "@/lib/currency";
+import { EmptyArt } from "@/components/store/EmptyArt";
 
 const WISHLIST_KEY = "sialkot_wishlist";
 
@@ -60,7 +61,9 @@ export default function WishlistPage() {
 
       {items.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 20px" }}>
-          <p style={{ fontSize: 48, marginBottom: 16 }}>♡</p>
+          <div style={{ marginBottom: 12 }}>
+            <EmptyArt variant="wishlist" size={170} />
+          </div>
           <p style={{ fontSize: 16, color: "#888888", marginBottom: 24 }}>Your wishlist is empty</p>
           <Link
             href="/shop"

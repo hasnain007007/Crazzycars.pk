@@ -57,6 +57,7 @@ import {
   writeCheckoutDraft,
 } from "@/lib/checkoutDraft";
 import { stageFromCheckoutStep } from "@/lib/cartSyncNormalize";
+import { CarLoader } from "@/components/store/EmptyArt";
 
 function lineKey(x) {
   const m = x?.customMeasurements && typeof x.customMeasurements === "object" ? x.customMeasurements : {};
@@ -279,6 +280,16 @@ export function CheckoutView() {
   const [couponHint, setCouponHint] = useState("");
   const [discountPreview, setDiscountPreview] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  /** True from "order saved" until the success page replaces this one (keeps the loader up). */
+  const [redirecting, setRedirecting] = useState(false);
+  useEffect(() => {
+    // Back button from the success page restores this page from bfcache — drop the overlay.
+    const onShow = (e) => {
+      if (e.persisted) setRedirecting(false);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
   const [zoneShippingCost, setZoneShippingCost] = useState(0);
   const [shippingZone, setShippingZone] = useState("");
   const [shippingIsFree, setShippingIsFree] = useState(false);
@@ -1023,6 +1034,7 @@ export function CheckoutView() {
       clearCheckoutDraft();
       const qs = new URLSearchParams({ order_id: String(nextOrderId) });
       if (accessToken) qs.set("t", accessToken);
+      setRedirecting(true);
       window.location.href = `/checkout/success?${qs.toString()}`;
     } catch {
       toast.error("Network error");
@@ -1168,6 +1180,14 @@ export function CheckoutView() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-5 md:py-8">
+      {submitting || redirecting ? (
+        <div className="checkout-placing" role="alertdialog" aria-busy="true" aria-label="Placing your order">
+          <div className="checkout-placing__card">
+            <CarLoader label={redirecting ? "Order placed! Opening your confirmation…" : "Placing your order…"} />
+            <p className="checkout-placing__hint">Please don’t close this page.</p>
+          </div>
+        </div>
+      ) : null}
       <h1 className="text-xl font-bold text-zinc-900 md:text-2xl">Checkout</h1>
       <CheckoutProgressSteps activeStep={activeStep} />
       {showOptionalLoginPrompt ? (

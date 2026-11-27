@@ -21,6 +21,8 @@ import { normalizePakistaniPaymentMethods } from "@/lib/pakistaniPaymentMethods"
 import { codBookingAmountForTotal } from "@/config/checkout-money";
 import { WhatsAppPaymentButton } from "@/components/store/WhatsAppPaymentButton";
 import GoogleCustomerReviewsOptIn from "@/components/store/GoogleCustomerReviewsOptIn";
+import DeliveryScene from "@/components/store/DeliveryScene";
+import { CarLoader } from "@/components/store/EmptyArt";
 
 function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentMethods }) {
   const pm = String(order?.paymentMethod || "").toLowerCase();
@@ -358,7 +360,7 @@ export default function CheckoutSuccessView() {
           padding: "40px 24px",
         }}
       >
-        <p style={{ fontSize: 14, color: "#888888", margin: 0 }}>Loading…</p>
+        <CarLoader label="Loading your order…" />
       </div>
     );
   }
@@ -380,23 +382,8 @@ export default function CheckoutSuccessView() {
           textAlign: "center",
         }}
       >
-        <div
-          style={{
-            width: 80,
-            height: 80,
-            background: "#f0fdf4",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 28px",
-            border: "2px solid #86efac",
-          }}
-        >
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
+        {/* Van drives from our store to the customer's door, parcel drops, tick pops. */}
+        <DeliveryScene caption="Packed with care · delivered to your door" />
 
         <h1
           style={{

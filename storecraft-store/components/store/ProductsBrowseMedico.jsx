@@ -19,6 +19,7 @@ import {
   normalizeListingSort,
   normalizeListingView,
 } from "@/lib/productListing";
+import { EmptyArt } from "@/components/store/EmptyArt";
 
 /** Real vehicle brands only — not product attributes like Universal/Premium. */
 const SHOP_BRANDS = ["Honda", "Toyota", "Suzuki", "KIA", "Hyundai", "Changan", "MG"];
@@ -510,7 +511,10 @@ export function ProductsBrowseMedico({
               </div>
             )}
             {!products.length && !loading ? (
-              <p className="mt-6 text-sm text-[#555555]">
+              <EmptyArt variant="search" size={150} className="mt-6" />
+            ) : null}
+            {!products.length && !loading ? (
+              <p className="mt-3 text-center text-sm text-[#555555]">
                 {searchQ
                   ? `No products match “${searchQ}”. Try another keyword or browse the shop.`
                   : "No products match current filters."}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatPrice } from "@/lib/currency";
+import { EmptyArt } from "@/components/store/EmptyArt";
 
 export function AccountOrdersView() {
   const router = useRouter();
@@ -39,7 +40,10 @@ export function AccountOrdersView() {
       </Link>
       <h1 className="mt-4 text-2xl font-bold text-[#E8E8E8]">My orders</h1>
       {!orders.length ? (
-        <p className="mt-6 text-sm text-[#B0B0B0]">You have not placed any orders yet while signed in.</p>
+        <div className="mt-6 text-center">
+          <EmptyArt variant="orders" size={150} />
+          <p className="mt-3 text-sm text-[#B0B0B0]">You have not placed any orders yet while signed in.</p>
+        </div>
       ) : (
         <ul className="mt-8 space-y-3">
           {orders.map((o) => (
