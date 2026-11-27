@@ -8,6 +8,8 @@ import {
   gtinFromRaw,
   toDeliveryCountryCode,
 } from "@/lib/googleCustomerReviews";
+import { getProductCardImage } from "@/lib/productCardShape";
+import { cardImageUrl } from "@/lib/cloudinaryImage";
 
 /**
  * Guest success-page order summary.
@@ -60,8 +62,17 @@ export async function GET(req, { params }) {
     const gtinProducts = [];
     if (productIds.length) {
       const products = await Product.find({ _id: { $in: productIds } })
-        .select("ean")
+        .select("ean name slug image images media.images")
         .lean();
+      // Thumbnail for the success-page order summary (small -400 webp, never the master).
+      const imageById = new Map();
+      for (const p of products) {
+        const raw = getProductCardImage(p);
+        if (raw) imageById.set(String(p._id), cardImageUrl(raw, 400) || raw);
+      }
+      for (const it of items) {
+        it.image = imageById.get(it.productId) || "";
+      }
       const seen = new Set();
       for (const p of products) {
         const gtin = gtinFromRaw(p?.ean);

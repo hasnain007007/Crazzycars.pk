@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { isLahoreCity, lahoreEtaRange } from "@/lib/storePolicyCopy";
-import { FOUNDER, FOUNDER_PATH } from "@/config/founder";
 
 /**
  * Order-placed "parcel journey" card, with a Pakistani touch so the customer feels at home:
@@ -11,8 +9,8 @@ import { FOUNDER, FOUNDER_PATH } from "@/config/founder";
  *   - real landmarks: a mosque by our Gujranwala shop; Minar-e-Pakistan for Lahore orders,
  *   - "GT Road · N-5" on the route ONLY for cities that really sit on GT Road,
  *   - the classic truck-art line "دیکھ مگر پیار سے" (look, but with love) on a ribbon,
- *   - "Shukriya!" and a short JazakAllah note from the founder. Urdu is kept to the one
- *     truck-art ribbon on purpose (owner's request: light touch, not too much Urdu).
+ *   - Urdu kept to the one truck-art ribbon on purpose (owner: light touch). The
+ *     founder's JazakAllah note lives in FounderThanksNote (customer-care section).
  * Journey: the route draws from our shop to the customer's city while a top-down van follows
  * the road (SVG <animateMotion>, Safari-safe) and parks at the pin, which gets a green tick.
  * Tracker is honest: only the CONFIRMED Lahore ETA is shown; no invented timings.
@@ -144,11 +142,6 @@ export default function DeliveryScene({ city = "", advanceDue = false, cod = tru
 
   return (
     <figure className={`pj${reduced ? " pj--still" : ""}`} aria-label={`Your parcel's journey from CrazzyCars, Gujranwala to ${cityName || "your door"}`}>
-      <div className="pj-head">
-        <span className="pj-head__en">Shukriya!</span>
-        <span className="pj-head__sub">Your order is with us</span>
-      </div>
-
       <div className="pj-map" key={run}>
         <span className="pj-band" aria-hidden="true" />
         <svg className="pj-map__svg" viewBox="0 0 360 180" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice">
@@ -259,21 +252,6 @@ export default function DeliveryScene({ city = "", advanceDue = false, cod = tru
         />
       </ol>
 
-      <Link href={FOUNDER_PATH} className="pj-note">
-        {FOUNDER.photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={FOUNDER.photo} alt="" width={44} height={44} loading="lazy" decoding="async" />
-        ) : null}
-        <span className="pj-note__body">
-          <span className="pj-note__text">
-            JazakAllah for choosing CrazzyCars. Your parcel will be packed with care in Gujranwala — and if
-            anything is not right, I’m here.
-          </span>
-          <span className="pj-note__sign">
-            — {FOUNDER.name}, {FOUNDER.jobTitle}
-          </span>
-        </span>
-      </Link>
     </figure>
   );
 }

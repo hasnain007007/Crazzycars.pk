@@ -111,7 +111,8 @@ test("journey card: Pakistani touches stay true to geography", () => {
   // Light touch: Urdu only on the truck-art ribbon; never call the business "small".
   assert.equal((scene.match(/lang="ur"/g) || []).length, 1);
   assert.doesNotMatch(scene, /small (pakistani )?business/i);
-  assert.match(scene, /href=\{FOUNDER_PATH\} className="pj-note"/);
+  assert.doesNotMatch(read("components/store/FounderThanksNote.jsx"), /small (pakistani )?business/i);
+  assert.match(read("components/store/FounderThanksNote.jsx"), /href=\{FOUNDER_PATH\} className="pj-note"/);
 });
 
 test("Google review card: policy-safe copy, success page + tracking only when delivered", () => {
@@ -127,4 +128,29 @@ test("Google review card: policy-safe copy, success page + tracking only when de
     read("components/store/OrderTrackingView.jsx"),
     /\{step === PIPELINE\.length - 1 \? <GoogleReviewCard variant="delivered"/
   );
+});
+
+test("order success page: confirmation first, then journey, details, customer care", () => {
+  const v = read("components/store/CheckoutSuccessView.jsx");
+  const at = (needle) => {
+    const i = v.indexOf(needle);
+    assert.ok(i > 0, `missing ${needle}`);
+    return i;
+  };
+  const hero = at('<header className="osp-hero">');
+  const title = at('<h1 className="osp-title">');
+  const journey = at('<section className="osp-journey"');
+  const details = at('<section className="osp-details"');
+  const care = at('<section className="osp-care"');
+  assert.ok(hero < title && title < journey && journey < details && details < care);
+  // Order summary shows items with thumbnails + totals; API gives city + thumbnails only.
+  assert.match(v, /className="osp-items"/);
+  assert.match(v, /className="osp-totals"/);
+  const api = read("app/api/orders/[id]/public/route.js");
+  assert.match(api, /it\.image = imageById\.get\(it\.productId\)/);
+  assert.match(api, /cardImageUrl\(raw, 400\)/);
+  // Mobile stacks in the same order; desktop keeps the summary in a sticky right column.
+  const css = read("app/globals.css");
+  assert.match(css, /grid-template-areas: "journey" "details" "care";/);
+  assert.match(css, /grid-template-areas: "journey details" "care details";/);
 });

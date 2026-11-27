@@ -24,6 +24,7 @@ import GoogleCustomerReviewsOptIn from "@/components/store/GoogleCustomerReviews
 import DeliveryScene from "@/components/store/DeliveryScene";
 import GoogleReviewCard from "@/components/store/GoogleReviewCard";
 import { CarLoader } from "@/components/store/EmptyArt";
+import FounderThanksNote from "@/components/store/FounderThanksNote";
 
 function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentMethods }) {
   const pm = String(order?.paymentMethod || "").toLowerCase();
@@ -77,12 +78,12 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
   return (
     <div
       style={{
-        background: "#FFF5F5",
-        border: "1px solid #FECACA",
-        borderLeft: "4px solid #1E3A5F",
-        borderRadius: 8,
-        padding: "16px 20px",
-        marginBottom: 28,
+        background: "#FFFBEB",
+        border: "1px solid #FDE68A",
+        borderLeft: "4px solid #F59E0B",
+        borderRadius: 14,
+        padding: "16px 18px",
+        marginBottom: 16,
         textAlign: "left",
       }}
     >
@@ -91,7 +92,7 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
           margin: "0 0 10px",
           fontWeight: 700,
           fontSize: 15,
-          color: "#9F1239",
+          color: "#78350F",
         }}
       >
         {showPercent
@@ -104,7 +105,7 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
         style={{
           margin: "0 0 10px",
           fontSize: 14,
-          color: "#9F1239",
+          color: "#78350F",
           lineHeight: 1.6,
           whiteSpace: "pre-wrap",
         }}
@@ -117,13 +118,13 @@ function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentM
             margin: "0 0 10px",
             paddingLeft: 18,
             fontSize: 14,
-            color: "#9F1239",
+            color: "#78350F",
             lineHeight: 1.7,
           }}
         >
           {accountLines.map((line) => (
             <li key={line.label}>
-              <strong style={{ color: "#881337" }}>{line.label}:</strong> {line.value}
+              <strong style={{ color: "#451A03" }}>{line.label}:</strong> {line.value}
             </li>
           ))}
         </ul>
@@ -366,231 +367,183 @@ export default function CheckoutSuccessView() {
     );
   }
 
+  const pm = String(order?.paymentMethod || "").toLowerCase();
+  const isCod = pm === "cod" || (!pm && !paid);
+  const orderRef =
+    loading && orderId ? "…" : order?.orderNumber || (orderId ? String(orderId).slice(-8).toUpperCase() : "—");
+  const placedAt = order?.createdAt
+    ? new Date(order.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+    : "";
+  const total = Number(order?.total ?? order?.pricing?.total ?? 0);
+  const pricing = order?.pricing || {};
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const advance = Math.max(0, Number(order?.payment?.advanceRequired) || 0);
+  const remaining = Math.max(0, Number(order?.payment?.remainingCod) || 0);
+  const waNumber = contact.whatsapp?.number || storePolicyWhatsApp();
+  const helpLink = `https://wa.me/${whatsappWaMeDigits(waNumber)}?text=${encodeURIComponent(
+    `Hi CrazzyCars.pk, I have a question about my order ${orderRef}.`
+  )}`;
+  const paymentNote = applyWhatsAppPlaceholder(
+    isCod ? messages.codAdvanceNote || "" : messages.paymentConfirmedMessage || "",
+    waNumber
+  );
+
   return (
-    <div
-      style={{
-        minHeight: "60vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "60px 24px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 520,
-          width: "100%",
-          textAlign: "center",
-        }}
-      >
-        {/* Parcel journey map (shop → customer's city) + honest next-step tracker. */}
-        <DeliveryScene
-          city={order?.shippingCity || ""}
-          cod={String(order?.paymentMethod || "").toLowerCase() === "cod" || (!order?.paymentMethod && !paid)}
-          advanceDue={Number(order?.payment?.advanceRequired) > 0 && !paid}
-        />
-
-        <h1
-          style={{
-            fontFamily: "var(--font-heading)",
-            fontSize: 28,
-            fontWeight: 700,
-            color: "#111111",
-            margin: "0 0 12px",
-            textTransform: "uppercase",
-            letterSpacing: "0.04em",
-          }}
-        >
-          {messages.orderSuccessMessage || "Order Confirmed — CrazzyCars.pk"}
-        </h1>
-
-        <p
-          style={{
-            fontSize: 15,
-            color: "#555555",
-            margin: "0 0 28px",
-            lineHeight: 1.8,
-          }}
-        >
-          {messages.orderSuccessSubtext ||
-            "Thank you for shopping with CrazzyCars.pk. We will deliver to your doorstep."}
+    <div className="osp">
+      {/* 1 — Confirmation */}
+      <header className="osp-hero">
+        <span className="osp-check" aria-hidden="true">
+          <svg viewBox="0 0 52 52">
+            <circle className="osp-check__ring" cx="26" cy="26" r="24" />
+            <path className="osp-check__tick" d="M15 27l7.5 7.5L38 19" />
+          </svg>
+        </span>
+        <p className="osp-kicker">Shukriya! · Order {orderRef}</p>
+        <h1 className="osp-title">{messages.orderSuccessMessage || "Order placed successfully"}</h1>
+        <p className="osp-sub">
+          {messages.orderSuccessSubtext || "Thank you for shopping with CrazzyCars.pk. We will deliver to your doorstep."}
         </p>
-
-        <div
-          style={{
-            background: "#F8F8F8",
-            border: "1px solid #E5E5E5",
-            borderRadius: 8,
-            padding: "20px 24px",
-            marginBottom: 28,
-            textAlign: "left",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 12,
-              paddingBottom: 12,
-              borderBottom: "1px solid #E5E5E5",
-            }}
-          >
-            <span style={{ fontSize: 13, color: "#888888" }}>Payment Status</span>
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: paid ? "#16a34a" : "#92400e",
-                background: paid ? "#f0fdf4" : "#fffbeb",
-                padding: "3px 10px",
-                borderRadius: 99,
-                border: paid ? "1px solid #86efac" : "1px solid #fde68a",
-              }}
-            >
-              {paid ? "Paid" : "Pending"}
-            </span>
-          </div>
-
-          {(loading || order || orderId) && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 12,
-              }}
-            >
-              <span style={{ fontSize: 13, color: "#888888" }}>Order Reference</span>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "#111111",
-                  fontFamily: "monospace",
-                }}
-              >
-                {loading && orderId ? "..." : order?.orderNumber || (orderId ? String(orderId).slice(-8).toUpperCase() : "—")}
-              </span>
-            </div>
-          )}
-
-          {order && (order.total != null || order.pricing?.total != null) ? (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span style={{ fontSize: 13, color: "#888888" }}>Order Total</span>
-              <span
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: "#D72323",
-                  fontFamily: "var(--font-price)",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                {formatPrice(Number(order.total ?? order.pricing?.total ?? 0))}
-              </span>
-            </div>
+        <ul className="osp-meta">
+          <li>
+            <span>Order number</span>
+            <strong>{orderRef}</strong>
+          </li>
+          {placedAt ? (
+            <li>
+              <span>Date</span>
+              <strong>{placedAt}</strong>
+            </li>
           ) : null}
-        </div>
+          {order ? (
+            <li>
+              <span>Total</span>
+              <strong>{formatPrice(total)}</strong>
+            </li>
+          ) : null}
+          <li>
+            <span>Payment</span>
+            <strong>{isCod ? "Cash on delivery" : paid ? "Paid online" : "Online / bank"}</strong>
+          </li>
+        </ul>
+      </header>
 
-        {order ? (
-          <CodDeliveryChargeBox
-            order={order}
-            storePayment={contact.storePayment}
-            whatsapp={contact.whatsapp}
-            pakistaniPaymentMethods={contact.pakistaniPaymentMethods}
-          />
-        ) : null}
+      <div className="osp-grid">
+        {/* 2 — Parcel journey */}
+        <section className="osp-journey" aria-labelledby="osp-journey-h">
+          <h2 className="osp-h2" id="osp-journey-h">
+            Your parcel’s journey
+          </h2>
+          <DeliveryScene city={order?.shippingCity || ""} cod={isCod} advanceDue={advance > 0 && !paid} />
+        </section>
 
-        {(() => {
-          const method = String(order?.paymentMethod || "").toLowerCase();
-          const isCod = method === "cod" || (!method && !paid);
-          const noteRaw = isCod
-            ? messages.codAdvanceNote || ""
-            : messages.paymentConfirmedMessage || "";
-          const note = applyWhatsAppPlaceholder(
-            noteRaw,
-            contact.whatsapp?.number || storePolicyWhatsApp()
-          );
-          if (!note.trim()) return null;
-          return (
-            <p
-              style={{
-                fontSize: 14,
-                color: "#555555",
-                margin: "0 0 20px",
-                lineHeight: 1.7,
-                textAlign: "left",
-                background: "#F8F8F8",
-                border: "1px solid #E5E5E5",
-                borderRadius: 8,
-                padding: "14px 16px",
-              }}
-            >
-              {note}
-            </p>
-          );
-        })()}
+        {/* 3 — Order details (next action first, then the summary) */}
+        <section className="osp-details" aria-labelledby="osp-summary-h">
+          {order ? (
+            <CodDeliveryChargeBox
+              order={order}
+              storePayment={contact.storePayment}
+              whatsapp={contact.whatsapp}
+              pakistaniPaymentMethods={contact.pakistaniPaymentMethods}
+            />
+          ) : null}
+          {/* The amber advance box already says this for COD orders with a booking advance. */}
+          {paymentNote.trim() && !(isCod && advance > 0 && !paid) ? <p className="osp-paynote">{paymentNote}</p> : null}
 
-        <p
-          style={{
-            fontSize: 13,
-            color: "#888888",
-            margin: "0 0 12px",
-          }}
-        >
-          A confirmation email has been sent to your email address.
-        </p>
-        <GoogleReviewCard variant="after-order" className="grc--spaced" />
+          <div className="osp-card">
+            <div className="osp-card__head">
+              <h2 className="osp-h2" id="osp-summary-h">
+                Order summary
+              </h2>
+              <span className={`osp-pill ${paid ? "osp-pill--ok" : "osp-pill--wait"}`}>
+                {paid ? "Paid" : "Payment pending"}
+              </span>
+            </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            justifyContent: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <Link
-            href="/shop"
-            style={{
-              padding: "13px 32px",
-              background: "#111111",
-              color: "#FFFFFF",
-              textDecoration: "none",
-              borderRadius: 4,
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
-          >
-            Continue Shopping
-          </Link>
-          <Link
-            href="/account/orders"
-            style={{
-              padding: "13px 32px",
-              background: "transparent",
-              color: "#111111",
-              border: "1px solid #E5E5E5",
-              textDecoration: "none",
-              borderRadius: 4,
-              fontSize: 13,
-              fontWeight: 600,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-            }}
-          >
-            View Orders
-          </Link>
-        </div>
+            {items.length ? (
+              <ul className="osp-items">
+                {items.map((it, i) => (
+                  <li key={`${it.productId || it.name}-${i}`}>
+                    <span className="osp-items__img">
+                      {it.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={it.image} alt="" width={56} height={56} loading="lazy" decoding="async" />
+                      ) : null}
+                      <b>{it.quantity}</b>
+                    </span>
+                    <span className="osp-items__name">{it.name}</span>
+                    <span className="osp-items__price">{formatPrice(Number(it.total) || Number(it.unitPrice) * it.quantity)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : loading ? (
+              <p className="osp-muted">Loading items…</p>
+            ) : null}
+
+            {order ? (
+              <dl className="osp-totals">
+                <div>
+                  <dt>Subtotal</dt>
+                  <dd>{formatPrice(Number(pricing.subtotal) || 0)}</dd>
+                </div>
+                <div>
+                  <dt>Delivery</dt>
+                  <dd>{formatPrice(Number(pricing.shippingCost) || 0)}</dd>
+                </div>
+                {Number(pricing.discount) > 0 ? (
+                  <div className="osp-totals__save">
+                    <dt>Discount</dt>
+                    <dd>−{formatPrice(Number(pricing.discount))}</dd>
+                  </div>
+                ) : null}
+                <div className="osp-totals__total">
+                  <dt>Total</dt>
+                  <dd>{formatPrice(total)}</dd>
+                </div>
+                {isCod && advance > 0 && !paid ? (
+                  <>
+                    <div className="osp-totals__split">
+                      <dt>Booking advance (now)</dt>
+                      <dd>{formatPrice(advance)}</dd>
+                    </div>
+                    <div className="osp-totals__split">
+                      <dt>Pay on delivery</dt>
+                      <dd>{formatPrice(remaining || Math.max(0, total - advance))}</dd>
+                    </div>
+                  </>
+                ) : null}
+              </dl>
+            ) : null}
+            <p className="osp-muted">A confirmation email has been sent to your email address.</p>
+          </div>
+        </section>
+
+        {/* 4 — Customer care */}
+        <section className="osp-care" aria-labelledby="osp-care-h">
+          <h2 className="osp-h2" id="osp-care-h">
+            Need help with your order?
+          </h2>
+          <div className="osp-care__row">
+            <a className="osp-btn osp-btn--wa" href={helpLink} target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor">
+                <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3a.5.5 0 0 0 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.5-.3z" />
+              </svg>
+              Chat on WhatsApp
+            </a>
+            <Link className="osp-btn osp-btn--ghost" href={`/track-order?tracking=${encodeURIComponent(order?.orderNumber || "")}`}>
+              Track order
+            </Link>
+          </div>
+          <FounderThanksNote />
+          <GoogleReviewCard variant="after-order" />
+          <div className="osp-actions">
+            <Link className="osp-btn osp-btn--primary" href="/shop">
+              Continue shopping
+            </Link>
+            <Link className="osp-btn osp-btn--ghost" href="/account/orders">
+              View my orders
+            </Link>
+          </div>
+        </section>
       </div>
       {gcrPayload ? <GoogleCustomerReviewsOptIn payload={gcrPayload} /> : null}
     </div>
