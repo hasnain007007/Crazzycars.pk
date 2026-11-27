@@ -11,7 +11,8 @@ import { FOUNDER, FOUNDER_PATH } from "@/config/founder";
  *   - real landmarks: a mosque by our Gujranwala shop; Minar-e-Pakistan for Lahore orders,
  *   - "GT Road · N-5" on the route ONLY for cities that really sit on GT Road,
  *   - the classic truck-art line "دیکھ مگر پیار سے" (look, but with love) on a ribbon,
- *   - Urdu alongside English ("Shukriya!", tracker steps), and a short note from the founder.
+ *   - "Shukriya!" and a short JazakAllah note from the founder. Urdu is kept to the one
+ *     truck-art ribbon on purpose (owner's request: light touch, not too much Urdu).
  * Journey: the route draws from our shop to the customer's city while a top-down van follows
  * the road (SVG <animateMotion>, Safari-safe) and parks at the pin, which gets a green tick.
  * Tracker is honest: only the CONFIRMED Lahore ETA is shown; no invented timings.
@@ -93,7 +94,7 @@ function useReducedMotion() {
   return reduced;
 }
 
-function Step({ state, title, ur, note, icon }) {
+function Step({ state, title, note, icon }) {
   return (
     <li className={`pj-step pj-step--${state}`}>
       <span className="pj-step__dot" aria-hidden="true">
@@ -106,11 +107,6 @@ function Step({ state, title, ur, note, icon }) {
         )}
       </span>
       <span className="pj-step__title">{title}</span>
-      {ur ? (
-        <span className="pj-step__ur" lang="ur" dir="rtl">
-          {ur}
-        </span>
-      ) : null}
       {note ? <span className="pj-step__note">{note}</span> : null}
     </li>
   );
@@ -150,9 +146,7 @@ export default function DeliveryScene({ city = "", advanceDue = false, cod = tru
     <figure className={`pj${reduced ? " pj--still" : ""}`} aria-label={`Your parcel's journey from CrazzyCars, Gujranwala to ${cityName || "your door"}`}>
       <div className="pj-head">
         <span className="pj-head__en">Shukriya!</span>
-        <span className="pj-head__ur" lang="ur" dir="rtl">
-          آپ کا آرڈر ہمیں مل گیا ہے
-        </span>
+        <span className="pj-head__sub">Your order is with us</span>
       </div>
 
       <div className="pj-map" key={run}>
@@ -249,17 +243,17 @@ export default function DeliveryScene({ city = "", advanceDue = false, cod = tru
       </div>
 
       <ol className="pj-steps" aria-label="Order progress">
-        <Step state="done" title="Order placed" ur="آرڈر موصول" note="Just now" />
+        <Step state="done" title="Order placed" note="Just now" />
         {advanceDue ? (
-          <Step state="now" title="Booking advance" ur="بُکنگ ایڈوانس" note="Send screenshot on WhatsApp" icon={ICON.wallet} />
+          <Step state="now" title="Booking advance" note="Send screenshot on WhatsApp" icon={ICON.wallet} />
         ) : (
-          <Step state="now" title="Confirming" ur="تصدیق" note="We’ll call / WhatsApp you" icon={ICON.wallet} />
+          <Step state="now" title="Confirming" note="We’ll call / WhatsApp you" icon={ICON.wallet} />
         )}
-        <Step state="next" title="Packed & sent" ur="پیک اور روانہ" note="Tracking no. on WhatsApp" icon={ICON.box} />
+        <Step state="next" title="Packed & sent" note="Tracking no. on WhatsApp" icon={ICON.box} />
         <Step
           state="next"
           title="At your door"
-          ur="آپ کے دروازے پر"
+         
           note={lahore ? `Lahore: ${lahoreEtaRange()} days` : cod ? "Pay the rest on delivery" : "Delivered to you"}
           icon={ICON.home}
         />
@@ -272,11 +266,8 @@ export default function DeliveryScene({ city = "", advanceDue = false, cod = tru
         ) : null}
         <span className="pj-note__body">
           <span className="pj-note__text">
-            JazakAllah for trusting a small Pakistani business. Your parcel will be packed with care in Gujranwala —
-            and if anything is not right, I’m here.
-          </span>
-          <span className="pj-note__ur" lang="ur" dir="rtl">
-            آپ کے اعتماد کا بہت شکریہ
+            JazakAllah for choosing CrazzyCars. Your parcel will be packed with care in Gujranwala — and if
+            anything is not right, I’m here.
           </span>
           <span className="pj-note__sign">
             — {FOUNDER.name}, {FOUNDER.jobTitle}

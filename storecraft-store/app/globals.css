@@ -7932,7 +7932,7 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
   font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Noto Naskh Arabic", "Geeza Pro", serif;
   unicode-bidi: plaintext;
 }
-.pj-head__ur { font-size: 15px; line-height: 1.9; color: #374151; }
+.pj-head__sub { font-size: 13px; font-weight: 600; color: #6b7280; }
 .pj-band {
   position: absolute;
   inset: 0 0 auto 0;

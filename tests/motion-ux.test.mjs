@@ -108,6 +108,8 @@ test("journey card: Pakistani touches stay true to geography", () => {
   for (const c of ["karachi", "multan", "faisalabad", "sialkot", "quetta"]) assert.ok(!gt[1].split("|").includes(c), c);
   // Urdu alongside English, the truck-art line, and the founder's note.
   assert.match(scene, /دیکھ مگر پیار سے/);
-  assert.match(scene, /lang="ur" dir="rtl"/);
+  // Light touch: Urdu only on the truck-art ribbon; never call the business "small".
+  assert.equal((scene.match(/lang="ur"/g) || []).length, 1);
+  assert.doesNotMatch(scene, /small (pakistani )?business/i);
   assert.match(scene, /href=\{FOUNDER_PATH\} className="pj-note"/);
 });
