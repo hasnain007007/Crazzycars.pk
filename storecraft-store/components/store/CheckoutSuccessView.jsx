@@ -387,9 +387,11 @@ export default function CheckoutSuccessView() {
     waNumber
   );
 
+  const itemCount = items.reduce((n, it) => n + (Number(it.quantity) || 1), 0);
+
   return (
     <div className="osp">
-      {/* 1 — Confirmation */}
+      {/* 1 — Confirmation (one compact block) */}
       <header className="osp-hero">
         <span className="osp-check" aria-hidden="true">
           <svg viewBox="0 0 52 52">
@@ -397,46 +399,31 @@ export default function CheckoutSuccessView() {
             <path className="osp-check__tick" d="M15 27l7.5 7.5L38 19" />
           </svg>
         </span>
-        <p className="osp-kicker">Shukriya! · Order {orderRef}</p>
-        <h1 className="osp-title">{messages.orderSuccessMessage || "Order placed successfully"}</h1>
-        <p className="osp-sub">
-          {messages.orderSuccessSubtext || "Thank you for shopping with CrazzyCars.pk. We will deliver to your doorstep."}
-        </p>
-        <ul className="osp-meta">
-          <li>
-            <span>Order number</span>
-            <strong>{orderRef}</strong>
-          </li>
-          {placedAt ? (
-            <li>
-              <span>Date</span>
-              <strong>{placedAt}</strong>
-            </li>
-          ) : null}
-          {order ? (
-            <li>
-              <span>Total</span>
-              <strong>{formatPrice(total)}</strong>
-            </li>
-          ) : null}
-          <li>
-            <span>Payment</span>
-            <strong>{isCod ? "Cash on delivery" : paid ? "Paid online" : "Online / bank"}</strong>
-          </li>
-        </ul>
+        <div className="osp-hero__text">
+          <h1 className="osp-title">{messages.orderSuccessMessage || "Order placed successfully"}</h1>
+          <p className="osp-sub">{messages.orderSuccessSubtext || "Thank you for your order."}</p>
+          <p className="osp-line">
+            Order <b>{orderRef}</b>
+            {order ? (
+              <>
+                {" "}
+                · <b>{formatPrice(total)}</b>
+              </>
+            ) : null}{" "}
+            · {isCod ? "Cash on delivery" : paid ? "Paid online" : "Online / bank"}
+            {placedAt ? <> · {placedAt}</> : null}
+          </p>
+        </div>
       </header>
 
       <div className="osp-grid">
         {/* 2 — Parcel journey */}
-        <section className="osp-journey" aria-labelledby="osp-journey-h">
-          <h2 className="osp-h2" id="osp-journey-h">
-            Your parcel’s journey
-          </h2>
+        <section className="osp-journey" aria-label="Your parcel’s journey">
           <DeliveryScene city={order?.shippingCity || ""} cod={isCod} advanceDue={advance > 0 && !paid} />
         </section>
 
-        {/* 3 — Order details (next action first, then the summary) */}
-        <section className="osp-details" aria-labelledby="osp-summary-h">
+        {/* 3 — Order details: next action, then a collapsible summary */}
+        <section className="osp-details" aria-label="Order details">
           {order ? (
             <CodDeliveryChargeBox
               order={order}
@@ -445,19 +432,22 @@ export default function CheckoutSuccessView() {
               pakistaniPaymentMethods={contact.pakistaniPaymentMethods}
             />
           ) : null}
-          {/* The amber advance box already says this for COD orders with a booking advance. */}
+          {/* The advance note already says this for COD orders with a booking advance. */}
           {paymentNote.trim() && !(isCod && advance > 0 && !paid) ? <p className="osp-paynote">{paymentNote}</p> : null}
 
-          <div className="osp-card">
-            <div className="osp-card__head">
-              <h2 className="osp-h2" id="osp-summary-h">
+          <details className="osp-card osp-sum">
+            <summary>
+              <span>
                 Order summary
-              </h2>
-              <span className={`osp-pill ${paid ? "osp-pill--ok" : "osp-pill--wait"}`}>
-                {paid ? "Paid" : "Payment pending"}
+                {itemCount ? (
+                  <small>
+                    {" "}
+                    · {itemCount} {itemCount === 1 ? "item" : "items"}
+                  </small>
+                ) : null}
               </span>
-            </div>
-
+              <span className="osp-sum__total">{order ? formatPrice(total) : "…"}</span>
+            </summary>
             {items.length ? (
               <ul className="osp-items">
                 {items.map((it, i) => (
@@ -465,7 +455,7 @@ export default function CheckoutSuccessView() {
                     <span className="osp-items__img">
                       {it.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={it.image} alt="" width={56} height={56} loading="lazy" decoding="async" />
+                        <img src={it.image} alt="" width={48} height={48} loading="lazy" decoding="async" />
                       ) : null}
                       <b>{it.quantity}</b>
                     </span>
@@ -474,10 +464,7 @@ export default function CheckoutSuccessView() {
                   </li>
                 ))}
               </ul>
-            ) : loading ? (
-              <p className="osp-muted">Loading items…</p>
             ) : null}
-
             {order ? (
               <dl className="osp-totals">
                 <div>
@@ -513,35 +500,27 @@ export default function CheckoutSuccessView() {
               </dl>
             ) : null}
             <p className="osp-muted">A confirmation email has been sent to your email address.</p>
-          </div>
+          </details>
         </section>
 
-        {/* 4 — Customer care */}
-        <section className="osp-care" aria-labelledby="osp-care-h">
-          <h2 className="osp-h2" id="osp-care-h">
-            Need help with your order?
-          </h2>
-          <div className="osp-care__row">
+        {/* 4 — Customer care (one row of actions + two one-line notes) */}
+        <section className="osp-care" aria-label="Help and next steps">
+          <div className="osp-actions">
             <a className="osp-btn osp-btn--wa" href={helpLink} target="_blank" rel="noopener noreferrer">
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor">
+              <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor">
                 <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3a.5.5 0 0 0 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.5-.3z" />
               </svg>
-              Chat on WhatsApp
+              Help
             </a>
             <Link className="osp-btn osp-btn--ghost" href={`/track-order?tracking=${encodeURIComponent(order?.orderNumber || "")}`}>
               Track order
             </Link>
-          </div>
-          <FounderThanksNote />
-          <GoogleReviewCard variant="after-order" />
-          <div className="osp-actions">
             <Link className="osp-btn osp-btn--primary" href="/shop">
               Continue shopping
             </Link>
-            <Link className="osp-btn osp-btn--ghost" href="/account/orders">
-              View my orders
-            </Link>
           </div>
+          <FounderThanksNote compact />
+          <GoogleReviewCard variant="after-order" compact />
         </section>
       </div>
       {gcrPayload ? <GoogleCustomerReviewsOptIn payload={gcrPayload} /> : null}

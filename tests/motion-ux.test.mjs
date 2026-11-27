@@ -112,7 +112,7 @@ test("journey card: Pakistani touches stay true to geography", () => {
   assert.equal((scene.match(/lang="ur"/g) || []).length, 1);
   assert.doesNotMatch(scene, /small (pakistani )?business/i);
   assert.doesNotMatch(read("components/store/FounderThanksNote.jsx"), /small (pakistani )?business/i);
-  assert.match(read("components/store/FounderThanksNote.jsx"), /href=\{FOUNDER_PATH\} className="pj-note"/);
+  assert.match(read("components/store/FounderThanksNote.jsx"), /href=\{FOUNDER_PATH\} className=\{`pj-note/);
 });
 
 test("Google review card: policy-safe copy, success page + tracking only when delivered", () => {
@@ -161,4 +161,16 @@ test("booking advance on success page is a compact note (details tucked under Ho
   assert.match(v, /<details className="osp-advance__how">/);
   assert.match(v, /Deducted from your total · \$\{formatPrice\(remainingCod\)\} on delivery/);
   assert.doesNotMatch(v, /<WhatsAppPaymentButton/);
+});
+
+test("order success stays short: collapsible summary, one-line founder + review strip", () => {
+  const v = read("components/store/CheckoutSuccessView.jsx");
+  assert.match(v, /<details className="osp-card osp-sum">/);
+  assert.match(v, /<FounderThanksNote compact \/>/);
+  assert.match(v, /<GoogleReviewCard variant="after-order" compact \/>/);
+  assert.doesNotMatch(v, /className="osp-meta"/);
+  const card = read("components/store/GoogleReviewCard.jsx");
+  const strip = card.slice(card.indexOf("if (compact)"), card.indexOf("return (\n    <aside"));
+  assert.match(strip, /honest review on Google/);
+  assert.doesNotMatch(strip, /discount|coupon|free|reward|5[- ]star/i);
 });

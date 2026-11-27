@@ -33,8 +33,28 @@ function GoogleG() {
   );
 }
 
-export default function GoogleReviewCard({ variant = "after-order", className = "" }) {
+export default function GoogleReviewCard({ variant = "after-order", className = "", compact = false }) {
   const c = COPY[variant] || COPY["after-order"];
+  if (compact) {
+    // One-line strip (success page stays short). Same neutral, policy-safe ask.
+    return (
+      <a
+        className={`grc-strip ${className}`.trim()}
+        href="/review"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Review CrazzyCars on Google"
+      >
+        <GoogleG />
+        <span className="grc-strip__text">
+          <b>Got your parcel?</b> Share your honest review on Google
+        </span>
+        <span className="grc-strip__go" aria-hidden="true">
+          ★ →
+        </span>
+      </a>
+    );
+  }
   return (
     <aside className={`grc grc--${variant} ${className}`.trim()} aria-label="Review CrazzyCars on Google">
       <div className="grc__head">
