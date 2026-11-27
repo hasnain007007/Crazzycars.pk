@@ -9,7 +9,9 @@ import { useEffect } from "react";
  *    content stays in the HTML for Google.
  *  - 3D tilt: on desktop mouse only, product cards tilt toward the cursor with a soft glare.
  *  - Cart pop: the cart icon bounces when something is added (existing cart-item-added event).
- * All of it is skipped under prefers-reduced-motion.
+ * All of it is skipped under prefers-reduced-motion. On slow data / low-end phones
+ * (html[data-lite], set by lib/navLoaderScript) reveal + tilt are skipped too: the CPU and
+ * battery go to loading the page, not decoration. The cart pop stays (it is feedback).
  */
 const REVEAL = ".product-card,[data-product-card],main h2,[data-reveal]";
 const TILT = ".product-card,[data-product-card]";
@@ -133,7 +135,8 @@ export default function MotionEffects() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
     let cleanups = [];
     const boot = () => {
-      cleanups = [setupReveal(), setupTilt(), setupCartPop()];
+      const lite = document.documentElement.getAttribute("data-lite") === "1";
+      cleanups = lite ? [setupCartPop()] : [setupReveal(), setupTilt(), setupCartPop()];
     };
     const idle = window.requestIdleCallback || ((fn) => window.setTimeout(fn, 200));
     const id = idle(boot, { timeout: 1500 });

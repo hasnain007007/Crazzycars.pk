@@ -7878,3 +7878,12 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
   font-size: 12px;
   color: #9ca3af;
 }
+
+/* Lite mode (slow data / Data Saver / low-end phone — html[data-lite], see lib/navLoaderScript):
+   keep feedback, drop decorative loops so the CPU and data go to the page itself. */
+html[data-lite] .ea-spark,
+html[data-lite] .ea-mini,
+html[data-lite] .ds-cloud,
+html[data-lite] .ds-puff {
+  animation: none !important;
+}

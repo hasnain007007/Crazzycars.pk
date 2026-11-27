@@ -387,9 +387,20 @@ export default function HomeHero({ settings, initialSlides = null }) {
   const [dragPx, setDragPx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  /** Slow data / Data Saver / low-end phone (html[data-lite], set by lib/navLoaderScript). */
+  const [lite, setLite] = useState(false);
   const pointerRef = useRef({ x: 0, y: 0, active: false, locked: false });
   const sectionRef = useRef(null);
-  useHeroDepth(sectionRef, !reduceMotion && slides.length > 0);
+  useHeroDepth(sectionRef, !reduceMotion && !lite && slides.length > 0);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const read = () => setLite(root.getAttribute("data-lite") === "1");
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(root, { attributes: true, attributeFilter: ["data-lite"] });
+    return () => mo.disconnect();
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
@@ -454,10 +465,11 @@ export default function HomeHero({ settings, initialSlides = null }) {
 
   useEffect(() => {
     if (slides.length < 2 || paused || dragging) return undefined;
-    if (reduceMotion) return undefined;
+    // Lite: no autoplay — each slide is a large banner; on slow data let the shopper swipe.
+    if (reduceMotion || lite) return undefined;
     const t = setInterval(() => go(1), 7000);
     return () => clearInterval(t);
-  }, [slides.length, go, paused, dragging, reduceMotion]);
+  }, [slides.length, go, paused, dragging, reduceMotion, lite]);
 
   const onPointerDown = useCallback(
     (e) => {
