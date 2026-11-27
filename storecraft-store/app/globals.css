@@ -7828,7 +7828,7 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
   animation: ds-fade-in 0.4s ease 0.4s both;
 }
 .pj-label b { color: #c41e1e; }
-.pj-label--from { left: 4%; bottom: 6%; }
+.pj-label--from { left: 4%; bottom: 6%; max-width: 50%; }
 .pj-label--to { right: 17%; top: 8%; font-weight: 700; color: #111827; animation-delay: 3.7s; }
 .pj-replay {
   position: absolute;
@@ -7909,6 +7909,92 @@ body:has([data-prepaid-product]) .adv-band { display: none; }
   .pj-step__note { display: none; }
 }
 .pj--still *, .pj--still .pj-map { animation: none !important; }
+
+/* Pakistani touches: truck-art band + ribbon, Urdu lines, founder note */
+.pj-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 2px 8px;
+}
+.pj-head__en {
+  font-family: var(--font-heading), Rajdhani, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #01411c;
+}
+.pj-head__ur,
+.pj-step__ur,
+.pj-note__ur,
+.pj-ribbon {
+  font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Noto Naskh Arabic", "Geeza Pro", serif;
+  unicode-bidi: plaintext;
+}
+.pj-head__ur { font-size: 15px; line-height: 1.9; color: #374151; }
+.pj-band {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  height: 6px;
+  background:
+    radial-gradient(circle at 6px 3px, #fff 1.1px, transparent 1.6px) 0 0 / 12px 6px,
+    repeating-linear-gradient(90deg, #e11d48 0 12px, #facc15 12px 24px, #16a34a 24px 36px, #2563eb 36px 48px, #f97316 48px 60px);
+}
+.pj-road-name {
+  font: 700 7.2px/1 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  fill: #6b7280;
+  animation: ds-fade-in 0.6s ease 1.2s both;
+}
+.pj-ribbon {
+  position: absolute;
+  right: 3%;
+  bottom: 7%;
+  z-index: 2;
+  padding: 1px 10px 3px;
+  border-radius: 6px;
+  background: #facc15;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.9;
+  border: 2px solid #16a34a;
+  box-shadow: 0 0 0 2px #e11d48, 0 8px 16px -8px rgba(17, 24, 39, 0.5);
+  transform: rotate(-3deg);
+  animation: pj-ribbon 0.55s cubic-bezier(0.3, 1.6, 0.5, 1) 4.1s both;
+}
+@keyframes pj-ribbon { from { opacity: 0; transform: rotate(-3deg) scale(0.6); } }
+.pj-step__ur { font-size: 11.5px; line-height: 1.8; color: #6b7280; }
+.pj-step--done .pj-step__ur { color: #15803d; }
+.pj-step--now .pj-step__ur { color: #b45309; }
+.pj-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f0fdf4, #fffbeb);
+  border: 1px solid #d9f0dd;
+  text-decoration: none !important;
+  color: inherit;
+  animation: ds-fade-in 0.5s ease 1.6s both;
+}
+.pj-note img {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 22%;
+  border: 2px solid #01411c;
+}
+.pj-note__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pj-note__text { font-size: 13px; line-height: 1.5; color: #1f2937; }
+.pj-note__ur { font-size: 14px; line-height: 1.9; color: #01411c; text-align: right; }
+.pj-note__sign { font-size: 12px; font-weight: 700; color: #01411c; }
 
 @media (prefers-reduced-motion: reduce) {
   .ea *, .ea, .ccl *, .pj *, .pj-map, .cc-cart-pop { animation: none !important; }

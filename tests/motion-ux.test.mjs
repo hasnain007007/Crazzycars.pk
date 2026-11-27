@@ -96,3 +96,18 @@ test("network-adaptive: prefetch only on fast links, lite mode on slow/low-end, 
   assert.match(read("components/home/HomeHero.jsx"), /if \(reduceMotion \|\| lite\) return undefined;/);
   assert.match(read("components/store/MotionEffects.jsx"), /lite \? \[setupCartPop\(\)\]/);
 });
+
+test("journey card: Pakistani touches stay true to geography", () => {
+  const scene = read("components/store/DeliveryScene.jsx");
+  // GT Road label only for cities really on GT Road (N-5); Minar-e-Pakistan only for Lahore.
+  assert.match(scene, /\{gtRoad \? \(/);
+  assert.match(scene, /\{lahore \? <MinarEPakistan/);
+  const gt = scene.match(/GT_ROAD_CITIES =\s*\n?\s*\/\^\(([^)]*)\)\$\/i/);
+  assert.ok(gt, "GT_ROAD_CITIES regex present");
+  for (const c of ["lahore", "gujrat", "jhelum", "rawalpindi", "peshawar"]) assert.ok(gt[1].split("|").includes(c), c);
+  for (const c of ["karachi", "multan", "faisalabad", "sialkot", "quetta"]) assert.ok(!gt[1].split("|").includes(c), c);
+  // Urdu alongside English, the truck-art line, and the founder's note.
+  assert.match(scene, /دیکھ مگر پیار سے/);
+  assert.match(scene, /lang="ur" dir="rtl"/);
+  assert.match(scene, /href=\{FOUNDER_PATH\} className="pj-note"/);
+});
