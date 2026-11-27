@@ -223,7 +223,9 @@ async function main() {
   }));
 
   const vehicleCompatibility = {
-    fitmentType: "semi-universal",
+    // The fitting groups are the cars it fits, so "specific"; "semi-universal" would list
+    // them as exceptions (cars it does NOT fit) on the product page.
+    fitmentType: "specific",
     universalNote: FIT_NOTE,
     vehicles: vehicles.map((v) => ({
       make: v.make,

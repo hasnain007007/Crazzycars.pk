@@ -700,7 +700,9 @@ async function main() {
         },
       ],
       vehicleCompatibility: {
-        fitmentType: "semi-universal",
+        // "specific": this listing is for one car. "semi-universal" means "most cars EXCEPT
+        // these", which showed the listing's own car as an exception on the product page.
+        fitmentType: "specific",
         universalNote: FITMENT_NOTE,
         vehicles: [
           {

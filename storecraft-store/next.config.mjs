@@ -396,17 +396,9 @@ const nextConfig = {
       ...["/media/:path*", "/api/media/:path*"].map((source) => ({
         source,
         headers: [
-          {
-            // Filenames are unique per upload (timestamp + hex in sanitizeMediaFilename);
-            // writers never overwrite an existing name. Safe for long immutable TTL.
-            key: "Cache-Control",
-            value: "public, max-age=2592000, immutable",
-          },
-          {
-            // Keep shared caches warm a bit longer than browsers; s-maxage unchanged intent (~7d).
-            key: "CDN-Cache-Control",
-            value: "public, s-maxage=604800, stale-while-revalidate=86400",
-          },
+          // Cache-Control / CDN-Cache-Control for media are set in
+          // app/api/media/[...path]/route.js. Set here they also land on 404s, so a
+          // photo requested before its copy was built stays "missing" for 30 days.
           {
             key: "Content-Security-Policy",
             value: "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'; sandbox",

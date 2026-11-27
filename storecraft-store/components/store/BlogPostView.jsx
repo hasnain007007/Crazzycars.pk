@@ -271,7 +271,13 @@ export default function BlogPostView({ initialPost, initialRecent = [] }) {
                 Written by
               </p>
               <p className="cinzel" style={{ fontSize: 17, fontWeight: 700, color: "#111111", margin: "0 0 8px" }}>
-                {post.author.name}
+                {post.author.url ? (
+                  <Link href={post.author.url} rel="author" style={{ color: "inherit" }}>
+                    {post.author.name}
+                  </Link>
+                ) : (
+                  post.author.name
+                )}
               </p>
               {post.author.bio ? (
                 <p style={{ fontSize: 14, color: "#555555", lineHeight: 1.6, margin: 0 }}>{post.author.bio}</p>

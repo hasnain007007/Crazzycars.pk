@@ -14,6 +14,7 @@ import { recordBlogPostPageView } from "@/lib/blogEngagement";
 import { blogContentModifiedAt } from "@/lib/blogContentDate";
 import { faqPageJsonLd } from "@/lib/seo/keywordStrategyFaqs";
 import { BRAND } from "@/lib/brand";
+import { blogAuthorJsonLd, resolveBlogAuthor } from "@/lib/seo/blogAuthor";
 const BASE_URL = getSiteUrl();
 
 function withClientId(doc) {
@@ -86,7 +87,7 @@ export const generateMetadata = withSafeMetadata(async function postMetadata({ p
     // Absolute so the root layout does not append the store name a second time.
     title: { absolute: metaTitle },
     description: post.seo?.metaDescription || post.excerpt || post.title,
-    authors: [{ name: post.author?.name || BRAND }],
+    authors: [{ name: resolveBlogAuthor(post.author).name }],
     publishedTime: post.publishedAt || post.createdAt,
     modifiedTime: modified,
     alternates: {
@@ -98,7 +99,7 @@ export const generateMetadata = withSafeMetadata(async function postMetadata({ p
       type: "article",
       publishedTime: post.publishedAt || post.createdAt,
       modifiedTime: modified,
-      authors: [post.author?.name || BRAND],
+      authors: [resolveBlogAuthor(post.author).name],
       images: post.featuredImage?.url ? [{ url: post.featuredImage.url }] : [],
       url: `${BASE_URL}/blogs/${slug}`,
     },
@@ -151,10 +152,7 @@ export default async function BlogPostPage({ params }) {
       image: post.featuredImage?.url || "",
       datePublished: post.publishedAt || post.createdAt,
       dateModified: modified,
-      author: {
-        "@type": "Person",
-        name: post.author?.name || BRAND,
-      },
+      author: blogAuthorJsonLd(post.author, BASE_URL),
       publisher: {
         "@type": "Organization",
         name: BRAND,
@@ -185,7 +183,7 @@ export default async function BlogPostPage({ params }) {
         {faqLd ? (
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }} />
         ) : null}
-        <BlogPostView initialPost={post} initialRecent={recentPosts} />
+        <BlogPostView initialPost={{ ...post, author: resolveBlogAuthor(post.author) }} initialRecent={recentPosts} />
       </div>
     );
   } catch (error) {

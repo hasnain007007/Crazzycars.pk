@@ -440,7 +440,8 @@ async function main() {
           ]
         : [],
       vehicleCompatibility: {
-        fitmentType: vehicle ? "semi-universal" : "universal",
+        // "specific" when the item is for one car ("semi-universal" = most cars EXCEPT these).
+        fitmentType: vehicle ? "specific" : "universal",
         universalNote: FIT,
         vehicles: vehicle
           ? [

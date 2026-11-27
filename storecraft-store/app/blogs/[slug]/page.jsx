@@ -23,6 +23,7 @@ import { stripEmbeddedFaqHtml } from "@/lib/seo/stripEmbeddedFaqHtml";
 import { relatedGuidesForBlog } from "@/lib/seo/blogInternalLinks.mjs";
 import { dbRelatedGuidesForBlog } from "@/lib/seo/blogLinksFromDb";
 import { BRAND } from "@/lib/brand";
+import { blogAuthorJsonLd, resolveBlogAuthor } from "@/lib/seo/blogAuthor";
 import {
   policyBlogCanonicalMeta,
   scrubPolicyConflictPlain,
@@ -131,7 +132,7 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
     // Absolute so the root layout does not append the store name a second time.
     title: { absolute: metaTitle },
     description: metaDescription,
-    authors: [{ name: post.author?.name || BRAND }],
+    authors: [{ name: resolveBlogAuthor(post.author).name }],
     publishedTime: post.publishedAt || post.createdAt,
     modifiedTime: modified,
     alternates: {
@@ -143,7 +144,7 @@ export const generateMetadata = withSafeMetadata(async function blogPostMetadata
       type: "article",
       publishedTime: post.publishedAt || post.createdAt,
       modifiedTime: modified,
-      authors: [post.author?.name || BRAND],
+      authors: [resolveBlogAuthor(post.author).name],
       images: [{ url: ogImage, width: 1200, height: 630, alt: metaTitle }],
       url: `${BASE_URL}/blogs/${slug}`,
     },
@@ -206,10 +207,7 @@ export default async function BlogPostPage({ params }) {
       image: post.featuredImage?.url || "",
       datePublished: post.publishedAt || post.createdAt,
       dateModified: modified,
-      author: {
-        "@type": "Person",
-        name: post.author?.name || BRAND,
-      },
+      author: blogAuthorJsonLd(post.author, BASE_URL),
       publisher: {
         "@type": "Organization",
         name: BRAND,
@@ -239,9 +237,10 @@ export default async function BlogPostPage({ params }) {
       faqItems.length > 0
         ? {
             ...post,
+            author: resolveBlogAuthor(post.author),
             content: stripEmbeddedFaqHtml(String(post.content || "")),
           }
-        : post;
+        : { ...post, author: resolveBlogAuthor(post.author) };
 
     return (
       <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
