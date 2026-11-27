@@ -113,3 +113,18 @@ test("journey card: Pakistani touches stay true to geography", () => {
   assert.doesNotMatch(scene, /small (pakistani )?business/i);
   assert.match(scene, /href=\{FOUNDER_PATH\} className="pj-note"/);
 });
+
+test("Google review card: policy-safe copy, success page + tracking only when delivered", () => {
+  const card = read("components/store/GoogleReviewCard.jsx");
+  const copy = card.slice(card.indexOf("const COPY"), card.indexOf("function GoogleG"));
+  // Google policy: no incentives, no review gating, ask for HONEST reviews.
+  assert.doesNotMatch(copy, /discount|coupon|free|reward|gift|win|% off|cashback/i);
+  assert.doesNotMatch(copy, /not happy|unhappy|if you loved|only if|5[- ]star/i);
+  assert.equal((copy.match(/honest/g) || []).length, 2);
+  assert.match(card, /href="\/review" target="_blank" rel="noopener noreferrer"/);
+  assert.match(read("components/store/CheckoutSuccessView.jsx"), /<GoogleReviewCard variant="after-order"/);
+  assert.match(
+    read("components/store/OrderTrackingView.jsx"),
+    /\{step === PIPELINE\.length - 1 \? <GoogleReviewCard variant="delivered"/
+  );
+});

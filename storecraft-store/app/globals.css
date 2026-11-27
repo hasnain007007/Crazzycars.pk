@@ -8035,3 +8035,40 @@ html[data-lite] .ea-mini,
 html[data-lite] .pj-step--now .pj-step__dot {
   animation: none !important;
 }
+
+/* Google review card (components/store/GoogleReviewCard.jsx) */
+.grc {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 16px 18px 18px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 14px 32px -22px rgba(17, 24, 39, 0.35);
+  text-align: left;
+}
+.grc--spaced { margin-bottom: 28px; }
+.grc--track { margin: 14px 0 4px; max-width: none; }
+.grc__head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.grc__stars { display: inline-flex; gap: 2px; font-size: 18px; line-height: 1; color: #fbbc05; }
+.grc__star { display: inline-block; animation: grc-star 0.45s cubic-bezier(0.3, 1.7, 0.5, 1) both; animation-delay: calc(0.5s + var(--i) * 0.12s); }
+@keyframes grc-star { from { transform: scale(0) rotate(-40deg); opacity: 0; } }
+.grc__title { margin: 0 0 4px; font-size: 15px; font-weight: 800; color: #111827; }
+.grc__text { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: #4b5563; }
+.grc__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #1a73e8;
+  color: #fff !important;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none !important;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.grc__btn:hover { background: #1765cc; }
+.grc__btn:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) { .grc__star { animation: none; } }

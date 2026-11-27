@@ -22,6 +22,7 @@ import { codBookingAmountForTotal } from "@/config/checkout-money";
 import { WhatsAppPaymentButton } from "@/components/store/WhatsAppPaymentButton";
 import GoogleCustomerReviewsOptIn from "@/components/store/GoogleCustomerReviewsOptIn";
 import DeliveryScene from "@/components/store/DeliveryScene";
+import GoogleReviewCard from "@/components/store/GoogleReviewCard";
 import { CarLoader } from "@/components/store/EmptyArt";
 
 function CodDeliveryChargeBox({ order, storePayment, whatsapp, pakistaniPaymentMethods }) {
@@ -546,14 +547,7 @@ export default function CheckoutSuccessView() {
         >
           A confirmation email has been sent to your email address.
         </p>
-        <p style={{ fontSize: 13, margin: "0 0 28px" }}>
-          <a
-            href="/review"
-            style={{ color: "#C41E1E", fontWeight: 700, textDecoration: "underline" }}
-          >
-            Review us on Google
-          </a>
-        </p>
+        <GoogleReviewCard variant="after-order" className="grc--spaced" />
 
         <div
           style={{

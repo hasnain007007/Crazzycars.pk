@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import GoogleReviewCard from "@/components/store/GoogleReviewCard";
 
 const WAREHOUSE_LABEL = "CrazzyCars.pk Warehouse";
 
@@ -162,6 +163,9 @@ export default function OrderTrackingView() {
                 </Link>
               </p>
             ) : null}
+
+            {/* Delivered → best moment to ask for an honest Google review (local ranking). */}
+            {step === PIPELINE.length - 1 ? <GoogleReviewCard variant="delivered" className="grc--track" /> : null}
 
             <div className="cc-track__pipeline" aria-label="Delivery progress">
               {PIPELINE.map((p, i) => {
