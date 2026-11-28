@@ -1385,7 +1385,7 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
         `${courierName} does not cover "${notOnCourierList.wanted}" on this Run Courier account.`,
       ];
       if (nearest.length) parts.push(`Nearest ${courierName} cities: ${nearest.join(", ")}.`);
-      parts.push("Pick another Select API, or tick “Allow auto-switch courier”.");
+      parts.push("Pick another Select API, or untick “Lock to this courier only”.");
       return {
         success: false,
         error: parts.join(" "),
@@ -1403,7 +1403,7 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
         success: false,
         error: `${courierName} does not cover "${notOnCourierList.wanted}". Book with ${coveredBy
           .map((o) => `${o.title} (${o.city})`)
-          .join(" or ")}, or tick “Allow auto-switch courier”.`,
+          .join(" or ")}, or untick “Lock to this courier only”.`,
         selectedApi: requestedApi,
         requestedApi,
         apiVendor: apiVendor || "",
@@ -1533,7 +1533,7 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
       const triedFallback = Boolean(autoFallback) || allowCourierFallback;
       friendly = triedFallback
         ? `${displayCourierName(requestedApi || selectedApi)} will not take ${apiBody.origin} → ${apiBody.destination} on this Run Courier account (Trax/TCS/M&P also refused). Book via PostEx for this lane.`
-        : `${displayCourierName(requestedApi || selectedApi)} will not take ${apiBody.origin} → ${apiBody.destination} on this Run Courier account. Tick “Allow auto-switch courier”, pick another Select API, or book via PostEx.`;
+        : `${displayCourierName(requestedApi || selectedApi)} will not take ${apiBody.origin} → ${apiBody.destination} on this Run Courier account. Untick “Lock to this courier only”, pick another Select API, or book via PostEx.`;
     } else if (/Invalid charges calculation/i.test(upstream)) {
       friendly = `Run Courier could not price ${apiBody.origin} → ${apiBody.destination} via ${selectedApi}. Check city names, try PostEx, or pick another carrier.`;
     } else if (/missing\s*Mappings/i.test(upstream)) {
