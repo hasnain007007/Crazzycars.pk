@@ -67,6 +67,8 @@ export default function RunCourierBookingPanel({
   const [allowWithoutAdvance, setAllowWithoutAdvance] = useState(false);
   /** When off (default), the selected courier is booked as-is — no silent Trax/TCS switch. */
   const [allowCourierFallback, setAllowCourierFallback] = useState(false);
+  /** When off (default), never book PostEx from this Run Courier form — keep the two flows separate. */
+  const [allowPostexFallback, setAllowPostexFallback] = useState(false);
 
   const advanceUnpaid = isCodAdvanceUnpaid(order);
   const advanceRequired = Math.max(0, roundRupees(Number(order?.payment?.advanceRequired) || 0));
@@ -209,6 +211,7 @@ export default function RunCourierBookingPanel({
           rebook,
           selectedApi: pickRunCourierSelectApi(selectedApi, carriers),
           allowCourierFallback,
+          allowPostexFallback,
           productType,
           serviceType,
           codAmount: cod,
@@ -502,6 +505,29 @@ export default function RunCourierBookingPanel({
               <span>
                 Allow auto-switch courier if this one does not cover the city (may book Trax/TCS
                 instead of your selection). Leave off to keep the courier you picked.
+              </span>
+            </label>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 8,
+                marginTop: 8,
+                fontSize: 12,
+                color: "#475569",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={allowPostexFallback}
+                onChange={(e) => setAllowPostexFallback(e.target.checked)}
+                style={{ marginTop: 2 }}
+              />
+              <span>
+                Allow PostEx if Run Courier can’t deliver this city (tracking and label will show
+                PostEx, not Run Courier). Leave off to keep Run Courier and PostEx separate — use
+                the PostEx section above when you want PostEx.
               </span>
             </label>
           </div>

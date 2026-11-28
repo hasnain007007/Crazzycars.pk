@@ -2258,6 +2258,9 @@ export function OrderDetail({ orderId }) {
                     style={{ background: "#FAFAFA" }}
                   >
                     <p className="text-sm font-bold text-slate-900 dark:text-white">📦 Book Postex Shipment</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      PostEx only — does not use Run Courier / Leopard / TCS / Trax.
+                    </p>
                     {postexBookingSection}
                   </div>
                   <div
@@ -2266,6 +2269,10 @@ export function OrderDetail({ orderId }) {
                   >
                     <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100">
                       🚚 Book with Run Courier
+                    </p>
+                    <p className="mt-1 text-xs text-emerald-800/80 dark:text-emerald-200/80">
+                      Run Courier only by default. Will not book PostEx unless you tick that option
+                      inside the form.
                     </p>
                     {!showRunCourierForm ? (
                       <button

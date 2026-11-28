@@ -341,10 +341,10 @@ export async function POST(request) {
       const laneDead =
         isRunCourierServiceRefusal(result.error) ||
         /book via PostEx|does not cover|not set up for/i.test(String(result.error || ""));
-      // Run Courier cannot deliver some lanes on this account (live: Gujranwala → Bagh).
-      // PostEx covers BAGH (AJK) — book there instead of failing the admin.
+      // Keep Run Courier and PostEx strictly separate unless the admin opts in.
+      // (Previously this defaulted ON, so "Book with Run Courier" silently became PostEx.)
       const allowPostexFallback =
-        body.allowPostexFallback !== false && body.skipPostexFallback !== true;
+        body.allowPostexFallback === true && body.skipPostexFallback !== true;
       if (laneDead && allowPostexFallback) {
         const postexOpts = {
           handling: body.handling,
@@ -443,6 +443,7 @@ export async function POST(request) {
           }
           return NextResponse.json({
             success: true,
+            bookedVia: "postex_fallback",
             message: `Run Courier cannot deliver ${result.origin || "origin"} → ${
               result.destination || bookingOptions.cityName || "destination"
             } on this account. Booked via PostEx${matchedCity ? ` (${matchedCity})` : ""} instead.`,
@@ -494,16 +495,22 @@ export async function POST(request) {
         );
       }
 
+      const baseError = result.error || "Booking failed.";
+      const laneHint = laneDead
+        ? " Run Courier cannot deliver this lane. Use the separate PostEx booking section, or tick “Allow PostEx if Run Courier can’t deliver” and retry."
+        : "";
       return NextResponse.json(
         {
           success: false,
-          error: result.error || "Booking failed.",
+          bookedVia: "runcourier",
+          error: `${baseError}${laneHint}`,
           selectedApi: result.selectedApi || bookingOptions.selectedApi,
           requestedApi: result.requestedApi || bookingOptions.selectedApi,
           origin: result.origin || "",
           destination: result.destination || "",
           coveredBy: result.coveredBy || [],
           autoFallback: result.autoFallback || null,
+          postexFallbackAvailable: Boolean(laneDead),
         },
         { status: 400 }
       );
@@ -589,6 +596,7 @@ export async function POST(request) {
       : "";
     return NextResponse.json({
       success: true,
+      bookedVia: "runcourier",
       message: `Shipment booked via Run Courier (${result.selectedApi}).${fallbackNote}`,
       trackingNumber: result.trackingNumber,
       orderReference: result.orderReference || "",

@@ -281,7 +281,7 @@ export function BulkActionBar({
   const bookRunCourierBulk = useCallback(async () => {
     if (!ids.length) return;
     const ok = window.confirm(
-      `Book ${ids.length} order(s) with Run Courier?\n\nUses the default Select API from Settings (e.g. Leopard2 / TCS). Orders that already have tracking will be skipped.`
+      `Book ${ids.length} order(s) with Run Courier only?\n\nUses the default Select API from Settings (e.g. Leopard2 / TCS). Orders that already have tracking will be skipped.\n\nPostEx is NOT used — for PostEx use the separate PostEx bulk/book action.`
     );
     if (!ok) return;
     const allowWithoutAdvance = window.confirm(
@@ -304,14 +304,27 @@ export function BulkActionBar({
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: id, allowWithoutAdvance }),
+          // Explicit: bulk Run Courier stays on Run Courier (no silent PostEx).
+          body: JSON.stringify({
+            orderId: id,
+            allowWithoutAdvance,
+            allowPostexFallback: false,
+          }),
         });
         const json = await res.json();
         if (res.ok && json.success) {
-          okCount += 1;
-          if (json.trackingEmail === "sent") emailSent += 1;
-          else if (json.trackingEmail === "failed") emailFail += 1;
-          else if (json.trackingEmail === "skipped" || json.trackingEmail === "none") emailSkip += 1;
+          if (json.postexFallback || json.bookedVia === "postex_fallback") {
+            // Should not happen with allowPostexFallback:false — treat as failure for clarity.
+            failCount += 1;
+            failures.push(
+              `${json.order?.orderNumber || id}: unexpectedly booked PostEx — use PostEx booking instead`
+            );
+          } else {
+            okCount += 1;
+            if (json.trackingEmail === "sent") emailSent += 1;
+            else if (json.trackingEmail === "failed") emailFail += 1;
+            else if (json.trackingEmail === "skipped" || json.trackingEmail === "none") emailSkip += 1;
+          }
         } else {
           failCount += 1;
           failures.push(`${json.order?.orderNumber || id}: ${json.error || "Failed"}`);
