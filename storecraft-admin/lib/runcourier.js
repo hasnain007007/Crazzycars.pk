@@ -601,6 +601,25 @@ const RUN_COURIER_CITY_ALIASES = {
   "bagh a.k": "Bagh (ajk)",
   "bagh (a.k)": "Bagh (ajk)",
   "bagh azad kashmir": "Bagh (ajk)",
+  // AJK Mirpur — portal spelling is "Mir Pur A.k." (M&P / combined list).
+  mirpur: "Mir Pur A.k.",
+  "mir pur": "Mir Pur A.k.",
+  "mirpur ajk": "Mir Pur A.k.",
+  "mir pur ajk": "Mir Pur A.k.",
+  "mirpur a.k": "Mir Pur A.k.",
+  "mir pur a.k": "Mir Pur A.k.",
+  "mirpur a.k.": "Mir Pur A.k.",
+  "mir pur a.k.": "Mir Pur A.k.",
+  "mirpur (ajk)": "Mir Pur A.k.",
+  "mirpur azad kashmir": "Mir Pur A.k.",
+  "mir pur azad kashmir": "Mir Pur A.k.",
+  // Other common AJK spellings seen on orders.
+  muzaffarabad: "Muzaffarabad",
+  "muzaffarabad ajk": "Muzaffarabad",
+  kotli: "Kotli",
+  "kotli ajk": "Kotli",
+  rawalakot: "Rawalakot",
+  "rawalakot ajk": "Rawalakot",
 };
 
 /** Prefer these when auto-falling back off a courier that does not cover the town. */
@@ -765,7 +784,7 @@ export function matchVendorCity(rawCity, vendorCities = []) {
 }
 
 /** Other Run Courier couriers that list this city (with their spelling). */
-async function couriersCoveringCity(rawCity, carrierRows, settingsCourier, skipVendor) {
+export async function couriersCoveringCity(rawCity, carrierRows, settingsCourier, skipVendor) {
   const vendors = new Map();
   for (const r of carrierRows || []) {
     if (r?.id == null || String(r.id).toLowerCase() === "auto") continue;
@@ -1323,13 +1342,12 @@ export async function createRunCourierShipment({ order, settings }, { bookingOpt
     }
   }
 
-  // Auto-switch only when allowed (Auto select, or admin opted in). Explicit Trax/Daewoo/TCS
-  // picks must not silently become TCS — that was booking every Bagh/AK lane on TCS.
+  // Auto-switch within Run Courier when the picked courier does not list the city
+  // (e.g. Leopard → M&P for Mir Pur A.k.). Only skip when admin locked the courier.
   const allowCourierFallback =
-    bookingOptions?.allowCourierFallback === true ||
-    !isExplicitRunCourierSelect(
-      bookingOptions?.rawSelectedApi || bookingOptions?.selectedApi || bookingOptions?.api || ""
-    );
+    bookingOptions?.lockCourier === true
+      ? false
+      : bookingOptions?.allowCourierFallback !== false;
 
   if (notOnCourierList) {
     const coveredBy = await couriersCoveringCity(

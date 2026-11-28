@@ -65,10 +65,14 @@ export default function RunCourierBookingPanel({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [allowWithoutAdvance, setAllowWithoutAdvance] = useState(false);
-  /** When off (default), the selected courier is booked as-is — no silent Trax/TCS switch. */
-  const [allowCourierFallback, setAllowCourierFallback] = useState(false);
+  /**
+   * When off (default), Run Courier may auto-switch to another RC courier that covers
+   * the city (e.g. Leopard → M&P for Mir Pur A.k.). Tick to force the selected courier only.
+   */
+  const [lockCourier, setLockCourier] = useState(false);
   /** When off (default), never book PostEx from this Run Courier form — keep the two flows separate. */
   const [allowPostexFallback, setAllowPostexFallback] = useState(false);
+  const [coverageNote, setCoverageNote] = useState("");
 
   const advanceUnpaid = isCodAdvanceUnpaid(order);
   const advanceRequired = Math.max(0, roundRupees(Number(order?.payment?.advanceRequired) || 0));
@@ -139,28 +143,48 @@ export default function RunCourierBookingPanel({
     setCityName(String(order?.shippingAddress?.city || "").trim());
   }, [order, orderTotal, courierSettings.runCourierDefaultApi, order?.runCourierApi, carriers]);
 
-  // Live city audit against GetCitiesList whenever destination/origin changes.
+  // Live city audit + per-courier coverage whenever destination/origin/courier changes.
   useEffect(() => {
     const dest = String(cityName || "").trim();
     if (!dest) {
       setCityAudit(null);
+      setCoverageNote("");
       return;
     }
     const t = setTimeout(() => {
       const qs = new URLSearchParams({
         destination: dest,
         origin: originCity,
+        selectedApi: pickRunCourierSelectApi(selectedApi, carriers),
       });
       fetch(`/api/runcourier/city-audit?${qs}`, { credentials: "include" })
         .then((r) => r.json())
         .then((json) => {
-          if (json?.success) setCityAudit(json);
-          else setCityAudit(null);
+          if (!json?.success) {
+            setCityAudit(null);
+            return;
+          }
+          setCityAudit(json);
+          const cov = json.coverage;
+          if (!cov || lockCourier) return;
+          if (cov.selectedCovers === false && cov.suggestedApi) {
+            const next = pickRunCourierSelectApi(cov.suggestedApi, carriers);
+            const prevLabel = runCourierApiLabel(selectedApi);
+            const nextLabel = runCourierApiLabel(next);
+            if (next && next !== pickRunCourierSelectApi(selectedApi, carriers)) {
+              setSelectedApi(next);
+              setCoverageNote(
+                `${prevLabel} does not cover this city — switched to ${nextLabel}${
+                  cov.suggestedCity ? ` (${cov.suggestedCity})` : ""
+                }.`
+              );
+            }
+          }
         })
         .catch(() => setCityAudit(null));
     }, 280);
     return () => clearTimeout(t);
-  }, [cityName, originCity]);
+  }, [cityName, originCity, selectedApi, carriers, lockCourier]);
 
   // Once per order, snap free-text order city to the exact GetCitiesList name.
   const snappedRef = useRef("");
@@ -210,7 +234,8 @@ export default function RunCourierBookingPanel({
           orderId: order.id || order._id,
           rebook,
           selectedApi: pickRunCourierSelectApi(selectedApi, carriers),
-          allowCourierFallback,
+          lockCourier,
+          allowCourierFallback: !lockCourier,
           allowPostexFallback,
           productType,
           serviceType,
@@ -476,7 +501,10 @@ export default function RunCourierBookingPanel({
             <label style={labelStyle}>Select API (courier company) *</label>
             <select
               value={pickRunCourierSelectApi(selectedApi, carriers)}
-              onChange={(e) => setSelectedApi(e.target.value)}
+              onChange={(e) => {
+                setSelectedApi(e.target.value);
+                setCoverageNote("");
+              }}
               style={inputStyle}
             >
               {carriers.map((c) => (
@@ -485,6 +513,9 @@ export default function RunCourierBookingPanel({
                 </option>
               ))}
             </select>
+            {coverageNote ? (
+              <p style={{ margin: "6px 0 0", fontSize: 12, color: "#047857" }}>{coverageNote}</p>
+            ) : null}
             <label
               style={{
                 display: "flex",
@@ -498,13 +529,13 @@ export default function RunCourierBookingPanel({
             >
               <input
                 type="checkbox"
-                checked={allowCourierFallback}
-                onChange={(e) => setAllowCourierFallback(e.target.checked)}
+                checked={lockCourier}
+                onChange={(e) => setLockCourier(e.target.checked)}
                 style={{ marginTop: 2 }}
               />
               <span>
-                Allow auto-switch courier if this one does not cover the city (may book Trax/TCS
-                instead of your selection). Leave off to keep the courier you picked.
+                Lock to this courier only — do not auto-switch if it does not cover the city
+                (otherwise Run Courier will pick M&amp;P / Trax / TCS when needed).
               </span>
             </label>
             <label

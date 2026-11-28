@@ -1491,12 +1491,12 @@ function CourierSettingsTab({ courier, onPatch, onSave }) {
             </span>
             <select
               className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-900"
-              value={courier.runCourierDefaultApi || "Leopard2"}
+              value={courier.runCourierDefaultApi || "Trax"}
               onChange={(e) => onPatch({ runCourierDefaultApi: e.target.value })}
             >
-              <option value="Leopard2">Leopards</option>
               <option value="Trax">Trax</option>
               <option value="M&P">M&amp;P</option>
+              <option value="Leopard2">Leopards</option>
               <option value="TCS">TCS</option>
               <option value="Daewoo">Daewoo</option>
               <option value="Dastaq Logistics">Dastaq Logistics</option>

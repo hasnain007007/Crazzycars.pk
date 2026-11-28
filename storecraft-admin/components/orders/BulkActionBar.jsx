@@ -304,10 +304,12 @@ export function BulkActionBar({
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          // Explicit: bulk Run Courier stays on Run Courier (no silent PostEx).
+          // Bulk: auto-switch within Run Courier when needed; never silent PostEx.
           body: JSON.stringify({
             orderId: id,
             allowWithoutAdvance,
+            lockCourier: false,
+            allowCourierFallback: true,
             allowPostexFallback: false,
           }),
         });

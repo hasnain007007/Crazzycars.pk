@@ -750,6 +750,18 @@ const CITY_ALIASES = {
   "bagh a.k": "BAGH (AJK)",
   "bagh (a.k)": "BAGH (AJK)",
   "bagh azad kashmir": "BAGH (AJK)",
+  // AJK Mirpur — keep spellings on MIRPUR (AJK) when present in operational cities.
+  mirpur: "MIRPUR (AJK)",
+  "mir pur": "MIRPUR (AJK)",
+  "mirpur ajk": "MIRPUR (AJK)",
+  "mir pur ajk": "MIRPUR (AJK)",
+  "mirpur a.k": "MIRPUR (AJK)",
+  "mir pur a.k": "MIRPUR (AJK)",
+  "mirpur a.k.": "MIRPUR (AJK)",
+  "mir pur a.k.": "MIRPUR (AJK)",
+  "mirpur (ajk)": "MIRPUR (AJK)",
+  "mirpur azad kashmir": "MIRPUR (AJK)",
+  "mir pur azad kashmir": "MIRPUR (AJK)",
   // KP — Katlang is a Mardan tehsil; PostEx has no KATLANG city. Never alias to TANK
   // (street word "bank" used to fuzzy-match TANK — see resolvePostexCityName).
   katlang: "MARDAN",

@@ -13,7 +13,6 @@ import {
   createRunCourierShipment,
   displayCourierName,
   fetchRunCourierLabel,
-  isExplicitRunCourierSelect,
   isRunCourierServiceRefusal,
   resolveBookingSelectApi,
   RUN_COURIER_DEFAULT_API,
@@ -260,19 +259,21 @@ export async function POST(request) {
     }
     const rawSelectedApi =
       body.selectedApi || body.api || body.courierApi || settings?.courier?.runCourierDefaultApi || "";
-    const explicitCourier = isExplicitRunCourierSelect(rawSelectedApi);
-    // Never silent-switch Trax/Daewoo/… → TCS unless admin opted in or picked Auto.
+    // Auto-switch within Run Courier is ON by default (Leopard → M&P for Mir Pur A.k., etc.).
+    // Only lock when the admin ticks "Lock to this courier". Never treat a pre-filled
+    // Select API value as an explicit lock — that caused "does not cover" on every book.
+    const lockCourier = body.lockCourier === true;
     const allowCourierFallback =
-      body.allowCourierFallback === true ||
       body.autoSwitchCourier === true ||
-      !explicitCourier;
+      (!lockCourier && body.allowCourierFallback !== false);
     const bookingOptions = {
       selectedApi: resolveBookingSelectApi(
         rawSelectedApi,
         settings?.courier?.runCourierDefaultApi || RUN_COURIER_DEFAULT_API,
-        { softMigrateLeopard: !explicitCourier }
+        { softMigrateLeopard: !lockCourier }
       ),
       rawSelectedApi: String(rawSelectedApi || "").trim(),
+      lockCourier,
       allowCourierFallback,
       productType: body.productType,
       serviceType: body.serviceType,
@@ -496,9 +497,12 @@ export async function POST(request) {
       }
 
       const baseError = result.error || "Booking failed.";
-      const laneHint = laneDead
-        ? " Run Courier cannot deliver this lane. Use the separate PostEx booking section, or tick “Allow PostEx if Run Courier can’t deliver” and retry."
-        : "";
+      const coveredBy = Array.isArray(result.coveredBy) ? result.coveredBy : [];
+      // Only nudge PostEx when NO Run Courier carrier covers this city.
+      const laneHint =
+        laneDead && !coveredBy.length
+          ? " No Run Courier carrier covers this city. Use the separate PostEx booking section, or tick “Allow PostEx if Run Courier can’t deliver” and retry."
+          : "";
       return NextResponse.json(
         {
           success: false,
@@ -508,9 +512,9 @@ export async function POST(request) {
           requestedApi: result.requestedApi || bookingOptions.selectedApi,
           origin: result.origin || "",
           destination: result.destination || "",
-          coveredBy: result.coveredBy || [],
+          coveredBy,
           autoFallback: result.autoFallback || null,
-          postexFallbackAvailable: Boolean(laneDead),
+          postexFallbackAvailable: Boolean(laneDead && !coveredBy.length),
         },
         { status: 400 }
       );
